@@ -2,13 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="75c05bf0-5187-4e1e-b435-d792307494dc" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/cr-connect-workflow.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/cr_connect_workflow.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/cr-connect-workflow.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/cr-connect-workflow.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/tests.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cr_connect_workflow/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/cr_connect_workflow/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/flows.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/flows.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -27,7 +25,7 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/cr_connect_workflow" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -41,7 +39,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Django tests.Test: app.tests.CRConnectProcessTestCase">
+  <component name="RunManager" selected="Django server.cr-connect-workflow">
     <configuration name="Test: app.tests" type="DjangoTestsConfigurationType">
       <module name="cr-connect-workflow" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -108,6 +106,7 @@
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
+        <env name="DJANGO_SETTINGS_MODULE" value="cr_connect_workflow.settings" />
       </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="" />
@@ -148,7 +147,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1573749348006</updated>
-      <workItem from="1573749349496" duration="1128000" />
+      <workItem from="1573749349496" duration="2837000" />
+      <workItem from="1573759758901" duration="18000" />
     </task>
     <servers />
   </component>
@@ -160,7 +160,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
