@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../cr-connect-workflow/.idea/cr_connect_workflow.iml" filepath="$PROJECT_DIR$/../cr-connect-workflow/.idea/cr_connect_workflow.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/cr-connect-workflow.iml" filepath="$PROJECT_DIR$/.idea/cr-connect-workflow.iml" />
     </modules>
   </component>
 </project>
