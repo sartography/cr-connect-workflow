@@ -12,36 +12,66 @@ class CRConnectFlow(Flow):
     start = (
         flow.Start(
             CreateProcessView,
-            fields=["text"]
+            fields=[
+                "study_name",
+                "pi_computing_id",
+            ]
         ).Permission(
             auto_create=True
-        ).Next(this.approve)
+        ).Next(this.provide_computing_id)
     )
 
-    approve = (
+    provide_computing_id = (
+        flow.AbstractJob(this.lookup_contact_information)
+            .Next(this.describe_pi_experience)
+    )
+
+    describe_pi_experience = (
         flow.View(
             UpdateProcessView,
-            fields=["approved"]
-        ).Permission(
-            auto_create=True
-        ).Next(this.check_approve)
+            fields=[
+                "pi_experience_description",
+                "responsible_organization",
+            ]
+        ).Next(this.select_responsible_organization)
     )
 
-    check_approve = (
-        flow.If(lambda activation: activation.process.approved)
-        .Then(this.send)
+    select_responsible_organization = (
+        flow.AbstractJob(this.lookup_organization_information)
+            .Next(this.enter_title)
+    )
+
+    enter_title = (
+        flow.View(
+            UpdateProcessView,
+            fields=[
+                "study_title",
+                "study_abstract",
+                "study_type",
+                "will_have_contract",
+            ]
+        ).Next(this.check_will_have_contract)
+    )
+
+    check_will_have_contract = (
+        flow.If(lambda activation: activation.process.will_have_contract)
+        .Then(this.request_signature_from_department_chair)
         .Else(this.end)
     )
 
-    send = (
+    request_signature_from_department_chair = (
         flow.Handler(
-            this.send_cr_connect_request
+            this.provide_department_chair_signature
         ).Next(this.end)
     )
 
     end = flow.End()
 
-    def send_cr_connect_request(self, activation):
-        print(activation.process.text)
+    def provide_department_chair_signature(self, activation):
+        print(activation.process.study_name)
+
+    def lookup_contact_information(self, activation):
+        print(activation.process.pi_computing_id)
+
 
 

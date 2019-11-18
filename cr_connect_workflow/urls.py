@@ -19,7 +19,10 @@ from django.conf.urls import include, url
 from django.views import generic
 from material.frontend import urls as frontend_urls
 
+from app.views import BpmnXmlImportView
+
 urlpatterns = [
+    url(r'^bpmn/load/', BpmnXmlImportView.as_view(), name='load_bpmn'),
     url(r'^$', generic.RedirectView.as_view(url='/workflow/', permanent=False)),
     url(r'', include(frontend_urls)),
     path('admin/', admin.site.urls),
