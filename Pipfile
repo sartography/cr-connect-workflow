@@ -1,13 +1,16 @@
 [[source]]
-name = "crconnect"
-url = "https://crconnect.virginia.edu"
+name = "pypi"
+url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
 pytest = "*"
 
 [packages]
+spiffworkflow = "*"
 connexion = {extras = ["swagger-ui"],version = "*"}
+swagger-ui-bundle = "*"
+flask = "*"
 flask-bcrypt = "*"
 flask-cors = "*"
 flask-httpauth = "*"
@@ -17,12 +20,11 @@ flask-restful = "*"
 httpretty = "*"
 marshmallow = "*"
 marshmallow-enum = "*"
-marshmallow_sqlalchemy = "*"
+marshmallow-sqlalchemy = "*"
 openpyxl = "*"
 psycopg2 = "*"
 pyjwt = "*"
 requests = "*"
-spiffworkflow = "*"
 xlsxwriter = "*"
 
 [requires]
