@@ -18,7 +18,7 @@ def list_all(limit=100):
     return list(workflows.values())[0:limit]
 
 
-def get(workflow_id: int) -> Union[Tuple[Any, int], Dict[str, Union[int, str, datetime]]]:
+def get(workflow_id):
     id_ = int(workflow_id)
     if workflows.get(id_) is None:
         return NoContent, 404

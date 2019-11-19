@@ -35,13 +35,24 @@ workflow_tasks = [
     },
 ]
 
+
 def start(workflow_id):
-    spec = TrainingWorkflowSpec()
-    wf = Workflow(spec)
-    workflow_tasks[len(workflow_tasks)] = wf
+    # spec = TrainingWorkflowSpec()
+    # wf = Workflow(spec)
+    id_ = len(workflow_tasks)
+    workflow_tasks.append({
+        'id': id_,
+        'workflow_id': workflow_id,
+        'task_id': 1,
+        'last_updated': datetime.datetime.now(),
+        'status': 'Incomplete',
+    })
+    return workflow_tasks[id_]
+
 
 def get(workflow_id, task_id):
     i = _get_workflow_task_index(workflow_id, task_id)
+    print(i)
     return workflow_tasks[i] if i is not None else NoContent, 404
 
 
@@ -70,7 +81,7 @@ def delete(workflow_id, task_id):
 def _get_workflow_task_index(workflow_id, task_id):
     workflow_id = int(workflow_id)
     task_id = int(task_id)
-    for (wt, i) in enumerate(workflow_tasks):
+    for i, wt in enumerate(workflow_tasks):
         if wt['workflow_id'] == workflow_id and wt['task_id'] == task_id:
             return i
     return None

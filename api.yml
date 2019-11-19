@@ -43,10 +43,8 @@ paths:
 
   # /v1.0/workflows/0
   /workflows/{workflow_id}:
-
-    # api.workflows.get(workflow_id)
     get:
-      operationId: api.workflows_tasks.get
+      operationId: api.workflows_tasks.start
       summary: Status info for a specific workflow instance
       tags:
         - workflows
@@ -54,17 +52,17 @@ paths:
         - name: workflow_id
           in: path
           required: true
-          description: The id of the workflow to retrieve
+          description: The id of the workflow to start
           schema:
             type: integer
             format: int32
       responses:
         '200':
-          description: Expected response to a valid request
+          description: First task in the workflow
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Workflows"
+                $ref: "#/components/schemas/Task"
         default:
           description: unexpected error
           content:
@@ -72,9 +70,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  # /v1.0/workflows/0/task/0
+  # /v1.0/workflows/0/tasks/0
   /workflows/{workflow_id}/tasks/{task_id}:
-
     get:
       operationId: api.workflows_tasks.get
       summary: Get status of specific task in specific workflow instance
