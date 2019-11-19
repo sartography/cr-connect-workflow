@@ -1,0 +1,720 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="bpmn-diagrams-48994f62-a42d-945f-8cad-cff6a4eaf5b4" targetNamespace="http://creatio.com">
+    <bpmn2:collaboration id="Collaboration_1">
+        <bpmn2:participant id="laneSet_h6yaps2ye" processRef="Process_0" name="Study Startup"/>
+    </bpmn2:collaboration>
+    <bpmn2:process id="Process_0" isExecutable="false">
+        <bpmn2:laneSet id="LaneSet_0">
+            <bpmn2:lane id="lane_72c75373i" name="IRB Committee"/>
+            <bpmn2:lane id="lane_bb4dpd1rx" name="Research Coordinator">
+                <bpmn2:flowNodeRef>startEvent_37esc0jji</bpmn2:flowNodeRef>
+                <bpmn2:flowNodeRef>task_628dt0vtj</bpmn2:flowNodeRef>
+                <bpmn2:flowNodeRef>task_gallbp2y8</bpmn2:flowNodeRef>
+                <bpmn2:flowNodeRef>task_i3jfd6gz4</bpmn2:flowNodeRef>
+                <bpmn2:flowNodeRef>task_pxj2ssy6d</bpmn2:flowNodeRef>
+                <bpmn2:flowNodeRef>task_s6qq6l3zd</bpmn2:flowNodeRef>
+            </bpmn2:lane>
+            <bpmn2:lane id="lane_gsvz4xjiq" name="CR Connect Administrator"/>
+            <bpmn2:lane id="lane_hqo36bgut8" name="Principal Investigator"/>
+        </bpmn2:laneSet>
+        <bpmn2:startEvent id="startEvent_37esc0jji" name="Start">
+            <bpmn2:outgoing>connection_3bawdbs4m</bpmn2:outgoing>
+        </bpmn2:startEvent>
+        <bpmn2:task id="task_628dt0vtj" name="Complete Study Workflow Name Creation">
+            <bpmn2:incoming>connection_g1e7eu9y1</bpmn2:incoming>
+            <bpmn2:outgoing>connection_tadqf260i</bpmn2:outgoing>
+        </bpmn2:task>
+        <bpmn2:task id="task_gallbp2y8" name="Create new workflow">
+            <bpmn2:incoming>connection_3bawdbs4m</bpmn2:incoming>
+            <bpmn2:outgoing>connection_g1e7eu9y1</bpmn2:outgoing>
+        </bpmn2:task>
+        <bpmn2:task id="task_s6qq6l3zd" name="Submit for Review">
+            <bpmn2:incoming>connection_d4pqonwj4</bpmn2:incoming>
+        </bpmn2:task>
+        <bpmn2:scriptTask id="task_i3jfd6gz4" name="Generate UVA Study Tracking Number">
+            <bpmn2:incoming>connection_tadqf260i</bpmn2:incoming>
+            <bpmn2:outgoing>connection_aisg918f7</bpmn2:outgoing>
+        </bpmn2:scriptTask>
+        <bpmn2:sequenceFlow id="connection_3bawdbs4m" sourceRef="startEvent_37esc0jji" targetRef="task_gallbp2y8"/>
+        <bpmn2:sequenceFlow id="connection_aisg918f7" sourceRef="task_i3jfd6gz4" targetRef="task_pxj2ssy6d"/>
+        <bpmn2:sequenceFlow id="connection_d4pqonwj4" sourceRef="task_pxj2ssy6d" targetRef="task_s6qq6l3zd"/>
+        <bpmn2:sequenceFlow id="connection_g1e7eu9y1" sourceRef="task_gallbp2y8" targetRef="task_628dt0vtj"/>
+        <bpmn2:sequenceFlow id="connection_tadqf260i" sourceRef="task_628dt0vtj" targetRef="task_i3jfd6gz4"/>
+    </bpmn2:process>
+    <bpmn2:process id="Process_1" isExecutable="false">
+        <bpmn2:subProcess id="task_dr9i8b7u6" name="Complete All Steps" triggeredByEvent="true">
+            <bpmn2:sequenceFlow id="connection_1gmwgj7ft" sourceRef="task_qrs76lhhl" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_1rdm4m1lh" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_4h5dtv0vf"/>
+            <bpmn2:sequenceFlow id="connection_51ir53yur" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_twnp5whrd"/>
+            <bpmn2:sequenceFlow id="connection_59o7x7eu3d" sourceRef="task_vgnxo32vw" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_63nud0yh4" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_w7dplw8y4"/>
+            <bpmn2:sequenceFlow id="connection_6macieta2" sourceRef="task_w7dplw8y4" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_8s7l6omyia" sourceRef="task_twnp5whrd" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_a0j1fjuog" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_qrs76lhhl"/>
+            <bpmn2:sequenceFlow id="connection_dcmobf8bq" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_n978v3449"/>
+            <bpmn2:sequenceFlow id="connection_eaq5akefg" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_9c6j6un7g"/>
+            <bpmn2:sequenceFlow id="connection_g9alddfah" sourceRef="task_n978v3449" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_haheb1ub2" sourceRef="task_34u11thp5" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_ko3izvzt8" sourceRef="task_xhnctrw8m" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_n33ppjkad" sourceRef="task_9c6j6un7g" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_ng9tlrd14" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_34u11thp5"/>
+            <bpmn2:sequenceFlow id="connection_qgijmmunu" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_6y34c47aq"/>
+            <bpmn2:sequenceFlow id="connection_rb8wiyaoa" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_yd4q5du1d"/>
+            <bpmn2:sequenceFlow id="connection_sqiwhr9r6" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_vgnxo32vw"/>
+            <bpmn2:sequenceFlow id="connection_u02z5szoy" sourceRef="task_4h5dtv0vf" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_ueuz1h3w4" sourceRef="task_6y34c47aq" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_zaxpz7sco" sourceRef="task_yd4q5du1d" targetRef="endEvent_9m01vtvt3"/>
+            <bpmn2:sequenceFlow id="connection_zff24jm9a" sourceRef="startEventSignal_1gtc0ewos" targetRef="task_xhnctrw8m"/>
+            <bpmn2:endEvent id="endEvent_9m01vtvt3">
+                <bpmn2:incoming>connection_1gmwgj7ft</bpmn2:incoming>
+                <bpmn2:incoming>connection_59o7x7eu3d</bpmn2:incoming>
+                <bpmn2:incoming>connection_6macieta2</bpmn2:incoming>
+                <bpmn2:incoming>connection_8s7l6omyia</bpmn2:incoming>
+                <bpmn2:incoming>connection_g9alddfah</bpmn2:incoming>
+                <bpmn2:incoming>connection_haheb1ub2</bpmn2:incoming>
+                <bpmn2:incoming>connection_ko3izvzt8</bpmn2:incoming>
+                <bpmn2:incoming>connection_n33ppjkad</bpmn2:incoming>
+                <bpmn2:incoming>connection_u02z5szoy</bpmn2:incoming>
+                <bpmn2:incoming>connection_ueuz1h3w4</bpmn2:incoming>
+                <bpmn2:incoming>connection_zaxpz7sco</bpmn2:incoming>
+            </bpmn2:endEvent>
+            <bpmn2:startEvent id="startEventSignal_1gtc0ewos" parallelMultiple="true">
+                <bpmn2:outgoing>connection_1rdm4m1lh</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_51ir53yur</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_63nud0yh4</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_a0j1fjuog</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_dcmobf8bq</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_eaq5akefg</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_ng9tlrd14</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_qgijmmunu</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_rb8wiyaoa</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_sqiwhr9r6</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_zff24jm9a</bpmn2:outgoing>
+                <bpmn2:cancelEventDefinition/>
+                <bpmn2:terminateEventDefinition/>
+            </bpmn2:startEvent>
+            <bpmn2:task id="task_34u11thp5" name="Upload Documents - Sent to IRB-HSR, not locked when submitted">
+                <bpmn2:documentation id="task_34u11thp5_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete. You cannot Complete this step.
+
+How to Avoid special characters: / \ . , [ ] { } ( ) ! ; : ' * ? &lt; &gt; | ¢ $ in the naming of the files. It will cause problems.
+
+These documents will be sent to the IRB-HSR when the study is submitted to the IRB-HSR. However, the documents will remain open for editing. You will be able to specifically indicate which documents should be "receipt acknowledged" by the IRB-HSR below.</bpmn2:documentation>
+                <bpmn2:incoming>connection_ng9tlrd14</bpmn2:incoming>
+                <bpmn2:outgoing>connection_haheb1ub2</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_4h5dtv0vf" name="Grant Pricing Request Application">
+                <bpmn2:documentation id="task_4h5dtv0vf_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.You cannot Complete this step.
+
+This step is only required if the study utilizes Medical Center and/or UPG services or facilities.
+
+The Grant Pricing Request Application allows study teams to access procedure cost information and create cart(s) with all the required procedures for the study. The research charge master (research rates) is updated by MC Finance and UPG at least annually and uploaded by SOM Clinical Trials Office (SOM CTO) to the Grant Pricing Request Application. Research rates for this study will be based upon the version of the research charge master that is in effect on the date the study is entered into Clinical Research Connect.
+
+Contact:
+
+Kathy Richardson: (434) 982-4383	kr3m@Virginia.EDU
+Britnee Ochabski: (434) 924-9969	blo4e@Virginia.EDU
+Process: Create a cart with all the required procedures for this study in the Grant Pricing Request application. When ready for SOM CTO's review, rename the cart to match the name of this study exactly as shown on top left corner of this page. Proceed with your submission process in the “Grant Pricing Request Submission” Step.</bpmn2:documentation>
+                <bpmn2:incoming>connection_1rdm4m1lh</bpmn2:incoming>
+                <bpmn2:outgoing>connection_u02z5szoy</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_6y34c47aq" name="Upload Documents - Required by IRB-HSR, locked when submitted">
+                <bpmn2:documentation id="task_6y34c47aq_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.
+
+Important Do NOT submit this step until you are ready for submission to the IRB-HSR. After you "Submit" the step, the information will not be available for editing. After submission to the IRB-HSR for pre-review, go to Link to IRB-HSR Approved Documents to access the most updated documents,
+
+How to Avoid special characters: &amp; / \ . , [ ] { } ( ) ! ; : ' * ? &lt; &gt; | ¢ $ in the naming of the files. It will cause problems.
+
+Important This step has multiple pages for review.</bpmn2:documentation>
+                <bpmn2:incoming>connection_qgijmmunu</bpmn2:incoming>
+                <bpmn2:outgoing>connection_ueuz1h3w4</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_9c6j6un7g" name="Protocol Owner">
+                <bpmn2:documentation id="task_9c6j6un7g_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.
+
+Important: You do NOT need to submit this step until you are ready for submission to the IRB-HSR. After you "Submit" the step, the information will not be available for editing.</bpmn2:documentation>
+                <bpmn2:incoming>connection_eaq5akefg</bpmn2:incoming>
+                <bpmn2:outgoing>connection_n33ppjkad</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_n978v3449" name="MILESTONE: PTAO Entry">
+                <bpmn2:documentation id="task_n978v3449_documentation" textFormat="text/html">Instructions:
+This step is Open when: "Study Workflow Name Creation" Step is Complete.
+
+The following steps depend on this step being complete:
+
+Grant Pricing Request Submission (with CTO)
+MILESTONE: Billing Set-up (by CTO)</bpmn2:documentation>
+                <bpmn2:incoming>connection_dcmobf8bq</bpmn2:incoming>
+                <bpmn2:outgoing>connection_g9alddfah</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_qrs76lhhl" name="MILESTONE: Study Team Additional Checklist for Start-up">
+                <bpmn2:documentation id="task_qrs76lhhl_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.</bpmn2:documentation>
+                <bpmn2:incoming>connection_a0j1fjuog</bpmn2:incoming>
+                <bpmn2:outgoing>connection_1gmwgj7ft</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_vgnxo32vw" name="Principal Investigator Contact Information">
+                <bpmn2:documentation id="task_vgnxo32vw_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.</bpmn2:documentation>
+                <bpmn2:incoming>connection_sqiwhr9r6</bpmn2:incoming>
+                <bpmn2:outgoing>connection_59o7x7eu3d</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_w7dplw8y4" name="MILESTONE: STATUS">
+                <bpmn2:documentation id="task_w7dplw8y4_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.
+
+How to In order to receive the most updated status, save this page.
+
+Important: Submit the step only when all the milestones are either complete or not applicable and the study is open for enrollment based on these statuses and the checklist.
+
+After submitting the step – “Approve” the step to indicate that the study is open for enrollment. The approval will send an automated email to all the stakeholders. If you need to go back to editing the step and are not ready for the enrollment communication to come out, use the “Reject” button. No communication is sent on this reject.</bpmn2:documentation>
+                <bpmn2:incoming>connection_63nud0yh4</bpmn2:incoming>
+                <bpmn2:outgoing>connection_6macieta2</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_xhnctrw8m" name="ClinicalTrials.gov">
+                <bpmn2:documentation id="task_xhnctrw8m_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.</bpmn2:documentation>
+                <bpmn2:incoming>connection_zff24jm9a</bpmn2:incoming>
+                <bpmn2:outgoing>connection_ko3izvzt8</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_yd4q5du1d" name="Study Access and Emails">
+                <bpmn2:documentation id="task_yd4q5du1d_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete. You cannot Complete this step.
+
+This step provides opportunity to add individuals (see Note) that should have access to this study in this system and/or receive automated email communication.
+
+Note This information is not interfaced/shared with the IRB Protocol Builder or any other system.
+
+How to You do NOT need to add the person who initiated the workflow (this was cah3us). You do NOT need to add any reviewers/approvers of the study outside of the study team. All these functional units are added automatically. In addition to institutional reviewers, certain individuals are added automatically based on the selection of the Organizations – see the “Study Organization(s) and Access, Study Titles” step.
+
+After typing either Computing ID or Name (first or last) of each person, some contact information will be populated as it appears in the UVA database. If there are any errors in the information, contact University HR.</bpmn2:documentation>
+                <bpmn2:incoming>connection_rb8wiyaoa</bpmn2:incoming>
+                <bpmn2:outgoing>connection_zaxpz7sco</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:subProcess id="task_twnp5whrd" name="Dates, Study Type, Contract Acknowledgment">
+                <bpmn2:documentation id="task_twnp5whrd_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.
+
+Important You do NOT need to submit this step until you are ready for submission to the IRB-HSR or for the Contract step to be open (if needed). After you "Submit" the step, the information will not be available for editing.</bpmn2:documentation>
+                <bpmn2:incoming>connection_51ir53yur</bpmn2:incoming>
+                <bpmn2:outgoing>connection_8s7l6omyia</bpmn2:outgoing>
+            </bpmn2:subProcess>
+        </bpmn2:subProcess>
+        <bpmn2:subProcess id="task_gdwf0cpai" name="Dates, Study Type, Contract Acknowledgement" triggeredByEvent="true">
+            <bpmn2:documentation id="task_gdwf0cpai_documentation" textFormat="text/html">Instructions:
+This step is Open when "Study Workflow Name Creation" Step is Complete.
+
+Important You do NOT need to submit this step until you are ready for submission to the IRB-HSR or for the Contract step to be open (if needed). After you "Submit" the step, the information will not be available for editing.</bpmn2:documentation>
+            <bpmn2:sequenceFlow id="connection_808ujre7h" sourceRef="startEventSignal_yxr9yehhn" targetRef="intermediateThrowEvent_iaccomjc7"/>
+            <bpmn2:sequenceFlow id="connection_bbj0q1lv8" sourceRef="intermediateThrowEvent_jhs93qoga" targetRef="task_vw0fhvlco"/>
+            <bpmn2:sequenceFlow id="connection_bkeabmjis" sourceRef="task_v0x8m9edl" targetRef="task_w85wlsn5i"/>
+            <bpmn2:sequenceFlow id="connection_kukk7yb6s" sourceRef="startEventSignal_yxr9yehhn" targetRef="intermediateThrowEvent_qqbda27wu"/>
+            <bpmn2:sequenceFlow id="connection_kuo40dkw3" sourceRef="intermediateThrowEvent_qqbda27wu" targetRef="task_abk7vt2at"/>
+            <bpmn2:sequenceFlow id="connection_tuhujmcrs" sourceRef="task_nfbfgezsv" targetRef="task_ieawx48eq"/>
+            <bpmn2:sequenceFlow id="connection_wh5c294d5" sourceRef="intermediateThrowEvent_ohc4j2jph" targetRef="task_nfbfgezsv"/>
+            <bpmn2:sequenceFlow id="connection_wyp6h7cls" sourceRef="intermediateThrowEvent_iaccomjc7" targetRef="task_v0x8m9edl"/>
+            <bpmn2:sequenceFlow id="connection_xo4sap87x" sourceRef="startEventSignal_yxr9yehhn" targetRef="intermediateThrowEvent_ohc4j2jph"/>
+            <bpmn2:sequenceFlow id="connection_ys4o0vclw" sourceRef="startEventSignal_yxr9yehhn" targetRef="intermediateThrowEvent_jhs93qoga"/>
+            <bpmn2:intermediateCatchEvent id="intermediateThrowEvent_iaccomjc7" name="Is there a contract for funding?">
+                <bpmn2:incoming>connection_808ujre7h</bpmn2:incoming>
+                <bpmn2:outgoing>connection_wyp6h7cls</bpmn2:outgoing>
+                <bpmn2:conditionalEventDefinition/>
+            </bpmn2:intermediateCatchEvent>
+            <bpmn2:intermediateCatchEvent id="intermediateThrowEvent_jhs93qoga" name="This study will have a contract">
+                <bpmn2:incoming>connection_ys4o0vclw</bpmn2:incoming>
+                <bpmn2:outgoing>connection_bbj0q1lv8</bpmn2:outgoing>
+                <bpmn2:conditionalEventDefinition/>
+            </bpmn2:intermediateCatchEvent>
+            <bpmn2:intermediateCatchEvent id="intermediateThrowEvent_ohc4j2jph" name="Is there a Non-Funded Agreement?">
+                <bpmn2:incoming>connection_xo4sap87x</bpmn2:incoming>
+                <bpmn2:outgoing>connection_wh5c294d5</bpmn2:outgoing>
+                <bpmn2:conditionalEventDefinition/>
+            </bpmn2:intermediateCatchEvent>
+            <bpmn2:intermediateCatchEvent id="intermediateThrowEvent_qqbda27wu" name="Is there a need for an At-Risk PTAO?">
+                <bpmn2:incoming>connection_kukk7yb6s</bpmn2:incoming>
+                <bpmn2:outgoing>connection_kuo40dkw3</bpmn2:outgoing>
+                <bpmn2:conditionalEventDefinition/>
+            </bpmn2:intermediateCatchEvent>
+            <bpmn2:startEvent id="startEventSignal_yxr9yehhn" parallelMultiple="true">
+                <bpmn2:outgoing>connection_808ujre7h</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_kukk7yb6s</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_xo4sap87x</bpmn2:outgoing>
+                <bpmn2:outgoing>connection_ys4o0vclw</bpmn2:outgoing>
+                <bpmn2:cancelEventDefinition/>
+                <bpmn2:terminateEventDefinition/>
+            </bpmn2:startEvent>
+            <bpmn2:task id="task_abk7vt2at" name="At-Risk PTAO Request">
+                <bpmn2:incoming>connection_kuo40dkw3</bpmn2:incoming>
+            </bpmn2:task>
+            <bpmn2:task id="task_ieawx48eq" name="Non-Funded Executed Agreement (by OGC/OSP)">
+                <bpmn2:documentation id="task_ieawx48eq_documentation" textFormat="text/html">Instructions
+This step is Open when:
+
+* "Non-Funded Agreement" Step is Complete.
+* "MILESTONE: IRB-HSR Approval" is Complete
+
+Process: OGC will upload the Non-Funded Executed Agreement after it has been negotiated by OSP contract negotiator.</bpmn2:documentation>
+                <bpmn2:incoming>connection_tuhujmcrs</bpmn2:incoming>
+            </bpmn2:task>
+            <bpmn2:task id="task_nfbfgezsv" name="Non-Funded Agreement Submission">
+                <bpmn2:documentation id="task_nfbfgezsv_documentation" textFormat="text/html">Instructions:
+This step is Open when: Dates, Study Type, Contract Acknowledgment" is Complete and the question "Is there a Non-Funded Agreement?" is 'Yes'
+
+Process: The process of executing the Non-Funded Agreement has three main components.
+
+The first component is managed on this step by the study team.
+
+Study team: Download the Non-Funded Agreement (NFA) form Non Funded Agreement Request Form. Complete it and obtain appropriate signatures. Upload below.
+
+Upload any contract template(s) received from the outside party.
+
+When both documents are uploaded, submit the step. The submission will send an automated email to the Office of Grants and Contracts (OGC). The email will include the attachments and UVA Study Tracking Number for reference.
+
+Note: The study team should not email anything directly to the Office of Sponsored Programs (OSP).
+The following two components are performed on the next steps in Clinical Research Connect and/or managed outside of this system:
+
+OGC will obtain school approval and route the approved Non-Funded Agreement request to OSP. OSP will log the request into ResearchUVA and assign the appropriate contract negotiator.
+
+The OSP contract negotiator will negotiate the Non-Funded Agreement. When negotiated, and after IRB-HSR Approval is received, OGC will upload the executed agreement on the “Non-Funded Execution (by OGC/OSP)” step.
+If you have any questions about the process, contact your contract negotiator or the Office of Grants and Contracts at 434-924-8426.</bpmn2:documentation>
+                <bpmn2:incoming>connection_wh5c294d5</bpmn2:incoming>
+                <bpmn2:outgoing>connection_tuhujmcrs</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:task id="task_v0x8m9edl" name="ePRF Completion in ResearchUVa">
+                <bpmn2:documentation id="task_v0x8m9edl_documentation" textFormat="text/html">Instructions
+
+This step is Open when:
+* "IRB Review Type" Step is Complete and IRB Review Type is 'Full Board', 'Expedited', 'Non-Engaged', 'Exempt', 'Non-Human' or 'Emergency Use'.
+* "Dates, Study Type, Contract Acknowledgment" is Complete and the question "Is there a contract for funding?" is 'Yes'.
+* "Funding Source, Other Support Sources" is Complete.
+
+Process: For funded agreements, access the ePRF here: https://researchuva.virginia.edu. After the ePRF is completed in ResearchUVa, PI and Department Chair signatures are completed (via ResearchUVa) and the link to the ePRF must be sent to Grants and Contracts (somogc@hscmail.mcc.virginia.edu). Grants and Contracts will obtain school approval and route the ePRF request to OSP. The request will be logged into ResearchUVA and be assigned to the appropriate contract negotiator.
+
+If you have any questions about the process, contact contract negotiator or Office of Grants and Contracts at 434-924-8426.</bpmn2:documentation>
+                <bpmn2:incoming>connection_wyp6h7cls</bpmn2:incoming>
+                <bpmn2:outgoing>connection_bkeabmjis</bpmn2:outgoing>
+            </bpmn2:task>
+            <bpmn2:subProcess id="task_vw0fhvlco" name="Department Chair Signature: View and Upload">
+                <bpmn2:documentation id="task_vw0fhvlco_documentation" textFormat="text/html">Instructions: This step is Open when:
+* "IRB Review Type" Step is Complete and IRB Review Type is 'Full Board', 'Expedited', 'Non-Engaged', 'Exempt' or 'Non-UVA Agent'.
+* "Study Organization(s) and Access, Study Titles" is Complete.
+* "Dates, Study Type, Contract Acknowledgment" Step is Complete and the question "This study will have a contract" is 'Yes'.
+
+Process:
+Confirm that the signer is correct
+Upload the document to the database
+Save and submit this step
+Go to the next step to route for signatures
+Note: The Department Chair or designee signature is ONLY required if this is a new protocol or a modification changing the principal investigator.</bpmn2:documentation>
+                <bpmn2:incoming>connection_bbj0q1lv8</bpmn2:incoming>
+            </bpmn2:subProcess>
+            <bpmn2:subProcess id="task_w85wlsn5i" name="MILESTONE: Contract - Funded Execution">
+                <bpmn2:incoming>connection_bkeabmjis</bpmn2:incoming>
+            </bpmn2:subProcess>
+        </bpmn2:subProcess>
+        <bpmn2:subProcess id="task_ue5p4ji3y" name="Department Chair Signature: View and Upload" triggeredByEvent="true">
+            <bpmn2:startEvent id="startEventSignal_9o7hbivnx" isInterrupting="false">
+                <bpmn2:conditionalEventDefinition/>
+            </bpmn2:startEvent>
+        </bpmn2:subProcess>
+    </bpmn2:process>
+    <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+        <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+            <bpmndi:BPMNShape bpmnElement="task_dr9i8b7u6" id="task_dr9i8b7u6_di" isExpanded="true">
+                <dc:Bounds height="1645" width="322" x="218" y="391"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_gdwf0cpai" id="task_gdwf0cpai_di" isExpanded="true">
+                <dc:Bounds height="924" width="540" x="670" y="402"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_ue5p4ji3y" id="task_ue5p4ji3y_di" isExpanded="true">
+                <dc:Bounds height="190" width="350" x="1273" y="418"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="laneSet_h6yaps2ye" id="laneSet_h6yaps2ye_di">
+                <dc:Bounds height="3538" width="1469" x="-1603" y="386"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="lane_72c75373i" id="lane_72c75373i_di">
+                <dc:Bounds height="400" width="1439" x="-1573" y="3524"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="lane_bb4dpd1rx" id="lane_bb4dpd1rx_di">
+                <dc:Bounds height="2838" width="1439" x="-1573" y="536"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="lane_gsvz4xjiq" id="lane_gsvz4xjiq_di">
+                <dc:Bounds height="150" width="1439" x="-1573" y="386"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="lane_hqo36bgut8" id="lane_hqo36bgut8_di">
+                <dc:Bounds height="150" width="1439" x="-1573" y="3374"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="startEvent_37esc0jji" id="startEvent_37esc0jji_di">
+                <dc:Bounds height="31" width="31" x="-1529" y="602"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="14.399999999999999" width="26.40625" x="-1526.703125" y="640"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_628dt0vtj" id="task_628dt0vtj_di">
+                <dc:Bounds height="55" width="69" x="-1358.5" y="591.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="43.199999999999996" width="90.25" x="-1369.125" y="653.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_gallbp2y8" id="task_gallbp2y8_di">
+                <dc:Bounds height="55" width="69" x="-1457.5" y="591.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="64.0625" x="-1455.03125" y="653.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_i3jfd6gz4" id="task_i3jfd6gz4_di">
+                <dc:Bounds height="55" width="69" x="-1266.5" y="590.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="43.199999999999996" width="82.328125" x="-1273.1640625" y="652.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_s6qq6l3zd" id="task_s6qq6l3zd_di">
+                <dc:Bounds height="55" width="69" x="-1053.5" y="590.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="14.399999999999999" width="102.125" x="-1070.0625" y="652.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="endEvent_9m01vtvt3" id="endEvent_9m01vtvt3_di">
+                <dc:Bounds height="31" width="31" x="489" y="471"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="intermediateThrowEvent_iaccomjc7" id="intermediateThrowEvent_iaccomjc7_di">
+                <dc:Bounds height="31" width="31" x="782.5" y="711.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="101.921875" x="747.0390625" y="749.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="intermediateThrowEvent_jhs93qoga" id="intermediateThrowEvent_jhs93qoga_di">
+                <dc:Bounds height="31" width="31" x="782.5" y="816.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="108.34375" x="743.828125" y="854.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="intermediateThrowEvent_ohc4j2jph" id="intermediateThrowEvent_ohc4j2jph_di">
+                <dc:Bounds height="31" width="31" x="782.5" y="481.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="43.199999999999996" width="83.734375" x="756.1328125" y="519.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="intermediateThrowEvent_qqbda27wu" id="intermediateThrowEvent_qqbda27wu_di">
+                <dc:Bounds height="31" width="31" x="782.5" y="597.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="103.6875" x="746.15625" y="635.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="startEventSignal_1gtc0ewos" id="startEventSignal_1gtc0ewos_di">
+                <dc:Bounds height="31" width="31" x="238" y="470.5"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="startEventSignal_9o7hbivnx" id="startEventSignal_9o7hbivnx_di">
+                <dc:Bounds height="31" width="31" x="1293" y="497.5"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="startEventSignal_yxr9yehhn" id="startEventSignal_yxr9yehhn_di">
+                <dc:Bounds height="31" width="31" x="690" y="481.5"/>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_34u11thp5" id="task_34u11thp5_di">
+                <dc:Bounds height="55" width="69" x="328.5" y="459.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="57.599999999999994" width="109.09375" x="308.453125" y="521.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_4h5dtv0vf" id="task_4h5dtv0vf_di">
+                <dc:Bounds height="55" width="69" x="329.5" y="625.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="43.199999999999996" width="73.3125" x="327.34375" y="687.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_6y34c47aq" id="task_6y34c47aq_di">
+                <dc:Bounds height="55" width="69" x="329.5" y="1615.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="57.599999999999994" width="109.09375" x="309.453125" y="1677.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_9c6j6un7g" id="task_9c6j6un7g_di">
+                <dc:Bounds height="55" width="69" x="329.5" y="1379.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="14.399999999999999" width="88.75" x="319.625" y="1441.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_abk7vt2at" id="task_abk7vt2at_di">
+                <dc:Bounds height="55" width="69" x="1049.5" y="585.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="71.75" x="1048.125" y="647.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_ieawx48eq" id="task_ieawx48eq_di">
+                <dc:Bounds height="55" width="69" x="1049.5" y="469.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="57.599999999999994" width="83.0625" x="1042.46875" y="531.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_n978v3449" id="task_n978v3449_di">
+                <dc:Bounds height="55" width="69" x="328.5" y="934.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="103.140625" x="311.4296875" y="996.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_nfbfgezsv" id="task_nfbfgezsv_di">
+                <dc:Bounds height="55" width="69" x="879.5" y="469.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="43.199999999999996" width="70.53125" x="878.734375" y="531.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_qrs76lhhl" id="task_qrs76lhhl_di">
+                <dc:Bounds height="55" width="69" x="329.5" y="1785.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="57.599999999999994" width="105.234375" x="311.3828125" y="1847.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_twnp5whrd" id="task_twnp5whrd_di">
+                <dc:Bounds height="55" width="69" x="329.5" y="1063.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="43.199999999999996" width="103.65625" x="312.171875" y="1125.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_v0x8m9edl" id="task_v0x8m9edl_di">
+                <dc:Bounds height="55" width="69" x="879.5" y="699.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="95.3125" x="866.34375" y="761.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_vgnxo32vw" id="task_vgnxo32vw_di">
+                <dc:Bounds height="55" width="69" x="328.5" y="773.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="57.599999999999994" width="67.28125" x="329.359375" y="835.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_vw0fhvlco" id="task_vw0fhvlco_di">
+                <dc:Bounds height="55" width="69" x="879.5" y="804.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="43.199999999999996" width="101.90625" x="863.046875" y="866.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_w7dplw8y4" id="task_w7dplw8y4_di">
+                <dc:Bounds height="55" width="69" x="330.5" y="1933.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="69.375" x="330.3125" y="1995.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_w85wlsn5i" id="task_w85wlsn5i_di">
+                <dc:Bounds height="55" width="69" x="1049.5" y="699.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="43.199999999999996" width="106.75" x="1030.625" y="761.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_xhnctrw8m" id="task_xhnctrw8m_di">
+                <dc:Bounds height="55" width="69" x="329.5" y="1518.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="14.399999999999999" width="93.484375" x="317.2578125" y="1580.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNShape bpmnElement="task_yd4q5du1d" id="task_yd4q5du1d_di">
+                <dc:Bounds height="55" width="69" x="329.5" y="1231.5"/>
+                <bpmndi:BPMNLabel>
+                    <dc:Bounds height="28.799999999999997" width="96.0625" x="315.96875" y="1293.5"/>
+                </bpmndi:BPMNLabel>
+            </bpmndi:BPMNShape>
+            <bpmndi:BPMNEdge bpmnElement="connection_3bawdbs4m" id="connection_3bawdbs4m_di">
+                <di:waypoint x="-1498" y="618"/>
+                <di:waypoint x="-1478" y="618"/>
+                <di:waypoint x="-1478" y="619"/>
+                <di:waypoint x="-1458" y="619"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_aisg918f7" id="connection_aisg918f7_di">
+                <di:waypoint x="-1198" y="618"/>
+                <di:waypoint x="-1166" y="618"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_d4pqonwj4" id="connection_d4pqonwj4_di">
+                <di:waypoint x="-1098" y="618"/>
+                <di:waypoint x="-1054" y="618"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_g1e7eu9y1" id="connection_g1e7eu9y1_di">
+                <di:waypoint x="-1389" y="619"/>
+                <di:waypoint x="-1359" y="619"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_tadqf260i" id="connection_tadqf260i_di">
+                <di:waypoint x="-1290" y="619"/>
+                <di:waypoint x="-1278" y="619"/>
+                <di:waypoint x="-1278" y="618"/>
+                <di:waypoint x="-1267" y="618"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_1gmwgj7ft" id="connection_1gmwgj7ft_di">
+                <di:waypoint x="399" y="1813"/>
+                <di:waypoint x="444" y="1813"/>
+                <di:waypoint x="444" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_1rdm4m1lh" id="connection_1rdm4m1lh_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="653"/>
+                <di:waypoint x="329" y="653"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_51ir53yur" id="connection_51ir53yur_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="1091"/>
+                <di:waypoint x="329" y="1091"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_59o7x7eu3d" id="connection_59o7x7eu3d_di">
+                <di:waypoint x="397" y="801"/>
+                <di:waypoint x="443" y="801"/>
+                <di:waypoint x="443" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_63nud0yh4" id="connection_63nud0yh4_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="300" y="486"/>
+                <di:waypoint x="300" y="1961"/>
+                <di:waypoint x="331" y="1961"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_6macieta2" id="connection_6macieta2_di">
+                <di:waypoint x="400" y="1961"/>
+                <di:waypoint x="444" y="1961"/>
+                <di:waypoint x="444" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_808ujre7h" id="connection_808ujre7h_di">
+                <di:waypoint x="721" y="497"/>
+                <di:waypoint x="752" y="497"/>
+                <di:waypoint x="752" y="727"/>
+                <di:waypoint x="783" y="727"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_8s7l6omyia" id="connection_8s7l6omyia_di">
+                <di:waypoint x="398" y="1091"/>
+                <di:waypoint x="444" y="1091"/>
+                <di:waypoint x="444" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_a0j1fjuog" id="connection_a0j1fjuog_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="1813"/>
+                <di:waypoint x="329" y="1813"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_bbj0q1lv8" id="connection_bbj0q1lv8_di">
+                <di:waypoint x="814" y="832"/>
+                <di:waypoint x="879" y="832"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_bkeabmjis" id="connection_bkeabmjis_di">
+                <di:waypoint x="948" y="727"/>
+                <di:waypoint x="1050" y="727"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_dcmobf8bq" id="connection_dcmobf8bq_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="962"/>
+                <di:waypoint x="328" y="962"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_eaq5akefg" id="connection_eaq5akefg_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="1407"/>
+                <di:waypoint x="329" y="1407"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_g9alddfah" id="connection_g9alddfah_di">
+                <di:waypoint x="398" y="962"/>
+                <di:waypoint x="443" y="962"/>
+                <di:waypoint x="443" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_haheb1ub2" id="connection_haheb1ub2_di">
+                <di:waypoint x="397" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_ko3izvzt8" id="connection_ko3izvzt8_di">
+                <di:waypoint x="399" y="1546"/>
+                <di:waypoint x="444" y="1546"/>
+                <di:waypoint x="444" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_kukk7yb6s" id="connection_kukk7yb6s_di">
+                <di:waypoint x="721" y="497"/>
+                <di:waypoint x="752" y="497"/>
+                <di:waypoint x="752" y="613"/>
+                <di:waypoint x="782" y="613"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_kuo40dkw3" id="connection_kuo40dkw3_di">
+                <di:waypoint x="814" y="613"/>
+                <di:waypoint x="1050" y="613"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_n33ppjkad" id="connection_n33ppjkad_di">
+                <di:waypoint x="399" y="1407"/>
+                <di:waypoint x="444" y="1407"/>
+                <di:waypoint x="444" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_ng9tlrd14" id="connection_ng9tlrd14_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="487"/>
+                <di:waypoint x="328" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_qgijmmunu" id="connection_qgijmmunu_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="1643"/>
+                <di:waypoint x="329" y="1643"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_rb8wiyaoa" id="connection_rb8wiyaoa_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="1259"/>
+                <di:waypoint x="329" y="1259"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_sqiwhr9r6" id="connection_sqiwhr9r6_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="801"/>
+                <di:waypoint x="329" y="801"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_tuhujmcrs" id="connection_tuhujmcrs_di">
+                <di:waypoint x="949" y="497"/>
+                <di:waypoint x="1050" y="497"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_u02z5szoy" id="connection_u02z5szoy_di">
+                <di:waypoint x="399" y="653"/>
+                <di:waypoint x="444" y="653"/>
+                <di:waypoint x="444" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_ueuz1h3w4" id="connection_ueuz1h3w4_di">
+                <di:waypoint x="399" y="1643"/>
+                <di:waypoint x="444" y="1643"/>
+                <di:waypoint x="444" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_wh5c294d5" id="connection_wh5c294d5_di">
+                <di:waypoint x="813" y="497"/>
+                <di:waypoint x="879" y="497"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_wyp6h7cls" id="connection_wyp6h7cls_di">
+                <di:waypoint x="814" y="727"/>
+                <di:waypoint x="879" y="727"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_xo4sap87x" id="connection_xo4sap87x_di">
+                <di:waypoint x="721" y="497"/>
+                <di:waypoint x="783" y="497"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_ys4o0vclw" id="connection_ys4o0vclw_di">
+                <di:waypoint x="721" y="497"/>
+                <di:waypoint x="752" y="497"/>
+                <di:waypoint x="752" y="832"/>
+                <di:waypoint x="782" y="832"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_zaxpz7sco" id="connection_zaxpz7sco_di">
+                <di:waypoint x="399" y="1259"/>
+                <di:waypoint x="444" y="1259"/>
+                <di:waypoint x="444" y="487"/>
+                <di:waypoint x="489" y="487"/>
+            </bpmndi:BPMNEdge>
+            <bpmndi:BPMNEdge bpmnElement="connection_zff24jm9a" id="connection_zff24jm9a_di">
+                <di:waypoint x="269" y="486"/>
+                <di:waypoint x="299" y="486"/>
+                <di:waypoint x="299" y="1546"/>
+                <di:waypoint x="330" y="1546"/>
+            </bpmndi:BPMNEdge>
+        </bpmndi:BPMNPlane>
+    </bpmndi:BPMNDiagram>
+</bpmn2:definitions>

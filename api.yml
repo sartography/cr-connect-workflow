@@ -1,0 +1,194 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Workflow Microservice
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:5000/v1.0
+paths:
+  # /v1.0/workflows
+  /workflows:
+    get:
+      operationId: api.workflows.list_all
+      summary: List all workflows
+      tags:
+        - workflows
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: A paged array of workflows
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflows"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # /v1.0/workflows/0
+  /workflows/{workflow_id}:
+
+    # api.workflows.get(workflow_id)
+    get:
+      operationId: api.workflows_tasks.get
+      summary: Status info for a specific workflow instance
+      tags:
+        - workflows
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow to retrieve
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflows"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # /v1.0/workflows/0/task/0
+  /workflows/{workflow_id}/tasks/{task_id}:
+
+    get:
+      operationId: api.workflows_tasks.get
+      summary: Get status of specific task in specific workflow instance
+      tags:
+        - workflows
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+        - name: task_id
+          in: path
+          required: true
+          description: The id of the task
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      operationId: api.workflows_tasks.post
+      summary: Update data for a workflow task
+      tags:
+        - workflows
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+        - name: task_id
+          in: path
+          required: true
+          description: The id of the task
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        description: Task status to update
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Task"
+      responses:
+        '201':
+          description: Null response
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
+components:
+  schemas:
+    Task:
+      required:
+        - name
+      properties:
+        id:
+          readOnly: true
+          type: integer
+          format: int64
+        name:
+          type: string
+        tag:
+          type: string
+      example:
+        name: Do something useful
+        tag: tasks
+    Workflow:
+      required:
+        - name
+      properties:
+        id:
+          readOnly: true
+          type: integer
+          format: int64
+        name:
+          type: string
+        tag:
+          type: string
+      example:
+        name: Full IRB Board Review
+        tag: workflows
+    Workflows:
+      type: array
+      items:
+        $ref: "#/components/schemas/Workflow"
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
