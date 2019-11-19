@@ -3,12 +3,7 @@ import logging
 import connexion
 
 logging.basicConfig(level=logging.DEBUG)
-
-app = connexion.App(
-    __name__,
-    options={"swagger_ui": False}
-)
-
+app = connexion.FlaskApp(__name__)
 app.add_api('api.yml')
 
 if __name__ == "__main__":
