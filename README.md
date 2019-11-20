@@ -26,4 +26,19 @@ Make sure all of the following are properly installed on your system:
     - Under `Base interpreter`, select `Python 3.6`
     - In the `Pipenv executable` field, enter `/home/your_username_goes_here/.local/bin/pipenv` 
     - Click `Create`
-3. PyCharm should automatically install the necessary packages via `pipenv`. To add/remove/manage packages, make sure to only use `pipenv install` (or whatever) via the Terminal within PyCharm. Otherwise, you might corrupt your Pipfile.lock file and spend several hours floundering.
+        ![Project Interpreter](readme_images/new_project.png)
+3. PyCharm should automatically install the necessary packages via `pipenv`. 
+For me, the project interpreter did not set set up for me correctly on first attempt.  I had to go
+to File -> Settings -> Project Interpreter and again set the project to use the correct PipEnv 
+environment. Be sure that your settings like simliar to this, or attempt to add the interpreter again
+by clicking on the gear icon.
+![Project Interpreter Settings screen](readme_images/settings.png) 
+
+4. With this properly setup for the project, you can now right click on the run.py and set up a new 
+run configuration and set up a run configuration that looks like the following (be sure to save this 
+run configuration so it doesn't go away.) :
+![Run Configuration Screenshot](readme_images/run_config.png)
+
+### Running the project
+Just click the "Play" button next to RUN in the top right corner of the screen.
+The Swagger based view of the API will be avialable at http://0.0.0.0:5000/v1.0/ui/
