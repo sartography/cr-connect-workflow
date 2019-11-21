@@ -3,6 +3,9 @@ import connexion
 from app.api import workflows
 
 logging.basicConfig(level=logging.DEBUG)
-app = connexion.FlaskApp(__name__)
-app.add_api('api.yml')
 
+connexion_app = connexion.FlaskApp(__name__)
+connexion_app.add_api('api.yml')
+
+app = connexion_app.app
+app.config.from_object('config.default')

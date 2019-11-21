@@ -8,7 +8,7 @@ pytest = "*"
 
 [packages]
 spiffworkflow = "*"
-connexion = {extras = ["swagger-ui"],version = "*"}
+connexion = {version = "*",extras = ["swagger-ui"]}
 swagger-ui-bundle = "*"
 flask = "*"
 flask-bcrypt = "*"
@@ -25,6 +25,7 @@ openpyxl = "*"
 pyjwt = "*"
 requests = "*"
 xlsxwriter = "*"
+webtest = "*"
 
 [requires]
 python_version = "3.6"
