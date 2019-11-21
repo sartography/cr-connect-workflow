@@ -1,6 +1,6 @@
 import unittest
 
-from tests.BaseTest import BaseTest
+from tests.base_test import BaseTest
 
 
 class TestWorkflow(BaseTest, unittest.TestCase):
