@@ -10,7 +10,7 @@ paths:
   # /v1.0/workflows
   /workflows:
     get:
-      operationId: api.workflows.list_all
+      operationId: app.api.workflows.list_all
       summary: List all workflows
       tags:
         - workflows
@@ -44,7 +44,7 @@ paths:
   # /v1.0/workflows/0
   /workflows/{workflow_id}:
     get:
-      operationId: api.workflows_tasks.start
+      operationId: app.api.workflows_tasks.start
       summary: Status info for a specific workflow instance
       tags:
         - workflows
@@ -73,7 +73,7 @@ paths:
   # /v1.0/workflows/0/tasks/0
   /workflows/{workflow_id}/tasks/{task_id}:
     get:
-      operationId: api.workflows_tasks.get
+      operationId: app.api.workflows_tasks.get
       summary: Get status of specific task in specific workflow instance
       tags:
         - workflows
@@ -107,7 +107,7 @@ paths:
                 $ref: "#/components/schemas/Error"
 
     post:
-      operationId: api.workflows_tasks.post
+      operationId: app.api.workflows_tasks.post
       summary: Update data for a workflow task
       tags:
         - workflows

@@ -1,8 +1,6 @@
 import datetime
 
 from connexion import NoContent
-from SpiffWorkflow import Workflow
-from workflows.workflows import TrainingWorkflowSpec
 
 workflow_tasks = [
     {
