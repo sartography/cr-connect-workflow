@@ -72,7 +72,7 @@
             ]
         },
         "nuclear_strike": {
-            "class": "SpiffWorkflow.specs.Simple.Simple",
+            "class": "app.model.task.strike.NuclearStrike",
             "name": "nuclear_strike",
             "inputs": [
                 "president"
