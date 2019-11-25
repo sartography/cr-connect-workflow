@@ -39,6 +39,25 @@ run configuration and set up a run configuration that looks like the following (
 run configuration so it doesn't go away.) :
 ![Run Configuration Screenshot](readme_images/run_config.png)
 
-### Running the project
+### Running the Web API
 Just click the "Play" button next to RUN in the top right corner of the screen.
 The Swagger based view of the API will be avialable at http://0.0.0.0:5000/v1.0/ui/
+
+### Testing from the Shell
+This app includes a command line interface that will read in BPMN files and let you 
+play with it at the command line.  To run it right click on app/command_line/joke.py and
+click run.  Type "?" to get a list of commands. 
+
+### Additional Reading
+
+1. [BPMN](https://www.process.st/bpmn-tutorial/)  Is the tool we are using to create diagrams
+of our business processes.  It's is a beautiful concise diagramming tool. We strongly recommend you 
+read this complete tutorial, as this notation is the foundation on which this project as well as many
+other software systems for businesses are built.  Know it well.
+
+### Notes on Creating Good BPMN Diagrams in Comunda
+1. Be sure to give each task a thoughtful (but unique!) id. This will 
+make the command line and debugging far far easier.  I've tended to pre-fix
+these, so task_ask_riddle if a task is asking a riddle for instance.
+
+2. 

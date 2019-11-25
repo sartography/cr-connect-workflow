@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0dagfzd" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
+  <bpmn:process id="Process_182v69k" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1q16qc5</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1q16qc5" sourceRef="StartEvent_1" targetRef="task_show_riddle" />
+    <bpmn:sequenceFlow id="SequenceFlow_08iqlh1" sourceRef="task_show_riddle" targetRef="tast_await_answer" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_evaluate_answer">
+      <bpmn:incoming>SequenceFlow_06f0smj</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_correct_answer</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_incorrect_answer</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_correct_answer" name="correct" sourceRef="ExclusiveGateway_evaluate_answer" targetRef="task_say_good_job">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">task.get_data("answer") == "clock"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_incorrect_answer" name="incorrect" sourceRef="ExclusiveGateway_evaluate_answer" targetRef="task_say_nope">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">task.get_data("answer") != "clock"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="EndEvent_1yj6trx">
+      <bpmn:incoming>SequenceFlow_0vujjbq</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0vujjbq" sourceRef="task_say_nope" targetRef="EndEvent_1yj6trx" />
+    <bpmn:endEvent id="EndEvent_0mjci4q">
+      <bpmn:incoming>SequenceFlow_0vemdak</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0vemdak" sourceRef="task_say_good_job" targetRef="EndEvent_0mjci4q" />
+    <bpmn:scriptTask id="task_show_riddle" name="Show Riddle">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1q16qc5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_08iqlh1</bpmn:outgoing>
+      <bpmn:script>print("What has a face and two hands but no arms or legs?")</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="task_say_good_job" name="display &#34;good job&#34;">
+      <bpmn:incoming>SequenceFlow_correct_answer</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0vemdak</bpmn:outgoing>
+      <bpmn:script>print("Great!")</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="task_say_nope" name="display &#34;nope&#34;">
+      <bpmn:incoming>SequenceFlow_incorrect_answer</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0vujjbq</bpmn:outgoing>
+      <bpmn:script>print("Nope!")</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_06f0smj" sourceRef="tast_await_answer" targetRef="ExclusiveGateway_evaluate_answer" />
+    <bpmn:userTask id="tast_await_answer" name="Await Answer">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="correct">True</camunda:outputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_08iqlh1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_06f0smj</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmn:message id="Message_0wcbdkb" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_182v69k">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1q16qc5_di" bpmnElement="SequenceFlow_1q16qc5">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_08iqlh1_di" bpmnElement="SequenceFlow_08iqlh1">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="460" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0he1234_di" bpmnElement="ExclusiveGateway_evaluate_answer" isMarkerVisible="true">
+        <dc:Bounds x="655" y="152" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_02hgkgp_di" bpmnElement="SequenceFlow_correct_answer">
+        <di:waypoint x="680" y="152" />
+        <di:waypoint x="680" y="90" />
+        <di:waypoint x="800" y="90" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="678" y="118" width="34" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1kegyis_di" bpmnElement="SequenceFlow_incorrect_answer">
+        <di:waypoint x="680" y="202" />
+        <di:waypoint x="680" y="290" />
+        <di:waypoint x="800" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="674" y="243" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_1yj6trx_di" bpmnElement="EndEvent_1yj6trx">
+        <dc:Bounds x="1002" y="272" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0vujjbq_di" bpmnElement="SequenceFlow_0vujjbq">
+        <di:waypoint x="900" y="290" />
+        <di:waypoint x="1002" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="EndEvent_0mjci4q_di" bpmnElement="EndEvent_0mjci4q">
+        <dc:Bounds x="1002" y="72" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0vemdak_di" bpmnElement="SequenceFlow_0vemdak">
+        <di:waypoint x="900" y="90" />
+        <di:waypoint x="1002" y="90" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_0lxpwi3_di" bpmnElement="task_show_riddle">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0qc6vev_di" bpmnElement="task_say_good_job">
+        <dc:Bounds x="800" y="50" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0dy5sp8_di" bpmnElement="task_say_nope">
+        <dc:Bounds x="800" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_06f0smj_di" bpmnElement="SequenceFlow_06f0smj">
+        <di:waypoint x="560" y="177" />
+        <di:waypoint x="655" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_16xaap5_di" bpmnElement="tast_await_answer">
+        <dc:Bounds x="460" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
