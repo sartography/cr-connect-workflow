@@ -47,6 +47,20 @@ The Swagger based view of the API will be avialable at http://0.0.0.0:5000/v1.0/
 This app includes a command line interface that will read in BPMN files and let you 
 play with it at the command line.  To run it right click on app/command_line/joke.py and
 click run.  Type "?" to get a list of commands. 
+So far the joke system will work a little, when you file it up try these commands
+in this order:
+```bash
+> engine  (this will run all tasks up to first user task and should print a joke)
+> answer clock (this is the correct answer)
+> next (this completes the user task)
+> engine (this runs the rest of the tasks, and should tell you that  you got the question right)
+```
+
+You can try re-running this and getting the question wrong.
+You might open up the Joke bpmn diagram so you can see what this looks like to 
+draw out.
+
+
 
 ### Additional Reading
 
