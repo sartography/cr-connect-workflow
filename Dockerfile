@@ -14,7 +14,7 @@ WORKDIR /crc-workflow
 RUN pip install pipenv
 ADD Pipfile /crc-workflow/
 ADD Pipfile.lock /crc-workflow/
-RUN pipenv install
+RUN pipenv install --dev
 
 # include rejoiner code (gets overriden by local changes)
 COPY . /crc-workflow/
