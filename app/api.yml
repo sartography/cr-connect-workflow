@@ -7,33 +7,20 @@ info:
 servers:
   - url: http://localhost:5000/v1.0
 paths:
-  # /v1.0/workflows
-  /workflows:
+  # /v1.0/study
+  /study:
     get:
-      operationId: app.api.workflows.list_all
-      summary: List all workflows
+      operationId: app.api.study.list_all
+      summary: Provides a list of studies related to the current user.
       tags:
-        - workflows
-      parameters:
-        - name: limit
-          in: query
-          description: How many items to return at one time (max 100)
-          required: false
-          schema:
-            type: integer
-            format: int32
+        - Studies and Requirements
       responses:
         '200':
-          description: A paged array of workflows
-          headers:
-            x-next:
-              description: A link to the next page of responses
-              schema:
-                type: string
+          description: An array of studies, ordered by the last modified date.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Workflows"
+                $ref: "#/components/schemas/Study"
         default:
           description: unexpected error
           content:
@@ -41,28 +28,98 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  # /v1.0/workflows/0
-  /workflows/{workflow_id}:
+  /study/{study_id}/requirement:
     get:
-      operationId: app.api.workflows_tasks.start
+      operationId: app.api.requirements.list_all
+      summary: Provides a list of requirements for the study.
+      tags:
+        - Studies and Requirements
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study for which workflows should be returned.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: An array of requirements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Requirement"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /study/{study_id}/requirement/{requirement_id}:
+    post:
+      operationId: app.api.study.create_workflow
+      summary: Generate a new instance of a workflow, based on a requirement.
+      tags:
+        - Studies and Requirements
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study for which workflows should be returned.
+          schema:
+            type: integer
+            format: int32
+        - name: requirement_id
+          in: path
+          required: true
+          description: The id of the requirement for which to generate or start a new workflow.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Returns a new workflow instance on which to work.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+        '412':
+          description: You already have a workflow underway to complete this requirement.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # /v1.0/workflow/0
+  /workflow/{workflow_id}:
+    get:
+      operationId: app.api.workflows.getWorkflow
       summary: Status info for a specific workflow instance
       tags:
-        - workflows
+        - Workflows and Tasks
       parameters:
         - name: workflow_id
           in: path
           required: true
-          description: The id of the workflow to start
+          description: The id of the workflow
           schema:
             type: integer
             format: int32
       responses:
         '200':
-          description: First task in the workflow
+          description: Returns details about the workflows state and current task
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Task"
+                $ref: "#/components/schemas/Workflow"
         default:
           description: unexpected error
           content:
@@ -70,13 +127,13 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  # /v1.0/workflows/0/tasks/0
-  /workflows/{workflow_id}/tasks/{task_id}:
+  # /v1.0/workflow/0/tasks/0
+  /workflow/{workflow_id}/tasks/{task_id}:
     get:
       operationId: app.api.workflows_tasks.get
       summary: Get status of specific task in specific workflow instance
       tags:
-        - workflows
+        - Workflows and Tasks
       parameters:
         - name: workflow_id
           in: path
@@ -108,9 +165,9 @@ paths:
 
     post:
       operationId: app.api.workflows_tasks.post
-      summary: Update data for a workflow task
+      summary: Update, attempt to complete a workflow task
       tags:
-        - workflows
+        - Workflows and Tasks
       parameters:
         - name: workflow_id
           in: path
@@ -145,24 +202,75 @@ paths:
 
 components:
   schemas:
-    Task:
+    Study:
       required:
-        - name
+      - id
+      - title
+      - last_updated
+      - pb_status
+      - pi
+      - sponsor
+      - ind_number
       properties:
         id:
-          readOnly: true
-          type: integer
-          format: int64
+          type: string
+          format: string
+          example: AB1234
+        title:
+          type: string
+          example: The impact of fried pickles on beer consumption in bipedal software developers.
+        last_updated:
+          type: string
+          format: date_time
+          example: "2019-12-25T09:12:33.001Z"
+        pb_status:
+          type: string
+          enum: [started, done]
+          example: done
+        pi:
+          type: string
+          example: dhf8r
+        sponsor:
+          type: string
+          example: "Sartography Pharmaceuticals"
+        ind_number:
+          type: string
+          example: "27b-6-42"
+    Requirement:
+      required:
+        - id
+        - name
+        - type
+        - status
+        - description
+      properties:
+        id:
+          type: string
         name:
           type: string
-        tag:
+        type:
           type: string
+          enum: [workflow, non-functional]
+        status:
+          type: string
+          enum: [new, in-process, complete]
+        description:
+          type: string
+        workflow:
+          type: integer
       example:
-        name: Do something useful
-        tag: tasks
+        id: ids_submission
+        name: Investigational Drug Services
+        type: workflow
+        status: in-process
+        description: This workflow will help determine what application needs be provided to IDS, create the template, and submit it for approval.
+        workflow_id: 21
     Workflow:
       required:
-        - name
+        - id
+        - messages
+        - current_status
+        - current_task_id
       properties:
         id:
           readOnly: true
@@ -170,22 +278,62 @@ components:
           format: int64
         name:
           type: string
-        tag:
+        current_status:
+          type: enum
+          enum: ['user_input_required','waiting','complete']
+          $ref: "#/components/schemas/Task"
+        current_task_id:
+          readOnly: true,
           type: string
       example:
-        name: Full IRB Board Review
-        tag: workflows
-    Workflows:
-      type: array
-      items:
-        $ref: "#/components/schemas/Workflow"
+        id: 291234
+        requirement_id: ids_submission
+        workflow_status: 'user_input_required'
+        current_task_id: study_identification
+        messages: [
+          "Protocol Builder reports that the protocol process is complete for this study.",
+          "IDS Submission Template was generated successfully."
+        ]
+    Task:
+      required:
+        - id
+        - name
+        - type
+      properties:
+        id:
+          readOnly: true
+          type: integer
+          format: int64
+        name:
+          type: string
+        type:
+          type: string
+        form:
+          $ref: "#/components/schemas/Task"
+      example:
+        {
+          id: study_identification,
+          name: "Study Identification",
+          type: form,
+          form: {
+            field: {
+              id: adult_oncology,
+              type: enum,
+              label: "Is this study treating adult oncology patients?",
+              options: ["yes", "no"],
+              value: "yes"
+            }
+          }
+        }
     Error:
       required:
         - code
         - message
       properties:
         code:
-          type: integer
-          format: int32
+          type: string
+          format: string
+          example: "access_denied"
         message:
           type: string
+          example: "You do not have permission to view the requested study."
