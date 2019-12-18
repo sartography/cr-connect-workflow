@@ -59,6 +59,7 @@ def add_workflow_to_study(study_id, body):
                              study_id=study_id,
                              workflow_spec_id=workflow_spec_model.id)
     db.session.add(workflow)
+    db.session.commit()
 
 def get_workflow(workflow_id):
     return db.session.query(WorkflowModel).filter_by(id=workflow_id).first()

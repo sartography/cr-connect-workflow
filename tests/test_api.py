@@ -61,3 +61,4 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
         self.assertIsNotNone(workflow.bpmn_workflow_json)
         self.assertEqual(spec.id, workflow.workflow_spec_id)
+
