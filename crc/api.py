@@ -2,7 +2,8 @@ from connexion import NoContent
 from flask_marshmallow import Schema
 
 from crc import db, ma
-from crc.models import WorkflowModel, WorkflowSchema, StudySchema, StudyModel, WorkflowSpecSchema, WorkflowSpecModel
+from crc.models import WorkflowModel, WorkflowSchema, StudySchema, StudyModel, WorkflowSpecSchema, WorkflowSpecModel, \
+    WorkflowStatus
 from crc.workflow_processor import WorkflowProcessor
 
 
