@@ -1,7 +1,10 @@
 import json
 import unittest
+
+from sqlalchemy import func
+
 from crc import db
-from crc.models import StudyModel, StudySchema, WorkflowSpecModel, WorkflowSpecSchema
+from crc.models import StudyModel, StudySchema, WorkflowSpecModel, WorkflowSpecSchema, WorkflowModel, WorkflowStatus
 from tests.base_test import BaseTest
 
 
@@ -47,9 +50,14 @@ class TestStudy(BaseTest, unittest.TestCase):
     def test_add_workflow_to_study(self):
         self.load_example_data()
         study = db.session.query(StudyModel).first()
+        self.assertEqual(0, db.session.query(WorkflowModel).count())
         spec = db.session.query(WorkflowSpecModel).first()
         rv = self.app.post('/v1.0/study/%i/workflows' % study.id,content_type="application/json",
                            data=json.dumps(WorkflowSpecSchema().dump(spec)))
         self.assert_success(rv)
-
-
+        self.assertEqual(1, db.session.query(WorkflowModel).count())
+        workflow = db.session.query(WorkflowModel).first()
+        self.assertEqual(study.id, workflow.study_id)
+        self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
+        self.assertIsNotNone(workflow.bpmn_workflow_json)
+        self.assertEqual(spec.id, workflow.workflow_spec_id)

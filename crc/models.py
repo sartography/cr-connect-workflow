@@ -55,7 +55,6 @@ class WorkflowModel(db.Model):
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.Integer, db.ForeignKey('workflow_spec.id'))
-    messages: db.Column
 
 class WorkflowSchema(ModelSchema):
     class Meta:

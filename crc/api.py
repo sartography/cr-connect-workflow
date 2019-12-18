@@ -52,8 +52,13 @@ def add_workflow_to_study(study_id, body):
     if workflow_spec_model is None:
         error = ApiError('unknown_spec', 'The specification "' + body['id'] + '" is not recognized.')
         return ApiErrorSchema.dump(error), 404
-    processor = WorkflowProcessor.create(workflow_spec_model.id)
 
+    processor = WorkflowProcessor.create(workflow_spec_model.id)
+    workflow = WorkflowModel(bpmn_workflow_json=processor.serialize(),
+                             status=processor.get_status(),
+                             study_id=study_id,
+                             workflow_spec_id=workflow_spec_model.id)
+    db.session.add(workflow)
 
 def get_workflow(workflow_id):
     return db.session.query(WorkflowModel).filter_by(id=workflow_id).first()

@@ -33,12 +33,12 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
 class WorkflowProcessor:
 
-    script_engine = CustomBpmnScriptEngine()
-    serializer = CompactWorkflowSerializer()
+    _script_engine = CustomBpmnScriptEngine()
+    _serializer = CompactWorkflowSerializer()
 
     def __init__(self, workflow_spec_id, bpmn_json):
-        self.bpmn_workflow = self.serializer.deserialize_workflow(bpmn_json, self.get_spec(workflow_spec_id))
-        self.bpmn_workflow.script_engine = self.script_engine
+        self.bpmn_workflow = self._serializer.deserialize_workflow(bpmn_json, self.get_spec(workflow_spec_id))
+        self.bpmn_workflow.script_engine = self._script_engine
 
     @staticmethod
     def get_spec(workflow_spec_id):
@@ -48,9 +48,9 @@ class WorkflowProcessor:
     @classmethod
     def create(cls, workflow_spec_id):
         spec = cls.get_spec(workflow_spec_id)
-        bpmn_workflow = BpmnWorkflow(spec, script_engine=cls.script_engine)
+        bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
         bpmn_workflow.do_engine_steps()
-        json = cls.serializer.serialize_workflow(bpmn_workflow)
+        json = cls._serializer.serialize_workflow(bpmn_workflow)
         processor = cls(workflow_spec_id, json)
         return processor
 
