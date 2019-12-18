@@ -115,10 +115,6 @@ paths:
       tags:
         - Studies
       parameters:
-        - in: body
-          name: workflow_spec
-          schema:
-            $ref: '#/components/schemas/WorkflowSpec'
         - name: study_id
           in: path
           required: true
@@ -126,6 +122,11 @@ paths:
           schema:
             type: integer
             format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowSpec'
       responses:
         '200':
           description: An array of workflows

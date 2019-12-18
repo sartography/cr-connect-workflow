@@ -48,7 +48,8 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.load_example_data()
         study = db.session.query(StudyModel).first()
         spec = db.session.query(WorkflowSpecModel).first()
-        rv = self.app.post('/v1.0/study/%i/workflows' % study.id, data=WorkflowSpecSchema().dump(spec))
+        rv = self.app.post('/v1.0/study/%i/workflows' % study.id,content_type="application/json",
+                           data=json.dumps(WorkflowSpecSchema().dump(spec)))
         self.assert_success(rv)
 
 
