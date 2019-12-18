@@ -10,10 +10,10 @@ paths:
   # /v1.0/study
   /study:
     get:
-      operationId: app.api.study.list_all
+      operationId: crc.api.all_studies
       summary: Provides a list of studies related to the current user.
       tags:
-        - Studies and Requirements
+        - Studies
       responses:
         '200':
           description: An array of studies, ordered by the last modified date.
@@ -27,13 +27,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
-  /study/{study_id}/requirement:
+  /study/{study_id}:
     get:
-      operationId: app.api.requirements.list_all
-      summary: Provides a list of requirements for the study.
+      operationId: crc.api.get_study
+      summary: Provides a single study
       tags:
-        - Studies and Requirements
+        - Studies
       parameters:
         - name: study_id
           in: path
@@ -44,65 +43,131 @@ paths:
             format: int32
       responses:
         '200':
-          description: An array of requirements
+          description: An Study Object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /study-update/{study_id}:
+    post:
+      operationId: crc.api.post_update_study_from_protocol_builder
+      summary: If the study is up-to-date with Protocol Builder, returns a 304 Not Modified. If out of date, return a 202 Accepted and study state changes to updating.
+      tags:
+        - Study Status
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study that should be checked for updates.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '304':
+          description: Study is currently up to date and does not need to be reloaded from Protocol Builder
+        '202':
+          description: Request accepted, will preform an update. Study state set to "updating"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /study/{study_id}/workflows:
+    get:
+      operationId: crc.api.get_study_workflows
+      summary: Provides a list of workflows to be completed for the given study.
+      tags:
+        - Studies
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study for which workflows should be returned.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: An array of workflows
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Requirement"
+                  $ref: "#/components/schemas/Workflow"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /study/{study_id}/requirement/{requirement_id}:
     post:
-      operationId: app.api.study.create_workflow
-      summary: Generate a new instance of a workflow, based on a requirement.
+      operationId: crc.api.add_workflow_to_study
+      summary: Starts a new workflow for the given study using the provided spec.  This is atypical, and should be left to the protocol builder.
       tags:
-        - Studies and Requirements
+        - Studies
       parameters:
+        - in: body
+          name: workflow_spec
+          schema:
+            $ref: '#/components/schemas/WorkflowSpec'
         - name: study_id
           in: path
           required: true
-          description: The id of the study for which workflows should be returned.
-          schema:
-            type: integer
-            format: int32
-        - name: requirement_id
-          in: path
-          required: true
-          description: The id of the requirement for which to generate or start a new workflow.
+          description: The id of the study for which a workflow should start
           schema:
             type: integer
             format: int32
       responses:
         '200':
-          description: Returns a new workflow instance on which to work.
+          description: An array of workflows
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Workflow"
-        '412':
-          description: You already have a workflow underway to complete this requirement.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workflow"
         default:
           description: unexpected error
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
   # /v1.0/workflow/0
+  /workflow-specification:
+    get:
+      operationId: crc.api.all_specifications
+      summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: An array of workflow specifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpec"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    # /v1.0/workflow/0
   /workflow/{workflow_id}:
     get:
-      operationId: app.api.workflows.getWorkflow
-      summary: Status info for a specific workflow instance
+      operationId: crc.api.get_workflow
+      summary: Detailed information for a specific workflow instance
       tags:
         - Workflows and Tasks
       parameters:
@@ -127,11 +192,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  # /v1.0/workflow/0/tasks/0
-  /workflow/{workflow_id}/tasks/{task_id}:
+  # /v1.0/workflow/0/task/0
+  /workflow/{workflow_id}/task/{task_id}:
     get:
-      operationId: app.api.workflows_tasks.get
-      summary: Get status of specific task in specific workflow instance
+      operationId: crc.api.get_task
+      summary: Get details of specific task in specific workflow instance
       tags:
         - Workflows and Tasks
       parameters:
@@ -147,8 +212,7 @@ paths:
           required: true
           description: The id of the task
           schema:
-            type: integer
-            format: int32
+            type: string
       responses:
         '200':
           description: Expected response to a valid request
@@ -163,12 +227,16 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-    post:
-      operationId: app.api.workflows_tasks.post
+    put:
+      operationId: crc.api.update_task
       summary: Update, attempt to complete a workflow task
       tags:
         - Workflows and Tasks
       parameters:
+        - in: body
+          name: task
+          schema:
+            $ref: '#/components/schemas/Task'
         - name: workflow_id
           in: path
           required: true
@@ -181,14 +249,7 @@ paths:
           required: true
           description: The id of the task
           schema:
-            type: integer
-            format: int32
-      requestBody:
-        description: Task status to update
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Task"
+            type: string
       responses:
         '201':
           description: Null response
@@ -236,69 +297,55 @@ components:
         ind_number:
           type: string
           example: "27b-6-42"
-    Requirement:
-      required:
-        - id
-        - name
-        - type
-        - status
-        - description
+    WorkflowSpec:
       properties:
         id:
           type: string
-        name:
+        display_name:
           type: string
-        type:
-          type: string
-          enum: [workflow, non-functional]
-        status:
-          type: string
-          enum: [new, in-process, complete]
         description:
           type: string
-        workflow:
-          type: integer
-      example:
-        id: ids_submission
-        name: Investigational Drug Services
-        type: workflow
-        status: in-process
-        description: This workflow will help determine what application needs be provided to IDS, create the template, and submit it for approval.
-        workflow_id: 21
+        bpmn_url:
+          type: string
+        svg_url:
+          type: string
     Workflow:
-      required:
-        - id
-        - messages
-        - current_status
-        - current_task_id
       properties:
         id:
           readOnly: true
           type: integer
           format: int64
-        name:
-          type: string
-        current_status:
+        status:
           type: enum
           enum: ['user_input_required','waiting','complete']
-          $ref: "#/components/schemas/Task"
-        current_task_id:
-          readOnly: true,
-          type: string
+        study_id:
+          readOnly: true
+          type: integer
+        workflow_spec:
+          $ref: "#/components/schemas/WorkflowSpec"
+        current_task_ids:
+          type: array
+          items:
+            type: String
+        messages:
+          type: array
+          items:
+            type: String
       example:
         id: 291234
-        requirement_id: ids_submission
-        workflow_status: 'user_input_required'
-        current_task_id: study_identification
+        status: 'user_input_required'
+        current_task_ids: ['study_identification','Detailed Reports']
+        workflow_spec:
+          id: 'prot_def'
+          display_name: 'Protocol Definition'
+          description: 'Collect some additional information about your protocol to complete forms and processes.'
+          bpmn_url: 'https://crconnect.viriginia.edu/prot_def.bpmn'
+          svg_url: 'https://crconnect.viriginia.edu/prot_def.svg'
         messages: [
           "Protocol Builder reports that the protocol process is complete for this study.",
           "IDS Submission Template was generated successfully."
         ]
     Task:
-      required:
-        - id
-        - name
-        - type
       properties:
         id:
           readOnly: true
@@ -309,7 +356,7 @@ components:
         type:
           type: string
         form:
-          $ref: "#/components/schemas/Task"
+          $ref: "#/components/schemas/Form"
       example:
         {
           id: study_identification,
@@ -325,6 +372,31 @@ components:
             }
           }
         }
+    Form:
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/Field"
+    Field:
+      properties:
+        id:
+          type: string
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+        type:
+          type: enum
+          enum: ['text','number', 'enum']
+          readOnly: true
+        options:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        value:
+          type: string
     Error:
       required:
         - code

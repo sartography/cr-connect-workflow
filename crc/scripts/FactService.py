@@ -30,4 +30,4 @@ class FactService:
             details = self.get_buzzword()
         else:
             details = "unknown fact type."
-        print("The fact is : " + details)
+        data['details'] = details

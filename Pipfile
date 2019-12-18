@@ -7,7 +7,7 @@ verify_ssl = true
 pytest = "*"
 
 [packages]
-connexion = {version = "*",extras = ["swagger-ui"]}
+connexion = {extras = ["swagger-ui"],version = "*"}
 swagger-ui-bundle = "*"
 flask = "*"
 flask-bcrypt = "*"
@@ -26,6 +26,8 @@ requests = "*"
 xlsxwriter = "*"
 webtest = "*"
 spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "master"}
+alembic = "*"
+coverage = "*"
 
 [requires]
 python_version = "3.7"
