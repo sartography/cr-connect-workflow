@@ -4,7 +4,9 @@ import unittest
 from sqlalchemy import func
 
 from crc import db
-from crc.models import StudyModel, StudySchema, WorkflowSpecModel, WorkflowSpecSchema, WorkflowModel, WorkflowStatus
+from crc.models import StudyModel, StudySchema, WorkflowSpecModel, WorkflowSpecSchema, WorkflowModel, WorkflowStatus, \
+    WorkflowSchema, TaskSchema
+from crc.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
 
@@ -62,3 +64,19 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assertIsNotNone(workflow.bpmn_workflow_json)
         self.assertEqual(spec.id, workflow.workflow_spec_id)
 
+        json_data = json.loads(rv.get_data(as_text=True))
+        workflows = WorkflowSchema(many=True).load(json_data, session=db.session)
+        self.assertEqual(workflows[0].id, workflow.id)
+
+    def test_get_current_user_tasks(self):
+        self.load_example_data()
+        study = db.session.query(StudyModel).first()
+        spec = db.session.query(WorkflowSpecModel).filter_by(id='random_fact').first()
+        self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
+                      data=json.dumps(WorkflowSpecSchema().dump(spec)))
+        rv = self.app.get('/v1.0/workflow/%i/tasks' % study.id, content_type="application/json")
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        tasks = TaskSchema(many=True).load(json_data)
+        self.assertEqual("Task_User_Select_Type", tasks[0].name)
+        self.assertEqual(3, len(tasks[0].form["fields"][0]["options"]))

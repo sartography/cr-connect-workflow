@@ -67,7 +67,7 @@ class WorkflowProcessor:
         self.bpmn_workflow.do_engine_steps()
 
     def serialize(self):
-        return self.bpmn_workflow.serialize(JSONSerializer())
+        return self._serializer.serialize_workflow(self.bpmn_workflow)
 
     def next_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
@@ -77,3 +77,6 @@ class WorkflowProcessor:
 
     def get_data(self):
         return self.bpmn_workflow.data
+
+    def get_ready_user_tasks(self):
+        return self.bpmn_workflow.get_ready_user_tasks()

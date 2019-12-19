@@ -192,7 +192,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
+  /workflow/{workflow_id}/tasks:
+    get:
+      operationId: crc.api.get_tasks
+      summary: Return a list of all tasks for this workflow
+      tags:
+        - Workflows and Tasks
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   # /v1.0/workflow/0/task/0
   /workflow/{workflow_id}/task/{task_id}:
     get:
@@ -265,19 +293,10 @@ paths:
 components:
   schemas:
     Study:
-      required:
-      - id
-      - title
-      - last_updated
-      - pb_status
-      - pi
-      - sponsor
-      - ind_number
       properties:
         id:
-          type: string
-          format: string
-          example: AB1234
+          type: integer
+          example: 1234
         title:
           type: string
           example: The impact of fried pickles on beer consumption in bipedal software developers.
@@ -285,11 +304,11 @@ components:
           type: string
           format: date_time
           example: "2019-12-25T09:12:33.001Z"
-        pb_status:
+        protocol_builder_status:
           type: string
-          enum: [started, done]
+          enum: [out_of_date, in_process, complete, updating]
           example: done
-        pi:
+        primary_investigator_id:
           type: string
           example: dhf8r
         sponsor:
@@ -356,16 +375,20 @@ components:
           type: string
         type:
           type: string
+        status:
+          type: string
         form:
           $ref: "#/components/schemas/Form"
       example:
         {
           id: study_identification,
           name: "Study Identification",
-          type: form,
+          state: "ready",
+          type: "form",
           form: {
+            key: "oncology_form",
             field: {
-              id: adult_oncology,
+              id: "is_adult_patient",
               type: enum,
               label: "Is this study treating adult oncology patients?",
               options: ["yes", "no"],
