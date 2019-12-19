@@ -2,6 +2,7 @@ import logging
 import os
 
 import connexion
+from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -26,6 +27,7 @@ ma = Marshmallow(app)
 from crc import models
 
 connexion_app.add_api('api.yml')
+cors = CORS(connexion_app.app)
 
 @app.cli.command()
 def load_example_data():

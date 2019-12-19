@@ -1,10 +1,12 @@
 import enum
 
+from SpiffWorkflow import Task
 from flask_marshmallow.sqla import ModelSchema
+from marshmallow import post_load, fields, Schema
 from marshmallow_enum import EnumField
 from sqlalchemy import func
 
-from crc import db
+from crc import db, ma
 
 
 class ProtocolBuilderStatus(enum.Enum):
@@ -56,10 +58,58 @@ class WorkflowModel(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.Integer, db.ForeignKey('workflow_spec.id'))
 
+
 class WorkflowSchema(ModelSchema):
     class Meta:
         model = WorkflowModel
     status = EnumField(WorkflowStatus)
 
+
+class Task:
+    def __init__(self, id, name, type, state, form):
+        self.id = id
+        self.name = name
+        self.type = type
+        self.state = state
+        self.form = form
+
+    @classmethod
+    def from_spiff(cls, spiff_task):
+        instance = cls(spiff_task.id,
+                       spiff_task.task_spec.name,
+                       spiff_task.get_state_name(),
+                       "task",
+                       {})
+        if hasattr(spiff_task.task_spec, "form"):
+            instance.type = "form"
+            instance.form = spiff_task.task_spec.form
+        return instance
+
+
+class OptionSchema(ma.Schema):
+    class Meta:
+        fields = ["id", "name"]
+
+
+class FieldSchema(ma.Schema):
+    class Meta:
+        fields = ["id", "type", "label", "defaultValue", "options"]
+    options = fields.List(fields.Nested(OptionSchema))
+
+
+class FormSchema(ma.Schema):
+    class Meta:
+        fields = ["key", "fields"]
+    fields = fields.List(fields.Nested(FieldSchema))
+
+
+class TaskSchema(ma.Schema):
+    class Meta:
+        fields = ["id", "name", "type", "state", "form"]
+
+    form = fields.Nested(FormSchema)
+    @post_load
+    def make_task(self, data, **kwargs):
+        return Task(**data)
 
 
