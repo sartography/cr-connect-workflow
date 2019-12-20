@@ -372,15 +372,21 @@ components:
           type: string
         name:
           type: string
+        title:
+          type: string
         type:
           type: string
         state:
           type: string
         form:
           $ref: "#/components/schemas/Form"
+        documentation:
+          type: string
       example:
         id: study_identification
         name: Study Identification
+        title: IRB Review
+        documentation: "# Heading 1\n\nMarkdown documentation text goes here"
         type: form
         state: ready
         form:

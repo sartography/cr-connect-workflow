@@ -70,20 +70,24 @@ class WorkflowSchema(ModelSchema):
 
 
 class Task:
-    def __init__(self, id, name, type, state, form):
+    def __init__(self, id, name, title, type, state, form, documentation):
         self.id = id
         self.name = name
+        self.title = title
         self.type = type
         self.state = state
         self.form = form
+        self.documentation = documentation
 
     @classmethod
     def from_spiff(cls, spiff_task):
         instance = cls(spiff_task.id,
                        spiff_task.task_spec.name,
+                       spiff_task.task_spec.description,
                        spiff_task.get_state_name(),
                        "task",
-                       {})
+                       {},
+                       spiff_task.task_spec.documentation)
         if hasattr(spiff_task.task_spec, "form"):
             instance.type = "form"
             instance.form = spiff_task.task_spec.form
@@ -125,7 +129,7 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "type", "state", "form"]
+        fields = ["id", "name", "title", "type", "state", "form", "documentation"]
 
     form = fields.Nested(FormSchema)
 
