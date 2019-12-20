@@ -1,4 +1,4 @@
-openapi: "3.0.0"
+openapi: "3.0.2"
 info:
   version: 1.0.0
   title: Workflow Microservice
@@ -369,58 +369,150 @@ components:
       properties:
         id:
           readOnly: true
-          type: integer
-          format: int64
+          type: string
         name:
           type: string
         type:
           type: string
-        status:
+        state:
           type: string
         form:
           $ref: "#/components/schemas/Form"
       example:
-        {
-          id: study_identification,
-          name: "Study Identification",
-          state: "ready",
-          type: "form",
-          form: {
-            key: "oncology_form",
-            field: {
-              id: "is_adult_patient",
-              type: enum,
-              label: "Is this study treating adult oncology patients?",
-              options: ["yes", "no"],
-              value: "yes"
-            }
-          }
-        }
+        id: study_identification
+        name: Study Identification
+        type: form
+        state: ready
+        form:
+          "key": "irb_review_form"
+          "fields":
+            - "id": "irb_review_type"
+              "type": "enum"
+              "label": "Select IRB Review Type"
+              "options":
+                - id: "emergency_use"
+                  name: "Emergency Use"
+                - id: "humanitarian_device"
+                  name: "Humanitarian Device"
+                - id: "non_human"
+                  name: "Non-Human"
+                - id: "non_uva_agent"
+                  name: "Non-UVA Agent"
+                - id: "exempt"
+                  name: "Exempt"
+                - id: "non_engaged"
+                  name: "Non-Engaged"
+                - id: "expedited"
+                  name: "Expedited"
+                - id: "full_board"
+                  name: "Full Board"
+              "defaultValue": "Full Board"
+              "validation":
+                - name: "required"
+                  config: "true"
+              "properties":
+                - id: "description"
+                  value: "Description text goes here"
+                - id: "help"
+                  value: "# Heading 1\n\nMarkdown help text goes here"
+                - id: "required_expression"
+                  value: "model.my_boolean_field_id && model.my_enum_field_value !== 'something'"
+                - id: "hide_expression"
+                  value: "model.my_enum_field_value === 'something'"
     Form:
       properties:
+        key:
+          type: string
         fields:
           type: array
           items:
             $ref: "#/components/schemas/Field"
+      example:
+        "key": "irb_review_form"
+        "fields":
+          - "id": "irb_review_type"
+            "type": "enum"
+            "label": "Select IRB Review Type"
+            "options":
+              - id: "emergency_use"
+                name: "Emergency Use"
+              - id: "humanitarian_device"
+                name: "Humanitarian Device"
+              - id: "non_human"
+                name: "Non-Human"
+              - id: "non_uva_agent"
+                name: "Non-UVA Agent"
+              - id: "exempt"
+                name: "Exempt"
+              - id: "non_engaged"
+                name: "Non-Engaged"
+              - id: "expedited"
+                name: "Expedited"
+              - id: "full_board"
+                name: "Full Board"
+            "defaultValue": "Full Board"
+            "validation":
+              - name: "required"
+                config: "true"
+            "properties":
+              - id: "description"
+                value: "Description text goes here"
+              - id: "help"
+                value: "# Heading 1\n\nMarkdown help text goes here"
+              - id: "required_expression"
+                value: "model.my_boolean_field_id && model.my_enum_field_value !== 'something'"
+              - id: "hide_expression"
+                value: "model.my_enum_field_value === 'something'"
     Field:
       properties:
         id:
           type: string
           readOnly: true
-        label:
-          type: string
-          readOnly: true
         type:
           type: enum
-          enum: ['text','number', 'enum']
+          enum: ['string', 'long', 'boolean', 'date', 'enum']
+          readOnly: true
+        label:
+          type: string
           readOnly: true
         options:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/EnumFieldOption"
           readOnly: true
+        defaultValue:
+          type: string
+        validation:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldValidation"
+          readOnly: true
+        "properties":
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldProperty"
+          readOnly: true
+    EnumFieldOption:
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    FieldValidation:
+      properties:
+        name:
+          type: string
+        config:
+          type: string
+    FieldProperty:
+      properties:
+        id:
+          type: string
         value:
           type: string
+      example:
+        id: "required_expression"
+        value: "model.should_require"
     Error:
       required:
         - code
