@@ -2,7 +2,7 @@ import enum
 
 from SpiffWorkflow import Task
 from flask_marshmallow.sqla import ModelSchema
-from marshmallow import post_load, fields, Schema
+from marshmallow import post_load, fields
 from marshmallow_enum import EnumField
 from sqlalchemy import func
 
@@ -30,6 +30,7 @@ class StudyModel(db.Model):
 class StudySchema(ModelSchema):
     class Meta:
         model = StudyModel
+
     protocol_builder_status = EnumField(ProtocolBuilderStatus)
 
 
@@ -95,24 +96,29 @@ class WorkflowModel(db.Model):
 class WorkflowSchema(ModelSchema):
     class Meta:
         model = WorkflowModel
+
     status = EnumField(WorkflowStatus)
 
 
 class Task:
-    def __init__(self, id, name, type, state, form):
+    def __init__(self, id, name, title, type, state, form, documentation):
         self.id = id
         self.name = name
+        self.title = title
         self.type = type
         self.state = state
         self.form = form
+        self.documentation = documentation
 
     @classmethod
     def from_spiff(cls, spiff_task):
         instance = cls(spiff_task.id,
                        spiff_task.task_spec.name,
+                       spiff_task.task_spec.description,
                        spiff_task.get_state_name(),
                        "task",
-                       {})
+                       {},
+                       spiff_task.task_spec.documentation)
         if hasattr(spiff_task.task_spec, "form"):
             instance.type = "form"
             instance.form = spiff_task.task_spec.form
@@ -124,25 +130,40 @@ class OptionSchema(ma.Schema):
         fields = ["id", "name"]
 
 
+class ValidationSchema(ma.Schema):
+    class Meta:
+        fields = ["name", "config"]
+
+
+class PropertiesSchema(ma.Schema):
+    class Meta:
+        fields = ["id", "value"]
+
+
 class FieldSchema(ma.Schema):
     class Meta:
-        fields = ["id", "type", "label", "defaultValue", "options"]
+        fields = [
+            "id", "type", "label", "defaultValue", "options", "validation", "properties"
+        ]
+
     options = fields.List(fields.Nested(OptionSchema))
+    validation = fields.List(fields.Nested(ValidationSchema))
+    properties = fields.List(fields.Nested(PropertiesSchema))
 
 
 class FormSchema(ma.Schema):
     class Meta:
         fields = ["key", "fields"]
+
     fields = fields.List(fields.Nested(FieldSchema))
 
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "type", "state", "form"]
+        fields = ["id", "name", "title", "type", "state", "form", "documentation"]
 
     form = fields.Nested(FormSchema)
+
     @post_load
     def make_task(self, data, **kwargs):
         return Task(**data)
-
-

@@ -1,17 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1gjhqt9" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1gjhqt9" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.6.0-dev">
   <bpmn:process id="Process_1ds61df" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_0ik56h0</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="SequenceFlow_0ik56h0" sourceRef="StartEvent_1" targetRef="Task_User_Select_Type" />
-    <bpmn:userTask id="Task_User_Select_Type" name="Set Type" camunda:formKey="Fact">
+    <bpmn:userTask id="Task_User_Select_Type" name="Set Type" camunda:formKey="Get A Random Fun Fact">
+      <bpmn:documentation>Here's some documentation</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="type" label="Type" type="enum" defaultValue="cat">
             <camunda:value id="norris" name="Chuck Norris" />
             <camunda:value id="cat" name="Cat Fact" />
             <camunda:value id="buzzword" name="Business Buzzword" />
+          </camunda:formField>
+          <camunda:formField id="is_anonymous" label="Do you want to remain anonymous?" type="boolean">
+            <camunda:properties>
+              <camunda:property id="description" value="Choose &#34;yes&#34; if you don&#39;t want us to use your name" />
+              <camunda:property id="help" value="# Heading 1\n\nOh hey, it&#39;s Markdown text." />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="name" label="Your full name" type="string">
+            <camunda:properties>
+              <camunda:property id="description" value="Please enter your first and last name." />
+              <camunda:property id="help" value="# Heading 1\n\nLook, it&#39;s some Markdown!" />
+              <camunda:property id="hide_expression" value="model.is_anonymous" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="should_send_greeting" label="Say hi to user?" type="enum" defaultValue="yes">
+            <camunda:properties>
+              <camunda:property id="label_expression" value="model.name ? &#39;Say hi to &#39; + model.name + &#39;?&#39; : &#39;Say hi?&#39;" />
+              <camunda:property id="hide_expression" value="model.is_anonymous" />
+            </camunda:properties>
+            <camunda:value id="no" name="No!" />
+            <camunda:value id="yes" name="Yes!" />
+            <camunda:value id="maybe" name="Meh." />
+          </camunda:formField>
+          <camunda:formField id="random_num" label="Pick a number, any number." type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+            </camunda:properties>
+            <camunda:value id="Value_190fel2" name="42" />
+            <camunda:value id="Value_2mknvfh" name="21" />
+            <camunda:value id="Value_1atqgco" name="7" />
           </camunda:formField>
         </camunda:formData>
         <camunda:properties>
