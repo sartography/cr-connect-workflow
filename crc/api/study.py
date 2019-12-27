@@ -1,25 +1,19 @@
+import os
+from datetime import datetime
+
+import connexion
 from connexion import NoContent
 from flask_marshmallow import Schema
 
-from crc import db, ma
+from crc import db, ma, connexion_app
+from crc.api.common import ApiError, ApiErrorSchema
 from crc.models import WorkflowModel, WorkflowSchema, StudySchema, StudyModel, WorkflowSpecSchema, WorkflowSpecModel, \
-    WorkflowStatus, Task, TaskSchema
+    WorkflowStatus, Task, TaskSchema, FileSchema, FileModel, FileDataModel, FileType
 from crc.workflow_processor import WorkflowProcessor
 
 
-class ApiError:
-    def __init__(self, code, message):
-        self.code = code
-        self.message = message
-
-
-class ApiErrorSchema(ma.Schema):
-    class Meta:
-        fields = ("code", "message")
-
-
 def all_studies():
-    #todo: Limit returned studies to a user
+    # todo: Limit returned studies to a user
     schema = StudySchema(many=True)
     return schema.dump(db.session.query(StudyModel).all())
 
@@ -32,13 +26,8 @@ def get_study(study_id):
     return schema.dump(study)
 
 
-def all_specifications():
-    schema = WorkflowSpecSchema(many=True)
-    return schema.dump(db.session.query(WorkflowSpecModel).all())
-
-
 def post_update_study_from_protocol_builder(study_id):
-    #todo: Actually get data from an external service here
+    # todo: Actually get data from an external service here
     return NoContent, 304
 
 
@@ -63,30 +52,4 @@ def add_workflow_to_study(study_id, body):
     db.session.commit()
     return get_study_workflows(study_id)
 
-
-def get_workflow(workflow_id):
-    schema = WorkflowSchema()
-    workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    return schema.dump(workflow)
-
-
-def get_tasks(workflow_id):
-    workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
-    spiff_tasks = processor.get_ready_user_tasks()
-    tasks = []
-    for st in spiff_tasks:
-        tasks.append(Task.from_spiff(st))
-    return TaskSchema(many=True).dump(tasks)
-
-def get_task(workflow_id, task_id):
-    workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    return workflow.bpmn_workflow().get_task(task_id)
-
-
-def update_task(workflow_id, task_id, body):
-    global bpmn_workflow
-    for field in body["task"]["form"]:
-        print("Setting " + field["id"] + " to " + field["value"])
-    return body
 

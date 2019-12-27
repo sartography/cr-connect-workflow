@@ -7,7 +7,14 @@ os.environ["TESTING"] = "true"
 from crc import app, db
 
 
+# UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
+# import logging
+# logging.basicConfig()
+# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
+
 def clean_db():
+    db.session.flush() # Clear out any transactions before deleting it all to avoid spurious errors.
     for table in reversed(db.metadata.sorted_tables):
         db.session.execute(table.delete())
     db.session.flush()

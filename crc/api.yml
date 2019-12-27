@@ -10,7 +10,7 @@ paths:
   # /v1.0/study
   /study:
     get:
-      operationId: crc.api.all_studies
+      operationId: crc.api.study.all_studies
       summary: Provides a list of studies related to the current user.
       tags:
         - Studies
@@ -29,7 +29,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /study/{study_id}:
     get:
-      operationId: crc.api.get_study
+      operationId: crc.api.study.get_study
       summary: Provides a single study
       tags:
         - Studies
@@ -56,7 +56,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /study-update/{study_id}:
     post:
-      operationId: crc.api.post_update_study_from_protocol_builder
+      operationId: crc.api.study.post_update_study_from_protocol_builder
       summary: If the study is up-to-date with Protocol Builder, returns a 304 Not Modified. If out of date, return a 202 Accepted and study state changes to updating.
       tags:
         - Study Status
@@ -82,7 +82,7 @@ paths:
 
   /study/{study_id}/workflows:
     get:
-      operationId: crc.api.get_study_workflows
+      operationId: crc.api.study.get_study_workflows
       summary: Provides a list of workflows to be completed for the given study.
       tags:
         - Studies
@@ -110,7 +110,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     post:
-      operationId: crc.api.add_workflow_to_study
+      operationId: crc.api.study.add_workflow_to_study
       summary: Starts a new workflow for the given study using the provided spec.  This is atypical, and should be left to the protocol builder.
       tags:
         - Studies
@@ -142,13 +142,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  # /v1.0/workflow/0
   /workflow-specification:
     get:
-      operationId: crc.api.all_specifications
+      operationId: crc.api.workflow.all_specifications
       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
       tags:
-        - Workflow Specifications
+        - Workflow
       responses:
         '200':
           description: An array of workflow specifications
@@ -164,10 +163,135 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-    # /v1.0/workflow/0
+  /file:
+    parameters:
+      - name: spec_id
+        in: query
+        required: false
+        description: The unique name of a specification
+        schema:
+          type: string
+    get:
+      operationId: crc.api.file.get_files
+      summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
+      tags:
+        - Files
+      responses:
+        '200':
+          description: An array of file descriptions (not the file content)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: crc.api.file.add_file
+      summary: Add a new file
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                workflow_spec_id:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Metadata about the uploaded file, but not the file content.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+
+  /file/{file_id}:
+    parameters:
+      - name: file_id
+        in: path
+        required: true
+        description: The id of the File requested
+        schema:
+          type: integer
+    get:
+      operationId: crc.api.file.get_file_info
+      summary: Returns metadata about a file.
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the file information requested.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+    put:
+      operationId: crc.api.file.update_file
+      summary: Update a file
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                workflow_spec_id:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Metadata about the uploaded file, but not the file content.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+    delete:
+      operationId: crc.api.file.delete_file
+      summary: Removes an existing file
+      tags:
+        - Files
+      responses:
+        '204':
+          description: The file has been removed.
+  /file/{file_id}/data:
+    parameters:
+      - name: file_id
+        in: path
+        required: true
+        description: The id of the File requested
+        schema:
+          type: integer
+    get:
+      operationId: crc.api.file.get_file
+      summary: Returns only the file contents
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the actual file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+  # /v1.0/workflow/0
   /workflow/{workflow_id}:
     get:
-      operationId: crc.api.get_workflow
+      operationId: crc.api.workflow.get_workflow
       summary: Detailed information for a specific workflow instance
       tags:
         - Workflows and Tasks
@@ -194,7 +318,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /workflow/{workflow_id}/tasks:
     get:
-      operationId: crc.api.get_tasks
+      operationId: crc.api.workflow.get_tasks
       summary: Return a list of all tasks for this workflow
       tags:
         - Workflows and Tasks
@@ -224,7 +348,7 @@ paths:
   # /v1.0/workflow/0/task/0
   /workflow/{workflow_id}/task/{task_id}:
     get:
-      operationId: crc.api.get_task
+      operationId: crc.api.workflow.get_task
       summary: Get details of specific task in specific workflow instance
       tags:
         - Workflows and Tasks
@@ -257,7 +381,7 @@ paths:
                 $ref: "#/components/schemas/Error"
 
     put:
-      operationId: crc.api.update_task
+      operationId: crc.api.workflow.update_task
       summary: Update, attempt to complete a workflow task
       tags:
         - Workflows and Tasks
@@ -329,6 +453,38 @@ components:
           type: string
         svg_url:
           type: string
+    File:
+      properties:
+        id:
+          type: number
+          readOnly: true
+        name:
+          type: string
+          example: "random_fact.bpmn"
+        version:
+          type: string
+          readOnly: true
+        last_updated:
+          type: string
+          format: date_time
+          example: "2019-12-25T09:12:33.001Z"
+          readOnly: true
+        type:
+          type: enum
+          enum: ['bpmn','svg', 'dmn']
+          readOnly: true
+        primary:
+          type: boolean
+          readOnly: true
+        content_type:
+          type: string
+          example: "application/xml"
+        workflow_spec_id:
+          type: string
+          example: "random_fact"
+        file:
+          type: file
+          format: binary
     Workflow:
       properties:
         id:
