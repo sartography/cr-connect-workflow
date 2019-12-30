@@ -44,8 +44,8 @@ class BaseTest:
         self.auths = {}
 
     def load_example_data(self):
-        ExampleDataLoader.clean_db()
         from example_data import ExampleDataLoader
+        ExampleDataLoader.clean_db()
         ExampleDataLoader().load_all()
 
     def assert_success(self, rv, msg=""):

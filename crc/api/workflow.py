@@ -14,6 +14,8 @@ def get_workflow(workflow_id):
     workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()
     return schema.dump(workflow)
 
+def delete(workflow_id):
+    db.session.query(WorkflowModel).filter_by(id=workflow_id).delete()
 
 def get_tasks(workflow_id):
     workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()

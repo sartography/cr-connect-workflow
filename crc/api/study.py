@@ -50,4 +50,4 @@ def add_workflow_to_study(study_id, body):
                              workflow_spec_id=workflow_spec_model.id)
     db.session.add(workflow)
     db.session.commit()
-    return get_study_workflows(study_id)
+    return WorkflowSchema().dump(workflow)
