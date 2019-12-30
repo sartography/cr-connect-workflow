@@ -3,11 +3,12 @@ import os
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.serializer.CompactWorkflowSerializer import CompactWorkflowSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
+from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.camunda.serializer.CamundaSerializer import CamundaSerializer
 
-from crc import app
-from crc.models import WorkflowStatus
-
+from crc import app, db
+from crc.models import WorkflowStatus, WorkflowSpecModel, FileDataModel, FileModel
+import xml.etree.ElementTree as ElementTree
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.
@@ -40,12 +41,21 @@ class WorkflowProcessor:
 
     @staticmethod
     def get_spec(workflow_spec_id):
-        filename = os.path.join(app.root_path, 'static', 'bpmn', workflow_spec_id)
-        return CamundaSerializer().deserialize_workflow_spec(filename)
+        file_data_models = db.session.query(FileDataModel) \
+            .join(FileModel) \
+            .filter(FileModel.workflow_spec_id == workflow_spec_id).all()
+        parser = CamundaParser()
+        for file_data in file_data_models:
+            bpmn = ElementTree.fromstring(file_data.data)
+            process_id = WorkflowProcessor.__get_process_id(bpmn)
+            parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
+        return parser.get_spec(process_id)
 
     @classmethod
     def create(cls, workflow_spec_id):
-        spec = cls.get_spec(workflow_spec_id)
+        parser = CamundaParser()
+        spec = WorkflowProcessor.get_spec(workflow_spec_id)
+
         bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
         bpmn_workflow.do_engine_steps()
         json = cls._serializer.serialize_workflow(bpmn_workflow)
@@ -78,3 +88,19 @@ class WorkflowProcessor:
 
     def get_ready_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
+
+
+    @staticmethod
+    def __get_process_id(et_root):
+        process_elements = []
+        for child in et_root:
+            if child.tag.endswith('process') and child.attrib.get('isExecutable', False):
+                process_elements.append(child)
+
+        if len(process_elements) == 0:
+            raise Exception('No executable process tag found')
+
+        if len(process_elements) > 1:
+            raise Exception('Multiple executable processes tags found')
+
+        return process_elements[0].attrib['id']

@@ -51,5 +51,3 @@ def add_workflow_to_study(study_id, body):
     db.session.add(workflow)
     db.session.commit()
     return get_study_workflows(study_id)
-
-
