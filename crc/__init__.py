@@ -33,4 +33,5 @@ cors = CORS(connexion_app.app)
 def load_example_data():
     """Load example data into the database."""
     from example_data import ExampleDataLoader
+    ExampleDataLoader.clean_db()
     ExampleDataLoader().load_all()

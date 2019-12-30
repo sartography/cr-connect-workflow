@@ -290,12 +290,7 @@ paths:
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
   # /v1.0/workflow/0
   /workflow/{workflow_id}:
-    get:
-      operationId: crc.api.workflow.get_workflow
-      summary: Detailed information for a specific workflow instance
-      tags:
-        - Workflows and Tasks
-      parameters:
+    parameters:
         - name: workflow_id
           in: path
           required: true
@@ -303,6 +298,11 @@ paths:
           schema:
             type: integer
             format: int32
+    get:
+      operationId: crc.api.workflow.get_workflow
+      summary: Detailed information for a specific workflow instance
+      tags:
+        - Workflows and Tasks
       responses:
         '200':
           description: Returns details about the workflows state and current task
@@ -316,6 +316,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+    delete:
+      operationId: crc.api.workflow.delete
+      summary: Removes an existing workflow
+      tags:
+        - Workflows and Tasks
+      responses:
+        '204':
+          description: The workflow was removed
   /workflow/{workflow_id}/tasks:
     get:
       operationId: crc.api.workflow.get_tasks

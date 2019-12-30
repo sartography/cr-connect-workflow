@@ -5,7 +5,7 @@ import os
 os.environ["TESTING"] = "true"
 
 from crc import app, db
-
+from example_data import ExampleDataLoader
 
 # UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
 # import logging
@@ -13,11 +13,7 @@ from crc import app, db
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
-def clean_db():
-    db.session.flush() # Clear out any transactions before deleting it all to avoid spurious errors.
-    for table in reversed(db.metadata.sorted_tables):
-        db.session.execute(table.delete())
-    db.session.flush()
+
 
 
 # Great class to inherit from, as it sets up and tears down
@@ -43,13 +39,13 @@ class BaseTest:
         self.ctx.push()
 
     def tearDown(self):
-        clean_db()  # This does not seem to work, some colision of sessions.
+        ExampleDataLoader.clean_db()  # This does not seem to work, some colision of sessions.
         self.ctx.pop()
         self.auths = {}
 
     def load_example_data(self):
-        clean_db()
         from example_data import ExampleDataLoader
+        ExampleDataLoader.clean_db()
         ExampleDataLoader().load_all()
 
     def assert_success(self, rv, msg=""):

@@ -50,6 +50,13 @@ class ExampleDataLoader:
     file = open(filename, "rb")
     workflow_data = [FileDataModel(data=file.read(), file_model=workflow_spec_files[0])]
 
+    @staticmethod
+    def clean_db():
+        db.session.flush()  # Clear out any transactions before deleting it all to avoid spurious errors.
+        for table in reversed(db.metadata.sorted_tables):
+            db.session.execute(table.delete())
+        db.session.flush()
+
     def load_all(self):
         db.session.bulk_save_objects(ExampleDataLoader.studies)
         db.session.bulk_save_objects(ExampleDataLoader.workflow_specs)
