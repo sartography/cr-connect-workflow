@@ -1,4 +1,4 @@
-FROM python:3.6-stretch
+FROM python:3.7
 
 ENV PATH=/root/.local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
