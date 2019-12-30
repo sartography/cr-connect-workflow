@@ -22,7 +22,9 @@ class FactService:
         else:
             fact = data["Fact.type"]
 
-        if fact == "cat":
+        if True:
+            details = "Assertively Incubate Seamless Niches"
+        elif fact == "cat":
             details = self.get_cat()
         elif fact == "norris":
             details = self.get_norris()
