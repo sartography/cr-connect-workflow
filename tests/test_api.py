@@ -65,14 +65,14 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assertEqual(spec.id, workflow.workflow_spec_id)
 
         json_data = json.loads(rv.get_data(as_text=True))
-        workflows = WorkflowSchema(many=True).load(json_data, session=db.session)
-        self.assertEqual(workflows[0].id, workflow.id)
+        workflow = WorkflowSchema().load(json_data, session=db.session)
+        self.assertEqual(workflow.id, workflow.id)
 
     def test_delete_workflow(self):
         self.load_example_data()
         study = db.session.query(StudyModel).first()
         spec = db.session.query(WorkflowSpecModel).first()
-        rv = self.app.post('/v1.0/study/%i/workflows' % study.id,content_type="application/json",
+        rv = self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
                            data=json.dumps(WorkflowSpecSchema().dump(spec)))
         self.assertEqual(1, db.session.query(WorkflowModel).count())
         json_data = json.loads(rv.get_data(as_text=True))

@@ -54,10 +54,10 @@ class FileType(enum.Enum):
 
 class FileDataModel(db.Model):
     __tablename__ = 'file_data'
-    id = db.Column(db.Integer, db.ForeignKey('file.id'), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     data = db.Column(db.LargeBinary)
+    file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     file_model = db.relationship("FileModel")
-
 
 class FileModel(db.Model):
     __tablename__ = 'file'
