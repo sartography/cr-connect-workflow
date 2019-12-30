@@ -320,7 +320,7 @@ paths:
       operationId: crc.api.workflow.delete
       summary: Removes an existing workflow
       tags:
-        - Files
+        - Workflows and Tasks
       responses:
         '204':
           description: The workflow was removed
