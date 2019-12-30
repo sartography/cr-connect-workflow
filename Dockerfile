@@ -16,6 +16,8 @@ ADD Pipfile /crc-workflow/
 ADD Pipfile.lock /crc-workflow/
 RUN pipenv install --dev
 
+ENV FLASK_APP=./crc/__init__.py
+
 # include rejoiner code (gets overriden by local changes)
 COPY . /crc-workflow/
 
