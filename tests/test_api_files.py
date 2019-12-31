@@ -4,7 +4,7 @@ import unittest
 from datetime import datetime
 
 from crc import db
-from crc.models import WorkflowSpecModel, FileModel, FileType, FileSchema
+from crc.models import WorkflowSpecModel, FileModel, FileType, FileSchema, FileDataModel
 from tests.base_test import BaseTest
 
 
@@ -68,7 +68,7 @@ class TestApiFiles(BaseTest, unittest.TestCase):
         file = db.session.query(FileModel).filter_by(workflow_spec_id = spec.id).first()
 
         data = {}
-        data['file'] = io.BytesIO(b"abcdef"), 'random_fact.bpmn'
+        data['file'] = io.BytesIO(b"hijklim"), 'random_fact.bpmn'
 
         rv = self.app.put('/v1.0/file/%i' % file.id, data=data, follow_redirects=True,
                               content_type='multipart/form-data')
@@ -82,6 +82,9 @@ class TestApiFiles(BaseTest, unittest.TestCase):
         self.assertTrue(file.primary)
         self.assertEqual("application/octet-stream", file.content_type)
         self.assertEqual(spec.id, file.workflow_spec_id)
+
+        data_model = db.session.query(FileDataModel).filter_by(file_model_id = file.id).first()
+        self.assertEqual(b"hijklim", data_model.data)
 
     def test_get_file(self):
         self.load_example_data()

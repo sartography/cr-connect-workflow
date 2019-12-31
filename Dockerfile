@@ -18,6 +18,10 @@ RUN pipenv install --dev
 
 ENV FLASK_APP=./crc/__init__.py
 
+# run migrations
+CMD ["pipenv", "run", "flask", "db", "upgrade"]
+CMD ["pipenv", "run", "flask", "load-example-data"]
+
 # include rejoiner code (gets overriden by local changes)
 COPY . /crc-workflow/
 
@@ -26,3 +30,5 @@ CMD ["pipenv", "run", "python", "/crc-workflow/run.py"]
 
 # expose ports
 EXPOSE 5000
+
+
