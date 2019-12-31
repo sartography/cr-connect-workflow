@@ -1,14 +1,14 @@
-import os
+import xml.etree.ElementTree as ElementTree
 
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.serializer.CompactWorkflowSerializer import CompactWorkflowSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
-from SpiffWorkflow.camunda.serializer.CamundaSerializer import CamundaSerializer
 
-from crc import app, db
-from crc.models import WorkflowStatus, WorkflowSpecModel, FileDataModel, FileModel
-import xml.etree.ElementTree as ElementTree
+from crc import db
+from crc.models.file import FileDataModel, FileModel
+from crc.models.workflow import WorkflowStatus
+
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.

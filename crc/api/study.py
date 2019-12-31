@@ -1,14 +1,9 @@
-import os
-from datetime import datetime
-
-import connexion
 from connexion import NoContent
-from flask_marshmallow import Schema
 
-from crc import db, ma, connexion_app
+from crc import db
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models import WorkflowModel, WorkflowSchema, StudySchema, StudyModel, WorkflowSpecSchema, WorkflowSpecModel, \
-    WorkflowStatus, Task, TaskSchema, FileSchema, FileModel, FileDataModel, FileType
+from crc.models.study import StudySchema, StudyModel
+from crc.models.workflow import WorkflowModel, WorkflowSchema, WorkflowSpecModel
 from crc.workflow_processor import WorkflowProcessor
 
 

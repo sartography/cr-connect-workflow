@@ -1,5 +1,5 @@
 from crc import db
-from crc.models import WorkflowModel, WorkflowSchema, WorkflowSpecSchema, WorkflowSpecModel, \
+from crc.models.workflow import WorkflowModel, WorkflowSchema, WorkflowSpecSchema, WorkflowSpecModel, \
     Task, TaskSchema
 from crc.workflow_processor import WorkflowProcessor
 
@@ -36,7 +36,9 @@ def get_task(workflow_id, task_id):
 
 
 def update_task(workflow_id, task_id, body):
-    global bpmn_workflow
-    for field in body["task"]["form"]:
-        print("Setting " + field["id"] + " to " + field["value"])
+    workflow_spec_model = db.session.query(WorkflowSpecModel).filter_by(id=body["id"]).first()
+    task = TaskSchema().load(body)
+    if task.form:
+        for field in task.form["fields"]:
+            print("Setting " + field["id"] + " to " + field["value"])
     return body

@@ -147,7 +147,7 @@ paths:
       operationId: crc.api.workflow.all_specifications
       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
       tags:
-        - Workflow
+        - Workflows and Tasks
       responses:
         '200':
           description: An array of workflow specifications
@@ -424,6 +424,11 @@ paths:
 
 components:
   schemas:
+    DataModel:
+      properties:
+        id:
+          type: string
+
     Study:
       properties:
         id:

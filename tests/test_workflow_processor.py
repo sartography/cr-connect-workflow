@@ -1,7 +1,7 @@
 import unittest
 
 from crc import db
-from crc.models import WorkflowSpecModel, WorkflowStatus
+from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
 from crc.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
@@ -31,3 +31,13 @@ class TestWorkflowProcessor(BaseTest, unittest.TestCase):
         data = processor.get_data()
         self.assertIsNotNone(data)
         self.assertIn("details", data)
+
+    def test_two_forms(self):
+        self.load_example_data()
+        workflow_spec_model = db.session.query(WorkflowSpecModel).filter_by(id="two_forms").first()
+        processor = WorkflowProcessor.create(workflow_spec_model.id)
+        self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
+        next_user_tasks = processor.next_user_tasks()
+        task = next_user_tasks[0]
+        data = processor.get_data()
+

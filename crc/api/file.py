@@ -7,7 +7,7 @@ from flask import send_file
 
 from crc import db
 from crc.api.common import ApiErrorSchema, ApiError
-from crc.models import FileSchema, FileModel, FileDataModel, FileType
+from crc.models.file import FileSchema, FileModel, FileDataModel, FileType
 
 
 def update_file_from_request(file_model):
