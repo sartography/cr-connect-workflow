@@ -27,6 +27,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+    post:
+      operationId: crc.api.study.add_study
+      summary: Creates a new study with the given parameters.
+      tags:
+        - Studies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Study'
+      responses:
+        '200':
+          description: Study created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /study/{study_id}:
     get:
       operationId: crc.api.study.get_study
@@ -44,6 +67,37 @@ paths:
       responses:
         '200':
           description: An Study Object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: crc.api.study.update_study
+      summary: Updates an existing study with the given parameters.
+      tags:
+        - Studies
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study for which workflows should be returned.
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Study'
+      responses:
+        '200':
+          description: Study updated successfully.
           content:
             application/json:
               schema:

@@ -1,16 +1,16 @@
 from crc import db
-from crc.models.workflow import WorkflowModel, WorkflowSchema, WorkflowSpecSchema, WorkflowSpecModel, \
+from crc.models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModelSchema, WorkflowSpecModel, \
     Task, TaskSchema
 from crc.workflow_processor import WorkflowProcessor
 
 
 def all_specifications():
-    schema = WorkflowSpecSchema(many=True)
+    schema = WorkflowSpecModelSchema(many=True)
     return schema.dump(db.session.query(WorkflowSpecModel).all())
 
 
 def get_workflow(workflow_id):
-    schema = WorkflowSchema()
+    schema = WorkflowModelSchema()
     workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()
     return schema.dump(workflow)
 
