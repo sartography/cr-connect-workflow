@@ -5,7 +5,7 @@ from datetime import datetime
 
 from crc import db
 from crc.models.workflow import WorkflowSpecModel
-from crc.models.file import FileModel, FileType, FileSchema, FileDataModel
+from crc.models.file import FileModel, FileType, FileModelSchema, FileDataModel
 from tests.base_test import BaseTest
 
 
@@ -20,7 +20,7 @@ class TestApiFiles(BaseTest, unittest.TestCase):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(1, len(json_data))
-        file = FileSchema(many=True).load(json_data, session=db.session)
+        file = FileModelSchema(many=True).load(json_data, session=db.session)
         self.assertEqual("random_fact.bpmn", file[0].name)
 
     def test_list_multiple_files_for_workflow_spec(self):
@@ -50,7 +50,7 @@ class TestApiFiles(BaseTest, unittest.TestCase):
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
-        file = FileSchema().load(json_data, session=db.session)
+        file = FileModelSchema().load(json_data, session=db.session)
         self.assertEqual(1, file.version)
         self.assertEqual(FileType.svg, file.type)
         self.assertFalse(file.primary)
@@ -60,7 +60,7 @@ class TestApiFiles(BaseTest, unittest.TestCase):
         rv = self.app.get('/v1.0/file/%i' % file.id)
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        file2 = FileSchema().load(json_data, session=db.session)
+        file2 = FileModelSchema().load(json_data, session=db.session)
         self.assertEqual(file, file2)
 
     def test_update_file(self):
@@ -77,7 +77,7 @@ class TestApiFiles(BaseTest, unittest.TestCase):
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
-        file = FileSchema().load(json_data, session=db.session)
+        file = FileModelSchema().load(json_data, session=db.session)
         self.assertEqual(2, file.version)
         self.assertEqual(FileType.bpmn, file.type)
         self.assertTrue(file.primary)

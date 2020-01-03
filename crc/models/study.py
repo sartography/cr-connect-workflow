@@ -25,7 +25,7 @@ class StudyModel(db.Model):
     ind_number = db.Column(db.String)
 
 
-class StudySchema(ModelSchema):
+class StudyModelSchema(ModelSchema):
     class Meta:
         model = StudyModel
 

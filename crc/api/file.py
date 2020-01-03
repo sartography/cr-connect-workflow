@@ -7,7 +7,7 @@ from flask import send_file
 
 from crc import db
 from crc.api.common import ApiErrorSchema, ApiError
-from crc.models.file import FileSchema, FileModel, FileDataModel, FileType
+from crc.models.file import FileModelSchema, FileModel, FileDataModel, FileType
 
 
 def update_file_from_request(file_model):
@@ -39,12 +39,12 @@ def update_file_from_request(file_model):
     db.session.add(file_data_model)
     db.session.add(file_model)
     db.session.commit()
-    db.session.flush() # Assure the id is set on the model before returning it.
+    db.session.flush()  # Assure the id is set on the model before returning it.
 
 
 def get_files(spec_id):
     if spec_id:
-        schema = FileSchema(many=True)
+        schema = FileModelSchema(many=True)
         return schema.dump(db.session.query(FileModel).filter_by(workflow_spec_id=spec_id).all())
     else:
         error = ApiError('no_files_found', 'Please provide some parameters so we can find the files you need.')
@@ -57,7 +57,7 @@ def add_file():
                                             'Please specify a workflow_spec_id for this file in the form')), 404
     file_model = FileModel(version=0, workflow_spec_id=connexion.request.form['workflow_spec_id'])
     update_file_from_request(file_model)
-    return FileSchema().dump(file_model)
+    return FileModelSchema().dump(file_model)
 
 
 def update_file(file_id):
@@ -65,7 +65,7 @@ def update_file(file_id):
     if file_model is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
     update_file_from_request(file_model)
-    return FileSchema().dump(file_model)
+    return FileModelSchema().dump(file_model)
 
 
 def get_file(file_id):
@@ -84,7 +84,7 @@ def get_file_info(file_id):
     file_model = db.session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
-    return FileSchema().dump(file_model)
+    return FileModelSchema().dump(file_model)
 
 
 def delete_file(file_id):

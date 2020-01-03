@@ -14,9 +14,10 @@ class WorkflowSpecModel(db.Model):
     description = db.Column(db.Text)
 
 
-class WorkflowSpecSchema(ModelSchema):
+class WorkflowSpecModelSchema(ModelSchema):
     class Meta:
         model = WorkflowSpecModel
+
 
 class WorkflowStatus(enum.Enum):
     new = "new"
@@ -34,7 +35,7 @@ class WorkflowModel(db.Model):
     workflow_spec_id = db.Column(db.Integer, db.ForeignKey('workflow_spec.id'))
 
 
-class WorkflowSchema(ModelSchema):
+class WorkflowModelSchema(ModelSchema):
     class Meta:
         model = WorkflowModel
 
@@ -100,6 +101,7 @@ class FormSchema(ma.Schema):
 class TaskSchema(ma.Schema):
     class Meta:
         fields = ["id", "name", "title", "type", "state", "form", "documentation"]
+
     documentation = marshmallow.fields.String(required=False, allow_none=True)
     form = marshmallow.fields.Nested(FormSchema)
 
