@@ -32,12 +32,13 @@ class WorkflowModel(db.Model):
     bpmn_workflow_json = db.Column(db.TEXT)
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
-    workflow_spec_id = db.Column(db.Integer, db.ForeignKey('workflow_spec.id'))
+    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
 
 
 class WorkflowModelSchema(ModelSchema):
     class Meta:
         model = WorkflowModel
+        include_fk = True  # Includes foreign keys
 
     status = EnumField(WorkflowStatus)
 

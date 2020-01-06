@@ -36,9 +36,12 @@ def get_task(workflow_id, task_id):
 
 
 def update_task(workflow_id, task_id, body):
-    workflow_spec_model = db.session.query(WorkflowSpecModel).filter_by(id=body["id"]).first()
-    task = TaskSchema().load(body)
-    if task.form:
-        for field in task.form["fields"]:
-            print("Setting " + field["id"] + " to " + field["value"])
+    workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    task = workflow.bpmn_workflow().get_task(task_id)
+    if workflow and task and body:
+        print('workflow', workflow.id)
+        print('task', task.id)
+        print('body', body)
+        processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
+        processor.complete_task(task)
     return body

@@ -103,8 +103,8 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assertEqual(spec.id, workflow.workflow_spec_id)
 
         json_data = json.loads(rv.get_data(as_text=True))
-        workflow = WorkflowModelSchema().load(json_data, session=db.session)
-        self.assertEqual(workflow.id, workflow.id)
+        workflow2 = WorkflowModelSchema().load(json_data, session=db.session)
+        self.assertEqual(workflow.id, workflow2.id)
 
     def test_delete_workflow(self):
         self.load_example_data()

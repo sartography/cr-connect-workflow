@@ -564,8 +564,9 @@ components:
         study_id:
           readOnly: true
           type: integer
-        workflow_spec:
-          $ref: "#/components/schemas/WorkflowSpec"
+        workflow_spec_id:
+          readOnly: true
+          type: String
         current_task_ids:
           type: array
           items:
