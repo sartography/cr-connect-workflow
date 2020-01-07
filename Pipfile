@@ -28,6 +28,8 @@ webtest = "*"
 spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "master"}
 alembic = "*"
 coverage = "*"
+sphinx = "*"
+recommonmark = "*"
 
 [requires]
 python_version = "3.7"
