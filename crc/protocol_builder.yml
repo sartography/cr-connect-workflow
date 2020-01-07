@@ -1,0 +1,756 @@
+openapi: "3.0.2"
+info:
+  version: 1.0.0
+  title: Workflow Microservice
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:5000/v1.0
+paths:
+  # /v1.0/study
+  /study:
+    get:
+      operationId: crc.api.study.all_studies
+      summary: Provides a list of studies related to the current user.
+      tags:
+        - Studies
+      responses:
+        '200':
+          description: An array of studies, ordered by the last modified date.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: crc.api.study.add_study
+      summary: Creates a new study with the given parameters.
+      tags:
+        - Studies
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Study'
+      responses:
+        '200':
+          description: Study created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /study/{study_id}:
+    get:
+      operationId: crc.api.study.get_study
+      summary: Provides a single study
+      tags:
+        - Studies
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study for which workflows should be returned.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: An Study Object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: crc.api.study.update_study
+      summary: Updates an existing study with the given parameters.
+      tags:
+        - Studies
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study for which workflows should be returned.
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Study'
+      responses:
+        '200':
+          description: Study updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /study-update/{study_id}:
+    post:
+      operationId: crc.api.study.post_update_study_from_protocol_builder
+      summary: If the study is up-to-date with Protocol Builder, returns a 304 Not Modified. If out of date, return a 202 Accepted and study state changes to updating.
+      tags:
+        - Study Status
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study that should be checked for updates.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '304':
+          description: Study is currently up to date and does not need to be reloaded from Protocol Builder
+        '202':
+          description: Request accepted, will preform an update. Study state set to "updating"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /study/{study_id}/workflows:
+    get:
+      operationId: crc.api.study.get_study_workflows
+      summary: Provides a list of workflows to be completed for the given study.
+      tags:
+        - Studies
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study for which workflows should be returned.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: An array of workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workflow"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: crc.api.study.add_workflow_to_study
+      summary: Starts a new workflow for the given study using the provided spec.  This is atypical, and should be left to the protocol builder.
+      tags:
+        - Studies
+      parameters:
+        - name: study_id
+          in: path
+          required: true
+          description: The id of the study for which a workflow should start
+          schema:
+            type: integer
+            format: int32
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowSpec'
+      responses:
+        '200':
+          description: An array of workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workflow"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /workflow-specification:
+    get:
+      operationId: crc.api.workflow.all_specifications
+      summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
+      tags:
+        - Workflows and Tasks
+      responses:
+        '200':
+          description: An array of workflow specifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpec"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /file:
+    parameters:
+      - name: spec_id
+        in: query
+        required: false
+        description: The unique name of a specification
+        schema:
+          type: string
+    get:
+      operationId: crc.api.file.get_files
+      summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
+      tags:
+        - Files
+      responses:
+        '200':
+          description: An array of file descriptions (not the file content)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/File"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: crc.api.file.add_file
+      summary: Add a new file
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                workflow_spec_id:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Metadata about the uploaded file, but not the file content.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+
+  /file/{file_id}:
+    parameters:
+      - name: file_id
+        in: path
+        required: true
+        description: The id of the File requested
+        schema:
+          type: integer
+    get:
+      operationId: crc.api.file.get_file_info
+      summary: Returns metadata about a file.
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the file information requested.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+    put:
+      operationId: crc.api.file.update_file
+      summary: Update a file
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                workflow_spec_id:
+                  type: string
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Metadata about the uploaded file, but not the file content.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+    delete:
+      operationId: crc.api.file.delete_file
+      summary: Removes an existing file
+      tags:
+        - Files
+      responses:
+        '204':
+          description: The file has been removed.
+  /file/{file_id}/data:
+    parameters:
+      - name: file_id
+        in: path
+        required: true
+        description: The id of the File requested
+        schema:
+          type: integer
+    get:
+      operationId: crc.api.file.get_file
+      summary: Returns only the file contents
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the actual file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+  # /v1.0/workflow/0
+  /workflow/{workflow_id}:
+    parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+    get:
+      operationId: crc.api.workflow.get_workflow
+      summary: Detailed information for a specific workflow instance
+      tags:
+        - Workflows and Tasks
+      responses:
+        '200':
+          description: Returns details about the workflows state and current task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: crc.api.workflow.delete
+      summary: Removes an existing workflow
+      tags:
+        - Workflows and Tasks
+      responses:
+        '204':
+          description: The workflow was removed
+  /workflow/{workflow_id}/tasks:
+    get:
+      operationId: crc.api.workflow.get_tasks
+      summary: Return a list of all tasks for this workflow
+      tags:
+        - Workflows and Tasks
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  # /v1.0/workflow/0/task/0
+  /workflow/{workflow_id}/task/{task_id}:
+    get:
+      operationId: crc.api.workflow.get_task
+      summary: Get details of specific task in specific workflow instance
+      tags:
+        - Workflows and Tasks
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+        - name: task_id
+          in: path
+          required: true
+          description: The id of the task
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      operationId: crc.api.workflow.update_task
+      summary: Update, attempt to complete a workflow task
+      tags:
+        - Workflows and Tasks
+      parameters:
+        - in: body
+          name: task
+          schema:
+            $ref: '#/components/schemas/Task'
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+        - name: task_id
+          in: path
+          required: true
+          description: The id of the task
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Null response
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
+components:
+  schemas:
+    DataModel:
+      properties:
+        id:
+          type: string
+
+    Study:
+      properties:
+        id:
+          type: integer
+          example: 1234
+        title:
+          type: string
+          example: The impact of fried pickles on beer consumption in bipedal software developers.
+        last_updated:
+          type: string
+          format: date_time
+          example: "2019-12-25T09:12:33.001Z"
+        protocol_builder_status:
+          type: string
+          enum: [out_of_date, in_process, complete, updating]
+          example: done
+        primary_investigator_id:
+          type: string
+          example: dhf8r
+        sponsor:
+          type: string
+          example: "Sartography Pharmaceuticals"
+        ind_number:
+          type: string
+          example: "27b-6-42"
+    WorkflowSpec:
+      properties:
+        id:
+          type: string
+        display_name:
+          type: string
+        description:
+          type: string
+        bpmn_url:
+          type: string
+        svg_url:
+          type: string
+    File:
+      properties:
+        id:
+          type: number
+          readOnly: true
+        name:
+          type: string
+          example: "random_fact.bpmn"
+        version:
+          type: string
+          readOnly: true
+        last_updated:
+          type: string
+          format: date_time
+          example: "2019-12-25T09:12:33.001Z"
+          readOnly: true
+        type:
+          type: enum
+          enum: ['bpmn','svg', 'dmn']
+          readOnly: true
+        primary:
+          type: boolean
+          readOnly: true
+        content_type:
+          type: string
+          example: "application/xml"
+        workflow_spec_id:
+          type: string
+          example: "random_fact"
+        file:
+          type: file
+          format: binary
+    Workflow:
+      properties:
+        id:
+          readOnly: true
+          type: integer
+          format: int64
+        status:
+          type: enum
+          enum: ['user_input_required','waiting','complete']
+        study_id:
+          readOnly: true
+          type: integer
+        workflow_spec:
+          $ref: "#/components/schemas/WorkflowSpec"
+        current_task_ids:
+          type: array
+          items:
+            type: String
+        messages:
+          type: array
+          items:
+            type: String
+      example:
+        id: 291234
+        status: 'user_input_required'
+        current_task_ids: ['study_identification','Detailed Reports']
+        workflow_spec:
+          id: 'prot_def'
+          display_name: 'Protocol Definition'
+          description: 'Collect some additional information about your protocol to complete forms and processes.'
+          bpmn_url: 'https://crconnect.viriginia.edu/prot_def.bpmn'
+          svg_url: 'https://crconnect.viriginia.edu/prot_def.svg'
+        messages: [
+          "Protocol Builder reports that the protocol process is complete for this study.",
+          "IDS Submission Template was generated successfully."
+        ]
+    Task:
+      properties:
+        id:
+          readOnly: true
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+        state:
+          type: string
+        form:
+          $ref: "#/components/schemas/Form"
+        documentation:
+          type: string
+      example:
+        id: study_identification
+        name: Study Identification
+        title: IRB Review
+        documentation: "# Heading 1\n\nMarkdown documentation text goes here"
+        type: form
+        state: ready
+        form:
+          "key": "irb_review_form"
+          "fields":
+            - "id": "irb_review_type"
+              "type": "enum"
+              "label": "Select IRB Review Type"
+              "options":
+                - id: "emergency_use"
+                  name: "Emergency Use"
+                - id: "humanitarian_device"
+                  name: "Humanitarian Device"
+                - id: "non_human"
+                  name: "Non-Human"
+                - id: "non_uva_agent"
+                  name: "Non-UVA Agent"
+                - id: "exempt"
+                  name: "Exempt"
+                - id: "non_engaged"
+                  name: "Non-Engaged"
+                - id: "expedited"
+                  name: "Expedited"
+                - id: "full_board"
+                  name: "Full Board"
+              "defaultValue": "Full Board"
+              "validation":
+                - name: "required"
+                  config: "true"
+              "properties":
+                - id: "description"
+                  value: "Description text goes here"
+                - id: "help"
+                  value: "# Heading 1\n\nMarkdown help text goes here"
+                - id: "required_expression"
+                  value: "model.my_boolean_field_id && model.my_enum_field_value !== 'something'"
+                - id: "hide_expression"
+                  value: "model.my_enum_field_value === 'something'"
+    Form:
+      properties:
+        key:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/Field"
+      example:
+        "key": "irb_review_form"
+        "fields":
+          - "id": "irb_review_type"
+            "type": "enum"
+            "label": "Select IRB Review Type"
+            "options":
+              - id: "emergency_use"
+                name: "Emergency Use"
+              - id: "humanitarian_device"
+                name: "Humanitarian Device"
+              - id: "non_human"
+                name: "Non-Human"
+              - id: "non_uva_agent"
+                name: "Non-UVA Agent"
+              - id: "exempt"
+                name: "Exempt"
+              - id: "non_engaged"
+                name: "Non-Engaged"
+              - id: "expedited"
+                name: "Expedited"
+              - id: "full_board"
+                name: "Full Board"
+            "defaultValue": "Full Board"
+            "validation":
+              - name: "required"
+                config: "true"
+            "properties":
+              - id: "description"
+                value: "Description text goes here"
+              - id: "help"
+                value: "# Heading 1\n\nMarkdown help text goes here"
+              - id: "required_expression"
+                value: "model.my_boolean_field_id && model.my_enum_field_value !== 'something'"
+              - id: "hide_expression"
+                value: "model.my_enum_field_value === 'something'"
+    Field:
+      properties:
+        id:
+          type: string
+          readOnly: true
+        type:
+          type: enum
+          enum: ['string', 'long', 'boolean', 'date', 'enum']
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/EnumFieldOption"
+          readOnly: true
+        defaultValue:
+          type: string
+        validation:
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldValidation"
+          readOnly: true
+        "properties":
+          type: array
+          items:
+            $ref: "#/components/schemas/FieldProperty"
+          readOnly: true
+    EnumFieldOption:
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    FieldValidation:
+      properties:
+        name:
+          type: string
+        config:
+          type: string
+    FieldProperty:
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+      example:
+        id: "required_expression"
+        value: "model.should_require"
+    Error:
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          format: string
+          example: "access_denied"
+        message:
+          type: string
+          example: "You do not have permission to view the requested study."

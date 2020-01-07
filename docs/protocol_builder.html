@@ -1,0 +1,416 @@
+<!DOCTYPE HTML>
+<html>
+    
+    
+
+    <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Protocol Builder API</title>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+     body {
+         font-size: 14px;
+         position: relative;
+     }
+
+     * {
+         box-sizing: border-box;
+     }
+
+     #side-nav {
+         top: 0;
+         position: fixed;
+         right: 0;
+         height: 100vh;
+         overflow-y: auto;
+         overflow-x: hidden;
+         padding-top: 1rem;
+         padding-bottom: 1rem;
+     }
+
+     .col-md-9 {
+         padding-left: 2rem;
+     }
+
+     .nav ul {
+         list-style: none;
+         padding-left: 2rem;
+     }
+
+     .nav ul li a {
+         padding: 5px 10px;
+         color: inherit;
+     }
+
+     .nav li {
+         transition: border 0.25s;
+         word-break: break-word;
+     }
+
+     .nav-item {
+         margin-bottom: 2px;
+     }
+
+     .nav-link.active {
+         text-decoration: underline;
+     }
+
+     .group_link {
+         color: #333;
+         font-weight: bold;
+     }
+
+     a h3 {
+         margin: 0;
+     }
+
+     .card, .jumbotron, .form-control {
+         border-radius: 0;
+     }
+
+     .card-header>a {
+         color: inherit;
+     }
+
+     .schema>.schema, .enum {
+         padding-left: 1rem;
+     }
+
+     .schema>.sKey {
+         font-weight: bold;
+     }
+
+     .schema>.sOptional {
+         font-style: italic;
+     }
+
+     .schema>.sType {
+         color: #5555aa;
+     }
+
+     .sDescription>p {
+         padding: 0;
+         margin: 0;
+         padding-left: 1rem;
+     }
+
+     .footer {
+         text-align: right;
+     }
+
+     
+     li.get {
+         background-color: #E7F0F7;
+         border: thin solid #AAC0D3;
+         color: #445A6D;
+     }
+     .card-header.get {
+         background-color: #E7F0F7;
+         color: #445A6D;
+         border-bottom-color: #AAC0D3;
+     }
+     .card.get {
+         border-color: #AAC0D3;
+     }
+     
+     li.delete {
+         background-color: #F5E8E8;
+         border: thin solid #CFADAE;
+         color: #694748;
+     }
+     .card-header.delete {
+         background-color: #F5E8E8;
+         color: #694748;
+         border-bottom-color: #CFADAE;
+     }
+     .card.delete {
+         border-color: #CFADAE;
+     }
+     
+     li.post {
+         background-color: #E7F6EC;
+         border: thin solid #AACFB8;
+         color: #446952;
+     }
+     .card-header.post {
+         background-color: #E7F6EC;
+         color: #446952;
+         border-bottom-color: #AACFB8;
+     }
+     .card.post {
+         border-color: #AACFB8;
+     }
+     
+     li.put {
+         background-color: #F9F2E9;
+         border: thin solid #D7C7B1;
+         color: #71614B;
+     }
+     .card-header.put {
+         background-color: #F9F2E9;
+         color: #71614B;
+         border-bottom-color: #D7C7B1;
+     }
+     .card.put {
+         border-color: #D7C7B1;
+     }
+     
+     li.patch {
+         background-color: #FCE9E3;
+         border: thin solid #DCBCAA;
+         color: #765644;
+     }
+     .card-header.patch {
+         background-color: #FCE9E3;
+         color: #765644;
+         border-bottom-color: #DCBCAA;
+     }
+     .card.patch {
+         border-color: #DCBCAA;
+     }
+     
+
+    </style>
+</head>
+    <body data-spy="scroll" data-target="#side-nav">
+
+    <div class="container-fluid">
+        <br>
+        <div class="row">
+            <div class="col-md-3" id="side-nav">
+                <input id="search" type="text" class="form-control" placeholder="Search">
+                <ul class="nav nav-list">
+                    
+                    <span class="list-group">
+                        <a href="#tag_developers"
+                           class="group_link">developers</a>
+                        <ul class="nav">
+                            
+                            <li class="nav-item get">
+                                <a class="nav-link" href="#get__protocol">
+                                    <strong>GET</strong>
+                                    /protocol
+                                </a>
+                            </li>
+
+                            
+                            <li class="nav-item get">
+                                <a class="nav-link" href="#get__protocol__id_">
+                                    <strong>GET</strong>
+                                    /protocol/{id}
+                                </a>
+                            </li>
+
+                            
+                        </ul>
+                    </span>
+                    
+                </ul>
+            </div>
+            <div class="col-md-9">
+
+                <div id="info" class="jumbotron">
+                    <h1>Protocol Builder API 1.0.0</h1>
+
+                    
+                    <p>Provides access to detailed information about a protocol under definition within the IRB's Protocol Builder Application at the University of Virginia.</p>
+                    
+                </div>
+
+                <hr>
+
+                <div class="group">
+                    <h1 id="tag_developers">developers</h1>
+                    <div class="card method get">
+                        <div class="card-header get"
+                             id="get__protocol">
+                            <a name="get__protocol">
+                                <h3>
+                                    <strong>GET</strong>
+                                    /protocol
+                                    <span class="pull-right">
+                                        A list of all protocols related to a given UVA ID
+                                    </span>
+                                </h3>
+                            </a>
+                        </div>
+                        <div class="card-block"
+                             id="get__protocol_d">
+                            
+                            <h3>Description</h3>
+                            <p>By passing in a valid UVA Id (ex: dhf8r) it will return a list of all protocols created by that individual.  </p>
+                            
+
+                            
+
+                            
+                            <h3>Parameters</h3>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Located in</th>
+                                        <th>Description</th>
+                                        <th>Required</th>
+                                        <th>Schema</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                    <tr>
+                                        <td>uva_id</td>
+                                        <td>query</td>
+                                        <td>A valid user id for the university of Virginia.</td>
+                                        <td>True</td>
+                                        <td>string</td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td>after_date</td>
+                                        <td>query</td>
+                                        <td>Restrict the protocols to only those that were last modified after the given date. Date format is yyyy-mm-dd (2019-12-25)</td>
+                                        <td></td>
+                                        <td>date string</td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                            
+
+                            <h3>Responses</h3>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Description</th>
+                                        <th>Schema</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                    <tr>
+                                        <td>200</td>
+                                        <td>A list of protocol details</td>
+                                        <td><div class="schema">[<div class="schema"><span class="sKey">id</span> (<span class="sType">string string</span>)</div><div class="schema"><span class="sKey">last_updated</span> (<span class="sType">date_time string</span>)</div><div class="schema"><span class="sKey">title</span> (<span class="sType">string</span>)</div>]</div></td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td>400</td>
+                                        <td>bad input parameter</td>
+                                        <td></td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card method get">
+                        <div class="card-header get"
+                             id="get__protocol__id_">
+                            <a name="get__protocol__id_">
+                                <h3>
+                                    <strong>GET</strong>
+                                    /protocol/{id}
+                                    <span class="pull-right">
+                                        Details about a specific protocol.
+                                    </span>
+                                </h3>
+                            </a>
+                        </div>
+                        <div class="card-block"
+                             id="get__protocol__id__d">
+                            
+
+                            
+
+                            
+                            <h3>Parameters</h3>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Located in</th>
+                                        <th>Description</th>
+                                        <th>Required</th>
+                                        <th>Schema</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                    <tr>
+                                        <td>id</td>
+                                        <td>path</td>
+                                        <td>The unique id of the protocol.</td>
+                                        <td>True</td>
+                                        <td>string string</td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                            
+
+                            <h3>Responses</h3>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Description</th>
+                                        <th>Schema</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    
+                                    <tr>
+                                        <td>200</td>
+                                        <td>Details about the protocol</td>
+                                        <td><div class="schema"><span class="sKey">id</span> (<span class="sType">string string</span>)</div><div class="schema"><span class="sKey">last_updated</span> (<span class="sType">date_time string</span>)</div><div class="schema"><span class="sKey">protocol_status</span> (<span class="sType">string</span>)<span class="enum">[started | done]</span></div><div class="schema"><span class="sKey">title</span> (<span class="sType">string</span>)</div></td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td>400</td>
+                                        <td>bad input parameter</td>
+                                        <td></td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+
+                <footer class="footer">
+                    Generated by
+                    <a href="https://github.com/JuhaniImberg/swagger-render">
+                        Swagger-Render
+                    </a> 1.6.0<br>
+                    2020-01-07 19:00:27.484701
+                </footer>
+            </div>
+        </div>
+
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha/js/bootstrap.min.js"></script>
+    <script src="https://cdn.rawgit.com/joshaven/string_score/3b51216ccaa15a795df27502df5e8fbca554c0ab/string_score.min.js"></script>
+    <script>
+     $("#search").on("input", function(e) {
+         var text = e.target.value;
+         $(".nav-item").map(function(i, el) {
+             var cmp = $(el).children()[0].innerText;
+             if(cmp.score(text) > 0 || text.length == 0) {
+                 $(el).show();
+             } else {
+                 $(el).hide();
+             }
+         });
+     });
+    </script>
+</body>
+</html>
