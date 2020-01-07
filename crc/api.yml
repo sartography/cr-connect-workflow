@@ -408,26 +408,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
   # /v1.0/workflow/0/task/0
-  /workflow/{workflow_id}/task/{task_id}:
+  /workflow/{workflow_id}/task/{task_name}:
+    parameters:
+      - name: workflow_id
+        in: path
+        required: true
+        description: The id of the workflow
+        schema:
+          type: integer
+          format: int32
+      - name: task_name
+        in: path
+        required: true
+        description: The id of the task
+        schema:
+          type: string
     get:
       operationId: crc.api.workflow.get_task
       summary: Get details of specific task in specific workflow instance
       tags:
         - Workflows and Tasks
-      parameters:
-        - name: workflow_id
-          in: path
-          required: true
-          description: The id of the workflow
-          schema:
-            type: integer
-            format: int32
-        - name: task_id
-          in: path
-          required: true
-          description: The id of the task
-          schema:
-            type: string
       responses:
         '200':
           description: Expected response to a valid request
@@ -452,19 +452,6 @@ paths:
           name: task
           schema:
             $ref: '#/components/schemas/Task'
-        - name: workflow_id
-          in: path
-          required: true
-          description: The id of the workflow
-          schema:
-            type: integer
-            format: int32
-        - name: task_id
-          in: path
-          required: true
-          description: The id of the task
-          schema:
-            type: string
       responses:
         '201':
           description: Null response

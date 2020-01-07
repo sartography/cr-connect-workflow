@@ -35,9 +35,10 @@ def get_task(workflow_id, task_id):
     return workflow.bpmn_workflow().get_task(task_id)
 
 
-def update_task(workflow_id, task_id, body):
+def update_task(workflow_id, task_name, body):
     workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    task = workflow.bpmn_workflow().get_task(task_id)
+    processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
+    task = processor.bpmn_workflow.get_tasks_from_spec_name(task_name)[0]
     if workflow and task and body:
         print('workflow', workflow.id)
         print('task', task.id)
