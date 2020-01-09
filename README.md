@@ -60,7 +60,8 @@ You can try re-running this and getting the question wrong.
 You might open up the Joke bpmn diagram so you can see what this looks like to 
 draw out.
 
-
+## Documentation
+Additional Documentation is available on [ReadTheDocs](https://cr-connect-workflow.readthedocs.io/en/latest/#)
 
 ### Additional Reading
 
@@ -73,5 +74,3 @@ other software systems for businesses are built.  Know it well.
 1. Be sure to give each task a thoughtful (but unique!) id. This will 
 make the command line and debugging far far easier.  I've tended to pre-fix
 these, so task_ask_riddle if a task is asking a riddle for instance.
-
-2. 
