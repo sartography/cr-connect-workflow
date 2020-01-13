@@ -30,12 +30,13 @@ class FileModel(db.Model):
     type = db.Column(db.Enum(FileType))
     primary = db.Column(db.Boolean)
     content_type = db.Column(db.String)
-    workflow_spec_id = db.Column(db.Integer, db.ForeignKey('workflow_spec.id'))
+    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
 
 
 class FileModelSchema(ModelSchema):
     class Meta:
         model = FileModel
+        include_fk = True  # Includes foreign keys
     type = EnumField(FileType)
 
 
