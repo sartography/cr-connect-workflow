@@ -28,6 +28,7 @@ migrate = Migrate(app, db)
 ma = Marshmallow(app)
 
 from crc import models
+from crc import api
 
 connexion_app.add_api('api.yml')
 cors = CORS(connexion_app.app)
