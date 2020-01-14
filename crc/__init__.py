@@ -21,10 +21,8 @@ if "TESTING" in os.environ and os.environ["TESTING"] == "true":
 
 
 db = SQLAlchemy(app)
-""":type: sqlalchemy.orm.SQLAlchemy"""
 
 session = db.session
-""":type: sqlalchemy.orm.Session"""
 
 migrate = Migrate(app, db)
 ma = Marshmallow(app)

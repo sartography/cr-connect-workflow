@@ -133,7 +133,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
   /study/{study_id}/workflows:
     get:
       operationId: api.study.get_study_workflows
@@ -322,7 +321,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
-
   /file/{file_id}:
     parameters:
       - name: file_id
@@ -537,14 +535,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-
 components:
   schemas:
     DataModel:
       properties:
         id:
           type: string
-
     Study:
       properties:
         id:
