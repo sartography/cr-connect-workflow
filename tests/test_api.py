@@ -1,8 +1,8 @@
-from datetime import datetime
 import json
 import unittest
+from datetime import datetime
 
-from crc import db
+from crc import session
 from crc.models.study import StudyModel, StudyModelSchema, ProtocolBuilderStatus
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
     WorkflowModelSchema, TaskSchema
@@ -13,7 +13,7 @@ class TestStudy(BaseTest, unittest.TestCase):
 
     def test_study_basics(self):
         self.load_example_data()
-        study = db.session.query(StudyModel).first()
+        study = session.query(StudyModel).first()
         self.assertIsNotNone(study)
 
     def test_add_study(self):
@@ -30,7 +30,7 @@ class TestStudy(BaseTest, unittest.TestCase):
                            content_type="application/json",
                            data=json.dumps(StudyModelSchema().dump(study)))
         self.assert_success(rv)
-        db_study = db.session.query(StudyModel).first()
+        db_study = session.query(StudyModel).first()
         self.assertIsNotNone(db_study)
         self.assertEqual(study["id"], db_study.id)
         self.assertEqual(study["title"], db_study.title)
@@ -42,7 +42,7 @@ class TestStudy(BaseTest, unittest.TestCase):
 
     def test_update_study(self):
         self.load_example_data()
-        study: StudyModel = db.session.query(StudyModel).first()
+        study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
         study.protocol_builder_status = ProtocolBuilderStatus.complete
 
@@ -50,20 +50,20 @@ class TestStudy(BaseTest, unittest.TestCase):
                            content_type="application/json",
                            data=json.dumps(StudyModelSchema().dump(study)))
         self.assert_success(rv)
-        db_study = db.session.query(StudyModel).first()
+        db_study = session.query(StudyModel).first()
         self.assertIsNotNone(db_study)
         self.assertEqual(study.title, db_study.title)
         self.assertEqual(study.protocol_builder_status, db_study.protocol_builder_status)
 
     def test_study_api_get_single_study(self):
         self.load_example_data()
-        study = db.session.query(StudyModel).first()
+        study = session.query(StudyModel).first()
         rv = self.app.get('/v1.0/study/%i' % study.id,
                           follow_redirects=True,
                           content_type="application/json")
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        study2 = StudyModelSchema().load(json_data, session=db.session)
+        study2 = StudyModelSchema().load(json_data, session=session)
         self.assertEqual(study, study2)
         self.assertEqual(study.id, study2.id)
         self.assertEqual(study.title, study2.title)
@@ -75,13 +75,13 @@ class TestStudy(BaseTest, unittest.TestCase):
 
     def test_list_workflow_specifications(self):
         self.load_example_data()
-        spec = db.session.query(WorkflowSpecModel).first()
+        spec = session.query(WorkflowSpecModel).first()
         rv = self.app.get('/v1.0/workflow-specification',
                           follow_redirects=True,
                           content_type="application/json")
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        specs = WorkflowSpecModelSchema(many=True).load(json_data, session=db.session)
+        specs = WorkflowSpecModelSchema(many=True).load(json_data, session=session)
         spec2 = specs[0]
         self.assertEqual(spec.id, spec2.id)
         self.assertEqual(spec.display_name, spec2.display_name)
@@ -89,52 +89,53 @@ class TestStudy(BaseTest, unittest.TestCase):
 
     def test_add_new_workflow_specification(self):
         self.load_example_data();
-        num_before = db.session.query(WorkflowSpecModel).count()
-        spec = WorkflowSpecModel(id='make_cookies', display_name='Cooooookies', description='Om nom nom delicious cookies')
+        num_before = session.query(WorkflowSpecModel).count()
+        spec = WorkflowSpecModel(id='make_cookies', display_name='Cooooookies',
+                                 description='Om nom nom delicious cookies')
         rv = self.app.post('/v1.0/workflow-specification', content_type="application/json",
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assert_success(rv)
-        db_spec = db.session.query(WorkflowSpecModel).filter_by(id='make_cookies').first()
+        db_spec = session.query(WorkflowSpecModel).filter_by(id='make_cookies').first()
         self.assertEqual(spec.display_name, db_spec.display_name)
-        num_after = db.session.query(WorkflowSpecModel).count()
+        num_after = session.query(WorkflowSpecModel).count()
         self.assertEqual(num_after, num_before + 1)
 
     def test_add_workflow_to_study(self):
         self.load_example_data()
-        study = db.session.query(StudyModel).first()
-        self.assertEqual(0, db.session.query(WorkflowModel).count())
-        spec = db.session.query(WorkflowSpecModel).first()
+        study = session.query(StudyModel).first()
+        self.assertEqual(0, session.query(WorkflowModel).count())
+        spec = session.query(WorkflowSpecModel).first()
         rv = self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assert_success(rv)
-        self.assertEqual(1, db.session.query(WorkflowModel).count())
-        workflow = db.session.query(WorkflowModel).first()
+        self.assertEqual(1, session.query(WorkflowModel).count())
+        workflow = session.query(WorkflowModel).first()
         self.assertEqual(study.id, workflow.study_id)
         self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
         self.assertIsNotNone(workflow.bpmn_workflow_json)
         self.assertEqual(spec.id, workflow.workflow_spec_id)
 
         json_data = json.loads(rv.get_data(as_text=True))
-        workflow2 = WorkflowModelSchema().load(json_data, session=db.session)
+        workflow2 = WorkflowModelSchema().load(json_data, session=session)
         self.assertEqual(workflow.id, workflow2.id)
 
     def test_delete_workflow(self):
         self.load_example_data()
-        study = db.session.query(StudyModel).first()
-        spec = db.session.query(WorkflowSpecModel).first()
+        study = session.query(StudyModel).first()
+        spec = session.query(WorkflowSpecModel).first()
         rv = self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
-        self.assertEqual(1, db.session.query(WorkflowModel).count())
+        self.assertEqual(1, session.query(WorkflowModel).count())
         json_data = json.loads(rv.get_data(as_text=True))
-        workflow = WorkflowModelSchema().load(json_data, session=db.session)
+        workflow = WorkflowModelSchema().load(json_data, session=session)
         rv = self.app.delete('/v1.0/workflow/%i' % workflow.id)
         self.assert_success(rv)
-        self.assertEqual(0, db.session.query(WorkflowModel).count())
+        self.assertEqual(0, session.query(WorkflowModel).count())
 
     def test_get_current_user_tasks(self):
         self.load_example_data()
-        study = db.session.query(StudyModel).first()
-        spec = db.session.query(WorkflowSpecModel).filter_by(id='random_fact').first()
+        study = session.query(StudyModel).first()
+        spec = session.query(WorkflowSpecModel).filter_by(id='random_fact').first()
         self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
                       data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         rv = self.app.get('/v1.0/workflow/%i/tasks' % study.id, content_type="application/json")
@@ -147,12 +148,12 @@ class TestStudy(BaseTest, unittest.TestCase):
     def test_two_forms_task(self):
         # Set up a new workflow
         self.load_example_data()
-        study = db.session.query(StudyModel).first()
-        spec = db.session.query(WorkflowSpecModel).filter_by(id='two_forms').first()
+        study = session.query(StudyModel).first()
+        spec = session.query(WorkflowSpecModel).filter_by(id='two_forms').first()
         rv = self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         json_data = json.loads(rv.get_data(as_text=True))
-        workflow = WorkflowModelSchema().load(json_data, session=db.session)
+        workflow = WorkflowModelSchema().load(json_data, session=session)
 
         # get the first from in the two form workflow.
         rv = self.app.get('/v1.0/workflow/%i/tasks' % workflow.id, content_type="application/json")
@@ -165,8 +166,9 @@ class TestStudy(BaseTest, unittest.TestCase):
 
         # Complete the form for Step one and post it.
         tasks[0].form['fields'][0]['value'] = "Blue"
-        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, tasks[0].id), content_type="application/json",
-                           data=json.dumps({"color":"blue"}))
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, tasks[0].id),
+                          content_type="application/json",
+                          data=json.dumps({"color": "blue"}))
         self.assert_success(rv)
 
         # Get the next Task

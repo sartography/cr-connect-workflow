@@ -4,7 +4,7 @@ import json
 import os
 os.environ["TESTING"] = "true"
 
-from crc import app, db
+from crc import app, db, session
 from example_data import ExampleDataLoader
 
 # UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
@@ -32,7 +32,7 @@ class BaseTest:
     @classmethod
     def tearDownClass(cls):
         db.drop_all()
-        db.session.remove()
+        session.remove()
         pass
 
     def setUp(self):

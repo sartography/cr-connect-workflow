@@ -1,12 +1,11 @@
 import xml.etree.ElementTree as ElementTree
 
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
-from SpiffWorkflow.bpmn.serializer.CompactWorkflowSerializer import CompactWorkflowSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.camunda.serializer.CamundaSerializer import CamundaSerializer
 
-from crc import db
+from crc import session
 from crc.models.file import FileDataModel, FileModel
 from crc.models.workflow import WorkflowStatus
 
@@ -32,7 +31,6 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
 
 class WorkflowProcessor:
-
     _script_engine = CustomBpmnScriptEngine()
     _serializer = CamundaSerializer()
 
@@ -42,7 +40,7 @@ class WorkflowProcessor:
 
     @staticmethod
     def get_spec(workflow_spec_id):
-        file_data_models = db.session.query(FileDataModel) \
+        file_data_models = session.query(FileDataModel) \
             .join(FileModel) \
             .filter(FileModel.workflow_spec_id == workflow_spec_id).all()
         parser = CamundaParser()
@@ -89,7 +87,6 @@ class WorkflowProcessor:
 
     def get_ready_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
-
 
     @staticmethod
     def __get_process_id(et_root):

@@ -1,10 +1,10 @@
 import datetime
 import os
 
-from crc import db, app
-from crc.models.study import StudyModel
-from crc.models.workflow import  WorkflowSpecModel
+from crc import app, db, session
 from crc.models.file import FileType, FileModel, FileDataModel
+from crc.models.study import StudyModel
+from crc.models.workflow import WorkflowSpecModel
 
 
 class ExampleDataLoader:
@@ -59,12 +59,12 @@ class ExampleDataLoader:
 
     @staticmethod
     def clean_db():
-        db.session.flush()  # Clear out any transactions before deleting it all to avoid spurious errors.
+        session.flush()  # Clear out any transactions before deleting it all to avoid spurious errors.
         for table in reversed(db.metadata.sorted_tables):
-            db.session.execute(table.delete())
-        db.session.flush()
+            session.execute(table.delete())
+        session.flush()
 
     def load_all(self):
-        db.session.add_all(self.make_data())
-        db.session.commit()
-        db.session.flush()
+        session.add_all(self.make_data())
+        session.commit()
+        session.flush()
