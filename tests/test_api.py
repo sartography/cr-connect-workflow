@@ -17,6 +17,7 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assertIsNotNone(study)
 
     def test_add_study(self):
+        self.load_example_data()
         study = {
             "id": 12345,
             "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents for Interstellar Spacecraft",
@@ -30,9 +31,8 @@ class TestStudy(BaseTest, unittest.TestCase):
                            content_type="application/json",
                            data=json.dumps(StudyModelSchema().dump(study)))
         self.assert_success(rv)
-        db_study = session.query(StudyModel).first()
+        db_study = session.query(StudyModel).filter_by(id=12345).first()
         self.assertIsNotNone(db_study)
-        self.assertEqual(study["id"], db_study.id)
         self.assertEqual(study["title"], db_study.title)
         self.assertEqual(study["last_updated"], db_study.last_updated)
         self.assertEqual(study["protocol_builder_status"], db_study.protocol_builder_status)
@@ -155,7 +155,7 @@ class TestStudy(BaseTest, unittest.TestCase):
         json_data = json.loads(rv.get_data(as_text=True))
         workflow = WorkflowModelSchema().load(json_data, session=session)
 
-        # get the first from in the two form workflow.
+        # get the first form in the two form workflow.
         rv = self.app.get('/v1.0/workflow/%i/tasks' % workflow.id, content_type="application/json")
         json_data = json.loads(rv.get_data(as_text=True))
         tasks = TaskSchema(many=True).load(json_data)
