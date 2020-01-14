@@ -9,6 +9,13 @@ def all_specifications():
     return schema.dump(db.session.query(WorkflowSpecModel).all())
 
 
+def add_workflow_specification(body):
+    workflow_spec = WorkflowSpecModelSchema().load(body, session=db.session)
+    db.session.add(workflow_spec)
+    db.session.commit()
+    return WorkflowSpecModelSchema().dump(workflow_spec)
+
+
 def get_workflow(workflow_id):
     schema = WorkflowModelSchema()
     workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()

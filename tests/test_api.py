@@ -87,6 +87,18 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assertEqual(spec.display_name, spec2.display_name)
         self.assertEqual(spec.description, spec2.description)
 
+    def test_add_new_workflow_specification(self):
+        self.load_example_data();
+        num_before = db.session.query(WorkflowSpecModel).count()
+        spec = WorkflowSpecModel(id='make_cookies', display_name='Cooooookies', description='Om nom nom delicious cookies')
+        rv = self.app.post('/v1.0/workflow-specification', content_type="application/json",
+                           data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+        self.assert_success(rv)
+        db_spec = db.session.query(WorkflowSpecModel).filter_by(id='make_cookies').first()
+        self.assertEqual(spec.display_name, db_spec.display_name)
+        num_after = db.session.query(WorkflowSpecModel).count()
+        self.assertEqual(num_after, num_before + 1)
+
     def test_add_workflow_to_study(self):
         self.load_example_data()
         study = db.session.query(StudyModel).first()

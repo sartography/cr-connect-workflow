@@ -217,6 +217,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+    post:
+      operationId: crc.api.workflow.add_workflow_specification
+      summary: Creates a new workflow specification with the given parameters.
+      tags:
+        - Workflows and Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowSpec'
+      responses:
+        '200':
+          description: Workflow specification created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /file:
     parameters:
       - name: spec_id
