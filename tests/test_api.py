@@ -145,7 +145,7 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assertEqual(3, len(tasks[0].form["fields"][0]["options"]))
 
     def test_two_forms_task(self):
-        # Set up a new workfllow
+        # Set up a new workflow
         self.load_example_data()
         study = db.session.query(StudyModel).first()
         spec = db.session.query(WorkflowSpecModel).filter_by(id='two_forms').first()
@@ -164,9 +164,9 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assertEqual(1, len(tasks[0].form['fields']))
 
         # Complete the form for Step one and post it.
-        tasks[0].form['fields'][0]['value']="Blue"
-        rv = self.app.put('/v1.0/workflow/%i/task/%s' % (workflow.id, tasks[0].name), content_type="application/json",
-                           data=json.dumps(TaskSchema().dump(tasks[0])))
+        tasks[0].form['fields'][0]['value'] = "Blue"
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, tasks[0].id), content_type="application/json",
+                           data=json.dumps({"color":"blue"}))
         self.assert_success(rv)
 
         # Get the next Task
@@ -175,4 +175,3 @@ class TestStudy(BaseTest, unittest.TestCase):
         json_data = json.loads(rv.get_data(as_text=True))
         tasks = TaskSchema(many=True).load(json_data)
         self.assertEqual("StepTwo", tasks[0].name)
-        self.assertEqual(3, len(tasks[0].form["fields"][0]["options"]))

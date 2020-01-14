@@ -508,9 +508,9 @@
         },
         "pyrsistent": {
             "hashes": [
-                "sha256:f3b280d030afb652f79d67c5586157c5c1355c9a58dfc7940566e28d28f3df1b"
+                "sha256:cdc7b5e3ed77bed61270a47d35434a30617b9becdf2478af76ad2c6ade307280"
             ],
-            "version": "==0.15.6"
+            "version": "==0.15.7"
         },
         "python-dateutil": {
             "hashes": [
@@ -640,7 +640,7 @@
         "spiffworkflow": {
             "editable": true,
             "git": "https://github.com/sartography/SpiffWorkflow.git",
-            "ref": "d9f406c57ab05ce6e978318a22b6d327b635e1ae"
+            "ref": "970371c1a0aaacb8ed9d25321ee534bf34fa5fa8"
         },
         "sqlalchemy": {
             "hashes": [

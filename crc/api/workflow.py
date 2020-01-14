@@ -1,3 +1,5 @@
+import uuid
+
 from crc import db
 from crc.models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModelSchema, WorkflowSpecModel, \
     Task, TaskSchema
@@ -42,14 +44,13 @@ def get_task(workflow_id, task_id):
     return workflow.bpmn_workflow().get_task(task_id)
 
 
-def update_task(workflow_id, task_name, body):
+def update_task(workflow_id, task_id, body):
     workflow = db.session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
-    task = processor.bpmn_workflow.get_tasks_from_spec_name(task_name)[0]
-    if workflow and task and body:
-        print('workflow', workflow.id)
-        print('task', task.id)
-        print('body', body)
-        processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
-        processor.complete_task(task)
-    return body
+    task_id = uuid.UUID(task_id)
+    task = processor.bpmn_workflow.get_task(task_id)
+    task.data = body
+    processor.complete_task(task)
+    workflow.bpmn_workflow_json = processor.serialize()
+    db.session.add(workflow)
+    db.session.commit()

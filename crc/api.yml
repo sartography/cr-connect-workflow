@@ -431,7 +431,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
   # /v1.0/workflow/0/task/0
-  /workflow/{workflow_id}/task/{task_name}:
+  /workflow/{workflow_id}/task/{task_id}:
     parameters:
       - name: workflow_id
         in: path
@@ -440,12 +440,13 @@ paths:
         schema:
           type: integer
           format: int32
-      - name: task_name
+      - name: task_id
         in: path
         required: true
         description: The id of the task
         schema:
           type: string
+          format: uuid
     get:
       operationId: crc.api.workflow.get_task
       summary: Get details of specific task in specific workflow instance
@@ -464,17 +465,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
+  /workflow/{workflow_id}/task/{task_id}/data:
+    parameters:
+      - name: workflow_id
+        in: path
+        required: true
+        description: The id of the workflow
+        schema:
+          type: integer
+          format: int32
+      - name: task_id
+        in: path
+        required: true
+        description: The id of the task
+        schema:
+          type: string
+          format: uuid
     put:
       operationId: crc.api.workflow.update_task
-      summary: Update, attempt to complete a workflow task
+      summary: Exclusively for User Tasks, submits form data as a flat set of key/values.
       tags:
         - Workflows and Tasks
-      parameters:
-        - in: body
-          name: task
-          schema:
-            $ref: '#/components/schemas/Task'
+      requestBody:
+        description: Key / Value pairs in JSON format.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                favorite_color: blue
+                capital_assyria: Assur
       responses:
         '201':
           description: Null response
