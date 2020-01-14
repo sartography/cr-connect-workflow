@@ -1,7 +1,5 @@
 import uuid
 
-import connexion
-
 from api.common import ApiError, ApiErrorSchema
 from crc import session
 from crc.models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModelSchema, WorkflowSpecModel, \
