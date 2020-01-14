@@ -1,5 +1,8 @@
 import uuid
 
+import connexion
+
+from api.common import ApiError, ApiErrorSchema
 from crc import session
 from crc.models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModelSchema, WorkflowSpecModel, \
     Task, TaskSchema
@@ -12,10 +15,33 @@ def all_specifications():
 
 
 def add_workflow_specification(body):
-    workflow_spec = WorkflowSpecModelSchema().load(body, session=session)
-    session.add(workflow_spec)
+    new_spec = WorkflowSpecModelSchema().load(body, session=session)
+    session.add(new_spec)
     session.commit()
-    return WorkflowSpecModelSchema().dump(workflow_spec)
+    return WorkflowSpecModelSchema().dump(new_spec)
+
+
+def update_workflow_specification(spec_id, body):
+
+    if spec_id is None:
+        error = ApiError('unknown_study', 'Please provide a valid Workflow Specification ID.')
+        return ApiErrorSchema.dump(error), 404
+
+    db_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    """:type: WorkflowSpecModel"""
+
+    if db_spec is None:
+        error = ApiError('unknown_study', 'The Workflow Specification "' + spec_id + '" is not recognized.')
+        return ApiErrorSchema.dump(error), 404
+
+    new_spec = WorkflowSpecModelSchema().load(body, session=session)
+    """:type: WorkflowSpecModel"""
+
+    db_spec.id = new_spec.id
+    db_spec.display_name = new_spec.display_name
+    db_spec.description = new_spec.description
+    session.commit()
+    return WorkflowSpecModelSchema().dump(db_spec)
 
 
 def get_workflow(workflow_id):

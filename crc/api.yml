@@ -240,6 +240,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /workflow-specification/{spec_id}:
+    put:
+      operationId: crc.api.workflow.update_workflow_specification
+      summary: Modifies an existing workflow specification with the given parameters.
+      tags:
+        - Workflows and Tasks
+      parameters:
+        - name: spec_id
+          in: path
+          required: false
+          description: The unique id of an existing workflow specification to modify.
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowSpec'
+      responses:
+        '200':
+          description: Workflow specification created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /file:
     parameters:
       - name: spec_id
@@ -546,10 +577,6 @@ components:
         display_name:
           type: string
         description:
-          type: string
-        bpmn_url:
-          type: string
-        svg_url:
           type: string
     File:
       properties:

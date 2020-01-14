@@ -100,6 +100,23 @@ class TestStudy(BaseTest, unittest.TestCase):
         num_after = session.query(WorkflowSpecModel).count()
         self.assertEqual(num_after, num_before + 1)
 
+    def test_modify_workflow_specification(self):
+        self.load_example_data()
+        old_id = 'random_fact'
+        spec = session.query(WorkflowSpecModel).filter_by(id=old_id).first()
+        """:type: WorkflowSpecModel"""
+
+        spec.id = 'odd_datum'
+        num_before = session.query(WorkflowSpecModel).count()
+
+        rv = self.app.post('/v1.0/workflow-specification?spec_id=%s' % old_id, content_type="application/json",
+                           data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+        self.assert_success(rv)
+        db_spec = session.query(WorkflowSpecModel).filter_by(id=spec.id).first()
+        self.assertEqual(spec.display_name, db_spec.display_name)
+        num_after = session.query(WorkflowSpecModel).count()
+        self.assertEqual(num_after, num_before)
+
     def test_add_workflow_to_study(self):
         self.load_example_data()
         study = session.query(StudyModel).first()
