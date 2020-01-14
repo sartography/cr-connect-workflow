@@ -10,7 +10,7 @@ paths:
   # /v1.0/study
   /study:
     get:
-      operationId: api.study.all_studies
+      operationId: crc.api.study.all_studies
       summary: Provides a list of studies related to the current user.
       tags:
         - Studies
@@ -28,7 +28,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     post:
-      operationId: api.study.add_study
+      operationId: crc.api.study.add_study
       summary: Creates a new study with the given parameters.
       tags:
         - Studies
@@ -52,7 +52,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /study/{study_id}:
     get:
-      operationId: api.study.get_study
+      operationId: crc.api.study.get_study
       summary: Provides a single study
       tags:
         - Studies
@@ -78,7 +78,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     post:
-      operationId: api.study.update_study
+      operationId: crc.api.study.update_study
       summary: Updates an existing study with the given parameters.
       tags:
         - Studies
@@ -110,7 +110,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /study-update/{study_id}:
     post:
-      operationId: api.study.post_update_study_from_protocol_builder
+      operationId: crc.api.study.post_update_study_from_protocol_builder
       summary: If the study is up-to-date with Protocol Builder, returns a 304 Not Modified. If out of date, return a 202 Accepted and study state changes to updating.
       tags:
         - Study Status
@@ -135,7 +135,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /study/{study_id}/workflows:
     get:
-      operationId: api.study.get_study_workflows
+      operationId: crc.api.study.get_study_workflows
       summary: Provides a list of workflows to be completed for the given study.
       tags:
         - Studies
@@ -163,7 +163,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     post:
-      operationId: api.study.add_workflow_to_study
+      operationId: crc.api.study.add_workflow_to_study
       summary: Starts a new workflow for the given study using the provided spec.  This is atypical, and should be left to the protocol builder.
       tags:
         - Studies
@@ -197,7 +197,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /workflow-specification:
     get:
-      operationId: api.workflow.all_specifications
+      operationId: crc.api.workflow.all_specifications
       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
       tags:
         - Workflows and Tasks
@@ -217,7 +217,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     post:
-      operationId: api.workflow.add_workflow_specification
+      operationId: crc.api.workflow.add_workflow_specification
       summary: Creates a new workflow specification with the given parameters.
       tags:
         - Workflows and Tasks
@@ -241,7 +241,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /workflow-specification/{spec_id}:
     put:
-      operationId: api.workflow.update_workflow_specification
+      operationId: crc.api.workflow.update_workflow_specification
       summary: Modifies an existing workflow specification with the given parameters.
       tags:
         - Workflows and Tasks
@@ -279,7 +279,7 @@ paths:
         schema:
           type: string
     get:
-      operationId: api.file.get_files
+      operationId: crc.api.file.get_files
       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
       tags:
         - Files
@@ -299,7 +299,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     post:
-      operationId: api.file.add_file
+      operationId: crc.api.file.add_file
       summary: Add a new file
       tags:
         - Files
@@ -330,7 +330,7 @@ paths:
         schema:
           type: integer
     get:
-      operationId: api.file.get_file_info
+      operationId: crc.api.file.get_file_info
       summary: Returns metadata about a file.
       tags:
         - Files
@@ -342,7 +342,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/File"
     put:
-      operationId: api.file.update_file
+      operationId: crc.api.file.update_file
       summary: Update a file
       tags:
         - Files
@@ -365,7 +365,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/File"
     delete:
-      operationId: api.file.delete_file
+      operationId: crc.api.file.delete_file
       summary: Removes an existing file
       tags:
         - Files
@@ -381,7 +381,7 @@ paths:
         schema:
           type: integer
     get:
-      operationId: api.file.get_file
+      operationId: crc.api.file.get_file
       summary: Returns only the file contents
       tags:
         - Files
@@ -405,7 +405,7 @@ paths:
             type: integer
             format: int32
     get:
-      operationId: api.workflow.get_workflow
+      operationId: crc.api.workflow.get_workflow
       summary: Detailed information for a specific workflow instance
       tags:
         - Workflows and Tasks
@@ -423,7 +423,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
     delete:
-      operationId: api.workflow.delete
+      operationId: crc.api.workflow.delete
       summary: Removes an existing workflow
       tags:
         - Workflows and Tasks
@@ -432,7 +432,7 @@ paths:
           description: The workflow was removed
   /workflow/{workflow_id}/tasks:
     get:
-      operationId: api.workflow.get_tasks
+      operationId: crc.api.workflow.get_tasks
       summary: Return a list of all tasks for this workflow
       tags:
         - Workflows and Tasks
@@ -477,7 +477,7 @@ paths:
           type: string
           format: uuid
     get:
-      operationId: api.workflow.get_task
+      operationId: crc.api.workflow.get_task
       summary: Get details of specific task in specific workflow instance
       tags:
         - Workflows and Tasks
@@ -511,7 +511,7 @@ paths:
           type: string
           format: uuid
     put:
-      operationId: api.workflow.update_task
+      operationId: crc.api.workflow.update_task
       summary: Exclusively for User Tasks, submits form data as a flat set of key/values.
       tags:
         - Workflows and Tasks
