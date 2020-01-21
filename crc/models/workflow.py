@@ -10,6 +10,7 @@ from crc import db, ma
 class WorkflowSpecModel(db.Model):
     __tablename__ = 'workflow_spec'
     id = db.Column(db.String, primary_key=True)
+    name = db.Column(db.String)
     display_name = db.Column(db.String)
     description = db.Column(db.Text)
 
