@@ -103,7 +103,7 @@ class TestStudy(BaseTest, unittest.TestCase):
     def test_modify_workflow_specification(self):
         self.load_example_data()
         old_id = 'random_fact'
-        spec = session.query(WorkflowSpecModel).filter_by(id=old_id).first()
+        spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=old_id).first()
         """:type: WorkflowSpecModel"""
 
         spec.id = 'odd_datum'
@@ -114,6 +114,10 @@ class TestStudy(BaseTest, unittest.TestCase):
         self.assert_success(rv)
         db_spec = session.query(WorkflowSpecModel).filter_by(id=spec.id).first()
         self.assertEqual(spec.display_name, db_spec.display_name)
+
+        num_old_after = session.query(WorkflowSpecModel).filter_by(id=old_id).count()
+        self.assertEqual(num_old_after, 0)
+
         num_after = session.query(WorkflowSpecModel).count()
         self.assertEqual(num_after, num_before)
 
