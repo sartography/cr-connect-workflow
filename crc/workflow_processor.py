@@ -1,9 +1,10 @@
 import xml.etree.ElementTree as ElementTree
 
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
+from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
-from SpiffWorkflow.camunda.serializer.CamundaSerializer import CamundaSerializer
+
 
 from crc import session
 from crc.models.file import FileDataModel, FileModel
@@ -32,10 +33,11 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
 class WorkflowProcessor:
     _script_engine = CustomBpmnScriptEngine()
-    _serializer = CamundaSerializer()
+    _serializer = BpmnSerializer()
 
     def __init__(self, workflow_spec_id, bpmn_json):
-        self.bpmn_workflow = self._serializer.deserialize_workflow(bpmn_json, wf_spec=self.get_spec(workflow_spec_id))
+        wf_spec = self.get_spec(workflow_spec_id)
+        self.bpmn_workflow = self._serializer.deserialize_workflow(bpmn_json, workflow_spec=wf_spec)
         self.bpmn_workflow.script_engine = self._script_engine
 
     @staticmethod
