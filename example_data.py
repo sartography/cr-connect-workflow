@@ -74,7 +74,7 @@ class ExampleDataLoader:
                 continue
 
             is_primary = filename.lower() == id + ".bpmn"
-            file_model = FileModel(name=filename, type=type, version="1",
+            file_model = FileModel(name=filename, type=type, content_type='text/xml', version="1",
                                    last_updated=datetime.datetime.now(), primary=is_primary,
                                    workflow_spec_id=id)
             models.append(file_model)
@@ -84,6 +84,7 @@ class ExampleDataLoader:
             finally:
                 file.close()
         return models
+
 
     @staticmethod
     def clean_db():

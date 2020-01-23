@@ -88,5 +88,6 @@ def get_file_info(file_id):
 
 
 def delete_file(file_id):
-    session.query(FileDataModel).filter_by(id=file_id).delete()
+    session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
     session.query(FileModel).filter_by(id=file_id).delete()
+    session.commit()

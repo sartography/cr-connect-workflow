@@ -93,7 +93,7 @@ class TestApiFiles(BaseTest, unittest.TestCase):
         file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
         rv = self.app.get('/v1.0/file/%i/data' % file.id)
         self.assert_success(rv)
-        self.assertEquals("application/octet-stream", rv.content_type)
+        self.assertEqual("text/xml; charset=utf-8", rv.content_type)
         self.assertTrue(rv.content_length > 1)
 
     def test_delete_file(self):
