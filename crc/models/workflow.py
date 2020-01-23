@@ -13,6 +13,7 @@ class WorkflowSpecModel(db.Model):
     name = db.Column(db.String)
     display_name = db.Column(db.String)
     description = db.Column(db.Text)
+    primary_process_id = db.Column(db.String)
 
 
 class WorkflowSpecModelSchema(ModelSchema):
