@@ -30,7 +30,7 @@ class WorkflowStatus(enum.Enum):
 class WorkflowModel(db.Model):
     __tablename__ = 'workflow'
     id = db.Column(db.Integer, primary_key=True)
-    bpmn_workflow_json = db.Column(db.TEXT)
+    bpmn_workflow_json = db.Column(db.JSON)
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
