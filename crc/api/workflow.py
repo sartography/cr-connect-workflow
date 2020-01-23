@@ -21,19 +21,36 @@ def add_workflow_specification(body):
 
 def update_workflow_specification(spec_id, body):
     if spec_id is None:
-        error = ApiError('unknown_study', 'Please provide a valid Workflow Specification ID.')
+        error = ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
         return ApiErrorSchema.dump(error), 404
 
     spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
 
     if spec is None:
-        error = ApiError('unknown_study', 'The Workflow Specification "' + spec_id + '" is not recognized.')
+        error = ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
         return ApiErrorSchema.dump(error), 404
 
     spec = WorkflowSpecModelSchema().load(body, session=session)
     session.add(spec)
     session.commit()
     return WorkflowSpecModelSchema().dump(spec)
+
+
+def delete_workflow_specification(spec_id):
+    if spec_id is None:
+        error = ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
+        return ApiErrorSchema.dump(error), 404
+
+    spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+
+    if spec is None:
+        error = ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
+        return ApiErrorSchema.dump(error), 404
+
+    session.query(WorkflowSpecModel).filter_by(id=spec_id).delete()
+
+    # TODO: Delete everything else with the same workflow_spec_id?
+    session.commit()
 
 
 def get_workflow(workflow_id):

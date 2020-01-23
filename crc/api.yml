@@ -240,18 +240,18 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
   /workflow-specification/{spec_id}:
+    parameters:
+      - name: spec_id
+        in: path
+        required: false
+        description: The unique id of an existing workflow specification to modify.
+        schema:
+          type: string
     put:
       operationId: crc.api.workflow.update_workflow_specification
       summary: Modifies an existing workflow specification with the given parameters.
       tags:
         - Workflows and Tasks
-      parameters:
-        - name: spec_id
-          in: path
-          required: false
-          description: The unique id of an existing workflow specification to modify.
-          schema:
-            type: string
       requestBody:
         content:
           application/json:
@@ -270,6 +270,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+    delete:
+      operationId: crc.api.workflow.delete_workflow_specification
+      summary: Removes an existing workflow specification
+      tags:
+        - Workflows and Tasks
+      responses:
+        '204':
+          description: The workflow specification has been removed.
   /file:
     parameters:
       - name: spec_id
