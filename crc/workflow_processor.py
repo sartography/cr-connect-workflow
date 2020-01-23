@@ -1,13 +1,15 @@
 import xml.etree.ElementTree as ElementTree
 
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
+from SpiffWorkflow.bpmn.parser.task_parsers import UserTaskParser
+from SpiffWorkflow.bpmn.parser.util import full_tag
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
-
+from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 
 from crc import session
-from crc.models.file import FileDataModel, FileModel
+from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus
 
 
@@ -31,6 +33,14 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         klass().do_task(task.data)
 
 
+class MyCustomParser(BpmnDmnParser):
+    """
+    A BPMN and DMN parser that can also parse Camunda forms.
+    """
+    OVERRIDE_PARSER_CLASSES = BpmnDmnParser.OVERRIDE_PARSER_CLASSES
+    OVERRIDE_PARSER_CLASSES.update(CamundaParser.OVERRIDE_PARSER_CLASSES)
+
+
 class WorkflowProcessor:
     _script_engine = CustomBpmnScriptEngine()
     _serializer = BpmnSerializer()
@@ -41,22 +51,33 @@ class WorkflowProcessor:
         self.bpmn_workflow.script_engine = self._script_engine
 
     @staticmethod
+    def get_parser():
+        parser = MyCustomParser()
+        return parser
+
+    @staticmethod
     def get_spec(workflow_spec_id):
+        parser = WorkflowProcessor.get_parser()
+        process_id = None
         file_data_models = session.query(FileDataModel) \
             .join(FileModel) \
             .filter(FileModel.workflow_spec_id == workflow_spec_id).all()
-        parser = CamundaParser()
         for file_data in file_data_models:
-            bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
-            process_id = WorkflowProcessor.__get_process_id(bpmn)
-            parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
+            if file_data.file_model.type == FileType.bpmn:
+                bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
+                if file_data.file_model.primary:
+                    process_id = WorkflowProcessor.__get_process_id(bpmn)
+                parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
+            elif file_data.file_model.type == FileType.dmn:
+                dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
+                parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
+        if process_id is None:
+            raise(Exception("There is no primary BPMN model defined for workflow " + workflow_spec_id))
         return parser.get_spec(process_id)
 
     @classmethod
     def create(cls, workflow_spec_id):
-        parser = CamundaParser()
         spec = WorkflowProcessor.get_spec(workflow_spec_id)
-
         bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
         bpmn_workflow.do_engine_steps()
         json = cls._serializer.serialize_workflow(bpmn_workflow)

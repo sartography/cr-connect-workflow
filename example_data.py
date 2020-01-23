@@ -1,4 +1,5 @@
 import datetime
+import glob
 import os
 
 from crc import app, db, session
@@ -36,26 +37,53 @@ class ExampleDataLoader:
                              description='Displays a random fact about a topic of your choosing.')
         workflow_specifications += \
             self.create_spec(id="two_forms",
-                             display_name="Two dump questions on two seperate tasks",
-                             description='Displays a random fact about a topic of your choosing.')
+                             display_name="Two dump questions on two separate tasks",
+                             description='the name says it all')
+        workflow_specifications += \
+            self.create_spec(id="decision_table",
+                             display_name="Form with Decision Table",
+                             description='the name says it all')
+
 
         all_data = studies + workflow_specifications
         return all_data
 
     def create_spec(self, id, display_name, description):
-        """Assumes that a file exists in static/bpmn with the same name as the given id.
+        """Assumes that a directory exists in static/bpmn with the same name as the given id.
+           further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
+        models = []
         spec = WorkflowSpecModel(id=id,
                                  display_name=display_name,
                                  description=description)
-        file_model = FileModel(name=id + ".bpmn", type=FileType.bpmn, version="1",
-                               last_updated=datetime.datetime.now(), primary=True,
-                               workflow_spec_id=id)
-        filename = os.path.join(app.root_path, 'static', 'bpmn', id + ".bpmn")
-        file = open(filename, "rb")
-        workflow_data = FileDataModel(data=file.read(), file_model=file_model)
-        file.close()
-        return [spec, file_model, workflow_data]
+        models.append(spec)
+
+        filepath = os.path.join(app.root_path, 'static', 'bpmn', id, "*")
+        files = glob.glob(filepath)
+        for file_path in files:
+            noise, file_extension = os.path.splitext(file_path)
+            filename = os.path.basename(file_path)
+            if file_extension.lower() == '.bpmn':
+                type=FileType.bpmn
+            elif file_extension.lower() == '.dmn':
+                type=FileType.dmn
+            elif file_extension.lower() == '.svg':
+                type = FileType.svg
+            else:
+                raise Exception("Unsupported file type:" + file_path)
+                continue
+
+            is_primary = filename.lower() == id + ".bpmn"
+            file_model = FileModel(name=filename, type=type, version="1",
+                                   last_updated=datetime.datetime.now(), primary=is_primary,
+                                   workflow_spec_id=id)
+            models.append(file_model)
+            try:
+                file = open(file_path, "rb")
+                models.append(FileDataModel(data=file.read(), file_model=file_model))
+            finally:
+                file.close()
+        return models
 
     @staticmethod
     def clean_db():

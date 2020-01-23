@@ -198,3 +198,4 @@ class TestStudy(BaseTest, unittest.TestCase):
         json_data = json.loads(rv.get_data(as_text=True))
         tasks = TaskSchema(many=True).load(json_data)
         self.assertEqual("StepTwo", tasks[0].name)
+
