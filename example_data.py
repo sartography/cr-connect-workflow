@@ -48,7 +48,7 @@ class ExampleDataLoader:
         spec = WorkflowSpecModel(id=id,
                                  display_name=display_name,
                                  description=description)
-        file_model = FileModel(name=id + ".bpmn", type=FileType.bpmn, version="1",
+        file_model = FileModel(name=id + ".bpmn", type=FileType.bpmn, content_type='text/xml', version="1",
                                last_updated=datetime.datetime.now(), primary=True,
                                workflow_spec_id=id)
         filename = os.path.join(app.root_path, 'static', 'bpmn', id + ".bpmn")
