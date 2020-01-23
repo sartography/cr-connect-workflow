@@ -47,7 +47,7 @@ class WorkflowProcessor:
             .filter(FileModel.workflow_spec_id == workflow_spec_id).all()
         parser = CamundaParser()
         for file_data in file_data_models:
-            bpmn = ElementTree.fromstring(file_data.data)
+            bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
             process_id = WorkflowProcessor.__get_process_id(bpmn)
             parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
         return parser.get_spec(process_id)
@@ -91,7 +91,7 @@ class WorkflowProcessor:
         return self.bpmn_workflow.get_ready_user_tasks()
 
     @staticmethod
-    def __get_process_id(et_root):
+    def __get_process_id(et_root: ElementTree.Element):
         process_elements = []
         for child in et_root:
             if child.tag.endswith('process') and child.attrib.get('isExecutable', False):
