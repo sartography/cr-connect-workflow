@@ -124,12 +124,24 @@ class TestStudy(BaseTest, unittest.TestCase):
     def test_delete_workflow_specification(self):
         self.load_example_data()
         spec_id = 'random_fact'
+
+        num_specs_before = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()
+        self.assertEqual(num_specs_before, 1)
+
+        num_files_before = session.query(FileModel).filter_by(workflow_spec_id=spec_id).count()
+        num_workflows_before = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
+        self.assertGreater(num_files_before + num_workflows_before, 0)
+
         rv = self.app.delete('/v1.0/workflow-specification/' + spec_id)
         self.assert_success(rv)
-        db_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
-        self.assertIsNone(db_spec)
 
-        # TODO: Make sure that all items in the database with the workflow spec ID are deleted as well?
+        num_specs_after = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()
+        self.assertEqual(0, num_specs_after)
+
+        # Make sure that all items in the database with the workflow spec ID are deleted as well.
+        num_files_after = session.query(FileModel).filter_by(workflow_spec_id=spec_id).count()
+        num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
+        self.assertEqual(num_files_after + num_workflows_after, 0)
 
     def test_add_workflow_to_study(self):
         self.load_example_data()

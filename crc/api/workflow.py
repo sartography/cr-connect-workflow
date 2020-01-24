@@ -49,7 +49,12 @@ def delete_workflow_specification(spec_id):
 
     session.query(WorkflowSpecModel).filter_by(id=spec_id).delete()
 
-    # TODO: Delete everything else with the same workflow_spec_id?
+    # Delete all items in the database related to the deleted workflow spec.
+    files = session.query(FileModel).filter_by(workflow_spec_id=spec_id).all()
+    for file in files:
+        delete_file(file.id)
+
+    session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).delete()
     session.commit()
 
 
