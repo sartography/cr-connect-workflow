@@ -1,5 +1,4 @@
 import json
-import unittest
 from datetime import datetime
 
 from crc import session
@@ -10,7 +9,7 @@ from models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, Workflow
 from tests.base_test import BaseTest
 
 
-class TestStudy(BaseTest, unittest.TestCase):
+class TestStudy(BaseTest):
 
     def test_study_basics(self):
         self.load_example_data()
@@ -221,4 +220,3 @@ class TestStudy(BaseTest, unittest.TestCase):
         json_data = json.loads(rv.get_data(as_text=True))
         tasks = TaskSchema(many=True).load(json_data)
         self.assertEqual("StepTwo", tasks[0].name)
-

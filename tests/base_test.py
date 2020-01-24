@@ -2,6 +2,11 @@
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import json
 import os
+import unittest
+
+from models.file import FileModel, FileDataModel
+from models.workflow import WorkflowSpecModel
+
 os.environ["TESTING"] = "true"
 
 from crc import app, db, session
@@ -18,7 +23,7 @@ from example_data import ExampleDataLoader
 
 # Great class to inherit from, as it sets up and tears down
 # classes efficiently when we have a database in place.
-class BaseTest:
+class BaseTest(unittest.TestCase):
 
     auths = {}
 
@@ -47,6 +52,19 @@ class BaseTest:
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
         ExampleDataLoader().load_all()
+
+        specs = session.query(WorkflowSpecModel).all()
+        self.assertIsNotNone(specs)
+
+        for spec in specs:
+            files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
+            self.assertIsNotNone(files)
+            self.assertGreater(len(files), 0)
+
+            for file in files:
+                file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
+                self.assertIsNotNone(file_data)
+                self.assertGreater(len(file_data), 0)
 
     def assert_success(self, rv, msg=""):
         try:

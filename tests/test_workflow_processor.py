@@ -1,13 +1,11 @@
-import unittest
-
 from crc import session
 from models.file import FileModel
 from models.workflow import WorkflowSpecModel, WorkflowStatus
-from workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
+from workflow_processor import WorkflowProcessor
 
 
-class TestWorkflowProcessor(BaseTest, unittest.TestCase):
+class TestWorkflowProcessor(BaseTest):
 
     def test_create_and_complete_workflow(self):
         self.load_example_data()
