@@ -2,9 +2,9 @@ from connexion import NoContent
 
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.study import StudyModelSchema, StudyModel
-from crc.models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModel
-from crc.workflow_processor import WorkflowProcessor
+from models.study import StudyModelSchema, StudyModel
+from models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModel
+from workflow_processor import WorkflowProcessor
 
 
 def all_studies():

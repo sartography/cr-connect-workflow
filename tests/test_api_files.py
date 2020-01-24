@@ -4,8 +4,8 @@ import unittest
 from datetime import datetime
 
 from crc import session
-from crc.models.file import FileModel, FileType, FileModelSchema, FileDataModel
-from crc.models.workflow import WorkflowSpecModel
+from models.file import FileModel, FileType, FileModelSchema, FileDataModel
+from models.workflow import WorkflowSpecModel
 from tests.base_test import BaseTest
 
 

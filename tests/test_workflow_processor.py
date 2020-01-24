@@ -1,9 +1,9 @@
 import unittest
 
 from crc import session
-from crc.models.file import FileModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
-from crc.workflow_processor import WorkflowProcessor
+from models.file import FileModel
+from models.workflow import WorkflowSpecModel, WorkflowStatus
+from workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
 
