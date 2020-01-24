@@ -1,12 +1,12 @@
 import uuid
 
-from api.file import delete_file
+from crc.api.file import delete_file
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModelSchema, WorkflowSpecModel, \
+from crc.models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModelSchema, WorkflowSpecModel, \
     Task, TaskSchema
-from workflow_processor import WorkflowProcessor
-from models.file import FileModel
+from crc.workflow_processor import WorkflowProcessor
+from crc.models.file import FileModel
 
 
 def all_specifications():

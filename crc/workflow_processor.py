@@ -9,8 +9,8 @@ from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 
 from crc import session
-from models.file import FileDataModel, FileModel, FileType
-from models.workflow import WorkflowStatus
+from crc.models.file import FileDataModel, FileModel, FileType
+from crc.models.workflow import WorkflowStatus
 
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):

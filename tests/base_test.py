@@ -4,8 +4,8 @@ import json
 import os
 import unittest
 
-from models.file import FileModel, FileDataModel
-from models.workflow import WorkflowSpecModel
+from crc.models.file import FileModel, FileDataModel
+from crc.models.workflow import WorkflowSpecModel
 
 os.environ["TESTING"] = "true"
 

@@ -1,8 +1,8 @@
 from crc import session
-from models.file import FileModel
-from models.workflow import WorkflowSpecModel, WorkflowStatus
+from crc.models.file import FileModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
 from tests.base_test import BaseTest
-from workflow_processor import WorkflowProcessor
+from crc.workflow_processor import WorkflowProcessor
 
 
 class TestWorkflowProcessor(BaseTest):

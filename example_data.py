@@ -3,9 +3,9 @@ import glob
 import os
 
 from crc import app, db, session
-from models.file import FileType, FileModel, FileDataModel
-from models.study import StudyModel
-from models.workflow import WorkflowSpecModel
+from crc.models.file import FileType, FileModel, FileDataModel
+from crc.models.study import StudyModel
+from crc.models.workflow import WorkflowSpecModel
 
 
 class ExampleDataLoader:

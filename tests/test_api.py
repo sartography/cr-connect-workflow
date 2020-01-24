@@ -2,9 +2,9 @@ import json
 from datetime import datetime
 
 from crc import session
-from models.file import FileModel
-from models.study import StudyModel, StudyModelSchema, ProtocolBuilderStatus
-from models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
+from crc.models.file import FileModel
+from crc.models.study import StudyModel, StudyModelSchema, ProtocolBuilderStatus
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
     WorkflowModelSchema, TaskSchema
 from tests.base_test import BaseTest
 
