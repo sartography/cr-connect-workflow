@@ -21,7 +21,7 @@ def add_workflow_specification(body):
     return WorkflowSpecModelSchema().dump(new_spec)
 
 
-def update_workflow_specification(spec_id, body):
+def get_workflow_specification(spec_id):
     if spec_id is None:
         error = ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
         return ApiErrorSchema.dump(error), 404
@@ -32,7 +32,12 @@ def update_workflow_specification(spec_id, body):
         error = ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
         return ApiErrorSchema.dump(error), 404
 
+    return WorkflowSpecModelSchema().dump(spec)
+
+
+def update_workflow_specification(spec_id, body):
     spec = WorkflowSpecModelSchema().load(body, session=session)
+    spec.id = spec_id
     session.add(spec)
     session.commit()
     return WorkflowSpecModelSchema().dump(spec)
