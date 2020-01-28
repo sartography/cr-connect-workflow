@@ -33,14 +33,17 @@ class ExampleDataLoader:
 
         workflow_specifications = \
             self.create_spec(id="random_fact",
+                             name="random_fact",
                              display_name="Random Fact Generator",
                              description='Displays a random fact about a topic of your choosing.')
         workflow_specifications += \
             self.create_spec(id="two_forms",
+                             name="two_forms",
                              display_name="Two dump questions on two separate tasks",
                              description='the name says it all')
         workflow_specifications += \
             self.create_spec(id="decision_table",
+                             name="decision_table",
                              display_name="Form with Decision Table",
                              description='the name says it all')
 
@@ -48,12 +51,13 @@ class ExampleDataLoader:
         all_data = studies + workflow_specifications
         return all_data
 
-    def create_spec(self, id, display_name, description):
+    def create_spec(self, id, name, display_name, description):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
         models = []
         spec = WorkflowSpecModel(id=id,
+                                 name=name,
                                  display_name=display_name,
                                  description=description)
         models.append(spec)
