@@ -74,7 +74,7 @@ def get_workflow(workflow_id):
 def delete(workflow_id):
     session.query(WorkflowModel).filter_by(id=workflow_id).delete()
     session.commit()
-
+3
 
 def get_tasks(workflow_id):
     workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
@@ -101,3 +101,4 @@ def update_task(workflow_id, task_id, body):
     workflow.bpmn_workflow_json = processor.serialize()
     session.add(workflow)
     session.commit()
+    return WorkflowModelSchema().dump(workflow)

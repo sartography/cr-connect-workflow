@@ -200,7 +200,7 @@ paths:
       operationId: crc.api.workflow.all_specifications
       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
       tags:
-        - Workflows and Tasks
+        - Workflow Specifications
       responses:
         '200':
           description: An array of workflow specifications
@@ -220,7 +220,7 @@ paths:
       operationId: crc.api.workflow.add_workflow_specification
       summary: Creates a new workflow specification with the given parameters.
       tags:
-        - Workflows and Tasks
+        - Workflow Specifications
       requestBody:
         content:
           application/json:
@@ -251,7 +251,7 @@ paths:
       operationId: crc.api.workflow.get_workflow_specification
       summary: Returns a single workflow specification
       tags:
-        - Workflows and Tasks
+        - Workflow Specifications
       responses:
         '200':
           description: Workflow specification.
@@ -263,7 +263,7 @@ paths:
       operationId: crc.api.workflow.update_workflow_specification
       summary: Modifies an existing workflow specification with the given parameters.
       tags:
-        - Workflows and Tasks
+        - Workflow Specifications
       requestBody:
         content:
           application/json:
@@ -286,7 +286,7 @@ paths:
       operationId: crc.api.workflow.delete_workflow_specification
       summary: Removes an existing workflow specification
       tags:
-        - Workflows and Tasks
+        - Workflow Specifications
       responses:
         '204':
           description: The workflow specification has been removed.
@@ -547,13 +547,11 @@ paths:
                 capital_assyria: Assur
       responses:
         '201':
-          description: Null response
-        default:
-          description: unexpected error
+          description: Returns the updated workflow with the task completed.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/Workflow"
 
 components:
   schemas:

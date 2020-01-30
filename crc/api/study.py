@@ -17,6 +17,11 @@ def add_study(body):
     study = StudyModelSchema().load(body, session=session)
     session.add(study)
     session.commit()
+    # FIXME: We need to ask the protocol builder what workflows to add to the study, not just add them all.
+    for spec in session.query(WorkflowSpecModel).all():
+        workflow = __get_workflow_instance(study.id, spec)
+        session.add(workflow)
+    session.commit()
     return StudyModelSchema().dump(study)
 
 
@@ -61,12 +66,15 @@ def add_workflow_to_study(study_id, body):
     if workflow_spec_model is None:
         error = ApiError('unknown_spec', 'The specification "' + body['id'] + '" is not recognized.')
         return ApiErrorSchema.dump(error), 404
+    workflow = __get_workflow_instance(study_id, workflow_spec_model)
+    session.add(workflow)
+    session.commit()
+    return WorkflowModelSchema().dump(workflow)
 
+def __get_workflow_instance(study_id, workflow_spec_model):
     processor = WorkflowProcessor.create(workflow_spec_model.id)
     workflow = WorkflowModel(bpmn_workflow_json=processor.serialize(),
                              status=processor.get_status(),
                              study_id=study_id,
                              workflow_spec_id=workflow_spec_model.id)
-    session.add(workflow)
-    session.commit()
-    return WorkflowModelSchema().dump(workflow)
+    return workflow
