@@ -72,7 +72,7 @@ class WorkflowProcessor:
                 dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
         if process_id is None:
-            raise(Exception("There is no primary BPMN model defined for workflow " + workflow_spec_id))
+            raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
         return parser.get_spec(process_id)
 
     @classmethod

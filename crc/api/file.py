@@ -60,7 +60,7 @@ def add_file():
     return FileModelSchema().dump(file_model)
 
 
-def update_file(file_id):
+def update_file_data(file_id):
     file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
@@ -68,7 +68,7 @@ def update_file(file_id):
     return FileModelSchema().dump(file_model)
 
 
-def get_file(file_id):
+def get_file_data(file_id):
     file_data = session.query(FileDataModel).filter_by(id=file_id).first()
     if file_data is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
@@ -84,6 +84,23 @@ def get_file_info(file_id):
     file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
+    return FileModelSchema().dump(file_model)
+
+
+def update_file_info(file_id, body):
+    if file_id is None:
+        error = ApiError('unknown_file', 'Please provide a valid File ID.')
+        return ApiErrorSchema.dump(error), 404
+
+    file_model = session.query(FileModel).filter_by(id=file_id).first()
+
+    if file_model is None:
+        error = ApiError('unknown_file_model', 'The file_model "' + file_id + '" is not recognized.')
+        return ApiErrorSchema.dump(error), 404
+
+    file_model = FileModelSchema().load(body, session=session)
+    session.add(file_model)
+    session.commit()
     return FileModelSchema().dump(file_model)
 
 
