@@ -62,7 +62,20 @@ class TestApiFiles(BaseTest):
         file2 = FileModelSchema().load(json_data, session=session)
         self.assertEqual(file, file2)
 
-    def test_update_file(self):
+    def test_update_file_info(self):
+        self.load_example_data()
+        file: FileModel = session.query(FileModel).first()
+        file.name = "silly_new_name.bpmn"
+
+        rv = self.app.put('/v1.0/file/%i' % file.id,
+                           content_type="application/json",
+                           data=json.dumps(FileModelSchema().dump(file)))
+        self.assert_success(rv)
+        db_file = session.query(FileModel).first()
+        self.assertIsNotNone(db_file)
+        self.assertEqual(file.name, db_file.name)
+
+    def test_update_file_data(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
         file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
@@ -70,7 +83,7 @@ class TestApiFiles(BaseTest):
         data = {}
         data['file'] = io.BytesIO(b"hijklim"), 'random_fact.bpmn'
 
-        rv = self.app.put('/v1.0/file/%i' % file.id, data=data, follow_redirects=True,
+        rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
                           content_type='multipart/form-data')
 
         self.assert_success(rv)

@@ -46,7 +46,7 @@ class TestStudy(BaseTest):
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
         study.protocol_builder_status = ProtocolBuilderStatus.complete
 
-        rv = self.app.post('/v1.0/study',
+        rv = self.app.put('/v1.0/study/%i' % study.id,
                            content_type="application/json",
                            data=json.dumps(StudyModelSchema().dump(study)))
         self.assert_success(rv)
