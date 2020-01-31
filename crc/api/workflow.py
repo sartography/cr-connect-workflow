@@ -76,7 +76,18 @@ def delete(workflow_id):
     session.commit()
 3
 
-def get_tasks(workflow_id):
+
+def get_all_tasks(workflow_id):
+    workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
+    spiff_tasks = processor.get_all_user_tasks()
+    tasks = []
+    for st in spiff_tasks:
+        tasks.append(Task.from_spiff(st))
+    return TaskSchema(many=True).dump(tasks)
+
+
+def get_ready_user_tasks(workflow_id):
     workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
     spiff_tasks = processor.get_ready_user_tasks()

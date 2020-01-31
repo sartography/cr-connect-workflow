@@ -60,8 +60,8 @@ class Task:
         instance = cls(spiff_task.id,
                        spiff_task.task_spec.name,
                        spiff_task.task_spec.description,
-                       spiff_task.get_state_name(),
                        "task",
+                       spiff_task.get_state_name(),
                        {},
                        spiff_task.task_spec.documentation)
         if hasattr(spiff_task.task_spec, "form"):

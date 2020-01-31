@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ElementTree
 
+from SpiffWorkflow import Task as SpiffTask
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.parser.task_parsers import UserTaskParser
 from SpiffWorkflow.bpmn.parser.util import full_tag
@@ -110,6 +111,10 @@ class WorkflowProcessor:
 
     def get_ready_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
+
+    def get_all_user_tasks(self):
+        all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
+        return [t for t in all_tasks if not self.bpmn_workflow._is_engine_task(t.task_spec)]
 
     @staticmethod
     def __get_process_id(et_root: ElementTree.Element):
