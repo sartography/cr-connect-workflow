@@ -46,6 +46,11 @@ class ExampleDataLoader:
                              name="decision_table",
                              display_name="Form with Decision Table",
                              description='the name says it all')
+        workflow_specifications += \
+            self.create_spec(id="parallel_tasks",
+                             name="parallel_tasks",
+                             display_name="Parallel tasks",
+                             description='Four tasks that can happen simultaneously')
 
 
         all_data = studies + workflow_specifications
