@@ -11,6 +11,7 @@ class FileType(enum.Enum):
     bpmn = "bpmm"
     svg = "svg"
     dmn = "dmn"
+#    docx = "docx"
 
 
 class FileDataModel(db.Model):
@@ -31,6 +32,7 @@ class FileModel(db.Model):
     primary = db.Column(db.Boolean)
     content_type = db.Column(db.String)
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+#    workflow_id = db.Column(db.String, db.ForeignKey('workflow.id'))
 
 
 class FileModelSchema(ModelSchema):

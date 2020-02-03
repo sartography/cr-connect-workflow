@@ -109,6 +109,7 @@ def update_task(workflow_id, task_id, body):
     task = processor.bpmn_workflow.get_task(task_id)
     task.data = body
     processor.complete_task(task)
+    processor.do_engine_steps()
     workflow.bpmn_workflow_json = processor.serialize()
     session.add(workflow)
     session.commit()

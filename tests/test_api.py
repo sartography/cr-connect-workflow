@@ -240,3 +240,28 @@ class TestStudy(BaseTest):
             self.assertIsNotNone(task.data)
             for val in task.data.values():
                 self.assertIsNotNone(val)
+
+    # def test_workflow_with_parallel_forms(self):
+    #     self.load_example_data()
+    #     study = session.query(StudyModel).first()
+    #     spec = session.query(WorkflowSpecModel).filter_by(id='parallel_forms').first()
+    #     rv = self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
+    #                        data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+    #     json_data = json.loads(rv.get_data(as_text=True))
+    #     workflow = WorkflowModelSchema().load(json_data, session=session)
+    #
+    #     # get the first form in the two form workflow.
+    #     rv = self.app.get('/v1.0/workflow/%i/tasks' % workflow.id, content_type="application/json")
+    #     json_data = json.loads(rv.get_data(as_text=True))
+    #     tasks = TaskSchema(many=True).load(json_data)
+    #     rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, tasks[0].id),
+    #                       content_type="application/json",
+    #                       data=json.dumps({"color": "blue"}))
+    #     self.assert_success(rv)
+    #
+    #     # Get the next Task
+    #     rv = self.app.get('/v1.0/workflow/%i/tasks' % study.id, content_type="application/json")
+    #     self.assert_success(rv)
+    #     json_data = json.loads(rv.get_data(as_text=True))
+    #     tasks = TaskSchema(many=True).load(json_data)
+    #     self.assertEqual("StepTwo", tasks[0].name)

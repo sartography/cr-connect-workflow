@@ -51,7 +51,11 @@ class ExampleDataLoader:
                              name="parallel_tasks",
                              display_name="Parallel tasks",
                              description='Four tasks that can happen simultaneously')
-
+#        workflow_specifications += \
+#            self.create_spec(id="docx",
+#                             name="docx",
+#                             display_name="Form with document generation",
+#                             description='the name says it all')
 
         all_data = studies + workflow_specifications
         return all_data
@@ -73,11 +77,13 @@ class ExampleDataLoader:
             noise, file_extension = os.path.splitext(file_path)
             filename = os.path.basename(file_path)
             if file_extension.lower() == '.bpmn':
-                type=FileType.bpmn
+                type = FileType.bpmn
             elif file_extension.lower() == '.dmn':
-                type=FileType.dmn
+                type = FileType.dmn
             elif file_extension.lower() == '.svg':
                 type = FileType.svg
+#            elif file_extension.lower() == '.docx':
+#                type = FileType.docx
             else:
                 raise Exception("Unsupported file type:" + file_path)
                 continue
