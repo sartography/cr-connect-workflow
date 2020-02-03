@@ -46,7 +46,7 @@ class WorkflowModelSchema(ModelSchema):
 
 
 class Task:
-    def __init__(self, id, name, title, type, state, form, documentation):
+    def __init__(self, id, name, title, type, state, form, documentation, data):
         self.id = id
         self.name = name
         self.title = title
@@ -54,6 +54,7 @@ class Task:
         self.state = state
         self.form = form
         self.documentation = documentation
+        self.data = data
 
     @classmethod
     def from_spiff(cls, spiff_task):
@@ -63,7 +64,8 @@ class Task:
                        "task",
                        spiff_task.get_state_name(),
                        {},
-                       spiff_task.task_spec.documentation)
+                       spiff_task.task_spec.documentation,
+                       spiff_task.data)
         if hasattr(spiff_task.task_spec, "form"):
             instance.type = "form"
             instance.form = spiff_task.task_spec.form
@@ -103,7 +105,7 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "title", "type", "state", "form", "documentation"]
+        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data"]
 
     documentation = marshmallow.fields.String(required=False, allow_none=True)
     form = marshmallow.fields.Nested(FormSchema)

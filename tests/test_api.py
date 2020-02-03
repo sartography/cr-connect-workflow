@@ -230,3 +230,13 @@ class TestStudy(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         tasks = TaskSchema(many=True).load(json_data)
         self.assertEqual("StepTwo", tasks[0].name)
+
+        # Get all user Tasks and check that the data have been saved
+        rv = self.app.get('/v1.0/workflow/%i/all_tasks' % study.id, content_type="application/json")
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        all_tasks = TaskSchema(many=True).load(json_data)
+        for task in all_tasks:
+            self.assertIsNotNone(task.data)
+            for val in task.data.values():
+                self.assertIsNotNone(val)
