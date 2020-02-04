@@ -42,21 +42,37 @@ def update_file_from_request(file_model):
     session.flush()  # Assure the id is set on the model before returning it.
 
 
-def get_files(workflow_spec_id=None, study_id=None, task_id=None):
-    if all(v is None for v in [workflow_spec_id, study_id, task_id]):
-        error = ApiError('no_files_found', 'Please provide some parameters so we can find the files you need.')
-        return ApiErrorSchema().dump(error), 400
+def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None):
+    if all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id]):
+        return ApiErrorSchema().dump(ApiError('missing_parameter',
+                                              'Please specify at least one of workflow_spec_id, study_id, '
+                                              'workflow_id, and task_id for this file in the HTTP parameters')), 400
 
     schema = FileModelSchema(many=True)
-    results = session.query(FileModel).filter_by(workflow_spec_id=workflow_spec_id, study_id=study_id, task_id=task_id).all()
+    results = session.query(FileModel).filter_by(
+        workflow_spec_id=workflow_spec_id,
+        study_id=study_id,
+        workflow_id=workflow_id,
+        task_id=task_id
+    ).all()
     return schema.dump(results)
 
 
-def add_file(workflow_spec_id=None, study_id=None, task_id=None):
-    if all(v is None for v in [workflow_spec_id, study_id, task_id]):
-        return ApiErrorSchema().dump(ApiError('missing_spec_id',
-                                              'Please specify a workflow_spec_id, study_id, or task_id for this file in the form')), 404
-    file_model = FileModel(version=0, workflow_spec_id=workflow_spec_id, study_id=study_id, task_id=task_id)
+def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None):
+    all_none = all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id])
+    missing_some = (workflow_spec_id is None) and (None in [study_id, workflow_id, task_id])
+    if all_none or missing_some:
+        return ApiErrorSchema().dump(ApiError('missing_parameter',
+                                              'Please specify either a workflow_spec_id or all 3 of study_id, '
+                                              'workflow_id, and task_id for this file in the HTTP parameters')), 404
+
+    file_model = FileModel(
+        version=0,
+        workflow_spec_id=workflow_spec_id,
+        study_id=study_id,
+        workflow_id=workflow_id,
+        task_id=task_id
+    )
     update_file_from_request(file_model)
     return FileModelSchema().dump(file_model)
 

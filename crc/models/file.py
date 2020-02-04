@@ -31,10 +31,10 @@ class FileModel(db.Model):
     type = db.Column(db.Enum(FileType))
     primary = db.Column(db.Boolean)
     content_type = db.Column(db.String)
-    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
-#    workflow_id = db.Column(db.String, db.ForeignKey('workflow.id'))
-    study_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
-    task_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
+    workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
+    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=True)
+    task_id = db.Column(db.String, nullable=True)
 
 
 class FileModelSchema(ModelSchema):
