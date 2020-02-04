@@ -51,6 +51,12 @@ class ExampleDataLoader:
                              name="parallel_tasks",
                              display_name="Parallel tasks",
                              description='Four tasks that can happen simultaneously')
+        workflow_specifications += \
+            self.create_spec(id="exclusive_gateway",
+                             name="exclusive_gateway",
+                             display_name="Exclusive Gateway Example",
+                             description='How to take different paths based on input.')
+
 #        workflow_specifications += \
 #            self.create_spec(id="docx",
 #                             name="docx",
@@ -109,6 +115,7 @@ class ExampleDataLoader:
         session.flush()
 
     def load_all(self):
-        session.add_all(self.make_data())
-        session.commit()
+        for data in self.make_data():
+            session.add(data)
+            session.commit()
         session.flush()
