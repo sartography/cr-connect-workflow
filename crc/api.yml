@@ -295,13 +295,13 @@ paths:
         required: false
         description: The unique id of a study
         schema:
-          type: string
+          type: integer
       - name: task_id
         in: query
         required: false
         description: The unique id of a workflow task
         schema:
-          type: integer
+          type: string
     get:
       operationId: crc.api.file.get_files
       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
