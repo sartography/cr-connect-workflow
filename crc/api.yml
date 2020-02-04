@@ -296,6 +296,12 @@ paths:
         description: The unique id of a study
         schema:
           type: integer
+      - name: workflow_id
+        in: query
+        required: false
+        description: The unique id of a workflow instance
+        schema:
+          type: integer
       - name: task_id
         in: query
         required: false
