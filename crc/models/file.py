@@ -33,6 +33,8 @@ class FileModel(db.Model):
     content_type = db.Column(db.String)
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
 #    workflow_id = db.Column(db.String, db.ForeignKey('workflow.id'))
+    study_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    task_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
 
 
 class FileModelSchema(ModelSchema):

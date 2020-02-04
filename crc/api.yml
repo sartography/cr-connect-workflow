@@ -284,12 +284,24 @@ paths:
           description: The workflow specification has been removed.
   /file:
     parameters:
-      - name: spec_id
+      - name: workflow_spec_id
         in: query
         required: false
-        description: The unique name of a specification
+        description: The unique id of a workflow specification
         schema:
           type: string
+      - name: study_id
+        in: query
+        required: false
+        description: The unique id of a study
+        schema:
+          type: string
+      - name: task_id
+        in: query
+        required: false
+        description: The unique id of a workflow task
+        schema:
+          type: integer
     get:
       operationId: crc.api.file.get_files
       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
@@ -321,8 +333,6 @@ paths:
             schema:
               type: object
               properties:
-                workflow_spec_id:
-                  type: string
                 file:
                   type: string
                   format: binary

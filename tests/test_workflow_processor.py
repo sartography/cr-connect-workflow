@@ -37,7 +37,7 @@ class TestWorkflowProcessor(BaseTest):
     def test_workflow_with_dmn(self):
         self.load_example_data()
         files = session.query(FileModel).filter_by(workflow_spec_id='decision_table').all()
-        self.assertEquals(2, len(files))
+        self.assertEqual(2, len(files))
         workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="decision_table").first()
         processor = WorkflowProcessor.create(workflow_spec_model.id)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())

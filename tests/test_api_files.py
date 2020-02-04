@@ -13,7 +13,7 @@ class TestApiFiles(BaseTest):
     def test_list_files_for_workflow_spec(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
-        rv = self.app.get('/v1.0/file?spec_id=%s' % spec.id,
+        rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec.id,
                           follow_redirects=True,
                           content_type="application/json")
         self.assert_success(rv)
@@ -29,7 +29,7 @@ class TestApiFiles(BaseTest):
                             primary=False, workflow_spec_id=spec.id)
         session.add(svgFile)
         session.flush()
-        rv = self.app.get('/v1.0/file?spec_id=%s' % spec.id,
+        rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec.id,
                           follow_redirects=True,
                           content_type="application/json")
         self.assert_success(rv)
@@ -39,11 +39,8 @@ class TestApiFiles(BaseTest):
     def test_create_file(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
-
-        data = {'workflow_spec_id': spec.id}
-        data['file'] = io.BytesIO(b"abcdef"), 'random_fact.svg'
-
-        rv = self.app.post('/v1.0/file', data=data, follow_redirects=True,
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
                            content_type='multipart/form-data')
 
         self.assert_success(rv)

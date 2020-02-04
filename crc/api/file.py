@@ -42,20 +42,21 @@ def update_file_from_request(file_model):
     session.flush()  # Assure the id is set on the model before returning it.
 
 
-def get_files(spec_id):
-    if spec_id:
-        schema = FileModelSchema(many=True)
-        return schema.dump(session.query(FileModel).filter_by(workflow_spec_id=spec_id).all())
-    else:
+def get_files(workflow_spec_id=None, study_id=None, task_id=None):
+    if all(v is None for v in [workflow_spec_id, study_id, task_id]):
         error = ApiError('no_files_found', 'Please provide some parameters so we can find the files you need.')
         return ApiErrorSchema().dump(error), 400
 
+    schema = FileModelSchema(many=True)
+    results = session.query(FileModel).filter_by(workflow_spec_id=workflow_spec_id, study_id=study_id, task_id=task_id).all()
+    return schema.dump(results)
 
-def add_file():
-    if 'workflow_spec_id' not in connexion.request.form:
+
+def add_file(workflow_spec_id=None, study_id=None, task_id=None):
+    if all(v is None for v in [workflow_spec_id, study_id, task_id]):
         return ApiErrorSchema().dump(ApiError('missing_spec_id',
-                                              'Please specify a workflow_spec_id for this file in the form')), 404
-    file_model = FileModel(version=0, workflow_spec_id=connexion.request.form['workflow_spec_id'])
+                                              'Please specify a workflow_spec_id, study_id, or task_id for this file in the form')), 404
+    file_model = FileModel(version=0, workflow_spec_id=workflow_spec_id, study_id=study_id, task_id=task_id)
     update_file_from_request(file_model)
     return FileModelSchema().dump(file_model)
 
