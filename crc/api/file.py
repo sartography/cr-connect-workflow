@@ -23,6 +23,8 @@ def update_file_from_request(file_model):
     # Verify the extension
     basename, file_extension = os.path.splitext(file.filename)
     file_extension = file_extension.lower().strip()[1:]
+    print('\n\n\n', 'file_extension = "%s"' % file_extension, '\n\n\n')
+    print('FileType._member_names_', FileType._member_names_)
     if file_extension not in FileType._member_names_:
         return ApiErrorSchema().dump(ApiError('unknown_extension',
                                               'The file you provided does not have an accepted extension:' +
@@ -36,10 +38,10 @@ def update_file_from_request(file_model):
     else:
         file_data_model.data = file.stream.read()
 
-    session.add(file_data_model)
-    session.add(file_model)
+    session.add_all([file_model, file_data_model])
     session.commit()
     session.flush()  # Assure the id is set on the model before returning it.
+    return FileModelSchema().dump(file_model)
 
 
 def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None):
@@ -73,16 +75,14 @@ def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=Non
         workflow_id=workflow_id,
         task_id=task_id
     )
-    update_file_from_request(file_model)
-    return FileModelSchema().dump(file_model)
+    return update_file_from_request(file_model)
 
 
 def update_file_data(file_id):
     file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
-    update_file_from_request(file_model)
-    return FileModelSchema().dump(file_model)
+    return update_file_from_request(file_model)
 
 
 def get_file_data(file_id):

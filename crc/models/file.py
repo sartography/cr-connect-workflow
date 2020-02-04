@@ -9,9 +9,16 @@ from crc import db
 
 class FileType(enum.Enum):
     bpmn = "bpmm"
-    svg = "svg"
     dmn = "dmn"
-#    docx = "docx"
+    docx = "docx"
+    gif = 'gif'
+    jpg = 'jpg'
+    pdf = 'pdf'
+    png = 'png'
+    svg = "svg"
+    xlsx = 'xlsx'
+    zip = 'zip'
+    image = 'image'
 
 
 class FileDataModel(db.Model):
