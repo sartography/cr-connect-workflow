@@ -8,8 +8,10 @@ from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
+from SpiffWorkflow.operators import Operator
 
 from crc import session
+from crc.api.rest_exception import RestException
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus
 
@@ -32,6 +34,24 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         mod = __import__(module_name, fromlist=[class_name])
         klass = getattr(mod, class_name)
         klass().do_task(task.data)
+
+    def evaluate(self, task, expression):
+        """
+        Evaluate the given expression, within the context of the given task and
+        return the result.
+        """
+        if isinstance(expression, Operator):
+            return expression._matches(task)
+        else:
+            return self._eval(task, expression, **task.data)
+
+    def _eval(self, task, expression, **kwargs):
+        locals().update(kwargs)
+        try :
+            return eval(expression)
+        except NameError as ne:
+            raise RestException(RestException.EXPRESSION_ERROR,
+                                details=str(ne))
 
 
 class MyCustomParser(BpmnDmnParser):

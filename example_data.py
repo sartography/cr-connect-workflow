@@ -66,7 +66,7 @@ class ExampleDataLoader:
         all_data = studies + workflow_specifications
         return all_data
 
-    def create_spec(self, id, name, display_name, description):
+    def create_spec(self, id, name, display_name="", description="", filepath=None):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
@@ -76,8 +76,8 @@ class ExampleDataLoader:
                                  display_name=display_name,
                                  description=description)
         models.append(spec)
-
-        filepath = os.path.join(app.root_path, 'static', 'bpmn', id, "*")
+        if not filepath:
+            filepath = os.path.join(app.root_path, 'static', 'bpmn', id, "*")
         files = glob.glob(filepath)
         for file_path in files:
             noise, file_extension = os.path.splitext(file_path)

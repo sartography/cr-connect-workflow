@@ -92,4 +92,4 @@ class TestTasksApi(BaseTest):
 
         # Get the next Task
         tasks = self.get_tasks(workflow)
-        self.assertEqual("Task_Why_No_Bananas", tasks[0].name)
+        self.assertEqual("Task_Num_Bananas", tasks[0].name)

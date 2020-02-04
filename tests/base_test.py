@@ -66,6 +66,19 @@ class BaseTest(unittest.TestCase):
                 self.assertIsNotNone(file_data)
                 self.assertGreater(len(file_data), 0)
 
+    def load_test_spec(self, dir_name):
+        """Loads a spec into the database based on a directory in /tests/data"""
+        filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
+        models = ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath)
+        spec = None
+        for model in models:
+            if isinstance(model, WorkflowSpecModel):
+                spec = model
+            session.add(model)
+            session.commit()
+        session.flush()
+        return spec
+
     def assert_success(self, rv, msg=""):
         try:
             data = json.loads(rv.get_data(as_text=True))

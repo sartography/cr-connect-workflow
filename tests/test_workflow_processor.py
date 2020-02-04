@@ -2,6 +2,7 @@ import string
 import random
 
 from crc import session
+from crc.api.rest_exception import RestException
 from crc.models.file import FileModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
 from tests.base_test import BaseTest
@@ -9,6 +10,20 @@ from crc.workflow_processor import WorkflowProcessor
 
 
 class TestWorkflowProcessor(BaseTest):
+
+
+    def _randomString(self, stringLength=10):
+        """Generate a random string of fixed length """
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(stringLength))
+
+    def _complete_form_with_random_data(self, task):
+        form_data = {}
+        for field in task.task_spec.form.fields:
+            form_data[field.id] = self._randomString()
+        if task.data is None:
+            task.data = {}
+        task.data.update(form_data)
 
     def test_create_and_complete_workflow(self):
         self.load_example_data()
@@ -86,6 +101,18 @@ class TestWorkflowProcessor(BaseTest):
         processor.do_engine_steps()
         self.assertTrue(processor.bpmn_workflow.is_completed())
 
+    def test_workflow_with_bad_expression_raises_sensible_error(self):
+        workflow_spec_model = self.load_test_spec("invalid_expression")
+        processor = WorkflowProcessor.create(workflow_spec_model.id)
+        processor.do_engine_steps()
+        next_user_tasks = processor.next_user_tasks()
+        self.assertEqual(1, len(next_user_tasks))
+        self._complete_form_with_random_data(next_user_tasks[0])
+        processor.complete_task(next_user_tasks[0])
+        with self.assertRaises(RestException) as context:
+            processor.do_engine_steps()
+        self.assertEqual("invalid_expression", context.exception.payload['code'])
+
     # def test_workflow_with_docx_template(self):
     #     self.load_example_data()
     #     files = session.query(FileModel).filter_by(workflow_spec_id='docx').all()
@@ -103,15 +130,4 @@ class TestWorkflowProcessor(BaseTest):
 
         # workflow_files = session.query(FileModel).filter_by(workflow_id=).all()
 
-    def _randomString(self, stringLength=10):
-        """Generate a random string of fixed length """
-        letters = string.ascii_lowercase
-        return ''.join(random.choice(letters) for i in range(stringLength))
 
-    def _complete_form_with_random_data(self,task):
-        form_data = {}
-        for field in task.task_spec.form.fields:
-            form_data[field.id] = self._randomString()
-        if task.data is None:
-            task.data = {}
-        task.data.update(form_data)
