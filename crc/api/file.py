@@ -30,7 +30,7 @@ def update_file_from_request(file_model):
     else:
         file_model.type = FileType[file_extension]
 
-    file_data_model = session.query(FileDataModel).filter_by(id=file_model.id).with_for_update().first()
+    file_data_model = session.query(FileDataModel).filter_by(file_model_id=file_model.id).with_for_update().first()
     if file_data_model is None:
         file_data_model = FileDataModel(data=file.stream.read(), file_model=file_model)
     else:

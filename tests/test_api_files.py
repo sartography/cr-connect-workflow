@@ -68,28 +68,29 @@ class TestApiFiles(BaseTest):
                            content_type="application/json",
                            data=json.dumps(FileModelSchema().dump(file)))
         self.assert_success(rv)
-        db_file = session.query(FileModel).first()
+        db_file = session.query(FileModel).filter_by(id=file.id).first()
         self.assertIsNotNone(db_file)
         self.assertEqual(file.name, db_file.name)
 
     def test_update_file_data(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
-        file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
-
         data = {}
-        data['file'] = io.BytesIO(b"hijklim"), 'random_fact.bpmn'
+        data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
+        rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
+                           content_type='multipart/form-data')
+        json_data = json.loads(rv.get_data(as_text=True))
+        file = FileModelSchema().load(json_data, session=session)
 
+        data['file'] = io.BytesIO(b"hijklim"), 'my_new_file.bpmn'
         rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
                           content_type='multipart/form-data')
-
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
         self.assertEqual(2, file.version)
         self.assertEqual(FileType.bpmn, file.type)
-        self.assertTrue(file.primary)
         self.assertEqual("application/octet-stream", file.content_type)
         self.assertEqual(spec.id, file.workflow_spec_id)
 
