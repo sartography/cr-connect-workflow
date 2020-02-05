@@ -1,8 +1,17 @@
 language: python
+
+services:
+  - postgresql
+
 python:
   - "3.6"
   - "3.7"
   - "3.8"
+
+before_script:
+  - cp config/travis-testing.py config/testing.py
+  - psql -c 'create database crc_test;' -U postgres
+
 install:
   - pip install pipenv pytest
   - pipenv install
