@@ -11,8 +11,9 @@ before_install:
   - cp config/travis-testing.py config/testing.py
   - psql -c 'create database crc_test;' -U postgres
   - docker build -t sartography/cr-connect-workflow .
-  - docker run sartography/cr-connect-workflow /bin/sh -c "pytest"
-
+  - docker run -d -p 127.0.0.1:5000:5000 sartography/cr-connect-workflow
+  - docker ps -a
+  - docker run sartography/cr-connect-workflow /bin/sh -c "pipenv run pytest"
 # command to run tests
 script:
   - pytest
