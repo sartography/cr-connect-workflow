@@ -1,1 +1,1 @@
-docker stop pg-docker
+docker stop postgres_db_1

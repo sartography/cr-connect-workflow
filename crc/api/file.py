@@ -23,8 +23,6 @@ def update_file_from_request(file_model):
     # Verify the extension
     basename, file_extension = os.path.splitext(file.filename)
     file_extension = file_extension.lower().strip()[1:]
-    print('\n\n\n', 'file_extension = "%s"' % file_extension, '\n\n\n')
-    print('FileType._member_names_', FileType._member_names_)
     if file_extension not in FileType._member_names_:
         return ApiErrorSchema().dump(ApiError('unknown_extension',
                                               'The file you provided does not have an accepted extension:' +
