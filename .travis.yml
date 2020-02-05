@@ -20,6 +20,9 @@ install:
 script:
   - pytest
 
+before_deploy:
+  - docker build -t sartography/cr-connect-workflow .
+
 deploy:
   provider: script
   script: bash docker_push
