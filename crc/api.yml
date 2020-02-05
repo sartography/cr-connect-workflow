@@ -308,6 +308,12 @@ paths:
         description: The unique id of a workflow task
         schema:
           type: string
+      - name: form_field_key
+        in: query
+        required: false
+        description: The unique key of a workflow task form field
+        schema:
+          type: string
     get:
       operationId: crc.api.file.get_files
       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.

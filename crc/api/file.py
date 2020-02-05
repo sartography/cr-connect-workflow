@@ -42,8 +42,8 @@ def update_file_from_request(file_model):
     return FileModelSchema().dump(file_model)
 
 
-def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None):
-    if all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id]):
+def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
+    if all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key]):
         return ApiErrorSchema().dump(ApiError('missing_parameter',
                                               'Please specify at least one of workflow_spec_id, study_id, '
                                               'workflow_id, and task_id for this file in the HTTP parameters')), 400
@@ -53,14 +53,15 @@ def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=No
         workflow_spec_id=workflow_spec_id,
         study_id=study_id,
         workflow_id=workflow_id,
-        task_id=task_id
+        task_id=task_id,
+        form_field_key=form_field_key
     ).all()
     return schema.dump(results)
 
 
-def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None):
-    all_none = all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id])
-    missing_some = (workflow_spec_id is None) and (None in [study_id, workflow_id, task_id])
+def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
+    all_none = all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key])
+    missing_some = (workflow_spec_id is None) and (None in [study_id, workflow_id, task_id, form_field_key])
     if all_none or missing_some:
         return ApiErrorSchema().dump(ApiError('missing_parameter',
                                               'Please specify either a workflow_spec_id or all 3 of study_id, '
@@ -71,7 +72,8 @@ def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=Non
         workflow_spec_id=workflow_spec_id,
         study_id=study_id,
         workflow_id=workflow_id,
-        task_id=task_id
+        task_id=task_id,
+        form_field_key=form_field_key
     )
     return update_file_from_request(file_model)
 
