@@ -1,3 +1,7 @@
+# CrConnectFrontend
+
+[![Build Status](https://travis-ci.com/sartography/cr-connect-workflow.svg?branch=master)](https://travis-ci.com/sartography/cr-connect-workflow)
+
 # CR Connect Workflow Microservice
 ## Development Setup
 ### Tools
