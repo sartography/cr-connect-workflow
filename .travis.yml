@@ -28,6 +28,6 @@ before_deploy:
 
 deploy:
   provider: script
-  script: bash docker_push
+  script: bash docker_push.sh
   on:
     branch: master
