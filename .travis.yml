@@ -14,3 +14,7 @@ install:
   - pip install pipenv pytest
   - pipenv install
   - pytest              # <== This runs in Pipenv (a/k/a virtualenv)
+
+# command to run tests
+script:
+  - pytest
