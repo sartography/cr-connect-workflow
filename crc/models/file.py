@@ -42,6 +42,7 @@ class FileModel(db.Model):
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=True)
     task_id = db.Column(db.String, nullable=True)
+    form_field_key = db.Column(db.String, nullable=True)
 
 
 class FileModelSchema(ModelSchema):
