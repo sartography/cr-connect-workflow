@@ -18,7 +18,9 @@ app.config.from_object('config.default')
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
     app.config.from_object('config.testing')
     app.config.from_pyfile('testing.py')
-
+else:
+    # load the instance/config.py, if it exists, when not testing
+    app.config.from_pyfile('config.py', silent=True)
 
 db = SQLAlchemy(app)
 """:type: sqlalchemy.orm.SQLAlchemy"""
