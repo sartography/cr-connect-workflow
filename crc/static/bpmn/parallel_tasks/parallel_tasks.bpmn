@@ -45,6 +45,8 @@
             <camunda:value id="Value_0l52r92" name="I&#39;ve got a bad feeling about this." />
             <camunda:value id="Value_3fpalk7" name="Run away! Run away!" />
           </camunda:formField>
+          <camunda:formField id="FormField_3vtabe9" label="Files" type="files" />
+          <camunda:formField id="FormField_0eg7ror" label="One file" type="file" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0pfke5z</bpmn:incoming>
