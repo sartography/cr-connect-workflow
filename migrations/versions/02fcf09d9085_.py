@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: f9c4e92a8afe
-Revises: 
-Create Date: 2020-02-04 12:49:57.265041
+Revision ID: 02fcf09d9085
+Revises:
+Create Date: 2020-02-05 17:18:35.324675
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f9c4e92a8afe'
+revision = '02fcf09d9085'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -51,13 +51,14 @@ def upgrade():
     sa.Column('name', sa.String(), nullable=True),
     sa.Column('version', sa.Integer(), nullable=True),
     sa.Column('last_updated', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('type', sa.Enum('bpmn', 'dmn', 'docx', 'gif', 'jpg', 'pdf', 'png', 'svg', 'xlsx', 'zip', 'image', name='filetype'), nullable=True),
+    sa.Column('type', sa.Enum('bpmn', 'csv', 'dmn', 'doc', 'docx', 'gif', 'jpg', 'md', 'pdf', 'png', 'ppt', 'pptx', 'rtf', 'svg', 'svg_xml', 'txt', 'xls', 'xlsx', 'xml', 'zip', name='filetype'), nullable=True),
     sa.Column('primary', sa.Boolean(), nullable=True),
     sa.Column('content_type', sa.String(), nullable=True),
     sa.Column('workflow_spec_id', sa.String(), nullable=True),
     sa.Column('workflow_id', sa.Integer(), nullable=True),
     sa.Column('study_id', sa.Integer(), nullable=True),
     sa.Column('task_id', sa.String(), nullable=True),
+    sa.Column('form_field_key', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['study_id'], ['study.id'], ),
     sa.ForeignKeyConstraint(['workflow_id'], ['workflow.id'], ),
     sa.ForeignKeyConstraint(['workflow_spec_id'], ['workflow_spec.id'], ),

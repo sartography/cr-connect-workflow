@@ -9,17 +9,25 @@ from crc import db
 
 class FileType(enum.Enum):
     bpmn = "bpmm"
+    csv = 'csv'
     dmn = "dmn"
+    doc = "doc"
     docx = "docx"
     gif = 'gif'
     jpg = 'jpg'
+    md = 'md'
     pdf = 'pdf'
     png = 'png'
+    ppt = 'ppt'
+    pptx = 'pptx'
+    rtf = 'rtf'
     svg = "svg"
+    svg_xml = "svg+xml"
+    txt = 'txt'
+    xls = 'xls'
     xlsx = 'xlsx'
+    xml = 'xml'
     zip = 'zip'
-    image = 'image'
-
 
 class FileDataModel(db.Model):
     __tablename__ = 'file_data'
