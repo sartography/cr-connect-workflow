@@ -51,19 +51,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
   /study/{study_id}:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which workflows should be returned.
+        schema:
+          type: integer
+          format: int32
     get:
       operationId: crc.api.study.get_study
       summary: Provides a single study
       tags:
         - Studies
-      parameters:
-        - name: study_id
-          in: path
-          required: true
-          description: The id of the study for which workflows should be returned.
-          schema:
-            type: integer
-            format: int32
       responses:
         '200':
           description: An Study Object
@@ -77,19 +77,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-    post:
+    put:
       operationId: crc.api.study.update_study
       summary: Updates an existing study with the given parameters.
       tags:
         - Studies
-      parameters:
-        - name: study_id
-          in: path
-          required: true
-          description: The id of the study for which workflows should be returned.
-          schema:
-            type: integer
-            format: int32
       requestBody:
         content:
           application/json:
@@ -133,7 +125,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
   /study/{study_id}/workflows:
     get:
       operationId: crc.api.study.get_study_workflows
@@ -201,7 +192,7 @@ paths:
       operationId: crc.api.workflow.all_specifications
       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
       tags:
-        - Workflows and Tasks
+        - Workflow Specifications
       responses:
         '200':
           description: An array of workflow specifications
@@ -217,12 +208,110 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /file:
+    post:
+      operationId: crc.api.workflow.add_workflow_specification
+      summary: Creates a new workflow specification with the given parameters.
+      tags:
+        - Workflow Specifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowSpec'
+      responses:
+        '200':
+          description: Workflow specification created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /workflow-specification/{spec_id}:
     parameters:
       - name: spec_id
+        in: path
+        required: false
+        description: The unique id of an existing workflow specification to modify.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.workflow.get_workflow_specification
+      summary: Returns a single workflow specification
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow specification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+    put:
+      operationId: crc.api.workflow.update_workflow_specification
+      summary: Modifies an existing workflow specification with the given parameters.
+      tags:
+        - Workflow Specifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowSpec'
+      responses:
+        '200':
+          description: Workflow specification created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: crc.api.workflow.delete_workflow_specification
+      summary: Removes an existing workflow specification
+      tags:
+        - Workflow Specifications
+      responses:
+        '204':
+          description: The workflow specification has been removed.
+  /file:
+    parameters:
+      - name: workflow_spec_id
         in: query
         required: false
-        description: The unique name of a specification
+        description: The unique id of a workflow specification
+        schema:
+          type: string
+      - name: study_id
+        in: query
+        required: false
+        description: The unique id of a study
+        schema:
+          type: integer
+      - name: workflow_id
+        in: query
+        required: false
+        description: The unique id of a workflow instance
+        schema:
+          type: integer
+      - name: task_id
+        in: query
+        required: false
+        description: The unique id of a workflow task
+        schema:
+          type: string
+      - name: form_field_key
+        in: query
+        required: false
+        description: The unique key of a workflow task form field
         schema:
           type: string
     get:
@@ -256,8 +345,6 @@ paths:
             schema:
               type: object
               properties:
-                workflow_spec_id:
-                  type: string
                 file:
                   type: string
                   format: binary
@@ -268,7 +355,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
-
   /file/{file_id}:
     parameters:
       - name: file_id
@@ -290,28 +376,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/File"
     put:
-      operationId: crc.api.file.update_file
-      summary: Update a file
+      operationId: crc.api.file.update_file_info
+      summary: Updates existing file info with the given parameters.
       tags:
         - Files
       requestBody:
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              properties:
-                workflow_spec_id:
-                  type: string
-                file:
-                  type: string
-                  format: binary
+              $ref: '#/components/schemas/File'
       responses:
         '200':
-          description: Metadata about the uploaded file, but not the file content.
+          description: File info updated successfully.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     delete:
       operationId: crc.api.file.delete_file
       summary: Removes an existing file
@@ -329,10 +415,33 @@ paths:
         schema:
           type: integer
     get:
-      operationId: crc.api.file.get_file
+      operationId: crc.api.file.get_file_data
       summary: Returns only the file contents
       tags:
         - Files
+      responses:
+        '200':
+          description: Returns the actual file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+    put:
+      operationId: crc.api.file.update_file_data
+      summary: Update only the file contents for a given file
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
       responses:
         '200':
           description: Returns the actual file
@@ -378,10 +487,39 @@ paths:
       responses:
         '204':
           description: The workflow was removed
+  /workflow/{workflow_id}/all_tasks:
+    get:
+      operationId: crc.api.workflow.get_all_tasks
+      summary: Return a list of all tasks for this workflow
+      tags:
+        - Workflows and Tasks
+      parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /workflow/{workflow_id}/tasks:
     get:
-      operationId: crc.api.workflow.get_tasks
-      summary: Return a list of all tasks for this workflow
+      operationId: crc.api.workflow.get_ready_user_tasks
+      summary: Returns the list of ready user tasks for this workflow
       tags:
         - Workflows and Tasks
       parameters:
@@ -409,25 +547,26 @@ paths:
                 $ref: "#/components/schemas/Error"
   # /v1.0/workflow/0/task/0
   /workflow/{workflow_id}/task/{task_id}:
+    parameters:
+      - name: workflow_id
+        in: path
+        required: true
+        description: The id of the workflow
+        schema:
+          type: integer
+          format: int32
+      - name: task_id
+        in: path
+        required: true
+        description: The id of the task
+        schema:
+          type: string
+          format: uuid
     get:
       operationId: crc.api.workflow.get_task
       summary: Get details of specific task in specific workflow instance
       tags:
         - Workflows and Tasks
-      parameters:
-        - name: workflow_id
-          in: path
-          required: true
-          description: The id of the workflow
-          schema:
-            type: integer
-            format: int32
-        - name: task_id
-          in: path
-          required: true
-          description: The id of the task
-          schema:
-            type: string
       responses:
         '200':
           description: Expected response to a valid request
@@ -441,40 +580,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
+  /workflow/{workflow_id}/task/{task_id}/data:
+    parameters:
+      - name: workflow_id
+        in: path
+        required: true
+        description: The id of the workflow
+        schema:
+          type: integer
+          format: int32
+      - name: task_id
+        in: path
+        required: true
+        description: The id of the task
+        schema:
+          type: string
+          format: uuid
     put:
       operationId: crc.api.workflow.update_task
-      summary: Update, attempt to complete a workflow task
+      summary: Exclusively for User Tasks, submits form data as a flat set of key/values.
       tags:
         - Workflows and Tasks
-      parameters:
-        - in: body
-          name: task
-          schema:
-            $ref: '#/components/schemas/Task'
-        - name: workflow_id
-          in: path
-          required: true
-          description: The id of the workflow
-          schema:
-            type: integer
-            format: int32
-        - name: task_id
-          in: path
-          required: true
-          description: The id of the task
-          schema:
-            type: string
+      requestBody:
+        description: Key / Value pairs in JSON format.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                favorite_color: blue
+                capital_assyria: Assur
       responses:
         '201':
-          description: Null response
-        default:
-          description: unexpected error
+          description: Returns the updated workflow with the task completed.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-
+                $ref: "#/components/schemas/Workflow"
 
 components:
   schemas:
@@ -482,7 +625,6 @@ components:
       properties:
         id:
           type: string
-
     Study:
       properties:
         id:
@@ -516,33 +658,24 @@ components:
           type: string
         description:
           type: string
-        bpmn_url:
-          type: string
-        svg_url:
-          type: string
     File:
       properties:
         id:
           type: number
-          readOnly: true
         name:
           type: string
           example: "random_fact.bpmn"
         version:
-          type: string
-          readOnly: true
+          type: integer
         last_updated:
           type: string
           format: date_time
           example: "2019-12-25T09:12:33.001Z"
-          readOnly: true
         type:
-          type: enum
+          type: string
           enum: ['bpmn','svg', 'dmn']
-          readOnly: true
         primary:
           type: boolean
-          readOnly: true
         content_type:
           type: string
           example: "application/xml"
@@ -564,8 +697,9 @@ components:
         study_id:
           readOnly: true
           type: integer
-        workflow_spec:
-          $ref: "#/components/schemas/WorkflowSpec"
+        workflow_spec_id:
+          readOnly: true
+          type: String
         current_task_ids:
           type: array
           items:

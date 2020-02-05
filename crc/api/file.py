@@ -5,7 +5,7 @@ from datetime import datetime
 import connexion
 from flask import send_file
 
-from crc import db
+from crc import session
 from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileModelSchema, FileModel, FileDataModel, FileType
 
@@ -30,64 +30,98 @@ def update_file_from_request(file_model):
     else:
         file_model.type = FileType[file_extension]
 
-    file_data_model = db.session.query(FileDataModel).filter_by(id=file_model.id).with_for_update().first()
+    file_data_model = session.query(FileDataModel).filter_by(file_model_id=file_model.id).with_for_update().first()
     if file_data_model is None:
-        file_data_model = FileDataModel(data=file.stream.read(), file_model = file_model)
+        file_data_model = FileDataModel(data=file.stream.read(), file_model=file_model)
     else:
         file_data_model.data = file.stream.read()
 
-    db.session.add(file_data_model)
-    db.session.add(file_model)
-    db.session.commit()
-    db.session.flush()  # Assure the id is set on the model before returning it.
-
-
-def get_files(spec_id):
-    if spec_id:
-        schema = FileModelSchema(many=True)
-        return schema.dump(db.session.query(FileModel).filter_by(workflow_spec_id=spec_id).all())
-    else:
-        error = ApiError('no_files_found', 'Please provide some parameters so we can find the files you need.')
-        return ApiErrorSchema().dump(error), 400
-
-
-def add_file():
-    if 'workflow_spec_id' not in connexion.request.form:
-        return ApiErrorSchema().dump(ApiError('missing_spec_id',
-                                            'Please specify a workflow_spec_id for this file in the form')), 404
-    file_model = FileModel(version=0, workflow_spec_id=connexion.request.form['workflow_spec_id'])
-    update_file_from_request(file_model)
+    session.add_all([file_model, file_data_model])
+    session.commit()
+    session.flush()  # Assure the id is set on the model before returning it.
     return FileModelSchema().dump(file_model)
 
 
-def update_file(file_id):
-    file_model = db.session.query(FileModel).filter_by(id=file_id).with_for_update().first()
+def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
+    if all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key]):
+        return ApiErrorSchema().dump(ApiError('missing_parameter',
+                                              'Please specify at least one of workflow_spec_id, study_id, '
+                                              'workflow_id, and task_id for this file in the HTTP parameters')), 400
+
+    schema = FileModelSchema(many=True)
+    results = session.query(FileModel).filter_by(
+        workflow_spec_id=workflow_spec_id,
+        study_id=study_id,
+        workflow_id=workflow_id,
+        task_id=task_id,
+        form_field_key=form_field_key
+    ).all()
+    return schema.dump(results)
+
+
+def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
+    all_none = all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key])
+    missing_some = (workflow_spec_id is None) and (None in [study_id, workflow_id, task_id, form_field_key])
+    if all_none or missing_some:
+        return ApiErrorSchema().dump(ApiError('missing_parameter',
+                                              'Please specify either a workflow_spec_id or all 3 of study_id, '
+                                              'workflow_id, and task_id for this file in the HTTP parameters')), 404
+
+    file_model = FileModel(
+        version=0,
+        workflow_spec_id=workflow_spec_id,
+        study_id=study_id,
+        workflow_id=workflow_id,
+        task_id=task_id,
+        form_field_key=form_field_key
+    )
+    return update_file_from_request(file_model)
+
+
+def update_file_data(file_id):
+    file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
-    update_file_from_request(file_model)
-    return FileModelSchema().dump(file_model)
+    return update_file_from_request(file_model)
 
 
-def get_file(file_id):
-    file_data = db.session.query(FileDataModel).filter_by(id=file_id).first()
+def get_file_data(file_id):
+    file_data = session.query(FileDataModel).filter_by(id=file_id).first()
     if file_data is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
     return send_file(
-                 io.BytesIO(file_data.data),
-                 attachment_filename=file_data.file_model.name,
-                 mimetype=file_data.file_model.content_type,
-                 cache_timeout=-1  # Don't cache these files on the browser.
-           )
+        io.BytesIO(file_data.data),
+        attachment_filename=file_data.file_model.name,
+        mimetype=file_data.file_model.content_type,
+        cache_timeout=-1  # Don't cache these files on the browser.
+    )
 
 
 def get_file_info(file_id):
-    file_model = db.session.query(FileModel).filter_by(id=file_id).with_for_update().first()
+    file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         return ApiErrorSchema().dump(ApiError('no_such_file', 'The file id you provided does not exist')), 404
+    return FileModelSchema().dump(file_model)
+
+
+def update_file_info(file_id, body):
+    if file_id is None:
+        error = ApiError('unknown_file', 'Please provide a valid File ID.')
+        return ApiErrorSchema.dump(error), 404
+
+    file_model = session.query(FileModel).filter_by(id=file_id).first()
+
+    if file_model is None:
+        error = ApiError('unknown_file_model', 'The file_model "' + file_id + '" is not recognized.')
+        return ApiErrorSchema.dump(error), 404
+
+    file_model = FileModelSchema().load(body, session=session)
+    session.add(file_model)
+    session.commit()
     return FileModelSchema().dump(file_model)
 
 
 def delete_file(file_id):
-    db.session.query(FileDataModel).filter_by(id=file_id).delete()
-    db.session.query(FileModel).filter_by(id=file_id).delete()
-
+    session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
+    session.query(FileModel).filter_by(id=file_id).delete()
+    session.commit()

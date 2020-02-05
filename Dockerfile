@@ -16,20 +16,11 @@ ADD Pipfile /crc-workflow/
 ADD Pipfile.lock /crc-workflow/
 RUN pipenv install --dev
 
-ENV FLASK_APP=./crc/__init__.py
-
 # include rejoiner code (gets overriden by local changes)
 COPY . /crc-workflow/
 
-# run migrations
-CMD ["pipenv", "run", "flask", "db", "upgrade"]
-CMD ["pipenv", "run", "flask", "load-example-data"]
-
 # run webserver by default
-CMD ["pipenv", "run", "python", "/crc-workflow/run.py"]
-
+CMD ["pipenv", "run", "python", "./run.py"]
 
 # expose ports
 EXPOSE 5000
-
-

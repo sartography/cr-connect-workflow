@@ -9,8 +9,16 @@ from crc import db
 
 class FileType(enum.Enum):
     bpmn = "bpmm"
-    svg = "svg"
     dmn = "dmn"
+    docx = "docx"
+    gif = 'gif'
+    jpg = 'jpg'
+    pdf = 'pdf'
+    png = 'png'
+    svg = "svg"
+    xlsx = 'xlsx'
+    zip = 'zip'
+    image = 'image'
 
 
 class FileDataModel(db.Model):
@@ -30,12 +38,17 @@ class FileModel(db.Model):
     type = db.Column(db.Enum(FileType))
     primary = db.Column(db.Boolean)
     content_type = db.Column(db.String)
-    workflow_spec_id = db.Column(db.Integer, db.ForeignKey('workflow_spec.id'))
+    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
+    workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
+    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=True)
+    task_id = db.Column(db.String, nullable=True)
+    form_field_key = db.Column(db.String, nullable=True)
 
 
 class FileModelSchema(ModelSchema):
     class Meta:
         model = FileModel
+        include_fk = True  # Includes foreign keys
     type = EnumField(FileType)
 
 
