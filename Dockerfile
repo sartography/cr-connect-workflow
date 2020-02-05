@@ -19,11 +19,6 @@ RUN pipenv install --dev
 # include rejoiner code (gets overriden by local changes)
 COPY . /crc-workflow/
 
-# run migrations
-ENV FLASK_APP=./crc/__init__.py
-RUN pipenv run flask db upgrade
-RUN pipenv run flask load-example-data
-
 # run webserver by default
 CMD ["pipenv", "run", "python", "./run.py"]
 
