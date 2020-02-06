@@ -1,4 +1,3 @@
-File Edit Options Buffers Tools Sh-Script Help
 # run migrations
 ENV FLASK_APP=./crc/__init__.py
 RUN pipenv run flask db upgrade
