@@ -20,6 +20,7 @@ RUN pipenv install --dev
 COPY . /crc-workflow/
 
 # run webserver by default
+ENV FLASK_APP=./crc/__init__.py
 CMD ["pipenv", "run", "python", "./run.py"]
 
 # expose ports
