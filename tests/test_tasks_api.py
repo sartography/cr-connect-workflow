@@ -23,6 +23,7 @@ class TestTasksApi(BaseTest):
         rv = self.app.get('/v1.0/workflow/%i' % workflow.id, content_type="application/json")
         json_data = json.loads(rv.get_data(as_text=True))
         workflow_api = WorkflowApiSchema().load(json_data)
+        self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
     def complete_form(self, workflow, task, dict_data):
@@ -47,6 +48,7 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('two_forms')
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
+        self.assertEqual('two_forms', workflow_api.workflow_spec_id)
         self.assertEqual(2, len(workflow_api.user_tasks))
         self.assertIsNotNone(workflow_api.user_tasks[0].form)
         self.assertEqual("UserTask", workflow_api.next_task['type'])

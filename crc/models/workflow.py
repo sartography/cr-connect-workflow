@@ -108,17 +108,18 @@ class TaskSchema(ma.Schema):
 
 
 class WorkflowApi(object):
-    def __init__(self, id, status, user_tasks, last_task, next_task):
+    def __init__(self, id, status, user_tasks, last_task, next_task, workflow_spec_id):
         self.id = id
         self.status = status
         self.user_tasks = user_tasks
         self.last_task = last_task
         self.next_task = next_task
+        self.workflow_spec_id = workflow_spec_id
 
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
-        fields = ["id", "status", "user_tasks", "last_task", "next_task"]
+        fields = ["id", "status", "user_tasks", "last_task", "next_task", "workflow_spec_id"]
         unknown = INCLUDE
     status = EnumField(WorkflowStatus)
     user_tasks = marshmallow.fields.List(marshmallow.fields.Nested(TaskSchema, dump_only=True))

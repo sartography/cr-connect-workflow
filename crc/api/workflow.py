@@ -70,10 +70,14 @@ def delete_workflow_specification(spec_id):
 def __get_workflow_api_model(workflow_model: WorkflowModel, processor: WorkflowProcessor):
     spiff_tasks = processor.get_all_user_tasks()
     user_tasks = map(Task.from_spiff, spiff_tasks)
-    return WorkflowApi(id=workflow_model.id, status=workflow_model.status,
-                       last_task=Task.from_spiff(processor.bpmn_workflow.last_task),
-                       next_task=Task.from_spiff(processor.next_task()),
-                       user_tasks=user_tasks)
+    return WorkflowApi(
+        id=workflow_model.id,
+        status=workflow_model.status,
+        last_task=Task.from_spiff(processor.bpmn_workflow.last_task),
+        next_task=Task.from_spiff(processor.next_task()),
+        user_tasks=user_tasks,
+        workflow_spec_id=workflow_model.workflow_spec_id
+    )
 
 
 def get_workflow(workflow_id):
