@@ -487,64 +487,6 @@ paths:
       responses:
         '204':
           description: The workflow was removed
-  /workflow/{workflow_id}/all_tasks:
-    get:
-      operationId: crc.api.workflow.get_all_tasks
-      summary: Return a list of all tasks for this workflow
-      tags:
-        - Workflows and Tasks
-      parameters:
-        - name: workflow_id
-          in: path
-          required: true
-          description: The id of the workflow
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Expected response to a valid request
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Task"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /workflow/{workflow_id}/tasks:
-    get:
-      operationId: crc.api.workflow.get_ready_user_tasks
-      summary: Returns the list of ready user tasks for this workflow
-      tags:
-        - Workflows and Tasks
-      parameters:
-        - name: workflow_id
-          in: path
-          required: true
-          description: The id of the workflow
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: Expected response to a valid request
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Task"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   # /v1.0/workflow/0/task/0
   /workflow/{workflow_id}/task/{task_id}:
     parameters:
@@ -693,21 +635,16 @@ components:
           format: int64
         status:
           type: enum
-          enum: ['user_input_required','waiting','complete']
-        study_id:
-          readOnly: true
+          enum: ['new','user_input_required','waiting','complete']
+        last_task_id:
           type: integer
-        workflow_spec_id:
-          readOnly: true
-          type: String
-        current_task_ids:
+        next_task_id:
+          type: integer
+        user_tasks:
           type: array
           items:
-            type: String
-        messages:
-          type: array
-          items:
-            type: String
+            $ref: "#/components/schemas/Task"
+
       example:
         id: 291234
         status: 'user_input_required'

@@ -1,6 +1,7 @@
 import enum
 
 import marshmallow
+from marshmallow import post_dump, pre_dump, EXCLUDE, INCLUDE
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import ModelSchema
 
@@ -14,7 +15,6 @@ class WorkflowSpecModel(db.Model):
     display_name = db.Column(db.String)
     description = db.Column(db.Text)
     primary_process_id = db.Column(db.String)
-
 
 class WorkflowSpecModelSchema(ModelSchema):
     class Meta:
@@ -35,17 +35,10 @@ class WorkflowModel(db.Model):
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    last_completed_task_id = db.Column(db.String)
 
 
-class WorkflowModelSchema(ModelSchema):
-    class Meta:
-        model = WorkflowModel
-        include_fk = True  # Includes foreign keys
-
-    status = EnumField(WorkflowStatus)
-
-
-class Task:
+class Task(object):
     def __init__(self, id, name, title, type, state, form, documentation, data):
         self.id = id
         self.name = name
@@ -61,13 +54,12 @@ class Task:
         instance = cls(spiff_task.id,
                        spiff_task.task_spec.name,
                        spiff_task.task_spec.description,
-                       "task",
+                       spiff_task.task_spec.__class__.__name__,
                        spiff_task.get_state_name(),
-                       {},
+                       None,
                        spiff_task.task_spec.documentation,
                        spiff_task.data)
         if hasattr(spiff_task.task_spec, "form"):
-            instance.type = "form"
             instance.form = spiff_task.task_spec.form
         return instance
 
@@ -108,8 +100,32 @@ class TaskSchema(ma.Schema):
         fields = ["id", "name", "title", "type", "state", "form", "documentation", "data"]
 
     documentation = marshmallow.fields.String(required=False, allow_none=True)
-    form = marshmallow.fields.Nested(FormSchema)
+    form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
+    title = marshmallow.fields.String(required=False, allow_none=True)
 
     @marshmallow.post_load
     def make_task(self, data, **kwargs):
         return Task(**data)
+
+
+class WorkflowApi(object):
+    def __init__(self, id, status, user_tasks, last_task, next_task):
+        self.id = id
+        self.status = status
+        self.user_tasks = user_tasks
+        self.last_task = last_task
+        self.next_task = next_task
+
+class WorkflowApiSchema(ma.Schema):
+    class Meta:
+        model = WorkflowApi
+        fields = ["id", "status", "user_tasks", "last_task", "next_task"]
+        unknown = INCLUDE
+    status = EnumField(WorkflowStatus)
+    user_tasks = marshmallow.fields.List(marshmallow.fields.Nested(TaskSchema, dump_only=True))
+    last_task = marshmallow.fields.Nested(TaskSchema, dump_only=True)
+    next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True)
+
+    @marshmallow.post_load
+    def make_workflow(self, data, **kwargs):
+        return WorkflowApi(**data)

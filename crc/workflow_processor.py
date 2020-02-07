@@ -1,9 +1,7 @@
 import xml.etree.ElementTree as ElementTree
 
-from SpiffWorkflow import Task as SpiffTask
+from SpiffWorkflow import Task as SpiffTask, Workflow
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
-from SpiffWorkflow.bpmn.parser.task_parsers import UserTaskParser
-from SpiffWorkflow.bpmn.parser.util import full_tag
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
@@ -54,6 +52,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                                 details=str(ne))
 
 
+
 class MyCustomParser(BpmnDmnParser):
     """
     A BPMN and DMN parser that can also parse Camunda forms.
@@ -61,8 +60,7 @@ class MyCustomParser(BpmnDmnParser):
     OVERRIDE_PARSER_CLASSES = BpmnDmnParser.OVERRIDE_PARSER_CLASSES
     OVERRIDE_PARSER_CLASSES.update(CamundaParser.OVERRIDE_PARSER_CLASSES)
 
-
-class WorkflowProcessor:
+class WorkflowProcessor(object):
     _script_engine = CustomBpmnScriptEngine()
     _serializer = BpmnSerializer()
 
@@ -96,6 +94,8 @@ class WorkflowProcessor:
             raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
         return parser.get_spec(process_id)
 
+
+
     @classmethod
     def create(cls, workflow_spec_id):
         spec = WorkflowProcessor.get_spec(workflow_spec_id)
@@ -122,6 +122,21 @@ class WorkflowProcessor:
 
     def next_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
+
+    def next_task(self):
+        """Returns the next user task that should be completed
+        even if there are parallel tasks and mulitple options are
+        available."""
+        ready_tasks = self.bpmn_workflow.get_ready_user_tasks()
+        if len(ready_tasks) == 0:
+            return None
+        elif len(ready_tasks) == 1:
+            return ready_tasks[0]
+        else:
+            for task in ready_tasks:
+                if task.parent == self.bpmn_workflow.last_task:
+                    return task;
+            return ready_tasks[0]
 
     def complete_task(self, task):
         self.bpmn_workflow.complete_task_from_id(task.id)

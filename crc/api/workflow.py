@@ -1,10 +1,12 @@
 import uuid
 
+from flask import json
+
 from crc.api.file import delete_file
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.workflow import WorkflowModel, WorkflowModelSchema, WorkflowSpecModelSchema, WorkflowSpecModel, \
-    Task, TaskSchema
+from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, \
+    Task, TaskSchema, WorkflowApiSchema, WorkflowApi
 from crc.workflow_processor import WorkflowProcessor
 from crc.models.file import FileModel
 
@@ -65,37 +67,26 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
+def __get_workflow_api_model(workflow_model: WorkflowModel, processor: WorkflowProcessor):
+    spiff_tasks = processor.get_all_user_tasks()
+    user_tasks = map(Task.from_spiff, spiff_tasks)
+    return WorkflowApi(id=workflow_model.id, status=workflow_model.status,
+                       last_task=Task.from_spiff(processor.bpmn_workflow.last_task),
+                       next_task=Task.from_spiff(processor.next_task()),
+                       user_tasks=user_tasks)
+
+
 def get_workflow(workflow_id):
-    schema = WorkflowModelSchema()
-    workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    return schema.dump(workflow)
+    schema = WorkflowApiSchema()
+    workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    processor = WorkflowProcessor(workflow_model.workflow_spec_id,
+                                  workflow_model.bpmn_workflow_json)
+    return schema.dump(__get_workflow_api_model(workflow_model, processor))
 
 
 def delete(workflow_id):
     session.query(WorkflowModel).filter_by(id=workflow_id).delete()
     session.commit()
-3
-
-
-def get_all_tasks(workflow_id):
-    workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
-    spiff_tasks = processor.get_all_user_tasks()
-    tasks = []
-    for st in spiff_tasks:
-        tasks.append(Task.from_spiff(st))
-    return TaskSchema(many=True).dump(tasks)
-
-
-def get_ready_user_tasks(workflow_id):
-    workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
-    spiff_tasks = processor.get_ready_user_tasks()
-    tasks = []
-    for st in spiff_tasks:
-        tasks.append(Task.from_spiff(st))
-    return TaskSchema(many=True).dump(tasks)
-
 
 def get_task(workflow_id, task_id):
     workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
@@ -103,14 +94,16 @@ def get_task(workflow_id, task_id):
 
 
 def update_task(workflow_id, task_id, body):
-    workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow.workflow_spec_id, workflow.bpmn_workflow_json)
+    workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    processor = WorkflowProcessor(workflow_model.workflow_spec_id, workflow_model.bpmn_workflow_json)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
     task.data = body
     processor.complete_task(task)
     processor.do_engine_steps()
-    workflow.bpmn_workflow_json = processor.serialize()
-    session.add(workflow)
+    workflow_model.last_completed_task_id = task.id
+    workflow_model.bpmn_workflow_json = processor.serialize()
+    session.add(workflow_model)
     session.commit()
-    return WorkflowModelSchema().dump(workflow)
+    return WorkflowApiSchema().dump(__get_workflow_api_model(workflow_model, processor)
+                                    )

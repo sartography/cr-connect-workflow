@@ -5,7 +5,7 @@ from crc import session
 from crc.models.file import FileModel
 from crc.models.study import StudyModel, StudyModelSchema, ProtocolBuilderStatus
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
-    WorkflowModelSchema, TaskSchema
+    WorkflowApiSchema
 from tests.base_test import BaseTest
 
 
@@ -162,15 +162,15 @@ class TestStudy(BaseTest):
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assert_success(rv)
         self.assertEqual(1, session.query(WorkflowModel).count())
-        workflow = session.query(WorkflowModel).first()
-        self.assertEqual(study.id, workflow.study_id)
-        self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
-        self.assertIsNotNone(workflow.bpmn_workflow_json)
-        self.assertEqual(spec.id, workflow.workflow_spec_id)
+        workflow_model = session.query(WorkflowModel).first()
+        self.assertEqual(study.id, workflow_model.study_id)
+        self.assertEqual(WorkflowStatus.user_input_required, workflow_model.status)
+        self.assertIsNotNone(workflow_model.bpmn_workflow_json)
+        self.assertEqual(spec.id, workflow_model.workflow_spec_id)
 
         json_data = json.loads(rv.get_data(as_text=True))
-        workflow2 = WorkflowModelSchema().load(json_data, session=session)
-        self.assertEqual(workflow.id, workflow2.id)
+        workflow2 = WorkflowApiSchema().load(json_data)
+        self.assertEqual(workflow_model.id, workflow2.id)
 
     def test_delete_workflow(self):
         self.load_example_data()
@@ -180,8 +180,7 @@ class TestStudy(BaseTest):
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assertEqual(1, session.query(WorkflowModel).count())
         json_data = json.loads(rv.get_data(as_text=True))
-        workflow = WorkflowModelSchema().load(json_data, session=session)
+        workflow = WorkflowApiSchema().load(json_data)
         rv = self.app.delete('/v1.0/workflow/%i' % workflow.id)
         self.assert_success(rv)
         self.assertEqual(0, session.query(WorkflowModel).count())
-

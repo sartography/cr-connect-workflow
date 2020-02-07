@@ -6,7 +6,7 @@ from crc.api.rest_exception import RestException
 from crc.models.file import FileModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
 from tests.base_test import BaseTest
-from crc.workflow_processor import WorkflowProcessor
+from crc.workflow_processor import Workflow, WorkflowProcessor
 
 
 class TestWorkflowProcessor(BaseTest):
@@ -17,7 +17,7 @@ class TestWorkflowProcessor(BaseTest):
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for i in range(stringLength))
 
-    def _complete_form_with_random_data(self, task):
+    def _populate_form_with_random_data(self, task):
         form_data = {}
         for field in task.task_spec.form.fields:
             form_data[field.id] = self._randomString()
@@ -79,10 +79,10 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(4, len(next_user_tasks))
-        self._complete_form_with_random_data(next_user_tasks[0])
-        self._complete_form_with_random_data(next_user_tasks[1])
-        self._complete_form_with_random_data(next_user_tasks[2])
-        self._complete_form_with_random_data(next_user_tasks[3])
+        self._populate_form_with_random_data(next_user_tasks[0])
+        self._populate_form_with_random_data(next_user_tasks[1])
+        self._populate_form_with_random_data(next_user_tasks[2])
+        self._populate_form_with_random_data(next_user_tasks[3])
         processor.complete_task(next_user_tasks[0])
         processor.complete_task(next_user_tasks[1])
         processor.complete_task(next_user_tasks[2])
@@ -90,10 +90,10 @@ class TestWorkflowProcessor(BaseTest):
         # There are another 4 tasks to complete (each task, had a follow up task in the parallel list)
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(4, len(next_user_tasks))
-        self._complete_form_with_random_data(next_user_tasks[0])
-        self._complete_form_with_random_data(next_user_tasks[1])
-        self._complete_form_with_random_data(next_user_tasks[2])
-        self._complete_form_with_random_data(next_user_tasks[3])
+        self._populate_form_with_random_data(next_user_tasks[0])
+        self._populate_form_with_random_data(next_user_tasks[1])
+        self._populate_form_with_random_data(next_user_tasks[2])
+        self._populate_form_with_random_data(next_user_tasks[3])
         processor.complete_task(next_user_tasks[0])
         processor.complete_task(next_user_tasks[1])
         processor.complete_task(next_user_tasks[2])
@@ -101,13 +101,34 @@ class TestWorkflowProcessor(BaseTest):
         processor.do_engine_steps()
         self.assertTrue(processor.bpmn_workflow.is_completed())
 
+    def test_workflow_processor_knows_the_text_task_even_when_parallel(self):
+        self.load_example_data()
+        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="parallel_tasks").first()
+        processor = WorkflowProcessor.create(workflow_spec_model.id)
+        self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
+        next_user_tasks = processor.next_user_tasks()
+        self.assertEqual(4, len(next_user_tasks))
+        self.assertEqual(next_user_tasks[0], processor.next_task(), "First task in list of 4")
+
+        # Complete the third open task, so do things out of order
+        # this should cause the system to recommend the first ready task that is a
+        # child of the last completed task.
+        task = next_user_tasks[2]
+        self._populate_form_with_random_data(task)
+        processor.complete_task(task)
+        next_user_tasks = processor.next_user_tasks()
+        self.assertEqual(processor.bpmn_workflow.last_task, task)
+        self.assertEqual(4, len(next_user_tasks))
+        self.assertEqual(task.children[0], processor.next_task())
+
+
     def test_workflow_with_bad_expression_raises_sensible_error(self):
         workflow_spec_model = self.load_test_spec("invalid_expression")
         processor = WorkflowProcessor.create(workflow_spec_model.id)
         processor.do_engine_steps()
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
-        self._complete_form_with_random_data(next_user_tasks[0])
+        self._populate_form_with_random_data(next_user_tasks[0])
         processor.complete_task(next_user_tasks[0])
         with self.assertRaises(RestException) as context:
             processor.do_engine_steps()
