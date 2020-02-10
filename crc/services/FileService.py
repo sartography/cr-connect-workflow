@@ -64,14 +64,19 @@ class FileService(object):
 
     @staticmethod
     def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
-        schema = FileModelSchema(many=True)
-        results = session.query(FileModel).filter_by(
-            workflow_spec_id=workflow_spec_id,
-            study_id=study_id,
-            workflow_id=workflow_id,
-            task_id=str(task_id),
-            form_field_key=form_field_key
-        ).all()
+        query = session.query(FileModel)
+        if workflow_spec_id:
+            query = query.filter_by(workflow_spec_id=workflow_spec_id)
+        if study_id:
+            query = query.filter_by(study_id=study_id)
+        if workflow_id:
+            query = query.filter_by(workflow_id=workflow_id)
+        if task_id:
+            query = query.filter_by(task_id=str(task_id))
+        if form_field_key:
+            query = query.filter_by(form_field_key=form_field_key)
+
+        results = query.all()
         return results
 
     @staticmethod
