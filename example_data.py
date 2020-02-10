@@ -6,7 +6,8 @@ from crc import app, db, session
 from crc.models.file import FileType, FileModel, FileDataModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel
-
+import xml.etree.ElementTree as ElementTree
+from crc.services.workflow_processor import WorkflowProcessor
 
 class ExampleDataLoader:
     def make_data(self):
@@ -56,12 +57,11 @@ class ExampleDataLoader:
                              name="exclusive_gateway",
                              display_name="Exclusive Gateway Example",
                              description='How to take different paths based on input.')
-
-#        workflow_specifications += \
-#            self.create_spec(id="docx",
-#                             name="docx",
-#                             display_name="Form with document generation",
-#                             description='the name says it all')
+        workflow_specifications += \
+            self.create_spec(id="docx",
+                            name="docx",
+                            display_name="Form with document generation",
+                            description='the name says it all')
 
         all_data = studies + workflow_specifications
         return all_data
@@ -88,8 +88,8 @@ class ExampleDataLoader:
                 type = FileType.dmn
             elif file_extension.lower() == '.svg':
                 type = FileType.svg
-#            elif file_extension.lower() == '.docx':
-#                type = FileType.docx
+            elif file_extension.lower() == '.docx':
+                type = FileType.docx
             else:
                 raise Exception("Unsupported file type:" + file_path)
                 continue
@@ -101,7 +101,12 @@ class ExampleDataLoader:
             models.append(file_model)
             try:
                 file = open(file_path, "rb")
-                models.append(FileDataModel(data=file.read(), file_model=file_model))
+                data = file.read()
+                if(is_primary):
+                    bpmn: ElementTree.Element = ElementTree.fromstring(data)
+                    spec.primary_process_id = WorkflowProcessor.get_process_id(bpmn)
+                    print("Locating Process Id for " + filename + "  " + spec.primary_process_id)
+                models.append(FileDataModel(data=data, file_model=file_model))
             finally:
                 file.close()
         return models

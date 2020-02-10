@@ -3,14 +3,15 @@ import random
 
 from crc import session
 from crc.api.rest_exception import RestException
-from crc.models.file import FileModel
+from crc.models.file import FileModel, FileDataModel
+from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
+from crc.services.FileService import FileService
 from tests.base_test import BaseTest
-from crc.workflow_processor import Workflow, WorkflowProcessor
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class TestWorkflowProcessor(BaseTest):
-
 
     def _randomString(self, stringLength=10):
         """Generate a random string of fixed length """
@@ -28,9 +29,9 @@ class TestWorkflowProcessor(BaseTest):
     def test_create_and_complete_workflow(self):
         self.load_example_data()
         workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="random_fact").first()
-
-        processor = WorkflowProcessor.create(workflow_spec_model.id)
-
+        study = session.query(StudyModel).first()
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertEqual(study.id, processor.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY])
         self.assertIsNotNone(processor)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
@@ -51,10 +52,11 @@ class TestWorkflowProcessor(BaseTest):
 
     def test_workflow_with_dmn(self):
         self.load_example_data()
+        study = session.query(StudyModel).first()
         files = session.query(FileModel).filter_by(workflow_spec_id='decision_table').all()
         self.assertEqual(2, len(files))
         workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="decision_table").first()
-        processor = WorkflowProcessor.create(workflow_spec_model.id)
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
@@ -71,11 +73,11 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("message", data)
         self.assertEqual("Oh, Ginger.", data.get('message'))
 
-
     def test_workflow_with_parallel_forms(self):
         self.load_example_data()
         workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="parallel_tasks").first()
-        processor = WorkflowProcessor.create(workflow_spec_model.id)
+        study = session.query(StudyModel).first()
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(4, len(next_user_tasks))
@@ -103,8 +105,9 @@ class TestWorkflowProcessor(BaseTest):
 
     def test_workflow_processor_knows_the_text_task_even_when_parallel(self):
         self.load_example_data()
+        study = session.query(StudyModel).first()
         workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="parallel_tasks").first()
-        processor = WorkflowProcessor.create(workflow_spec_model.id)
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(4, len(next_user_tasks))
@@ -121,10 +124,12 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(4, len(next_user_tasks))
         self.assertEqual(task.children[0], processor.next_task())
 
-
     def test_workflow_with_bad_expression_raises_sensible_error(self):
+        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("invalid_expression")
-        processor = WorkflowProcessor.create(workflow_spec_model.id)
+        study = session.query(StudyModel).first()
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         processor.do_engine_steps()
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
@@ -134,21 +139,28 @@ class TestWorkflowProcessor(BaseTest):
             processor.do_engine_steps()
         self.assertEqual("invalid_expression", context.exception.payload['code'])
 
-    # def test_workflow_with_docx_template(self):
-    #     self.load_example_data()
-    #     files = session.query(FileModel).filter_by(workflow_spec_id='docx').all()
-    #     self.assertEquals(2, len(files))
-    #     workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="docx").first()
-    #     processor = WorkflowProcessor.create(workflow_spec_model.id)
-    #     self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
-    #     next_user_tasks = processor.next_user_tasks()
-    #     self.assertEqual(1, len(next_user_tasks))
-    #     task = next_user_tasks[0]
-    #     self.assertEqual("task_gather_information", task.get_name())
-    #     self._complete_form_with_random_data(task)
-    #     processor.complete_task(task)
-    #     processor.do_engine_steps()
+    def test_workflow_with_docx_template(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("docx")
+        files = session.query(FileModel).filter_by(workflow_spec_id='docx').all()
+        self.assertEqual(2, len(files))
+        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="docx").first()
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
+        next_user_tasks = processor.next_user_tasks()
+        self.assertEqual(1, len(next_user_tasks))
+        task = next_user_tasks[0]
+        self.assertEqual("task_gather_information", task.get_name())
+        self._populate_form_with_random_data(task)
+        processor.complete_task(task)
 
-        # workflow_files = session.query(FileModel).filter_by(workflow_id=).all()
-
-
+        files = session.query(FileModel).filter_by(study_id=study.id, workflow_id=processor.get_workflow_id()).all()
+        self.assertEqual(0, len(files))
+        processor.do_engine_steps()
+        files = session.query(FileModel).filter_by(study_id=study.id, workflow_id=processor.get_workflow_id()).all()
+        self.assertEqual(1, len(files), "The task should create a new file.")
+        file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == files[0].id).first()
+        self.assertIsNotNone(file_data.data)
+        self.assertTrue(len(file_data.data) > 0)
+        # Not going any farther here, assuming this is tested in libraries correctly.

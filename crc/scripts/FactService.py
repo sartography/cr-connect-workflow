@@ -16,11 +16,11 @@ class FactService:
         response = requests.get('https://api.chucknorris.io/jokes/random')
         return response.json()['value']
 
-    def do_task(self, data, **kwargs):
-        if "Fact.type" not in data:
+    def do_task(self, task, **kwargs):
+        if "Fact.type" not in task.data:
             raise Exception("No Fact Provided.")
         else:
-            fact = data["Fact.type"]
+            fact = task.data["Fact.type"]
 
         if True:
             details = "Assertively Incubate Seamless Niches"
@@ -32,4 +32,4 @@ class FactService:
             details = self.get_buzzword()
         else:
             details = "unknown fact type."
-        data['details'] = details
+        task.data['details'] = details

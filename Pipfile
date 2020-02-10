@@ -32,6 +32,7 @@ sphinx = "*"
 recommonmark = "*"
 psycopg2 = "*"
 psycopg2-binary = "*"
+docxtpl = "*"
 
 [requires]
 python_version = "3.7"

@@ -1,7 +1,7 @@
 from crc import ma
 
 
-class ApiError:
+class ApiError(Exception):
     def __init__(self, code, message):
         self.code = code
         self.message = message
