@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1ykepw0" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:collaboration id="Collaboration_1likhak">
+    <bpmn:participant id="SP_CRC_Enter_Global_Data" name="CR Connect 2" processRef="CRC_Enter_Global_Data" />
+    <bpmn:participant id="Participant_097r5f5" name="Services" processRef="Process_1lwd6ei" />
+  </bpmn:collaboration>
+  <bpmn:process id="CRC_Enter_Global_Data" name="CRC Enter Global Data" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_0e8vydb">
+      <bpmn:outgoing>SequenceFlow_0ydxtzh</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:parallelGateway id="ParallelGateway_0fc3ao3">
+      <bpmn:incoming>SequenceFlow_0ydxtzh</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0x8nr66</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0vdnsq1</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:parallelGateway id="ParallelGateway_065v9b6">
+      <bpmn:incoming>SequenceFlow_0eiz3zi</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1pbjc56</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_068ghru</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:endEvent id="EndEvent_04s7xhs">
+      <bpmn:incoming>SequenceFlow_068ghru</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0ydxtzh" sourceRef="StartEvent_0e8vydb" targetRef="ParallelGateway_0fc3ao3" />
+    <bpmn:sequenceFlow id="SequenceFlow_0x8nr66" sourceRef="ParallelGateway_0fc3ao3" targetRef="SubProcess_0o9cad3" />
+    <bpmn:sequenceFlow id="SequenceFlow_0vdnsq1" sourceRef="ParallelGateway_0fc3ao3" targetRef="SubProcess_1nby6qc" />
+    <bpmn:sequenceFlow id="SequenceFlow_0eiz3zi" sourceRef="SubProcess_0o9cad3" targetRef="ParallelGateway_065v9b6" />
+    <bpmn:sequenceFlow id="SequenceFlow_1pbjc56" sourceRef="SubProcess_1nby6qc" targetRef="ParallelGateway_065v9b6" />
+    <bpmn:sequenceFlow id="SequenceFlow_068ghru" sourceRef="ParallelGateway_065v9b6" targetRef="EndEvent_04s7xhs" />
+    <bpmn:callActivity id="SubProcess_0o9cad3" name="Enter Core Info" calledElement="CRC_Enter_Core_Info">
+      <bpmn:incoming>SequenceFlow_0x8nr66</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0eiz3zi</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:callActivity id="SubProcess_1nby6qc" name="Enter Personnel Info" calledElement="CRC_Enter_Personnel_Info">
+      <bpmn:incoming>SequenceFlow_0vdnsq1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1pbjc56</bpmn:outgoing>
+    </bpmn:callActivity>
+  </bpmn:process>
+  <bpmn:process id="Process_1lwd6ei" isExecutable="false" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1likhak">
+      <bpmndi:BPMNShape id="Participant_1npbhyn_di" bpmnElement="SP_CRC_Enter_Global_Data" isHorizontal="true">
+        <dc:Bounds x="160" y="110" width="580" height="360" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_097r5f5_di" bpmnElement="Participant_097r5f5" isHorizontal="true">
+        <dc:Bounds x="230" y="960" width="600" height="110" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_0e8vydb_di" bpmnElement="StartEvent_0e8vydb">
+        <dc:Bounds x="249" y="279" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_0fc3ao3_di" bpmnElement="ParallelGateway_0fc3ao3">
+        <dc:Bounds x="335" y="272" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_065v9b6_di" bpmnElement="ParallelGateway_065v9b6">
+        <dc:Bounds x="535" y="272" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_04s7xhs_di" bpmnElement="EndEvent_04s7xhs">
+        <dc:Bounds x="642" y="279" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ydxtzh_di" bpmnElement="SequenceFlow_0ydxtzh">
+        <di:waypoint x="285" y="297" />
+        <di:waypoint x="335" y="297" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0x8nr66_di" bpmnElement="SequenceFlow_0x8nr66">
+        <di:waypoint x="360" y="272" />
+        <di:waypoint x="360" y="210" />
+        <di:waypoint x="410" y="210" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0vdnsq1_di" bpmnElement="SequenceFlow_0vdnsq1">
+        <di:waypoint x="360" y="322" />
+        <di:waypoint x="360" y="380" />
+        <di:waypoint x="410" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0eiz3zi_di" bpmnElement="SequenceFlow_0eiz3zi">
+        <di:waypoint x="510" y="210" />
+        <di:waypoint x="560" y="210" />
+        <di:waypoint x="560" y="272" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1pbjc56_di" bpmnElement="SequenceFlow_1pbjc56">
+        <di:waypoint x="510" y="380" />
+        <di:waypoint x="560" y="380" />
+        <di:waypoint x="560" y="322" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_068ghru_di" bpmnElement="SequenceFlow_068ghru">
+        <di:waypoint x="585" y="297" />
+        <di:waypoint x="642" y="297" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="CallActivity_16mgtwy_di" bpmnElement="SubProcess_0o9cad3">
+        <dc:Bounds x="410" y="170" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="CallActivity_14dnavk_di" bpmnElement="SubProcess_1nby6qc">
+        <dc:Bounds x="410" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
