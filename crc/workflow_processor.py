@@ -161,7 +161,16 @@ class WorkflowProcessor(object):
         if len(process_elements) == 0:
             raise Exception('No executable process tag found')
 
+        # There are multiple root elements
         if len(process_elements) > 1:
-            raise Exception('Multiple executable processes tags found')
+
+            # Look for the element that has the startEvent in it
+            for e in process_elements:
+                this_element: ElementTree.Element = e
+                for child_element in list(this_element):
+                    if child_element.tag.endswith('startEvent'):
+                        return this_element.attrib['id']
+
+            raise Exception('No start event found in %s' % et_root.attrib['id'])
 
         return process_elements[0].attrib['id']
