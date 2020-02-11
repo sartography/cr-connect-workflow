@@ -68,6 +68,8 @@ class BaseTest(unittest.TestCase):
 
     def load_test_spec(self, dir_name):
         """Loads a spec into the database based on a directory in /tests/data"""
+        if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
+            return
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
         models = ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath)
         spec = None

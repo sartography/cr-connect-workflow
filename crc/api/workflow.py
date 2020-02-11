@@ -77,7 +77,7 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
         workflow_spec_id=processor.workflow_spec_id
     )
     if(processor.next_task()):
-        workflow_api.next_task = Task.from_spiff(processor.next_task()),
+        workflow_api.next_task = Task.from_spiff(processor.next_task())
     return workflow_api
 
 def get_workflow(workflow_id):

@@ -151,7 +151,7 @@ class WorkflowProcessor(object):
         else:
             for task in ready_tasks:
                 if task.parent == self.bpmn_workflow.last_task:
-                    return task;
+                    return task
             return ready_tasks[0]
 
     def complete_task(self, task):
