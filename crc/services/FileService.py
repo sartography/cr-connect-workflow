@@ -23,6 +23,19 @@ class FileService(object):
         return FileService.update_file(file_model, binary_data, content_type)
 
     @staticmethod
+    def add_form_field_file(study_id, workflow_id, task_id, form_field_key, name, content_type, binary_data):
+        """Create a new file and associate it with a user task form field within a workflow."""
+        file_model = FileModel(
+            version=0,
+            study_id=study_id,
+            workflow_id=workflow_id,
+            task_id=task_id,
+            name=name,
+            form_field_key=form_field_key
+        )
+        return FileService.update_file(file_model, binary_data, content_type)
+
+    @staticmethod
     def add_task_file(study_id, workflow_id, task_id, name, content_type, binary_data):
         """Create a new file and associate it with an executing task within a workflow."""
         file_model = FileModel(

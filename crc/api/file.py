@@ -36,7 +36,7 @@ def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=Non
     if workflow_spec_id:
         file_model = FileService.add_workflow_spec_file(workflow_spec_id, file.filename, file.content_type, file.stream.read())
     else:
-        file_model = FileService.add_task_file(study_id, workflow_id, task_id, file.filename, file.content_type, file.stream.read())
+        file_model = FileService.add_form_field_file(study_id, workflow_id, task_id, form_field_key, file.filename, file.content_type, file.stream.read())
 
     return FileModelSchema().dump(file_model)
 
