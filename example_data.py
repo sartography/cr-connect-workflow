@@ -37,11 +37,11 @@ class ExampleDataLoader:
                              name="m2_demo",
                              display_name="Milestone 2 Demo",
                              description='A simplified CR Connect workflow for demonstration purposes.')
-        workflow_specifications += \
-            self.create_spec(id="crc_study_workflow",
-                             name="crc_study_workflow",
-                             display_name="CR Connect Study Workflow",
-                             description='Draft workflow for CR Connect studies.')
+        # workflow_specifications += \
+        #     self.create_spec(id="crc_study_workflow",
+        #                      name="crc_study_workflow",
+        #                      display_name="CR Connect Study Workflow",
+        #                      description='Draft workflow for CR Connect studies.')
         workflow_specifications += \
             self.create_spec(id="random_fact",
                              name="random_fact",

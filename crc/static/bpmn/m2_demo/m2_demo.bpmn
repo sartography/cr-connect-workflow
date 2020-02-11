@@ -9,14 +9,14 @@
         <camunda:formData>
           <camunda:formField id="StudyShortName" label="Study Short Name" type="string" />
           <camunda:formField id="PIExperience" label="Investigator&#39;s Experience" type="string" />
-          <camunda:formField id="PIStudyAccess" label="Should the PI have Study Team editing access in the system?" type="boolean" defaultValue="Yes" />
+          <camunda:formField id="PIStudyAccess" label="Should the PI have Study Team editing access in the system?" type="boolean" defaultValue="True" />
           <camunda:formField id="PIAutoEmails" label="Should the PI receive automated email notifications?" type="boolean" defaultValue="True" />
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>SequenceFlow_0dsj62d</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_13sjege</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1doa5ln</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="SequenceFlow_13sjege" sourceRef="StartEvent_1" targetRef="script_IRBDocAPI" />
+    <bpmn:sequenceFlow id="SequenceFlow_13sjege" sourceRef="StartEvent_1" targetRef="EnterSetUp" />
     <bpmn:userTask id="EnterDSP" name="Enter DSP" camunda:formKey="DSP Entry">
       <bpmn:extensionElements>
         <camunda:formData>
@@ -68,18 +68,22 @@
           <camunda:formField id="CollStorUVaLocPaperOther" label="Other: (Please describe)" type="textarea" />
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>SequenceFlow_1cf9ps4</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_15tszx8</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1ts885e</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="EnterFinance" name="Enter Finance" camunda:formKey="Finance">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="Budget" label="Is there a budget document for this study?" type="boolean">
+          <camunda:formField id="isBudgetDoc" label="Is there a budget document for this study?" type="boolean">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="BudgetDraft" label="Draft Budget" type="file" />
+          <camunda:formField id="BudgetDraft" label="Draft Budget" type="file">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!(model.isBudgetDoc)" />
+            </camunda:properties>
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_03v7kc7</bpmn:incoming>
@@ -101,7 +105,7 @@
       <bpmn:outgoing>SequenceFlow_15tszx8</bpmn:outgoing>
     </bpmn:parallelGateway>
     <bpmn:sequenceFlow id="SequenceFlow_0xvbe57" sourceRef="EnterFinance" targetRef="ExclusiveGateway_0hffz7d" />
-    <bpmn:sequenceFlow id="SequenceFlow_15tszx8" sourceRef="ExclusiveGateway_0hffz7d" targetRef="ExclusiveGateway_0gj51xo" />
+    <bpmn:sequenceFlow id="SequenceFlow_15tszx8" sourceRef="ExclusiveGateway_0hffz7d" targetRef="EnterDSP" />
     <bpmn:sequenceFlow id="SequenceFlow_1ts885e" sourceRef="EnterDSP" targetRef="EndEvent_0pb0i5b" />
     <bpmn:userTask id="SelectReviewType" name="Select Review Type" camunda:formKey="ReviewType">
       <bpmn:extensionElements>
@@ -119,41 +123,27 @@
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_1fioi5l" sourceRef="ExclusiveGateway_1aeninh" targetRef="SelectReviewType" />
     <bpmn:sequenceFlow id="SequenceFlow_1brwirp" sourceRef="SelectReviewType" targetRef="ExclusiveGateway_0hffz7d" />
-    <bpmn:exclusiveGateway id="ExclusiveGateway_0gj51xo">
-      <bpmn:extensionElements>
-        <camunda:executionListener expression="" event="start" />
-      </bpmn:extensionElements>
-      <bpmn:incoming>SequenceFlow_15tszx8</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1cf9ps4</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="SequenceFlow_1cf9ps4" sourceRef="ExclusiveGateway_0gj51xo" targetRef="EnterDSP" />
-    <bpmn:sequenceFlow id="SequenceFlow_0dsj62d" sourceRef="script_IRBDocAPI" targetRef="EnterSetUp" />
-    <bpmn:scriptTask id="script_IRBDocAPI" name="IRB Doc API">
-      <bpmn:incoming>SequenceFlow_13sjege</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_0dsj62d</bpmn:outgoing>
-      <bpmn:script>scripts.IRBDocAPI</bpmn:script>
-    </bpmn:scriptTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1uzs4e7">
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="160" y="219" width="36" height="36" />
+        <dc:Bounds x="228" y="219" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_04sxlow_di" bpmnElement="EnterSetUp">
         <dc:Bounds x="400" y="197" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_13sjege_di" bpmnElement="SequenceFlow_13sjege">
-        <di:waypoint x="196" y="237" />
-        <di:waypoint x="237" y="237" />
+        <di:waypoint x="264" y="237" />
+        <di:waypoint x="400" y="237" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="UserTask_1yoscoq_di" bpmnElement="EnterDSP">
-        <dc:Bounds x="1208" y="197" width="100" height="80" />
+        <dc:Bounds x="1021" y="197" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_0gu3eep_di" bpmnElement="EnterFinance">
         <dc:Bounds x="682" y="306" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_0pb0i5b_di" bpmnElement="EndEvent_0pb0i5b">
-        <dc:Bounds x="1380" y="219" width="36" height="36" />
+        <dc:Bounds x="1285" y="219" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_1doa5ln_di" bpmnElement="SequenceFlow_1doa5ln">
         <di:waypoint x="500" y="237" />
@@ -177,11 +167,11 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_15tszx8_di" bpmnElement="SequenceFlow_15tszx8">
         <di:waypoint x="901" y="237" />
-        <di:waypoint x="1086" y="237" />
+        <di:waypoint x="1021" y="237" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1ts885e_di" bpmnElement="SequenceFlow_1ts885e">
-        <di:waypoint x="1308" y="237" />
-        <di:waypoint x="1380" y="237" />
+        <di:waypoint x="1121" y="237" />
+        <di:waypoint x="1285" y="237" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="UserTask_0xr3q5b_di" bpmnElement="SelectReviewType">
         <dc:Bounds x="682" y="78" width="100" height="80" />
@@ -196,20 +186,6 @@
         <di:waypoint x="876" y="118" />
         <di:waypoint x="876" y="212" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="ExclusiveGateway_0gj51xo_di" bpmnElement="ExclusiveGateway_0gj51xo" isMarkerVisible="true">
-        <dc:Bounds x="1086" y="212" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_1cf9ps4_di" bpmnElement="SequenceFlow_1cf9ps4">
-        <di:waypoint x="1136" y="237" />
-        <di:waypoint x="1208" y="237" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0dsj62d_di" bpmnElement="SequenceFlow_0dsj62d">
-        <di:waypoint x="337" y="237" />
-        <di:waypoint x="400" y="237" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="ScriptTask_0m5671s_di" bpmnElement="script_IRBDocAPI">
-        <dc:Bounds x="237" y="197" width="100" height="80" />
-      </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
