@@ -11,7 +11,7 @@ from SpiffWorkflow.operators import Operator
 from crc import session
 from crc.api.rest_exception import RestException
 from crc.models.file import FileDataModel, FileModel, FileType
-from crc.models.workflow import WorkflowStatus
+from crc.models.workflow import WorkflowStatus, WorkflowModel
 
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
@@ -27,11 +27,12 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
         This allows us to reference custom code from the BPMN diagram.
         """
-        module_name = "crc." + script
+        commands = script.split(" ")
+        module_name = "crc." + commands[0]
         class_name = module_name.split(".")[-1]
         mod = __import__(module_name, fromlist=[class_name])
         klass = getattr(mod, class_name)
-        klass().do_task(task.data)
+        klass().do_task(task, *commands[1:])
 
     def evaluate(self, task, expression):
         """
@@ -63,9 +64,12 @@ class MyCustomParser(BpmnDmnParser):
 class WorkflowProcessor(object):
     _script_engine = CustomBpmnScriptEngine()
     _serializer = BpmnSerializer()
+    WORKFLOW_ID_KEY = "workflow_id"
+    STUDY_ID_KEY = "session_id"
 
     def __init__(self, workflow_spec_id, bpmn_json):
         wf_spec = self.get_spec(workflow_spec_id)
+        self.workflow_spec_id = workflow_spec_id
         self.bpmn_workflow = self._serializer.deserialize_workflow(bpmn_json, workflow_spec=wf_spec)
         self.bpmn_workflow.script_engine = self._script_engine
 
@@ -85,7 +89,7 @@ class WorkflowProcessor(object):
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 if file_data.file_model.primary:
-                    process_id = WorkflowProcessor.__get_process_id(bpmn)
+                    process_id = WorkflowProcessor.get_process_id(bpmn)
                 parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
             elif file_data.file_model.type == FileType.dmn:
                 dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
@@ -95,14 +99,26 @@ class WorkflowProcessor(object):
         return parser.get_spec(process_id)
 
 
-
     @classmethod
-    def create(cls, workflow_spec_id):
+    def create(cls,  study_id, workflow_spec_id):
         spec = WorkflowProcessor.get_spec(workflow_spec_id)
         bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
         bpmn_workflow.do_engine_steps()
         json = cls._serializer.serialize_workflow(bpmn_workflow)
         processor = cls(workflow_spec_id, json)
+        workflow_model = WorkflowModel(status=processor.get_status(),
+                                       study_id=study_id,
+                                       workflow_spec_id=workflow_spec_id)
+        session.add(workflow_model)
+        session.commit()
+        # Need to commit twice, first to get a unique id for the workflow model, and
+        # a second time to store the serilaization so we can maintain this link within
+        # the spiff-workflow process.
+        processor.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
+        processor.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study_id
+        workflow_model.bpmn_workflow_json = processor.serialize()
+        session.add(workflow_model)
+        session.commit()
         return processor
 
     def get_status(self):
@@ -135,7 +151,7 @@ class WorkflowProcessor(object):
         else:
             for task in ready_tasks:
                 if task.parent == self.bpmn_workflow.last_task:
-                    return task;
+                    return task
             return ready_tasks[0]
 
     def complete_task(self, task):
@@ -143,6 +159,12 @@ class WorkflowProcessor(object):
 
     def get_data(self):
         return self.bpmn_workflow.data
+
+    def get_workflow_id(self):
+        return self.bpmn_workflow.data[self.WORKFLOW_ID_KEY]
+
+    def get_study_id(self):
+        return self.bpmn_workflow.data[self.STUDY_ID_KEY]
 
     def get_ready_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
@@ -152,7 +174,7 @@ class WorkflowProcessor(object):
         return [t for t in all_tasks if not self.bpmn_workflow._is_engine_task(t.task_spec)]
 
     @staticmethod
-    def __get_process_id(et_root: ElementTree.Element):
+    def get_process_id(et_root: ElementTree.Element):
         process_elements = []
         for child in et_root:
             if child.tag.endswith('process') and child.attrib.get('isExecutable', False):

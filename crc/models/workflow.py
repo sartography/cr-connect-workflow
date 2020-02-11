@@ -50,13 +50,17 @@ class Task(object):
 
     @classmethod
     def from_spiff(cls, spiff_task):
+        try:
+            documentation = spiff_task.task_spec.documentation,
+        except AttributeError:
+            documentation = None
         instance = cls(spiff_task.id,
                        spiff_task.task_spec.name,
                        spiff_task.task_spec.description,
                        spiff_task.task_spec.__class__.__name__,
                        spiff_task.get_state_name(),
                        None,
-                       spiff_task.task_spec.documentation,
+                       documentation,
                        spiff_task.data)
         if hasattr(spiff_task.task_spec, "form"):
             instance.form = spiff_task.task_spec.form
@@ -124,7 +128,7 @@ class WorkflowApiSchema(ma.Schema):
     status = EnumField(WorkflowStatus)
     user_tasks = marshmallow.fields.List(marshmallow.fields.Nested(TaskSchema, dump_only=True))
     last_task = marshmallow.fields.Nested(TaskSchema, dump_only=True)
-    next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True)
+    next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):

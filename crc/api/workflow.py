@@ -1,13 +1,11 @@
 import uuid
 
-from flask import json
-
 from crc.api.file import delete_file
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, \
-    Task, TaskSchema, WorkflowApiSchema, WorkflowApi
-from crc.workflow_processor import WorkflowProcessor
+    Task, WorkflowApiSchema, WorkflowApi
+from crc.services.workflow_processor import WorkflowProcessor
 from crc.models.file import FileModel
 
 
@@ -67,25 +65,27 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def __get_workflow_api_model(workflow_model: WorkflowModel, processor: WorkflowProcessor):
+def __get_workflow_api_model(processor: WorkflowProcessor):
     spiff_tasks = processor.get_all_user_tasks()
     user_tasks = map(Task.from_spiff, spiff_tasks)
-    return WorkflowApi(
-        id=workflow_model.id,
-        status=workflow_model.status,
+    workflow_api = WorkflowApi(
+        id=processor.get_workflow_id(),
+        status=processor.get_status(),
         last_task=Task.from_spiff(processor.bpmn_workflow.last_task),
-        next_task=Task.from_spiff(processor.next_task()),
+        next_task=None,
         user_tasks=user_tasks,
-        workflow_spec_id=workflow_model.workflow_spec_id
+        workflow_spec_id=processor.workflow_spec_id
     )
-
+    if(processor.next_task()):
+        workflow_api.next_task = Task.from_spiff(processor.next_task())
+    return workflow_api
 
 def get_workflow(workflow_id):
     schema = WorkflowApiSchema()
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model.workflow_spec_id,
                                   workflow_model.bpmn_workflow_json)
-    return schema.dump(__get_workflow_api_model(workflow_model, processor))
+    return schema.dump(__get_workflow_api_model(processor))
 
 
 def delete(workflow_id):
@@ -109,5 +109,5 @@ def update_task(workflow_id, task_id, body):
     workflow_model.bpmn_workflow_json = processor.serialize()
     session.add(workflow_model)
     session.commit()
-    return WorkflowApiSchema().dump(__get_workflow_api_model(workflow_model, processor)
+    return WorkflowApiSchema().dump(__get_workflow_api_model(processor)
                                     )

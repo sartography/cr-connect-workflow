@@ -5,7 +5,7 @@ from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.workflow import __get_workflow_api_model
 from crc.models.study import StudyModelSchema, StudyModel
 from crc.models.workflow import WorkflowModel, WorkflowApiSchema, WorkflowSpecModel
-from crc.workflow_processor import Workflow, WorkflowProcessor
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 def all_studies():
@@ -20,13 +20,7 @@ def add_study(body):
     session.commit()
     # FIXME: We need to ask the protocol builder what workflows to add to the study, not just add them all.
     for spec in session.query(WorkflowSpecModel).all():
-        processor = WorkflowProcessor.create(spec.id)
-        workflow = WorkflowModel(bpmn_workflow_json=processor.serialize(),
-                                 status=processor.get_status(),
-                                 study_id=study.id,
-                                 workflow_spec_id=spec.id)
-        session.add(workflow)
-    session.commit()
+        WorkflowProcessor.create(study.id, spec.id)
     return StudyModelSchema().dump(study)
 
 
@@ -66,7 +60,7 @@ def get_study_workflows(study_id):
     for workflow_model in workflow_models:
         processor = WorkflowProcessor(workflow_model.workflow_spec_id,
                                       workflow_model.bpmn_workflow_json)
-        api_models.append( __get_workflow_api_model(workflow_model, processor))
+        api_models.append( __get_workflow_api_model(processor))
     schema = WorkflowApiSchema(many=True)
     return schema.dump(api_models)
 
@@ -76,12 +70,6 @@ def add_workflow_to_study(study_id, body):
     if workflow_spec_model is None:
         error = ApiError('unknown_spec', 'The specification "' + body['id'] + '" is not recognized.')
         return ApiErrorSchema.dump(error), 404
-    processor = WorkflowProcessor.create(workflow_spec_model.id)
-    workflow = WorkflowModel(bpmn_workflow_json=processor.serialize(),
-                             status=processor.get_status(),
-                             study_id=study_id,
-                             workflow_spec_id=workflow_spec_model.id)
-    session.add(workflow)
-    session.commit()
-    return WorkflowApiSchema().dump(__get_workflow_api_model(workflow, processor))
+    processor = WorkflowProcessor.create(study_id, workflow_spec_model.id)
+    return WorkflowApiSchema().dump(__get_workflow_api_model(processor))
 
