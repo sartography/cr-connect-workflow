@@ -79,6 +79,8 @@ class TestWorkflowProcessor(BaseTest):
         study = session.query(StudyModel).first()
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
+
+        # Complete the first steps of the 4 parallel tasks
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(4, len(next_user_tasks))
         self._populate_form_with_random_data(next_user_tasks[0])
@@ -89,7 +91,8 @@ class TestWorkflowProcessor(BaseTest):
         processor.complete_task(next_user_tasks[1])
         processor.complete_task(next_user_tasks[2])
         processor.complete_task(next_user_tasks[3])
-        # There are another 4 tasks to complete (each task, had a follow up task in the parallel list)
+
+        # There are another 4 tasks to complete (each parallel task has a follow-up task)
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(4, len(next_user_tasks))
         self._populate_form_with_random_data(next_user_tasks[0])
@@ -100,6 +103,14 @@ class TestWorkflowProcessor(BaseTest):
         processor.complete_task(next_user_tasks[1])
         processor.complete_task(next_user_tasks[2])
         processor.complete_task(next_user_tasks[3])
+        processor.do_engine_steps()
+
+        # Should be one last step after the above are complete
+        final_user_tasks = processor.next_user_tasks()
+        self.assertEqual(1, len(final_user_tasks))
+        self._populate_form_with_random_data(final_user_tasks[0])
+        processor.complete_task(final_user_tasks[0])
+
         processor.do_engine_steps()
         self.assertTrue(processor.bpmn_workflow.is_completed())
 

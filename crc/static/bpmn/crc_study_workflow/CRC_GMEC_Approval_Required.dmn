@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_18k8sbg" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="CRC_GMEC_Approval_Required" name="GMEC Approval Required?">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="Protocol Builder Available">
+        <inputExpression id="inputExpression_1" typeRef="boolean" expressionLanguage="Python">
+          <text>irb_study['protocol_builder_available']</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_0auubha" label="Review Type">
+        <inputExpression id="LiteralExpression_022ihld" typeRef="string" expressionLanguage="Python">
+          <text>irb_study['irb_review_type']</text>
+        </inputExpression>
+        <inputValues id="UnaryTests_0e7pj9s">
+          <text>"Full Board","Expedited","Non-Engaged","Exempt"</text>
+        </inputValues>
+      </input>
+      <input id="InputClause_0gmbjff" label="IRB Requires">
+        <inputExpression id="LiteralExpression_0t8lqzh" typeRef="boolean" expressionLanguage="Python">
+          <text>irb_study['irb_requires']</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="gmec_approval_required" name="gmec_approval_required" typeRef="boolean" />
+      <rule id="DecisionRule_0lr3po8">
+        <inputEntry id="UnaryTests_013ua31">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1105yxa">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0x9xoh8">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_12im0bq">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1i41lrb">
+        <inputEntry id="UnaryTests_18jiive">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1innq3b">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_061c26q">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_01jhjkm">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1wb3fja">
+        <inputEntry id="UnaryTests_16euv1s">
+          <text>true</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0vhxpu5">
+          <text>"Full Board","Expedited","Non-Engaged","Exempt"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1hwi0su">
+          <text>true</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_178bq1c">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
