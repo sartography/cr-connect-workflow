@@ -9,10 +9,10 @@
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="full_name" label="What is your name?" type="string" />
-          <camunda:formField id="date" label="date" type="date" />
-          <camunda:formField id="title" type="string" />
+          <camunda:formField id="date" label="date" type="string" />
+          <camunda:formField id="title" label="Title" type="string" />
           <camunda:formField id="company" label="Company" type="string" />
-          <camunda:formField id="last_name" label="Last Name" />
+          <camunda:formField id="last_name" label="Last Name" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0637d8i</bpmn:incoming>

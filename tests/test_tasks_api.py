@@ -1,9 +1,10 @@
 import json
 
 from crc import session
+from crc.models.file import FileModelSchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, \
-    WorkflowApiSchema
+    WorkflowApiSchema, WorkflowStatus
 from tests.base_test import BaseTest
 
 
@@ -108,3 +109,25 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         self.assertIsNotNone(workflow_api.last_task)
         self.assertIsNotNone(workflow_api.next_task)
+
+    def test_document_added_to_workflow_shows_up_in_file_list(self):
+        self.load_example_data()
+        workflow = self.create_workflow('docx')
+        # get the first form in the two form workflow.
+        tasks = self.get_workflow_api(workflow).user_tasks
+        data = {
+            "full_name": "Buck of the Wild",
+            "date": "5/1/2020",
+            "title": "Leader of the Pack",
+            "company": "In the company of wolves",
+            "last_name": "Mr. Wolf"
+        }
+        workflow_api = self.complete_form(workflow, tasks[0], data)
+#        workflow_api = self.get_workflow_api(workflow)
+        self.assertIsNone(workflow_api.next_task)
+        self.assertTrue(workflow_api.status == WorkflowStatus.complete)
+        rv = self.app.get('/v1.0/file?workflow_id=%i' % workflow.id)
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        files = FileModelSchema(many=True).load(json_data, session=session)
+        self.assertTrue(len(files) == 1)
