@@ -27,6 +27,7 @@ install:
 # command to run tests
 script:
   - pytest
+  - coverage xml -i
   - sonar-scanner
 
 # Would be better to directly test the docker image, may require setting
