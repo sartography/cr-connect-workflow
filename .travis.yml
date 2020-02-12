@@ -23,7 +23,7 @@ install:
 
 # command to run tests
 script:
-  - pytest
+  - coverage run -m pytest
   - coverage xml -i
   - sonar-scanner
 

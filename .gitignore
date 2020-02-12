@@ -235,4 +235,5 @@ fabric.properties
 *.db
 postgres/var/
 .env
+.coverage
 coverage.xml
