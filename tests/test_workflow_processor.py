@@ -38,7 +38,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(1, len(next_user_tasks))
         task = next_user_tasks[0]
         self.assertEqual("Task_User_Select_Type", task.get_name())
-        model = {"Fact.type": "buzzword"}
+        model = {"type": "buzzword"}
         if task.data is None:
             task.data = {}
         task.data.update(model)

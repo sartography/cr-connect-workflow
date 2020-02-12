@@ -17,14 +17,14 @@ class FactService:
         return response.json()['value']
 
     def do_task(self, task, **kwargs):
-        if "Fact.type" not in task.data:
+        print(task.data)
+
+        if "type" not in task.data:
             raise Exception("No Fact Provided.")
         else:
-            fact = task.data["Fact.type"]
+            fact = task.data["type"]
 
-        if True:
-            details = "Assertively Incubate Seamless Niches"
-        elif fact == "cat":
+        if fact == "cat":
             details = self.get_cat()
         elif fact == "norris":
             details = self.get_norris()
@@ -32,4 +32,7 @@ class FactService:
             details = self.get_buzzword()
         else:
             details = "unknown fact type."
+
         task.data['details'] = details
+        print(details)
+        return details
