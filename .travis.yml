@@ -1,23 +1,23 @@
-sudo: required
-dist: trusty
+language: python
+
+python:
+  - "3.7"
+
+services:
+  - postgresql
+  - docker
 
 addons:
   chrome: stable
   sonarcloud:
     organization: "sartography"
 
-language: python
-
-services:
-  - postgresql
-  - docker
-
 before_install:
   - cp config/travis-testing.py config/testing.py
   - psql -c 'create database crc_test;' -U postgres
 
 install:
-  - pip install pipenv pytest
+  - pip install pipenv pytest coverage
   - pipenv install
   - pytest              # <== This runs in Pipenv (a/k/a virtualenv)
 
