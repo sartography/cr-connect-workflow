@@ -12,9 +12,6 @@ services:
   - postgresql
   - docker
 
-python:
-  - "3.7"
-
 before_install:
   - cp config/travis-testing.py config/testing.py
   - psql -c 'create database crc_test;' -U postgres
