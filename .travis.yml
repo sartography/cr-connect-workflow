@@ -1,3 +1,8 @@
+addons:
+  chrome: stable
+  sonarcloud:
+    organization: "sartography"
+
 language: python
 
 services:
@@ -19,6 +24,7 @@ install:
 # command to run tests
 script:
   - pytest
+  - sonar-scanner
 
 # Would be better to directly test the docker image, may require setting
 # up a docker-compose with postgres image and this docker image and connecting
