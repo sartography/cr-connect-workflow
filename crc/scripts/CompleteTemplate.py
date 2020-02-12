@@ -56,7 +56,7 @@ class CompleteTemplate(object):
 
     def make_template(self, file_data_model, context):
         doc = DocxTemplate(BytesIO(file_data_model.data))
-        jinja_env = jinja2.Environment()
+        jinja_env = jinja2.Environment(autoescape=True)
         doc.render(context, jinja_env)
         target_stream = BytesIO()
         doc.save(target_stream)
