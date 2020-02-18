@@ -30,9 +30,9 @@ alembic = "*"
 coverage = "*"
 sphinx = "*"
 recommonmark = "*"
-psycopg2 = "*"
 psycopg2-binary = "*"
 docxtpl = "*"
+flask-sso = "*"
 
 [requires]
 python_version = "3.7"

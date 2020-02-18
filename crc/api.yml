@@ -7,6 +7,37 @@ info:
 servers:
   - url: http://localhost:5000/v1.0
 paths:
+  # /v1.0/sso
+  /sso_backdoor/{uid}:
+    parameters:
+      - name: uid
+        in: path
+        required: true
+        description: The id of the user to connect as.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.user.backdoor
+      summary: A backdoor that allows someone to log in as a specific user, if they
+        are in a staging environment.
+      tags:
+        - Users
+      responses:
+        '304':
+          description: Redirection to the hosted frontend with an auth_token header.
+  /user:
+    get:
+      operationId: crc.api.user.get_current_user
+      summary: Returns the current user.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: The currently authenticated user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
   # /v1.0/study
   /study:
     get:
@@ -563,6 +594,14 @@ paths:
 
 components:
   schemas:
+    User:
+      properties:
+        uid:
+          type: string
+        email_address:
+          type: string
+        display_name:
+          type: string
     DataModel:
       properties:
         id:

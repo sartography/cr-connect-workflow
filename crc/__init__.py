@@ -2,24 +2,25 @@ import logging
 import os
 
 import connexion
+from flask import g
 from flask_cors import CORS
+from flask_httpauth import HTTPTokenAuth
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-
-
+from flask_sso import SSO
 logging.basicConfig(level=logging.INFO)
 
 connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
 app.config.from_object('config.default')
-#app.config.from_pyfile('config.py')
+auth = HTTPTokenAuth('Bearer')
+
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
     app.config.from_object('config.testing')
     app.config.from_pyfile('testing.py')
 else:
-    # load the instance/config.py, if it exists, when not testing
     app.config.root_path = app.instance_path
     app.config.from_pyfile('config.py', silent=True)
 
@@ -31,12 +32,14 @@ session = db.session
 
 migrate = Migrate(app, db)
 ma = Marshmallow(app)
+sso = SSO(app=app)
 
 from crc import models
 from crc import api
 
 connexion_app.add_api('api.yml')
 cors = CORS(connexion_app.app)
+
 
 @app.cli.command()
 def load_example_data():

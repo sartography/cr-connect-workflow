@@ -9,7 +9,7 @@ from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.operators import Operator
 
 from crc import session
-from crc.api.rest_exception import RestException
+from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus, WorkflowModel
 
@@ -49,8 +49,8 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         try :
             return eval(expression)
         except NameError as ne:
-            raise RestException(RestException.EXPRESSION_ERROR,
-                                details=str(ne))
+            raise ApiError('invalid_expression',
+                           'The expression you provided does not exist:' + expression)
 
 
 

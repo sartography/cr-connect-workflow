@@ -84,9 +84,15 @@ class BaseTest(unittest.TestCase):
     def assert_success(self, rv, msg=""):
         try:
             data = json.loads(rv.get_data(as_text=True))
-            self.assertTrue(rv.status_code >= 200 and rv.status_code < 300,
+            self.assertTrue(200 <= rv.status_code < 300,
                             "BAD Response: %i. \n %s" %
                             (rv.status_code, json.dumps(data)) + ". " + msg)
         except:
-            self.assertTrue(rv.status_code >= 200 and rv.status_code < 300,
+            self.assertTrue(200 <= rv.status_code < 300,
                             "BAD Response: %i." % rv.status_code + ". " + msg)
+
+    def assert_failure(self, rv, code=0):
+        self.assertFalse(200 <= rv.status_code < 300,
+                         "Incorrect Valid Response:" + rv.status + ".")
+        if code != 0:
+            self.assertEqual(code, rv.status_code)

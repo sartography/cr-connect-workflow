@@ -2,11 +2,10 @@ import string
 import random
 
 from crc import session
-from crc.api.rest_exception import RestException
+from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
-from crc.services.FileService import FileService
 from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -135,9 +134,9 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(1, len(next_user_tasks))
         self._populate_form_with_random_data(next_user_tasks[0])
         processor.complete_task(next_user_tasks[0])
-        with self.assertRaises(RestException) as context:
+        with self.assertRaises(ApiError) as context:
             processor.do_engine_steps()
-        self.assertEqual("invalid_expression", context.exception.payload['code'])
+        self.assertEqual("invalid_expression", context.exception.code)
 
     def test_workflow_with_docx_template(self):
         self.load_example_data()
