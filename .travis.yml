@@ -1,24 +1,31 @@
 language: python
 
+python:
+  - "3.7"
+
 services:
   - postgresql
   - docker
 
-python:
-  - "3.7"
+addons:
+  chrome: stable
+  sonarcloud:
+    organization: "sartography"
 
 before_install:
   - cp config/travis-testing.py config/testing.py
   - psql -c 'create database crc_test;' -U postgres
 
 install:
-  - pip install pipenv pytest
+  - pip install pipenv pytest coverage
   - pipenv install
   - pytest              # <== This runs in Pipenv (a/k/a virtualenv)
 
 # command to run tests
 script:
-  - pytest
+  - coverage run -m pytest
+  - coverage xml -i
+  - sonar-scanner
 
 # Would be better to directly test the docker image, may require setting
 # up a docker-compose with postgres image and this docker image and connecting

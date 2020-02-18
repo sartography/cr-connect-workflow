@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1n1jsl1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_1uzs4e7" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_13sjege</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="EnterSetUp" name="Enter SetUp" camunda:formKey="Setup">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="StudyShortName" label="Study Short Name" type="string" />
+          <camunda:formField id="PIExperience" label="Investigator&#39;s Experience" type="string" />
+          <camunda:formField id="PIStudyAccess" label="Should the PI have Study Team editing access in the system?" type="boolean" defaultValue="True" />
+          <camunda:formField id="PIAutoEmails" label="Should the PI receive automated email notifications?" type="boolean" defaultValue="True" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_13sjege</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1doa5ln</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_13sjege" sourceRef="StartEvent_1" targetRef="EnterSetUp" />
+    <bpmn:userTask id="EnterDSP" name="Enter DSP" camunda:formKey="DSP Entry">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="HIPAA_Ids" label="HIPAA Identifiers" type="enum">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="HIPAA_Ids0" name="No HIPAA identifiers will be recorded as part of this research" />
+            <camunda:value id="HIPAA_Ids1" name="1. Name - Highly Sensitive Data	" />
+            <camunda:value id="HIPAA_Ids2a" name="2a. Postal address includes street and/or PO Box, and town or city, state, and zip code - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids2b" name="2b. Postal address that includes only town or city, state, and/or zip code - Moderately Sensitive Data" />
+            <camunda:value id="HIPAA_Ids3" name="3. All date elements (except year) for dates related to an individual, e.g. service date" />
+            <camunda:value id="HIPAA_Ids4" name="4. Telephone numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids5" name="5. Fax numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids6" name="6. Electronic mail addresses - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids7" name="7. Social Security number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids8" name="8. Medical Record number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids9" name="9. Health plan beneficiary numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids10" name="10. Account numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids11" name="11. Certificate/license numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids12" name="12. Vehicle identifiers and serial numbers, including license plate numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids13" name="13. Device identifiers and serial numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids14" name="14. Web Universal Resource Locators (URLs) - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids15" name="15. Internet Protocol (IP) address numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids16" name="16. Biometric identifiers, including finger and voice prints - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids17" name="17. Full face photographic images and any comparable images - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids18" name="18. Other unique number, characteristic, code related to an individual, e.g. initials" />
+          </camunda:formField>
+          <camunda:formField id="HIPPA_IdsDataQualifiers" label="Check each that apply:" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="OrigSource" name="Original source data collection (receive, collect, or record at UVa)" />
+            <camunda:value id="ShortTerm" name="Store long term at UVa" />
+            <camunda:value id="SendTransOutside" name="Send or transmit outside of UVA" />
+            <camunda:value id="NA" name="Not Applicable" />
+          </camunda:formField>
+          <camunda:formField id="CollStorUVaLocPaperTypes" label="Check all that apply" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="help" value="# Appropriate UVA locations include one or more of the following:\r\n\r\n- Kept in a locked office in a building with 24 hour swipe locks when unattended\r\n- Kept in a locked file cabinet in a locked room when unattended\n- Kept in an office where study are personnel present in room at all times located in a building with 24 hour swipe locks or a room with a lock when unattended\n -Behind two locked doors when unattended" />
+            </camunda:properties>
+            <camunda:value id="Appropriate" name="Appropriate UVa location (See list below)" />
+            <camunda:value id="Approved" name="UVa approved storage facility" />
+          </camunda:formField>
+          <camunda:formField id="CollStorUVaLocPaperOther" label="Other: (Please describe)" type="textarea" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_15tszx8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1ts885e</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="EnterFinance" name="Enter Finance" camunda:formKey="Finance">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="isBudgetDoc" label="Is there a budget document for this study?" type="boolean">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="BudgetDraft" label="Draft Budget" type="file">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!(model.isBudgetDoc)" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_03v7kc7</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0xvbe57</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_0pb0i5b">
+      <bpmn:incoming>SequenceFlow_1ts885e</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1doa5ln" sourceRef="EnterSetUp" targetRef="ExclusiveGateway_1aeninh" />
+    <bpmn:parallelGateway id="ExclusiveGateway_1aeninh">
+      <bpmn:incoming>SequenceFlow_1doa5ln</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_03v7kc7</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1fioi5l</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_03v7kc7" sourceRef="ExclusiveGateway_1aeninh" targetRef="EnterFinance" />
+    <bpmn:parallelGateway id="ExclusiveGateway_0hffz7d">
+      <bpmn:incoming>SequenceFlow_0xvbe57</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1brwirp</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_15tszx8</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0xvbe57" sourceRef="EnterFinance" targetRef="ExclusiveGateway_0hffz7d" />
+    <bpmn:sequenceFlow id="SequenceFlow_15tszx8" sourceRef="ExclusiveGateway_0hffz7d" targetRef="EnterDSP" />
+    <bpmn:sequenceFlow id="SequenceFlow_1ts885e" sourceRef="EnterDSP" targetRef="EndEvent_0pb0i5b" />
+    <bpmn:userTask id="SelectReviewType" name="Select Review Type" camunda:formKey="ReviewType">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="RevType" label="Review Type" type="enum">
+            <camunda:value id="FullBoard" name="Full Board" />
+            <camunda:value id="Expedited" name="Expedited" />
+            <camunda:value id="NonEngaged" name="Non-Engaged" />
+            <camunda:value id="Exempt" name="Exempt" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1fioi5l</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1brwirp</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1fioi5l" sourceRef="ExclusiveGateway_1aeninh" targetRef="SelectReviewType" />
+    <bpmn:sequenceFlow id="SequenceFlow_1brwirp" sourceRef="SelectReviewType" targetRef="ExclusiveGateway_0hffz7d" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1uzs4e7">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="228" y="219" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_04sxlow_di" bpmnElement="EnterSetUp">
+        <dc:Bounds x="400" y="197" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_13sjege_di" bpmnElement="SequenceFlow_13sjege">
+        <di:waypoint x="264" y="237" />
+        <di:waypoint x="400" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1yoscoq_di" bpmnElement="EnterDSP">
+        <dc:Bounds x="1021" y="197" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0gu3eep_di" bpmnElement="EnterFinance">
+        <dc:Bounds x="682" y="306" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0pb0i5b_di" bpmnElement="EndEvent_0pb0i5b">
+        <dc:Bounds x="1285" y="219" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1doa5ln_di" bpmnElement="SequenceFlow_1doa5ln">
+        <di:waypoint x="500" y="237" />
+        <di:waypoint x="575" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ParallelGateway_0lpcxey_di" bpmnElement="ExclusiveGateway_1aeninh">
+        <dc:Bounds x="575" y="212" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_03v7kc7_di" bpmnElement="SequenceFlow_03v7kc7">
+        <di:waypoint x="600" y="262" />
+        <di:waypoint x="600" y="346" />
+        <di:waypoint x="682" y="346" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ParallelGateway_1ytoob9_di" bpmnElement="ExclusiveGateway_0hffz7d">
+        <dc:Bounds x="851" y="212" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0xvbe57_di" bpmnElement="SequenceFlow_0xvbe57">
+        <di:waypoint x="782" y="346" />
+        <di:waypoint x="876" y="346" />
+        <di:waypoint x="876" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_15tszx8_di" bpmnElement="SequenceFlow_15tszx8">
+        <di:waypoint x="901" y="237" />
+        <di:waypoint x="1021" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ts885e_di" bpmnElement="SequenceFlow_1ts885e">
+        <di:waypoint x="1121" y="237" />
+        <di:waypoint x="1285" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0xr3q5b_di" bpmnElement="SelectReviewType">
+        <dc:Bounds x="682" y="78" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1fioi5l_di" bpmnElement="SequenceFlow_1fioi5l">
+        <di:waypoint x="600" y="212" />
+        <di:waypoint x="600" y="118" />
+        <di:waypoint x="682" y="118" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1brwirp_di" bpmnElement="SequenceFlow_1brwirp">
+        <di:waypoint x="782" y="118" />
+        <di:waypoint x="876" y="118" />
+        <di:waypoint x="876" y="212" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
