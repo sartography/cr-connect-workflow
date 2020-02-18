@@ -708,7 +708,7 @@ components:
                   name: "Expedited"
                 - id: "full_board"
                   name: "Full Board"
-              "defaultValue": "Full Board"
+              "default_value": "Full Board"
               "validation":
                 - name: "required"
                   config: "true"
@@ -752,7 +752,7 @@ components:
                 name: "Expedited"
               - id: "full_board"
                 name: "Full Board"
-            "defaultValue": "Full Board"
+            "default_value": "Full Board"
             "validation":
               - name: "required"
                 config: "true"
@@ -782,8 +782,9 @@ components:
           items:
             $ref: "#/components/schemas/EnumFieldOption"
           readOnly: true
-        defaultValue:
+        default_value:
           type: string
+          readOnly: true
         validation:
           type: array
           items:

@@ -1,7 +1,7 @@
 import enum
 
 import marshmallow
-from marshmallow import post_dump, pre_dump, EXCLUDE, INCLUDE
+from marshmallow import INCLUDE
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import ModelSchema
 
@@ -15,6 +15,7 @@ class WorkflowSpecModel(db.Model):
     display_name = db.Column(db.String)
     description = db.Column(db.Text)
     primary_process_id = db.Column(db.String)
+
 
 class WorkflowSpecModelSchema(ModelSchema):
     class Meta:
@@ -85,9 +86,10 @@ class PropertiesSchema(ma.Schema):
 class FormFieldSchema(ma.Schema):
     class Meta:
         fields = [
-            "id", "type", "label", "defaultValue", "options", "validation", "properties", "value"
+            "id", "type", "label", "default_value", "options", "validation", "properties", "value"
         ]
 
+    default_value = marshmallow.fields.String(required=False, allow_none=True)
     options = marshmallow.fields.List(marshmallow.fields.Nested(OptionSchema))
     validation = marshmallow.fields.List(marshmallow.fields.Nested(ValidationSchema))
     properties = marshmallow.fields.List(marshmallow.fields.Nested(PropertiesSchema))
@@ -120,11 +122,13 @@ class WorkflowApi(object):
         self.next_task = next_task
         self.workflow_spec_id = workflow_spec_id
 
+
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
         fields = ["id", "status", "user_tasks", "last_task", "next_task", "workflow_spec_id"]
         unknown = INCLUDE
+
     status = EnumField(WorkflowStatus)
     user_tasks = marshmallow.fields.List(marshmallow.fields.Nested(TaskSchema, dump_only=True))
     last_task = marshmallow.fields.Nested(TaskSchema, dump_only=True)

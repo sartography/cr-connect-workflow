@@ -29,6 +29,7 @@ class FileType(enum.Enum):
     xml = 'xml'
     zip = 'zip'
 
+
 class FileDataModel(db.Model):
     __tablename__ = 'file_data'
     id = db.Column(db.Integer, primary_key=True)
@@ -58,5 +59,3 @@ class FileModelSchema(ModelSchema):
         model = FileModel
         include_fk = True  # Includes foreign keys
     type = EnumField(FileType)
-
-

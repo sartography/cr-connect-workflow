@@ -15,7 +15,7 @@ class TestTasksApi(BaseTest):
         spec = session.query(WorkflowSpecModel).filter_by(id=workflow_name).first()
         self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
                       data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
-        workflow = session.query(WorkflowModel).filter_by(study_id = study.id, workflow_spec_id=workflow_name).first()
+        workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
         return workflow
 
     def get_workflow_api(self, workflow):
@@ -96,7 +96,7 @@ class TestTasksApi(BaseTest):
         workflow_api = self.complete_form(workflow, tasks[0], {"has_bananas": True})
 
         self.assertIsNotNone(workflow_api.last_task)
-        self.assertEquals({"has_bananas": True}, workflow_api.last_task['data'])
+        self.assertEqual({"has_bananas": True}, workflow_api.last_task['data'])
 
     def test_get_workflow_contains_reference_to_last_task_and_next_task(self):
         self.load_example_data()
