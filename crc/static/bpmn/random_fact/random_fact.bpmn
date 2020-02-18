@@ -14,7 +14,7 @@
             <camunda:value id="cat" name="Cat Fact" />
             <camunda:value id="buzzword" name="Business Buzzword" />
           </camunda:formField>
-          <camunda:formField id="is_anonymous" label="Do you want to remain anonymous?" type="boolean" defaultValue="yes">
+          <camunda:formField id="is_anonymous" label="Do you want to remain anonymous?" type="boolean" defaultValue="true">
             <camunda:properties>
               <camunda:property id="description" value="Choose &#34;yes&#34; if you don&#39;t want us to use your name" />
               <camunda:property id="help" value="# Heading 1\n\nOh hey, it&#39;s Markdown text." />
@@ -23,7 +23,7 @@
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="name" label="Your full name" type="string" defaultValue="Poopsy McButtface">
+          <camunda:formField id="name" label="Your full name" type="string">
             <camunda:properties>
               <camunda:property id="description" value="Please enter your first and last name." />
               <camunda:property id="help" value="# Heading 1\n\nLook, it&#39;s some Markdown!" />
