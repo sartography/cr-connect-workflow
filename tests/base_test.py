@@ -81,6 +81,12 @@ class BaseTest(unittest.TestCase):
         session.flush()
         return spec
 
+    def protocol_builder_response(self, file_name):
+        filepath = os.path.join(app.root_path, '..', 'tests', 'data', 'pb_responses', file_name)
+        with open(filepath, 'r') as myfile:
+            data = myfile.read()
+        return data
+
     def assert_success(self, rv, msg=""):
         try:
             data = json.loads(rv.get_data(as_text=True))

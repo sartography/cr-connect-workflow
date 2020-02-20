@@ -48,8 +48,13 @@ def get_study(study_id):
         return NoContent, 404
     return schema.dump(study)
 
+def update_from_protocol_builder():
+    """Call the """
 
 def post_update_study_from_protocol_builder(study_id):
+    """This will update the list of known studies based on data received from
+    the protocol builder."""
+
     # todo: Actually get data from an external service here
     return NoContent, 304
 
