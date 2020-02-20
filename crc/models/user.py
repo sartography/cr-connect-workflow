@@ -13,6 +13,11 @@ class UserModel(db.Model):
     uid = db.Column(db.String, unique=True)
     email_address = db.Column(db.String)
     display_name = db.Column(db.String)
+    affiliation = db.Column(db.String, nullable=True)
+    eppn = db.Column(db.String, nullable=True)
+    first_name = db.Column(db.String, nullable=True)
+    last_name = db.Column(db.String, nullable=True)
+    title = db.Column(db.String, nullable=True)
 
     def encode_auth_token(self):
         """

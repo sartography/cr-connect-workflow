@@ -7,19 +7,52 @@ info:
 servers:
   - url: http://localhost:5000/v1.0
 paths:
-  # /v1.0/sso
-  /sso_backdoor/{uid}:
-    parameters:
-      - name: uid
-        in: path
-        required: true
-        description: The id of the user to connect as.
-        schema:
-          type: string
+  /sso_backdoor:
     get:
       operationId: crc.api.user.backdoor
       summary: A backdoor that allows someone to log in as a specific user, if they
         are in a staging environment.
+      parameters:
+        - name: uid
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: email_address
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: display_name
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: affiliation
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: eppn
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: first_name
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: last_name
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: title
+          in: header
+          required: false
+          schema:
+            type: string
       tags:
         - Users
       responses:
@@ -601,6 +634,16 @@ components:
         email_address:
           type: string
         display_name:
+          type: string
+        affiliation:
+          type: string
+        eppn:
+          type: string
+        first_name:
+          type: string
+        last_name:
+          type: string
+        title:
           type: string
     DataModel:
       properties:
