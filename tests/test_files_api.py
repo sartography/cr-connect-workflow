@@ -8,7 +8,7 @@ from crc.models.workflow import WorkflowSpecModel
 from tests.base_test import BaseTest
 
 
-class TestApiFiles(BaseTest):
+class TestFilesApi(BaseTest):
 
     def test_list_files_for_workflow_spec(self):
         self.load_example_data()

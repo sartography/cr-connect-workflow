@@ -40,6 +40,17 @@ class TestTasksApi(BaseTest):
         tasks = self.get_workflow_api(workflow).user_tasks
         self.assertEqual("Task_User_Select_Type", tasks[0].name)
         self.assertEqual(3, len(tasks[0].form["fields"][0]["options"]))
+        self.assertIsNotNone(tasks[0].documentation)
+        expected_docs = """# Here's some documentation
+Here is some details in paragraph form.
+Along with a list of bullets:
+* Bullet 1
+* Bullet 2
+
+> # Block Quotes are Help
+> You can use block qoutes to hide information if you want to keep things more tidy.
+"""
+        self.assertEqual(expected_docs, tasks[0].documentation)
 
     def test_two_forms_task(self):
         # Set up a new workflow

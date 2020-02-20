@@ -1,0 +1,17 @@
+[
+  {
+    "INVESTIGATORTYPE": "DC",
+    "INVESTIGATORTYPEFULL": "Department Contact",
+    "NETBADGEID": "asd3v"
+  },
+  {
+    "INVESTIGATORTYPE": "IRBC",
+    "INVESTIGATORTYPEFULL": "IRB Coordinator",
+    "NETBADGEID": "asdf32"
+  },
+  {
+    "INVESTIGATORTYPE": "PI",
+    "INVESTIGATORTYPEFULL": "Primary Investigator",
+    "NETBADGEID": "dhf8r"
+  }
+]

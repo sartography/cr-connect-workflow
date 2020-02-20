@@ -21,3 +21,9 @@ SSO_ATTRIBUTE_MAP = {
     'displayName': (False, 'display_name'),  # Daniel Harold Funk
     'title': (False, 'title')  # SOFTWARE ENGINEER V
 }
+
+# %s/%i placeholders expected for uva_id and study_id in various calls.
+PB_USER_STUDIES_URL = "http://workflow.sartography.com:5001/pb/user_studies?uva_id=%s"
+PB_INVESTIGATORS_URL = "http://workflow.sartography.com:5001/pb/investigators?studyid=%i"
+PB_REQUIRED_DOCS_URL = "http://workflow.sartography.com:5001/pb/required_docs?studyid=%i"
+PB_STUDY_DETAILS_URL = "http://workflow.sartography.com:5001/pb/study?studyid=%i"
