@@ -14,10 +14,10 @@ FRONTEND_AUTH_CALLBACK = "http://localhost:4200" # Not Required
 SSO_ATTRIBUTE_MAP = {
     'eppn': (False, 'eppn'),  # dhf8r@virginia.edu
     'uid': (True, 'uid'),  # dhf8r
-    'givenName': (False, 'givenName'), # Daniel
-    'mail': (False, 'email'), # dhf8r@Virginia.EDU
-    'sn': (False, 'surName'), # Funk
-    'affiliation': (False, 'affiliation'), #  'staff@virginia.edu;member@virginia.edu'
-    'displayName': (False, 'displayName'), # Daniel Harold Funk
+    'givenName': (False, 'first_name'),  # Daniel
+    'mail': (False, 'email_address'),  # dhf8r@Virginia.EDU
+    'sn': (False, 'last_name'),  # Funk
+    'affiliation': (False, 'affiliation'),  # 'staff@virginia.edu;member@virginia.edu'
+    'displayName': (False, 'display_name'),  # Daniel Harold Funk
     'title': (False, 'title')  # SOFTWARE ENGINEER V
 }

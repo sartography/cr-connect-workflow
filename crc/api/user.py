@@ -57,6 +57,9 @@ def _handle_login(user_info):
     uid = user_info['uid']
     user = db.session.query(UserModel).filter(UserModel.uid == uid).first()
 
+    if user is not None:
+        del user_info['uid']  # Prevents duplicate uid errors
+
     # Update existing user data or create a new user
     user = UserModelSchema().load(user_info, session=db.session)
 
@@ -102,7 +105,6 @@ def backdoor():
            ApiError.  If on production, returns a 404 error.
    """
     if not 'PRODUCTION' in app.config or not app.config['PRODUCTION']:
-
         # Translate uppercase HTTP_PROP_NAME to lowercase without HTTP_, if property exists in UserModel.
         user_info = {}
         for key, value in connexion.request.environ.items():

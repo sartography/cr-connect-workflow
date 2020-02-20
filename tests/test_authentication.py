@@ -34,12 +34,18 @@ class TestAuthentication(BaseTest):
         self.assertIsNone(user)
 
         headers = {'uid': self.test_uid, 'first_name': 'Daniel', 'email_address': 'dhf8r@virginia.edu'}
-        rv = self.app.get("/v1.0/sso_backdoor", headers=headers, follow_redirects=True,
-                          content_type="application/json")
+        rv_1 = self.app.get("/v1.0/sso_backdoor", headers=headers, follow_redirects=False)
+        self.assertTrue(rv_1.status_code == 302)
+
+
         user = db.session.query(UserModel).filter(UserModel.uid == self.test_uid).first()
         self.assertIsNotNone(user)
         self.assertIsNotNone(user.display_name)
         self.assertIsNotNone(user.email_address)
+
+        # Hitting the same endpoint again with the same info should not cause an error
+        rv_2 = self.app.get("/v1.0/sso_backdoor", headers=headers, follow_redirects=False)
+        self.assertTrue(rv_1.status_code == 302)
 
     def test_current_user_status(self):
         self.load_example_data()
