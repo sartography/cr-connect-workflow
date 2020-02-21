@@ -35,7 +35,7 @@ def update_study(study_id, body):
         error = ApiError('unknown_study', 'The study "' + study_id + '" is not recognized.')
         return ApiErrorSchema.dump(error), 404
 
-    study = StudyModelSchema().load(body, session=session)
+    study = StudyModelSchema().load(body, session=session, instance=study)
     session.add(study)
     session.commit()
     return StudyModelSchema().dump(study)
