@@ -41,16 +41,14 @@ class TestTasksApi(BaseTest):
         self.assertEqual("Task_User_Select_Type", tasks[0].name)
         self.assertEqual(3, len(tasks[0].form["fields"][0]["options"]))
         self.assertIsNotNone(tasks[0].documentation)
-        expected_docs = """# Here's some documentation
-Here is some details in paragraph form.
-Along with a list of bullets:
-* Bullet 1
-* Bullet 2
-
-> # Block Quotes are Help
-> You can use block qoutes to hide information if you want to keep things more tidy.
+        expected_docs = """# h1 Heading 8-)
+## h2 Heading
+### h3 Heading
+#### h4 Heading
+##### h5 Heading
+###### h6 Heading
 """
-        self.assertEqual(expected_docs, tasks[0].documentation)
+        self.assertTrue(str.startswith(tasks[0].documentation, expected_docs))
 
     def test_two_forms_task(self):
         # Set up a new workflow
