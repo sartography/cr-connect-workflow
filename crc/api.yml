@@ -14,42 +14,42 @@ paths:
         are in a staging environment.
       parameters:
         - name: uid
-          in: header
+          in: query
           required: true
           schema:
             type: string
         - name: email_address
-          in: header
+          in: query
           required: false
           schema:
             type: string
         - name: display_name
-          in: header
+          in: query
           required: false
           schema:
             type: string
         - name: affiliation
-          in: header
+          in: query
           required: false
           schema:
             type: string
         - name: eppn
-          in: header
+          in: query
           required: false
           schema:
             type: string
         - name: first_name
-          in: header
+          in: query
           required: false
           schema:
             type: string
         - name: last_name
-          in: header
+          in: query
           required: false
           schema:
             type: string
         - name: title
-          in: header
+          in: query
           required: false
           schema:
             type: string

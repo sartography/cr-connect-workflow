@@ -52,16 +52,17 @@ def _handle_login(user_info):
            }): Dictionary of user attributes
 
        Returns:
-           str.  returns the frontend auth callback URL, with auth token appended.
+           Response.  302 - Redirects to the frontend auth callback URL, with auth token appended.
    """
     uid = user_info['uid']
     user = db.session.query(UserModel).filter(UserModel.uid == uid).first()
 
-    if user is not None:
-        del user_info['uid']  # Prevents duplicate uid errors
-
-    # Update existing user data or create a new user
-    user = UserModelSchema().load(user_info, session=db.session)
+    if user is None:
+        # Add new user
+        user = UserModelSchema().load(user_info, session=db.session)
+    else:
+        # Update existing user data
+        user = UserModelSchema().load(user_info, session=db.session, instance=user, partial=True)
 
     # Build display_name if not set
     if 'display_name' not in user_info or len(user_info['display_name']) == 0:
@@ -82,21 +83,28 @@ def _handle_login(user_info):
     return redirect(response_url)
 
 
-def backdoor():
+def backdoor(
+    uid=None,
+    affiliation=None,
+    display_name=None,
+    email_address=None,
+    eppn=None,
+    first_name=None,
+    last_name=None,
+    title=None
+):
     """A backdoor for end-to-end system testing that allows the system to simulate logging in as a specific user.
        Only works if the application is running in a non-production environment.
 
        Args:
-           headers (dict of {
-                uid: str,
-                affiliation: Optional[str],
-                display_name: Optional[str],
-                email_address: Optional[str],
-                eppn: Optional[str],
-                first_name: Optional[str],
-                last_name: Optional[str],
-                title: Optional[str],
-           }): Dictionary of user attributes
+          uid: str
+          affiliation: Optional[str]
+          display_name: Optional[str]
+          email_address: Optional[str]
+          eppn: Optional[str]
+          first_name: Optional[str]
+          last_name: Optional[str]
+          title: Optional[str]
 
        Returns:
            str.  If not on production, returns the frontend auth callback URL, with auth token appended.
@@ -105,13 +113,10 @@ def backdoor():
            ApiError.  If on production, returns a 404 error.
    """
     if not 'PRODUCTION' in app.config or not app.config['PRODUCTION']:
-        # Translate uppercase HTTP_PROP_NAME to lowercase without HTTP_, if property exists in UserModel.
         user_info = {}
-        for key, value in connexion.request.environ.items():
-            if key.startswith('HTTP_'):
-                prop = key[5:].lower()
-                if hasattr(UserModel, prop):
-                    user_info[prop] = value
+        for key in UserModel.__dict__.keys():
+            if key in connexion.request.args:
+                user_info[key] = connexion.request.args[key]
 
         return _handle_login(user_info)
     else:
