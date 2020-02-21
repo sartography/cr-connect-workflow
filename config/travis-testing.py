@@ -8,7 +8,7 @@ TESTING = True
 SQLALCHEMY_DATABASE_URI = "postgresql://postgres:@localhost:5432/crc_test"
 TOKEN_AUTH_TTL_HOURS = 2
 TOKEN_AUTH_SECRET_KEY = "Shhhh!!! This is secret!  And better darn well not show up in prod."
-FRONTEND_AUTH_CALLBACK = "http://localhost:4200" # Not Required
+FRONTEND_AUTH_CALLBACK = "http://localhost:4200/session"  # Not Required
 
 #: Default attribute map for single signon.
 SSO_ATTRIBUTE_MAP = {
