@@ -53,6 +53,11 @@ paths:
           required: false
           schema:
             type: string
+        - name: redirect_url
+          in: query
+          required: false
+          schema:
+            type: string
       tags:
         - Users
       responses:

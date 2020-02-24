@@ -32,10 +32,11 @@ def get_current_user():
 
 @sso.login_handler
 def sso_login(user_info):
+    # TODO: Get redirect URL from Shibboleth request header
     _handle_login(user_info)
 
 
-def _handle_login(user_info):
+def _handle_login(user_info, redirect_url=app.config['FRONTEND_AUTH_CALLBACK']):
     """On successful login, adds user to database if the user is not already in the system,
        then returns the frontend auth callback URL, with auth token appended.
 
@@ -50,6 +51,7 @@ def _handle_login(user_info):
                 last_name: Optional[str],
                 title: Optional[str],
            }): Dictionary of user attributes
+          redirect_url: Optional[str]
 
        Returns:
            Response.  302 - Redirects to the frontend auth callback URL, with auth token appended.
@@ -79,8 +81,7 @@ def _handle_login(user_info):
 
     # Return the frontend auth callback URL, with auth token appended.
     auth_token = user.encode_auth_token().decode()
-    response_url = ('%s/%s' % (app.config['FRONTEND_AUTH_CALLBACK'], auth_token))
-    return redirect(response_url)
+    return redirect('%s/%s' % (redirect_url, auth_token))
 
 
 def backdoor(
@@ -91,7 +92,8 @@ def backdoor(
     eppn=None,
     first_name=None,
     last_name=None,
-    title=None
+    title=None,
+    redirect_url=None,
 ):
     """A backdoor for end-to-end system testing that allows the system to simulate logging in as a specific user.
        Only works if the application is running in a non-production environment.
@@ -105,6 +107,7 @@ def backdoor(
           first_name: Optional[str]
           last_name: Optional[str]
           title: Optional[str]
+          redirect_url: Optional[str]
 
        Returns:
            str.  If not on production, returns the frontend auth callback URL, with auth token appended.
@@ -118,6 +121,6 @@ def backdoor(
             if key in connexion.request.args:
                 user_info[key] = connexion.request.args[key]
 
-        return _handle_login(user_info)
+        return _handle_login(user_info, redirect_url)
     else:
         raise ApiError('404', 'unknown')
