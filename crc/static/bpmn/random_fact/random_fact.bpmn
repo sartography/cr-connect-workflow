@@ -104,10 +104,7 @@ Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
 ## Images
 
 ![Minion](https://octodex.github.com/images/minion.png)
-![Stormtroopocat](https://octodex.github.com/images/stormtroopocat.jpg "The Stormtroopocat")
-
-
-</bpmn:documentation>
+![Stormtroopocat](https://octodex.github.com/images/stormtroopocat.jpg "The Stormtroopocat")</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="type" label="Type" type="enum" defaultValue="cat">
@@ -124,6 +121,8 @@ Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
       <bpmn:outgoing>SequenceFlow_0641sh6</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:scriptTask id="Task_Get_Fact_From_API" name="Display Fact">
+      <bpmn:documentation>
+</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:inputOutput>
           <camunda:inputParameter name="Fact.type" />
@@ -134,6 +133,12 @@ Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
       <bpmn:script>scripts.FactService</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="EndEvent_0u1cgrf">
+      <bpmn:documentation># Great Job!
+You have completed the random fact generator.
+You chose to receive a random fact of the type: "{{type}}"
+
+Your random fact is:
+{{details}}</bpmn:documentation>
       <bpmn:incoming>SequenceFlow_0t29gjo</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="SequenceFlow_0c7wlth" sourceRef="StartEvent_1" targetRef="Task_User_Select_Type" />

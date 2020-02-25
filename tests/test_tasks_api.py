@@ -4,7 +4,7 @@ from crc import session
 from crc.models.file import FileModelSchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, \
-    WorkflowApiSchema, WorkflowStatus
+    WorkflowApiSchema, WorkflowStatus, Task
 from tests.base_test import BaseTest
 
 
@@ -132,11 +132,55 @@ class TestTasksApi(BaseTest):
             "last_name": "Mr. Wolf"
         }
         workflow_api = self.complete_form(workflow, tasks[0], data)
-#        workflow_api = self.get_workflow_api(workflow)
-        self.assertIsNone(workflow_api.next_task)
+        self.assertIsNotNone(workflow_api.next_task)
+        self.assertEquals("EndEvent_0evb22x", workflow_api.next_task['name'])
         self.assertTrue(workflow_api.status == WorkflowStatus.complete)
         rv = self.app.get('/v1.0/file?workflow_id=%i' % workflow.id)
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         files = FileModelSchema(many=True).load(json_data, session=session)
         self.assertTrue(len(files) == 1)
+
+    def test_documentation_processing_handles_replacements(self):
+
+        docs = "Some simple docs"
+        task = Task(1, "bill", "bill", "", "started", {}, docs, {})
+        task.process_documentation(docs)
+        self.assertEqual(docs, task.documentation)
+
+        task.data = {"replace_me": "new_thing"}
+        task.process_documentation("{{replace_me}}")
+        self.assertEqual("new_thing", task.documentation)
+
+        documentation = """
+# Bigger Test
+
+  * bullet one
+  * bullet two has {{replace_me}}
+
+# other stuff.       
+        """
+        expected = """
+# Bigger Test
+
+  * bullet one
+  * bullet two has new_thing
+
+# other stuff.       
+        """
+        task.process_documentation(documentation)
+        self.assertEqual(expected, task.documentation)
+
+    def test_get_documentation_populated_in_end(self):
+        self.load_example_data()
+        workflow = self.create_workflow('random_fact')
+        workflow_api = self.get_workflow_api(workflow)
+        tasks = workflow_api.user_tasks
+        self.assertEqual("Task_User_Select_Type", tasks[0].name)
+        self.assertEqual(3, len(tasks[0].form["fields"][0]["options"]))
+        self.assertIsNotNone(tasks[0].documentation)
+        self.complete_form(workflow, workflow_api.user_tasks[0], {"type": "norris"})
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertEqual("EndEvent_0u1cgrf", workflow_api.next_task['name'])
+        self.assertIsNotNone(workflow_api.next_task['documentation'])
+        self.assertTrue("norris" in workflow_api.next_task['documentation'])

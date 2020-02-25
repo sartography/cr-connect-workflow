@@ -1,6 +1,8 @@
 import string
 import random
 
+from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
+
 from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
@@ -71,6 +73,9 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIsNotNone(data)
         self.assertIn("message", data)
         self.assertEqual("Oh, Ginger.", data.get('message'))
+        self.assertEqual("End", processor.bpmn_workflow.last_task.task_spec.name)
+        self.assertEqual("Oh, Ginger.", processor.bpmn_workflow.last_task.data.get('message'))
+
 
     def test_workflow_with_parallel_forms(self):
         self.load_example_data()
@@ -133,6 +138,23 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(processor.bpmn_workflow.last_task, task)
         self.assertEqual(4, len(next_user_tasks))
         self.assertEqual(task.children[0], processor.next_task())
+
+    def test_workflow_processor_returns_next_task_as_end_task_if_complete(self):
+        self.load_example_data()
+        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="random_fact").first()
+        study = session.query(StudyModel).first()
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        task.data = {"type": "buzzword"}
+        processor.complete_task(task)
+        self.assertEqual(WorkflowStatus.waiting, processor.get_status())
+        processor.do_engine_steps()
+        self.assertEqual(WorkflowStatus.complete, processor.get_status())
+        task = processor.next_task()
+        self.assertIsNotNone(task)
+        self.assertIn("details", task.data)
+        self.assertIsInstance(task.task_spec, EndEvent)
 
     def test_workflow_with_bad_expression_raises_sensible_error(self):
         self.load_example_data()

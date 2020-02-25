@@ -1,6 +1,7 @@
 import enum
 
 import marshmallow
+from jinja2 import Environment, BaseLoader
 from marshmallow import INCLUDE
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import ModelSchema
@@ -54,7 +55,7 @@ class Task(object):
         try:
             documentation = spiff_task.task_spec.documentation
         except AttributeError:
-            documentation = None
+            documentation = ""
         instance = cls(spiff_task.id,
                        spiff_task.task_spec.name,
                        spiff_task.task_spec.description,
@@ -65,7 +66,15 @@ class Task(object):
                        spiff_task.data)
         if hasattr(spiff_task.task_spec, "form"):
             instance.form = spiff_task.task_spec.form
+        if documentation != "" and documentation is not None:
+            instance.process_documentation(documentation)
         return instance
+
+    def process_documentation(self, documentation):
+        '''Runs markdown documentation through the Jinja2 processor to inject data
+        create loops, etc...'''
+        rtemplate = Environment(loader=BaseLoader).from_string(documentation)
+        self.documentation = rtemplate.render(**self.data)
 
 
 class OptionSchema(ma.Schema):

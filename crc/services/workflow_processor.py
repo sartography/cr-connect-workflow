@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ElementTree
 from SpiffWorkflow import Task as SpiffTask, Workflow
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
+from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
@@ -140,19 +141,38 @@ class WorkflowProcessor(object):
         return self.bpmn_workflow.get_ready_user_tasks()
 
     def next_task(self):
-        """Returns the next user task that should be completed
-        even if there are parallel tasks and mulitple options are
-        available."""
-        ready_tasks = self.bpmn_workflow.get_ready_user_tasks()
-        if len(ready_tasks) == 0:
-            return None
-        elif len(ready_tasks) == 1:
-            return ready_tasks[0]
-        else:
+        """Returns the next task that should be completed
+        even if there are parallel tasks and multiple options are
+        available.
+        If the workflow is complete
+        it will return the final end task.
+        """
+
+        # If the whole blessed mess is done, return the end_event task in the tree
+        if self.bpmn_workflow.is_completed():
+            last_task = None
+            for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
+                if isinstance(task.task_spec, EndEvent):
+                    return task
+
+        # If there are ready tasks to complete, return the next ready task, but return the one
+        # in the active parallel path if possible.
+        ready_tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
+        if len(ready_tasks) > 0:
             for task in ready_tasks:
                 if task.parent == self.bpmn_workflow.last_task:
                     return task
             return ready_tasks[0]
+
+        # If there are no ready tasks, but the thing isn't complete yet, find the first non-complete task
+        # and return that
+        next_task = None
+        for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.NOT_FINISHED_MASK):
+            next_task = task
+        return next_task
+
+
+
 
     def complete_task(self, task):
         self.bpmn_workflow.complete_task_from_id(task.id)
