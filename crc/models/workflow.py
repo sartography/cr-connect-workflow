@@ -73,7 +73,7 @@ class Task(object):
     def process_documentation(self, documentation):
         '''Runs markdown documentation through the Jinja2 processor to inject data
         create loops, etc...'''
-        rtemplate = Environment(loader=BaseLoader).from_string(documentation)
+        rtemplate = Environment(autoescape=True, loader=BaseLoader).from_string(documentation)
         self.documentation = rtemplate.render(**self.data)
 
 
