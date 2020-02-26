@@ -1,3 +1,4 @@
+from datetime import datetime
 import enum
 
 from marshmallow_enum import EnumField
@@ -23,10 +24,26 @@ class StudyModel(db.Model):
     primary_investigator_id = db.Column(db.String)
     sponsor = db.Column(db.String)
     ind_number = db.Column(db.String)
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
+    investigator_uids = db.Column(db.ARRAY(db.String))
 
 
 class StudyModelSchema(ModelSchema):
     class Meta:
         model = StudyModel
+        include_fk = True  # Includes foreign keys
 
     protocol_builder_status = EnumField(ProtocolBuilderStatus)
+
+
+class ProtocolBuilderStudy(object):
+    def __init__(
+            self, STUDYID: int, HSRNUMBER: str, TITLE: str, NETBADGEID: str,
+            Q_COMPLETE: bool, DATE_MODIFIED: str
+    ):
+        self.STUDYID = STUDYID
+        self.HSRNUMBER = HSRNUMBER
+        self.TITLE = TITLE
+        self.NETBADGEID = NETBADGEID
+        self.Q_COMPLETE = Q_COMPLETE
+        self.DATE_MODIFIED = DATE_MODIFIED

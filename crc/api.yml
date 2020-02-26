@@ -670,6 +670,9 @@ components:
           type: string
           enum: [out_of_date, in_process, complete, updating]
           example: done
+        user_uid:
+          type: string
+          example: dhf8r
         primary_investigator_id:
           type: string
           example: dhf8r
