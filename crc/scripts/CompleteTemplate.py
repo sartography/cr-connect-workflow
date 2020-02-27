@@ -19,7 +19,6 @@ class CompleteTemplate(object):
     as much feedback as possible.  Some of this might move up to a higher level object or be
     passed into all tasks as we complete more work."""
 
-
     def do_task(self, task, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""
         if len(args) != 1:
@@ -37,7 +36,6 @@ class CompleteTemplate(object):
             .join(FileModel) \
             .filter(FileModel.name == file_name) \
             .filter(FileModel.workflow_spec_id == workflow_spec_model.id).first()
-
 
         if file_data_model is None:
             raise ApiError(code="file_missing",

@@ -7,7 +7,8 @@ from flask import g
 from crc import session, auth
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.workflow import __get_workflow_api_model
-from crc.models.study import StudyModelSchema, StudyModel, ProtocolBuilderStudy, ProtocolBuilderStatus
+from crc.models.study import StudyModelSchema, StudyModel
+from models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowModel, WorkflowApiSchema, WorkflowSpecModel
 from crc.services import protocol_builder
 from crc.services.workflow_processor import WorkflowProcessor

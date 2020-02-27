@@ -3,7 +3,8 @@ from datetime import datetime, tzinfo, timezone
 
 from crc import session
 from crc.models.file import FileModel
-from crc.models.study import StudyModel, StudyModelSchema, ProtocolBuilderStatus
+from crc.models.study import StudyModel, StudyModelSchema
+from models.protocol_builder import ProtocolBuilderStatus
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
     WorkflowApiSchema
 from tests.base_test import BaseTest

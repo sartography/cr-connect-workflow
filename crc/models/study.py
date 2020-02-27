@@ -1,18 +1,9 @@
-from datetime import datetime
-import enum
-
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import func
 
 from crc import db
-
-
-class ProtocolBuilderStatus(enum.Enum):
-    out_of_date = "out_of_date"
-    in_process = "in_process"
-    complete = "complete"
-    updating = "updating"
+from models.protocol_builder import ProtocolBuilderStatus
 
 
 class StudyModel(db.Model):
@@ -36,14 +27,3 @@ class StudyModelSchema(ModelSchema):
     protocol_builder_status = EnumField(ProtocolBuilderStatus)
 
 
-class ProtocolBuilderStudy(object):
-    def __init__(
-            self, STUDYID: int, HSRNUMBER: str, TITLE: str, NETBADGEID: str,
-            Q_COMPLETE: bool, DATE_MODIFIED: str
-    ):
-        self.STUDYID = STUDYID
-        self.HSRNUMBER = HSRNUMBER
-        self.TITLE = TITLE
-        self.NETBADGEID = NETBADGEID
-        self.Q_COMPLETE = Q_COMPLETE
-        self.DATE_MODIFIED = DATE_MODIFIED
