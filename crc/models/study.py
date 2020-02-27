@@ -3,7 +3,7 @@ from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import func
 
 from crc import db
-from models.protocol_builder import ProtocolBuilderStatus
+from crc.models.protocol_builder import ProtocolBuilderStatus
 
 
 class StudyModel(db.Model):
@@ -17,6 +17,7 @@ class StudyModel(db.Model):
     ind_number = db.Column(db.String)
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
     investigator_uids = db.Column(db.ARRAY(db.String))
+    inactive = db.Column(db.Boolean, default=False)
 
 
 class StudyModelSchema(ModelSchema):

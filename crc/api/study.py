@@ -1,18 +1,16 @@
 from typing import List
 
-from dateutil.parser import parse
 from connexion import NoContent
 from flask import g
 
 from crc import session, auth
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.workflow import __get_workflow_api_model
+from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.study import StudyModelSchema, StudyModel
-from models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowModel, WorkflowApiSchema, WorkflowSpecModel
-from crc.services import protocol_builder
 from crc.services.workflow_processor import WorkflowProcessor
-from services.protocol_builder import ProtocolBuilderService
+from crc.services.protocol_builder import ProtocolBuilderService
 
 
 @auth.login_required
@@ -77,10 +75,13 @@ def update_from_protocol_builder():
 
     db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
     db_study_ids = list(map(lambda s: s.id, db_studies))
+    pb_study_ids = list(map(lambda s: s.id, pb_studies))
 
+    # Add studies from Protocol Builder that aren't in the database yet
     for pb_study in pb_studies:
         if pb_study['HSRNUMBER'] not in db_study_ids:
-            status = ProtocolBuilderStatus.complete._value_ if pb_study['Q_COMPLETE'] else ProtocolBuilderStatus.in_process._value_
+            status = ProtocolBuilderStatus.complete._value_ if pb_study[
+                'Q_COMPLETE'] else ProtocolBuilderStatus.in_process._value_
             add_study({
                 'id': pb_study['HSRNUMBER'],
                 'title': pb_study['TITLE'],
@@ -88,6 +89,11 @@ def update_from_protocol_builder():
                 'user_uid': pb_study['NETBADGEID'],
                 'last_updated': pb_study['DATE_MODIFIED']
             })
+
+    # Mark studies as inactive that are no longer in Protocol Builder
+    for study_id in db_study_ids:
+        if study_id not in pb_study_ids:
+            update_study(study_id=study_id, body={'inactive': True})
 
 
 def post_update_study_from_protocol_builder(study_id):

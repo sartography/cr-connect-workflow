@@ -4,7 +4,7 @@ from typing import List, Optional
 import requests
 
 from crc import app
-from models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStudySchema, ProtocolBuilderInvestigator, \
+from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStudySchema, ProtocolBuilderInvestigator, \
     ProtocolBuilderRequiredDocument, ProtocolBuilderStudyDetails, ProtocolBuilderInvestigatorSchema, \
     ProtocolBuilderRequiredDocumentSchema, ProtocolBuilderStudyDetailsSchema
 
