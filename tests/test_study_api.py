@@ -1,8 +1,7 @@
 import json
-from datetime import datetime, tzinfo, timezone
+from datetime import datetime, timezone
 
 from crc import session
-from crc.models.file import FileModel
 from crc.models.study import StudyModel, StudyModelSchema
 from models.protocol_builder import ProtocolBuilderStatus
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
@@ -21,7 +20,8 @@ class TestStudyApi(BaseTest):
         self.load_example_data()
         study = {
             "id": 12345,
-            "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents for Interstellar Spacecraft",
+            "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
+                     "for Interstellar Spacecraft",
             "last_updated": datetime.now(tz=timezone.utc),
             "protocol_builder_status": ProtocolBuilderStatus.in_process,
             "primary_investigator_id": "tricia.marie.mcmillan@heartofgold.edu",
@@ -30,6 +30,7 @@ class TestStudyApi(BaseTest):
         }
         rv = self.app.post('/v1.0/study',
                            content_type="application/json",
+                           headers=self.logged_in_headers(),
                            data=json.dumps(StudyModelSchema().dump(study)))
         self.assert_success(rv)
         db_study = session.query(StudyModel).filter_by(id=12345).first()
@@ -41,16 +42,15 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study["sponsor"], db_study.sponsor)
         self.assertEqual(study["ind_number"], db_study.ind_number)
 
-
-
     def test_update_study(self):
         self.load_example_data()
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
         study.protocol_builder_status = ProtocolBuilderStatus.complete
         rv = self.app.put('/v1.0/study/%i' % study.id,
-                           content_type="application/json",
-                           data=json.dumps(StudyModelSchema().dump(study)))
+                          content_type="application/json",
+                          headers=self.logged_in_headers(),
+                          data=json.dumps(StudyModelSchema().dump(study)))
         self.assert_success(rv)
         db_study = session.query(StudyModel).filter_by(id=study.id).first()
         self.assertIsNotNone(db_study)
@@ -62,6 +62,7 @@ class TestStudyApi(BaseTest):
         study = session.query(StudyModel).first()
         rv = self.app.get('/v1.0/study/%i' % study.id,
                           follow_redirects=True,
+                          headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
@@ -80,7 +81,9 @@ class TestStudyApi(BaseTest):
         study = session.query(StudyModel).first()
         self.assertEqual(0, session.query(WorkflowModel).count())
         spec = session.query(WorkflowSpecModel).first()
-        rv = self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
+        rv = self.app.post('/v1.0/study/%i/workflows' % study.id,
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assert_success(rv)
         self.assertEqual(1, session.query(WorkflowModel).count())
@@ -98,7 +101,9 @@ class TestStudyApi(BaseTest):
         self.load_example_data()
         study = session.query(StudyModel).first()
         spec = session.query(WorkflowSpecModel).first()
-        rv = self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
+        rv = self.app.post('/v1.0/study/%i/workflows' % study.id,
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assertEqual(1, session.query(WorkflowModel).count())
         json_data = json.loads(rv.get_data(as_text=True))

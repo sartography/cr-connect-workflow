@@ -12,6 +12,7 @@ from models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowModel, WorkflowApiSchema, WorkflowSpecModel
 from crc.services import protocol_builder
 from crc.services.workflow_processor import WorkflowProcessor
+from services.protocol_builder import ProtocolBuilderService
 
 
 @auth.login_required
@@ -19,38 +20,24 @@ def all_studies():
     user = g.user
     """:type: crc.models.user.UserModel"""
 
-    # Get studies matching this user from Protocol Builder
-    pb_studies: List[ProtocolBuilderStudy] = protocol_builder.get_studies(user.uid)
-
-    schema = StudyModelSchema(many=True)
+    update_from_protocol_builder()
     db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
-    db_study_ids = list(map(lambda s: s.id, db_studies))
-
-    for pb_study in pb_studies:
-        if pb_study['HSRNUMBER'] not in db_study_ids:
-            status = ProtocolBuilderStatus.complete._value_ if pb_study['Q_COMPLETE'] else ProtocolBuilderStatus.in_process._value_
-            add_study({
-                'id': pb_study['HSRNUMBER'],
-                'title': pb_study['TITLE'],
-                'protocol_builder_status': status,
-                'user_uid': pb_study['NETBADGEID'],
-                'last_updated': pb_study['DATE_MODIFIED']
-            })
-
-    db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
-    return schema.dump(db_studies)
+    return StudyModelSchema(many=True).dump(db_studies)
 
 
+@auth.login_required
 def add_study(body):
     study = StudyModelSchema().load(body, session=session)
     session.add(study)
     session.commit()
+
     # FIXME: We need to ask the protocol builder what workflows to add to the study, not just add them all.
     for spec in session.query(WorkflowSpecModel).all():
         WorkflowProcessor.create(study.id, spec.id)
     return StudyModelSchema().dump(study)
 
 
+@auth.login_required
 def update_study(study_id, body):
     if study_id is None:
         error = ApiError('unknown_study', 'Please provide a valid Study ID.')
@@ -68,6 +55,7 @@ def update_study(study_id, body):
     return StudyModelSchema().dump(study)
 
 
+@auth.login_required
 def get_study(study_id):
     study = session.query(StudyModel).filter_by(id=study_id).first()
     schema = StudyModelSchema()
@@ -76,12 +64,34 @@ def get_study(study_id):
     return schema.dump(study)
 
 
+@auth.login_required
 def update_from_protocol_builder():
-    """Call the """
+    """Updates the list of known studies for a given user based on data received from
+    the protocol builder."""
+
+    user = g.user
+    """:type: crc.models.user.UserModel"""
+
+    # Get studies matching this user from Protocol Builder
+    pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(user.uid)
+
+    db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
+    db_study_ids = list(map(lambda s: s.id, db_studies))
+
+    for pb_study in pb_studies:
+        if pb_study['HSRNUMBER'] not in db_study_ids:
+            status = ProtocolBuilderStatus.complete._value_ if pb_study['Q_COMPLETE'] else ProtocolBuilderStatus.in_process._value_
+            add_study({
+                'id': pb_study['HSRNUMBER'],
+                'title': pb_study['TITLE'],
+                'protocol_builder_status': status,
+                'user_uid': pb_study['NETBADGEID'],
+                'last_updated': pb_study['DATE_MODIFIED']
+            })
 
 
 def post_update_study_from_protocol_builder(study_id):
-    """This will update the list of known studies based on data received from
+    """Update a single study based on data received from
     the protocol builder."""
 
     # todo: Actually get data from an external service here
