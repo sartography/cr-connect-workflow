@@ -54,13 +54,13 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                            'The expression you provided does not exist:' + expression)
 
 
-
 class MyCustomParser(BpmnDmnParser):
     """
     A BPMN and DMN parser that can also parse Camunda forms.
     """
     OVERRIDE_PARSER_CLASSES = BpmnDmnParser.OVERRIDE_PARSER_CLASSES
     OVERRIDE_PARSER_CLASSES.update(CamundaParser.OVERRIDE_PARSER_CLASSES)
+
 
 class WorkflowProcessor(object):
     _script_engine = CustomBpmnScriptEngine()
@@ -170,9 +170,6 @@ class WorkflowProcessor(object):
         for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.NOT_FINISHED_MASK):
             next_task = task
         return next_task
-
-
-
 
     def complete_task(self, task):
         self.bpmn_workflow.complete_task_from_id(task.id)

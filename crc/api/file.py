@@ -8,7 +8,7 @@ from flask import send_file
 from crc import session
 from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileModelSchema, FileModel, FileDataModel, FileType
-from crc.services.FileService import FileService
+from crc.services.file_service import FileService
 
 
 def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):

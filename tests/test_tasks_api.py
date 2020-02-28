@@ -13,8 +13,12 @@ class TestTasksApi(BaseTest):
     def create_workflow(self, workflow_name):
         study = session.query(StudyModel).first()
         spec = session.query(WorkflowSpecModel).filter_by(id=workflow_name).first()
-        self.app.post('/v1.0/study/%i/workflows' % study.id, content_type="application/json",
-                      data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+        rv = self.app.post(
+            '/v1.0/study/%i/workflows' % study.id,
+            headers=self.logged_in_headers(),
+            content_type="application/json",
+            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+        self.assert_success(rv)
         workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
         return workflow
 

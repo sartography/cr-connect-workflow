@@ -33,6 +33,7 @@ recommonmark = "*"
 psycopg2-binary = "*"
 docxtpl = "*"
 flask-sso = "*"
+python-dateutil = "*"
 
 [requires]
 python_version = "3.7"

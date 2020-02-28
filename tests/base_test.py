@@ -3,11 +3,13 @@
 import json
 import os
 import unittest
+import urllib.parse
+
+os.environ["TESTING"] = "true"
 
 from crc.models.file import FileModel, FileDataModel
 from crc.models.workflow import WorkflowSpecModel
-
-os.environ["TESTING"] = "true"
+from crc.models.user import UserModel
 
 from crc import app, db, session
 from example_data import ExampleDataLoader
@@ -18,14 +20,13 @@ from example_data import ExampleDataLoader
 # logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
-
-
-
-# Great class to inherit from, as it sets up and tears down
-# classes efficiently when we have a database in place.
 class BaseTest(unittest.TestCase):
+    """ Great class to inherit from, as it sets up and tears down classes
+        efficiently when we have a database in place.
+    """
 
     auths = {}
+    test_uid = "dhf8r"
 
     @classmethod
     def setUpClass(cls):
@@ -48,6 +49,25 @@ class BaseTest(unittest.TestCase):
         self.ctx.pop()
         self.auths = {}
 
+    def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
+        if user is None:
+            uid = self.test_uid
+            user_info = {'uid': self.test_uid, 'first_name': 'Daniel', 'last_name': 'Funk',
+                         'email_address': 'dhf8r@virginia.edu'}
+        else:
+            uid = user.uid
+            user_info = {'uid': user.uid, 'first_name': user.first_name, 'last_name': user.last_name,
+                         'email_address': user.email_address}
+
+        query_string = self.user_info_to_query_string(user_info, redirect_url)
+        rv = self.app.get("/v1.0/sso_backdoor%s" % query_string, follow_redirects=False)
+        self.assertTrue(rv.status_code == 302)
+        self.assertTrue(str.startswith(rv.location, redirect_url))
+
+        user_model = session.query(UserModel).filter_by(uid=uid).first()
+        self.assertIsNotNone(user_model.display_name)
+        return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
+
     def load_example_data(self):
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
@@ -66,7 +86,8 @@ class BaseTest(unittest.TestCase):
                 self.assertIsNotNone(file_data)
                 self.assertGreater(len(file_data), 0)
 
-    def load_test_spec(self, dir_name):
+    @staticmethod
+    def load_test_spec(dir_name):
         """Loads a spec into the database based on a directory in /tests/data"""
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
             return
@@ -81,7 +102,8 @@ class BaseTest(unittest.TestCase):
         session.flush()
         return spec
 
-    def protocol_builder_response(self, file_name):
+    @staticmethod
+    def protocol_builder_response(file_name):
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', 'pb_responses', file_name)
         with open(filepath, 'r') as myfile:
             data = myfile.read()
@@ -102,3 +124,16 @@ class BaseTest(unittest.TestCase):
                          "Incorrect Valid Response:" + rv.status + ".")
         if code != 0:
             self.assertEqual(code, rv.status_code)
+
+    @staticmethod
+    def user_info_to_query_string(user_info, redirect_url):
+        query_string_list = []
+        items = user_info.items()
+        for key, value in items:
+            query_string_list.append('%s=%s' % (key, urllib.parse.quote(value)))
+
+        query_string_list.append('redirect_url=%s' % redirect_url)
+
+        return '?%s' % '&'.join(query_string_list)
+
+

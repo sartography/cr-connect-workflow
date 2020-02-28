@@ -11,7 +11,6 @@ class FileService(object):
 
     DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
-
     @staticmethod
     def add_workflow_spec_file(workflow_spec_id, name, content_type, binary_data):
         """Create a new file and associate it with a workflow spec."""

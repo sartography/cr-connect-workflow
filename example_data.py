@@ -1,16 +1,31 @@
 import datetime
 import glob
 import os
+import xml.etree.ElementTree as ElementTree
 
 from crc import app, db, session
 from crc.models.file import FileType, FileModel, FileDataModel
 from crc.models.study import StudyModel
+from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel
-import xml.etree.ElementTree as ElementTree
 from crc.services.workflow_processor import WorkflowProcessor
+
 
 class ExampleDataLoader:
     def make_data(self):
+        users = [
+            UserModel(
+                uid='dhf8r',
+                email_address='dhf8r@virginia.EDU',
+                display_name='Daniel Harold Funk',
+                affiliation='staff@virginia.edu;member@virginia.edu',
+                eppn='dhf8r@virginia.edu',
+                first_name='Daniel',
+                last_name='Funk',
+                title='SOFTWARE ENGINEER V'
+            )
+        ]
+
         studies = [
             StudyModel(
                 id=1,
@@ -19,7 +34,8 @@ class ExampleDataLoader:
                 protocol_builder_status='in_process',
                 primary_investigator_id='dhf8r',
                 sponsor='Sartography Pharmaceuticals',
-                ind_number='1234'
+                ind_number='1234',
+                user_uid='dhf8r'
             ),
             StudyModel(
                 id=2,
@@ -28,7 +44,8 @@ class ExampleDataLoader:
                 protocol_builder_status='in_process',
                 primary_investigator_id='dhf8r',
                 sponsor='Makerspace & Co.',
-                ind_number='5678'
+                ind_number='5678',
+                user_uid='dhf8r'
             ),
         ]
 
@@ -69,11 +86,11 @@ class ExampleDataLoader:
                              description='How to take different paths based on input.')
         workflow_specifications += \
             self.create_spec(id="docx",
-                            name="docx",
-                            display_name="Form with document generation",
-                            description='the name says it all')
+                             name="docx",
+                             display_name="Form with document generation",
+                             description='the name says it all')
 
-        all_data = studies + workflow_specifications
+        all_data = users + studies + workflow_specifications
         return all_data
 
     def create_spec(self, id, name, display_name="", description="", filepath=None):
@@ -112,7 +129,7 @@ class ExampleDataLoader:
             try:
                 file = open(file_path, "rb")
                 data = file.read()
-                if(is_primary):
+                if (is_primary):
                     bpmn: ElementTree.Element = ElementTree.fromstring(data)
                     spec.primary_process_id = WorkflowProcessor.get_process_id(bpmn)
                     print("Locating Process Id for " + filename + "  " + spec.primary_process_id)
@@ -120,7 +137,6 @@ class ExampleDataLoader:
             finally:
                 file.close()
         return models
-
 
     @staticmethod
     def clean_db():
