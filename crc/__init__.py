@@ -19,7 +19,7 @@ auth = HTTPTokenAuth('Bearer')
 
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
     app.config.from_object('config.testing')
-    app.config.from_pyfile('testing.py')
+    app.config.from_pyfile('../config/testing.py')
 else:
     app.config.root_path = app.instance_path
     app.config.from_pyfile('config.py', silent=True)
