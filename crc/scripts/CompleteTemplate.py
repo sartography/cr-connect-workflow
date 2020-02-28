@@ -9,7 +9,7 @@ from crc.models.workflow import WorkflowSpecModel
 from docxtpl import DocxTemplate
 import jinja2
 
-from crc.services.FileService import FileService
+from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
