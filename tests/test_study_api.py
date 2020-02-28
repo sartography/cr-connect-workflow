@@ -27,6 +27,7 @@ class TestStudyApi(BaseTest):
             "primary_investigator_id": "tricia.marie.mcmillan@heartofgold.edu",
             "sponsor": "Sirius Cybernetics Corporation",
             "ind_number": "567890",
+            "user_uid": "dhf8r",
         }
         rv = self.app.post('/v1.0/study',
                            content_type="application/json",
@@ -41,6 +42,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study["primary_investigator_id"], db_study.primary_investigator_id)
         self.assertEqual(study["sponsor"], db_study.sponsor)
         self.assertEqual(study["ind_number"], db_study.ind_number)
+        self.assertEqual(study["user_uid"], db_study.user_uid)
 
     def test_update_study(self):
         self.load_example_data()
