@@ -1,0 +1,976 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1wv9t3c" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_19ej1y2" name="Data Securty Plan" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1co48s3">
+      <bpmn:outgoing>SequenceFlow_100w7co</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_EnterHIPAAIdentifiers" name="Enter HIPAA Identifiers" camunda:formKey="Enter_HIPAA_Identifiers">
+      <bpmn:documentation>Add a box for each of the HIPAA Identifiers that you will receive, collect, record, store long term, or send outside of UVA during the course of your research..</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="HIPAA_Ids" label="HIPAA Identifiers" type="enum">
+            <camunda:properties>
+              <camunda:property id="group" value="hipaa" />
+              <camunda:property id="repeat" value="hipaa" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="HIPAA_Ids0" name="No HIPAA identifiers will be recorded as part of this research" />
+            <camunda:value id="HIPAA_Ids1" name="1. Name - Highly Sensitive Data	" />
+            <camunda:value id="HIPAA_Ids2a" name="2a. Postal address includes street and/or PO Box, and town or city, state, and zip code - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids2b" name="2b. Postal address that includes only town or city, state, and/or zip code - Moderately Sensitive Data" />
+            <camunda:value id="HIPAA_Ids3" name="3. All date elements (except year) for dates related to an individual, e.g. service date" />
+            <camunda:value id="HIPAA_Ids4" name="4. Telephone numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids5" name="5. Fax numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids6" name="6. Electronic mail addresses - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids7" name="7. Social Security number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids8" name="8. Medical Record number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids9" name="9. Health plan beneficiary numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids10" name="10. Account numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids11" name="11. Certificate/license numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids12" name="12. Vehicle identifiers and serial numbers, including license plate numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids13" name="13. Device identifiers and serial numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids14" name="14. Web Universal Resource Locators (URLs) - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids15" name="15. Internet Protocol (IP) address numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids16" name="16. Biometric identifiers, including finger and voice prints - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids17" name="17. Full face photographic images and any comparable images - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids18" name="18. Other unique number, characteristic, code related to an individual, e.g. initials" />
+          </camunda:formField>
+          <camunda:formField id="HIPPA_IdsDataQualifiers" label="Check each that apply:" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="group" value="hipaa" />
+              <camunda:property id="repeat" value="hipaa" />
+              <camunda:property id="hide_expression" value="model.HIPAA_Ids === &#39;HIPAA_Ids0&#39;" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="!(model.HIPAA_Ids === &#39;HIPAA_Ids0&#39;) || model.HIPAA_Ids == null" />
+            </camunda:validation>
+            <camunda:value id="OrigSource" name="Original source data collection (receive, collect, or record at UVa)" />
+            <camunda:value id="ShortTerm" name="Store long term at UVa" />
+            <camunda:value id="SendTransOutside" name="Send or transmit outside of UVA" />
+            <camunda:value id="NA" name="Not Applicable" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0jyty9m</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0blyor8</bpmn:outgoing>
+      <bpmn:standardLoopCharacteristics />
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="ExclusiveGateway_0b16kmf">
+      <bpmn:incoming>SequenceFlow_1oq4w2h</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1i6ac9a</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_084dyht</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_10g92nf</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0pw57x9</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0ng3fm8</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0obqjjx</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1i6ac9a" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterPaperDocuments" />
+    <bpmn:userTask id="Task_EnterPaperDocuments" name="Enter Paper Documents" camunda:formKey="Enter_Paper_Documents">
+      <bpmn:documentation>A) Paper documents:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="CollStorUVaLocPaperTypes" label="Check all that apply" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="help" value="### Appropriate UVA locations include one or more of the following:\r\n\r\n- Kept in a locked office in a building with 24 hour swipe locks when unattended\r\n- Kept in a locked file cabinet in a locked room when unattended\n- Kept in an office where study are personnel present in room at all times located in a building with 24 hour swipe locks or a room with a lock when unattended\n -Behind two locked doors when unattended" />
+            </camunda:properties>
+            <camunda:value id="Appropriate" name="Appropriate UVa location (Click Help for list)" />
+            <camunda:value id="Approved" name="UVa approved storage facility" />
+          </camunda:formField>
+          <camunda:formField id="CollStorUVaLocPaperOther" label="Other: (Please describe)" type="textarea" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1i6ac9a</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1q6gf6w</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_084dyht" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterEmailedUVAPersonnel" />
+    <bpmn:sequenceFlow id="SequenceFlow_10g92nf" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterEMR" />
+    <bpmn:sequenceFlow id="SequenceFlow_0pw57x9" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterUVAApprovedECRF" />
+    <bpmn:sequenceFlow id="SequenceFlow_0ng3fm8" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterUVaServersWebsites" />
+    <bpmn:userTask id="Task_EnterEmailedUVAPersonnel" name="Enter Emailed to UVA Personnel" camunda:formKey="EnterEmailedUVAPersonnel">
+      <bpmn:documentation>B) Emailed to other UVA personnel:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="CollStorUVaLocEmailUVaTypes" label="Check all that apply:" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+            </camunda:properties>
+            <camunda:value id="ResearchNoHIPPAIds" name="Research data emailed to UVa personnel, but with no HIPAA identifiers except dates." />
+            <camunda:value id="EmailUVa" name="Email only to and from UVA personnel with *HS in the Global Address List" />
+          </camunda:formField>
+          <camunda:formField id="CollStorUVaLocEmailOther" label="Other Email Characteristics (Please describe)" type="textarea" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_084dyht</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_12cos7w</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_EnterEMR" name="Enter EMR (EPIC)" camunda:formKey="EnterEMR">
+      <bpmn:documentation>C) Electronic Medical Record (EPIC):</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="CollStorUVaLocEMR" label="Data will be collected in EPIC as part of routine care or as part of medical center encounters during the research study" type="enum" defaultValue="Not Applicable">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="radio" />
+              <camunda:property id="description" value="Use of EPIC in this context encludes data managed entirely in the EPIC environment." />
+            </camunda:properties>
+            <camunda:value id="NA" name="Not Applicable" />
+            <camunda:value id="Yes" name="Yes" />
+            <camunda:value id="No" name="No" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_10g92nf</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0z10m1d</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_EnterUVAApprovedECRF" name="Enter UVA Approved eCRF" camunda:formKey="EnterUVaApprovedECRF">
+      <bpmn:documentation>D) UVA approved eCRF or clinical trials management system:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="CollStorUVaLocCTMSTypes" label="Check all that apply:" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="description" value="If no device, please choose &#34;Yes&#34; below" />
+            </camunda:properties>
+            <camunda:value id="hstsdatalab" name="hstsdatalab.hscs.virginia.edu" />
+            <camunda:value id="hstsdsmpogapp" name="hstsdsmpogapp.hscs.virginia.edu" />
+            <camunda:value id="musicvpn01" name="musicvpn01.med.virginia.edu" />
+            <camunda:value id="OnCore" name="OnCore (oncore.med.virginia.edu)" />
+            <camunda:value id="RedCap" name="Redcap-int.hscs.virginia.edu" />
+            <camunda:value id="reveal" name="https://reveal.studymanager.com/" />
+          </camunda:formField>
+          <camunda:formField id="CollStorUVaLocCTMSAck" label="I acknowledge that ANY electronic individual use devices used to &#62;&#62;connect&#60;&#60; to any servers/websites checked above are supported by UVA Health System IT." type="boolean">
+            <camunda:properties>
+              <camunda:property id="help" value="[Definition of electronic individual user devices](https://security.virginia.edu/individual%E2%80%93use-electronic-devices)" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="CollStorUVaLocCTMSAckNo" label="If you answered &#34;No&#34; to the acknowledgment above, for each device list who provides support. Include their contact information (Device Name: Contact Name, Email &#38; Phone):" type="textarea">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="model.CollStorUVaLocCTMSAck || model.CollStorUVaLocCTMSAck == null" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0pw57x9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1agmshr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_EnterUVaServersWebsites" name="Enter UVA Servers &#38; Websites" camunda:formKey="EnterUVaServersWebsites">
+      <bpmn:documentation>E) UVA servers &amp; websites:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="CollStorUVaLocUVaServersWebsites" label="Check all that apply:" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="help" value="You may locate the server/drive name and path by taking the following steps:\n\n- Windows: Click your “computer icon”, right click on the Drive icon (e.g., F). Then click on ”properties”. The server/drive name and path will appear at the very top of the box.\n- If you need additional assistance, contact your department computer support or system administrator for assistance." />
+            </camunda:properties>
+            <camunda:value id="domatlas" name="domatlas.eservices.virginia.edu" />
+            <camunda:value id="dom-titan" name="dom-titan.eservices.virginia.edu" />
+            <camunda:value id="elson1" name="elson1.studenthealth.virginia.edu" />
+            <camunda:value id="es3" name="es3.eservices.virginia.edu" />
+            <camunda:value id="gcrcserver" name="gcrcserver.itc.virginia.edu" />
+            <camunda:value id="hscs-ss7" name="\\hscs-ss7" />
+            <camunda:value id="hscs-ss8" name="\\hscs-ss8" />
+            <camunda:value id="hscs-ss9" name="\\hscs-ss9" />
+            <camunda:value id="hscs-ss10" name="\\hscs-ss10" />
+            <camunda:value id="hscs-ss11" name="\\hscs-ss11" />
+            <camunda:value id="hscs-ss12" name="\\hscs-ss12" />
+            <camunda:value id="hscs-ss13" name="\\hscs-ss13" />
+            <camunda:value id="hscs-share1" name="\\hscs-share1\" />
+            <camunda:value id="hscs-share2" name="\\hscs-share2\" />
+            <camunda:value id="hscs-share3" name="\\hscs-share3\" />
+            <camunda:value id="radshare" name="\\radshare\" />
+            <camunda:value id="upgusers" name="upgusers.hscs.virginia.edu" />
+            <camunda:value id="Ivy" name="Ivy Secure Computing Platform/ Ivy Secure Cloud/Ivy Cloud" />
+            <camunda:value id="SECURE" name="School of Nursing SECURE NET" />
+            <camunda:value id="DropBoxSookasa" name="UVa HIT DropBox/Sookasa" />
+            <camunda:value id="Qualtrics" name=" UVa Qualtrics HSD survey tool: https://virginiahsd.co1.qualtrics.com/ControlPanel/" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0ng3fm8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1xp62py</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0obqjjx" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterWebCloudServer" />
+    <bpmn:userTask id="Task_EnterWebCloudServer" name="Enter Web or Cloud Server" camunda:formKey="EnterWebCloudServer">
+      <bpmn:documentation>F) Web-based server, cloud server, or any non-centrally managed server (not listed above):</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="CollStorUVaLocWebCloud" label="Will data be collected and/or stored on a web-based server, cloud server or any non-centrally UVA managed server?" type="boolean" />
+          <camunda:formField id="CollStorUVaLocWebCloudDescribe" label="Please describe:" type="textarea">
+            <camunda:properties>
+              <camunda:property id="rows" value="5" />
+              <camunda:property id="hide_expression" value="!(model.CollStorUVaLocWebCloud)" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="CollStorUVaLocWebCloudHIPPA" label="Check all HIPAA Identifiers stored on a web based server, cloud server, and/or any non-centrally managed UVA server." type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="hide_expression" value="!(model.CollStorUVaLocWebCloud)" />
+            </camunda:properties>
+            <camunda:value id="HIPAA_Ids0" name="No HIPAA identifiers will be recorded as part of this research" />
+            <camunda:value id="HIPAA_Ids1" name="1. Name - Highly Sensitive Data	" />
+            <camunda:value id="HIPAA_Ids2a" name="2a. Postal address includes street and/or PO Box, and town or city, state, and zip code - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids2b" name="2b. Postal address that includes only town or city, state, and/or zip code - Moderately Sensitive Data" />
+            <camunda:value id="HIPAA_Ids3" name="3. All date elements (except year) for dates related to an individual, e.g. service date" />
+            <camunda:value id="HIPAA_Ids4" name="4. Telephone numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids5" name="5. Fax numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids6" name="6. Electronic mail addresses - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids7" name="7. Social Security number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids8" name="8. Medical Record number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids9" name="9. Health plan beneficiary numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids10" name="10. Account numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids11" name="11. Certificate/license numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids12" name="12. Vehicle identifiers and serial numbers, including license plate numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids13" name="13. Device identifiers and serial numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids14" name="14. Web Universal Resource Locators (URLs) - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids15" name="15. Internet Protocol (IP) address numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids16" name="16. Biometric identifiers, including finger and voice prints - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids17" name="17. Full face photographic images and any comparable images - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids18" name="18. Other unique number, characteristic, code related to an individual, e.g. initials" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0obqjjx</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_10fsxk4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0z10m1d" sourceRef="Task_EnterEMR" targetRef="ExclusiveGateway_06kvl84" />
+    <bpmn:parallelGateway id="ExclusiveGateway_06kvl84">
+      <bpmn:incoming>SequenceFlow_0z10m1d</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1q6gf6w</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_12cos7w</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1agmshr</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1xp62py</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_10fsxk4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0nc6lcs</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_1q6gf6w" sourceRef="Task_EnterPaperDocuments" targetRef="ExclusiveGateway_06kvl84" />
+    <bpmn:sequenceFlow id="SequenceFlow_12cos7w" sourceRef="Task_EnterEmailedUVAPersonnel" targetRef="ExclusiveGateway_06kvl84" />
+    <bpmn:sequenceFlow id="SequenceFlow_1agmshr" sourceRef="Task_EnterUVAApprovedECRF" targetRef="ExclusiveGateway_06kvl84" />
+    <bpmn:sequenceFlow id="SequenceFlow_1xp62py" sourceRef="Task_EnterUVaServersWebsites" targetRef="ExclusiveGateway_06kvl84" />
+    <bpmn:sequenceFlow id="SequenceFlow_10fsxk4" sourceRef="Task_EnterWebCloudServer" targetRef="ExclusiveGateway_06kvl84" />
+    <bpmn:sequenceFlow id="SequenceFlow_0nc6lcs" sourceRef="ExclusiveGateway_06kvl84" targetRef="Task_EnterIndividualUseDevices" />
+    <bpmn:userTask id="Task_EnterIndividualUseDevices" name="Enter Individual Use Devices" camunda:formKey="EnterIndividualUseDevices">
+      <bpmn:documentation>G) Answer the questions for each of the Individual Use Devices that you use to collect or store your data onto your individual use device during the course of your research. Do not select these items if they are only to be used to connect elsewhere (to the items you identified in C, D, E, and F):</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="IUD_IndividualUseDevices" label="Individual use devices:" type="enum">
+            <camunda:properties>
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="None" name="No Individual Use Devices will be used" />
+            <camunda:value id="FlashDrive" name="Flash (thumb) drive" />
+            <camunda:value id="ExternalDrive" name="External drive" />
+            <camunda:value id="CDorDVD" name="CD or DVD" />
+            <camunda:value id="Desktop" name="Desktop Computer" />
+            <camunda:value id="Laptop" name="Laptop" />
+            <camunda:value id="Tablet" name="Tablet" />
+            <camunda:value id="SmartPhone" name="Smart phone" />
+            <camunda:value id="Camera" name="Camera" />
+            <camunda:value id="VideoRecorder" name="Video recorder" />
+            <camunda:value id="AudioRecorder" name="Audio recorder" />
+            <camunda:value id="Biometric" name="Biometric recording device" />
+            <camunda:value id="FitnessTrackers" name="Fitness Trackers" />
+            <camunda:value id="Other" name="Other" />
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesOther" label="Since you selected &#34;Other&#34; above, please identify the device type:" type="textarea">
+            <camunda:properties>
+              <camunda:property id="rows" value="5" />
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="hide_expression" value="model.IUD_IndividualUseDevices !== &#39;Other&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesProcess" label="Please describe your process for collecting, storing and/or transmitting data on the Individual Use Devices you selected in earlier steps (phones, flash drives, CDs, etc.):" type="textarea">
+            <camunda:properties>
+              <camunda:property id="rows" value="5" />
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="hide_expression" value="model.IUD_IndividualUseDevices == &#39;None&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesHIPPA_Ids" label="Check the HIPAA Identifiers stored with the data on this device (e.g. such as full-face picture or video):" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="hide_expression" value="model.IUD_IndividualUseDevices == &#39;None&#39;" />
+            </camunda:properties>
+            <camunda:value id="HIPAA_Ids0" name="No HIPAA identifiers will be recorded as part of this research" />
+            <camunda:value id="HIPAA_Ids1" name="1. Name - Highly Sensitive Data	" />
+            <camunda:value id="HIPAA_Ids2a" name="2a. Postal address includes street and/or PO Box, and town or city, state, and zip code - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids2b" name="2b. Postal address that includes only town or city, state, and/or zip code - Moderately Sensitive Data" />
+            <camunda:value id="HIPAA_Ids3" name="3. All date elements (except year) for dates related to an individual, e.g. service date" />
+            <camunda:value id="HIPAA_Ids4" name="4. Telephone numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids5" name="5. Fax numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids6" name="6. Electronic mail addresses - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids7" name="7. Social Security number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids8" name="8. Medical Record number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids9" name="9. Health plan beneficiary numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids10" name="10. Account numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids11" name="11. Certificate/license numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids12" name="12. Vehicle identifiers and serial numbers, including license plate numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids13" name="13. Device identifiers and serial numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids14" name="14. Web Universal Resource Locators (URLs) - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids15" name="15. Internet Protocol (IP) address numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids16" name="16. Biometric identifiers, including finger and voice prints - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids17" name="17. Full face photographic images and any comparable images - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids18" name="18. Other unique number, characteristic, code related to an individual, e.g. initials" />
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesBackups" label="Describe any backups made of the data stored on the device. Please include the location &#38; method of data transfer:" type="textarea">
+            <camunda:properties>
+              <camunda:property id="rows" value="5" />
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="hide_expression" value="model.IUD_IndividualUseDevices == &#39;None&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesDelete" label="After the information is transferred elsewhere, will you securely delete all the data from this device?" type="boolean">
+            <camunda:properties>
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="hide_expression" value="model.IUD_IndividualUseDevices == &#39;None&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesAccessYes" label="If yes, describe:" type="textarea">
+            <camunda:properties>
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="rows" value="5" />
+              <camunda:property id="hide_expression" value="!(model.IUD_IndividualUseDevicesDelete) || model.IUD_IndividualUseDevicesDelete == null || model.IUD_IndividualUseDevices == &#39;None&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesAccess" label="Will anyone other than the study team or sponsor/CRO have access to data on this device?" type="textarea">
+            <camunda:properties>
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="rows" value="5" />
+              <camunda:property id="hide_expression" value="model.IUD_IndividualUseDevices == &#39;None&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesAlternatives" label="Other storage alternatives that were considered and the reasons they are unworkable:" type="textarea">
+            <camunda:properties>
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="rows" value="5" />
+              <camunda:property id="hide_expression" value="model.IUD_IndividualUseDevices == &#39;None&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IUD_IndividualUseDevicesJustification" label="The justification for storage of these data on this individual use device is:" type="textarea">
+            <camunda:properties>
+              <camunda:property id="group" value="devices" />
+              <camunda:property id="repeat" value="devices" />
+              <camunda:property id="rows" value="5" />
+              <camunda:property id="hide_expression" value="model.IUD_IndividualUseDevices == &#39;None&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0nc6lcs</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0gp2pjm</bpmn:outgoing>
+      <bpmn:standardLoopCharacteristics />
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0gp2pjm" sourceRef="Task_EnterIndividualUseDevices" targetRef="Task_EnterOutsideUVA" />
+    <bpmn:sequenceFlow id="SequenceFlow_0mgwas4" sourceRef="Task_EnterOutsideUVA" targetRef="ExclusiveGateway_0pi0c2d" />
+    <bpmn:sequenceFlow id="SequenceFlow_1i8e52t" sourceRef="ExclusiveGateway_0x3t2vl" targetRef="Task_EnterEmailMethods" />
+    <bpmn:userTask id="Task_EnterOutsideUVA" name="Enter Outside of UVA" camunda:formKey="EnterOutsideUVa">
+      <bpmn:documentation>Transmission to and/or storage of the human subject research data OUTSIDE of UVA, such as to a sponsor or a colleague at another institution
+
+##### Important 
+Indicate all the possible formats in which you will transmit your data outside of UVA. Options should be selected even if the data is only temporarily stored in that format. Also remember to select any location where a subject’s SSN, hospital billing or account number, or certificate/license number might be recorded either with the data or separately.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="DateTransmittedOutside" label="Will data be transmitted to a sponsor or a colleague at another institution?" type="boolean">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0gp2pjm</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0mgwas4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_EnterEmailMethods" name="Enter Email Methods" camunda:formKey="EnterEmailMethods">
+      <bpmn:documentation>Since you answered "Yes" to question above, than complete questions below:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="DateTransmittedOutsideViaHSC" label="Data will be emailed to non-UVA personnel via HSC secure email:" type="boolean">
+            <camunda:properties>
+              <camunda:property id="help" value="For information regarding how to email data to non-UVA personnel via HSC secure email: http://hit.healthsystem.virginia.edu/index.cfm/departments/security/how-tos/how-to-encrypt-a-medical-center-email/" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="DateTransmittedOutsideRegEmail" label="Data will be emailed to non-UVA personnel via regular email" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1i8e52t</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0uewki3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_12bv2i4" sourceRef="ExclusiveGateway_0x3t2vl" targetRef="Task_EnterDataManagement" />
+    <bpmn:userTask id="Task_EnterDataManagement" name="Enter Data Management" camunda:formKey="EnterDataManagement">
+      <bpmn:documentation>Data will be sent to website/server/drive managed by the sponsor or CRO</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="EnterDataManagementWebwsiteServerDriveAck" label="I acknowledge that ANY electronic individual use devices used to connect to any servers/websites listed below are supported by UVA Health System IT." type="boolean">
+            <camunda:properties>
+              <camunda:property id="help" value="[Definition of electronic individual user devices](https://security.virginia.edu/individual%E2%80%93use-electronic-devices)" />
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="EnterDataManagementHIPAA_Ids" label="HIPAA Identifiers" type="enum">
+            <camunda:properties>
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="HIPAA_Ids0" name="No HIPAA identifiers will be recorded as part of this research" />
+            <camunda:value id="HIPAA_Ids1" name="1. Name - Highly Sensitive Data	" />
+            <camunda:value id="HIPAA_Ids2a" name="2a. Postal address includes street and/or PO Box, and town or city, state, and zip code - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids2b" name="2b. Postal address that includes only town or city, state, and/or zip code - Moderately Sensitive Data" />
+            <camunda:value id="HIPAA_Ids3" name="3. All date elements (except year) for dates related to an individual, e.g. service date" />
+            <camunda:value id="HIPAA_Ids4" name="4. Telephone numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids5" name="5. Fax numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids6" name="6. Electronic mail addresses - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids7" name="7. Social Security number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids8" name="8. Medical Record number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids9" name="9. Health plan beneficiary numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids10" name="10. Account numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids11" name="11. Certificate/license numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids12" name="12. Vehicle identifiers and serial numbers, including license plate numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids13" name="13. Device identifiers and serial numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids14" name="14. Web Universal Resource Locators (URLs) - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids15" name="15. Internet Protocol (IP) address numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids16" name="16. Biometric identifiers, including finger and voice prints - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids17" name="17. Full face photographic images and any comparable images - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids18" name="18. Other unique number, characteristic, code related to an individual, e.g. initials" />
+          </camunda:formField>
+          <camunda:formField id="EnterDataManagementSharingContract" label="If sharing data with anyone outside of UVA, do you confirm that you will obtain a contract with them via the School of Medicine Office of Grants and Contracts (OGC) or the Office of Sponsored Programs (OSP)?" type="boolean">
+            <camunda:properties>
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="EnterDataManagementWebsiteServerDriveEncrypted" label="Data will be sent and stored in an encrypted fashion (e.g. will only be shared and via Secure FX, Secure FTP, HTTPS, PGP) and the server/drive is configured to store data regulated by HIPAA" type="boolean">
+            <camunda:properties>
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="EnterDataManagementWebsiteServerDriveURL" label="Name (URL) of website (e.g. https://remote.sponsor.com/project name)" type="textarea">
+            <camunda:properties>
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_12bv2i4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_08rwbhm</bpmn:outgoing>
+      <bpmn:standardLoopCharacteristics />
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1mnmo6p" sourceRef="ExclusiveGateway_0x3t2vl" targetRef="Task_EnterTransmissionMethod" />
+    <bpmn:sequenceFlow id="SequenceFlow_08rwbhm" sourceRef="Task_EnterDataManagement" targetRef="ExclusiveGateway_1lpm3pa" />
+    <bpmn:parallelGateway id="ExclusiveGateway_1lpm3pa">
+      <bpmn:incoming>SequenceFlow_08rwbhm</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0uewki3</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0lere0k</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_14p4mbl</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0uewki3" sourceRef="Task_EnterEmailMethods" targetRef="ExclusiveGateway_1lpm3pa" />
+    <bpmn:sequenceFlow id="SequenceFlow_0lere0k" sourceRef="Task_EnterTransmissionMethod" targetRef="ExclusiveGateway_1lpm3pa" />
+    <bpmn:sequenceFlow id="SequenceFlow_14p4mbl" sourceRef="ExclusiveGateway_1lpm3pa" targetRef="Task_EnterDSPTeamNotes" />
+    <bpmn:userTask id="Task_EnterTransmissionMethod" name="Enter Transmission Method" camunda:formKey="EnterTransmissionMethod">
+      <bpmn:documentation>Transmission Method of data that will be mailed or faxed (FedEx, UPS, certified mail, etc.) Check all that apply:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="DataTransmissionMethodPaper" label="Paper documents will be shipped using trackable method." type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="markdown_description" value="**Note:** Paper documents shipped using not trackable method - Not Allowed." />
+            </camunda:properties>
+            <camunda:value id="Yes" name="Yes" />
+            <camunda:value id="NA" name="NA, paper documents will not be shipped" />
+          </camunda:formField>
+          <camunda:formField id="DataTransmissionMethodEncrypted" label="Data encrypted on an individual use device and shipped using trackable method. Password to the encrypted data transmitted separately." type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="markdown_description" value="**Note:** Examples of individual use devices: CD, thumb drive, etc." />
+            </camunda:properties>
+            <camunda:value id="Yes" name="Yes" />
+            <camunda:value id="NA" name="NA, paper documents will not be shipped" />
+          </camunda:formField>
+          <camunda:formField id="DataTransmissionMethodFaxed" label="Data faxed to a receiving machine in a restricted-access location. The intended recipient is clearly indicated, alerted to the pending transmission and available to pick up immediately." type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="markdown_description" value="**Note:** By checking this option, you are also confirming you will verify FAX numbers before faxing and use FAX cover sheet with a confidentiality statement." />
+            </camunda:properties>
+            <camunda:value id="Yes" name="Yes" />
+            <camunda:value id="NA" name="NA, data will not be faxed" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1mnmo6p</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0lere0k</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_EnterDSPTeamNotes" name="Enter DSP Team Notes" camunda:formKey="EnterTeamNotes">
+      <bpmn:documentation>Data Security Plan Study Team Notes</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="TeamNotesType" label="DSP Note Type:" type="enum">
+            <camunda:properties>
+              <camunda:property id="group" value="TeamNotes" />
+              <camunda:property id="repeat" value="TeamNotes" />
+            </camunda:properties>
+            <camunda:value id="nitial" name="Initial DSP Submission Notes" />
+            <camunda:value id="RevPre" name="DSP Revisions - Pre-Study Initial IRB Approval" />
+            <camunda:value id="RevPost" name="DSP Revisions - Post-Study IRB Approval" />
+          </camunda:formField>
+          <camunda:formField id="TeamNotes" label="DSP Study Team Notes:" type="textarea">
+            <camunda:properties>
+              <camunda:property id="group" value="TeamNotes" />
+              <camunda:property id="repeat" value="TeamNotes" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_14p4mbl</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_18ik6tv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_02pq2w4</bpmn:outgoing>
+      <bpmn:standardLoopCharacteristics />
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_151cj59">
+      <bpmn:incoming>Flow_0bvraie</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_02pq2w4" sourceRef="Task_EnterDSPTeamNotes" targetRef="Task_Create_DSP" />
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0pi0c2d" name="Outside of UVa?">
+      <bpmn:incoming>SequenceFlow_0mgwas4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_01hl869</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_18ik6tv</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_01hl869" name="Yes" sourceRef="ExclusiveGateway_0pi0c2d" targetRef="ExclusiveGateway_0x3t2vl">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">DateTransmittedOutside == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:parallelGateway id="ExclusiveGateway_0x3t2vl">
+      <bpmn:incoming>SequenceFlow_01hl869</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1i8e52t</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_12bv2i4</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1mnmo6p</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_18ik6tv" name="No" sourceRef="ExclusiveGateway_0pi0c2d" targetRef="Task_EnterDSPTeamNotes">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">DateTransmittedOutside == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_100w7co" sourceRef="StartEvent_1co48s3" targetRef="Task_0q6ir2l" />
+    <bpmn:userTask id="Task_196zozc" name="View Definitions &#38; Instructions" camunda:formKey="def_temp_ack">
+      <bpmn:documentation>#### Collection &amp; storage of research data at UVA
+
+• Include the HIPAA identifier if you are collecting, recording or receiving any of these items for a potential subject, an enrolled subject, a subject’s relative, household member or employer.
+
+• Include the HIPAA identifier even if you are recording any item below temporarily while the information is being collected.
+
+• Keep in mind that the information below includes data collected via photographs, video, audiotapes, and systems like IVRS (Interactive Voice Response System)
+
+• If you list no HIPAA identifier to all items it means you would never be able to go back and obtain any additional information about an individual.
+
+##### Important 
+Indicate all the possible formats in which you will collect or receive your original source documentation at UVA. Also indicate any locations where it might be stored long term at UVA. Options should be selected even if the data is only temporarily stored in that format. Check all that apply for each category. If "Other" selected, please provide a brief description.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="def_ack" label="I have read definitions" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+            </camunda:properties>
+            <camunda:value id="def_ack" name="Yes" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0blyor8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1oq4w2h</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1oq4w2h" sourceRef="Task_196zozc" targetRef="ExclusiveGateway_0b16kmf" />
+    <bpmn:sequenceFlow id="SequenceFlow_0m2op9s" sourceRef="Task_0q6ir2l" targetRef="Task_0uotpzg" />
+    <bpmn:sequenceFlow id="SequenceFlow_0jyty9m" sourceRef="Task_0uotpzg" targetRef="Task_EnterHIPAAIdentifiers" />
+    <bpmn:sequenceFlow id="SequenceFlow_0blyor8" sourceRef="Task_EnterHIPAAIdentifiers" targetRef="Task_196zozc" />
+    <bpmn:userTask id="Task_0q6ir2l" name="View Instructions" camunda:formKey="asf">
+      <bpmn:documentation>##### Instructions
+
+Overview: You should consult with UVA Information Security (InfoSec) while completing this Step if your protocol will involve highly technical issues such as the creation of a website to collect data, software application development, the use of a smart phone app, or if you plan to store identifiable data onto an individual use device such as a tablet, laptop, or camera. Otherwise, answer the questions on this Step to create the Data Security Plan for your study. After you submit this Step, you can view the resulting Data Security Plan and assessment outcomes on the Data Security Plan Upload Step and submit your plan for UVA Information Security (InfoSec) or IRB-HSR Review.
+
+You need a protocol to submit for this step. If you do not have a protocol, please go to IRB Protocol Builder to create the Protocol template.  Complete the template and upload.  
+
+UVA Information Security Contact Information:
+
+Website: UVA Office of Information Security
+Email: IT-Security@Virginia.edu
+
+HIPAA Reference: https://www.hhs.gov/hipaa/for-professionals/privacy/laws-regulations/index.html
+
+Process: The Study Team will answer the questions in this section to create the Data Security Plan and, if required, a Highly Sensitive Data Storage Request Form.
+
+How to The Data Security Plan is auto-generated based on your answers on this Step. You can save your information here and check the outcomes on the Data Security Plan Upload Step at any time.
+
+Submit the step only when you are ready. After you "Submit" the step, the information will not be available for editing.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="FormField_23d42bc" label="asdg" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_100w7co</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0m2op9s</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_0uotpzg" name="View HIPAA ID Instructions" camunda:formKey="sdhga">
+      <bpmn:documentation>• Include the HIPAA identifier if you are collecting, recording or receiving any of these items for a potential subject, an enrolled subject, a subject’s relative, household member or employer.
+
+• Include the HIPAA identifier even if you are recording any item below temporarily while the information is being collected.
+
+• Keep in mind that the information below includes data collected via photographs, video, audiotapes, and systems like IVRS (Interactive Voice Response System)
+
+• If you list no HIPAA identifier to all items it means you would never be able to go back and obtain any additional information about an individual.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="FormField_3l1fkli" label="asdgad" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0m2op9s</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0jyty9m</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1wzlqa1" sourceRef="Task_Create_DSP" targetRef="ExclusiveGateway_1ef1ype" />
+    <bpmn:userTask id="Task_Create_DSP" name="Create DSP?" camunda:formKey="Create_DSP">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="FormField_isCreateDSP" label="Create DSP?" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_02pq2w4</bpmn:incoming>
+      <bpmn:incoming>Flow_1wgcnrc</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1wzlqa1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_1ef1ype">
+      <bpmn:incoming>SequenceFlow_1wzlqa1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_07rwety</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1huif01</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_07rwety" name="Yes" sourceRef="ExclusiveGateway_1ef1ype" targetRef="Task_0q2zf9x">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">FormField_isCreateDSP == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0v51xcx" sourceRef="Task_0q2zf9x" targetRef="Activity_0kxjyy1" />
+    <bpmn:scriptTask id="Task_0q2zf9x" name="Generate DSP">
+      <bpmn:incoming>SequenceFlow_07rwety</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0v51xcx</bpmn:outgoing>
+      <bpmn:script>scripts.CompleteTemplate NEW_SP_template.docx</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1huif01" name="No" sourceRef="ExclusiveGateway_1ef1ype" targetRef="Activity_0kxjyy1">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">FormField_isCreateDSP == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0gejicg" sourceRef="Activity_0kxjyy1" targetRef="Gateway_1yxsvlc" />
+    <bpmn:userTask id="Activity_0kxjyy1" name="Answer Done?" camunda:formKey="DSP_Done">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="FormField_DSP_Done" label="Done?" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0v51xcx</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1huif01</bpmn:incoming>
+      <bpmn:outgoing>Flow_0gejicg</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_1yxsvlc">
+      <bpmn:incoming>Flow_0gejicg</bpmn:incoming>
+      <bpmn:outgoing>Flow_0bvraie</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1wgcnrc</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0bvraie" name="Yes" sourceRef="Gateway_1yxsvlc" targetRef="EndEvent_151cj59">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">FormField_DSP_Done == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1wgcnrc" name="No" sourceRef="Gateway_1yxsvlc" targetRef="Task_Create_DSP">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">FormField_DSP_Done == No</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_19ej1y2">
+      <bpmndi:BPMNShape id="StartEvent_1co48s3_di" bpmnElement="StartEvent_1co48s3">
+        <dc:Bounds x="-185" y="372" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_16imtaa_di" bpmnElement="Task_EnterHIPAAIdentifiers">
+        <dc:Bounds x="225" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_03qblyb_di" bpmnElement="ExclusiveGateway_0b16kmf">
+        <dc:Bounds x="535" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1i6ac9a_di" bpmnElement="SequenceFlow_1i6ac9a">
+        <di:waypoint x="560" y="365" />
+        <di:waypoint x="560" y="120" />
+        <di:waypoint x="640" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1wsga3m_di" bpmnElement="Task_EnterPaperDocuments">
+        <dc:Bounds x="640" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_084dyht_di" bpmnElement="SequenceFlow_084dyht">
+        <di:waypoint x="560" y="365" />
+        <di:waypoint x="560" y="220" />
+        <di:waypoint x="640" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_10g92nf_di" bpmnElement="SequenceFlow_10g92nf">
+        <di:waypoint x="560" y="365" />
+        <di:waypoint x="560" y="320" />
+        <di:waypoint x="640" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0pw57x9_di" bpmnElement="SequenceFlow_0pw57x9">
+        <di:waypoint x="560" y="415" />
+        <di:waypoint x="560" y="440" />
+        <di:waypoint x="640" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ng3fm8_di" bpmnElement="SequenceFlow_0ng3fm8">
+        <di:waypoint x="560" y="415" />
+        <di:waypoint x="560" y="550" />
+        <di:waypoint x="640" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0o1xjub_di" bpmnElement="Task_EnterEmailedUVAPersonnel">
+        <dc:Bounds x="640" y="180" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1gnbchf_di" bpmnElement="Task_EnterEMR">
+        <dc:Bounds x="640" y="280" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0a4bj92_di" bpmnElement="Task_EnterUVAApprovedECRF">
+        <dc:Bounds x="640" y="400" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1f2b80a_di" bpmnElement="Task_EnterUVaServersWebsites">
+        <dc:Bounds x="640" y="510" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0obqjjx_di" bpmnElement="SequenceFlow_0obqjjx">
+        <di:waypoint x="560" y="415" />
+        <di:waypoint x="560" y="650" />
+        <di:waypoint x="640" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0n3jbd7_di" bpmnElement="Task_EnterWebCloudServer">
+        <dc:Bounds x="640" y="610" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0z10m1d_di" bpmnElement="SequenceFlow_0z10m1d">
+        <di:waypoint x="740" y="320" />
+        <di:waypoint x="820" y="320" />
+        <di:waypoint x="820" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ParallelGateway_0zl5t7b_di" bpmnElement="ExclusiveGateway_06kvl84">
+        <dc:Bounds x="795" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1q6gf6w_di" bpmnElement="SequenceFlow_1q6gf6w">
+        <di:waypoint x="740" y="120" />
+        <di:waypoint x="820" y="120" />
+        <di:waypoint x="820" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12cos7w_di" bpmnElement="SequenceFlow_12cos7w">
+        <di:waypoint x="740" y="220" />
+        <di:waypoint x="820" y="220" />
+        <di:waypoint x="820" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1agmshr_di" bpmnElement="SequenceFlow_1agmshr">
+        <di:waypoint x="740" y="440" />
+        <di:waypoint x="820" y="440" />
+        <di:waypoint x="820" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1xp62py_di" bpmnElement="SequenceFlow_1xp62py">
+        <di:waypoint x="740" y="550" />
+        <di:waypoint x="820" y="550" />
+        <di:waypoint x="820" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_10fsxk4_di" bpmnElement="SequenceFlow_10fsxk4">
+        <di:waypoint x="740" y="650" />
+        <di:waypoint x="820" y="650" />
+        <di:waypoint x="820" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0nc6lcs_di" bpmnElement="SequenceFlow_0nc6lcs">
+        <di:waypoint x="845" y="390" />
+        <di:waypoint x="940" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0q8o038_di" bpmnElement="Task_EnterIndividualUseDevices">
+        <dc:Bounds x="940" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0gp2pjm_di" bpmnElement="SequenceFlow_0gp2pjm">
+        <di:waypoint x="1040" y="390" />
+        <di:waypoint x="1110" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0mgwas4_di" bpmnElement="SequenceFlow_0mgwas4">
+        <di:waypoint x="1210" y="390" />
+        <di:waypoint x="1255" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1i8e52t_di" bpmnElement="SequenceFlow_1i8e52t">
+        <di:waypoint x="1410" y="365" />
+        <di:waypoint x="1410" y="250" />
+        <di:waypoint x="1510" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_10x8kgc_di" bpmnElement="Task_EnterOutsideUVA">
+        <dc:Bounds x="1110" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1x8azom_di" bpmnElement="Task_EnterEmailMethods">
+        <dc:Bounds x="1510" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_12bv2i4_di" bpmnElement="SequenceFlow_12bv2i4">
+        <di:waypoint x="1435" y="390" />
+        <di:waypoint x="1510" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1r640re_di" bpmnElement="Task_EnterDataManagement">
+        <dc:Bounds x="1510" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1mnmo6p_di" bpmnElement="SequenceFlow_1mnmo6p">
+        <di:waypoint x="1410" y="415" />
+        <di:waypoint x="1410" y="530" />
+        <di:waypoint x="1510" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_08rwbhm_di" bpmnElement="SequenceFlow_08rwbhm">
+        <di:waypoint x="1610" y="390" />
+        <di:waypoint x="1685" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ParallelGateway_0cignbh_di" bpmnElement="ExclusiveGateway_1lpm3pa">
+        <dc:Bounds x="1685" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0uewki3_di" bpmnElement="SequenceFlow_0uewki3">
+        <di:waypoint x="1610" y="250" />
+        <di:waypoint x="1710" y="250" />
+        <di:waypoint x="1710" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0lere0k_di" bpmnElement="SequenceFlow_0lere0k">
+        <di:waypoint x="1610" y="530" />
+        <di:waypoint x="1710" y="530" />
+        <di:waypoint x="1710" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_14p4mbl_di" bpmnElement="SequenceFlow_14p4mbl">
+        <di:waypoint x="1735" y="390" />
+        <di:waypoint x="1810" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_0ns9m8t_di" bpmnElement="Task_EnterTransmissionMethod">
+        <dc:Bounds x="1510" y="490" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1s134j8_di" bpmnElement="Task_EnterDSPTeamNotes">
+        <dc:Bounds x="1810" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_151cj59_di" bpmnElement="EndEvent_151cj59">
+        <dc:Bounds x="2742" y="372" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_02pq2w4_di" bpmnElement="SequenceFlow_02pq2w4">
+        <di:waypoint x="1910" y="390" />
+        <di:waypoint x="1959" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ExclusiveGateway_0pi0c2d_di" bpmnElement="ExclusiveGateway_0pi0c2d" isMarkerVisible="true">
+        <dc:Bounds x="1255" y="365" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1240" y="341" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_01hl869_di" bpmnElement="SequenceFlow_01hl869">
+        <di:waypoint x="1305" y="390" />
+        <di:waypoint x="1385" y="390" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1336" y="372" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ParallelGateway_1284xgu_di" bpmnElement="ExclusiveGateway_0x3t2vl">
+        <dc:Bounds x="1385" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_18ik6tv_di" bpmnElement="SequenceFlow_18ik6tv">
+        <di:waypoint x="1280" y="415" />
+        <di:waypoint x="1280" y="610" />
+        <di:waypoint x="1860" y="610" />
+        <di:waypoint x="1860" y="430" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1563" y="592" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_100w7co_di" bpmnElement="SequenceFlow_100w7co">
+        <di:waypoint x="-149" y="390" />
+        <di:waypoint x="-89" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1nybxz8_di" bpmnElement="Task_196zozc">
+        <dc:Bounds x="377" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1oq4w2h_di" bpmnElement="SequenceFlow_1oq4w2h">
+        <di:waypoint x="477" y="390" />
+        <di:waypoint x="535" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0m2op9s_di" bpmnElement="SequenceFlow_0m2op9s">
+        <di:waypoint x="11" y="390" />
+        <di:waypoint x="58" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0jyty9m_di" bpmnElement="SequenceFlow_0jyty9m">
+        <di:waypoint x="158" y="390" />
+        <di:waypoint x="225" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0blyor8_di" bpmnElement="SequenceFlow_0blyor8">
+        <di:waypoint x="325" y="390" />
+        <di:waypoint x="377" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1la1kj4_di" bpmnElement="Task_0q6ir2l">
+        <dc:Bounds x="-89" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1x7d94b_di" bpmnElement="Task_0uotpzg">
+        <dc:Bounds x="58" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1wzlqa1_di" bpmnElement="SequenceFlow_1wzlqa1">
+        <di:waypoint x="2059" y="390" />
+        <di:waypoint x="2127" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_19v750c_di" bpmnElement="Task_Create_DSP">
+        <dc:Bounds x="1959" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_1ef1ype_di" bpmnElement="ExclusiveGateway_1ef1ype" isMarkerVisible="true">
+        <dc:Bounds x="2127" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_07rwety_di" bpmnElement="SequenceFlow_07rwety">
+        <di:waypoint x="2177" y="390" />
+        <di:waypoint x="2254" y="390" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2207" y="372" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0v51xcx_di" bpmnElement="SequenceFlow_0v51xcx">
+        <di:waypoint x="2354" y="390" />
+        <di:waypoint x="2430" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ScriptTask_0c4dq75_di" bpmnElement="Task_0q2zf9x">
+        <dc:Bounds x="2254" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1huif01_di" bpmnElement="SequenceFlow_1huif01">
+        <di:waypoint x="2152" y="415" />
+        <di:waypoint x="2152" y="513" />
+        <di:waypoint x="2480" y="513" />
+        <di:waypoint x="2480" y="430" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2309" y="495" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0gejicg_di" bpmnElement="Flow_0gejicg">
+        <di:waypoint x="2530" y="390" />
+        <di:waypoint x="2595" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_0y3cxu2_di" bpmnElement="Activity_0kxjyy1">
+        <dc:Bounds x="2430" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1yxsvlc_di" bpmnElement="Gateway_1yxsvlc" isMarkerVisible="true">
+        <dc:Bounds x="2595" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0bvraie_di" bpmnElement="Flow_0bvraie">
+        <di:waypoint x="2645" y="390" />
+        <di:waypoint x="2742" y="390" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2685" y="372" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1wgcnrc_di" bpmnElement="Flow_1wgcnrc">
+        <di:waypoint x="2620" y="415" />
+        <di:waypoint x="2620" y="590" />
+        <di:waypoint x="2009" y="590" />
+        <di:waypoint x="2009" y="430" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2308" y="572" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

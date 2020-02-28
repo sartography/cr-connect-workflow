@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0be39yr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:collaboration id="Collaboration_1c9d1zt">
+    <bpmn:participant id="SP_CRC_Enter_Core_Info" name="CR Connect 2" processRef="CRC_Enter_Core_Info" />
+  </bpmn:collaboration>
+  <bpmn:process id="CRC_Enter_Core_Info" name="Enter Core Info" isExecutable="true">
+    <bpmn:sequenceFlow id="SequenceFlow_1nyebxq" sourceRef="ParallelGateway_0x50y2p" targetRef="UserTask_1tmqx78" />
+    <bpmn:sequenceFlow id="SequenceFlow_0vnit5w" sourceRef="UserTask_1tmqx78" targetRef="ParallelGateway_0uesolv" />
+    <bpmn:sequenceFlow id="SequenceFlow_0s6lscl" sourceRef="ParallelGateway_0x50y2p" targetRef="UserTask_034mwob" />
+    <bpmn:sequenceFlow id="SequenceFlow_12u08ph" sourceRef="UserTask_034mwob" targetRef="ParallelGateway_0uesolv" />
+    <bpmn:sequenceFlow id="SequenceFlow_0tl6dtl" sourceRef="ParallelGateway_0x50y2p" targetRef="UserTask_1ubwe2g" />
+    <bpmn:sequenceFlow id="SequenceFlow_1049qrj" sourceRef="UserTask_1ubwe2g" targetRef="ParallelGateway_0uesolv" />
+    <bpmn:sequenceFlow id="SequenceFlow_0xfv8yt" sourceRef="StartEvent_1k8r624" targetRef="ParallelGateway_0x50y2p" />
+    <bpmn:sequenceFlow id="SequenceFlow_1bdgyx8" sourceRef="ParallelGateway_0x50y2p" targetRef="UserTask_0vmwq3j" />
+    <bpmn:sequenceFlow id="SequenceFlow_1vfbg50" sourceRef="UserTask_0vmwq3j" targetRef="ParallelGateway_0uesolv" />
+    <bpmn:sequenceFlow id="SequenceFlow_0skynyx" sourceRef="ParallelGateway_0uesolv" targetRef="EndEvent_0d4jix4" />
+    <bpmn:userTask id="UserTask_1tmqx78" name="Enter Study Info" camunda:formKey="form_key_enter_study_info">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="StudyShortName" label="Study Short Name" type="string">
+            <camunda:properties>
+              <camunda:property id="help" value="- This title is primarily used for Office of Grants and Contracts / Office of Sponsored Programs (OGC/OSP) related processes.\n- Length limit: 30 characters. It is automatically populated on Save based on School, Award Owning Organization, PI&#39;s computing ID, and study short name provided earlier and used for the workflow." />
+              <camunda:property id="description" value="Important: Until the system integration with ResearchUVa is in place, for consistency and alignment, please remember to enter this same title when you complete ePRF information in ResearchUVa." />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="FullProtocolTitle" label="Full Protocol Title" type="string">
+            <camunda:properties>
+              <camunda:property id="help" value="### Important\nThis title is included in auto-generated signature documents and email communications with stakeholders throughout study start-up. It is **VERY** important that you use the same title here and in IRB Protocol Builder. If the titles do not match, it is possible the IRB-HSR will ask you to redo all your submissions." />
+              <camunda:property id="rows" value="2" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="StudyType" label="Study Type" type="enum">
+            <camunda:properties>
+              <camunda:property id="help" value="- Basic Science (BAS): Protocol designed to examine the basic mechanisms of action (e.g., physiology, biomechanics) of an intervention.\n- Diagnostic (DIA): Protocol designed to evaluate one or more interventions aimed at identifying a disease or health condition.\n- Health Services Research (HSR): Protocol designed to evaluate the delivery, processes, management, organization, or financing of health care.\n- Prevention (PRE): Protocol designed to assess one or more interventions aimed at preventing the development of a specific disease or health condition.\n- Screening (SCR): Protocol designed to assess or examine methods of identifying a condition (or risk factor for a condition) in people who are not yet known to have the condition (or risk factor).\n- Supportive Care (SUP): Protocol designed to evaluate one or more interventions where the primary intent is to maximize comfort, minimize side effects, or mitigate against a decline in the participant’s health or function. In general, supportive care interventions are not intended to cure a disease.\n- Treatment (TRE): Protocol designed to evaluate one or more interventions for treating a disease, syndrome, or condition.\n- Other (OTH): Not in other categories\n- Retrospective ONLY (sub-category of HSR)" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="BAS" name="Basic Science / Biospecimen" />
+            <camunda:value id="DIA" name="Diagnostic" />
+            <camunda:value id="HSR" name="Health Services Research / Observational / Registry / Outcome / Econ" />
+            <camunda:value id="PRE" name="Prevention" />
+            <camunda:value id="SCR" name="Screening" />
+            <camunda:value id="SUP" name="Supportive Care" />
+            <camunda:value id="TRE" name="Treatment" />
+            <camunda:value id="HSR-Retro" name="Retrospective ONLY (sub-category of HSR)" />
+          </camunda:formField>
+          <camunda:formField id="StudyPhase" label="Study Phase" type="enum">
+            <camunda:value id="Zero" name="0" />
+            <camunda:value id="I" name="I" />
+            <camunda:value id="I-II" name="I/II" />
+            <camunda:value id="I-III" name="I/III" />
+            <camunda:value id="II" name="II" />
+            <camunda:value id="II-III" name="II/III" />
+            <camunda:value id="III" name="III" />
+            <camunda:value id="III-IV" name="III/IV" />
+            <camunda:value id="IV" name="IV" />
+            <camunda:value id="NA" name="NA" />
+            <camunda:value id="Pilot" name="Pilot" />
+            <camunda:value id="Pivotal" name="Pivotal" />
+          </camunda:formField>
+          <camunda:formField id="SubjectAge" label="Age of Subjects to be Enrolled in Study" type="enum">
+            <camunda:properties>
+              <camunda:property id="help" value="Additional Information: [NIH Age Definition](https://grants.nih.gov/grants/guide/notice-files/NOT-OD-16-010.html)" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="child" name="Child (Under 18 Years Old)" />
+            <camunda:value id="adult" name="Adult (18 Years and Older)" />
+            <camunda:value id="both" name="Both" />
+          </camunda:formField>
+          <camunda:formField id="UVaMedResFell" label="Is the study targeting UVA Medical Students, Residents, and/or Fellows?" type="boolean">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1nyebxq</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0vnit5w</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_034mwob" name="Enter Multi-Site Info" camunda:formKey="form_key_enter_multisite_info" camunda:priority="1">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="SiteInvolvement" label="Site Involvement" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="radio" />
+              <camunda:property id="help" value="Collaborative Analysis: a similar study being done by multiple sites for which there is NO sponsors/common protocol and data will only be shared for analysis purposes.\n\nFor additional Information visit:\n\nhttp://www.virginia.edu/vpr/irb/hsr/Multisite_Studies.html" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="signle_site" name="Single Site" />
+            <camunda:value id="multi_site" name="Multi-Site" />
+            <camunda:value id="collab_analysis" name="Collaborative Analysis" />
+          </camunda:formField>
+          <camunda:formField id="MultiSiteUVaLeadPI" label="For Multi-Site only - Is the UVA PI the Lead PI" type="boolean">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!(model.SiteInvolvement === &#39;multi_site&#39;)" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="SiteLocation" label="Site Location" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="radio" />
+            </camunda:properties>
+            <camunda:value id="US" name="US" />
+            <camunda:value id="OutsideUS" name="Outside US" />
+            <camunda:value id="Global" name="Global (US and outside US)" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0s6lscl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_12u08ph</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_0vmwq3j" name="Enter Clinical Trials.gov Info" camunda:formKey="form_key_enter_clinical_trials_info">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="CTG_NA" label="Not Applicable" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+            </camunda:properties>
+            <camunda:value id="enumNoRegister" name="Study does not need to be registered at ClinicalTrials.gov" />
+          </camunda:formField>
+          <camunda:formField id="CTG_NCT" label="Clinicaltrials.gov NCT #" type="string">
+            <camunda:properties>
+              <camunda:property id="description" value="It is the responsibility of Study Sponsor to register the study and obtain the #." />
+              <camunda:property id="help" value="#### How to\n\nThe format is NCT########. (11 characters total)" />
+              <camunda:property id="placeholder" value="Limit Length: 11" />
+              <camunda:property id="hide_expression" value="model.CTG_NA &#38;&#38; model.CTG_NA.enumNoRegister" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="CTG_StudyType" label="ClinicalTrials.gov Study Type" type="enum">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="model.CTG_NA &#38;&#38; model.CTG_NA.enumNoRegister" />
+            </camunda:properties>
+            <camunda:value id="Interv" name="Interventional" />
+            <camunda:value id="Obs" name="Observational" />
+            <camunda:value id="Obs_PR" name="Observational - Patient Registry" />
+            <camunda:value id="Exp_Acc" name="Expanded Access" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1bdgyx8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1vfbg50</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1oz7y6d" sourceRef="ParallelGateway_0x50y2p" targetRef="Task_1h8282e" />
+    <bpmn:sequenceFlow id="SequenceFlow_0vbmpyv" sourceRef="Task_1h8282e" targetRef="ParallelGateway_0uesolv" />
+    <bpmn:userTask id="Task_1h8282e" name="Enter Funding Info" camunda:formKey="form_key_enter_funding_info">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="NotGrant" label="Is there a contract for external funding? (Not a Grant)" type="boolean" defaultValue="No">
+            <camunda:properties>
+              <camunda:property id="help" value="For **contracts that include external funding**, an electronic proposal routing form (ePRF) will need to be submitted through ResearchUVA. The &#34;ePRF Completion in ResearchUVa&#34; Step will provide details for ePRF submission.\n\nIf study is funded by a grant, answer &#34;No&#34;.\n\n**External funding** means the award is funded by an entity outside the University of Virginia." />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="NonFundedAgreement" label="Is there a Non-Funded Agreement?" type="boolean">
+            <camunda:properties>
+              <camunda:property id="help" value="For **non-funded agreements** (material transfer agreements, data use agreements, etc), a non-funded agreement (NFA) form will need to be completed and submitted in the &#34;Non-Funded Agreement Submission&#34; Step.\n\nIf you are unsure which of the above applies to your agreement, please contact Lynn Koplin (lkv5c@virginia.edu) in the Office of Sponsored Programs." />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="ImmediateSourceFunds" label="Immediate Source of the Funds" type="enum">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="Federal" name="Federal" />
+            <camunda:value id="StateLocal" name="State/Local" />
+            <camunda:value id="Foundation" name="Foundation/Not for Profit" />
+            <camunda:value id="Industry" name="Industry" />
+            <camunda:value id="InternalDepartmental" name="Internal/Departmental (including gifts or philanthropy)" />
+            <camunda:value id="IncomingSubAward" name="Incoming Sub Award" />
+            <camunda:value id="NoFunding" name="No Funding" />
+            <camunda:value id="OtherCollegesUniversities" name="Other Colleges and Universities" />
+          </camunda:formField>
+          <camunda:formField id="ImmediateSourceFundsLegalName" label="Immediate Source Funds Legal Name" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1oz7y6d</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0vbmpyv</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="UserTask_1ubwe2g" name="Enter Protocol Owner Info" camunda:formKey="FormKey_EnterProtocolOwnerInfo">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="FormField_ProtocolOwnerInfo" label="What is the Protocol Owner?" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="dropdown" />
+              <camunda:property id="description" value="The protocol owner name is always an entity. For example, if this is a UVA Primary Investigator - Investigator initiated study, the Protocol Owner Name will be &#34;University of Virginia&#34;" />
+              <camunda:property id="help" value="**The protocol owner name is always an entity.** For example, if this is a UVA Primary Investigator - Investigator initiated study, the Protocol Owner Name will be &#39;University of Virginia&#39;.\n\n### **How To:**\nYou can find the name by typing any part (at least 3 characters) of the name.\nNote: This source of this list is in the Integration System (Oracle) and the information is owned by and managed by the OSP team.\n**If you are not finding the name or need to make any changes:**\n1. Email &#39;Information Team listserve&#39; osp-infoteam@virginia.edu with the Subject Line &#34;Requesting New Sponsor Setup&#34; and provide the following information:\n    - Sponsor Legal Name, Address, Sponsor Classification (Federal Government, Foreign Entity, Foundation, Industry, Local Government, Other Colleges &#38; Universities or State Government) as stated in the agreement/notification.\n    - Copies of the agreement from the sponsor (contract, award letter, email, etc.).\n2. Once all the required information is received, OSP will add the name to the list.\n3. The updated list should be available for your selection in the workflow within 2 business days." />
+            </camunda:properties>
+            <camunda:value id="Ind" name="Industry" />
+            <camunda:value id="IntPI" name="UVA Primary Investigator - Investigator Initiated" />
+            <camunda:value id="OutPI" name="Outside Primary Investigator - Investigator Initiated" />
+            <camunda:value id="CoopGrp" name="Cooperative Group" />
+            <camunda:value id="OthColUni" name="Other Colleges and Universities" />
+          </camunda:formField>
+          <camunda:formField id="ProtocolOwnerName" label="Protocol Owner Name" type="string">
+            <camunda:properties>
+              <camunda:property id="placeholder" value="Need Oracle lookup" />
+              <camunda:property id="help" value="**The protocol owner name is always an entity.** For example, if this is a UVA Primary Investigator - Investigator initiated study, the Protocol Owner Name will be &#34;University of Virginia&#34;.\n\n#### How To:\nYou can find the name by typing any part (at least 3 characters) of the name.\n\nNote: This source of this list is in the Integration System (Oracle) and the information is owned by and managed by the OSP team.\n\nIf you are not finding the name or need to make any changes.\n1. Email &#39;Information Team listserve&#39; osp-infoteam@virginia.edu with the Subject Line &#34;Requesting New Sponsor Setup&#34; and provide the following information:\n   - Sponsor Legal Name, Address, Sponsor Classification (Federal Government, Foreign Entity, Foundation, Industry, Local Government, Other Colleges &#38; Universities or State Government) as stated in the agreement/notification.\n   - Copies of the agreement from the sponsor (contract, award letter, email, etc.).\n2. Once all the required information is received, OSP will add the name to the list.\n3. The updated list should be available for your selection in the workflow within 2 business days." />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="FormFieldPOHigherEd" label="Is the owner part of an institution of higher education?" type="boolean">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0tl6dtl</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1049qrj</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="ParallelGateway_0x50y2p">
+      <bpmn:incoming>SequenceFlow_0xfv8yt</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1nyebxq</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0s6lscl</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0tl6dtl</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1bdgyx8</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1oz7y6d</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:parallelGateway id="ParallelGateway_0uesolv">
+      <bpmn:incoming>SequenceFlow_0vnit5w</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_12u08ph</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1049qrj</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_1vfbg50</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0vbmpyv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0skynyx</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:endEvent id="EndEvent_0d4jix4">
+      <bpmn:incoming>SequenceFlow_0skynyx</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="StartEvent_1k8r624">
+      <bpmn:outgoing>SequenceFlow_0xfv8yt</bpmn:outgoing>
+    </bpmn:startEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1c9d1zt">
+      <bpmndi:BPMNShape id="Participant_0a9xv3i_di" bpmnElement="SP_CRC_Enter_Core_Info" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="620" height="570" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1k8r624_di" bpmnElement="StartEvent_1k8r624">
+        <dc:Bounds x="218" y="347" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1tmqx78_di" bpmnElement="UserTask_1tmqx78">
+        <dc:Bounds x="430" y="120" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_034mwob_di" bpmnElement="UserTask_034mwob">
+        <dc:Bounds x="430" y="220" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1ubwe2g_di" bpmnElement="UserTask_1ubwe2g">
+        <dc:Bounds x="430" y="430" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_0x50y2p_di" bpmnElement="ParallelGateway_0x50y2p">
+        <dc:Bounds x="305" y="340" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_0uesolv_di" bpmnElement="ParallelGateway_0uesolv">
+        <dc:Bounds x="605" y="340" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0d4jix4_di" bpmnElement="EndEvent_0d4jix4">
+        <dc:Bounds x="708" y="347" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0vmwq3j_di" bpmnElement="UserTask_0vmwq3j">
+        <dc:Bounds x="430" y="530" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0xfv8yt_di" bpmnElement="SequenceFlow_0xfv8yt">
+        <di:waypoint x="254" y="365" />
+        <di:waypoint x="305" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1nyebxq_di" bpmnElement="SequenceFlow_1nyebxq">
+        <di:waypoint x="330" y="340" />
+        <di:waypoint x="330" y="160" />
+        <di:waypoint x="430" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0vnit5w_di" bpmnElement="SequenceFlow_0vnit5w">
+        <di:waypoint x="530" y="160" />
+        <di:waypoint x="630" y="160" />
+        <di:waypoint x="630" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0s6lscl_di" bpmnElement="SequenceFlow_0s6lscl">
+        <di:waypoint x="355" y="365" />
+        <di:waypoint x="390" y="365" />
+        <di:waypoint x="390" y="260" />
+        <di:waypoint x="430" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12u08ph_di" bpmnElement="SequenceFlow_12u08ph">
+        <di:waypoint x="530" y="260" />
+        <di:waypoint x="570" y="260" />
+        <di:waypoint x="570" y="365" />
+        <di:waypoint x="605" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0tl6dtl_di" bpmnElement="SequenceFlow_0tl6dtl">
+        <di:waypoint x="355" y="365" />
+        <di:waypoint x="390" y="365" />
+        <di:waypoint x="390" y="470" />
+        <di:waypoint x="430" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1049qrj_di" bpmnElement="SequenceFlow_1049qrj">
+        <di:waypoint x="530" y="470" />
+        <di:waypoint x="570" y="470" />
+        <di:waypoint x="570" y="365" />
+        <di:waypoint x="605" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1bdgyx8_di" bpmnElement="SequenceFlow_1bdgyx8">
+        <di:waypoint x="330" y="390" />
+        <di:waypoint x="330" y="570" />
+        <di:waypoint x="430" y="570" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1vfbg50_di" bpmnElement="SequenceFlow_1vfbg50">
+        <di:waypoint x="530" y="570" />
+        <di:waypoint x="630" y="570" />
+        <di:waypoint x="630" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0skynyx_di" bpmnElement="SequenceFlow_0skynyx">
+        <di:waypoint x="655" y="365" />
+        <di:waypoint x="708" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1oz7y6d_di" bpmnElement="SequenceFlow_1oz7y6d">
+        <di:waypoint x="355" y="365" />
+        <di:waypoint x="430" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0vbmpyv_di" bpmnElement="SequenceFlow_0vbmpyv">
+        <di:waypoint x="530" y="365" />
+        <di:waypoint x="605" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1ny72v6_di" bpmnElement="Task_1h8282e">
+        <dc:Bounds x="430" y="325" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

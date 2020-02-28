@@ -50,10 +50,25 @@ class ExampleDataLoader:
         ]
 
         workflow_specifications = \
-            self.create_spec(id="m2_demo",
-                             name="m2_demo",
-                             display_name="Milestone 2 Demo",
-                             description='A simplified CR Connect workflow for demonstration purposes.')
+            self.create_spec(id="crc2_training_session_enter_core_info",
+                             name="crc2_training_session_enter_core_info",
+                             display_name="CR Connect2 - Training Session - Core Info",
+                             description='Part of Milestone 3 Deliverable')
+        workflow_specifications += \
+        self.create_spec(id="crc2_training_session_data_security_plan",
+                         name="crc2_training_session_data_security_plan",
+                         display_name="CR Connect2 - Training Session - Data Security Plan",
+                         description='Part of Milestone 3 Deliverable')
+        workflow_specifications += \
+        self.create_spec(id="sponsor_funding_source",
+                         name="sponsor_funding_source",
+                         display_name="Sponsor and/or Funding Source ",
+                         description='TBD')
+        # workflow_specifications += \
+        # self.create_spec(id="m2_demo",
+        #                  name="m2_demo",
+        #                  display_name="Milestone 2 Demo",
+        #                  description='A simplified CR Connect workflow for demonstration purposes.')
         # workflow_specifications += \
         #     self.create_spec(id="crc_study_workflow",
         #                      name="crc_study_workflow",
