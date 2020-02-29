@@ -42,7 +42,7 @@ class CompleteTemplate(object):
                            message="Can not find a file called '%s' "
                                    "within workflow specification '%s'") % (args[0], workflow_spec_model.id)
 
-        final_document_stream = self.make_template(file_data_model, task.data)
+        final_document_stream = self.make_template(BytesIO(file_data_model.data), task.data)
         study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         FileService.add_task_file(study_id=study_id, workflow_id=workflow_id, task_id=task.id,
@@ -52,8 +52,8 @@ class CompleteTemplate(object):
 
         print("Complete Task was called with %s" % str(args))
 
-    def make_template(self, file_data_model, context):
-        doc = DocxTemplate(BytesIO(file_data_model.data))
+    def make_template(self, binary_stream, context):
+        doc = DocxTemplate(binary_stream)
         jinja_env = jinja2.Environment(autoescape=True)
         doc.render(context, jinja_env)
         target_stream = BytesIO()

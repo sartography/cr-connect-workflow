@@ -585,12 +585,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Task"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /workflow/{workflow_id}/task/{task_id}/data:
     parameters:
       - name: workflow_id
@@ -629,6 +623,63 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
+  /render_markdown:
+    parameters:
+      - name: data
+        in: query
+        required: true
+        description: The json data to use in populating the template
+        schema:
+          type: string
+      - name: template
+        in: query
+        required: true
+        description: The markdown template to process.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.tools.render_markdown
+      summary: Processes the markdown template using the data provided.
+      tags:
+        - Configurator Tools
+      responses:
+        '201':
+          description: Returns the updated workflow with the task completed.
+          content:
+            text/plain:
+              schema:
+                type: string
+  /render_docx:
+    parameters:
+      - name: data
+        in: query
+        required: true
+        description: The json data to use in populating the template
+        schema:
+          type: string
+    put:
+      operationId: crc.api.tools.render_docx
+      summary: Renders a docx template with embedded jinja2 markup.
+      tags:
+        - Configurator Tools
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Returns the generated document.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
 
 components:
   schemas:

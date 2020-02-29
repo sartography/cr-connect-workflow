@@ -1,7 +1,7 @@
 import enum
 
 import marshmallow
-from jinja2 import Environment, BaseLoader
+from jinja2 import Environment, BaseLoader, Undefined, Template
 from marshmallow import INCLUDE
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import ModelSchema
@@ -38,7 +38,6 @@ class WorkflowModel(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
 
-
 class Task(object):
     def __init__(self, id, name, title, type, state, form, documentation, data):
         self.id = id
@@ -67,14 +66,16 @@ class Task(object):
         if hasattr(spiff_task.task_spec, "form"):
             instance.form = spiff_task.task_spec.form
         if documentation != "" and documentation is not None:
+
             instance.process_documentation(documentation)
         return instance
 
     def process_documentation(self, documentation):
         '''Runs markdown documentation through the Jinja2 processor to inject data
         create loops, etc...'''
-        rtemplate = Environment(autoescape=True, loader=BaseLoader).from_string(documentation)
-        self.documentation = rtemplate.render(**self.data)
+
+        template = Template(documentation)
+        self.documentation = template.render(**self.data)
 
 
 class OptionSchema(ma.Schema):
