@@ -52,10 +52,7 @@ class Task(object):
 
     @classmethod
     def from_spiff(cls, spiff_task):
-        try:
-            documentation = spiff_task.task_spec.documentation
-        except AttributeError:
-            documentation = ""
+        documentation = spiff_task.task_spec.documentation if hasattr(spiff_task.task_spec, "documentation") else ""
         instance = cls(spiff_task.id,
                        spiff_task.task_spec.name,
                        spiff_task.task_spec.description,
