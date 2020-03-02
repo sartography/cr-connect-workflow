@@ -68,10 +68,9 @@ class TestStudyApi(BaseTest):
         db_studies_before = session.query(StudyModel).all()
         num_db_studies_before = len(db_studies_before)
 
+        # Mock Protocol Builder response
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
-        # pb_response = ProtocolBuilderService.get_studies(self.test_uid)
-        # self.assertIsNotNone(pb_response)
 
         self.load_example_data()
         api_response = self.app.get('/v1.0/study',
@@ -79,11 +78,6 @@ class TestStudyApi(BaseTest):
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(api_response)
-
-        db_studies_after = session.query(StudyModel).all()
-        num_db_studies_after = len(db_studies_after)
-        self.assertGreater(num_db_studies_after, num_db_studies_before)
-
         json_data = json.loads(api_response.get_data(as_text=True))
         api_studies = StudyModelSchema(many=True).load(json_data, session=session)
 
@@ -96,8 +90,13 @@ class TestStudyApi(BaseTest):
             else:
                 num_active += 1
 
-        self.assertEqual(num_inactive, num_db_studies_before)
-        self.assertEqual(num_active, num_db_studies_after - num_db_studies_before)
+        db_studies_after = session.query(StudyModel).all()
+        num_db_studies_after = len(db_studies_after)
+        self.assertGreater(num_db_studies_after, num_db_studies_before)
+        self.assertGreater(num_inactive, 0)
+        self.assertGreater(num_active, 0)
+        self.assertEqual(len(api_studies), num_db_studies_after)
+        self.assertEqual(num_active + num_inactive, num_db_studies_after)
 
     def test_study_api_get_single_study(self):
         self.load_example_data()
