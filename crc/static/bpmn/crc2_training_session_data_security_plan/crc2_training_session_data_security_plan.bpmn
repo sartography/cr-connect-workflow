@@ -69,7 +69,7 @@
     </bpmn:parallelGateway>
     <bpmn:sequenceFlow id="SequenceFlow_1i6ac9a" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterPaperDocuments" />
     <bpmn:userTask id="Task_EnterPaperDocuments" name="Enter Paper Documents" camunda:formKey="Enter_Paper_Documents">
-      <bpmn:documentation>A) Paper documents:</bpmn:documentation>
+      <bpmn:documentation>Paper documents:</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="CollStorUVaLocPaperTypes" label="Check all that apply" type="enum">
@@ -91,7 +91,7 @@
     <bpmn:sequenceFlow id="SequenceFlow_0pw57x9" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterUVAApprovedECRF" />
     <bpmn:sequenceFlow id="SequenceFlow_0ng3fm8" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterUVaServersWebsites" />
     <bpmn:userTask id="Task_EnterEmailedUVAPersonnel" name="Enter Emailed to UVA Personnel" camunda:formKey="EnterEmailedUVAPersonnel">
-      <bpmn:documentation>B) Emailed to other UVA personnel:</bpmn:documentation>
+      <bpmn:documentation>Emailed to other UVA personnel:</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="CollStorUVaLocEmailUVaTypes" label="Check all that apply:" type="enum">
@@ -108,7 +108,7 @@
       <bpmn:outgoing>SequenceFlow_12cos7w</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Task_EnterEMR" name="Enter EMR (EPIC)" camunda:formKey="EnterEMR">
-      <bpmn:documentation>C) Electronic Medical Record (EPIC):</bpmn:documentation>
+      <bpmn:documentation>Electronic Medical Record (EPIC):</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="CollStorUVaLocEMR" label="Data will be collected in EPIC as part of routine care or as part of medical center encounters during the research study" type="enum" defaultValue="Not Applicable">
@@ -126,7 +126,7 @@
       <bpmn:outgoing>SequenceFlow_0z10m1d</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Task_EnterUVAApprovedECRF" name="Enter UVA Approved eCRF" camunda:formKey="EnterUVaApprovedECRF">
-      <bpmn:documentation>D) UVA approved eCRF or clinical trials management system:</bpmn:documentation>
+      <bpmn:documentation>UVA approved eCRF or clinical trials management system:</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="CollStorUVaLocCTMSTypes" label="Check all that apply:" type="enum">
@@ -157,7 +157,7 @@
       <bpmn:outgoing>SequenceFlow_1agmshr</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Task_EnterUVaServersWebsites" name="Enter UVA Servers &#38; Websites" camunda:formKey="EnterUVaServersWebsites">
-      <bpmn:documentation>E) UVA servers &amp; websites:</bpmn:documentation>
+      <bpmn:documentation>UVA servers &amp; websites:</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="CollStorUVaLocUVaServersWebsites" label="Check all that apply:" type="enum">
@@ -194,7 +194,7 @@
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_0obqjjx" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterWebCloudServer" />
     <bpmn:userTask id="Task_EnterWebCloudServer" name="Enter Web or Cloud Server" camunda:formKey="EnterWebCloudServer">
-      <bpmn:documentation>F) Web-based server, cloud server, or any non-centrally managed server (not listed above):</bpmn:documentation>
+      <bpmn:documentation>Web-based server, cloud server, or any non-centrally managed server (not entered previously):</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="CollStorUVaLocWebCloud" label="Will data be collected and/or stored on a web-based server, cloud server or any non-centrally UVA managed server?" type="boolean" />
@@ -252,7 +252,7 @@
     <bpmn:sequenceFlow id="SequenceFlow_10fsxk4" sourceRef="Task_EnterWebCloudServer" targetRef="ExclusiveGateway_06kvl84" />
     <bpmn:sequenceFlow id="SequenceFlow_0nc6lcs" sourceRef="ExclusiveGateway_06kvl84" targetRef="Task_EnterIndividualUseDevices" />
     <bpmn:userTask id="Task_EnterIndividualUseDevices" name="Enter Individual Use Devices" camunda:formKey="EnterIndividualUseDevices">
-      <bpmn:documentation>G) Answer the questions for each of the Individual Use Devices that you use to collect or store your data onto your individual use device during the course of your research. Do not select these items if they are only to be used to connect elsewhere (to the items you identified in C, D, E, and F):</bpmn:documentation>
+      <bpmn:documentation>Answer the questions for each of the Individual Use Devices that you use to collect or store your data onto your individual use device during the course of your research. Do not select these items if they are only to be used to connect elsewhere (to the items you identified in Electronic Medical Record, UVA approved eCRF or clinical trials management system, UVA servers &amp; websites, and Web-based server, cloud server, or any non-centrally managed server):</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="IUD_IndividualUseDevices" label="Individual use devices:" type="enum">
@@ -507,7 +507,7 @@ Indicate all the possible formats in which you will transmit your data outside o
               <camunda:property id="markdown_description" value="**Note:** Examples of individual use devices: CD, thumb drive, etc." />
             </camunda:properties>
             <camunda:value id="Yes" name="Yes" />
-            <camunda:value id="NA" name="NA, paper documents will not be shipped" />
+            <camunda:value id="NA" name="NA, data will not be shipped on an individual use device" />
           </camunda:formField>
           <camunda:formField id="DataTransmissionMethodFaxed" label="Data faxed to a receiving machine in a restricted-access location. The intended recipient is clearly indicated, alerted to the pending transmission and available to pick up immediately." type="enum">
             <camunda:properties>
@@ -666,7 +666,7 @@ Submit the step only when you are ready. After you "Submit" the step, the inform
     <bpmn:scriptTask id="Task_0q2zf9x" name="Generate DSP">
       <bpmn:incoming>SequenceFlow_07rwety</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0v51xcx</bpmn:outgoing>
-      <bpmn:script>scripts.CompleteTemplate NEW_SP_template.docx</bpmn:script>
+      <bpmn:script>scripts.CompleteTemplate NEW_DSP_template.docx</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1huif01" name="No" sourceRef="ExclusiveGateway_1ef1ype" targetRef="Activity_0kxjyy1">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">FormField_isCreateDSP == False</bpmn:conditionExpression>
@@ -691,7 +691,7 @@ Submit the step only when you are ready. After you "Submit" the step, the inform
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">FormField_DSP_Done == True</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1wgcnrc" name="No" sourceRef="Gateway_1yxsvlc" targetRef="Task_Create_DSP">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">FormField_DSP_Done == No</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">FormField_DSP_Done == False</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
