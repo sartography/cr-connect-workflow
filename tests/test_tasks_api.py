@@ -175,6 +175,19 @@ class TestTasksApi(BaseTest):
         task.process_documentation(documentation)
         self.assertEqual(expected, task.documentation)
 
+    def test_documentation_processing_handles_conditionals(self):
+
+        docs = "This test {% if works == 'yes' %}works{% endif %}"
+        task = Task(1, "bill", "bill", "", "started", {}, docs, {})
+        task.process_documentation(docs)
+        self.assertEqual("This test ", task.documentation)
+
+        task.data = {"works": 'yes'}
+        task.process_documentation(docs)
+        self.assertEqual("This test works", task.documentation)
+
+
+
     def test_get_documentation_populated_in_end(self):
         self.load_example_data()
         workflow = self.create_workflow('random_fact')
