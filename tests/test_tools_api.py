@@ -22,7 +22,8 @@ class TestStudyApi(BaseTest):
 
     def test_render_docx(self):
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', 'table.docx')
-        template_data = {"hippa": [{"option": "Name", "selected": True, "stored": ["Record at UVA", "Stored Long Term"]},
+        template_data = {"hippa": [
+                   {"option": "Name", "selected": True, "stored": ["Record at UVA", "Stored Long Term"]},
                    {"option": "Address", "selected": False},
                    {"option": "Phone", "selected": True, "stored": ["Send or Transmit outside of UVA"]}]}
         with open(filepath, 'rb') as f:

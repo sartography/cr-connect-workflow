@@ -47,7 +47,7 @@ class TestWorkflowSpec(BaseTest):
     def test_delete_workflow_specification(self):
         self.load_example_data()
         spec_id = 'random_fact'
-
+        self.load_test_spec(spec_id)
         num_specs_before = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()
         self.assertEqual(num_specs_before, 1)
 

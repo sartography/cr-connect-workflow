@@ -7,7 +7,6 @@ from crc.models.study import StudyModel, StudyModelSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
     WorkflowApiSchema
-from services.protocol_builder import ProtocolBuilderService
 from tests.base_test import BaseTest
 
 

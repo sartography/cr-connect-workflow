@@ -1,10 +1,12 @@
 import json
+from unittest.mock import patch
 
 from crc import session
 from crc.models.file import FileModelSchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, \
     WorkflowApiSchema, WorkflowStatus, Task
+from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
 
@@ -12,7 +14,8 @@ class TestTasksApi(BaseTest):
 
     def create_workflow(self, workflow_name):
         study = session.query(StudyModel).first()
-        spec = session.query(WorkflowSpecModel).filter_by(id=workflow_name).first()
+        spec = self.load_test_spec(workflow_name)
+        processor = WorkflowProcessor.create(study.id, spec.id)
         rv = self.app.post(
             '/v1.0/study/%i/workflows' % study.id,
             headers=self.logged_in_headers(),
@@ -186,8 +189,6 @@ class TestTasksApi(BaseTest):
         task.process_documentation(docs)
         self.assertEqual("This test works", task.documentation)
 
-
-
     def test_get_documentation_populated_in_end(self):
         self.load_example_data()
         workflow = self.create_workflow('random_fact')
@@ -201,3 +202,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual("EndEvent_0u1cgrf", workflow_api.next_task['name'])
         self.assertIsNotNone(workflow_api.next_task['documentation'])
         self.assertTrue("norris" in workflow_api.next_task['documentation'])
+
+
+
+ #       response = ProtocolBuilderService.get_study_details(self.test_study_id)

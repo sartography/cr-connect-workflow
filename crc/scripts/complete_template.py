@@ -9,17 +9,21 @@ from crc.models.workflow import WorkflowSpecModel
 from docxtpl import DocxTemplate
 import jinja2
 
+from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
-class CompleteTemplate(object):
+class CompleteTemplate(Script):
+
+    def get_description(self):
+        return
     """Completes a word template, using the data available in the current task. Heavy on the
     error messages, because there is so much that can go wrong here, and we want to provide
     as much feedback as possible.  Some of this might move up to a higher level object or be
     passed into all tasks as we complete more work."""
 
-    def do_task(self, task, *args, **kwargs):
+    def do_task(self, task, study_id, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""
         if len(args) != 1:
             raise ApiError(code="missing_argument",

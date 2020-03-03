@@ -10,7 +10,7 @@ from flask import send_file
 from jinja2 import Template, UndefinedError
 
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.scripts.CompleteTemplate import CompleteTemplate
+from crc.scripts.complete_template import CompleteTemplate
 from crc.services.file_service import FileService
 
 
