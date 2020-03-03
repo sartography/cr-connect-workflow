@@ -1,5 +1,6 @@
 import string
 import random
+from unittest.mock import patch
 
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 
@@ -29,7 +30,7 @@ class TestWorkflowProcessor(BaseTest):
 
     def test_create_and_complete_workflow(self):
         self.load_example_data()
-        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="random_fact").first()
+        workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         self.assertEqual(study.id, processor.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY])
@@ -54,9 +55,9 @@ class TestWorkflowProcessor(BaseTest):
     def test_workflow_with_dmn(self):
         self.load_example_data()
         study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("decision_table")
         files = session.query(FileModel).filter_by(workflow_spec_id='decision_table').all()
         self.assertEqual(2, len(files))
-        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="decision_table").first()
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
@@ -79,7 +80,7 @@ class TestWorkflowProcessor(BaseTest):
 
     def test_workflow_with_parallel_forms(self):
         self.load_example_data()
-        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="parallel_tasks").first()
+        workflow_spec_model = self.load_test_spec("parallel_tasks")
         study = session.query(StudyModel).first()
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
@@ -121,7 +122,7 @@ class TestWorkflowProcessor(BaseTest):
     def test_workflow_processor_knows_the_text_task_even_when_parallel(self):
         self.load_example_data()
         study = session.query(StudyModel).first()
-        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="parallel_tasks").first()
+        workflow_spec_model = self.load_test_spec("parallel_tasks")
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
@@ -141,7 +142,7 @@ class TestWorkflowProcessor(BaseTest):
 
     def test_workflow_processor_returns_next_task_as_end_task_if_complete(self):
         self.load_example_data()
-        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="random_fact").first()
+        workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
         processor.do_engine_steps()
@@ -196,3 +197,20 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIsNotNone(file_data.data)
         self.assertTrue(len(file_data.data) > 0)
         # Not going any farther here, assuming this is tested in libraries correctly.
+
+    def test_load_study_information(self):
+        """ Test a workflow that includes requests to pull in Study Details."""
+
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("study_details")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor.do_engine_steps()
+        task = processor.bpmn_workflow.last_task
+        self.assertIsNotNone(task.data)
+        self.assertIn("study", task.data)
+        self.assertIn("info", task.data["study"])
+        self.assertIn("title", task.data["study"]["info"])
+        self.assertIn("last_updated", task.data["study"]["info"])
+        self.assertIn("sponsor", task.data["study"]["info"])
+

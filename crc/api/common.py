@@ -6,6 +6,7 @@ class ApiError(Exception):
         self.status_code = status_code
         self.code = code
         self.message = message
+        Exception.__init__(self, self.message)
 
 
 class ApiErrorSchema(ma.Schema):
