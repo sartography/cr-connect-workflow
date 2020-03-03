@@ -165,9 +165,9 @@ def map_pb_study_to_study(pb_study):
 
     # Translate Protocol Builder states to enum values
     status = ProtocolBuilderStatus.DRAFT
-    if pb_study['Q_COMPLETE']:
-        if pb_study['UPLOAD_COMPLETE']:
-            if pb_study['HSRNUMBER']:
+    if 'Q_COMPLETE' in pb_study['Q_COMPLETE'] and pb_study['Q_COMPLETE']:
+        if 'UPLOAD_COMPLETE' in pb_study and pb_study['UPLOAD_COMPLETE']:
+            if 'HSRNUMBER' in pb_study and pb_study['HSRNUMBER']:
                 status = ProtocolBuilderStatus.REVIEW_COMPLETE
             else:
                 status = ProtocolBuilderStatus.IN_REVIEW

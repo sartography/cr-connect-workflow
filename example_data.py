@@ -9,6 +9,7 @@ from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
+from models.protocol_builder import ProtocolBuilderStatus
 
 
 class ExampleDataLoader:
@@ -31,7 +32,7 @@ class ExampleDataLoader:
                 id=1,
                 title='The impact of fried pickles on beer consumption in bipedal software developers.',
                 last_updated=datetime.datetime.now(),
-                protocol_builder_status='in_process',
+                protocol_builder_status=ProtocolBuilderStatus.IN_PROCESS.name,
                 primary_investigator_id='dhf8r',
                 sponsor='Sartography Pharmaceuticals',
                 ind_number='1234',
@@ -41,7 +42,7 @@ class ExampleDataLoader:
                 id=2,
                 title='Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
                 last_updated=datetime.datetime.now(),
-                protocol_builder_status='in_process',
+                protocol_builder_status=ProtocolBuilderStatus.IN_PROCESS.name,
                 primary_investigator_id='dhf8r',
                 sponsor='Makerspace & Co.',
                 ind_number='5678',
