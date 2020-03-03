@@ -1,3 +1,4 @@
+import re
 import xml.etree.ElementTree as ElementTree
 
 from SpiffWorkflow import Task as SpiffTask, Workflow
@@ -13,6 +14,7 @@ from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus, WorkflowModel
+from crc.scripts.script import Script
 
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
@@ -20,7 +22,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
     Rather than execute arbitrary code, this assumes the script references a fully qualified python class
     such as myapp.RandomFact. """
 
-    def execute(self, task, script, **kwargs):
+    def execute(self, task:SpiffTask, script, **kwargs):
         """
         Assume that the script read in from the BPMN file is a fully qualified python class. Instantiate
         that class, pass in any data available to the current task so that it might act on it.
@@ -29,11 +31,31 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         This allows us to reference custom code from the BPMN diagram.
         """
         commands = script.split(" ")
-        module_name = "crc." + commands[0]
-        class_name = module_name.split(".")[-1]
-        mod = __import__(module_name, fromlist=[class_name])
-        klass = getattr(mod, class_name)
-        klass().do_task(task, *commands[1:])
+        path_and_command = commands[0].rsplit(".", 1)
+        if len(path_and_command) == 1:
+            module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
+            class_name = path_and_command[0]
+        else:
+            module_name = "crc.scripts." + path_and_command[0] + "." + self.camel_to_snake(path_and_command[1])
+            class_name = path_and_command[1]
+        try:
+            mod = __import__(module_name, fromlist=[class_name])
+            klass = getattr(mod, class_name)
+            study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+            if not isinstance(klass(), Script):
+                raise ApiError("invalid_script",
+                               "This is an internal error. The script '%s:%s' you called  "
+                               "does not properly implement the CRC Script class." %
+                               (module_name, class_name))
+            klass().do_task(task, study_id, *commands[1:])
+        except ModuleNotFoundError as mnfe:
+            raise ApiError("invalid_script",
+                           "Unable to locate Script: '%s:%s'" % (module_name, class_name), 400)
+
+    @staticmethod
+    def camel_to_snake(camel):
+        camel = camel.strip()
+        return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
 
     def evaluate(self, task, expression):
         """
@@ -66,7 +88,7 @@ class WorkflowProcessor(object):
     _script_engine = CustomBpmnScriptEngine()
     _serializer = BpmnSerializer()
     WORKFLOW_ID_KEY = "workflow_id"
-    STUDY_ID_KEY = "session_id"
+    STUDY_ID_KEY = "study_id"
 
     def __init__(self, workflow_spec_id, bpmn_json):
         wf_spec = self.get_spec(workflow_spec_id)
@@ -104,6 +126,7 @@ class WorkflowProcessor(object):
     def create(cls,  study_id, workflow_spec_id):
         spec = WorkflowProcessor.get_spec(workflow_spec_id)
         bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
+        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study_id
         bpmn_workflow.do_engine_steps()
         json = cls._serializer.serialize_workflow(bpmn_workflow)
         processor = cls(workflow_spec_id, json)
@@ -116,7 +139,6 @@ class WorkflowProcessor(object):
         # a second time to store the serilaization so we can maintain this link within
         # the spiff-workflow process.
         processor.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-        processor.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study_id
         workflow_model.bpmn_workflow_json = processor.serialize()
         session.add(workflow_model)
         session.commit()

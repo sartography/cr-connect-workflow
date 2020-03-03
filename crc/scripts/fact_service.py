@@ -1,8 +1,12 @@
 import requests
 
+from crc.scripts.script import Script
 
-class FactService:
-    """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
+
+class FactService(Script):
+    def get_description(self):
+        return """Just your basic class that can pull in data from a few api endpoints and 
+        do a basic task."""
 
     def get_cat(self):
         response = requests.get('https://cat-fact.herokuapp.com/facts/random')
@@ -16,7 +20,7 @@ class FactService:
         response = requests.get('https://api.chucknorris.io/jokes/random')
         return response.json()['value']
 
-    def do_task(self, task, **kwargs):
+    def do_task(self, task, study_id, **kwargs):
         print(task.data)
 
         if "type" not in task.data:

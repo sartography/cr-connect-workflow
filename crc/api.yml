@@ -680,7 +680,21 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
-
+  /list_scripts:
+    get:
+      operationId: crc.api.tools.list_scripts
+      summary: Returns an list of scripts, along with their descriptions
+      tags:
+        - Configurator Tools
+      responses:
+        '201':
+          description: The list of scripts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Script"
 components:
   schemas:
     User:
@@ -969,3 +983,12 @@ components:
         message:
           type: string
           example: "You do not have permission to view the requested study."
+    Script:
+      properties:
+        name:
+          type: string
+          format: string
+          example: "random_fact"
+        description:
+          type: string
+          example: "Returns a random fact about a topic.  Provide an argument of either 'cat', 'norris', or 'buzzword'"
