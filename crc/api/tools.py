@@ -1,18 +1,14 @@
 import io
 import json
-import uuid
-from io import BytesIO
 
 import connexion
-import jinja2
-from docxtpl import DocxTemplate
 from flask import send_file
 from jinja2 import Template, UndefinedError
 
-from crc.api.common import ApiError, ApiErrorSchema
+from crc.api.common import ApiError
 from crc.scripts.complete_template import CompleteTemplate
-from crc.services.file_service import FileService
-
+from crc.scripts.script import Script
+import crc.scripts
 
 def render_markdown(data, template):
     """
@@ -48,3 +44,17 @@ def render_docx(data):
         raise ApiError(code="invalid", message=str(e))
     except Exception as e:
         raise ApiError(code="invalid", message=str(e))
+
+
+def list_scripts():
+    """Provides a list of scripts that can be called by a script task."""
+    scripts = Script.get_all_subclasses()
+    script_meta = []
+    for script_class in scripts:
+        script_meta.append(
+            {
+                "name": script_class.__name__,
+                "description": script_class().get_description()
+            })
+    return script_meta
+

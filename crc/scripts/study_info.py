@@ -13,8 +13,7 @@ class StudyInfo(Script):
     type_options = ['info', 'investigators', 'required_docs', 'details']
 
     def get_description(self):
-        return """
-            StudyInfo [TYPE] is one of 'info', 'investigators','required_docs', 'details'
+        return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators','required_docs', or 'details'
             Adds details about the current study to the Task Data.  The type of information required should be 
             provided as an argument.  Basic returns the basic information such as the title.  Investigators provides
             detailed information about each investigator in th study.  Details provides a large number

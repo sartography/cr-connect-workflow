@@ -5,7 +5,8 @@ from crc.scripts.script import Script
 
 class FactService(Script):
     def get_description(self):
-        return """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
+        return """Just your basic class that can pull in data from a few api endpoints and 
+        do a basic task."""
 
     def get_cat(self):
         response = requests.get('https://cat-fact.herokuapp.com/facts/random')

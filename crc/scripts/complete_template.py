@@ -17,11 +17,8 @@ from crc.services.workflow_processor import WorkflowProcessor
 class CompleteTemplate(Script):
 
     def get_description(self):
-        return
-    """Completes a word template, using the data available in the current task. Heavy on the
-    error messages, because there is so much that can go wrong here, and we want to provide
-    as much feedback as possible.  Some of this might move up to a higher level object or be
-    passed into all tasks as we complete more work."""
+        return """Takes one argument, which is the name of a MS Word docx file to use as a template.
+        All data currently collected up to this Task will be available for use in the template."""
 
     def do_task(self, task, study_id, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""

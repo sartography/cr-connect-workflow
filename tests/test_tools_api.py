@@ -32,3 +32,11 @@ class TestStudyApi(BaseTest):
                               data=file_data, follow_redirects=True,
                               content_type='multipart/form-data')
             self.assert_success(rv)
+
+    def test_list_scripts(self):
+        rv = self.app.get('/v1.0/list_scripts')
+        self.assert_success(rv)
+        scripts = json.loads(rv.get_data(as_text=True))
+        self.assertTrue(len(scripts) > 1)
+        self.assertIsNotNone(scripts[0]['name'])
+        self.assertIsNotNone(scripts[0]['description'])
