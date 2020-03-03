@@ -18,10 +18,11 @@ class ProtocolBuilderInvestigatorType(enum.Enum):
 
 
 class ProtocolBuilderStatus(enum.Enum):
-    out_of_date = "out_of_date"
-    in_process = "in_process"
-    complete = "complete"
-    updating = "updating"
+    DRAFT = 'draft',                      # !Q_COMPLETE
+    IN_PROCESS = 'in_process',            # Q_COMPLETE && !UPLOAD_COMPLETE && !HSRNUMBER
+    IN_REVIEW = 'in_review',              # Q_COMPLETE && (!UPLOAD_COMPLETE || !HSRNUMBER)
+    REVIEW_COMPLETE = 'review_complete',  # Q_COMPLETE && UPLOAD_COMPLETE && HSRNUMBER
+    INACTIVE = 'inactive',                # Not found in PB
 
 
 class ProtocolBuilderStudy(object):
