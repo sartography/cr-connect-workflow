@@ -203,6 +203,3 @@ class TestTasksApi(BaseTest):
         self.assertIsNotNone(workflow_api.next_task['documentation'])
         self.assertTrue("norris" in workflow_api.next_task['documentation'])
 
-
-
- #       response = ProtocolBuilderService.get_study_details(self.test_study_id)

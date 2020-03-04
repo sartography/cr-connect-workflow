@@ -103,11 +103,17 @@ class WorkflowProcessor(object):
 
     @staticmethod
     def get_spec(workflow_spec_id):
+        """Returns the last version of the specification."""
         parser = WorkflowProcessor.get_parser()
+        major_version = 0  # The version of the pirmary file.
+        minor_version = []  # The versions of the minor files if any.
         process_id = None
         file_data_models = session.query(FileDataModel) \
             .join(FileModel) \
-            .filter(FileModel.workflow_spec_id == workflow_spec_id).all()
+            .filter(FileModel.workflow_spec_id == workflow_spec_id)\
+            .filter(FileDataModel.version == FileModel.latest_version)\
+            .order_by(FileModel.id)\
+            .all()
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
@@ -117,9 +123,16 @@ class WorkflowProcessor(object):
             elif file_data.file_model.type == FileType.dmn:
                 dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
+            if file_data.file_model.primary:
+                major_version = file_data.version
+            else:
+                minor_version.append(file_data.version)
         if process_id is None:
             raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
-        return parser.get_spec(process_id)
+        minor_version.insert(0, major_version) # Add major version to begining.
+        spec = parser.get_spec(process_id)
+        spec.description = ".".join(str(x) for x in minor_version)
+        return spec
 
 
     @classmethod
@@ -144,6 +157,19 @@ class WorkflowProcessor(object):
         session.commit()
         return processor
 
+    def restart_with_current_task_data(self):
+        """Recreate this workflow, but keep the data from the last completed task and add it back into the first task.
+         This may be useful when a workflow specification changes, and users need to review all the
+         prior steps, but don't need to reenter all the previous data. """
+        spec = WorkflowProcessor.get_spec(self.workflow_spec_id)
+        bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
+        bpmn_workflow.data = self.bpmn_workflow.data
+        for task in bpmn_workflow.get_tasks(SpiffTask.READY):
+            task.data = self.bpmn_workflow.last_task.data
+        bpmn_workflow.do_engine_steps()
+        self.bpmn_workflow = bpmn_workflow
+
+
     def get_status(self):
         if self.bpmn_workflow.is_completed():
             return WorkflowStatus.complete
@@ -152,6 +178,10 @@ class WorkflowProcessor(object):
             return WorkflowStatus.user_input_required
         else:
             return WorkflowStatus.waiting
+
+    def get_spec_version(self):
+        """We use the spec's descrption field to store the version information"""
+        return self.bpmn_workflow.spec.description
 
     def do_engine_steps(self):
         self.bpmn_workflow.do_engine_steps()

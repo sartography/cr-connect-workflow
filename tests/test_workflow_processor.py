@@ -1,14 +1,16 @@
+import os
 import string
 import random
 from unittest.mock import patch
 
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 
-from crc import session
+from crc import session, db, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
+from crc.models.workflow import WorkflowSpecModel, WorkflowStatus, WorkflowModel
+from crc.services.file_service import FileService
 from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -214,3 +216,41 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("last_updated", task.data["study"]["info"])
         self.assertIn("sponsor", task.data["study"]["info"])
 
+    def test_spec_versioning(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("decision_table")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertEquals("1.1", processor.get_spec_version())
+        file_service = FileService()
+
+        file_service.add_workflow_spec_file(workflow_spec_model, "new_file.txt", "txt", b'blahblah')
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertEquals("1.1.1", processor.get_spec_version())
+
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'docx', 'docx.bpmn')
+        file = open(file_path, "rb")
+        data = file.read()
+
+        file_model = db.session.query(FileModel).filter(FileModel.name == "decision_table.bpmn").first()
+        file_service.update_file(file_model, data, "txt")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertEquals("2.1.1", processor.get_spec_version())
+
+    def test_restart_workflow(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("two_forms")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
+        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        task = processor.next_task()
+        task.data = {"key": "Value"}
+        processor.complete_task(task)
+        task_before_restart = processor.next_task()
+        processor.restart_with_current_task_data()
+        task_after_restart = processor.next_task()
+
+        self.assertNotEqual(task.get_name(), task_before_restart.get_name())
+        self.assertEqual(task.get_name(), task_after_restart.get_name())
+        self.assertEqual(task.data, task_after_restart.data)
