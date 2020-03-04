@@ -92,15 +92,7 @@ class BaseTest(unittest.TestCase):
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
             return
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
-        models = ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath)
-        spec = None
-        for model in models:
-            if isinstance(model, WorkflowSpecModel):
-                spec = model
-            session.add(model)
-            session.commit()
-        session.flush()
-        return spec
+        return ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath)
 
     @staticmethod
     def protocol_builder_response(file_name):

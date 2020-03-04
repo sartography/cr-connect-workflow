@@ -1,12 +1,14 @@
 import enum
 
+import jinja2
 import marshmallow
-from jinja2 import Environment, BaseLoader, Undefined, Template
+from jinja2 import Template
 from marshmallow import INCLUDE
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import ModelSchema
 
 from crc import db, ma
+from crc.api.common import ApiError
 
 
 class WorkflowSpecModel(db.Model):
@@ -37,6 +39,7 @@ class WorkflowModel(db.Model):
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+
 
 class Task(object):
     def __init__(self, id, name, title, type, state, form, documentation, data):
@@ -72,8 +75,11 @@ class Task(object):
         create loops, etc...'''
 
         template = Template(documentation)
-        self.documentation = template.render(**self.data)
-
+        try:
+            self.documentation = template.render(**self.data)
+        except jinja2.exceptions.UndefinedError as ue:
+            raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
+                                                          (self.name, str(ue)), status_code=500)
 
 class OptionSchema(ma.Schema):
     class Meta:

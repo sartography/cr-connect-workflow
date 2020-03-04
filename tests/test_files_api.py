@@ -25,7 +25,7 @@ class TestFilesApi(BaseTest):
     def test_list_multiple_files_for_workflow_spec(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
-        svgFile = FileModel(name="test.svg", type=FileType.svg, version=1, last_updated=datetime.now(),
+        svgFile = FileModel(name="test.svg", type=FileType.svg,
                             primary=False, workflow_spec_id=spec.id)
         session.add(svgFile)
         session.flush()
@@ -47,7 +47,6 @@ class TestFilesApi(BaseTest):
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(1, file.version)
         self.assertEqual(FileType.svg, file.type)
         self.assertFalse(file.primary)
         self.assertEqual("image/svg+xml", file.content_type)
@@ -89,13 +88,36 @@ class TestFilesApi(BaseTest):
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(2, file.version)
+        self.assertEqual(2, file.latest_version)
         self.assertEqual(FileType.bpmn, file.type)
         self.assertEqual("application/octet-stream", file.content_type)
         self.assertEqual(spec.id, file.workflow_spec_id)
 
-        data_model = session.query(FileDataModel).filter_by(file_model_id=file.id).first()
-        self.assertEqual(b"hijklim", data_model.data)
+        rv = self.app.get('/v1.0/file/%i/data' % file.id)
+        self.assert_success(rv)
+        data = rv.get_data()
+        self.assertIsNotNone(data)
+        self.assertEqual(b"hijklim", data)
+
+    def test_update_with_same_exact_data_does_not_increment_version(self):
+        self.load_example_data()
+        spec = session.query(WorkflowSpecModel).first()
+        data = {}
+        data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
+        rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
+                           content_type='multipart/form-data')
+        self.assertIsNotNone(rv.get_data())
+        json_data = json.loads(rv.get_data(as_text=True))
+        file = FileModelSchema().load(json_data, session=session)
+        self.assertEqual(1, file.latest_version)
+        data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
+        rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
+                          content_type='multipart/form-data')
+        self.assertIsNotNone(rv.get_data())
+        json_data = json.loads(rv.get_data(as_text=True))
+        file = FileModelSchema().load(json_data, session=session)
+        self.assertEqual(1, file.latest_version)
+
 
     def test_get_file(self):
         self.load_example_data()

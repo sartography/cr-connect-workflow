@@ -4,7 +4,7 @@ from jinja2 import UndefinedError
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel
 from docxtpl import DocxTemplate
 import jinja2
@@ -48,7 +48,7 @@ class CompleteTemplate(Script):
         workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         FileService.add_task_file(study_id=study_id, workflow_id=workflow_id, task_id=task.id,
                                   name=file_name,
-                                  content_type=FileService.DOCX_MIME,
+                                  content_type=CONTENT_TYPES['docx'],
                                   binary_data=final_document_stream.read())
 
         print("Complete Task was called with %s" % str(args))
