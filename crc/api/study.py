@@ -92,7 +92,7 @@ def update_from_protocol_builder():
                 study_id=study_id,
                 body={
                     'inactive': True,
-                    'protocol_builder_status': ProtocolBuilderStatus.INACTIVE._value_
+                    'protocol_builder_status': ProtocolBuilderStatus.INACTIVE.name
                 }
             )
 
@@ -165,8 +165,11 @@ def map_pb_study_to_study(pb_study):
 
     # Translate Protocol Builder states to enum values
     status = ProtocolBuilderStatus.DRAFT
-    if 'Q_COMPLETE' in pb_study['Q_COMPLETE'] and pb_study['Q_COMPLETE']:
-        if 'UPLOAD_COMPLETE' in pb_study and pb_study['UPLOAD_COMPLETE']:
+    pb_details = ProtocolBuilderService.get_study_details(pb_study['STUDYID'])
+    print(pb_details)
+
+    if 'Q_COMPLETE' in pb_study and pb_study['Q_COMPLETE']:
+        if 'UPLOAD_COMPLETE' in pb_details and pb_details['UPLOAD_COMPLETE']:
             if 'HSRNUMBER' in pb_study and pb_study['HSRNUMBER']:
                 status = ProtocolBuilderStatus.REVIEW_COMPLETE
             else:
@@ -174,7 +177,7 @@ def map_pb_study_to_study(pb_study):
         else:
             status = ProtocolBuilderStatus.IN_PROCESS
 
-    study_info['protocol_builder_status'] = status._value_
+    study_info['protocol_builder_status'] = status.name
     study_info['inactive'] = False
     return study_info
 
