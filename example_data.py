@@ -9,7 +9,7 @@ from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
-from models.protocol_builder import ProtocolBuilderStatus
+from crc.models.protocol_builder import ProtocolBuilderStatus
 
 
 class ExampleDataLoader:
