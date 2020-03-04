@@ -4,7 +4,8 @@ from unittest.mock import patch, Mock
 
 from crc import session
 from crc.models.study import StudyModel, StudyModelSchema
-from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudyDetailsSchema
+from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudyDetailsSchema, \
+    ProtocolBuilderStudySchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
     WorkflowApiSchema
 from tests.base_test import BaseTest
@@ -60,21 +61,19 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study.title, db_study.title)
         self.assertEqual(study.protocol_builder_status, db_study.protocol_builder_status)
 
-
-    def test_get_all_studies(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
+    def test_get_all_studies(self, mock_studies, mock_details):
         self.load_example_data()
         db_studies_before = session.query(StudyModel).all()
         num_db_studies_before = len(db_studies_before)
 
         # Mock Protocol Builder response
-        with patch('crc.services.protocol_builder.requests.get') as mock_get:
-            mock_get.return_value.ok = True
-            mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
+        studies_response = self.protocol_builder_response('user_studies.json')
+        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
 
-        with patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details') as mock_details:
-            sd_response = self.protocol_builder_response('study_details.json')
-            mock_details.return_value = Mock()
-            mock_details.return_value.json.return_value = ProtocolBuilderStudyDetailsSchema().loads(sd_response)
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = ProtocolBuilderStudyDetailsSchema().loads(details_response)
 
         self.load_example_data()
         api_response = self.app.get('/v1.0/study',
