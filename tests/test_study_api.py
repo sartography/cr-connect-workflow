@@ -50,7 +50,7 @@ class TestStudyApi(BaseTest):
         self.load_example_data()
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
-        study.protocol_builder_status = ProtocolBuilderStatus.REVIEW_COMPLETE.name
+        study.protocol_builder_status = ProtocolBuilderStatus.REVIEW_COMPLETE
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),

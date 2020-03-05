@@ -14,11 +14,7 @@
               <camunda:property id="placeholder" value="Merck" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="FormField_FROMOSP" label="From OSP" type="string" />
-          <camunda:formField id="FormField_SponsorState" label="State" type="enum">
-            <camunda:value id="VA" name="Virginia" />
-            <camunda:value id="WA" name="Washington" />
-          </camunda:formField>
+          <camunda:formField id="FormField_FromOSP" label="From OSP" type="string" />
           <camunda:formField id="FormField_Type" label="Select all that apply:" type="enum">
             <camunda:properties>
               <camunda:property id="enum_type" value="checkbox" />
@@ -26,14 +22,7 @@
             <camunda:value id="sponsor" name="Sponsor" />
             <camunda:value id="funding_source" name="Funding Source" />
           </camunda:formField>
-          <camunda:formField id="FormField_FundType" label="Funding Type" type="enum">
-            <camunda:value id="immedicate" name="Immediate" />
-            <camunda:value id="originating" name="Originating" />
-            <camunda:value id="incoming" name="Incoming Sub Award" />
-          </camunda:formField>
-          <camunda:formField id="FormField_ContactName" label="Contact Name" type="string" />
-          <camunda:formField id="FormField_ContactEmail" label="Contact Email" type="string" />
-          <camunda:formField id="FormField_Notes" label="Notes" type="text_area">
+          <camunda:formField id="FormField_Notes" label="Notes" type="textarea">
             <camunda:properties>
               <camunda:property id="rows" value="5" />
             </camunda:properties>
@@ -51,10 +40,10 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0quormc">
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="167" y="99" width="36" height="36" />
+        <dc:Bounds x="162" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_17znkku_di" bpmnElement="SequenceFlow_17znkku">
-        <di:waypoint x="203" y="117" />
+        <di:waypoint x="198" y="117" />
         <di:waypoint x="268" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="UserTask_15oiwqt_di" bpmnElement="Task_14cuhvm">
