@@ -103,10 +103,11 @@ class WorkflowProcessor(object):
 
     @staticmethod
     def get_spec(workflow_spec_id):
-        """Returns the last version of the specification."""
+        """Returns the latest version of the specification."""
         parser = WorkflowProcessor.get_parser()
-        major_version = 0  # The version of the pirmary file.
+        major_version = 0  # The version of the primary file.
         minor_version = []  # The versions of the minor files if any.
+        file_ids = []
         process_id = None
         file_data_models = session.query(FileDataModel) \
             .join(FileModel) \
@@ -129,7 +130,7 @@ class WorkflowProcessor(object):
                 minor_version.append(file_data.version)
         if process_id is None:
             raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
-        minor_version.insert(0, major_version) # Add major version to begining.
+        minor_version.insert(0, major_version) # Add major version to beginning.
         spec = parser.get_spec(process_id)
         spec.description = ".".join(str(x) for x in minor_version)
         return spec

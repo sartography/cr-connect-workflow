@@ -3,8 +3,8 @@ import uuid
 from crc.api.file import delete_file
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, \
-    Task, WorkflowApiSchema, WorkflowApi
+from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
+from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.models.file import FileModel
 
@@ -74,11 +74,13 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
         last_task=Task.from_spiff(processor.bpmn_workflow.last_task),
         next_task=None,
         user_tasks=user_tasks,
-        workflow_spec_id=processor.workflow_spec_id
+        workflow_spec_id=processor.workflow_spec_id,
+        spec_version=processor.get_spec_version()
     )
     if processor.next_task():
         workflow_api.next_task = Task.from_spiff(processor.next_task())
     return workflow_api
+
 
 def get_workflow(workflow_id):
     schema = WorkflowApiSchema()

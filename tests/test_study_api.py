@@ -3,10 +3,10 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 from crc import session
+from crc.models.api_models import WorkflowApiSchema
 from crc.models.study import StudyModel, StudyModelSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
-    WorkflowApiSchema
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from tests.base_test import BaseTest
 
 

@@ -99,6 +99,9 @@ class ExampleDataLoader:
                 content_type = CONTENT_TYPES[file_extension[1:]]
                 file_service.add_workflow_spec_file(workflow_spec=spec, name=filename, content_type=content_type,
                                                     binary_data=data, primary=is_primary)
+            except IsADirectoryError as de:
+                # Ignore sub directories
+                pass
             finally:
                 file.close()
         return spec
