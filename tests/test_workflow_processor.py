@@ -248,14 +248,14 @@ class TestWorkflowProcessor(BaseTest):
         task.data = {"key": "Value"}
         processor.complete_task(task)
         task_before_restart = processor.next_task()
-        processor.restart_with_current_task_data()
+        processor.hard_reset()
         task_after_restart = processor.next_task()
 
         self.assertNotEqual(task.get_name(), task_before_restart.get_name())
         self.assertEqual(task.get_name(), task_after_restart.get_name())
         self.assertEqual(task.data, task_after_restart.data)
 
-    def test_modify_spec_with_text_change_with_running_workflow(self):
+    def test_soft_reset(self):
         self.load_example_data()
 
         # Start the two_forms workflow, and enter some data in the first form.
@@ -272,14 +272,22 @@ class TestWorkflowProcessor(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_text_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
+        # Setting up another processor should not error out, but doesn't pick up the update.
         workflow_model.bpmn_workflow_json = processor.serialize()
         processor2 = WorkflowProcessor(workflow_model)
         self.assertEquals("Step 1", processor2.bpmn_workflow.last_task.task_spec.description)
-        self.assertEquals("# This is some documentation I wanted to add.",
+        self.assertNotEquals("# This is some documentation I wanted to add.",
                           processor2.bpmn_workflow.last_task.task_spec.documentation)
 
+        # You can do a soft update and get the right response.
+        processor3 = WorkflowProcessor(workflow_model, soft_reset=True)
+        self.assertEquals("Step 1", processor3.bpmn_workflow.last_task.task_spec.description)
+        self.assertEquals("# This is some documentation I wanted to add.",
+                          processor3.bpmn_workflow.last_task.task_spec.documentation)
 
-    def test_modify_spec_with_structural_change_with_running_workflow(self):
+
+
+    def test_hard_reset(self):
         self.load_example_data()
 
         # Start the two_forms workflow, and enter some data in the first form.
@@ -298,15 +306,17 @@ class TestWorkflowProcessor(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
-        with self.assertRaises(KeyError):
-            workflow_model.bpmn_workflow_json = processor.serialize()
-            processor2 = WorkflowProcessor(workflow_model)
+        # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
+        workflow_model.bpmn_workflow_json = processor.serialize()
+        processor2 = WorkflowProcessor(workflow_model)
+        self.assertTrue(processor2.get_spec_version().startswith("v1 ")) # Still at version 1.
 
-        # Restart the workflow, and the error should go away
-        processor.restart_with_current_task_data()
-        self.assertEquals("Step 1", processor.next_task().task_spec.description)
-        processor.complete_task(processor.next_task())
-        self.assertEquals("New Step", processor.next_task().task_spec.description)
-        self.assertEquals({"color": "blue"}, processor.next_task().data)
+        # Do a hard reset, which should bring us back to the beginning, but retain the data.
+        processor3 = WorkflowProcessor(workflow_model, hard_reset=True)
+        self.assertEquals("Step 1", processor3.next_task().task_spec.description)
+        self.assertEquals({"color": "blue"}, processor3.next_task().data)
+        processor3.complete_task(processor3.next_task())
+        self.assertEquals("New Step", processor3.next_task().task_spec.description)
+        self.assertEquals({"color": "blue"}, processor3.next_task().data)
 
 

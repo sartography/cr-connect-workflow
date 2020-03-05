@@ -211,9 +211,11 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         self.complete_form(workflow, workflow_api.user_tasks[0], {"color": "blue"})
 
-        # Modify the specification, with a major change that alters the flow and can't be serialized effectively.
+        # Modify the specification, with a major change that alters the flow and can't be deserialized
+        # effectively, if it uses the latest spec files.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
-        with self.assertRaises(KeyError):
-            workflow_api = self.get_workflow_api(workflow)
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertTrue(workflow_api.spec_version.startswith("v1 "))
+        self.assertTrue(workflow_api.latest_spec_version)

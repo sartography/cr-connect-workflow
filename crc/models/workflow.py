@@ -33,4 +33,5 @@ class WorkflowModel(db.Model):
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    spec_version = db.Column(db.String)
 
