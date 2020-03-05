@@ -10,6 +10,7 @@ from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.models.protocol_builder import ProtocolBuilderStatus
 
 
 class ExampleDataLoader:
@@ -41,7 +42,7 @@ class ExampleDataLoader:
                 id=1,
                 title='The impact of fried pickles on beer consumption in bipedal software developers.',
                 last_updated=datetime.datetime.now(),
-                protocol_builder_status='in_process',
+                protocol_builder_status=ProtocolBuilderStatus.IN_PROCESS,
                 primary_investigator_id='dhf8r',
                 sponsor='Sartography Pharmaceuticals',
                 ind_number='1234',
@@ -51,7 +52,7 @@ class ExampleDataLoader:
                 id=2,
                 title='Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
                 last_updated=datetime.datetime.now(),
-                protocol_builder_status='in_process',
+                protocol_builder_status=ProtocolBuilderStatus.IN_PROCESS,
                 primary_investigator_id='dhf8r',
                 sponsor='Makerspace & Co.',
                 ind_number='5678',
@@ -69,10 +70,11 @@ class ExampleDataLoader:
                          name="crc2_training_session_data_security_plan",
                          display_name="CR Connect2 - Training Session - Data Security Plan",
                          description='Part of Milestone 3 Deliverable')
-        self.create_spec(id="sponsor_funding_source",
-                         name="sponsor_funding_source",
-                         display_name="Sponsor and/or Funding Source ",
-                         description='TBD')
+        self.create_spec(id="crc2_training_session_sponsor_funding_source",
+                         name="crc2_training_session_sponsor_funding_source",
+                         display_name="CR Connect2 - Training Session - Sponsor and/or Funding Source",
+                         description='Part of Milestone 3 Deliverable')
+
 
     def create_spec(self, id, name, display_name="", description="", filepath=None):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.

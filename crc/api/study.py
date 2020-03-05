@@ -89,7 +89,13 @@ def update_from_protocol_builder():
     # Mark studies as inactive that are no longer in Protocol Builder
     for study_id in db_study_ids:
         if study_id not in pb_study_ids:
-            update_study(study_id=study_id, body={'inactive': True})
+            update_study(
+                study_id=study_id,
+                body={
+                    'inactive': True,
+                    'protocol_builder_status': ProtocolBuilderStatus.INACTIVE.name
+                }
+            )
 
     # Return updated studies
     updated_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
@@ -158,10 +164,20 @@ def map_pb_study_to_study(pb_study):
         if k in prop_map:
             study_info[prop_map[k]] = v
 
-    if pb_study['Q_COMPLETE']:
-        study_info['protocol_builder_status'] = ProtocolBuilderStatus.complete._value_
-    else:
-        study_info['protocol_builder_status'] = ProtocolBuilderStatus.in_process._value_
+    # Translate Protocol Builder states to enum values
+    status = ProtocolBuilderStatus.DRAFT
+    pb_details = ProtocolBuilderService.get_study_details(pb_study['STUDYID'])
 
+    if 'Q_COMPLETE' in pb_study and pb_study['Q_COMPLETE']:
+        if 'UPLOAD_COMPLETE' in pb_details and pb_details['UPLOAD_COMPLETE']:
+            if 'HSRNUMBER' in pb_study and pb_study['HSRNUMBER']:
+                status = ProtocolBuilderStatus.REVIEW_COMPLETE
+            else:
+                status = ProtocolBuilderStatus.IN_REVIEW
+        else:
+            status = ProtocolBuilderStatus.IN_PROCESS
+
+    study_info['protocol_builder_status'] = status.name
+    study_info['inactive'] = False
     return study_info
 

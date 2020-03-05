@@ -1,11 +1,12 @@
 import json
 from datetime import datetime, timezone
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from crc import session
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.study import StudyModel, StudyModelSchema
-from crc.models.protocol_builder import ProtocolBuilderStatus
+from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudyDetailsSchema, \
+    ProtocolBuilderStudySchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from tests.base_test import BaseTest
 
@@ -24,7 +25,7 @@ class TestStudyApi(BaseTest):
             "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
                      "for Interstellar Spacecraft",
             "last_updated": datetime.now(tz=timezone.utc),
-            "protocol_builder_status": ProtocolBuilderStatus.in_process,
+            "protocol_builder_status": ProtocolBuilderStatus.IN_PROCESS,
             "primary_investigator_id": "tricia.marie.mcmillan@heartofgold.edu",
             "sponsor": "Sirius Cybernetics Corporation",
             "ind_number": "567890",
@@ -49,7 +50,7 @@ class TestStudyApi(BaseTest):
         self.load_example_data()
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
-        study.protocol_builder_status = ProtocolBuilderStatus.complete
+        study.protocol_builder_status = ProtocolBuilderStatus.REVIEW_COMPLETE
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
@@ -60,17 +61,19 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study.title, db_study.title)
         self.assertEqual(study.protocol_builder_status, db_study.protocol_builder_status)
 
-
-    @patch('crc.services.protocol_builder.requests.get')
-    def test_get_all_studies(self, mock_get):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
+    def test_get_all_studies(self, mock_studies, mock_details):
         self.load_example_data()
         db_studies_before = session.query(StudyModel).all()
         num_db_studies_before = len(db_studies_before)
 
-        mock_get.return_value.ok = True
-        mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
-        # pb_response = ProtocolBuilderService.get_studies(self.test_uid)
-        # self.assertIsNotNone(pb_response)
+        # Mock Protocol Builder response
+        studies_response = self.protocol_builder_response('user_studies.json')
+        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
+
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = ProtocolBuilderStudyDetailsSchema().loads(details_response)
 
         self.load_example_data()
         api_response = self.app.get('/v1.0/study',
@@ -78,11 +81,6 @@ class TestStudyApi(BaseTest):
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(api_response)
-
-        db_studies_after = session.query(StudyModel).all()
-        num_db_studies_after = len(db_studies_after)
-        self.assertGreater(num_db_studies_after, num_db_studies_before)
-
         json_data = json.loads(api_response.get_data(as_text=True))
         api_studies = StudyModelSchema(many=True).load(json_data, session=session)
 
@@ -95,8 +93,13 @@ class TestStudyApi(BaseTest):
             else:
                 num_active += 1
 
-        self.assertEqual(num_inactive, num_db_studies_before)
-        self.assertEqual(num_active, num_db_studies_after - num_db_studies_before)
+        db_studies_after = session.query(StudyModel).all()
+        num_db_studies_after = len(db_studies_after)
+        self.assertGreater(num_db_studies_after, num_db_studies_before)
+        self.assertGreater(num_inactive, 0)
+        self.assertGreater(num_active, 0)
+        self.assertEqual(len(api_studies), num_db_studies_after)
+        self.assertEqual(num_active + num_inactive, num_db_studies_after)
 
     def test_study_api_get_single_study(self):
         self.load_example_data()

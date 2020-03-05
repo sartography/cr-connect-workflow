@@ -746,7 +746,7 @@ components:
           example: "2019-12-25T09:12:33.001Z"
         protocol_builder_status:
           type: string
-          enum: [out_of_date, in_process, complete, updating]
+          enum: [DRAFT, IN_PROCESS, IN_REVIEW, REVIEW_COMPLETE, INACTIVE]
           example: done
         user_uid:
           type: string
