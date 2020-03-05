@@ -34,4 +34,3 @@ class WorkflowModel(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
 
-

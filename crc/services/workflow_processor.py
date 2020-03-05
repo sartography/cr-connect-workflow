@@ -1,3 +1,4 @@
+import json
 import re
 import xml.etree.ElementTree as ElementTree
 
@@ -89,11 +90,13 @@ class WorkflowProcessor(object):
     _serializer = BpmnSerializer()
     WORKFLOW_ID_KEY = "workflow_id"
     STUDY_ID_KEY = "study_id"
+    SPEC_VERSION_KEY = "spec_version"
 
-    def __init__(self, workflow_spec_id, bpmn_json):
-        wf_spec = self.get_spec(workflow_spec_id)
-        self.workflow_spec_id = workflow_spec_id
-        self.bpmn_workflow = self._serializer.deserialize_workflow(bpmn_json, workflow_spec=wf_spec)
+    def __init__(self, workflow_model: WorkflowModel):
+        latest_spec = self.get_spec(workflow_model.workflow_spec_id)
+        self.workflow_spec_id = workflow_model.workflow_spec_id
+        self.bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
+                                                                   workflow_spec=latest_spec)
         self.bpmn_workflow.script_engine = self._script_engine
 
     @staticmethod
@@ -116,6 +119,7 @@ class WorkflowProcessor(object):
             .order_by(FileModel.id)\
             .all()
         for file_data in file_data_models:
+            file_ids.append(file_data.id)
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 if file_data.file_model.primary:
@@ -132,19 +136,27 @@ class WorkflowProcessor(object):
             raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
         minor_version.insert(0, major_version) # Add major version to beginning.
         spec = parser.get_spec(process_id)
-        spec.description = ".".join(str(x) for x in minor_version)
+        version = ".".join(str(x) for x in minor_version)
+        files = ".".join(str(x) for x in file_ids)
+        spec.description = "v%s (%s) " % (version, files)
         return spec
 
+    @staticmethod
+    def status_of(bpmn_workflow):
+        if bpmn_workflow.is_completed():
+            return WorkflowStatus.complete
+        user_tasks = bpmn_workflow.get_ready_user_tasks()
+        if len(user_tasks) > 0:
+            return WorkflowStatus.user_input_required
+        else:
+            return WorkflowStatus.waiting
 
     @classmethod
     def create(cls,  study_id, workflow_spec_id):
         spec = WorkflowProcessor.get_spec(workflow_spec_id)
         bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
-        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study_id
         bpmn_workflow.do_engine_steps()
-        json = cls._serializer.serialize_workflow(bpmn_workflow)
-        processor = cls(workflow_spec_id, json)
-        workflow_model = WorkflowModel(status=processor.get_status(),
+        workflow_model = WorkflowModel(status=WorkflowProcessor.status_of(bpmn_workflow),
                                        study_id=study_id,
                                        workflow_spec_id=workflow_spec_id)
         session.add(workflow_model)
@@ -152,10 +164,14 @@ class WorkflowProcessor(object):
         # Need to commit twice, first to get a unique id for the workflow model, and
         # a second time to store the serilaization so we can maintain this link within
         # the spiff-workflow process.
-        processor.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-        workflow_model.bpmn_workflow_json = processor.serialize()
+        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study_id
+        bpmn_workflow.data[WorkflowProcessor.SPEC_VERSION_KEY] = spec.description
+        bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
+
+        workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(bpmn_workflow)
         session.add(workflow_model)
         session.commit()
+        processor = cls(workflow_model)
         return processor
 
     def restart_with_current_task_data(self):
@@ -170,15 +186,8 @@ class WorkflowProcessor(object):
         bpmn_workflow.do_engine_steps()
         self.bpmn_workflow = bpmn_workflow
 
-
     def get_status(self):
-        if self.bpmn_workflow.is_completed():
-            return WorkflowStatus.complete
-        user_tasks = self.bpmn_workflow.get_ready_user_tasks()
-        if len(user_tasks) > 0:
-            return WorkflowStatus.user_input_required
-        else:
-            return WorkflowStatus.waiting
+        return self.status_of(self.bpmn_workflow)
 
     def get_spec_version(self):
         """We use the spec's descrption field to store the version information"""

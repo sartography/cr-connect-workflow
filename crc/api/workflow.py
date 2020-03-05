@@ -85,8 +85,7 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
 def get_workflow(workflow_id):
     schema = WorkflowApiSchema()
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow_model.workflow_spec_id,
-                                  workflow_model.bpmn_workflow_json)
+    processor = WorkflowProcessor(workflow_model)
     return schema.dump(__get_workflow_api_model(processor))
 
 
@@ -101,7 +100,7 @@ def get_task(workflow_id, task_id):
 
 def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow_model.workflow_spec_id, workflow_model.bpmn_workflow_json)
+    processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
     task.data = body

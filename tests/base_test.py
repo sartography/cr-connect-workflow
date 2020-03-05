@@ -5,9 +5,11 @@ import os
 import unittest
 import urllib.parse
 
+from crc.services.file_service import FileService
+
 os.environ["TESTING"] = "true"
 
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel
 from crc.models.user import UserModel
 
@@ -129,3 +131,13 @@ class BaseTest(unittest.TestCase):
         return '?%s' % '&'.join(query_string_list)
 
 
+    def replace_file(self, name, file_path):
+        """Replaces a stored file with the given name with the contents of the file at the given path."""
+        file_service = FileService()
+        file = open(file_path, "rb")
+        data = file.read()
+
+        file_model = db.session.query(FileModel).filter(FileModel.name == name).first()
+        noise, file_extension = os.path.splitext(file_path)
+        content_type = CONTENT_TYPES[file_extension[1:]]
+        file_service.update_file(file_model, data, content_type)

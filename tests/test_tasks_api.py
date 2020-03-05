@@ -1,6 +1,7 @@
 import json
+import os
 
-from crc import session
+from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, Task
 from crc.models.file import FileModelSchema
 from crc.models.study import StudyModel
@@ -202,3 +203,17 @@ class TestTasksApi(BaseTest):
         self.assertIsNotNone(workflow_api.next_task['documentation'])
         self.assertTrue("norris" in workflow_api.next_task['documentation'])
 
+    def test_load_workflow_from_outdated_spec(self):
+
+        # Start the basic two_forms workflow and complete a task.
+        self.load_example_data()
+        workflow = self.create_workflow('two_forms')
+        workflow_api = self.get_workflow_api(workflow)
+        self.complete_form(workflow, workflow_api.user_tasks[0], {"color": "blue"})
+
+        # Modify the specification, with a major change that alters the flow and can't be serialized effectively.
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        self.replace_file("two_forms.bpmn", file_path)
+
+        with self.assertRaises(KeyError):
+            workflow_api = self.get_workflow_api(workflow)

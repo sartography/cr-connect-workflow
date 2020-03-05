@@ -221,12 +221,12 @@ class TestWorkflowProcessor(BaseTest):
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("decision_table")
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
-        self.assertEquals("1.1", processor.get_spec_version())
+        self.assertTrue(processor.get_spec_version().startswith('v1.1'))
         file_service = FileService()
 
         file_service.add_workflow_spec_file(workflow_spec_model, "new_file.txt", "txt", b'blahblah')
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
-        self.assertEquals("1.1.1", processor.get_spec_version())
+        self.assertTrue(processor.get_spec_version().startswith('v1.1.1'))
 
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'docx', 'docx.bpmn')
         file = open(file_path, "rb")
@@ -235,7 +235,7 @@ class TestWorkflowProcessor(BaseTest):
         file_model = db.session.query(FileModel).filter(FileModel.name == "decision_table.bpmn").first()
         file_service.update_file(file_model, data, "txt")
         processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
-        self.assertEquals("2.1.1", processor.get_spec_version())
+        self.assertTrue(processor.get_spec_version().startswith('v2.1.1'))
 
     def test_restart_workflow(self):
         self.load_example_data()
@@ -255,17 +255,6 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(task.get_name(), task_after_restart.get_name())
         self.assertEqual(task.data, task_after_restart.data)
 
-    def replace_file(self, name, file_path):
-        """Replaces a stored file with the given name with the contents of the file at the given path."""
-        file_service = FileService()
-        file = open(file_path, "rb")
-        data = file.read()
-
-        file_model = db.session.query(FileModel).filter(FileModel.name == name).first()
-        noise, file_extension = os.path.splitext(file_path)
-        content_type = CONTENT_TYPES[file_extension[1:]]
-        file_service.update_file(file_model, data, content_type)
-
     def test_modify_spec_with_text_change_with_running_workflow(self):
         self.load_example_data()
 
@@ -283,7 +272,8 @@ class TestWorkflowProcessor(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_text_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
-        processor2 = WorkflowProcessor(workflow_spec_model.id, processor.serialize())
+        workflow_model.bpmn_workflow_json = processor.serialize()
+        processor2 = WorkflowProcessor(workflow_model)
         self.assertEquals("Step 1", processor2.bpmn_workflow.last_task.task_spec.description)
         self.assertEquals("# This is some documentation I wanted to add.",
                           processor2.bpmn_workflow.last_task.task_spec.documentation)
@@ -309,7 +299,8 @@ class TestWorkflowProcessor(BaseTest):
         self.replace_file("two_forms.bpmn", file_path)
 
         with self.assertRaises(KeyError):
-            processor2 = WorkflowProcessor(workflow_spec_model.id, processor.serialize())
+            workflow_model.bpmn_workflow_json = processor.serialize()
+            processor2 = WorkflowProcessor(workflow_model)
 
         # Restart the workflow, and the error should go away
         processor.restart_with_current_task_data()
@@ -317,3 +308,5 @@ class TestWorkflowProcessor(BaseTest):
         processor.complete_task(processor.next_task())
         self.assertEquals("New Step", processor.next_task().task_spec.description)
         self.assertEquals({"color": "blue"}, processor.next_task().data)
+
+
