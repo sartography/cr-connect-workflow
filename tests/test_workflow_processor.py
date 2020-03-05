@@ -319,4 +319,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEquals("New Step", processor3.next_task().task_spec.description)
         self.assertEquals({"color": "blue"}, processor3.next_task().data)
 
-
+    def test_get_latest_spec_version(self):
+        workflow_spec_model = self.load_test_spec("two_forms")
+        version = WorkflowProcessor.get_latest_version_string("two_forms")
+        self.assertTrue(version.startswith("v1 "))

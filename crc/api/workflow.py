@@ -75,17 +75,18 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
         next_task=None,
         user_tasks=user_tasks,
         workflow_spec_id=processor.workflow_spec_id,
-        spec_version=processor.get_spec_version()
+        spec_version=processor.get_spec_version(),
+        is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id)
     )
     if processor.next_task():
         workflow_api.next_task = Task.from_spiff(processor.next_task())
     return workflow_api
 
 
-def get_workflow(workflow_id):
+def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     schema = WorkflowApiSchema()
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow_model)
+    processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
     return schema.dump(__get_workflow_api_model(processor))
 
 

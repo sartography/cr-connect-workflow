@@ -92,7 +92,7 @@ class WorkflowProcessor(object):
     STUDY_ID_KEY = "study_id"
 
     def __init__(self, workflow_model: WorkflowModel, soft_reset=False, hard_reset=False):
-        """Create a Worflow Processor based on the serialized information available in the workflow model.
+        """Create a Workflow Processor based on the serialized information available in the workflow model.
         If soft_reset is set to true, it will try to use the latest version of the workflow specification.
         If hard_reset is set to true, it will create a new Workflow, but embed the data from the last
         completed task in the previous workflow.
@@ -118,14 +118,36 @@ class WorkflowProcessor(object):
         return parser
 
     @staticmethod
-    def __get_file_models_for_version(workflow_spec_id, version):
-        """Version is in the format v[VERSION] [FILE_ID_LIST]
+    def get_latest_version_string(workflow_spec_id):
+        """Version is in the format v[VERSION] (FILE_ID_LIST)
          For example, a single bpmn file with only one version would be
-         v1 [12]  Where 12 is the id of the file that is used to create the
+         v1 (12)  Where 12 is the id of the file data model that is used to create the
          specification.  If multiple files exist, they are added on in
          dot notation to both the version number and the file list. So
          a Spec that includes a BPMN, DMN, an a Word file all on the first
-         version would be v1.1.1 [12,45,21]"""
+         version would be v1.1.1 (12.45.21)"""
+
+        # this could potentially become expensive to load all the data in the data models.
+        # in which case we might consider using a deferred loader for the actual data, but
+        # trying not to pre-optimize.
+        file_data_models = WorkflowProcessor.__get_latest_file_models(workflow_spec_id)
+        major_version = 0  # The version of the primary file.
+        minor_version = []  # The versions of the minor files if any.
+        file_ids = []
+        for file_data in file_data_models:
+            file_ids.append(file_data.id)
+            if file_data.file_model.primary:
+                major_version = file_data.version
+            else:
+                minor_version.append(file_data.version)
+        minor_version.insert(0, major_version) # Add major version to beginning.
+        version = ".".join(str(x) for x in minor_version)
+        files = ".".join(str(x) for x in file_ids)
+        full_version = "v%s (%s)" % (version, files)
+        return full_version
+
+    @staticmethod
+    def __get_file_models_for_version(workflow_spec_id, version):
         file_id_strings = re.findall('\((.*)\)', version)[0].split(".")
         file_ids = [int(i) for i in file_id_strings]
         files = session.query(FileDataModel)\
@@ -148,21 +170,19 @@ class WorkflowProcessor(object):
             .order_by(FileModel.id)\
             .all()
 
+
     @staticmethod
     def get_spec(workflow_spec_id, version=None):
         """Returns the requested version of the specification,
         or the lastest version if none is specified."""
         parser = WorkflowProcessor.get_parser()
-        major_version = 0  # The version of the primary file.
-        minor_version = []  # The versions of the minor files if any.
-        file_ids = []
         process_id = None
         if version is None:
             file_data_models = WorkflowProcessor.__get_latest_file_models(workflow_spec_id)
+            version = WorkflowProcessor.get_latest_version_string(workflow_spec_id)
         else:
             file_data_models = WorkflowProcessor.__get_file_models_for_version(workflow_spec_id, version)
         for file_data in file_data_models:
-            file_ids.append(file_data.id)
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 if file_data.file_model.primary:
@@ -171,17 +191,10 @@ class WorkflowProcessor(object):
             elif file_data.file_model.type == FileType.dmn:
                 dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
-            if file_data.file_model.primary:
-                major_version = file_data.version
-            else:
-                minor_version.append(file_data.version)
         if process_id is None:
             raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
-        minor_version.insert(0, major_version) # Add major version to beginning.
         spec = parser.get_spec(process_id)
-        version = ".".join(str(x) for x in minor_version)
-        files = ".".join(str(x) for x in file_ids)
-        spec.description = "v%s (%s)" % (version, files)
+        spec.description = version
         return spec
 
     @staticmethod

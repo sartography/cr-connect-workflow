@@ -25,8 +25,10 @@ class TestTasksApi(BaseTest):
         workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
         return workflow
 
-    def get_workflow_api(self, workflow):
-        rv = self.app.get('/v1.0/workflow/%i' % workflow.id, content_type="application/json")
+    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False):
+        rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
+                          (workflow.id, str(soft_reset), str(hard_reset)),
+                          content_type="application/json")
         json_data = json.loads(rv.get_data(as_text=True))
         workflow_api = WorkflowApiSchema().load(json_data)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
@@ -210,6 +212,7 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('two_forms')
         workflow_api = self.get_workflow_api(workflow)
         self.complete_form(workflow, workflow_api.user_tasks[0], {"color": "blue"})
+        self.assertTrue(workflow_api.is_latest_spec)
 
         # Modify the specification, with a major change that alters the flow and can't be deserialized
         # effectively, if it uses the latest spec files.
@@ -218,4 +221,8 @@ class TestTasksApi(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow)
         self.assertTrue(workflow_api.spec_version.startswith("v1 "))
-        self.assertTrue(workflow_api.latest_spec_version)
+        self.assertFalse(workflow_api.is_latest_spec)
+
+        workflow_api = self.get_workflow_api(workflow, hard_reset=True)
+        self.assertTrue(workflow_api.spec_version.startswith("v2 "))
+        self.assertTrue(workflow_api.is_latest_spec)

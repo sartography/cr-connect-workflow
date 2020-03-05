@@ -533,6 +533,19 @@ paths:
     get:
       operationId: crc.api.workflow.get_workflow
       summary: Detailed information for a specific workflow instance
+      parameters:
+        - name: soft_reset
+          in: query
+          required: false
+          description: Set this to true to use the latest workflow specification to load minor modifications to the spec.
+          schema:
+            type: boolean
+        - name: hard_reset
+          in: query
+          required: false
+          description: Set this to true to reset the workflow
+          schema:
+            type: boolean
       tags:
         - Workflows and Tasks
       responses:
