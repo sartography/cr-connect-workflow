@@ -1,11 +1,10 @@
 import json
-from unittest.mock import patch
 
 from crc import session
+from crc.models.api_models import WorkflowApiSchema, Task
 from crc.models.file import FileModelSchema
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, \
-    WorkflowApiSchema, WorkflowStatus, Task
+from crc.models.workflow import WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
