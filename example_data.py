@@ -78,6 +78,7 @@ class ExampleDataLoader:
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
+        global file
         file_service = FileService()
 
         spec = WorkflowSpecModel(id=id,
@@ -103,5 +104,6 @@ class ExampleDataLoader:
                 # Ignore sub directories
                 pass
             finally:
-                file.close()
+                if file:
+                    file.close()
         return spec
