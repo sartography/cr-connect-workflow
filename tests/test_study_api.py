@@ -177,7 +177,7 @@ class TestStudyApi(BaseTest):
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assert_success(add_response)
 
-        # Should have no workflows to start
+        # Should have one workflow now
         response_after = self.app.get('/v1.0/study/%i/workflows' % study.id,
                            content_type="application/json",
                            headers=self.logged_in_headers())
