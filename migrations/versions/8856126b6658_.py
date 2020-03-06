@@ -1,16 +1,16 @@
 """empty message
 
-Revision ID: 1c6e4e179f8e
+Revision ID: 8856126b6658
 Revises: 
-Create Date: 2020-03-03 15:51:45.550681
+Create Date: 2020-03-06 09:49:37.872516
 
 """
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = '1c6e4e179f8e'
+revision = '8856126b6658'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -61,6 +61,7 @@ def upgrade():
     sa.Column('status', sa.Enum('new', 'user_input_required', 'waiting', 'complete', name='workflowstatus'), nullable=True),
     sa.Column('study_id', sa.Integer(), nullable=True),
     sa.Column('workflow_spec_id', sa.String(), nullable=True),
+    sa.Column('spec_version', sa.String(), nullable=True),
     sa.ForeignKeyConstraint(['study_id'], ['study.id'], ),
     sa.ForeignKeyConstraint(['workflow_spec_id'], ['workflow_spec.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -68,8 +69,6 @@ def upgrade():
     op.create_table('file',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=True),
-    sa.Column('version', sa.Integer(), nullable=True),
-    sa.Column('last_updated', sa.DateTime(timezone=True), nullable=True),
     sa.Column('type', sa.Enum('bpmn', 'csv', 'dmn', 'doc', 'docx', 'gif', 'jpg', 'md', 'pdf', 'png', 'ppt', 'pptx', 'rtf', 'svg', 'svg_xml', 'txt', 'xls', 'xlsx', 'xml', 'zip', name='filetype'), nullable=True),
     sa.Column('primary', sa.Boolean(), nullable=True),
     sa.Column('content_type', sa.String(), nullable=True),
@@ -78,6 +77,7 @@ def upgrade():
     sa.Column('study_id', sa.Integer(), nullable=True),
     sa.Column('task_id', sa.String(), nullable=True),
     sa.Column('form_field_key', sa.String(), nullable=True),
+    sa.Column('latest_version', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['study_id'], ['study.id'], ),
     sa.ForeignKeyConstraint(['workflow_id'], ['workflow.id'], ),
     sa.ForeignKeyConstraint(['workflow_spec_id'], ['workflow_spec.id'], ),
@@ -85,7 +85,10 @@ def upgrade():
     )
     op.create_table('file_data',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('md5_hash', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('data', sa.LargeBinary(), nullable=True),
+    sa.Column('version', sa.Integer(), nullable=True),
+    sa.Column('last_updated', sa.DateTime(timezone=True), nullable=True),
     sa.Column('file_model_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['file_model_id'], ['file.id'], ),
     sa.PrimaryKeyConstraint('id')
