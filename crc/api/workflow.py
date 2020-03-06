@@ -3,8 +3,8 @@ import uuid
 from crc.api.file import delete_file
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, \
-    Task, WorkflowApiSchema, WorkflowApi
+from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
+from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.models.file import FileModel
 
@@ -74,17 +74,19 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
         last_task=Task.from_spiff(processor.bpmn_workflow.last_task),
         next_task=None,
         user_tasks=user_tasks,
-        workflow_spec_id=processor.workflow_spec_id
+        workflow_spec_id=processor.workflow_spec_id,
+        spec_version=processor.get_spec_version(),
+        is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id)
     )
-    if(processor.next_task()):
+    if processor.next_task():
         workflow_api.next_task = Task.from_spiff(processor.next_task())
     return workflow_api
 
-def get_workflow(workflow_id):
+
+def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     schema = WorkflowApiSchema()
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow_model.workflow_spec_id,
-                                  workflow_model.bpmn_workflow_json)
+    processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
     return schema.dump(__get_workflow_api_model(processor))
 
 
@@ -99,7 +101,7 @@ def get_task(workflow_id, task_id):
 
 def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow_model.workflow_spec_id, workflow_model.bpmn_workflow_json)
+    processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
     task.data = body

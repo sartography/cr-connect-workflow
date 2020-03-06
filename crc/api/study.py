@@ -6,9 +6,10 @@ from flask import g
 from crc import session, auth
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.workflow import __get_workflow_api_model
+from crc.models.api_models import WorkflowApiSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.study import StudyModelSchema, StudyModel
-from crc.models.workflow import WorkflowModel, WorkflowApiSchema, WorkflowSpecModel, WorkflowApi
+from crc.models.workflow import WorkflowModel, WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.protocol_builder import ProtocolBuilderService
 
@@ -120,7 +121,7 @@ def get_study_workflows(study_id):
     workflow_models = session.query(WorkflowModel).filter_by(study_id=study_id).all()
     api_models = []
     for workflow_model in workflow_models:
-        processor = WorkflowProcessor(workflow_model.workflow_spec_id,
+        processor = WorkflowProcessor(workflow_model,
                                       workflow_model.bpmn_workflow_json)
         api_models.append(__get_workflow_api_model(processor))
     schema = WorkflowApiSchema(many=True)

@@ -1,11 +1,11 @@
 import json
-from unittest.mock import patch
+import os
 
-from crc import session
+from crc import session, app
+from crc.models.api_models import WorkflowApiSchema, Task
 from crc.models.file import FileModelSchema
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, \
-    WorkflowApiSchema, WorkflowStatus, Task
+from crc.models.workflow import WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
@@ -25,8 +25,10 @@ class TestTasksApi(BaseTest):
         workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
         return workflow
 
-    def get_workflow_api(self, workflow):
-        rv = self.app.get('/v1.0/workflow/%i' % workflow.id, content_type="application/json")
+    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False):
+        rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
+                          (workflow.id, str(soft_reset), str(hard_reset)),
+                          content_type="application/json")
         json_data = json.loads(rv.get_data(as_text=True))
         workflow_api = WorkflowApiSchema().load(json_data)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
@@ -203,6 +205,24 @@ class TestTasksApi(BaseTest):
         self.assertIsNotNone(workflow_api.next_task['documentation'])
         self.assertTrue("norris" in workflow_api.next_task['documentation'])
 
+    def test_load_workflow_from_outdated_spec(self):
 
+        # Start the basic two_forms workflow and complete a task.
+        self.load_example_data()
+        workflow = self.create_workflow('two_forms')
+        workflow_api = self.get_workflow_api(workflow)
+        self.complete_form(workflow, workflow_api.user_tasks[0], {"color": "blue"})
+        self.assertTrue(workflow_api.is_latest_spec)
 
- #       response = ProtocolBuilderService.get_study_details(self.test_study_id)
+        # Modify the specification, with a major change that alters the flow and can't be deserialized
+        # effectively, if it uses the latest spec files.
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        self.replace_file("two_forms.bpmn", file_path)
+
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertTrue(workflow_api.spec_version.startswith("v1 "))
+        self.assertFalse(workflow_api.is_latest_spec)
+
+        workflow_api = self.get_workflow_api(workflow, hard_reset=True)
+        self.assertTrue(workflow_api.spec_version.startswith("v2 "))
+        self.assertTrue(workflow_api.is_latest_spec)

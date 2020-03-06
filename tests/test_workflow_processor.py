@@ -1,14 +1,16 @@
+import os
 import string
 import random
 from unittest.mock import patch
 
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 
-from crc import session
+from crc import session, db, app
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
+from crc.models.workflow import WorkflowSpecModel, WorkflowStatus, WorkflowModel
+from crc.services.file_service import FileService
 from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -214,3 +216,110 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("last_updated", task.data["study"]["info"])
         self.assertIn("sponsor", task.data["study"]["info"])
 
+    def test_spec_versioning(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("decision_table")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertTrue(processor.get_spec_version().startswith('v1.1'))
+        file_service = FileService()
+
+        file_service.add_workflow_spec_file(workflow_spec_model, "new_file.txt", "txt", b'blahblah')
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertTrue(processor.get_spec_version().startswith('v1.1.1'))
+
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'docx', 'docx.bpmn')
+        file = open(file_path, "rb")
+        data = file.read()
+
+        file_model = db.session.query(FileModel).filter(FileModel.name == "decision_table.bpmn").first()
+        file_service.update_file(file_model, data, "txt")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertTrue(processor.get_spec_version().startswith('v2.1.1'))
+
+    def test_restart_workflow(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("two_forms")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
+        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        task = processor.next_task()
+        task.data = {"key": "Value"}
+        processor.complete_task(task)
+        task_before_restart = processor.next_task()
+        processor.hard_reset()
+        task_after_restart = processor.next_task()
+
+        self.assertNotEqual(task.get_name(), task_before_restart.get_name())
+        self.assertEqual(task.get_name(), task_after_restart.get_name())
+        self.assertEqual(task.data, task_after_restart.data)
+
+    def test_soft_reset(self):
+        self.load_example_data()
+
+        # Start the two_forms workflow, and enter some data in the first form.
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("two_forms")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
+        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        task = processor.next_task()
+        task.data = {"color": "blue"}
+        processor.complete_task(task)
+
+        # Modify the specification, with a minor text change.
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_text_mod.bpmn')
+        self.replace_file("two_forms.bpmn", file_path)
+
+        # Setting up another processor should not error out, but doesn't pick up the update.
+        workflow_model.bpmn_workflow_json = processor.serialize()
+        processor2 = WorkflowProcessor(workflow_model)
+        self.assertEquals("Step 1", processor2.bpmn_workflow.last_task.task_spec.description)
+        self.assertNotEquals("# This is some documentation I wanted to add.",
+                          processor2.bpmn_workflow.last_task.task_spec.documentation)
+
+        # You can do a soft update and get the right response.
+        processor3 = WorkflowProcessor(workflow_model, soft_reset=True)
+        self.assertEquals("Step 1", processor3.bpmn_workflow.last_task.task_spec.description)
+        self.assertEquals("# This is some documentation I wanted to add.",
+                          processor3.bpmn_workflow.last_task.task_spec.documentation)
+
+
+
+    def test_hard_reset(self):
+        self.load_example_data()
+
+        # Start the two_forms workflow, and enter some data in the first form.
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("two_forms")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
+        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        task = processor.next_task()
+        task.data = {"color": "blue"}
+        processor.complete_task(task)
+        next_task = processor.next_task()
+        self.assertEquals("Step 2", next_task.task_spec.description)
+
+        # Modify the specification, with a major change that alters the flow and can't be serialized effectively.
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        self.replace_file("two_forms.bpmn", file_path)
+
+        # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
+        workflow_model.bpmn_workflow_json = processor.serialize()
+        processor2 = WorkflowProcessor(workflow_model)
+        self.assertTrue(processor2.get_spec_version().startswith("v1 ")) # Still at version 1.
+
+        # Do a hard reset, which should bring us back to the beginning, but retain the data.
+        processor3 = WorkflowProcessor(workflow_model, hard_reset=True)
+        self.assertEquals("Step 1", processor3.next_task().task_spec.description)
+        self.assertEquals({"color": "blue"}, processor3.next_task().data)
+        processor3.complete_task(processor3.next_task())
+        self.assertEquals("New Step", processor3.next_task().task_spec.description)
+        self.assertEquals({"color": "blue"}, processor3.next_task().data)
+
+    def test_get_latest_spec_version(self):
+        workflow_spec_model = self.load_test_spec("two_forms")
+        version = WorkflowProcessor.get_latest_version_string("two_forms")
+        self.assertTrue(version.startswith("v1 "))

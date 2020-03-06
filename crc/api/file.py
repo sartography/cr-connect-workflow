@@ -8,6 +8,7 @@ from flask import send_file
 from crc import session
 from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileModelSchema, FileModel, FileDataModel, FileType
+from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 
 
@@ -34,7 +35,8 @@ def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=Non
 
     file = connexion.request.files['file']
     if workflow_spec_id:
-        file_model = FileService.add_workflow_spec_file(workflow_spec_id, file.filename, file.content_type, file.stream.read())
+        workflow_spec = session.query(WorkflowSpecModel).filter_by(id=workflow_spec_id).first()
+        file_model = FileService.add_workflow_spec_file(workflow_spec, file.filename, file.content_type, file.stream.read())
     else:
         file_model = FileService.add_form_field_file(study_id, workflow_id, task_id, form_field_key, file.filename, file.content_type, file.stream.read())
 

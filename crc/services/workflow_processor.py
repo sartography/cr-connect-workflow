@@ -1,3 +1,4 @@
+import json
 import re
 import xml.etree.ElementTree as ElementTree
 
@@ -10,7 +11,7 @@ from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.operators import Operator
 
-from crc import session
+from crc import session, db
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus, WorkflowModel
@@ -90,11 +91,26 @@ class WorkflowProcessor(object):
     WORKFLOW_ID_KEY = "workflow_id"
     STUDY_ID_KEY = "study_id"
 
-    def __init__(self, workflow_spec_id, bpmn_json):
-        wf_spec = self.get_spec(workflow_spec_id)
-        self.workflow_spec_id = workflow_spec_id
-        self.bpmn_workflow = self._serializer.deserialize_workflow(bpmn_json, workflow_spec=wf_spec)
+    def __init__(self, workflow_model: WorkflowModel, soft_reset=False, hard_reset=False):
+        """Create a Workflow Processor based on the serialized information available in the workflow model.
+        If soft_reset is set to true, it will try to use the latest version of the workflow specification.
+        If hard_reset is set to true, it will create a new Workflow, but embed the data from the last
+        completed task in the previous workflow.
+        If neither flag is set, it will use the same version of the specification that was used to originally
+        create the workflow model. """
+        if soft_reset:
+            spec = self.get_spec(workflow_model.workflow_spec_id)
+            workflow_model.spec_version = spec.description
+        else:
+            spec = self.get_spec(workflow_model.workflow_spec_id, workflow_model.spec_version)
+
+        self.workflow_spec_id = workflow_model.workflow_spec_id
+        self.bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
         self.bpmn_workflow.script_engine = self._script_engine
+
+        if hard_reset:
+            # Now that the spec is loaded, get the data and rebuild the bpmn with the new details
+            workflow_model.spec_version = self.hard_reset()
 
     @staticmethod
     def get_parser():
@@ -102,12 +118,70 @@ class WorkflowProcessor(object):
         return parser
 
     @staticmethod
-    def get_spec(workflow_spec_id):
+    def get_latest_version_string(workflow_spec_id):
+        """Version is in the format v[VERSION] (FILE_ID_LIST)
+         For example, a single bpmn file with only one version would be
+         v1 (12)  Where 12 is the id of the file data model that is used to create the
+         specification.  If multiple files exist, they are added on in
+         dot notation to both the version number and the file list. So
+         a Spec that includes a BPMN, DMN, an a Word file all on the first
+         version would be v1.1.1 (12.45.21)"""
+
+        # this could potentially become expensive to load all the data in the data models.
+        # in which case we might consider using a deferred loader for the actual data, but
+        # trying not to pre-optimize.
+        file_data_models = WorkflowProcessor.__get_latest_file_models(workflow_spec_id)
+        major_version = 0  # The version of the primary file.
+        minor_version = []  # The versions of the minor files if any.
+        file_ids = []
+        for file_data in file_data_models:
+            file_ids.append(file_data.id)
+            if file_data.file_model.primary:
+                major_version = file_data.version
+            else:
+                minor_version.append(file_data.version)
+        minor_version.insert(0, major_version) # Add major version to beginning.
+        version = ".".join(str(x) for x in minor_version)
+        files = ".".join(str(x) for x in file_ids)
+        full_version = "v%s (%s)" % (version, files)
+        return full_version
+
+    @staticmethod
+    def __get_file_models_for_version(workflow_spec_id, version):
+        file_id_strings = re.findall('\((.*)\)', version)[0].split(".")
+        file_ids = [int(i) for i in file_id_strings]
+        files = session.query(FileDataModel)\
+            .join(FileModel) \
+            .filter(FileModel.workflow_spec_id == workflow_spec_id)\
+            .filter(FileDataModel.id.in_(file_ids)).all()
+        if len(files) != len(file_ids):
+            raise ApiError("invalid_version",
+                           "The version '%s' of workflow specification '%s' is invalid.  Unable to locate the correct files to recreate it." %
+                           (version, workflow_spec_id))
+        return files
+
+    @staticmethod
+    def __get_latest_file_models(workflow_spec_id):
+        """Returns all the latest files related to a workflow specification"""
+        return session.query(FileDataModel) \
+            .join(FileModel) \
+            .filter(FileModel.workflow_spec_id == workflow_spec_id)\
+            .filter(FileDataModel.version == FileModel.latest_version)\
+            .order_by(FileModel.id)\
+            .all()
+
+
+    @staticmethod
+    def get_spec(workflow_spec_id, version=None):
+        """Returns the requested version of the specification,
+        or the lastest version if none is specified."""
         parser = WorkflowProcessor.get_parser()
         process_id = None
-        file_data_models = session.query(FileDataModel) \
-            .join(FileModel) \
-            .filter(FileModel.workflow_spec_id == workflow_spec_id).all()
+        if version is None:
+            file_data_models = WorkflowProcessor.__get_latest_file_models(workflow_spec_id)
+            version = WorkflowProcessor.get_latest_version_string(workflow_spec_id)
+        else:
+            file_data_models = WorkflowProcessor.__get_file_models_for_version(workflow_spec_id, version)
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
@@ -119,8 +193,19 @@ class WorkflowProcessor(object):
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
         if process_id is None:
             raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
-        return parser.get_spec(process_id)
+        spec = parser.get_spec(process_id)
+        spec.description = version
+        return spec
 
+    @staticmethod
+    def status_of(bpmn_workflow):
+        if bpmn_workflow.is_completed():
+            return WorkflowStatus.complete
+        user_tasks = bpmn_workflow.get_ready_user_tasks()
+        if len(user_tasks) > 0:
+            return WorkflowStatus.user_input_required
+        else:
+            return WorkflowStatus.waiting
 
     @classmethod
     def create(cls,  study_id, workflow_spec_id):
@@ -128,30 +213,45 @@ class WorkflowProcessor(object):
         bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
         bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study_id
         bpmn_workflow.do_engine_steps()
-        json = cls._serializer.serialize_workflow(bpmn_workflow)
-        processor = cls(workflow_spec_id, json)
-        workflow_model = WorkflowModel(status=processor.get_status(),
+        workflow_model = WorkflowModel(status=WorkflowProcessor.status_of(bpmn_workflow),
                                        study_id=study_id,
-                                       workflow_spec_id=workflow_spec_id)
+                                       workflow_spec_id=workflow_spec_id,
+                                       spec_version=spec.description)
         session.add(workflow_model)
         session.commit()
         # Need to commit twice, first to get a unique id for the workflow model, and
         # a second time to store the serilaization so we can maintain this link within
         # the spiff-workflow process.
-        processor.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-        workflow_model.bpmn_workflow_json = processor.serialize()
+        bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
+
+        workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(bpmn_workflow)
         session.add(workflow_model)
         session.commit()
+        processor = cls(workflow_model)
         return processor
 
+    def hard_reset(self):
+        """Recreate this workflow, but keep the data from the last completed task and add it back into the first task.
+         This may be useful when a workflow specification changes, and users need to review all the
+         prior steps, but don't need to reenter all the previous data.
+
+         Returns the new version.
+         """
+        spec = WorkflowProcessor.get_spec(self.workflow_spec_id)
+        bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
+        bpmn_workflow.data = self.bpmn_workflow.data
+        for task in bpmn_workflow.get_tasks(SpiffTask.READY):
+            task.data = self.bpmn_workflow.last_task.data
+        bpmn_workflow.do_engine_steps()
+        self.bpmn_workflow = bpmn_workflow
+        return spec.description
+
     def get_status(self):
-        if self.bpmn_workflow.is_completed():
-            return WorkflowStatus.complete
-        user_tasks = self.bpmn_workflow.get_ready_user_tasks()
-        if len(user_tasks) > 0:
-            return WorkflowStatus.user_input_required
-        else:
-            return WorkflowStatus.waiting
+        return self.status_of(self.bpmn_workflow)
+
+    def get_spec_version(self):
+        """We use the spec's descrption field to store the version information"""
+        return self.bpmn_workflow.spec.description
 
     def do_engine_steps(self):
         self.bpmn_workflow.do_engine_steps()
