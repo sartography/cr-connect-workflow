@@ -1,5 +1,3 @@
-import requests
-
 from crc import session
 from crc.api.common import ApiError
 from crc.models.study import StudyModel, StudyModelSchema
@@ -28,18 +26,18 @@ class StudyInfo(Script):
                            message="The StudyInfo script requires a single argument which must be "
                                    "one of %s" % ",".join(StudyInfo.type_options))
         cmd = args[0]
+        study_info = {}
+        if "study" in task.data:
+            study_info = task.data["study"]
+
         if cmd == 'info':
             study = session.query(StudyModel).filter_by(id=study_id).first()
             schema = StudyModelSchema()
-            details = {"study": {"info": schema.dump(study)}}
-            task.data.update(details)
+            study_info["info"] = schema.dump(study)
         if cmd == 'investigators':
-            details = {"study": {"investigators": self.pb.get_investigators(study_id)}}
-            task.data.update(details)
+            study_info["investigators"] = self.pb.get_investigators(study_id)
         if cmd == 'required_docs':
-            details = {"study": {"required_docs": self.pb.get_required_docs(study_id)}}
-            task.data.update(details)
+            study_info["required_docs"] = self.pb.get_required_docs(study_id)
         if cmd == 'details':
-            details = {"study": {"details": self.pb.get_study_details(study_id)}}
-            task.data.update(details)
-
+            study_info["details"] = self.pb.get_study_details(study_id)
+        task.data["study"] = study_info
