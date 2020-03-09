@@ -155,3 +155,33 @@ class TestStudyApi(BaseTest):
         rv = self.app.delete('/v1.0/workflow/%i' % workflow.id)
         self.assert_success(rv)
         self.assertEqual(0, session.query(WorkflowModel).count())
+
+    def test_get_study_workflows(self):
+        self.load_example_data()
+
+        # Should have no workflows to start
+        study = session.query(StudyModel).first()
+        response_before = self.app.get('/v1.0/study/%i/workflows' % study.id,
+                           content_type="application/json",
+                           headers=self.logged_in_headers())
+        self.assert_success(response_before)
+        json_data_before = json.loads(response_before.get_data(as_text=True))
+        workflows_before = WorkflowApiSchema(many=True).load(json_data_before)
+        self.assertEqual(0, len(workflows_before))
+
+        # Add a workflow
+        spec = session.query(WorkflowSpecModel).first()
+        add_response = self.app.post('/v1.0/study/%i/workflows' % study.id,
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
+                           data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+        self.assert_success(add_response)
+
+        # Should have one workflow now
+        response_after = self.app.get('/v1.0/study/%i/workflows' % study.id,
+                           content_type="application/json",
+                           headers=self.logged_in_headers())
+        self.assert_success(response_after)
+        json_data_after = json.loads(response_after.get_data(as_text=True))
+        workflows_after = WorkflowApiSchema(many=True).load(json_data_after)
+        self.assertEqual(1, len(workflows_after))
