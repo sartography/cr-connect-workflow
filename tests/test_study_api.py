@@ -141,6 +141,28 @@ class TestStudyApi(BaseTest):
         workflow2 = WorkflowApiSchema().load(json_data)
         self.assertEqual(workflow_model.id, workflow2.id)
 
+    def test_delete_study(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        rv = self.app.delete('/v1.0/study/%i' % study.id)
+        self.assert_success(rv)
+
+    def test_delete_study_with_workflow(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+
+        spec = session.query(WorkflowSpecModel).first()
+        rv = self.app.post('/v1.0/study/%i/workflows' % study.id,
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
+                           data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+
+        rv = self.app.delete('/v1.0/study/%i' % study.id)
+        self.assert_failure(rv, error_code="study_integrity_error")
+
+
+
+
     def test_delete_workflow(self):
         self.load_example_data()
         study = session.query(StudyModel).first()

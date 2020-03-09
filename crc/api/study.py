@@ -1,9 +1,11 @@
+import logging
 from typing import List, Optional, Union, Tuple, Dict
 
 from connexion import NoContent
 from flask import g
+from sqlalchemy.exc import IntegrityError
 
-from crc import session, auth
+from crc import session, auth, app
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.workflow import __get_workflow_api_model
 from crc.models.api_models import WorkflowApiSchema
@@ -29,6 +31,7 @@ def add_study(body):
     for spec in session.query(WorkflowSpecModel).all():
         WorkflowProcessor.create(study.id, spec.id)
     return StudyModelSchema().dump(study)
+
 
 
 @auth.login_required
@@ -58,6 +61,16 @@ def get_study(study_id):
         return NoContent, 404
     return schema.dump(study)
 
+
+def delete_study(study_id):
+    try:
+        session.query(StudyModel).filter_by(id=study_id).delete()
+    except IntegrityError as ie:
+        session.rollback()
+        app.logger.error("Failed to delete Study #%i due to an Integrity Error: %s" % (study_id, str(ie)))
+        raise ApiError(code="study_integrity_error", message="This study contains running workflows that is "
+                                                             "preventing deletion.  Please delete the workflows " +
+                                                             "before proceeding.")
 
 @auth.login_required
 def update_from_protocol_builder():
