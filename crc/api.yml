@@ -749,6 +749,12 @@ components:
           type: string
         is_latest_spec:
           type: boolean
+        num_tasks_total:
+          type: integer
+        num_tasks_complete:
+          type: integer
+        num_tasks_incomplete:
+          type: integer
 
       example:
         id: 291234

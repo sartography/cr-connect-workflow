@@ -61,7 +61,6 @@ def delete_workflow_specification(spec_id):
 
     session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).delete()
     session.query(WorkflowSpecModel).filter_by(id=spec_id).delete()
-
     session.commit()
 
 
@@ -94,6 +93,7 @@ def delete(workflow_id):
     session.query(WorkflowModel).filter_by(id=workflow_id).delete()
     session.commit()
 
+
 def get_task(workflow_id, task_id):
     workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     return workflow.bpmn_workflow().get_task(task_id)
@@ -111,5 +111,6 @@ def update_task(workflow_id, task_id, body):
     workflow_model.bpmn_workflow_json = processor.serialize()
     session.add(workflow_model)
     session.commit()
-    return WorkflowApiSchema().dump(__get_workflow_api_model(processor)
-                                    )
+    return WorkflowApiSchema().dump(__get_workflow_api_model(processor))
+
+
