@@ -117,9 +117,6 @@ class WorkflowApiSchema(ma.Schema):
     user_tasks = marshmallow.fields.List(marshmallow.fields.Nested(TaskSchema, dump_only=True))
     last_task = marshmallow.fields.Nested(TaskSchema, dump_only=True)
     next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
-    num_tasks_total = marshmallow.fields.Method('get_num_tasks_total')
-    num_tasks_complete = marshmallow.fields.Method('get_num_tasks_complete')
-    num_tasks_incomplete = marshmallow.fields.Method('get_num_tasks_incomplete')
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
@@ -135,17 +132,3 @@ class WorkflowApiSchema(ma.Schema):
         ]
         filtered_fields = {key: data[key] for key in keys}
         return WorkflowApi(**filtered_fields)
-
-    def get_num_tasks_total(self, obj):
-        tasks = list(obj.user_tasks)
-        return len(tasks)
-
-    def get_num_tasks_complete(self, obj):
-        complete_states = ['CANCELLED', 'COMPLETED']
-        tasks = list(obj.user_tasks)
-        return sum(1 for t in tasks if t.state in complete_states)
-
-    def get_num_tasks_incomplete(self, obj):
-        incomplete_states = ['MAYBE', 'LIKELY', 'FUTURE', 'WAITING', 'READY']
-        tasks = list(obj.user_tasks)
-        return sum(1 for t in tasks if t.state in incomplete_states)
