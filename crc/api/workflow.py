@@ -1,6 +1,6 @@
 import uuid
 
-from api.stats import update_workflow_stats, log_task_complete
+from crc.api.stats import update_workflow_stats, log_task_complete
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.file import delete_file
@@ -67,7 +67,7 @@ def delete_workflow_specification(spec_id):
 
 def __get_workflow_api_model(processor: WorkflowProcessor):
     spiff_tasks = processor.get_all_user_tasks()
-    user_tasks = map(Task.from_spiff, spiff_tasks)
+    user_tasks = list(map(Task.from_spiff, spiff_tasks))
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),
@@ -84,10 +84,12 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
 
 
 def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
-    schema = WorkflowApiSchema()
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
-    return schema.dump(__get_workflow_api_model(processor))
+
+    workflow_api_model = __get_workflow_api_model(processor)
+    update_workflow_stats(workflow_model, workflow_api_model)
+    return WorkflowApiSchema().dump(workflow_api_model)
 
 
 def delete(workflow_id):
