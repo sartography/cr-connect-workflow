@@ -7,6 +7,7 @@ from crc.models.file import FileModelSchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from tests.base_test import BaseTest
 
 
@@ -40,6 +41,19 @@ class TestTasksApi(BaseTest):
                           data=json.dumps(dict_data))
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
+
+        num_stats = session.query(WorkflowStatsModel)\
+            .filter_by(workflow_id=workflow.id)\
+            .filter_by(workflow_spec_id=workflow.workflow_spec_id)\
+            .count()
+        self.assertGreater(num_stats, 0)
+
+        num_task_events = session.query(TaskEventModel)\
+            .filter_by(workflow_id=workflow.id)\
+            .filter_by(task_id=task.id)\
+            .count()
+        self.assertGreater(num_task_events, 0)
+
         workflow = WorkflowApiSchema().load(json_data)
         return workflow
 
