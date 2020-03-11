@@ -1,15 +1,13 @@
 import uuid
-from datetime import datetime
-from flask import g
 
-from crc.api.file import delete_file
+from api.stats import update_workflow_stats, log_task_complete
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
+from crc.api.file import delete_file
 from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
+from crc.models.file import FileModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
-from crc.models.file import FileModel
-from crc.models.stats import WorkflowStatsModel, WorkflowStatsModelSchema, TaskEventModel, TaskEventModelSchema
 
 
 def all_specifications():
@@ -102,22 +100,6 @@ def get_task(workflow_id, task_id):
     return workflow.bpmn_workflow().get_task(task_id)
 
 
-def log_task_complete(workflow_model, task_id):
-    task_event = TaskEventModel(
-        study_id=workflow_model.study_id,
-        user_uid=g.user.uid,
-        workflow_id=workflow_model.id,
-        workflow_spec_id=workflow_model.workflow_spec_id,
-        spec_version=workflow_model.spec_version,
-        task_id=task_id,
-        task_state='COMPLETE',
-        date=datetime.now(),
-    )
-    session.add(task_event)
-    session.commit()
-    return TaskEventModelSchema().dump(task_event)
-
-
 def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model)
@@ -131,39 +113,7 @@ def update_task(workflow_id, task_id, body):
     session.add(workflow_model)
     session.commit()
 
-    workflow_api_model =__get_workflow_api_model(processor)
+    workflow_api_model = __get_workflow_api_model(processor)
     update_workflow_stats(workflow_model, workflow_api_model)
     log_task_complete(workflow_model, task_id)
     return WorkflowApiSchema().dump(workflow_api_model)
-
-
-def update_workflow_stats(workflow_model, workflow_api_model):
-    stats = session.query(WorkflowStatsModel)\
-        .filter_by(study_id=workflow_model.study_id)\
-        .filter_by(workflow_id=workflow_model.id)\
-        .filter_by(workflow_spec_id=workflow_model.workflow_spec_id)\
-        .filter_by(spec_version=workflow_model.spec_version)\
-        .first()
-
-    if stats is None:
-        stats = WorkflowStatsModel(
-            study_id=workflow_model.study_id,
-            workflow_id=workflow_model.id,
-            workflow_spec_id=workflow_model.workflow_spec_id,
-            spec_version=workflow_model.spec_version,
-        )
-
-    complete_states = ['CANCELLED', 'COMPLETED']
-    incomplete_states = ['MAYBE', 'LIKELY', 'FUTURE', 'WAITING', 'READY']
-    tasks = list(workflow_api_model.user_tasks)
-    stats.num_tasks_total = len(tasks)
-    stats.num_tasks_complete = sum(1 for t in tasks if t.state in complete_states)
-    stats.num_tasks_incomplete = sum(1 for t in tasks if t.state in incomplete_states)
-    stats.last_updated = datetime.now()
-
-    session.add(stats)
-    session.commit()
-    return WorkflowStatsModelSchema().dump(stats)
-
-
-

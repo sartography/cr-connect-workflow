@@ -4,10 +4,10 @@ import os
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, Task
 from crc.models.file import FileModelSchema
+from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from crc.services.workflow_processor import WorkflowProcessor
-from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from tests.base_test import BaseTest
 
 
@@ -42,15 +42,15 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
 
-        num_stats = session.query(WorkflowStatsModel)\
-            .filter_by(workflow_id=workflow.id)\
-            .filter_by(workflow_spec_id=workflow.workflow_spec_id)\
+        num_stats = session.query(WorkflowStatsModel) \
+            .filter_by(workflow_id=workflow.id) \
+            .filter_by(workflow_spec_id=workflow.workflow_spec_id) \
             .count()
         self.assertGreater(num_stats, 0)
 
-        num_task_events = session.query(TaskEventModel)\
-            .filter_by(workflow_id=workflow.id)\
-            .filter_by(task_id=task.id)\
+        num_task_events = session.query(TaskEventModel) \
+            .filter_by(workflow_id=workflow.id) \
+            .filter_by(task_id=task.id) \
             .count()
         self.assertGreater(num_task_events, 0)
 
@@ -240,3 +240,30 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow, hard_reset=True)
         self.assertTrue(workflow_api.spec_version.startswith("v2 "))
         self.assertTrue(workflow_api.is_latest_spec)
+
+    def test_get_workflow_stats(self):
+        self.load_example_data()
+        workflow = self.create_workflow('exclusive_gateway')
+
+        response_before = self.app.get('/v1.0/workflow/%i/stats' % workflow.id,
+                                       content_type="application/json",
+                                       headers=self.logged_in_headers())
+        self.assert_success(response_before)
+        db_stats_before = session.query(WorkflowStatsModel).filter_by(workflow_id=workflow.id).first()
+        self.assertIsNone(db_stats_before)
+
+        # Start the workflow.
+        tasks = self.get_workflow_api(workflow).user_tasks
+        self.complete_form(workflow, tasks[0], {"has_bananas": True})
+
+        response_after = self.app.get('/v1.0/workflow/%i/stats' % workflow.id,
+                                      content_type="application/json",
+                                      headers=self.logged_in_headers())
+        self.assert_success(response_after)
+        db_stats_after = session.query(WorkflowStatsModel).filter_by(workflow_id=workflow.id).first()
+        self.assertIsNotNone(db_stats_after)
+        self.assertGreater(db_stats_after.num_tasks_complete, 0)
+        self.assertGreater(db_stats_after.num_tasks_incomplete, 0)
+        self.assertGreater(db_stats_after.num_tasks_total, 0)
+        self.assertEqual(db_stats_after.num_tasks_total,
+                         db_stats_after.num_tasks_complete + db_stats_after.num_tasks_incomplete)
