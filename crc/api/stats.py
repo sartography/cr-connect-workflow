@@ -8,9 +8,8 @@ from crc.models.stats import WorkflowStatsModel, WorkflowStatsModelSchema, TaskE
 
 @auth.login_required
 def get_workflow_stats(workflow_id):
-    schema = WorkflowStatsModelSchema()
-    workflow_model = session.query(WorkflowStatsModel).filter_by(id=workflow_id).first()
-    return schema.dump(workflow_model)
+    workflow_model = session.query(WorkflowStatsModel).filter_by(workflow_id=workflow_id).first()
+    return WorkflowStatsModelSchema().dump(workflow_model)
 
 
 @auth.login_required
