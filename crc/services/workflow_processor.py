@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ElementTree
 
 from SpiffWorkflow import Task as SpiffTask, Workflow
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
+from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
@@ -98,6 +99,7 @@ class WorkflowProcessor(object):
         completed task in the previous workflow.
         If neither flag is set, it will use the same version of the specification that was used to originally
         create the workflow model. """
+        orig_version = workflow_model.spec_version
         if soft_reset:
             spec = self.get_spec(workflow_model.workflow_spec_id)
             workflow_model.spec_version = spec.description
@@ -105,7 +107,17 @@ class WorkflowProcessor(object):
             spec = self.get_spec(workflow_model.workflow_spec_id, workflow_model.spec_version)
 
         self.workflow_spec_id = workflow_model.workflow_spec_id
-        self.bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
+        try:
+            self.bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
+        except KeyError as ke:
+            if soft_reset:
+                # Undo the soft-reset.
+                workflow_model.spec_version = orig_version
+            orig_version = workflow_model.spec_version
+            raise ApiError(code="unexpected_workflow_structure",
+                           message="Failed to deserialize workflow '%s' version %s, due to a mis-placed or missing task '%s'" %
+                                   (self.workflow_spec_id, workflow_model.spec_version, str(ke)) +
+                           " This is very likely due to a soft reset where there was a structural change.")
         self.bpmn_workflow.script_engine = self._script_engine
 
         if hard_reset:
@@ -193,7 +205,12 @@ class WorkflowProcessor(object):
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
         if process_id is None:
             raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
-        spec = parser.get_spec(process_id)
+        try:
+            spec = parser.get_spec(process_id)
+        except ValidationException as ve:
+            raise ApiError(code="workflow_validation_error",
+                           message="Failed to parse Workflow Specification '%s' %s." % (workflow_spec_id, version) +
+                                   "Error is %s" % str(ve))
         spec.description = version
         return spec
 
