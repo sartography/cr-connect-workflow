@@ -29,6 +29,7 @@ class TestTasksApi(BaseTest):
     def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False):
         rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
                           (workflow.id, str(soft_reset), str(hard_reset)),
+                          headers=self.logged_in_headers(),
                           content_type="application/json")
         json_data = json.loads(rv.get_data(as_text=True))
         workflow_api = WorkflowApiSchema().load(json_data)
@@ -37,6 +38,7 @@ class TestTasksApi(BaseTest):
 
     def complete_form(self, workflow, task, dict_data):
         rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, task.id),
+                          headers=self.logged_in_headers(),
                           content_type="application/json",
                           data=json.dumps(dict_data))
         self.assert_success(rv)
@@ -158,7 +160,7 @@ class TestTasksApi(BaseTest):
         self.assertIsNotNone(workflow_api.next_task)
         self.assertEquals("EndEvent_0evb22x", workflow_api.next_task['name'])
         self.assertTrue(workflow_api.status == WorkflowStatus.complete)
-        rv = self.app.get('/v1.0/file?workflow_id=%i' % workflow.id)
+        rv = self.app.get('/v1.0/file?workflow_id=%i' % workflow.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         files = FileModelSchema(many=True).load(json_data, session=session)

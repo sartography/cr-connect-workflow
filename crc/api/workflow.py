@@ -1,7 +1,7 @@
 import uuid
 
 from crc.api.stats import update_workflow_stats, log_task_complete
-from crc import session
+from crc import session, auth
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.file import delete_file
 from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
@@ -15,6 +15,7 @@ def all_specifications():
     return schema.dump(session.query(WorkflowSpecModel).all())
 
 
+@auth.login_required
 def add_workflow_specification(body):
     new_spec = WorkflowSpecModelSchema().load(body, session=session)
     session.add(new_spec)
@@ -22,6 +23,7 @@ def add_workflow_specification(body):
     return WorkflowSpecModelSchema().dump(new_spec)
 
 
+@auth.login_required
 def get_workflow_specification(spec_id):
     if spec_id is None:
         error = ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
@@ -36,6 +38,7 @@ def get_workflow_specification(spec_id):
     return WorkflowSpecModelSchema().dump(spec)
 
 
+@auth.login_required
 def update_workflow_specification(spec_id, body):
     spec = WorkflowSpecModelSchema().load(body, session=session)
     spec.id = spec_id
@@ -44,6 +47,7 @@ def update_workflow_specification(spec_id, body):
     return WorkflowSpecModelSchema().dump(spec)
 
 
+@auth.login_required
 def delete_workflow_specification(spec_id):
     if spec_id is None:
         error = ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
@@ -83,6 +87,7 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
     return workflow_api
 
 
+@auth.login_required
 def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
@@ -92,16 +97,19 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
+@auth.login_required
 def delete(workflow_id):
     session.query(WorkflowModel).filter_by(id=workflow_id).delete()
     session.commit()
 
 
+@auth.login_required
 def get_task(workflow_id, task_id):
     workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     return workflow.bpmn_workflow().get_task(task_id)
 
 
+@auth.login_required
 def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model)

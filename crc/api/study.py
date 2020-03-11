@@ -33,7 +33,6 @@ def add_study(body):
     return StudyModelSchema().dump(study)
 
 
-
 @auth.login_required
 def update_study(study_id, body):
     if study_id is None:
