@@ -105,6 +105,7 @@ class WorkflowApi(object):
         self.spec_version = spec_version
         self.is_latest_spec = is_latest_spec
 
+
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi

@@ -1,3 +1,4 @@
+import enum
 import io
 import os
 from datetime import datetime
@@ -21,6 +22,10 @@ def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=No
     results = FileService.get_files(workflow_spec_id, study_id, workflow_id, task_id, form_field_key)
     return FileModelSchema(many=True).dump(results)
 
+def get_reference_files():
+    results = FileService.get_files(is_reference=True)
+    return FileModelSchema(many=True).dump(results)
+
 
 def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
     all_none = all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key])
@@ -39,6 +44,42 @@ def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=Non
         file_model = FileService.add_workflow_spec_file(workflow_spec, file.filename, file.content_type, file.stream.read())
     else:
         file_model = FileService.add_form_field_file(study_id, workflow_id, task_id, form_field_key, file.filename, file.content_type, file.stream.read())
+
+    return FileModelSchema().dump(file_model)
+
+
+def get_reference_file(name):
+    file_data = FileService.get_reference_file_data(name)
+    return send_file(
+        io.BytesIO(file_data.data),
+        attachment_filename=file_data.file_model.name,
+        mimetype=file_data.file_model.content_type,
+        cache_timeout=-1  # Don't cache these files on the browser.
+    )
+
+
+def set_reference_file(name):
+    """Uses the file service to manage reference-files. They will be used in script tasks to compute values."""
+    if 'file' not in connexion.request.files:
+        raise ApiError('invalid_file',
+                       'Expected a file named "file" in the multipart form request', status_code=400)
+
+    file = connexion.request.files['file']
+
+    name_extension = FileService.get_extension(name)
+    file_extension = FileService.get_extension(file.filename)
+    if name_extension != file_extension:
+        raise ApiError('invalid_file_type',
+                       "The file you uploaded has an extension '%s', but it should have an extension of '%s' " %
+                       (file_extension, name_extension))
+
+
+    file_models = FileService.get_files(name=name, is_reference=True)
+    if len(file_models) == 0:
+        file_model = FileService.add_reference_file(name, file.content_type, file.stream.read())
+    else:
+        file_model = file_models[0]
+        FileService.update_file(file_models[0], file.stream.read(), file.content_type)
 
     return FileModelSchema().dump(file_model)
 
