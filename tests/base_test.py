@@ -113,11 +113,14 @@ class BaseTest(unittest.TestCase):
             self.assertTrue(200 <= rv.status_code < 300,
                             "BAD Response: %i." % rv.status_code + ". " + msg)
 
-    def assert_failure(self, rv, code=0):
+    def assert_failure(self, rv, status_code=0, error_code=""):
         self.assertFalse(200 <= rv.status_code < 300,
                          "Incorrect Valid Response:" + rv.status + ".")
-        if code != 0:
-            self.assertEqual(code, rv.status_code)
+        if status_code != 0:
+            self.assertEqual(status_code, rv.status_code)
+        if error_code != "":
+            data = json.loads(rv.get_data(as_text=True))
+            self.assertEqual(error_code, data["code"])
 
     @staticmethod
     def user_info_to_query_string(user_info, redirect_url):

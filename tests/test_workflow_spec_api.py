@@ -27,7 +27,9 @@ class TestWorkflowSpec(BaseTest):
         num_before = session.query(WorkflowSpecModel).count()
         spec = WorkflowSpecModel(id='make_cookies', display_name='Cooooookies',
                                  description='Om nom nom delicious cookies')
-        rv = self.app.post('/v1.0/workflow-specification', content_type="application/json",
+        rv = self.app.post('/v1.0/workflow-specification',
+                           headers=self.logged_in_headers(),
+                           content_type="application/json",
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assert_success(rv)
         db_spec = session.query(WorkflowSpecModel).filter_by(id='make_cookies').first()
@@ -38,7 +40,7 @@ class TestWorkflowSpec(BaseTest):
     def test_get_workflow_specification(self):
         self.load_example_data()
         db_spec = session.query(WorkflowSpecModel).first()
-        rv = self.app.get('/v1.0/workflow-specification/%s' % db_spec.id)
+        rv = self.app.get('/v1.0/workflow-specification/%s' % db_spec.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         api_spec = WorkflowSpecModelSchema().load(json_data, session=session)
@@ -55,7 +57,7 @@ class TestWorkflowSpec(BaseTest):
         num_workflows_before = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertGreater(num_files_before + num_workflows_before, 0)
 
-        rv = self.app.delete('/v1.0/workflow-specification/' + spec_id)
+        rv = self.app.delete('/v1.0/workflow-specification/' + spec_id, headers=self.logged_in_headers())
         self.assert_success(rv)
 
         num_specs_after = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()

@@ -4,6 +4,7 @@ import os
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, Task
 from crc.models.file import FileModelSchema
+from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from crc.services.workflow_processor import WorkflowProcessor
@@ -28,6 +29,7 @@ class TestTasksApi(BaseTest):
     def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False):
         rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
                           (workflow.id, str(soft_reset), str(hard_reset)),
+                          headers=self.logged_in_headers(),
                           content_type="application/json")
         json_data = json.loads(rv.get_data(as_text=True))
         workflow_api = WorkflowApiSchema().load(json_data)
@@ -36,10 +38,24 @@ class TestTasksApi(BaseTest):
 
     def complete_form(self, workflow, task, dict_data):
         rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, task.id),
+                          headers=self.logged_in_headers(),
                           content_type="application/json",
                           data=json.dumps(dict_data))
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
+
+        num_stats = session.query(WorkflowStatsModel) \
+            .filter_by(workflow_id=workflow.id) \
+            .filter_by(workflow_spec_id=workflow.workflow_spec_id) \
+            .count()
+        self.assertGreater(num_stats, 0)
+
+        num_task_events = session.query(TaskEventModel) \
+            .filter_by(workflow_id=workflow.id) \
+            .filter_by(task_id=task.id) \
+            .count()
+        self.assertGreater(num_task_events, 0)
+
         workflow = WorkflowApiSchema().load(json_data)
         return workflow
 
@@ -144,7 +160,7 @@ class TestTasksApi(BaseTest):
         self.assertIsNotNone(workflow_api.next_task)
         self.assertEquals("EndEvent_0evb22x", workflow_api.next_task['name'])
         self.assertTrue(workflow_api.status == WorkflowStatus.complete)
-        rv = self.app.get('/v1.0/file?workflow_id=%i' % workflow.id)
+        rv = self.app.get('/v1.0/file?workflow_id=%i' % workflow.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         files = FileModelSchema(many=True).load(json_data, session=session)
@@ -226,3 +242,30 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow, hard_reset=True)
         self.assertTrue(workflow_api.spec_version.startswith("v2 "))
         self.assertTrue(workflow_api.is_latest_spec)
+
+    def test_get_workflow_stats(self):
+        self.load_example_data()
+        workflow = self.create_workflow('exclusive_gateway')
+
+        response_before = self.app.get('/v1.0/workflow/%i/stats' % workflow.id,
+                                       content_type="application/json",
+                                       headers=self.logged_in_headers())
+        self.assert_success(response_before)
+        db_stats_before = session.query(WorkflowStatsModel).filter_by(workflow_id=workflow.id).first()
+        self.assertIsNone(db_stats_before)
+
+        # Start the workflow.
+        tasks = self.get_workflow_api(workflow).user_tasks
+        self.complete_form(workflow, tasks[0], {"has_bananas": True})
+
+        response_after = self.app.get('/v1.0/workflow/%i/stats' % workflow.id,
+                                      content_type="application/json",
+                                      headers=self.logged_in_headers())
+        self.assert_success(response_after)
+        db_stats_after = session.query(WorkflowStatsModel).filter_by(workflow_id=workflow.id).first()
+        self.assertIsNotNone(db_stats_after)
+        self.assertGreater(db_stats_after.num_tasks_complete, 0)
+        self.assertGreater(db_stats_after.num_tasks_incomplete, 0)
+        self.assertGreater(db_stats_after.num_tasks_total, 0)
+        self.assertEqual(db_stats_after.num_tasks_total,
+                         db_stats_after.num_tasks_complete + db_stats_after.num_tasks_incomplete)

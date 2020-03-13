@@ -90,12 +90,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     post:
       operationId: crc.api.study.add_study
       summary: Creates a new study with the given parameters.
@@ -113,12 +107,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /study/{study_id}:
     parameters:
       - name: study_id
@@ -140,12 +128,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+    delete:
+      operationId: crc.api.study.delete_study
+      summary: Removes the given study completely.
+      tags:
+        - Studies
+      responses:
+        '204':
+          description: The study has been removed.
     put:
       operationId: crc.api.study.update_study
       summary: Updates an existing study with the given parameters.
@@ -163,12 +153,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /study-update/{study_id}:
     post:
       operationId: crc.api.study.post_update_study_from_protocol_builder
@@ -188,12 +172,6 @@ paths:
           description: Study is currently up to date and does not need to be reloaded from Protocol Builder
         '202':
           description: Request accepted, will preform an update. Study state set to "updating"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /study/{study_id}/workflows:
     get:
       operationId: crc.api.study.get_study_workflows
@@ -217,12 +195,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Workflow"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     post:
       operationId: crc.api.study.add_workflow_to_study
       summary: Starts a new workflow for the given study using the provided spec.  This is atypical, and should be left to the protocol builder.
@@ -250,12 +222,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Workflow"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -271,12 +237,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowSpec"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     post:
       operationId: crc.api.workflow.add_workflow_specification
       summary: Creates a new workflow specification with the given parameters.
@@ -294,12 +254,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /workflow-specification/{spec_id}:
     parameters:
       - name: spec_id
@@ -337,12 +291,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     delete:
       operationId: crc.api.workflow.delete_workflow_specification
       summary: Removes an existing workflow specification
@@ -397,12 +345,7 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/File"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+
     post:
       operationId: crc.api.file.add_file
       summary: Add a new file
@@ -461,12 +404,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     delete:
       operationId: crc.api.file.delete_file
       summary: Removes an existing file
@@ -555,12 +492,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     delete:
       operationId: crc.api.workflow.delete
       summary: Removes an existing workflow
@@ -569,6 +500,27 @@ paths:
       responses:
         '204':
           description: The workflow was removed
+  /workflow/{workflow_id}/stats:
+    parameters:
+        - name: workflow_id
+          in: path
+          required: true
+          description: The id of the workflow
+          schema:
+            type: integer
+            format: int32
+    get:
+      operationId: crc.api.stats.get_workflow_stats
+      summary: Stats about a given workflow
+      tags:
+        - Workflows and Tasks
+      responses:
+        '200':
+          description: Returns counts of complete, incomplete, and total number of tasks
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
   # /v1.0/workflow/0/task/0
   /workflow/{workflow_id}/task/{task_id}:
     parameters:
@@ -818,6 +770,12 @@ components:
           type: string
         is_latest_spec:
           type: boolean
+        num_tasks_total:
+          type: integer
+        num_tasks_complete:
+          type: integer
+        num_tasks_incomplete:
+          type: integer
 
       example:
         id: 291234
