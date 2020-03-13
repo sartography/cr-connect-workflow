@@ -323,3 +323,28 @@ class TestWorkflowProcessor(BaseTest):
         workflow_spec_model = self.load_test_spec("two_forms")
         version = WorkflowProcessor.get_latest_version_string("two_forms")
         self.assertTrue(version.startswith("v1 "))
+
+    def test_status_bpmn(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("status")
+
+        for enabled in [True, False]:
+            processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+            task = processor.next_task()
+
+            # Turn all specs on or off
+            task.data = {"some_input": enabled}
+            processor.complete_task(task)
+
+            # Finish out rest of workflow
+            while processor.get_status() == WorkflowStatus.waiting:
+                task = processor.next_task()
+                processor.complete_task(task)
+
+            self.assertEqual(processor.get_status(), WorkflowStatus.complete)
+
+            # Enabled status of all specs should match the value set in the first task
+            for spec_id in ['two_forms', 'random_fact', 'pb_responses', 'study_details']:
+                self.assertEqual(task.data[spec_id], enabled)
+

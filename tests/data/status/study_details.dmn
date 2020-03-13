@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+  <decision id="should_enable_study_details" name="should_enable_study_details">
+    <extensionElements>
+      <biodi:bounds x="190" y="70" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="DecisionTable_00zdxg0">
+      <input id="InputClause_02n3ccs" label="some_input">
+        <inputExpression id="LiteralExpression_1ju4o1o" typeRef="boolean" expressionLanguage="feel" />
+      </input>
+      <output id="OutputClause_1ybi1ud" label="study_details" name="study_details" typeRef="boolean" />
+      <rule id="DecisionRule_1t97mw4">
+        <inputEntry id="UnaryTests_0ym4ln2">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1pweuqc">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0j9wah0">
+        <inputEntry id="UnaryTests_0dzq6w4">
+          <text>true</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_119lstj">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
