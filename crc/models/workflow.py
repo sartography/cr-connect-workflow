@@ -25,7 +25,7 @@ class WorkflowSpecModel(db.Model):
     primary_process_id = db.Column(db.String)
     workflow_spec_category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'))
     workflow_spec_category = db.relationship("WorkflowSpecCategoryModel")
-    is_status = db.Column(db.Boolean)
+    is_status = db.Column(db.Boolean, default=False)
 
 
 class WorkflowSpecModelSchema(ModelSchema):
@@ -49,4 +49,3 @@ class WorkflowModel(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
     spec_version = db.Column(db.String)
-

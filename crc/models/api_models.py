@@ -95,7 +95,8 @@ class TaskSchema(ma.Schema):
 
 
 class WorkflowApi(object):
-    def __init__(self, id, status, user_tasks, last_task, next_task, workflow_spec_id, spec_version, is_latest_spec):
+    def __init__(self, id, status, user_tasks, last_task, next_task, workflow_spec_id, spec_version,
+                 is_latest_spec, is_active):
         self.id = id
         self.status = status
         self.user_tasks = user_tasks
@@ -104,13 +105,13 @@ class WorkflowApi(object):
         self.workflow_spec_id = workflow_spec_id
         self.spec_version = spec_version
         self.is_latest_spec = is_latest_spec
+        self.is_active = is_active
 
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
         fields = ["id", "status", "user_tasks", "last_task", "next_task",
-                  "workflow_spec_id", "spec_version", "is_latest_spec",
-                  "num_tasks_total", "num_tasks_complete", "num_tasks_incomplete"]
+                  "workflow_spec_id", "spec_version", "is_latest_spec", "is_active"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
@@ -120,15 +121,7 @@ class WorkflowApiSchema(ma.Schema):
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
-        keys = [
-            'id',
-            'status',
-            'user_tasks',
-            'last_task',
-            'next_task',
-            'workflow_spec_id',
-            'spec_version',
-            'is_latest_spec'
-        ]
+        keys = ['id', 'status', 'user_tasks', 'last_task', 'next_task',
+                'workflow_spec_id', 'spec_version', 'is_latest_spec', "is_active"]
         filtered_fields = {key: data[key] for key in keys}
         return WorkflowApi(**filtered_fields)

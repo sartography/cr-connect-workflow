@@ -1,6 +1,6 @@
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import ModelSchema
-from sqlalchemy import func
+from sqlalchemy import func, Column
 
 from crc import db
 from crc.models.protocol_builder import ProtocolBuilderStatus
@@ -20,6 +20,8 @@ class StudyModel(db.Model):
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
     inactive = db.Column(db.Boolean, default=False)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
+    status_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    status_spec_version = db.Column(db.String)
 
 
 class StudyModelSchema(ModelSchema):
