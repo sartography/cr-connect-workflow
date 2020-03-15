@@ -82,11 +82,11 @@ class ExampleDataLoader:
            returns an array of data models to be added to the database."""
         global file
         file_service = FileService()
-
         spec = WorkflowSpecModel(id=id,
                                  name=name,
                                  display_name=display_name,
-                                 description=description)
+                                 description=description,
+                                 is_status=id == 'status')
         db.session.add(spec)
         db.session.commit()
         if not filepath:
@@ -96,7 +96,7 @@ class ExampleDataLoader:
             noise, file_extension = os.path.splitext(file_path)
             filename = os.path.basename(file_path)
 
-            is_status = filename.lower() == 'status'
+            is_status = filename.lower() == 'status.bpmn'
             is_primary = filename.lower() == id + '.bpmn'
             try:
                 file = open(file_path, 'rb')

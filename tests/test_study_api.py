@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from unittest.mock import patch, Mock
 
 from crc import session
-from crc.models.api_models import WorkflowApiSchema
+from crc.models.api_models import WorkflowApiSchema, WorkflowApi
 from crc.models.study import StudyModel, StudyModelSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudyDetailsSchema, \
     ProtocolBuilderStudySchema
@@ -160,9 +160,6 @@ class TestStudyApi(BaseTest):
         rv = self.app.delete('/v1.0/study/%i' % study.id)
         self.assert_failure(rv, error_code="study_integrity_error")
 
-
-
-
     def test_delete_workflow(self):
         self.load_example_data()
         study = session.query(StudyModel).first()
@@ -207,3 +204,56 @@ class TestStudyApi(BaseTest):
         json_data_after = json.loads(response_after.get_data(as_text=True))
         workflows_after = WorkflowApiSchema(many=True).load(json_data_after)
         self.assertEqual(1, len(workflows_after))
+
+    """
+    Workflow Specs that have been made available (or not) to a particular study via the status.bpmn should be flagged
+    as available (or not) when the list of a study's workflows is retrieved.
+    """
+    def test_workflow_spec_status(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+
+        # Add status workflow
+        self.load_test_spec('status')
+
+        # Add status workflow to the study
+        status_spec = session.query(WorkflowSpecModel).filter_by(is_status=True).first()
+        add_status_response = self.app.post('/v1.0/study/%i/workflows' % study.id,
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
+                           data=json.dumps(WorkflowSpecModelSchema().dump(status_spec)))
+        self.assert_success(add_status_response)
+        json_data_status = json.loads(add_status_response.get_data(as_text=True))
+        status_workflow: WorkflowApi = WorkflowApiSchema().load(json_data_status)
+        status_task_id = status_workflow.next_task['id']
+
+        # Add all available non-status workflows to the study
+        specs = session.query(WorkflowSpecModel).filter_by(is_status=False).all()
+        for spec in specs:
+            add_response = self.app.post('/v1.0/study/%i/workflows' % study.id,
+                               content_type="application/json",
+                               headers=self.logged_in_headers(),
+                               data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+            self.assert_success(add_response)
+
+        for is_active in [False, True]:
+            # Update status task data
+            update_status_response = self.app.put('/v1.0/workflow/%i/task/%s/data' % (status_workflow.id, status_task_id),
+                              headers=self.logged_in_headers(),
+                              content_type="application/json",
+                              data=json.dumps({'some_input': is_active}))
+            self.assert_success(update_status_response)
+
+            # List workflows for study
+            response_after = self.app.get('/v1.0/study/%i/workflows' % study.id,
+                               content_type="application/json",
+                               headers=self.logged_in_headers())
+            self.assert_success(response_after)
+
+            json_data_after = json.loads(response_after.get_data(as_text=True))
+            workflows_after = WorkflowApiSchema(many=True).load(json_data_after)
+            self.assertEqual(len(specs), len(workflows_after))
+
+            for workflow in workflows_after:
+                self.assertEqual(workflow.is_active, is_active)
+

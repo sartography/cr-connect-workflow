@@ -326,6 +326,9 @@ class TestWorkflowProcessor(BaseTest):
 
     def test_status_bpmn(self):
         self.load_example_data()
+
+        specs = session.query(WorkflowSpecModel).all()
+
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("status")
 
@@ -345,6 +348,5 @@ class TestWorkflowProcessor(BaseTest):
             self.assertEqual(processor.get_status(), WorkflowStatus.complete)
 
             # Enabled status of all specs should match the value set in the first task
-            for spec_id in ['two_forms', 'random_fact', 'pb_responses', 'study_details']:
-                self.assertEqual(task.data[spec_id], enabled)
-
+            for spec in specs:
+                self.assertEqual(task.data[spec.id], enabled)

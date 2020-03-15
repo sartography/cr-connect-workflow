@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
-  <decision id="should_enable_random_fact" name="should_enable_random_fact">
+  <decision id="should_enable_crc2_training_session_enter_core_info" name="should_enable_crc2_training_session_enter_core_info">
     <extensionElements>
       <biodi:bounds x="170" y="60" width="180" height="80" />
     </extensionElements>
@@ -10,7 +10,7 @@
           <text></text>
         </inputExpression>
       </input>
-      <output id="output_1" label="random_fact" name="random_fact" typeRef="boolean" />
+      <output id="output_1" label="crc2_training_session_enter_core_info" name="crc2_training_session_enter_core_info" typeRef="boolean" />
       <rule id="DecisionRule_10oo3ms">
         <inputEntry id="UnaryTests_1ozg74s">
           <text>false</text>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
-  <decision id="should_enable_pb_responses" name="should_enable_pb_responses">
+  <decision id="should_enable_crc2_training_session_data_security_plan" name="should_enable_crc2_training_session_data_security_plan">
     <extensionElements>
       <biodi:bounds x="190" y="80" width="180" height="80" />
     </extensionElements>
@@ -8,10 +8,18 @@
       <input id="InputClause_18pwfqu" label="some_input">
         <inputExpression id="LiteralExpression_1y84stb" typeRef="boolean" expressionLanguage="feel" />
       </input>
-      <output id="OutputClause_05y0j7c" label="pb_responses" name="pb_responses" typeRef="boolean" />
+      <input id="InputClause_0ahp5b9">
+        <inputExpression id="LiteralExpression_1ptkp9l" typeRef="string">
+          <text></text>
+        </inputExpression>
+      </input>
+      <output id="OutputClause_05y0j7c" label="crc2_training_session_data_security_plan" name="crc2_training_session_data_security_plan" typeRef="boolean" />
       <rule id="DecisionRule_17xsr74">
         <inputEntry id="UnaryTests_05ldcq4">
           <text>false</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1ebers6">
+          <text></text>
         </inputEntry>
         <outputEntry id="LiteralExpression_09oao3s">
           <text>false</text>
@@ -20,6 +28,9 @@
       <rule id="DecisionRule_0zavblw">
         <inputEntry id="UnaryTests_09xdkib">
           <text>true</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1hqb6bs">
+          <text></text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0y2v9zc">
           <text>true</text>
