@@ -184,3 +184,9 @@ def update_workflow_spec_category(cat_id, body):
     session.add(category)
     session.commit()
     return schema.dump(category)
+
+
+@auth.login_required
+def delete_workflow_spec_category(cat_id):
+    session.query(WorkflowSpecCategoryModel).filter_by(id=cat_id).delete()
+    session.commit()
