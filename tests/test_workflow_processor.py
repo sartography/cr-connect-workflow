@@ -165,7 +165,7 @@ class TestWorkflowProcessor(BaseTest):
         study = session.query(StudyModel).first()
         with self.assertRaises(ApiError) as context:
             WorkflowProcessor.create(study.id, workflow_spec_model.id)
-        self.assertEquals("workflow_validation_error", context.exception.code)
+        self.assertEqual("workflow_validation_error", context.exception.code)
         self.assertTrue("bpmn:startEvent" in context.exception.message)
 
     def test_workflow_spec_key_error(self):
@@ -311,14 +311,14 @@ class TestWorkflowProcessor(BaseTest):
         # Setting up another processor should not error out, but doesn't pick up the update.
         workflow_model.bpmn_workflow_json = processor.serialize()
         processor2 = WorkflowProcessor(workflow_model)
-        self.assertEquals("Step 1", processor2.bpmn_workflow.last_task.task_spec.description)
+        self.assertEqual("Step 1", processor2.bpmn_workflow.last_task.task_spec.description)
         self.assertNotEquals("# This is some documentation I wanted to add.",
                           processor2.bpmn_workflow.last_task.task_spec.documentation)
 
         # You can do a soft update and get the right response.
         processor3 = WorkflowProcessor(workflow_model, soft_reset=True)
-        self.assertEquals("Step 1", processor3.bpmn_workflow.last_task.task_spec.description)
-        self.assertEquals("# This is some documentation I wanted to add.",
+        self.assertEqual("Step 1", processor3.bpmn_workflow.last_task.task_spec.description)
+        self.assertEqual("# This is some documentation I wanted to add.",
                           processor3.bpmn_workflow.last_task.task_spec.documentation)
 
 
@@ -336,7 +336,7 @@ class TestWorkflowProcessor(BaseTest):
         task.data = {"color": "blue"}
         processor.complete_task(task)
         next_task = processor.next_task()
-        self.assertEquals("Step 2", next_task.task_spec.description)
+        self.assertEqual("Step 2", next_task.task_spec.description)
 
         # Modify the specification, with a major change that alters the flow and can't be serialized effectively.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
@@ -349,11 +349,11 @@ class TestWorkflowProcessor(BaseTest):
 
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
         processor3 = WorkflowProcessor(workflow_model, hard_reset=True)
-        self.assertEquals("Step 1", processor3.next_task().task_spec.description)
-        self.assertEquals({"color": "blue"}, processor3.next_task().data)
+        self.assertEqual("Step 1", processor3.next_task().task_spec.description)
+        self.assertEqual({"color": "blue"}, processor3.next_task().data)
         processor3.complete_task(processor3.next_task())
-        self.assertEquals("New Step", processor3.next_task().task_spec.description)
-        self.assertEquals({"color": "blue"}, processor3.next_task().data)
+        self.assertEqual("New Step", processor3.next_task().task_spec.description)
+        self.assertEqual({"color": "blue"}, processor3.next_task().data)
 
     def test_get_latest_spec_version(self):
         workflow_spec_model = self.load_test_spec("two_forms")
