@@ -261,7 +261,8 @@ class TestTasksApi(BaseTest):
         # perform a soft reset returns an error
         rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
                           (workflow.id, "true", "false"),
-                          content_type="application/json")
+                          content_type="application/json",
+                          headers=self.logged_in_headers())
         self.assert_failure(rv, error_code="unexpected_workflow_structure")
 
         # Try again without a soft reset, and we are still ok, and on the original version.
