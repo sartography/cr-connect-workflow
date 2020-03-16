@@ -6,7 +6,8 @@ from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.file import delete_file
 from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
 from crc.models.file import FileModel
-from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel
+from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
+    WorkflowSpecCategoryModelSchema
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -41,11 +42,21 @@ def get_workflow_specification(spec_id):
 
 @auth.login_required
 def update_workflow_specification(spec_id, body):
-    spec = WorkflowSpecModelSchema().load(body, session=session)
-    spec.id = spec_id
+    if spec_id is None:
+        error = ApiError('unknown_spec', 'Please provide a valid Workflow Spec ID.')
+        return ApiErrorSchema.dump(error), 404
+
+    spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+
+    if spec is None:
+        error = ApiError('unknown_study', 'The spec "' + spec_id + '" is not recognized.')
+        return ApiErrorSchema.dump(error), 404
+
+    schema = WorkflowSpecModelSchema()
+    spec = schema.load(body, session=session, instance=spec, partial=True)
     session.add(spec)
     session.commit()
-    return WorkflowSpecModelSchema().dump(spec)
+    return schema.dump(spec)
 
 
 @auth.login_required
@@ -133,3 +144,43 @@ def update_task(workflow_id, task_id, body):
     update_workflow_stats(workflow_model, workflow_api_model)
     log_task_complete(workflow_model, task_id)
     return WorkflowApiSchema().dump(workflow_api_model)
+
+
+@auth.login_required
+def list_workflow_spec_categories():
+    schema = WorkflowSpecCategoryModelSchema(many=True)
+    return schema.dump(session.query(WorkflowSpecCategoryModel).all())
+
+
+@auth.login_required
+def get_workflow_spec_category(cat_id):
+    schema = WorkflowSpecCategoryModelSchema()
+    return schema.dump(session.query(WorkflowSpecCategoryModel).filter_by(id=cat_id).first())
+
+
+@auth.login_required
+def add_workflow_spec_category(body):
+    schema = WorkflowSpecCategoryModelSchema()
+    new_cat: WorkflowSpecCategoryModel = schema.load(body, session=session)
+    session.add(new_cat)
+    session.commit()
+    return schema.dump(new_cat)
+
+
+@auth.login_required
+def update_workflow_spec_category(cat_id, body):
+    if cat_id is None:
+        error = ApiError('unknown_category', 'Please provide a valid Workflow Spec Category ID.')
+        return ApiErrorSchema.dump(error), 404
+
+    category = session.query(WorkflowSpecCategoryModel).filter_by(id=cat_id).first()
+
+    if category is None:
+        error = ApiError('unknown_category', 'The category "' + cat_id + '" is not recognized.')
+        return ApiErrorSchema.dump(error), 404
+
+    schema = WorkflowSpecCategoryModelSchema()
+    category = schema.load(body, session=session, instance=category, partial=True)
+    session.add(category)
+    session.commit()
+    return schema.dump(category)
