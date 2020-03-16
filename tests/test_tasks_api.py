@@ -31,6 +31,7 @@ class TestTasksApi(BaseTest):
                           (workflow.id, str(soft_reset), str(hard_reset)),
                           headers=self.logged_in_headers(),
                           content_type="application/json")
+        self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         workflow_api = WorkflowApiSchema().load(json_data)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
@@ -242,6 +243,32 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow, hard_reset=True)
         self.assertTrue(workflow_api.spec_version.startswith("v2 "))
         self.assertTrue(workflow_api.is_latest_spec)
+
+    def test_soft_reset_errors_out_and_next_result_is_on_original_version(self):
+
+        # Start the basic two_forms workflow and complete a task.
+        self.load_example_data()
+        workflow = self.create_workflow('two_forms')
+        workflow_api = self.get_workflow_api(workflow)
+        self.complete_form(workflow, workflow_api.user_tasks[0], {"color": "blue"})
+        self.assertTrue(workflow_api.is_latest_spec)
+
+        # Modify the specification, with a major change that alters the flow and can't be deserialized
+        # effectively, if it uses the latest spec files.
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        self.replace_file("two_forms.bpmn", file_path)
+
+        # perform a soft reset returns an error
+        rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
+                          (workflow.id, "true", "false"),
+                          content_type="application/json",
+                          headers=self.logged_in_headers())
+        self.assert_failure(rv, error_code="unexpected_workflow_structure")
+
+        # Try again without a soft reset, and we are still ok, and on the original version.
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertTrue(workflow_api.spec_version.startswith("v1 "))
+        self.assertFalse(workflow_api.is_latest_spec)
 
     def test_get_workflow_stats(self):
         self.load_example_data()

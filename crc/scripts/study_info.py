@@ -41,3 +41,18 @@ class StudyInfo(Script):
         if cmd == 'details':
             study_info["details"] = self.pb.get_study_details(study_id)
         task.data["study"] = study_info
+
+
+    def get_required_docs(self, study_id):
+        required_docs = self.pb.get_required_docs(study_id)
+        return required_docs
+
+
+
+
+
+
+
+
+
+
