@@ -25,7 +25,7 @@ class TestWorkflowSpec(BaseTest):
     def test_add_new_workflow_specification(self):
         self.load_example_data();
         num_before = session.query(WorkflowSpecModel).count()
-        spec = WorkflowSpecModel(id='make_cookies', display_name='Cooooookies',
+        spec = WorkflowSpecModel(id='make_cookies', name='make_cookies', display_name='Cooooookies',
                                  description='Om nom nom delicious cookies')
         rv = self.app.post('/v1.0/workflow-specification',
                            headers=self.logged_in_headers(),

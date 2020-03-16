@@ -23,7 +23,7 @@ class WorkflowSpecModel(db.Model):
     display_name = db.Column(db.String)
     description = db.Column(db.Text)
     primary_process_id = db.Column(db.String)
-    workflow_spec_category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'))
+    workflow_spec_category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'), nullable=True)
     workflow_spec_category = db.relationship("WorkflowSpecCategoryModel")
     is_status = db.Column(db.Boolean, default=False)
 
