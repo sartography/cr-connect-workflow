@@ -203,11 +203,20 @@ def get_study_workflows(study_id):
 
 @auth.login_required
 def add_workflow_to_study(study_id, body):
-    workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id=body["id"]).first()
+    workflow_spec_model: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=body["id"]).first()
     if workflow_spec_model is None:
         error = ApiError('unknown_spec', 'The specification "' + body['id'] + '" is not recognized.')
         return ApiErrorSchema.dump(error), 404
     processor = WorkflowProcessor.create(study_id, workflow_spec_model.id)
+
+    # If workflow spec is a status spec, update the study status spec
+    if workflow_spec_model.is_status:
+        study = session.query(StudyModel).filter_by(id=study_id).first()
+        study.status_spec_id = workflow_spec_model.id
+        study.status_spec_version = processor.get_spec_version()
+        session.add(study)
+        session.commit()
+
     return WorkflowApiSchema().dump(__get_workflow_api_model(processor))
 
 

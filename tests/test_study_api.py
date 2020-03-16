@@ -212,6 +212,7 @@ class TestStudyApi(BaseTest):
     def test_workflow_spec_status(self):
         self.load_example_data()
         study = session.query(StudyModel).first()
+        study_id = study.id
 
         # Add status workflow
         self.load_test_spec('status')
@@ -225,7 +226,20 @@ class TestStudyApi(BaseTest):
         self.assert_success(add_status_response)
         json_data_status = json.loads(add_status_response.get_data(as_text=True))
         status_workflow: WorkflowApi = WorkflowApiSchema().load(json_data_status)
+        self.assertIsNotNone(status_workflow)
+        self.assertIsNotNone(status_workflow.workflow_spec_id)
+        self.assertIsNotNone(status_workflow.spec_version)
+        self.assertIsNotNone(status_workflow.next_task)
+        self.assertIsNotNone(status_workflow.next_task['id'])
         status_task_id = status_workflow.next_task['id']
+
+        # Verify that the study status spec is populated
+        updated_study: StudyModel = session.query(StudyModel).filter_by(id=study_id).first()
+        self.assertIsNotNone(updated_study)
+        self.assertIsNotNone(updated_study.status_spec_id)
+        self.assertIsNotNone(updated_study.status_spec_version)
+        self.assertEqual(updated_study.status_spec_id, status_workflow.workflow_spec_id)
+        self.assertEqual(updated_study.status_spec_version, status_workflow.spec_version)
 
         # Add all available non-status workflows to the study
         specs = session.query(WorkflowSpecModel).filter_by(is_status=False).all()
@@ -237,12 +251,20 @@ class TestStudyApi(BaseTest):
             self.assert_success(add_response)
 
         for is_active in [False, True]:
-            # Update status task data
+            # Set all workflow specs to inactive|active
             update_status_response = self.app.put('/v1.0/workflow/%i/task/%s/data' % (status_workflow.id, status_task_id),
                               headers=self.logged_in_headers(),
                               content_type="application/json",
                               data=json.dumps({'some_input': is_active}))
             self.assert_success(update_status_response)
+            json_workflow_api = json.loads(update_status_response.get_data(as_text=True))
+            updated_workflow_api: WorkflowApi = WorkflowApiSchema().load(json_workflow_api)
+            self.assertIsNotNone(updated_workflow_api)
+            self.assertEqual(updated_workflow_api.status, WorkflowStatus.complete)
+            self.assertIsNotNone(updated_workflow_api.last_task)
+            self.assertIsNotNone(updated_workflow_api.last_task['data'])
+            self.assertIsNotNone(updated_workflow_api.last_task['data']['some_input'])
+            self.assertEqual(updated_workflow_api.last_task['data']['some_input'], is_active)
 
             # List workflows for study
             response_after = self.app.get('/v1.0/study/%i/workflows' % study.id,
@@ -254,6 +276,7 @@ class TestStudyApi(BaseTest):
             workflows_after = WorkflowApiSchema(many=True).load(json_data_after)
             self.assertEqual(len(specs), len(workflows_after))
 
+            # All workflows should be inactive|active
             for workflow in workflows_after:
                 self.assertEqual(workflow.is_active, is_active)
 
