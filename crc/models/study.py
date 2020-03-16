@@ -28,5 +28,3 @@ class StudyModelSchema(ModelSchema):
         include_fk = True  # Includes foreign keys
 
     protocol_builder_status = EnumField(ProtocolBuilderStatus)
-
-

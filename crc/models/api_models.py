@@ -108,10 +108,9 @@ class WorkflowApi(object):
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
-        fields = ["id", "status",
-                  "user_tasks", "last_task", "next_task",
-                  "workflow_spec_id",
-                  "spec_version", "is_latest_spec"]
+        fields = ["id", "status", "user_tasks", "last_task", "next_task",
+                  "workflow_spec_id", "spec_version", "is_latest_spec",
+                  "num_tasks_total", "num_tasks_complete", "num_tasks_incomplete"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
@@ -121,4 +120,15 @@ class WorkflowApiSchema(ma.Schema):
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
-        return WorkflowApi(**data)
+        keys = [
+            'id',
+            'status',
+            'user_tasks',
+            'last_task',
+            'next_task',
+            'workflow_spec_id',
+            'spec_version',
+            'is_latest_spec'
+        ]
+        filtered_fields = {key: data[key] for key in keys}
+        return WorkflowApi(**filtered_fields)

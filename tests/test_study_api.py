@@ -174,7 +174,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(1, session.query(WorkflowModel).count())
         json_data = json.loads(rv.get_data(as_text=True))
         workflow = WorkflowApiSchema().load(json_data)
-        rv = self.app.delete('/v1.0/workflow/%i' % workflow.id)
+        rv = self.app.delete('/v1.0/workflow/%i' % workflow.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertEqual(0, session.query(WorkflowModel).count())
 
