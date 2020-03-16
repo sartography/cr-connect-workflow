@@ -1,6 +1,6 @@
 import enum
 
-from marshmallow_sqlalchemy import ModelSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db
 
@@ -11,9 +11,11 @@ class WorkflowSpecCategoryModel(db.Model):
     display_name = db.Column(db.String)
 
 
-class WorkflowSpecCategoryModelSchema(ModelSchema):
+class WorkflowSpecCategoryModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = WorkflowSpecCategoryModel
+        load_instance = True
+        include_relationships = True
 
 
 class WorkflowSpecModel(db.Model):
@@ -28,9 +30,11 @@ class WorkflowSpecModel(db.Model):
     is_status = db.Column(db.Boolean, default=False)
 
 
-class WorkflowSpecModelSchema(ModelSchema):
+class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = WorkflowSpecModel
+        load_instance = True
+        include_relationships = True
         include_fk = True  # Includes foreign keys
 
 

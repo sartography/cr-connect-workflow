@@ -1,4 +1,4 @@
-from marshmallow_sqlalchemy import ModelSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db
 
@@ -16,9 +16,11 @@ class WorkflowStatsModel(db.Model):
     last_updated = db.Column(db.DateTime)
 
 
-class WorkflowStatsModelSchema(ModelSchema):
+class WorkflowStatsModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = WorkflowStatsModel
+        load_instance = True
+        include_relationships = True
         include_fk = True  # Includes foreign keys
 
 
@@ -35,7 +37,9 @@ class TaskEventModel(db.Model):
     date = db.Column(db.DateTime)
 
 
-class TaskEventModelSchema(ModelSchema):
+class TaskEventModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = TaskEventModel
+        load_instance = True
+        include_relationships = True
         include_fk = True  # Includes foreign keys

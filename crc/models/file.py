@@ -1,7 +1,7 @@
 import enum
 
 from marshmallow_enum import EnumField
-from marshmallow_sqlalchemy import ModelSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -81,8 +81,10 @@ class FileModel(db.Model):
     latest_version = db.Column(db.Integer, default=0)
 
 
-class FileModelSchema(ModelSchema):
+class FileModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = FileModel
+        load_instance = True
+        include_relationships = True
         include_fk = True  # Includes foreign keys
     type = EnumField(FileType)

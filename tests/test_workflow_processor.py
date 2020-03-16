@@ -312,7 +312,7 @@ class TestWorkflowProcessor(BaseTest):
         workflow_model.bpmn_workflow_json = processor.serialize()
         processor2 = WorkflowProcessor(workflow_model)
         self.assertEqual("Step 1", processor2.bpmn_workflow.last_task.task_spec.description)
-        self.assertNotEquals("# This is some documentation I wanted to add.",
+        self.assertNotEqual("# This is some documentation I wanted to add.",
                           processor2.bpmn_workflow.last_task.task_spec.documentation)
 
         # You can do a soft update and get the right response.

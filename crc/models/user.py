@@ -1,7 +1,7 @@
 import datetime
 
 import jwt
-from marshmallow_sqlalchemy import ModelSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db, app
 from crc.api.common import ApiError
@@ -52,7 +52,9 @@ class UserModel(db.Model):
             raise ApiError('token_invalid', 'The Authentication token you provided.  You need a new token. ')
 
 
-class UserModelSchema(ModelSchema):
+class UserModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = UserModel
+        load_instance = True
+        include_relationships = True
 

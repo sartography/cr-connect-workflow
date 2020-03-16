@@ -159,7 +159,7 @@ class TestTasksApi(BaseTest):
         }
         workflow_api = self.complete_form(workflow, tasks[0], data)
         self.assertIsNotNone(workflow_api.next_task)
-        self.assertEquals("EndEvent_0evb22x", workflow_api.next_task['name'])
+        self.assertEqual("EndEvent_0evb22x", workflow_api.next_task['name'])
         self.assertTrue(workflow_api.status == WorkflowStatus.complete)
         rv = self.app.get('/v1.0/file?workflow_id=%i' % workflow.id, headers=self.logged_in_headers())
         self.assert_success(rv)

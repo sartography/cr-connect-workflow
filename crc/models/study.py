@@ -1,6 +1,6 @@
 from marshmallow_enum import EnumField
-from marshmallow_sqlalchemy import ModelSchema
-from sqlalchemy import func, Column
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from sqlalchemy import func
 
 from crc import db
 from crc.models.protocol_builder import ProtocolBuilderStatus
@@ -24,9 +24,11 @@ class StudyModel(db.Model):
     status_spec_version = db.Column(db.String)
 
 
-class StudyModelSchema(ModelSchema):
+class StudyModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = StudyModel
+        load_instance = True
+        include_relationships = True
         include_fk = True  # Includes foreign keys
 
     protocol_builder_status = EnumField(ProtocolBuilderStatus)
