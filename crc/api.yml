@@ -443,11 +443,14 @@ paths:
         content:
           multipart/form-data:
             schema:
+              x-body-name: file
               type: object
               properties:
                 file:
                   type: string
                   format: binary
+              required:
+                - file
       responses:
         '200':
           description: Returns the actual file
