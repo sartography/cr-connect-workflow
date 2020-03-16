@@ -82,11 +82,11 @@ class ExampleDataLoader:
            returns an array of data models to be added to the database."""
         global file
         file_service = FileService()
-
         spec = WorkflowSpecModel(id=id,
                                  name=name,
                                  display_name=display_name,
-                                 description=description)
+                                 description=description,
+                                 is_status=id == 'status')
         db.session.add(spec)
         db.session.commit()
         if not filepath:
@@ -95,13 +95,15 @@ class ExampleDataLoader:
         for file_path in files:
             noise, file_extension = os.path.splitext(file_path)
             filename = os.path.basename(file_path)
-            is_primary = filename.lower() == id + ".bpmn"
+
+            is_status = filename.lower() == 'status.bpmn'
+            is_primary = filename.lower() == id + '.bpmn'
             try:
-                file = open(file_path, "rb")
+                file = open(file_path, 'rb')
                 data = file.read()
                 content_type = CONTENT_TYPES[file_extension[1:]]
                 file_service.add_workflow_spec_file(workflow_spec=spec, name=filename, content_type=content_type,
-                                                    binary_data=data, primary=is_primary)
+                                                    binary_data=data, primary=is_primary, is_status=is_status)
             except IsADirectoryError as de:
                 # Ignore sub directories
                 pass

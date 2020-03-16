@@ -28,6 +28,11 @@ class CompleteTemplate(Script):
                                    "the name of the docx template to use.")
         file_name = args[0]
         workflow_spec_model = self.find_spec_model_in_db(task.workflow)
+        task_study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+
+        if task_study_id != study_id:
+            raise ApiError(code="invalid_argument",
+                           message="The given task does not match the given study.")
 
         if workflow_spec_model is None:
             raise ApiError(code="workflow_model_error",
@@ -44,7 +49,6 @@ class CompleteTemplate(Script):
                                    "within workflow specification '%s'") % (args[0], workflow_spec_model.id)
 
         final_document_stream = self.make_template(BytesIO(file_data_model.data), task.data)
-        study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         FileService.add_task_file(study_id=study_id, workflow_id=workflow_id, task_id=task.id,
                                   name=file_name,

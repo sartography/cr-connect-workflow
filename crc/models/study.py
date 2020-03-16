@@ -1,5 +1,5 @@
 from marshmallow_enum import EnumField
-from marshmallow_sqlalchemy import ModelSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func
 
 from crc import db
@@ -20,11 +20,15 @@ class StudyModel(db.Model):
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
     inactive = db.Column(db.Boolean, default=False)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
+    status_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    status_spec_version = db.Column(db.String)
 
 
-class StudyModelSchema(ModelSchema):
+class StudyModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = StudyModel
+        load_instance = True
+        include_relationships = True
         include_fk = True  # Includes foreign keys
 
     protocol_builder_status = EnumField(ProtocolBuilderStatus)

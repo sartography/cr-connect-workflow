@@ -443,11 +443,14 @@ paths:
         content:
           multipart/form-data:
             schema:
+              x-body-name: file
               type: object
               properties:
                 file:
                   type: string
                   format: binary
+              required:
+                - file
       responses:
         '200':
           description: Returns the actual file
@@ -716,9 +719,30 @@ components:
       properties:
         id:
           type: string
+        name:
+          type: string
         display_name:
           type: string
         description:
+          type: string
+        primary_process_id:
+          type: string
+          nullable: true
+        workflow_spec_category_id:
+          type: integer
+          nullable: true
+        workflow_spec_category:
+          $ref: "#/components/schemas/WorkflowSpecCategory"
+        is_status:
+          type: boolean
+          nullable: true
+    WorkflowSpecCategory:
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        display_name:
           type: string
     File:
       properties:

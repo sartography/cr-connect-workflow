@@ -16,12 +16,13 @@ class FileService(object):
 
     @staticmethod
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
-                               name, content_type, binary_data, primary=False):
+                               name, content_type, binary_data, primary=False, is_status=False):
         """Create a new file and associate it with a workflow spec."""
         file_model = FileModel(
             workflow_spec_id=workflow_spec.id,
             name=name,
-            primary=primary
+            primary=primary,
+            is_status=is_status
         )
         if primary:
             bpmn: ElementTree.Element = ElementTree.fromstring(binary_data)

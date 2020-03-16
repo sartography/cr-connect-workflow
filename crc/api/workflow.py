@@ -17,7 +17,8 @@ def all_specifications():
 
 @auth.login_required
 def add_workflow_specification(body):
-    new_spec = WorkflowSpecModelSchema().load(body, session=session)
+    new_spec: WorkflowSpecModel = WorkflowSpecModelSchema().load(body, session=session)
+    new_spec.is_status = new_spec.id == 'status'
     session.add(new_spec)
     session.commit()
     return WorkflowSpecModelSchema().dump(new_spec)
@@ -69,9 +70,14 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def __get_workflow_api_model(processor: WorkflowProcessor):
+def __get_workflow_api_model(processor: WorkflowProcessor, status_data=None):
     spiff_tasks = processor.get_all_user_tasks()
     user_tasks = list(map(Task.from_spiff, spiff_tasks))
+    is_active = True
+
+    if status_data is not None and processor.workflow_spec_id in status_data:
+        is_active = status_data[processor.workflow_spec_id]
+
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),
@@ -80,7 +86,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
         user_tasks=user_tasks,
         workflow_spec_id=processor.workflow_spec_id,
         spec_version=processor.get_spec_version(),
-        is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id)
+        is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
+        is_active=is_active
     )
     if processor.next_task():
         workflow_api.next_task = Task.from_spiff(processor.next_task())
@@ -89,9 +96,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
 
 @auth.login_required
 def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
-    workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
-
     workflow_api_model = __get_workflow_api_model(processor)
     update_workflow_stats(workflow_model, workflow_api_model)
     return WorkflowApiSchema().dump(workflow_api_model)

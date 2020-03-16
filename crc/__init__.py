@@ -15,6 +15,7 @@ connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
 app.config.from_object('config.default')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 auth = HTTPTokenAuth('Bearer')
 
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
