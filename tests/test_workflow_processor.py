@@ -159,6 +159,42 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("details", task.data)
         self.assertIsInstance(task.task_spec, EndEvent)
 
+    def test_workflow_validation_error_is_properly_raised(self):
+        self.load_example_data()
+        workflow_spec_model = self.load_test_spec("invalid_spec")
+        study = session.query(StudyModel).first()
+        with self.assertRaises(ApiError) as context:
+            WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        self.assertEquals("workflow_validation_error", context.exception.code)
+        self.assertTrue("bpmn:startEvent" in context.exception.message)
+
+    def test_workflow_spec_key_error(self):
+        """Frequently seeing errors in the logs about a 'Key' error, where a workflow
+        references something that doesn't exist in the midst of processing. Want to
+        make sure we produce errors to the front end that allows us to debug this."""
+        # Start the two_forms workflow, and enter some data in the first form.
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("two_forms")
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
+        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        task = processor.next_task()
+        task.data = {"color": "blue"}
+        processor.complete_task(task)
+
+        # Modify the specification, with a major change.
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        self.replace_file("two_forms.bpmn", file_path)
+
+        # Attemping a soft update on a structural change should raise a sensible error.
+        with self.assertRaises(ApiError) as context:
+            processor3 = WorkflowProcessor(workflow_model, soft_reset=True)
+        self.assertEqual("unexpected_workflow_structure", context.exception.code)
+
+
+
+
     def test_workflow_with_bad_expression_raises_sensible_error(self):
         self.load_example_data()
 
