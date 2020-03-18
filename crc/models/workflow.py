@@ -5,6 +5,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db
 
+
 class WorkflowSpecCategoryModel(db.Model):
     __tablename__ = 'workflow_spec_category'
     id = db.Column(db.Integer, primary_key=True)

@@ -19,7 +19,6 @@ def all_specifications():
 @auth.login_required
 def add_workflow_specification(body):
     new_spec: WorkflowSpecModel = WorkflowSpecModelSchema().load(body, session=session)
-    new_spec.is_status = new_spec.id == 'status'
     session.add(new_spec)
     session.commit()
     return WorkflowSpecModelSchema().dump(new_spec)
