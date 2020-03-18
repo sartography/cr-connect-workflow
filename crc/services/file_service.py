@@ -145,3 +145,4 @@ class FileService(object):
         if not file_model:
             raise ApiError("file_not_found", "There is no reference file with the name '%s'" % file_name)
         return FileService.get_file_data(file_model.id, file_model)
+

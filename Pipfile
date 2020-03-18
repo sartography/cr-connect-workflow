@@ -34,6 +34,7 @@ psycopg2-binary = "*"
 docxtpl = "*"
 flask-sso = "*"
 python-dateutil = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.7"
