@@ -44,7 +44,8 @@ class StudyInfo(Script):
 
 
     def get_required_docs(self, study_id):
-            required_docs = self.pb.get_required_docs(study_id)
+        required_docs = self.pb.get_required_docs(study_id)
+        return required_docs
 
 
 

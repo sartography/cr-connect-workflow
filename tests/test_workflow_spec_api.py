@@ -2,7 +2,7 @@ import json
 
 from crc import session
 from crc.models.file import FileModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
 from tests.base_test import BaseTest
 
 
@@ -25,9 +25,11 @@ class TestWorkflowSpec(BaseTest):
     def test_add_new_workflow_specification(self):
         self.load_example_data();
         num_before = session.query(WorkflowSpecModel).count()
-        spec = WorkflowSpecModel(id='make_cookies', display_name='Cooooookies',
+        spec = WorkflowSpecModel(id='make_cookies', name='make_cookies', display_name='Cooooookies',
                                  description='Om nom nom delicious cookies')
-        rv = self.app.post('/v1.0/workflow-specification', content_type="application/json",
+        rv = self.app.post('/v1.0/workflow-specification',
+                           headers=self.logged_in_headers(),
+                           content_type="application/json",
                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
         self.assert_success(rv)
         db_spec = session.query(WorkflowSpecModel).filter_by(id='make_cookies').first()
@@ -38,11 +40,37 @@ class TestWorkflowSpec(BaseTest):
     def test_get_workflow_specification(self):
         self.load_example_data()
         db_spec = session.query(WorkflowSpecModel).first()
-        rv = self.app.get('/v1.0/workflow-specification/%s' % db_spec.id)
+        rv = self.app.get('/v1.0/workflow-specification/%s' % db_spec.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         api_spec = WorkflowSpecModelSchema().load(json_data, session=session)
         self.assertEqual(db_spec, api_spec)
+
+    def test_update_workflow_specification(self):
+        self.load_example_data()
+
+        category = WorkflowSpecCategoryModel(id=0, name='trap', display_name="It's a trap!")
+        session.add(category)
+        session.commit()
+
+        db_spec_before: WorkflowSpecModel = session.query(WorkflowSpecModel).first()
+        spec_id = db_spec_before.id
+        self.assertIsNone(db_spec_before.workflow_spec_category_id)
+
+        db_spec_before.workflow_spec_category_id = 0
+        rv = self.app.put('/v1.0/workflow-specification/%s' % spec_id,
+                          content_type="application/json",
+                          headers=self.logged_in_headers(),
+                          data=json.dumps(WorkflowSpecModelSchema().dump(db_spec_before)))
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        api_spec = WorkflowSpecModelSchema().load(json_data, session=session)
+        self.assertEqual(db_spec_before, api_spec)
+
+        db_spec_after: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+        self.assertIsNotNone(db_spec_after.workflow_spec_category_id)
+        self.assertIsNotNone(db_spec_after.workflow_spec_category)
+        self.assertEqual(db_spec_after.workflow_spec_category.display_name, category.display_name)
 
     def test_delete_workflow_specification(self):
         self.load_example_data()
@@ -55,7 +83,7 @@ class TestWorkflowSpec(BaseTest):
         num_workflows_before = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertGreater(num_files_before + num_workflows_before, 0)
 
-        rv = self.app.delete('/v1.0/workflow-specification/' + spec_id)
+        rv = self.app.delete('/v1.0/workflow-specification/' + spec_id, headers=self.logged_in_headers())
         self.assert_success(rv)
 
         num_specs_after = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()

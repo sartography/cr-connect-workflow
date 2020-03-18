@@ -1,7 +1,7 @@
 import enum
 
 from marshmallow_enum import EnumField
-from marshmallow_sqlalchemy import ModelSchema
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -76,6 +76,8 @@ class FileModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.Enum(FileType))
+    primary = db.Column(db.Boolean)
+    is_status = db.Column(db.Boolean)
     content_type = db.Column(db.String)
     is_reference = db.Column(db.Boolean, nullable=False, default=False) # A global reference file.
     primary = db.Column(db.Boolean) # Is this the primary BPMN in a workflow?
@@ -87,8 +89,10 @@ class FileModel(db.Model):
     latest_version = db.Column(db.Integer, default=0)
 
 
-class FileModelSchema(ModelSchema):
+class FileModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = FileModel
+        load_instance = True
+        include_relationships = True
         include_fk = True  # Includes foreign keys
     type = EnumField(FileType)

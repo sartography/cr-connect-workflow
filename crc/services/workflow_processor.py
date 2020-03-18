@@ -204,7 +204,8 @@ class WorkflowProcessor(object):
                 dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
         if process_id is None:
-            raise(Exception("There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
+            raise(ApiError(code="no_primary_bpmn_error",
+                           message="There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
         try:
             spec = parser.get_spec(process_id)
         except ValidationException as ve:
@@ -237,7 +238,7 @@ class WorkflowProcessor(object):
         session.add(workflow_model)
         session.commit()
         # Need to commit twice, first to get a unique id for the workflow model, and
-        # a second time to store the serilaization so we can maintain this link within
+        # a second time to store the serialization so we can maintain this link within
         # the spiff-workflow process.
         bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
 
@@ -337,7 +338,7 @@ class WorkflowProcessor(object):
                 process_elements.append(child)
 
         if len(process_elements) == 0:
-            raise Exception('No executable process tag found')
+            raise ValidationException('No executable process tag found')
 
         # There are multiple root elements
         if len(process_elements) > 1:
@@ -349,6 +350,6 @@ class WorkflowProcessor(object):
                     if child_element.tag.endswith('startEvent'):
                         return this_element.attrib['id']
 
-            raise Exception('No start event found in %s' % et_root.attrib['id'])
+            raise ValidationException('No start event found in %s' % et_root.attrib['id'])
 
         return process_elements[0].attrib['id']
