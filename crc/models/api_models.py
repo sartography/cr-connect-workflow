@@ -107,7 +107,6 @@ class WorkflowApi(object):
         self.is_latest_spec = is_latest_spec
         self.is_active = is_active
 
-
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
