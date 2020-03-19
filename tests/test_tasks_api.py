@@ -13,18 +13,6 @@ from tests.base_test import BaseTest
 
 class TestTasksApi(BaseTest):
 
-    def create_workflow(self, workflow_name):
-        study = session.query(StudyModel).first()
-        spec = self.load_test_spec(workflow_name)
-        processor = WorkflowProcessor.create(study.id, spec.id)
-        rv = self.app.post(
-            '/v1.0/study/%i/workflows' % study.id,
-            headers=self.logged_in_headers(),
-            content_type="application/json",
-            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
-        self.assert_success(rv)
-        workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
-        return workflow
 
     def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False):
         rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
@@ -59,6 +47,7 @@ class TestTasksApi(BaseTest):
 
         workflow = WorkflowApiSchema().load(json_data)
         return workflow
+
 
     def test_get_current_user_tasks(self):
         self.load_example_data()
@@ -145,8 +134,10 @@ class TestTasksApi(BaseTest):
         self.assertIsNotNone(workflow_api.last_task)
         self.assertIsNotNone(workflow_api.next_task)
 
+
     def test_document_added_to_workflow_shows_up_in_file_list(self):
         self.load_example_data()
+        self.create_reference_document()
         workflow = self.create_workflow('docx')
         # get the first form in the two form workflow.
         tasks = self.get_workflow_api(workflow).user_tasks

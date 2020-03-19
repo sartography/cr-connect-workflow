@@ -4,6 +4,7 @@ import json
 from crc import session
 from crc.models.file import FileModel, FileType, FileModelSchema
 from crc.models.workflow import WorkflowSpecModel
+from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
 
@@ -56,6 +57,27 @@ class TestFilesApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         file2 = FileModelSchema().load(json_data, session=session)
         self.assertEqual(file, file2)
+
+    def test_add_file_from_task_and_form_errors_on_invalid_form_field_name(self):
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form')
+        processor = WorkflowProcessor(workflow)
+        task = processor.next_task()
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        correct_name = task.task_spec.form.fields[0].id
+
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, "not_a_known_file"), data=data, follow_redirects=True,
+                           content_type='multipart/form-data')
+        self.assert_failure(rv, error_code="invalid_form_field_key")
+
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
+                           content_type='multipart/form-data')
+        self.assert_success(rv)
+
 
     def test_set_reference_file(self):
         file_name = "irb_document_types.xls"

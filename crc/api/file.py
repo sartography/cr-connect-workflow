@@ -1,14 +1,11 @@
-import enum
 import io
-import os
-from datetime import datetime
 
 import connexion
 from flask import send_file
 
 from crc import session
 from crc.api.common import ApiErrorSchema, ApiError
-from crc.models.file import FileModelSchema, FileModel, FileDataModel, FileType
+from crc.models.file import FileModelSchema, FileModel, FileDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 
@@ -33,7 +30,7 @@ def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=Non
     if all_none or missing_some:
         return ApiErrorSchema().dump(ApiError('missing_parameter',
                                               'Please specify either a workflow_spec_id or all 3 of study_id, '
-                                              'workflow_id, and task_id for this file in the HTTP parameters')), 404
+                                              'workflow_id, task_id and field_id for this file in the HTTP parameters')), 404
     if 'file' not in connexion.request.files:
         return ApiErrorSchema().dump(ApiError('invalid_file',
                                               'Expected a file named "file" in the multipart form request')), 404

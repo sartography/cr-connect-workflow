@@ -1,15 +1,20 @@
+import io
 import os
 from unittest.mock import patch
 
 from crc import app, db
 from crc.models.file import CONTENT_TYPES, FileDataModel, FileModel
+from crc.models.study import StudyModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel
+from crc.scripts.required_docs import RequiredDocs
 from crc.scripts.study_info import StudyInfo
 from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
+from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
 
-class TestStudyInfoService(BaseTest):
+class TestRequiredDocsScript(BaseTest):
     test_uid = "dhf8r"
     test_study_id = 1
 
@@ -20,34 +25,27 @@ class TestStudyInfoService(BaseTest):
             convention that we are implementing for the IRB.
     """
 
-    def create_reference_document(self):
-        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'reference', 'irb_documents.xlsx')
-        file = open(file_path, "rb")
-        FileService.add_reference_file(StudyInfo.IRB_PRO_CATEGORIES_FILE,
-                                       binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xls'])
-
     def test_validate_returns_error_if_reference_files_do_not_exist(self):
         file_model = db.session.query(FileModel). \
             filter(FileModel.is_reference == True). \
-            filter(FileModel.name == StudyInfo.IRB_PRO_CATEGORIES_FILE).first()
+            filter(FileModel.name == FileService.IRB_PRO_CATEGORIES_FILE).first()
         if file_model:
             db.session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model.id).delete()
             db.session.query(FileModel).filter(FileModel.id == file_model.id).delete()
         db.session.commit()
         db.session.flush()
-        errors = StudyInfo.validate()
+        errors = RequiredDocs.validate()
         self.assertTrue(len(errors) > 0)
         self.assertEquals("file_not_found", errors[0].code)
 
     def test_no_validation_error_when_correct_file_exists(self):
         self.create_reference_document()
-        errors = StudyInfo.validate()
+        errors = RequiredDocs.validate()
         self.assertTrue(len(errors) == 0)
 
     def test_load_lookup_data(self):
         self.create_reference_document()
-        dict = StudyInfo().get_file_reference_dictionary()
+        dict = FileService.get_file_reference_dictionary()
         self.assertIsNotNone(dict)
 
     @patch('crc.services.protocol_builder.requests.get')
@@ -55,8 +53,8 @@ class TestStudyInfoService(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         self.create_reference_document()
-        studyInfo = StudyInfo()
-        required_docs = studyInfo.get_required_docs(12)
+        script = RequiredDocs()
+        required_docs = script.get_required_docs(12)
         self.assertIsNotNone(required_docs)
         self.assertTrue(len(required_docs) == 5)
         self.assertEquals(6, required_docs[0]['id'])
@@ -64,3 +62,29 @@ class TestStudyInfoService(BaseTest):
         self.assertEquals("UVA Compliance", required_docs[0]['category1'])
         self.assertEquals("PRC Approval", required_docs[0]['category2'])
         self.assertEquals("CRC", required_docs[0]['Who Uploads?'])
+        self.assertEquals(0, required_docs[0]['count'])
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_get_required_docs_has_correct_count_when_a_file_exists(self, mock_get):
+
+        self.load_example_data()
+
+        # Mock out the protocol builder
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
+
+        # Make sure the xslt refernce document is in place.
+        self.create_reference_document()
+        script = RequiredDocs()
+
+        # Add a document to the study with the correct code.
+        workflow = self.create_workflow('docx')
+        irb_code = "UVACompliance.PRCApproval" # The first file referenced in pb required docs.
+        FileService.add_task_file(study_id = workflow.study_id, workflow_id = workflow.id,
+                                  task_id ="fakingthisout",
+                                  name="anything.png", content_type="text",
+                                  binary_data=b'1234', irb_doc_code=irb_code)
+
+        required_docs = script.get_required_docs(workflow.study_id)
+        self.assertIsNotNone(required_docs)
+        self.assertEquals(1, required_docs[0]['count'])

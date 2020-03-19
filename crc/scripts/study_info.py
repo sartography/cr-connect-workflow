@@ -1,21 +1,17 @@
-from pandas import ExcelFile
-
-from crc import session, ma
+from crc import session
 from crc.api.common import ApiError
 from crc.models.study import StudyModel, StudyModelSchema
-from crc.scripts.script import Script, ScriptValidationError
-from crc.services.file_service import FileService
+from crc.scripts.script import Script
 from crc.services.protocol_builder import ProtocolBuilderService
 
 
 class StudyInfo(Script):
     """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'required_docs', 'details']
-    IRB_PRO_CATEGORIES_FILE = "irb_pro_categories.xls"
+    type_options = ['info', 'investigators', 'details']
 
     def get_description(self):
-        return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators','required_docs', or 'details'
+        return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', or 'details'
             Adds details about the current study to the Task Data.  The type of information required should be 
             provided as an argument.  Basic returns the basic information such as the title.  Investigators provides
             detailed information about each investigator in th study.  Details provides a large number
@@ -40,63 +36,6 @@ class StudyInfo(Script):
             study_info["info"] = schema.dump(study)
         if cmd == 'investigators':
             study_info["investigators"] = self.pb.get_investigators(study_id)
-        if cmd == 'required_docs':
-            study_info["required_docs"] = self.get_required_docs(study_id)
         if cmd == 'details':
             study_info["details"] = self.pb.get_study_details(study_id)
         task.data["study"] = study_info
-
-    def get_required_docs(self, study_id):
-        """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories spreadsheet to return
-        pertinant details about the required documents."""
-        pb_docs = self.pb.get_required_docs(study_id)
-        doc_dictionary = self.get_file_reference_dictionary()
-        required_docs = []
-        for doc in pb_docs:
-            id = int(doc['AUXDOCID'])
-            required_doc = {'id': id, 'name': doc['AUXDOC']}
-            if id in doc_dictionary:
-                required_doc = {**required_doc, **doc_dictionary[id]}
-            required_docs.append(required_doc)
-        return required_docs
-
-
-    def get_file_reference_dictionary(self):
-        """Loads up the xsl file that contains the IRB Pro Categories and converts it to a Panda's data frame for processing."""
-        data_model = FileService.get_reference_file_data(StudyInfo.IRB_PRO_CATEGORIES_FILE)
-        xls = ExcelFile(data_model.data)
-        df = xls.parse(xls.sheet_names[0])
-        # Pandas is lovely, but weird. Here we drop records without an Id, and convert it to an integer.
-        df = df.drop_duplicates(subset='Id').astype({'Id': 'Int64'})
-        # Now we index on the ID column and convert to a dictionary, where the key is the id, and the value
-        #    is a dictionary with all the remaining data in it.  It's kinda pretty really.
-        all_dict = df.set_index('Id').to_dict('index')
-        return all_dict
-
-    # Verifies that information is available for this script task to function
-    # correctly. Returns a list of validation errors.
-    @staticmethod
-    def validate():
-        errors = []
-        try:
-            FileService.get_reference_file_data(StudyInfo.IRB_PRO_CATEGORIES_FILE)
-        except ApiError as ae:
-            errors.append(ScriptValidationError.from_api_error(ae))
-        return errors
-
-class RequiredDocument(object):
-    def __init__(self, pb_id, pb_name, category1, category2, category3, who_uploads, required, total_uploaded):
-        self.protocol_builder_id = pb_id
-        self.protocol_builder_name = pb_name
-        self.category1 = category1
-        self.category2 = category2
-        self.category3 = category3
-        self.who_uploads = who_uploads
-        self.required = required
-        self.total_uploaded = total_uploaded
-
-class RequiredDocumentSchema(ma.Schema):
-    class Meta:
-        model = RequiredDocument
-        fields = ["pb_id", "pb_name", "category1", "category2", "category3",
-                  "who_uploads", "required", "total_uploaded"]
