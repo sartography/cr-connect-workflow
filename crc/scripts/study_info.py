@@ -50,18 +50,28 @@ class StudyInfo(Script):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories spreadsheet to return
         pertinant details about the required documents."""
         pb_docs = self.pb.get_required_docs(study_id)
-        data_frame = self.get_file_reference_dictionary()
+        doc_dictionary = self.get_file_reference_dictionary()
         required_docs = []
         for doc in pb_docs:
-            required_docs.append(RequiredDocument.form_pb_and_spread_sheet(doc, data_frame))
+            id = int(doc['AUXDOCID'])
+            required_doc = {'id': id, 'name': doc['AUXDOC']}
+            if id in doc_dictionary:
+                required_doc = {**required_doc, **doc_dictionary[id]}
+            required_docs.append(required_doc)
         return required_docs
+
 
     def get_file_reference_dictionary(self):
         """Loads up the xsl file that contains the IRB Pro Categories and converts it to a Panda's data frame for processing."""
         data_model = FileService.get_reference_file_data(StudyInfo.IRB_PRO_CATEGORIES_FILE)
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])
-        return df
+        # Pandas is lovely, but weird. Here we drop records without an Id, and convert it to an integer.
+        df = df.drop_duplicates(subset='Id').astype({'Id': 'Int64'})
+        # Now we index on the ID column and convert to a dictionary, where the key is the id, and the value
+        #    is a dictionary with all the remaining data in it.  It's kinda pretty really.
+        all_dict = df.set_index('Id').to_dict('index')
+        return all_dict
 
     # Verifies that information is available for this script task to function
     # correctly. Returns a list of validation errors.
@@ -84,14 +94,6 @@ class RequiredDocument(object):
         self.who_uploads = who_uploads
         self.required = required
         self.total_uploaded = total_uploaded
-
-    @classmethod
-    def form_pb_and_spread_sheet(cls, pb_data, sheet_data):
-        """Generates a Required Document record from protobol builder record and a Panda's data sheet"""
-        return cls(pb_id=pb_data['AUXDOCID'],
-                   pb_name=pb_data['AUXDOC'],
-                   category1="")
-
 
 class RequiredDocumentSchema(ma.Schema):
     class Meta:

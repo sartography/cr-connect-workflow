@@ -20,11 +20,6 @@ class TestStudyInfoService(BaseTest):
             convention that we are implementing for the IRB.
     """
 
-    def test_get_required_docs(self):
-        """The Study info service should re-structure required docs to provide
-        a flatted view of just the documents that are required.
-        """
-
     def create_reference_document(self):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
@@ -32,10 +27,8 @@ class TestStudyInfoService(BaseTest):
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
 
-
     def test_validate_returns_error_if_reference_files_do_not_exist(self):
         errors = StudyInfo.validate()
-        FileService.
         self.assertTrue(len(errors) > 0)
         self.assertEquals("file_not_found", errors[0].code)
 
@@ -58,4 +51,8 @@ class TestStudyInfoService(BaseTest):
         required_docs = studyInfo.get_required_docs(12)
         self.assertIsNotNone(required_docs)
         self.assertTrue(len(required_docs) == 5)
-        self.assertEquals(6, required_docs[0].protocol_builder_id)
+        self.assertEquals(6, required_docs[0]['id'])
+        self.assertEquals("Cancer Center's PRC Approval Form", required_docs[0]['name'])
+        self.assertEquals("UVA Compliance", required_docs[0]['category1'])
+        self.assertEquals("PRC Approval", required_docs[0]['category2'])
+        self.assertEquals("CRC", required_docs[0]['Who Uploads?'])
