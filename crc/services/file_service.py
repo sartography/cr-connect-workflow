@@ -58,10 +58,14 @@ class FileService(object):
     def add_reference_file(name, content_type, binary_data):
         """Create a file with the given name, but not associated with a spec or workflow.
            Only one file with the given reference name can exist."""
-        file_model = FileModel(
-            name=name,
-            is_reference=True
-        )
+        file_model = session.query(FileModel). \
+            filter(FileModel.is_reference == True). \
+            filter(FileModel.name == name).first()
+        if not file_model:
+            file_model = FileModel(
+                name=name,
+                is_reference=True
+            )
         return FileService.update_file(file_model, binary_data, content_type)
 
     @staticmethod
@@ -145,4 +149,3 @@ class FileService(object):
         if not file_model:
             raise ApiError("file_not_found", "There is no reference file with the name '%s'" % file_name)
         return FileService.get_file_data(file_model.id, file_model)
-

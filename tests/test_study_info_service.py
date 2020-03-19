@@ -1,8 +1,8 @@
 import os
 from unittest.mock import patch
 
-from crc import app
-from crc.models.file import CONTENT_TYPES
+from crc import app, db
+from crc.models.file import CONTENT_TYPES, FileDataModel, FileModel
 from crc.scripts.study_info import StudyInfo
 from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
@@ -28,6 +28,14 @@ class TestStudyInfoService(BaseTest):
                                        content_type=CONTENT_TYPES['xls'])
 
     def test_validate_returns_error_if_reference_files_do_not_exist(self):
+        file_model = db.session.query(FileModel). \
+            filter(FileModel.is_reference == True). \
+            filter(FileModel.name == StudyInfo.IRB_PRO_CATEGORIES_FILE).first()
+        if file_model:
+            db.session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model.id).delete()
+            db.session.query(FileModel).filter(FileModel.id == file_model.id).delete()
+        db.session.commit()
+        db.session.flush()
         errors = StudyInfo.validate()
         self.assertTrue(len(errors) > 0)
         self.assertEquals("file_not_found", errors[0].code)
