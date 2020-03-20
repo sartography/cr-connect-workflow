@@ -166,7 +166,9 @@ def get_study_workflows(study_id):
 
     # Get study status spec
     status_spec: WorkflowSpecModel = session.query(WorkflowSpecModel)\
-        .filter_by(is_status=True).first()
+        .filter_by(is_status=True)\
+        .filter_by(id=study.status_spec_id)\
+        .first()
 
     status_data = None
 
