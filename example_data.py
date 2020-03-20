@@ -22,6 +22,9 @@ class ExampleDataLoader:
         session.flush()
 
     def load_all(self):
+
+        self.load_reference_documents()
+
         users = [
             UserModel(
                 uid='dhf8r',
@@ -111,3 +114,11 @@ class ExampleDataLoader:
                 if file:
                     file.close()
         return spec
+
+    def load_reference_documents(self):
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        file = open(file_path, "rb")
+        FileService.add_reference_file(FileService.IRB_PRO_CATEGORIES_FILE,
+                                       binary_data=file.read(),
+                                       content_type=CONTENT_TYPES['xls'])
+        file.close()
