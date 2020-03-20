@@ -1,6 +1,7 @@
 import enum
 
 import marshmallow
+from marshmallow import EXCLUDE
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db
@@ -38,6 +39,7 @@ class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
         load_instance = True
         include_relationships = True
         include_fk = True  # Includes foreign keys
+        unknown = EXCLUDE
 
     workflow_spec_category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
 
