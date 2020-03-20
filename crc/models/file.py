@@ -66,12 +66,6 @@ class FileDataModel(db.Model):
 
 
 class FileModel(db.Model):
-    """A file model defines one of the following increasingly specific types:
-    * A Reference file.  Which just has a name and a reference flag set to true. These are global, and available everywhere.
-    * A Workflow Specification (such as BPMN or DMN model or a template)
-    * A Script generated file in a workflow. Which is specific to a study, workflow and task.
-    * An Uploaded file in a workflow. specific to a study, workflow, task, AND a field value.
-    """
     __tablename__ = 'file'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)

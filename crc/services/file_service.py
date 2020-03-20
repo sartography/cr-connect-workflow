@@ -1,5 +1,5 @@
-import hashlib
 import os
+from datetime import datetime
 from uuid import UUID
 from xml.etree import ElementTree
 
@@ -10,6 +10,7 @@ from crc.api.common import ApiError
 from crc.models.file import FileType, FileDataModel, FileModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
+import hashlib
 
 
 class FileService(object):
@@ -108,12 +109,12 @@ class FileService(object):
     @staticmethod
     def update_file(file_model, binary_data, content_type):
 
-        file_data_model = session.query(FileDataModel). \
+        file_data_model = session.query(FileDataModel).\
             filter_by(file_model_id=file_model.id,
                       version=file_model.latest_version
                       ).with_for_update().first()
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
-        if (file_data_model is not None and md5_checksum == file_data_model.md5_hash):
+        if(file_data_model is not None and md5_checksum == file_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.
             return file_model
 

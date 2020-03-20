@@ -1,8 +1,9 @@
 import io
 import json
+from datetime import datetime
 
 from crc import session
-from crc.models.file import FileModel, FileType, FileModelSchema
+from crc.models.file import FileModel, FileType, FileModelSchema, FileDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -186,6 +187,7 @@ class TestFilesApi(BaseTest):
         file = FileModelSchema().load(json_data, session=session)
         self.assertEqual(1, file.latest_version)
 
+
     def test_get_file(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
@@ -204,4 +206,3 @@ class TestFilesApi(BaseTest):
         rv = self.app.delete('/v1.0/file/%i' % file.id)
         rv = self.app.get('/v1.0/file/%i' % file.id)
         self.assertEqual(404, rv.status_code)
-
