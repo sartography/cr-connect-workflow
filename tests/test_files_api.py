@@ -4,6 +4,7 @@ import json
 from crc import session
 from crc.models.file import FileModel, FileType, FileModelSchema
 from crc.models.workflow import WorkflowSpecModel
+from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
@@ -93,7 +94,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual("application/vnd.ms-excel", file.content_type)
 
     def test_set_reference_file_bad_extension(self):
-        file_name = "irb_document_types.xls"
+        file_name = FileService.IRB_PRO_CATEGORIES_FILE
         data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.ppt")}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data')
@@ -110,7 +111,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual(b"abcdef", data_out)
 
     def test_list_reference_files(self):
-        file_name = "irb_document_types.xls"
+        file_name = FileService.IRB_PRO_CATEGORIES_FILE
         data = {'file': (io.BytesIO(b"abcdef"), file_name)}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data')

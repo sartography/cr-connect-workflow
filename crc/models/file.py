@@ -76,11 +76,10 @@ class FileModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.Enum(FileType))
-    primary = db.Column(db.Boolean)
     is_status = db.Column(db.Boolean)
     content_type = db.Column(db.String)
     is_reference = db.Column(db.Boolean, nullable=False, default=False) # A global reference file.
-    primary = db.Column(db.Boolean) # Is this the primary BPMN in a workflow?
+    primary = db.Column(db.Boolean, nullable=False, default=False) # Is this the primary BPMN in a workflow?
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=True)

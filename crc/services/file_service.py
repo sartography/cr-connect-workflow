@@ -14,7 +14,7 @@ from crc.services.workflow_processor import WorkflowProcessor
 
 class FileService(object):
     """Provides consistent management and rules for storing, retrieving and processing files."""
-    IRB_PRO_CATEGORIES_FILE = "irb_pro_categories.xls"
+    IRB_PRO_CATEGORIES_FILE = "irb_documents.xlsx"
 
     @staticmethod
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,

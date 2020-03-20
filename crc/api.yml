@@ -820,7 +820,6 @@ components:
           example: "2019-12-25T09:12:33.001Z"
         type:
           type: string
-          enum: ['bpmn','svg', 'dmn']
         primary:
           type: boolean
         content_type:
@@ -829,6 +828,7 @@ components:
         workflow_spec_id:
           type: string
           example: "random_fact"
+          x-nullable: true
         file:
           type: file
           format: binary

@@ -33,7 +33,7 @@ Takes two arguments:
                            message="The CompleteTemplate script requires 2 arguments.  The first argument is "
                                    "the name of the docx template to use.  The second "
                                    "argument is a code for the document, as "
-                                   "set in the reference document irb_documents.xlsx. ")
+                                   "set in the reference document %s. " % FileService.IRB_PRO_CATEGORIES_FILE)
         file_name = args[0]
         irb_doc_code = args[1]
         workflow_spec_model = self.find_spec_model_in_db(task.workflow)
