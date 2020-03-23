@@ -8,10 +8,10 @@ from crc.services.protocol_builder import ProtocolBuilderService
 class StudyInfo(Script):
     """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'required_docs', 'details']
+    type_options = ['info', 'investigators', 'details']
 
     def get_description(self):
-        return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators','required_docs', or 'details'
+        return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', or 'details'
             Adds details about the current study to the Task Data.  The type of information required should be 
             provided as an argument.  Basic returns the basic information such as the title.  Investigators provides
             detailed information about each investigator in th study.  Details provides a large number
@@ -36,23 +36,6 @@ class StudyInfo(Script):
             study_info["info"] = schema.dump(study)
         if cmd == 'investigators':
             study_info["investigators"] = self.pb.get_investigators(study_id)
-        if cmd == 'required_docs':
-            study_info["required_docs"] = self.pb.get_required_docs(study_id)
         if cmd == 'details':
             study_info["details"] = self.pb.get_study_details(study_id)
         task.data["study"] = study_info
-
-
-    def get_required_docs(self, study_id):
-        required_docs = self.pb.get_required_docs(study_id)
-        return required_docs
-
-
-
-
-
-
-
-
-
-

@@ -5,6 +5,8 @@ from datetime import datetime
 from crc import session
 from crc.models.file import FileModel, FileType, FileModelSchema, FileDataModel
 from crc.models.workflow import WorkflowSpecModel
+from crc.services.file_service import FileService
+from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
 
@@ -57,6 +59,73 @@ class TestFilesApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         file2 = FileModelSchema().load(json_data, session=session)
         self.assertEqual(file, file2)
+
+    def test_add_file_from_task_and_form_errors_on_invalid_form_field_name(self):
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form')
+        processor = WorkflowProcessor(workflow)
+        task = processor.next_task()
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        correct_name = task.task_spec.form.fields[0].id
+
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, "not_a_known_file"), data=data, follow_redirects=True,
+                           content_type='multipart/form-data')
+        self.assert_failure(rv, error_code="invalid_form_field_key")
+
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
+                           content_type='multipart/form-data')
+        self.assert_success(rv)
+
+
+    def test_set_reference_file(self):
+        file_name = "irb_document_types.xls"
+        data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.xls")}
+        rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
+                          content_type='multipart/form-data')
+        self.assert_success(rv)
+        self.assertIsNotNone(rv.get_data())
+        json_data = json.loads(rv.get_data(as_text=True))
+        file = FileModelSchema().load(json_data, session=session)
+        self.assertEqual(FileType.xls, file.type)
+        self.assertTrue(file.is_reference)
+        self.assertEqual("application/vnd.ms-excel", file.content_type)
+
+    def test_set_reference_file_bad_extension(self):
+        file_name = FileService.IRB_PRO_CATEGORIES_FILE
+        data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.ppt")}
+        rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
+                          content_type='multipart/form-data')
+        self.assert_failure(rv, error_code="invalid_file_type")
+
+    def test_get_reference_file(self):
+        file_name = "irb_document_types.xls"
+        data = {'file': (io.BytesIO(b"abcdef"), "some crazy thing do not care.xls")}
+        rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
+                          content_type='multipart/form-data')
+        rv = self.app.get('/v1.0/reference_file/%s' % file_name)
+        self.assert_success(rv)
+        data_out = rv.get_data()
+        self.assertEqual(b"abcdef", data_out)
+
+    def test_list_reference_files(self):
+        file_name = FileService.IRB_PRO_CATEGORIES_FILE
+        data = {'file': (io.BytesIO(b"abcdef"), file_name)}
+        rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
+                          content_type='multipart/form-data')
+
+        rv = self.app.get('/v1.0/reference_file',
+                          follow_redirects=True,
+                          content_type="application/json")
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(1, len(json_data))
+        file = FileModelSchema(many=True).load(json_data, session=session)
+        self.assertEqual(file_name, file[0].name)
+        self.assertTrue(file[0].is_reference)
 
     def test_update_file_info(self):
         self.load_example_data()

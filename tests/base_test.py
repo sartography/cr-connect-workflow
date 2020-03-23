@@ -5,12 +5,14 @@ import os
 import unittest
 import urllib.parse
 
+from crc.models.study import StudyModel
 from crc.services.file_service import FileService
+from crc.services.workflow_processor import WorkflowProcessor
 
 os.environ["TESTING"] = "true"
 
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
-from crc.models.workflow import WorkflowSpecModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel
 from crc.models.user import UserModel
 
 from crc import app, db, session
@@ -144,3 +146,24 @@ class BaseTest(unittest.TestCase):
         noise, file_extension = os.path.splitext(file_path)
         content_type = CONTENT_TYPES[file_extension[1:]]
         file_service.update_file(file_model, data, content_type)
+
+    def create_workflow(self, workflow_name):
+        study = session.query(StudyModel).first()
+        spec = self.load_test_spec(workflow_name)
+        processor = WorkflowProcessor.create(study.id, spec.id)
+        rv = self.app.post(
+            '/v1.0/study/%i/workflows' % study.id,
+            headers=self.logged_in_headers(),
+            content_type="application/json",
+            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+        self.assert_success(rv)
+        workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
+        return workflow
+
+    def create_reference_document(self):
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'reference', 'irb_documents.xlsx')
+        file = open(file_path, "rb")
+        FileService.add_reference_file(FileService.IRB_PRO_CATEGORIES_FILE,
+                                       binary_data=file.read(),
+                                       content_type=CONTENT_TYPES['xls'])
+        file.close()

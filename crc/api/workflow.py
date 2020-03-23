@@ -42,14 +42,11 @@ def get_workflow_specification(spec_id):
 @auth.login_required
 def update_workflow_specification(spec_id, body):
     if spec_id is None:
-        error = ApiError('unknown_spec', 'Please provide a valid Workflow Spec ID.')
-        return ApiErrorSchema.dump(error), 404
-
+        raise ApiError('unknown_spec', 'Please provide a valid Workflow Spec ID.')
     spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
 
     if spec is None:
-        error = ApiError('unknown_study', 'The spec "' + spec_id + '" is not recognized.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_study', 'The spec "' + spec_id + '" is not recognized.')
 
     schema = WorkflowSpecModelSchema()
     spec = schema.load(body, session=session, instance=spec, partial=True)
@@ -169,14 +166,12 @@ def add_workflow_spec_category(body):
 @auth.login_required
 def update_workflow_spec_category(cat_id, body):
     if cat_id is None:
-        error = ApiError('unknown_category', 'Please provide a valid Workflow Spec Category ID.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_category', 'Please provide a valid Workflow Spec Category ID.')
 
     category = session.query(WorkflowSpecCategoryModel).filter_by(id=cat_id).first()
 
     if category is None:
-        error = ApiError('unknown_category', 'The category "' + cat_id + '" is not recognized.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_category', 'The category "' + cat_id + '" is not recognized.')
 
     schema = WorkflowSpecCategoryModelSchema()
     category = schema.load(body, session=session, instance=category, partial=True)

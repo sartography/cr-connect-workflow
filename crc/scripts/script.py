@@ -18,6 +18,13 @@ class Script:
                        "This is an internal error. The script you are trying to execute " +
                        "does not properly implement the do_task function.")
 
+    def validate(self):
+        """Override this method to perform an early check that the script has access to
+        everything it needs to properly process requests.
+        Should return an array of ScriptValidationErrors.
+        """
+        return []
+
     @staticmethod
     def get_all_subclasses():
         return Script._get_all_subclasses(Script)
@@ -39,3 +46,14 @@ class Script:
             all_subclasses.extend(Script._get_all_subclasses(subclass))
 
         return all_subclasses
+
+
+class ScriptValidationError:
+
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+
+    @classmethod
+    def from_api_error(cls, api_error: ApiError):
+        return cls(api_error.code, api_error.message)
