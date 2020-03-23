@@ -27,14 +27,12 @@ def add_workflow_specification(body):
 @auth.login_required
 def get_workflow_specification(spec_id):
     if spec_id is None:
-        error = ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
 
     spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
 
     if spec is None:
-        error = ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
 
     return WorkflowSpecModelSchema().dump(spec)
 
@@ -58,14 +56,12 @@ def update_workflow_specification(spec_id, body):
 @auth.login_required
 def delete_workflow_specification(spec_id):
     if spec_id is None:
-        error = ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
 
     spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
 
     if spec is None:
-        error = ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
 
     # Delete all items in the database related to the deleted workflow spec.
     files = session.query(FileModel).filter_by(workflow_spec_id=spec_id).all()

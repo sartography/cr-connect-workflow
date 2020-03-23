@@ -66,14 +66,12 @@ def __add_study_workflows_from_status(study_id, status_spec):
 @auth.login_required
 def update_study(study_id, body):
     if study_id is None:
-        error = ApiError('unknown_study', 'Please provide a valid Study ID.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_study', 'Please provide a valid Study ID.')
 
     study = session.query(StudyModel).filter_by(id=study_id).first()
 
     if study is None:
-        error = ApiError('unknown_study', 'The study "' + study_id + '" is not recognized.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_study', 'The study "' + study_id + '" is not recognized.')
 
     schema = StudyModelSchema()
     study = schema.load(body, session=session, instance=study, partial=True)
@@ -207,8 +205,7 @@ def get_study_workflows(study_id):
 def add_workflow_to_study(study_id, body):
     workflow_spec_model: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=body["id"]).first()
     if workflow_spec_model is None:
-        error = ApiError('unknown_spec', 'The specification "' + body['id'] + '" is not recognized.')
-        return ApiErrorSchema.dump(error), 404
+        raise ApiError('unknown_spec', 'The specification "' + body['id'] + '" is not recognized.')
     processor = WorkflowProcessor.create(study_id, workflow_spec_model.id)
 
     # If workflow spec is a status spec, update the study status spec
