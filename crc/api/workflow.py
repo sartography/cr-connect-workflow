@@ -6,6 +6,7 @@ from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.file import delete_file
 from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
 from crc.models.file import FileModel
+from crc.models.stats import WorkflowStatsModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.workflow_processor import WorkflowProcessor
@@ -68,6 +69,8 @@ def delete_workflow_specification(spec_id):
     for file in files:
         delete_file(file.id)
 
+    # Delete all stats and workflow models related to this specification
+    session.query(WorkflowStatsModel).filter_by(workflow_spec_id=spec_id).delete()
     session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).delete()
     session.query(WorkflowSpecModel).filter_by(id=spec_id).delete()
     session.commit()
