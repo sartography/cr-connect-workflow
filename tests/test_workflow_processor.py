@@ -353,7 +353,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual({"color": "blue"}, processor3.next_task().data)
         processor3.complete_task(processor3.next_task())
         self.assertEqual("New Step", processor3.next_task().task_spec.description)
-        self.assertEqual({"color": "blue"}, processor3.next_task().data)
+        self.assertEqual("blue", processor3.next_task().data["color"])
 
     def test_get_latest_spec_version(self):
         workflow_spec_model = self.load_test_spec("two_forms")
