@@ -5,7 +5,7 @@ from connexion import NoContent
 from flask import g
 from sqlalchemy.exc import IntegrityError
 
-from crc import session, auth, app
+from crc import session, app
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.workflow import __get_workflow_api_model
 from crc.models.api_models import WorkflowApiSchema
@@ -16,12 +16,10 @@ from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.protocol_builder import ProtocolBuilderService
 
 
-@auth.login_required
 def all_studies():
     return update_from_protocol_builder()
 
 
-@auth.login_required
 def add_study(body):
     study: StudyModel = StudyModelSchema().load(body, session=session)
     status_spec = __get_status_spec(study.status_spec_id)
@@ -63,7 +61,6 @@ def __add_study_workflows_from_status(study_id, status_spec):
             WorkflowProcessor.create(study_id, spec.id)
 
 
-@auth.login_required
 def update_study(study_id, body):
     if study_id is None:
         raise ApiError('unknown_study', 'Please provide a valid Study ID.')
@@ -80,7 +77,6 @@ def update_study(study_id, body):
     return schema.dump(study)
 
 
-@auth.login_required
 def get_study(study_id):
     study = session.query(StudyModel).filter_by(id=study_id).first()
     schema = StudyModelSchema()
@@ -99,7 +95,6 @@ def delete_study(study_id):
                                                              "preventing deletion.  Please delete the workflows " +
                                                              "before proceeding.")
 
-@auth.login_required
 def update_from_protocol_builder():
     """Updates the list of known studies for a given user based on data received from
     the protocol builder."""
@@ -143,7 +138,6 @@ def update_from_protocol_builder():
     return results
 
 
-@auth.login_required
 def post_update_study_from_protocol_builder(study_id):
     """Update a single study based on data received from
     the protocol builder."""
@@ -156,7 +150,6 @@ def post_update_study_from_protocol_builder(study_id):
     return NoContent, 304
 
 
-@auth.login_required
 def get_study_workflows(study_id):
 
     # Get study
@@ -201,7 +194,6 @@ def get_study_workflows(study_id):
     return schema.dump(api_models)
 
 
-@auth.login_required
 def add_workflow_to_study(study_id, body):
     workflow_spec_model: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=body["id"]).first()
     if workflow_spec_model is None:
@@ -219,7 +211,6 @@ def add_workflow_to_study(study_id, body):
     return WorkflowApiSchema().dump(__get_workflow_api_model(processor))
 
 
-@auth.login_required
 def get_user_pb_studies() -> List[ProtocolBuilderStudy]:
     """Get studies from Protocol Builder matching the given user"""
 

@@ -17,7 +17,7 @@ class TestFilesApi(BaseTest):
         spec = session.query(WorkflowSpecModel).first()
         rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec.id,
                           follow_redirects=True,
-                          content_type="application/json")
+                          content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(1, len(json_data))
@@ -33,7 +33,7 @@ class TestFilesApi(BaseTest):
         session.flush()
         rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec.id,
                           follow_redirects=True,
-                          content_type="application/json")
+                          content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(2, len(json_data))
@@ -43,7 +43,7 @@ class TestFilesApi(BaseTest):
         spec = session.query(WorkflowSpecModel).first()
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
-                           content_type='multipart/form-data')
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
 
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
@@ -54,7 +54,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual("image/svg+xml", file.content_type)
         self.assertEqual(spec.id, file.workflow_spec_id)
 
-        rv = self.app.get('/v1.0/file/%i' % file.id)
+        rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         file2 = FileModelSchema().load(json_data, session=session)
@@ -71,13 +71,13 @@ class TestFilesApi(BaseTest):
 
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
                            (workflow.study_id, workflow.id, task.id, "not_a_known_file"), data=data, follow_redirects=True,
-                           content_type='multipart/form-data')
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_failure(rv, error_code="invalid_form_field_key")
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
                            (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
-                           content_type='multipart/form-data')
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
 
 
@@ -85,7 +85,7 @@ class TestFilesApi(BaseTest):
         file_name = "irb_document_types.xls"
         data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.xls")}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
-                          content_type='multipart/form-data')
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
@@ -98,15 +98,15 @@ class TestFilesApi(BaseTest):
         file_name = FileService.IRB_PRO_CATEGORIES_FILE
         data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.ppt")}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
-                          content_type='multipart/form-data')
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_failure(rv, error_code="invalid_file_type")
 
     def test_get_reference_file(self):
         file_name = "irb_document_types.xls"
         data = {'file': (io.BytesIO(b"abcdef"), "some crazy thing do not care.xls")}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
-                          content_type='multipart/form-data')
-        rv = self.app.get('/v1.0/reference_file/%s' % file_name)
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/reference_file/%s' % file_name, headers=self.logged_in_headers())
         self.assert_success(rv)
         data_out = rv.get_data()
         self.assertEqual(b"abcdef", data_out)
@@ -115,11 +115,11 @@ class TestFilesApi(BaseTest):
         file_name = FileService.IRB_PRO_CATEGORIES_FILE
         data = {'file': (io.BytesIO(b"abcdef"), file_name)}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
-                          content_type='multipart/form-data')
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
 
         rv = self.app.get('/v1.0/reference_file',
                           follow_redirects=True,
-                          content_type="application/json")
+                          content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(1, len(json_data))
@@ -134,7 +134,7 @@ class TestFilesApi(BaseTest):
 
         rv = self.app.put('/v1.0/file/%i' % file.id,
                            content_type="application/json",
-                           data=json.dumps(FileModelSchema().dump(file)))
+                           data=json.dumps(FileModelSchema().dump(file)), headers=self.logged_in_headers())
         self.assert_success(rv)
         db_file = session.query(FileModel).filter_by(id=file.id).first()
         self.assertIsNotNone(db_file)
@@ -146,13 +146,13 @@ class TestFilesApi(BaseTest):
         data = {}
         data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
         rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
-                           content_type='multipart/form-data')
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
 
         data['file'] = io.BytesIO(b"hijklim"), 'my_new_file.bpmn'
         rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
-                          content_type='multipart/form-data')
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
@@ -162,7 +162,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual("application/octet-stream", file.content_type)
         self.assertEqual(spec.id, file.workflow_spec_id)
 
-        rv = self.app.get('/v1.0/file/%i/data' % file.id)
+        rv = self.app.get('/v1.0/file/%i/data' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         data = rv.get_data()
         self.assertIsNotNone(data)
@@ -174,14 +174,14 @@ class TestFilesApi(BaseTest):
         data = {}
         data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
         rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
-                           content_type='multipart/form-data')
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
         self.assertEqual(1, file.latest_version)
         data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
         rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
-                          content_type='multipart/form-data')
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
@@ -192,7 +192,7 @@ class TestFilesApi(BaseTest):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
         file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
-        rv = self.app.get('/v1.0/file/%i/data' % file.id)
+        rv = self.app.get('/v1.0/file/%i/data' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertEqual("text/xml; charset=utf-8", rv.content_type)
         self.assertTrue(rv.content_length > 1)
@@ -201,8 +201,8 @@ class TestFilesApi(BaseTest):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
         file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
-        rv = self.app.get('/v1.0/file/%i' % file.id)
+        rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
-        rv = self.app.delete('/v1.0/file/%i' % file.id)
-        rv = self.app.get('/v1.0/file/%i' % file.id)
+        rv = self.app.delete('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         self.assertEqual(404, rv.status_code)

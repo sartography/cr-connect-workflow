@@ -29,11 +29,11 @@ class FactService(Script):
             fact = task.data["type"]
 
         if fact == "cat":
-            details = self.get_cat()
+            details = "The cat in the hat" # self.get_cat()
         elif fact == "norris":
-            details = self.get_norris()
+            details = "Chuck Norris doesn’t read books. He stares them down until he gets the information he wants." # self.get_norris()
         elif fact == "buzzword":
-            details = self.get_buzzword()
+            details = "Move the Needle." #  self.get_buzzword()
         else:
             details = "unknown fact type."
 

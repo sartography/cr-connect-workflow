@@ -6,12 +6,15 @@ info:
     name: MIT
 servers:
   - url: http://localhost:5000/v1.0
+security:
+  - jwt: ['secret']
 paths:
   /sso_backdoor:
     get:
       operationId: crc.api.user.backdoor
       summary: A backdoor that allows someone to log in as a specific user, if they
         are in a staging environment.
+      security: []  # Disable security for this endpoint only.
       parameters:
         - name: uid
           in: query
@@ -745,6 +748,7 @@ paths:
           type: string
     get:
       operationId: crc.api.tools.render_markdown
+      security: []  # Disable security for this endpoint only.
       summary: Processes the markdown template using the data provided.
       tags:
         - Configurator Tools
@@ -765,6 +769,7 @@ paths:
           type: string
     put:
       operationId: crc.api.tools.render_docx
+      security: []  # Disable security for this endpoint only.
       summary: Renders a docx template with embedded jinja2 markup.
       tags:
         - Configurator Tools
@@ -789,6 +794,7 @@ paths:
   /list_scripts:
     get:
       operationId: crc.api.tools.list_scripts
+      security: []  # Disable security for this endpoint only.
       summary: Returns an list of scripts, along with their descriptions
       tags:
         - Configurator Tools
@@ -802,6 +808,12 @@ paths:
                 items:
                   $ref: "#/components/schemas/Script"
 components:
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: crc.api.user.verify_token
   schemas:
     User:
       properties:

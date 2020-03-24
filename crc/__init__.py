@@ -2,9 +2,7 @@ import logging
 import os
 
 import connexion
-from flask import g
 from flask_cors import CORS
-from flask_httpauth import HTTPTokenAuth
 from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -16,7 +14,6 @@ connexion_app = connexion.FlaskApp(__name__)
 app = connexion_app.app
 app.config.from_object('config.default')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-auth = HTTPTokenAuth('Bearer')
 
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
     app.config.from_object('config.testing')

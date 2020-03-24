@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "51f307cebb352f07cb4241ed716ff7abff66581033169ce0fcf936e0b8e16b2f"
+            "sha256": "fd7b3a41fb37479aa670fd23bad0f4770c76cd4e8e75bbf5ddeba452e95e7e94"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -275,14 +275,6 @@
             ],
             "index": "pypi",
             "version": "==3.0.8"
-        },
-        "flask-httpauth": {
-            "hashes": [
-                "sha256:0149953720489407e51ec24bc2f86273597b7973d71cd51f9443bd0e2a89bd72",
-                "sha256:6ef8b761332e780f9ff74d5f9056c2616f52babc1998b01d9f361a1e439e61b9"
-            ],
-            "index": "pypi",
-            "version": "==3.3.0"
         },
         "flask-marshmallow": {
             "hashes": [
@@ -777,7 +769,7 @@
         "spiffworkflow": {
             "editable": true,
             "git": "https://github.com/sartography/SpiffWorkflow.git",
-            "ref": "d8dbbb4e0575e8346e3342f314b76a0bce140530"
+            "ref": "eff4e3562775239bda8de9b20b722104d6b7e345"
         },
         "sqlalchemy": {
             "hashes": [
@@ -929,10 +921,10 @@
         },
         "wcwidth": {
             "hashes": [
-                "sha256:8fd29383f539be45b20bd4df0dc29c20ba48654a41e661925e612311e9f3c603",
-                "sha256:f28b3e8a6483e5d49e7f8949ac1a78314e740333ae305b4ba5defd3e74fb37a8"
+                "sha256:cafe2186b3c009a04067022ce1dcd79cb38d8d65ee4f4791b8888d6599d1bbe1",
+                "sha256:ee73862862a156bf77ff92b09034fc4825dd3af9cf81bc5b360668d425f3c5f1"
             ],
-            "version": "==0.1.8"
+            "version": "==0.1.9"
         },
         "zipp": {
             "hashes": [

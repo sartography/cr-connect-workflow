@@ -2,17 +2,15 @@ from datetime import datetime
 
 from flask import g
 
-from crc import session, auth
+from crc import session
 from crc.models.stats import WorkflowStatsModel, WorkflowStatsModelSchema, TaskEventModel, TaskEventModelSchema
 
 
-@auth.login_required
 def get_workflow_stats(workflow_id):
     workflow_model = session.query(WorkflowStatsModel).filter_by(workflow_id=workflow_id).first()
     return WorkflowStatsModelSchema().dump(workflow_model)
 
 
-@auth.login_required
 def update_workflow_stats(workflow_model, workflow_api_model):
     stats = session.query(WorkflowStatsModel) \
         .filter_by(study_id=workflow_model.study_id) \
@@ -42,7 +40,6 @@ def update_workflow_stats(workflow_model, workflow_api_model):
     return WorkflowStatsModelSchema().dump(stats)
 
 
-@auth.login_required
 def log_task_complete(workflow_model, task_id):
     task_event = TaskEventModel(
         study_id=workflow_model.study_id,

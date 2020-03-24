@@ -1,31 +1,32 @@
 import connexion
 from flask import redirect, g
 
-from crc import sso, app, db, auth
+from crc import sso, app, db
 from crc.api.common import ApiError
 from crc.models.user import UserModel, UserModelSchema
+
 
 """
 .. module:: crc.api.user
    :synopsis: Single Sign On (SSO) user login and session handlers
 """
-
-
-@auth.verify_token
 def verify_token(token):
+    failure_error = ApiError("invalid_token", "Unable to decode the token you provided.  Please re-authenticate", status_code=403)
+    if (not 'PRODUCTION' in app.config or not app.config['PRODUCTION']) and token == app.config["SWAGGER_AUTH_KEY"]:
+        g.user = UserModel.query.first()
+        token = g.user.encode_auth_token()
+
     try:
-        resp = UserModel.decode_auth_token(token)
-        g.user = UserModel.query.filter_by(uid=resp).first()
+        token_info = UserModel.decode_auth_token(token)
+        g.user = UserModel.query.filter_by(uid=token_info['sub']).first()
     except:
-        return False
-
+        raise failure_error
     if g.user is not None:
-        return True
+        return token_info
     else:
-        return False
+        raise failure_error
 
 
-@auth.login_required
 def get_current_user():
     return UserModelSchema().dump(g.user)
 
@@ -81,8 +82,10 @@ def _handle_login(user_info, redirect_url=app.config['FRONTEND_AUTH_CALLBACK']):
 
     # Return the frontend auth callback URL, with auth token appended.
     auth_token = user.encode_auth_token().decode()
-    return redirect('%s/%s' % (redirect_url, auth_token))
-
+    if redirect_url is not None:
+        return redirect('%s/%s' % (redirect_url, auth_token))
+    else:
+        return auth_token
 
 def backdoor(
     uid=None,

@@ -19,6 +19,7 @@ class UserModel(db.Model):
     last_name = db.Column(db.String, nullable=True)
     title = db.Column(db.String, nullable=True)
 
+
     def encode_auth_token(self):
         """
         Generates the Auth Token
@@ -45,7 +46,7 @@ class UserModel(db.Model):
         """
         try:
             payload = jwt.decode(auth_token, app.config.get('TOKEN_AUTH_SECRET_KEY'), algorithms='HS256')
-            return payload['sub']
+            return payload
         except jwt.ExpiredSignatureError:
             raise ApiError('token_expired', 'The Authentication token you provided expired, and must be renewed.')
         except jwt.InvalidTokenError:

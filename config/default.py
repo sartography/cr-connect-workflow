@@ -9,6 +9,7 @@ SQLALCHEMY_DATABASE_URI = "postgresql://crc_user:crc_pass@localhost:5432/crc_dev
 TOKEN_AUTH_TTL_HOURS = 2
 TOKEN_AUTH_SECRET_KEY = "Shhhh!!! This is secret!  And better darn well not show up in prod."
 FRONTEND_AUTH_CALLBACK = "http://localhost:4200/session"
+SWAGGER_AUTH_KEY = "SWAGGER"
 
 #: Default attribute map for single signon.
 SSO_ATTRIBUTE_MAP = {

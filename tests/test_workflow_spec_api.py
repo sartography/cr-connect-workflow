@@ -13,7 +13,7 @@ class TestWorkflowSpec(BaseTest):
         spec = session.query(WorkflowSpecModel).first()
         rv = self.app.get('/v1.0/workflow-specification',
                           follow_redirects=True,
-                          content_type="application/json")
+                          content_type="application/json",headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         specs = WorkflowSpecModelSchema(many=True).load(json_data, session=session)

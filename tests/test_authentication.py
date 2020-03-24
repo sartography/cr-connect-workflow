@@ -10,7 +10,7 @@ class TestAuthentication(BaseTest):
         user = UserModel(uid="dhf8r")
         auth_token = user.encode_auth_token()
         self.assertTrue(isinstance(auth_token, bytes))
-        self.assertEqual("dhf8r", user.decode_auth_token(auth_token))
+        self.assertEqual("dhf8r", user.decode_auth_token(auth_token).get("sub"))
 
     def test_auth_creates_user(self):
         new_uid = 'czn1z';
