@@ -533,13 +533,11 @@ paths:
                 - file
       responses:
         '200':
-          description: Returns the actual file
+          description: Returns the updated file model with the new version information.
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                type: string
-                format: binary
-                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+                $ref: "#/components/schemas/File"
   # /v1.0/workflow/0
   /reference_file:
     get:
