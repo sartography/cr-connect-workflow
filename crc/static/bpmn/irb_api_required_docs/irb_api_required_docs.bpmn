@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1ezzsxp" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_1soujf0" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_005mo19</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="ScriptTask_1cyger3" name="Load IRB Documents">
+      <bpmn:incoming>Flow_0u1stvg</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_10fvp7e</bpmn:outgoing>
+      <bpmn:script>RequiredDocs</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_005mo19" sourceRef="StartEvent_1" targetRef="Gateway_0qz3e4g" />
+    <bpmn:userTask id="UserTask_181dnz1" name="Show IRB Required Documents" camunda:formKey="FormKey_ReqDocs">
+      <bpmn:documentation>#### Required Documents
+{% for doc in study.required_docs %}
+  {{ doc.AUXDOC }}
+{% endfor %}</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="FormField_ack" label="Leave" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_15k0i5s</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1deaoy0</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_10fvp7e" sourceRef="ScriptTask_1cyger3" targetRef="Gateway_0glrkoo" />
+    <bpmn:endEvent id="EndEvent_1k1s9ah">
+      <bpmn:incoming>Flow_0lz4pws</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1deaoy0" sourceRef="UserTask_181dnz1" targetRef="Gateway_07x5alv" />
+    <bpmn:sequenceFlow id="Flow_0u1stvg" sourceRef="Gateway_0qz3e4g" targetRef="ScriptTask_1cyger3" />
+    <bpmn:inclusiveGateway id="Gateway_0qz3e4g">
+      <bpmn:incoming>SequenceFlow_005mo19</bpmn:incoming>
+      <bpmn:incoming>Flow_00qp7ki</bpmn:incoming>
+      <bpmn:outgoing>Flow_0u1stvg</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_15k0i5s" sourceRef="Gateway_0glrkoo" targetRef="UserTask_181dnz1" />
+    <bpmn:parallelGateway id="Gateway_0glrkoo">
+      <bpmn:incoming>SequenceFlow_10fvp7e</bpmn:incoming>
+      <bpmn:outgoing>Flow_15k0i5s</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0d0d237</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="Flow_0lz4pws" sourceRef="Gateway_07x5alv" targetRef="EndEvent_1k1s9ah" />
+    <bpmn:parallelGateway id="Gateway_07x5alv">
+      <bpmn:incoming>SequenceFlow_1deaoy0</bpmn:incoming>
+      <bpmn:incoming>Flow_04bvocz</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lz4pws</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="Flow_0d0d237" sourceRef="Gateway_0glrkoo" targetRef="Activity_16naa3k" />
+    <bpmn:userTask id="Activity_16naa3k" name="Reload IRB Required Documents?" camunda:formKey="Reload_RequiredDocs">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="isReloadRequiredDocs" label="Reload Required Documents?" type="boolean" defaultValue="true">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0d0d237</bpmn:incoming>
+      <bpmn:outgoing>Flow_1exnz5m</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_13nie2q">
+      <bpmn:incoming>Flow_1exnz5m</bpmn:incoming>
+      <bpmn:outgoing>Flow_04bvocz</bpmn:outgoing>
+      <bpmn:outgoing>Flow_00qp7ki</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1exnz5m" sourceRef="Activity_16naa3k" targetRef="Gateway_13nie2q" />
+    <bpmn:sequenceFlow id="Flow_04bvocz" name="No" sourceRef="Gateway_13nie2q" targetRef="Gateway_07x5alv">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">isReloadRequiredDocs == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_00qp7ki" name="No" sourceRef="Gateway_13nie2q" targetRef="Gateway_0qz3e4g">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">isReloadRequiredDocs == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1soujf0">
+      <bpmndi:BPMNEdge id="Flow_00qp7ki_di" bpmnElement="Flow_00qp7ki">
+        <di:waypoint x="870" y="255" />
+        <di:waypoint x="870" y="360" />
+        <di:waypoint x="280" y="360" />
+        <di:waypoint x="280" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="568" y="342" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04bvocz_di" bpmnElement="Flow_04bvocz">
+        <di:waypoint x="870" y="205" />
+        <di:waypoint x="870" y="142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="878" y="171" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1exnz5m_di" bpmnElement="Flow_1exnz5m">
+        <di:waypoint x="760" y="230" />
+        <di:waypoint x="845" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d0d237_di" bpmnElement="Flow_0d0d237">
+        <di:waypoint x="550" y="142" />
+        <di:waypoint x="550" y="230" />
+        <di:waypoint x="660" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lz4pws_di" bpmnElement="Flow_0lz4pws">
+        <di:waypoint x="895" y="117" />
+        <di:waypoint x="992" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15k0i5s_di" bpmnElement="Flow_15k0i5s">
+        <di:waypoint x="575" y="117" />
+        <di:waypoint x="660" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0u1stvg_di" bpmnElement="Flow_0u1stvg">
+        <di:waypoint x="305" y="117" />
+        <di:waypoint x="360" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1deaoy0_di" bpmnElement="SequenceFlow_1deaoy0">
+        <di:waypoint x="760" y="117" />
+        <di:waypoint x="845" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_10fvp7e_di" bpmnElement="SequenceFlow_10fvp7e">
+        <di:waypoint x="460" y="117" />
+        <di:waypoint x="525" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_005mo19_di" bpmnElement="SequenceFlow_005mo19">
+        <di:waypoint x="208" y="117" />
+        <di:waypoint x="255" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="172" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1cyger3_di" bpmnElement="ScriptTask_1cyger3">
+        <dc:Bounds x="360" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_181dnz1_di" bpmnElement="UserTask_181dnz1">
+        <dc:Bounds x="660" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1k1s9ah_di" bpmnElement="EndEvent_1k1s9ah">
+        <dc:Bounds x="992" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_114nzib_di" bpmnElement="Gateway_0qz3e4g">
+        <dc:Bounds x="255" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_00z5hb4_di" bpmnElement="Gateway_0glrkoo">
+        <dc:Bounds x="525" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1gfwdfx_di" bpmnElement="Gateway_07x5alv">
+        <dc:Bounds x="845" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1plnj4w_di" bpmnElement="Activity_16naa3k">
+        <dc:Bounds x="660" y="190" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_13nie2q_di" bpmnElement="Gateway_13nie2q" isMarkerVisible="true">
+        <dc:Bounds x="845" y="205" width="50" height="50" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

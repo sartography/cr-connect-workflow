@@ -65,18 +65,38 @@ class ExampleDataLoader:
         db.session.add_all(studies)
         db.session.commit()
 
-        self.create_spec(id="crc2_training_session_enter_core_info",
-                         name="crc2_training_session_enter_core_info",
-                         display_name="CR Connect2 - Training Session - Core Info",
-                         description='Part of Milestone 3 Deliverable')
-        self.create_spec(id="crc2_training_session_data_security_plan",
-                         name="crc2_training_session_data_security_plan",
-                         display_name="CR Connect2 - Training Session - Data Security Plan",
-                         description='Part of Milestone 3 Deliverable')
-        self.create_spec(id="crc2_training_session_sponsor_funding_source",
-                         name="crc2_training_session_sponsor_funding_source",
-                         display_name="CR Connect2 - Training Session - Sponsor and/or Funding Source",
-                         description='Part of Milestone 3 Deliverable')
+        self.create_spec(id="core_info",
+                         name="core_info",
+                         display_name="core_info",
+                         description="core_info")
+        self.create_spec(id="data_security_plan",
+                         name="data_security_plan",
+                         display_name="data_security_plan",
+                         description="data_security_plan")
+        self.create_spec(id="finance",
+                         name="finance",
+                         display_name="finance",
+                         description="finance")
+        self.create_spec(id="ids",
+                         name="ids",
+                         display_name="ids",
+                         description="ids")
+        self.create_spec(id="irb_api_details",
+                         name="irb_api_details",
+                         display_name="irb_api_details",
+                         description="irb_api_details")
+        self.create_spec(id="irb_api_personnel",
+                         name="irb_api_personnel",
+                         display_name="irb_api_personnel",
+                         description="irb_api_personnel")
+        self.create_spec(id="irb_api_required_docs",
+                         name="irb_api_required_docs",
+                         display_name="irb_api_required_docs",
+                         description="irb_api_required_docs")
+        self.create_spec(id="sponsor_funding_source",
+                         name="sponsor_funding_source",
+                         display_name="sponsor_funding_source",
+                         description="sponsor_funding_source")
 
 
     def create_spec(self, id, name, display_name="", description="", filepath=None):

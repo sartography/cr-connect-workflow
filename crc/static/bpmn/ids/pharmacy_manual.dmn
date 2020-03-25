@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_02iuvuc" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_PharmacyManual" name="Decision_PharmacyManual">
+    <extensionElements>
+      <biodi:bounds x="150" y="150" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="All cases">
+        <inputExpression id="inputExpression_1" typeRef="string" expressionLanguage="FEEL">
+          <text></text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="IRB_UplCnt.DrugDeviceDocument.PharmacyManual" name="IRB_UplCnt.DrugDeviceDocument.PharmacyManual" typeRef="boolean" />
+      <rule id="DecisionRule_19gnnyv">
+        <inputEntry id="UnaryTests_044pg07">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1da4cm8">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
