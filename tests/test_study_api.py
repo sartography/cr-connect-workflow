@@ -1,12 +1,12 @@
 import json
 from datetime import datetime, timezone
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 from crc import session
 from crc.models.api_models import WorkflowApiSchema, WorkflowApi
-from crc.models.study import StudyModel, StudyModelSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudyDetailsSchema, \
     ProtocolBuilderStudySchema
+from crc.models.study import StudyModel, StudyModelSchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from tests.base_test import BaseTest
 
@@ -65,21 +65,24 @@ class TestStudyApi(BaseTest):
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
     def test_get_all_studies(self, mock_studies, mock_details):
         self.load_example_data()
-        db_studies_before = session.query(StudyModel).all()
-        num_db_studies_before = len(db_studies_before)
+        s = StudyModel(
+            id=54321,  # This matches one of the ids from the study_details_json data.
+            title='The impact of pandemics on dog owner sanity after 12 days',
+            user_uid='dhf8r',
+        )
+        session.add(s)
+        session.commit()
 
-        # Mock Protocol Builder response
+        num_db_studies_before = session.query(StudyModel).count()
+
+        # Mock Protocol Builder responses
         studies_response = self.protocol_builder_response('user_studies.json')
         mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
-
         details_response = self.protocol_builder_response('study_details.json')
         mock_details.return_value = ProtocolBuilderStudyDetailsSchema().loads(details_response)
 
-        self.load_example_data()
-        api_response = self.app.get('/v1.0/study',
-                          follow_redirects=True,
-                          headers=self.logged_in_headers(),
-                          content_type="application/json")
+        # Make the api call to get all studies
+        api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
         self.assert_success(api_response)
         json_data = json.loads(api_response.get_data(as_text=True))
         api_studies = StudyModelSchema(many=True).load(json_data, session=session)
@@ -100,6 +103,10 @@ class TestStudyApi(BaseTest):
         self.assertGreater(num_active, 0)
         self.assertEqual(len(api_studies), num_db_studies_after)
         self.assertEqual(num_active + num_inactive, num_db_studies_after)
+
+        # Assure that the existing study is properly updated.
+        test_study = session.query(StudyModel).filter_by(id=54321).first()
+        self.assertFalse(test_study.inactive)
 
     def test_study_api_get_single_study(self):
         self.load_example_data()
@@ -205,78 +212,54 @@ class TestStudyApi(BaseTest):
         workflows_after = WorkflowApiSchema(many=True).load(json_data_after)
         self.assertEqual(1, len(workflows_after))
 
-    """
-    Workflow Specs that have been made available (or not) to a particular study via the status.bpmn should be flagged
-    as available (or not) when the list of a study's workflows is retrieved.
-    """
-    def test_workflow_spec_status(self):
-        self.load_example_data()
-        study = session.query(StudyModel).first()
-        study_id = study.id
-
-        # Add status workflow
-        self.load_test_spec('status')
-
-        # Add status workflow to the study
-        status_spec = session.query(WorkflowSpecModel).filter_by(is_status=True).first()
-        add_status_response = self.app.post('/v1.0/study/%i/workflows' % study.id,
-                           content_type="application/json",
-                           headers=self.logged_in_headers(),
-                           data=json.dumps(WorkflowSpecModelSchema().dump(status_spec)))
-        self.assert_success(add_status_response)
-        json_data_status = json.loads(add_status_response.get_data(as_text=True))
-        status_workflow: WorkflowApi = WorkflowApiSchema().load(json_data_status)
-        self.assertIsNotNone(status_workflow)
-        self.assertIsNotNone(status_workflow.workflow_spec_id)
-        self.assertIsNotNone(status_workflow.spec_version)
-        self.assertIsNotNone(status_workflow.next_task)
-        self.assertIsNotNone(status_workflow.next_task['id'])
-        status_task_id = status_workflow.next_task['id']
-
-        # Verify that the study status spec is populated
-        updated_study: StudyModel = session.query(StudyModel).filter_by(id=study_id).first()
-        self.assertIsNotNone(updated_study)
-        self.assertIsNotNone(updated_study.status_spec_id)
-        self.assertIsNotNone(updated_study.status_spec_version)
-        self.assertEqual(updated_study.status_spec_id, status_workflow.workflow_spec_id)
-        self.assertEqual(updated_study.status_spec_version, status_workflow.spec_version)
-
-        # Add all available non-status workflows to the study
-        specs = session.query(WorkflowSpecModel).filter_by(is_status=False).all()
-        for spec in specs:
-            add_response = self.app.post('/v1.0/study/%i/workflows' % study.id,
-                               content_type="application/json",
-                               headers=self.logged_in_headers(),
-                               data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
-            self.assert_success(add_response)
-
-        for is_active in [False, True]:
-            # Set all workflow specs to inactive|active
-            update_status_response = self.app.put('/v1.0/workflow/%i/task/%s/data' % (status_workflow.id, status_task_id),
-                              headers=self.logged_in_headers(),
-                              content_type="application/json",
-                              data=json.dumps({'some_input': is_active}))
-            self.assert_success(update_status_response)
-            json_workflow_api = json.loads(update_status_response.get_data(as_text=True))
-            updated_workflow_api: WorkflowApi = WorkflowApiSchema().load(json_workflow_api)
-            self.assertIsNotNone(updated_workflow_api)
-            self.assertEqual(updated_workflow_api.status, WorkflowStatus.complete)
-            self.assertIsNotNone(updated_workflow_api.last_task)
-            self.assertIsNotNone(updated_workflow_api.last_task['data'])
-            self.assertIsNotNone(updated_workflow_api.last_task['data']['some_input'])
-            self.assertEqual(updated_workflow_api.last_task['data']['some_input'], is_active)
-
-            # List workflows for study
-            response_after = self.app.get('/v1.0/study/%i/workflows' % study.id,
-                               content_type="application/json",
-                               headers=self.logged_in_headers())
-            self.assert_success(response_after)
-
-            json_data_after = json.loads(response_after.get_data(as_text=True))
-            workflows_after = WorkflowApiSchema(many=True).load(json_data_after)
-            self.assertEqual(len(specs), len(workflows_after))
-
-            # All workflows should be inactive|active
-            for workflow in workflows_after:
-                self.assertEqual(workflow.is_active, is_active)
+    # """
+    # Assure that when we create a new study, the status of the workflows in that study
+    # reflects information we have read in from the protocol builder.
+    # """
+    # def test_top_level_workflow(self):
+    #
+    #     # Set up the status workflow
+    #     self.load_test_spec('top_level_workflow', master_spec=True)
+    #
+    #     # Create a new study.
+    #     self.
+    #
+    #     # Add all available non-status workflows to the study
+    #     specs = session.query(WorkflowSpecModel).filter_by(is_status=False).all()
+    #     for spec in specs:
+    #         add_response = self.app.post('/v1.0/study/%i/workflows' % study.id,
+    #                            content_type="application/json",
+    #                            headers=self.logged_in_headers(),
+    #                            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+    #         self.assert_success(add_response)
+    #
+    #     for is_active in [False, True]:
+    #         # Set all workflow specs to inactive|active
+    #         update_status_response = self.app.put('/v1.0/workflow/%i/task/%s/data' % (status_workflow.id, status_task_id),
+    #                           headers=self.logged_in_headers(),
+    #                           content_type="application/json",
+    #                           data=json.dumps({'some_input': is_active}))
+    #         self.assert_success(update_status_response)
+    #         json_workflow_api = json.loads(update_status_response.get_data(as_text=True))
+    #         updated_workflow_api: WorkflowApi = WorkflowApiSchema().load(json_workflow_api)
+    #         self.assertIsNotNone(updated_workflow_api)
+    #         self.assertEqual(updated_workflow_api.status, WorkflowStatus.complete)
+    #         self.assertIsNotNone(updated_workflow_api.last_task)
+    #         self.assertIsNotNone(updated_workflow_api.last_task['data'])
+    #         self.assertIsNotNone(updated_workflow_api.last_task['data']['some_input'])
+    #         self.assertEqual(updated_workflow_api.last_task['data']['some_input'], is_active)
+    #
+    #         # List workflows for study
+    #         response_after = self.app.get('/v1.0/study/%i/workflows' % study.id,
+    #                            content_type="application/json",
+    #                            headers=self.logged_in_headers())
+    #         self.assert_success(response_after)
+    #
+    #         json_data_after = json.loads(response_after.get_data(as_text=True))
+    #         workflows_after = WorkflowApiSchema(many=True).load(json_data_after)
+    #         self.assertEqual(len(specs), len(workflows_after))
+    #
+    #         # All workflows should be inactive|active
+    #         for workflow in workflows_after:
+    #             self.assertEqual(workflow.is_active, is_active)
 

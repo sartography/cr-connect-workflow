@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
+  <decision id="data_security_plan" name="Data Security Plan">
+    <extensionElements>
+      <biodi:bounds x="190" y="80" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="DecisionTable_1mjqwlv">
+      <input id="InputClause_18pwfqu" label="Required Doc Keys">
+        <inputExpression id="LiteralExpression_1y84stb" typeRef="string" expressionLanguage="feel">
+          <text>required_docs.keys()</text>
+        </inputExpression>
+      </input>
+      <output id="OutputClause_05y0j7c" label="data_security_plan" name="data_security_plan" typeRef="string" />
+      <rule id="DecisionRule_17xsr74">
+        <description></description>
+        <inputEntry id="UnaryTests_05ldcq4">
+          <text>contains(6)</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_09oao3s">
+          <text>"required"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

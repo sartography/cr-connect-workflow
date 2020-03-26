@@ -91,12 +91,12 @@ class BaseTest(unittest.TestCase):
                 self.assertGreater(len(file_data), 0)
 
     @staticmethod
-    def load_test_spec(dir_name):
+    def load_test_spec(dir_name, master_spec=False):
         """Loads a spec into the database based on a directory in /tests/data"""
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
             return
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
-        return ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath)
+        return ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath, master_spec=master_spec)
 
     @staticmethod
     def protocol_builder_response(file_name):

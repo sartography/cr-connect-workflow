@@ -3,7 +3,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func
 
 from crc import db
-from crc.models.protocol_builder import ProtocolBuilderStatus
+from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 
 
 class StudyModel(db.Model):
@@ -20,8 +20,19 @@ class StudyModel(db.Model):
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
     inactive = db.Column(db.Boolean, default=False)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
-    status_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
-    status_spec_version = db.Column(db.String)
+
+    def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
+        self.hsr_number = pbs.HSRNUMBER
+        self.title = pbs.TITLE
+        self.user_uid = pbs.NETBADGEID
+        self.last_updated = pbs.DATE_MODIFIED
+        self.protocol_builder_status = ProtocolBuilderStatus.DRAFT
+        self.inactive = False
+
+        if pbs.HSRNUMBER:  # And Up load complete?
+            self.protocol_builder_status = ProtocolBuilderStatus.REVIEW_COMPLETE
+        elif pbs.Q_COMPLETE:
+            self.protocol_builder_status = ProtocolBuilderStatus.IN_PROCESS
 
 
 class StudyModelSchema(SQLAlchemyAutoSchema):

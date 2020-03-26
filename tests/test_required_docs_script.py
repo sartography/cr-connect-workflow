@@ -1,16 +1,9 @@
-import io
-import os
 from unittest.mock import patch
 
-from crc import app, db
-from crc.models.file import CONTENT_TYPES, FileDataModel, FileModel
-from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel
+from crc import db
+from crc.models.file import FileDataModel, FileModel
 from crc.scripts.required_docs import RequiredDocs
-from crc.scripts.study_info import StudyInfo
 from crc.services.file_service import FileService
-from crc.services.protocol_builder import ProtocolBuilderService
-from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
 
@@ -54,37 +47,35 @@ class TestRequiredDocsScript(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         self.create_reference_document()
         script = RequiredDocs()
-        required_docs = script.get_required_docs(12)
+        required_docs = script.get_required_docs(12)  # Mocked out, any random study id works.
         self.assertIsNotNone(required_docs)
-        self.assertTrue(len(required_docs) == 5)
-        self.assertEquals(6, required_docs[0]['id'])
-        self.assertEquals("Cancer Center's PRC Approval Form", required_docs[0]['name'])
-        self.assertEquals("UVA Compliance", required_docs[0]['category1'])
-        self.assertEquals("PRC Approval", required_docs[0]['category2'])
-        self.assertEquals("CRC", required_docs[0]['Who Uploads?'])
-        self.assertEquals(0, required_docs[0]['count'])
+        self.assertTrue(6 in required_docs.keys())
+        self.assertEquals("Cancer Center's PRC Approval Form", required_docs[6]['name'])
+        self.assertEquals("UVA Compliance", required_docs[6]['category1'])
+        self.assertEquals("PRC Approval", required_docs[6]['category2'])
+        self.assertEquals("CRC", required_docs[6]['Who Uploads?'])
+        self.assertEquals(0, required_docs[6]['count'])
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_get_required_docs_has_correct_count_when_a_file_exists(self, mock_get):
-
         self.load_example_data()
 
         # Mock out the protocol builder
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
 
-        # Make sure the xslt refernce document is in place.
+        # Make sure the xslt reference document is in place.
         self.create_reference_document()
         script = RequiredDocs()
 
         # Add a document to the study with the correct code.
         workflow = self.create_workflow('docx')
-        irb_code = "UVACompliance.PRCApproval" # The first file referenced in pb required docs.
-        FileService.add_task_file(study_id = workflow.study_id, workflow_id = workflow.id,
-                                  task_id ="fakingthisout",
+        irb_code = "UVACompliance.PRCApproval"  # The first file referenced in pb required docs.
+        FileService.add_task_file(study_id=workflow.study_id, workflow_id=workflow.id,
+                                  task_id="fakingthisout",
                                   name="anything.png", content_type="text",
                                   binary_data=b'1234', irb_doc_code=irb_code)
 
         required_docs = script.get_required_docs(workflow.study_id)
         self.assertIsNotNone(required_docs)
-        self.assertEquals(1, required_docs[0]['count'])
+        self.assertEquals(1, required_docs[6]['count'])

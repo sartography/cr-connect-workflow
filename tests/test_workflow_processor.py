@@ -1,3 +1,4 @@
+import logging
 import os
 import string
 import random
@@ -360,29 +361,31 @@ class TestWorkflowProcessor(BaseTest):
         version = WorkflowProcessor.get_latest_version_string("two_forms")
         self.assertTrue(version.startswith("v1 "))
 
-    def test_status_bpmn(self):
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_master_bpmn(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         self.load_example_data()
 
-        specs = session.query(WorkflowSpecModel).all()
-
         study = session.query(StudyModel).first()
-        workflow_spec_model = self.load_test_spec("status")
+        workflow_spec_model = self.load_test_spec("top_level_workflow", )
 
-        for enabled in [True, False]:
-            processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
-            task = processor.next_task()
+        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor.do_engine_steps()
+        self.assertTrue("Top level process is fully automatic.", processor.bpmn_workflow.is_completed())
+        data = processor.bpmn_workflow.last_task.data
 
-            # Turn all specs on or off
-            task.data = {"some_input": enabled}
-            processor.complete_task(task)
+        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
-            # Finish out rest of workflow
-            while processor.get_status() == WorkflowStatus.waiting:
-                task = processor.next_task()
-                processor.complete_task(task)
+        # It should mark Enter Core Data as required, because it is always required.
+        self.assertTrue("enter_core_info" in data)
+        self.assertEquals("required", data["enter_core_info"])
 
-            self.assertEqual(processor.get_status(), WorkflowStatus.complete)
+        # It should mark the Data Security Plan as required, because InfoSec Approval (24) is included in required docs.
+        self.assertTrue("data_security_plan" in data)
+        self.assertEquals("required", data["data_security_plan"])
 
-            # Enabled status of all specs should match the value set in the first task
-            for spec in specs:
-                self.assertEqual(task.data[spec.id], enabled)
+        # It should mark the sponsor funding source as disabled since the funding required (12) is not included in the required docs.
+        self.assertTrue("sponsor_funding_source" in data)
+        self.assertEquals("disabled", data["sponsor_funding_source"])
+

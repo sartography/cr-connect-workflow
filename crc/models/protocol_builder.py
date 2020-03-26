@@ -1,6 +1,6 @@
 import enum
 
-from marshmallow import INCLUDE
+from marshmallow import INCLUDE, post_load
 
 from crc import ma
 
@@ -43,10 +43,13 @@ class ProtocolBuilderStudySchema(ma.Schema):
         model = ProtocolBuilderStudy
         unknown = INCLUDE
 
+    @post_load
+    def make_pbs(self, data, **kwargs):
+        return ProtocolBuilderStudy(**data)
+
 
 class ProtocolBuilderInvestigator(object):
-    def __init__(self, STUDYID: int, NETBADGEID: str, INVESTIGATORTYPE: str, INVESTIGATORTYPEFULL: str):
-        self.STUDYID = STUDYID
+    def __init__(self, NETBADGEID: str, INVESTIGATORTYPE: str, INVESTIGATORTYPEFULL: str):
         self.NETBADGEID = NETBADGEID
         self.INVESTIGATORTYPE = INVESTIGATORTYPE
         self.INVESTIGATORTYPEFULL = INVESTIGATORTYPEFULL
@@ -57,6 +60,9 @@ class ProtocolBuilderInvestigatorSchema(ma.Schema):
         model = ProtocolBuilderInvestigator
         unknown = INCLUDE
 
+    @post_load
+    def make_inv(self, data, **kwargs):
+        return ProtocolBuilderInvestigator(**data)
 
 class ProtocolBuilderRequiredDocument(object):
     def __init__(self, AUXDOCID: str, AUXDOC: str):
@@ -69,12 +75,14 @@ class ProtocolBuilderRequiredDocumentSchema(ma.Schema):
         model = ProtocolBuilderRequiredDocument
         unknown = INCLUDE
 
+    @post_load
+    def make_req(self, data, **kwargs):
+        return ProtocolBuilderRequiredDocument(**data)
 
 class ProtocolBuilderStudyDetails(object):
 
     def __init__(
             self,
-            STUDYID: int,
             IS_IND: int,
             IND_1: str,
             IND_2: str,
@@ -140,7 +148,6 @@ class ProtocolBuilderStudyDetails(object):
             IS_REVIEW_BY_CENTRAL_IRB: int,
             IRBREVIEWERADMIN: str
     ):
-        self.STUDYID = STUDYID
         self.IS_IND = IS_IND
         self.IND_1 = IND_1
         self.IND_2 = IND_2
@@ -211,3 +218,7 @@ class ProtocolBuilderStudyDetailsSchema(ma.Schema):
     class Meta:
         model = ProtocolBuilderStudyDetails
         unknown = INCLUDE
+
+    @post_load
+    def make_details(self, data, **kwargs):
+        return ProtocolBuilderStudyDetails(**data)

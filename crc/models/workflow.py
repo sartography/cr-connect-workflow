@@ -30,7 +30,7 @@ class WorkflowSpecModel(db.Model):
     primary_process_id = db.Column(db.String)
     workflow_spec_category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'), nullable=True)
     workflow_spec_category = db.relationship("WorkflowSpecCategoryModel")
-    is_status = db.Column(db.Boolean, default=False)
+    is_master_spec = db.Column(db.Boolean, default=False)
 
 
 class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
@@ -43,13 +43,18 @@ class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
 
     workflow_spec_category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
 
+class WorkflowState(enum.Enum):
+    hidden = "hidden"
+    disabled = "disabled"
+    required = "required"
+    optional = "optional"
+
 
 class WorkflowStatus(enum.Enum):
     new = "new"
     user_input_required = "user_input_required"
     waiting = "waiting"
     complete = "complete"
-
 
 class WorkflowModel(db.Model):
     __tablename__ = 'workflow'

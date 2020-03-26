@@ -93,3 +93,12 @@ class TestWorkflowSpec(BaseTest):
         num_files_after = session.query(FileModel).filter_by(workflow_spec_id=spec_id).count()
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertEqual(num_files_after + num_workflows_after, 0)
+
+    # def test_validate_workflow_specification(self):
+    #     self.load_example_data()
+    #     db_spec = session.query(WorkflowSpecModel).first()
+    #     rv = self.app.get('/v1.0/workflow-specification/%s/validate' % db_spec.id, headers=self.logged_in_headers())
+    #     self.assert_success(rv)
+    #     json_data = json.loads(rv.get_data(as_text=True))
+    #     api_spec = WorkflowSpecModelSchema().load(json_data, session=session)
+    #     self.assertEqual(db_spec, api_spec)

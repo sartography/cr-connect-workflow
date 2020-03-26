@@ -79,7 +79,7 @@ class ExampleDataLoader:
                          description='Part of Milestone 3 Deliverable')
 
 
-    def create_spec(self, id, name, display_name="", description="", filepath=None):
+    def create_spec(self, id, name, display_name="", description="", filepath=None, master_spec=False):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
@@ -89,7 +89,7 @@ class ExampleDataLoader:
                                  name=name,
                                  display_name=display_name,
                                  description=description,
-                                 is_status=id == 'status')
+                                 is_master_spec=master_spec)
         db.session.add(spec)
         db.session.commit()
         if not filepath:
