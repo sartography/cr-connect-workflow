@@ -89,10 +89,10 @@ class ExampleDataLoader:
                          name="irb_api_personnel",
                          display_name="irb_api_personnel",
                          description="irb_api_personnel")
-        self.create_spec(id="irb_api_required_docs",
-                         name="irb_api_required_docs",
-                         display_name="irb_api_required_docs",
-                         description="irb_api_required_docs")
+        # self.create_spec(id="irb_api_required_docs",
+        #                  name="irb_api_required_docs",
+        #                  display_name="irb_api_required_docs",
+        #                  description="irb_api_required_docs")
         self.create_spec(id="sponsor_funding_source",
                          name="sponsor_funding_source",
                          display_name="sponsor_funding_source",
