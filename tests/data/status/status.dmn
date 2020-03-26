@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+  <decision id="set_status" name="Set Workflow Spec Status">
+    <extensionElements>
+      <biodi:bounds x="190" y="70" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="DecisionTable_00zdxg0">
+      <input id="InputClause_02n3ccs" label="some_input">
+        <inputExpression id="LiteralExpression_1ju4o1o" typeRef="boolean" expressionLanguage="feel" />
+      </input>
+      <output id="OutputClause_1ybi1ud" label="core_info" name="Core Info" typeRef="boolean" />
+      <output id="OutputClause_1flmldc" label="data_security_plan" name="Data Security Plan" typeRef="boolean" />
+      <output id="OutputClause_0d82n6f" label="finance" name="Finance" typeRef="boolean" />
+      <output id="OutputClause_1odxpcj" label="ids" name="IDS" typeRef="boolean" />
+      <output id="OutputClause_0s9ssvl" label="irb_api_details" name="IRB API Details" typeRef="boolean" />
+      <output id="OutputClause_19akic4" label="irb_api_personnel" name="IRB API Personnel" typeRef="boolean" />
+      <output id="OutputClause_0snkhd8" label="sponsor_funding_source" name="Sponsor Funding Source" typeRef="boolean" />
+      <rule id="DecisionRule_1t97mw4">
+        <inputEntry id="UnaryTests_0ym4ln2">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1pweuqc">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0bybp69">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0t9f8go">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_02avtl3">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_10vzn1s">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0tzzekf">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0q6qmjy">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0j9wah0">
+        <inputEntry id="UnaryTests_0dzq6w4">
+          <text>true</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_119lstj">
+          <text>true</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_030mbml">
+          <text>true</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1gsvr6s">
+          <text>true</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_06q5wbg">
+          <text>true</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_083h7la">
+          <text>true</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_02loqh4">
+          <text>true</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_00odcj9">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
