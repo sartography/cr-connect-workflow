@@ -6,7 +6,7 @@ from crc import session
 from crc.models.api_models import WorkflowApiSchema, WorkflowApi
 from crc.models.study import StudyModel, StudyModelSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudyDetailsSchema, \
-    ProtocolBuilderStudySchema
+    ProtocolBuilderStudySchema, ProtocolBuilderInvestigatorSchema, ProtocolBuilderRequiredDocumentSchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
 from tests.base_test import BaseTest
 
@@ -209,7 +209,29 @@ class TestStudyApi(BaseTest):
     Workflow Specs that have been made available (or not) to a particular study via the status.bpmn should be flagged
     as available (or not) when the list of a study's workflows is retrieved.
     """
-    def test_workflow_spec_status(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')
+    def test_workflow_spec_status(self,
+                                  mock_details,
+                                  mock_required_docs,
+                                  mock_investigators,
+                                  mock_studies):
+
+        # Mock Protocol Builder response
+        studies_response = self.protocol_builder_response('user_studies.json')
+        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
+
+        investigators_response = self.protocol_builder_response('investigators.json')
+        mock_investigators.return_value = ProtocolBuilderInvestigatorSchema(many=True).loads(investigators_response)
+
+        required_docs_response = self.protocol_builder_response('required_docs.json')
+        mock_required_docs.return_value = ProtocolBuilderRequiredDocumentSchema(many=True).loads(required_docs_response)
+
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = ProtocolBuilderStudyDetailsSchema().loads(details_response)
+
         self.load_example_data()
         study = session.query(StudyModel).first()
         study_id = study.id
