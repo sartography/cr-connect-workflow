@@ -49,7 +49,7 @@ class TestWorkflowSpec(BaseTest):
     def test_update_workflow_specification(self):
         self.load_example_data()
 
-        category = WorkflowSpecCategoryModel(id=0, name='trap', display_name="It's a trap!")
+        category = WorkflowSpecCategoryModel(id=0, name='trap', display_name="It's a trap!", display_order=0)
         session.add(category)
         session.commit()
 
@@ -71,6 +71,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertIsNotNone(db_spec_after.workflow_spec_category_id)
         self.assertIsNotNone(db_spec_after.workflow_spec_category)
         self.assertEqual(db_spec_after.workflow_spec_category.display_name, category.display_name)
+        self.assertEqual(db_spec_after.workflow_spec_category.display_order, category.display_order)
 
     def test_delete_workflow_specification(self):
         self.load_example_data()

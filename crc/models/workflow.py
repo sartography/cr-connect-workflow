@@ -12,6 +12,7 @@ class WorkflowSpecCategoryModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     display_name = db.Column(db.String)
+    display_order = db.Column(db.Integer)
 
 
 class WorkflowSpecCategoryModelSchema(SQLAlchemyAutoSchema):
