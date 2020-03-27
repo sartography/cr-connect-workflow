@@ -30,36 +30,45 @@ class ProtocolBuilderService(object):
                            (response.status_code, response.text))
 
     @staticmethod
-    def get_investigators(study_id) -> Optional[List[ProtocolBuilderInvestigator]]:
+    def get_investigators(study_id, as_json=False) -> Optional[List[ProtocolBuilderInvestigator]]:
         ProtocolBuilderService.check_args(study_id)
         response = requests.get(ProtocolBuilderService.INVESTIGATOR_URL % study_id)
         if response.ok and response.text:
             pb_studies = ProtocolBuilderInvestigatorSchema(many=True).loads(response.text)
-            return pb_studies
+            if as_json:
+                return ProtocolBuilderInvestigatorSchema(many=True).dump(pb_studies)
+            else:
+                return pb_studies
         else:
             raise ApiError("protocol_builder_error",
                            "Received an invalid response from the protocol builder (status %s): %s" %
                            (response.status_code, response.text))
 
     @staticmethod
-    def get_required_docs(study_id) -> Optional[List[ProtocolBuilderRequiredDocument]]:
+    def get_required_docs(study_id, as_json=False) -> Optional[List[ProtocolBuilderRequiredDocument]]:
         ProtocolBuilderService.check_args(study_id)
         response = requests.get(ProtocolBuilderService.REQUIRED_DOCS_URL % study_id)
         if response.ok and response.text:
             pb_studies = ProtocolBuilderRequiredDocumentSchema(many=True).loads(response.text)
-            return pb_studies
+            if as_json:
+                return ProtocolBuilderRequiredDocumentSchema(many=True).dump(pb_studies)
+            else:
+                return pb_studies
         else:
             raise ApiError("protocol_builder_error",
                            "Received an invalid response from the protocol builder (status %s): %s" %
                            (response.status_code, response.text))
 
     @staticmethod
-    def get_study_details(study_id) -> Optional[ProtocolBuilderStudyDetails]:
+    def get_study_details(study_id, as_json=False) -> Optional[ProtocolBuilderStudyDetails]:
         ProtocolBuilderService.check_args(study_id)
         response = requests.get(ProtocolBuilderService.STUDY_DETAILS_URL % study_id)
         if response.ok and response.text:
             pb_study_details = ProtocolBuilderStudyDetailsSchema().loads(response.text)
-            return pb_study_details
+            if as_json:
+                return ProtocolBuilderStudyDetailsSchema().dump(pb_study_details)
+            else:
+                return pb_study_details
         else:
             raise ApiError("protocol_builder_error",
                            "Received an invalid response from the protocol builder (status %s): %s" %

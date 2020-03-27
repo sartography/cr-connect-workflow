@@ -39,9 +39,9 @@ class StudyInfo(Script):
             schema = StudyModelSchema()
             study_info["info"] = schema.dump(study)
         if cmd == 'investigators':
-            study_info["investigators"] = self.pb.get_investigators(study_id)
+            study_info["investigators"] = self.pb.get_investigators(study_id, as_json=True)
         if cmd == 'details':
-            study_info["details"] = self.pb.get_study_details(study_id)
+            study_info["details"] = self.pb.get_study_details(study_id, as_json=True)
         task.data["study"] = study_info
 
 
