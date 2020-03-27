@@ -1,11 +1,12 @@
 from typing import List
 
+from SpiffWorkflow.exceptions import WorkflowException
 from connexion import NoContent
 from flask import g
 from sqlalchemy.exc import IntegrityError
 
 from crc import session, app
-from crc.api.common import ApiError
+from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.workflow import __get_workflow_api_model
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
@@ -15,12 +16,14 @@ from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
-
 def add_study(body):
     study: StudyModel = StudyModelSchema().load(body, session=session)
     session.add(study)
+    errors = add_all_workflow_specs_to_study(study)
     session.commit()
-    return StudyModelSchema().dump(study)
+    study_data = StudyModelSchema().dump(study)
+    study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
+    return study_data
 
 
 def update_study(study_id, body):
@@ -120,34 +123,20 @@ def get_study_workflows(study_id):
     return schema.dump(api_models)
 
 
-def get_study_workflows_with_refresh(study_id):
-    """Returns all the workflows related to this study, assuring that the status of 
-    these workflows is up to date. """
-
-    # Get study
-    study: StudyModel = session.query(StudyModel).filter_by(id=study_id).first()
-    current_workflows = session.query(WorkflowModel).filter_by(study_id=study_id).all()
-    all_specs = session.query(WorkflowSpecModel).filter_by(is_status=False).first()
-    api_models = []
-
-    status_spec = session.query(WorkflowSpecModel).filter_by(is_status=True).first()
-    if status_spec is not None:
-        # Run status spec to get list of workflow specs applicable to this study
-        status_processor = WorkflowProcessor.create(study.id, status_spec)
-        status_processor.do_engine_steps()
-        status_data = status_processor.next_task().data
-
-        # Only add workflow specs listed in status spec
-        for spec in all_specs:
-            if spec.id in status_data and status_data[spec.id]:
-                processor = WorkflowProcessor.create(study.id, spec.id)
-                api_models.append(__get_workflow_api_model(processor, status_data))
-    else:
-        # No status spec. Just add all workflows.
-        for spec in all_specs:
-            processor = WorkflowProcessor.create(study.id, spec.id)
-            api_models.append(__get_workflow_api_model(processor, status_data))
-
+def add_all_workflow_specs_to_study(study):
+    existing_models = session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).all()
+    existing_specs = list(m.workflow_spec_id for m in existing_models)
+    new_specs = session.query(WorkflowSpecModel). \
+        filter(WorkflowSpecModel.is_master_spec == False). \
+        filter(WorkflowSpecModel.id.notin_(existing_specs)). \
+        all()
+    errors = []
+    for workflow_spec in new_specs:
+        try:
+            WorkflowProcessor.create(study.id, workflow_spec.id)
+        except WorkflowException as we:
+            errors.append(ApiError.from_task_spec("workflow_execution_exception", str(we), we.sender))
+    return errors
 
 def add_workflow_to_study(study_id, body):
     workflow_spec_model: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=body["id"]).first()
@@ -155,6 +144,3 @@ def add_workflow_to_study(study_id, body):
         raise ApiError('unknown_spec', 'The specification "' + body['id'] + '" is not recognized.')
     processor = WorkflowProcessor.create(study_id, workflow_spec_model.id)
     return WorkflowApiSchema().dump(__get_workflow_api_model(processor))
-
-
-

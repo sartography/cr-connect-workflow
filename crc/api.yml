@@ -914,6 +914,8 @@ components:
           type: string
         display_name:
           type: string
+        display_order:
+          type: integer
     File:
       properties:
         id:
