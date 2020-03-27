@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_13ibzgx" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_IVRS-IWRS-IXRS" name="Decision_IVRS-IWRS-IXRS">
+    <extensionElements>
+      <biodi:bounds x="150" y="150" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text></text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual" name="IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual" typeRef="boolean" />
+      <rule id="DecisionRule_0qbyqkn">
+        <inputEntry id="UnaryTests_0k06tzv">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1i0v4vv">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
