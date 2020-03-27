@@ -36,6 +36,17 @@ def get_workflow_specification(spec_id):
     return WorkflowSpecModelSchema().dump(spec)
 
 
+def validate_workflow_specification(spec_id):
+
+    errors = []
+    try:
+        WorkflowProcessor.test_spec(spec_id)
+    except ApiError as ae:
+        errors.append(ae)
+    return ApiErrorSchema(many=True).dump(errors)
+
+
+
 def update_workflow_specification(spec_id, body):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Spec ID.')
@@ -102,6 +113,7 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     workflow_api_model = __get_workflow_api_model(processor)
     update_workflow_stats(workflow_model, workflow_api_model)
     return WorkflowApiSchema().dump(workflow_api_model)
+
 
 
 def delete(workflow_id):

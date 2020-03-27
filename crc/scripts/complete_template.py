@@ -26,7 +26,23 @@ Takes two arguments:
 2. The 'code' of the IRB Document as set in the irb_documents.xlsx file."
 """
 
+    def do_task_validate_only(self, task, study_id, *args, **kwargs):
+        """For validation only, process the template, but do not store it in the database."""
+        self.process_template(task, study_id, *args, **kwargs)
+
     def do_task(self, task, study_id, *args, **kwargs):
+        workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+        final_document_stream = self.process_template(task, study_id, *args, **kwargs)
+
+        file_name = args[0]
+        irb_doc_code = args[1]
+        FileService.add_task_file(study_id=study_id, workflow_id=workflow_id, task_id=task.id,
+                                  name=file_name,
+                                  content_type=CONTENT_TYPES['docx'],
+                                  binary_data=final_document_stream.read(),
+                                  irb_doc_code=irb_doc_code)
+
+    def process_template(self, task, study_id, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""
         if len(args) != 2:
             raise ApiError(code="missing_argument",
@@ -34,10 +50,9 @@ Takes two arguments:
                                    "the name of the docx template to use.  The second "
                                    "argument is a code for the document, as "
                                    "set in the reference document %s. " % FileService.IRB_PRO_CATEGORIES_FILE)
-        file_name = args[0]
-        irb_doc_code = args[1]
         workflow_spec_model = self.find_spec_model_in_db(task.workflow)
         task_study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+        file_name = args[0]
 
         if task_study_id != study_id:
             raise ApiError(code="invalid_argument",
@@ -54,18 +69,12 @@ Takes two arguments:
 
         if file_data_model is None:
             raise ApiError(code="file_missing",
-                           message="Can not find a file called '%s' "
-                                   "within workflow specification '%s'") % (args[0], workflow_spec_model.id)
+                           message="Can not find a file called '%s' within workflow specification '%s'"
+                                   % (args[0], workflow_spec_model.id))
 
-        final_document_stream = self.make_template(BytesIO(file_data_model.data), task.data)
-        workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-        FileService.add_task_file(study_id=study_id, workflow_id=workflow_id, task_id=task.id,
-                                  name=file_name,
-                                  content_type=CONTENT_TYPES['docx'],
-                                  binary_data=final_document_stream.read(),
-                                  irb_doc_code=irb_doc_code)
 
-        print("Complete Task was called with %s" % str(args))
+        return self.make_template(BytesIO(file_data_model.data), task.data)
+
 
     def make_template(self, binary_stream, context):
         doc = DocxTemplate(binary_stream)

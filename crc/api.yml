@@ -302,12 +302,34 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
+  /workflow-specification/{spec_id}/validate:
+    parameters:
+      - name: spec_id
+        in: path
+        required: false
+        description: The unique id of an existing workflow specification to validate.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.workflow.validate_workflow_specification
+      summary: Loads and attempts to execute a Workflow Specification, returning a list of errors encountered
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow specification.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Error"
   /workflow-specification-category:
     get:
       operationId: crc.api.workflow.list_workflow_spec_categories
       summary: Provides a list of categories that can be added to a workflow spec.
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       responses:
         '200':
           description: An array of workflow specification categories
@@ -321,7 +343,7 @@ paths:
       operationId: crc.api.workflow.add_workflow_spec_category
       summary: Creates a new workflow spec category with the given parameters.
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       requestBody:
         content:
           application/json:
@@ -346,7 +368,7 @@ paths:
       operationId: crc.api.workflow.get_workflow_spec_category
       summary: Returns a single workflow spec category
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       responses:
         '200':
           description: Workflow spec category.
@@ -358,7 +380,7 @@ paths:
       operationId: crc.api.workflow.update_workflow_spec_category
       summary: Modifies an existing workflow spec category with the given parameters.
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       requestBody:
         content:
           application/json:
@@ -375,7 +397,7 @@ paths:
       operationId: crc.api.workflow.delete_workflow_spec_category
       summary: Removes an existing workflow spec category
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       responses:
         '204':
           description: The workflow spec category has been removed.

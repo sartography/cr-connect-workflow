@@ -18,18 +18,10 @@ from crc.services.workflow_processor import WorkflowProcessor
 
 class TestWorkflowProcessor(BaseTest):
 
-    def _randomString(self, stringLength=10):
-        """Generate a random string of fixed length """
-        letters = string.ascii_lowercase
-        return ''.join(random.choice(letters) for i in range(stringLength))
+
 
     def _populate_form_with_random_data(self, task):
-        form_data = {}
-        for field in task.task_spec.form.fields:
-            form_data[field.id] = self._randomString()
-        if task.data is None:
-            task.data = {}
-        task.data.update(form_data)
+        WorkflowProcessor.populate_form_with_random_data(task)
 
     def test_create_and_complete_workflow(self):
         self.load_example_data()
@@ -192,9 +184,6 @@ class TestWorkflowProcessor(BaseTest):
         with self.assertRaises(ApiError) as context:
             processor3 = WorkflowProcessor(workflow_model, soft_reset=True)
         self.assertEqual("unexpected_workflow_structure", context.exception.code)
-
-
-
 
     def test_workflow_with_bad_expression_raises_sensible_error(self):
         self.load_example_data()

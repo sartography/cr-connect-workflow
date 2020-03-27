@@ -1,6 +1,7 @@
 import json
 
 from crc import session
+from crc.api.common import ApiErrorSchema
 from crc.models.file import FileModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
 from tests.base_test import BaseTest
@@ -94,11 +95,3 @@ class TestWorkflowSpec(BaseTest):
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertEqual(num_files_after + num_workflows_after, 0)
 
-    # def test_validate_workflow_specification(self):
-    #     self.load_example_data()
-    #     db_spec = session.query(WorkflowSpecModel).first()
-    #     rv = self.app.get('/v1.0/workflow-specification/%s/validate' % db_spec.id, headers=self.logged_in_headers())
-    #     self.assert_success(rv)
-    #     json_data = json.loads(rv.get_data(as_text=True))
-    #     api_spec = WorkflowSpecModelSchema().load(json_data, session=session)
-    #     self.assertEqual(db_spec, api_spec)

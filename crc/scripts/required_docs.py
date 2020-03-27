@@ -1,8 +1,4 @@
-from pandas import ExcelFile
-
-from crc import session, ma
 from crc.api.common import ApiError
-from crc.models.study import StudyModel, StudyModelSchema
 from crc.scripts.script import Script, ScriptValidationError
 from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
@@ -38,18 +34,23 @@ For example:
         }
 ```            
 """
-                    
+    def do_task_validate_only(self, task, study_id, *args, **kwargs):
+        """For validation only, pretend no results come back from pb"""
+        pb_docs = []
+        self.get_required_docs(study_id, pb_docs)
+        task.data["required_docs"] = self.get_required_docs(study_id, pb_docs)
 
     def do_task(self, task, study_id, *args, **kwargs):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories
          spreadsheet to return pertinent details about the required documents."""
-        self.get_required_docs(study_id)
-        task.data["required_docs"] = self.get_required_docs(study_id)
+        pb_docs = self.pb.get_required_docs(study_id)
+        self.get_required_docs(study_id, pb_docs)
+        task.data["required_docs"] = self.get_required_docs(study_id, pb_docs)
 
-    def get_required_docs(self, study_id):
+    def get_required_docs(self, study_id, pb_docs):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories spreadsheet to return
         pertinant details about the required documents."""
-        pb_docs = self.pb.get_required_docs(study_id)
+
         doc_dictionary = FileService.get_file_reference_dictionary()
         required_docs = {}
         for doc in pb_docs:
