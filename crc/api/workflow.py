@@ -97,10 +97,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor, status_data=None):
         last_task=Task.from_spiff(processor.bpmn_workflow.last_task),
         next_task=None,
         user_tasks=user_tasks,
-        workflow_spec_id=processor.workflow_spec_id,
         spec_version=processor.get_spec_version(),
         is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
-        is_active=is_active
     )
     if processor.next_task():
         workflow_api.next_task = Task.from_spiff(processor.next_task())

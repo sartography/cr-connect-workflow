@@ -95,17 +95,15 @@ class TaskSchema(ma.Schema):
 
 
 class WorkflowApi(object):
-    def __init__(self, id, status, user_tasks, last_task, next_task, workflow_spec_id, spec_version,
-                 is_latest_spec, is_active):
+    def __init__(self, id, status, user_tasks, last_task, next_task,
+                 spec_version, is_latest_spec):
         self.id = id
         self.status = status
         self.user_tasks = user_tasks
         self.last_task = last_task
         self.next_task = next_task
-        self.workflow_spec_id = workflow_spec_id
         self.spec_version = spec_version
         self.is_latest_spec = is_latest_spec
-        self.is_active = is_active
 
 
 class WorkflowApiSchema(ma.Schema):

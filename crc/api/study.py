@@ -68,7 +68,7 @@ def all_studies():
     """:type: crc.models.user.UserModel"""
 
     # Get studies matching this user from Protocol Builder
-    pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(g.user.id)
+    pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(g.user.uid)
 
     # Get studies from the database
     db_studies = session.query(StudyModel).filter_by(user_uid=g.user.uid).all()
@@ -100,7 +100,7 @@ def post_update_study_from_protocol_builder(study_id):
     the protocol builder."""
 
     db_study = session.query(StudyModel).filter_by(study_id=study_id).all()
-    pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(g.user.id)
+    pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(g.user.uid)
     pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study_id), None)
     if pb_study:
         db_study.update_from_protocol_builder(pb_study)
@@ -113,9 +113,10 @@ def post_update_study_from_protocol_builder(study_id):
 
 def get_study_workflows(study_id):
     """Returns all the workflows related to this study"""
-    workflow_models = session.query(WorkflowModel).filter_by(study_id=study_id).all()
+    existing_workflow_models = session.query(WorkflowModel).filter_by(study_id=study_id).all()
+    all_specs = session.query(WorkflowSpecModel).filter_by(is_master_spec=False).all()
     api_models = []
-    for workflow_model in workflow_models:
+    for workflow_model in existing_workflow_models:
         processor = WorkflowProcessor(workflow_model,
                                       workflow_model.bpmn_workflow_json)
         api_models.append(__get_workflow_api_model(processor))
