@@ -50,15 +50,16 @@ class TestWorkflowSpec(BaseTest):
     def test_update_workflow_specification(self):
         self.load_example_data()
 
-        category = WorkflowSpecCategoryModel(id=0, name='trap', display_name="It's a trap!", display_order=0)
+        category_id = 99
+        category = WorkflowSpecCategoryModel(id=category_id, name='trap', display_name="It's a trap!", display_order=0)
         session.add(category)
         session.commit()
 
         db_spec_before: WorkflowSpecModel = session.query(WorkflowSpecModel).first()
         spec_id = db_spec_before.id
-        self.assertIsNone(db_spec_before.workflow_spec_category_id)
+        self.assertNotEqual(db_spec_before.workflow_spec_category_id, category_id)
 
-        db_spec_before.workflow_spec_category_id = 0
+        db_spec_before.workflow_spec_category_id = category_id
         rv = self.app.put('/v1.0/workflow-specification/%s' % spec_id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
