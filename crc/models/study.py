@@ -34,6 +34,17 @@ class StudyModel(db.Model):
         elif pbs.Q_COMPLETE:
             self.protocol_builder_status = ProtocolBuilderStatus.IN_PROCESS
 
+class Study():
+    def __init__(model: StudyModel, status, stats):
+        self.id = id
+        self.status = status
+        self.user_tasks = user_tasks
+        self.last_task = last_task
+        self.next_task = next_task
+        self.spec_version = spec_version
+        self.is_latest_spec = is_latest_spec
+
+
 
 class StudyModelSchema(SQLAlchemyAutoSchema):
     class Meta:
