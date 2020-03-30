@@ -85,16 +85,6 @@ def post_update_study_from_protocol_builder(study_id):
     return NoContent, 304
 
 
-def get_study_workflows(study_id):
-    """Returns all the workflows related to this study"""
-    existing_workflow_models = session.query(WorkflowModel).filter_by(study_id=study_id).all()
-    all_specs = session.query(WorkflowSpecModel).filter_by(is_master_spec=False).all()
-    api_models = []
-    for workflow_model in existing_workflow_models:
-        processor = WorkflowProcessor(workflow_model,
-                                      workflow_model.bpmn_workflow_json)
-        api_models.append(__get_workflow_api_model(processor))
-    schema = WorkflowApiSchema(many=True)
-    return schema.dump(api_models)
+
 
 

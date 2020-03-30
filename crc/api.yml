@@ -175,29 +175,7 @@ paths:
           description: Study is currently up to date and does not need to be reloaded from Protocol Builder
         '202':
           description: Request accepted, will preform an update. Study state set to "updating"
-  /study/{study_id}/workflows:
-    get:
-      operationId: crc.api.study.get_study_workflows
-      summary: Provides a list of workflows to be completed for the given study.
-      tags:
-        - Studies
-      parameters:
-        - name: study_id
-          in: path
-          required: true
-          description: The id of the study for which workflows should be returned.
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: An array of workflows
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Workflow"
+
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -842,22 +820,29 @@ components:
           type: string
           format: date_time
           example: "2019-12-25T09:12:33.001Z"
+        primary_investigator_id:
+          type: string
+          example: dhf8r
+        user_uid:
+          type: string
+          example: dhf8r
         protocol_builder_status:
           type: string
           enum: [DRAFT, IN_PROCESS, IN_REVIEW, REVIEW_COMPLETE, INACTIVE]
           example: done
-        user_uid:
-          type: string
-          example: dhf8r
-        primary_investigator_id:
-          type: string
-          example: dhf8r
         sponsor:
           type: string
           example: "Sartography Pharmaceuticals"
         ind_number:
           type: string
           example: "27b-6-42"
+        hsr_number:
+          type: string
+          example: "27b-6-1212"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowSpecCategory"
     WorkflowSpec:
       properties:
         id:
@@ -889,6 +874,10 @@ components:
           type: string
         display_order:
           type: integer
+        workflows:
+          type: array
+          items:
+            $ref: "#/components/schemas/Workflow"
     File:
       properties:
         id:

@@ -42,7 +42,7 @@ class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
         include_fk = True  # Includes foreign keys
         unknown = EXCLUDE
 
-    workflow_spec_category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
+    category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
 
 
 class WorkflowState(enum.Enum):
