@@ -12,22 +12,25 @@ from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus, WorkflowModel
 from crc.services.file_service import FileService
+from crc.services.study_service import StudyService
 from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 
 
 class TestWorkflowProcessor(BaseTest):
 
-
-
     def _populate_form_with_random_data(self, task):
         WorkflowProcessor.populate_form_with_random_data(task)
+
+    def get_processor(self, study_model, spec_model):
+        workflow_model = StudyService._create_workflow_model(study_model, spec_model)
+        return WorkflowProcessor(workflow_model)
 
     def test_create_and_complete_workflow(self):
         self.load_example_data()
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         self.assertEqual(study.id, processor.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY])
         self.assertIsNotNone(processor)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
@@ -53,7 +56,7 @@ class TestWorkflowProcessor(BaseTest):
         workflow_spec_model = self.load_test_spec("decision_table")
         files = session.query(FileModel).filter_by(workflow_spec_id='decision_table').all()
         self.assertEqual(2, len(files))
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
@@ -77,7 +80,7 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
         workflow_spec_model = self.load_test_spec("parallel_tasks")
         study = session.query(StudyModel).first()
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
 
         # Complete the first steps of the 4 parallel tasks
@@ -118,7 +121,7 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("parallel_tasks")
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(4, len(next_user_tasks))
@@ -139,7 +142,7 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
         task = processor.next_task()
         task.data = {"type": "buzzword"}
@@ -157,7 +160,7 @@ class TestWorkflowProcessor(BaseTest):
         workflow_spec_model = self.load_test_spec("invalid_spec")
         study = session.query(StudyModel).first()
         with self.assertRaises(ApiError) as context:
-            WorkflowProcessor.create(study.id, workflow_spec_model.id)
+            self.get_processor(study, workflow_spec_model)
         self.assertEqual("workflow_validation_error", context.exception.code)
         self.assertTrue("bpmn:startEvent" in context.exception.message)
 
@@ -169,9 +172,8 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
-        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
-        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
+        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
         task = processor.next_task()
         task.data = {"color": "blue"}
         processor.complete_task(task)
@@ -182,7 +184,7 @@ class TestWorkflowProcessor(BaseTest):
 
         # Attemping a soft update on a structural change should raise a sensible error.
         with self.assertRaises(ApiError) as context:
-            processor3 = WorkflowProcessor(workflow_model, soft_reset=True)
+            processor3 = WorkflowProcessor(processor.workflow_model, soft_reset=True)
         self.assertEqual("unexpected_workflow_structure", context.exception.code)
 
     def test_workflow_with_bad_expression_raises_sensible_error(self):
@@ -190,7 +192,7 @@ class TestWorkflowProcessor(BaseTest):
 
         workflow_spec_model = self.load_test_spec("invalid_expression")
         study = session.query(StudyModel).first()
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
@@ -207,7 +209,7 @@ class TestWorkflowProcessor(BaseTest):
         files = session.query(FileModel).filter_by(workflow_spec_id='docx').all()
         self.assertEqual(2, len(files))
         workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="docx").first()
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
@@ -232,7 +234,7 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_details")
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
         task = processor.bpmn_workflow.last_task
         self.assertIsNotNone(task.data)
@@ -246,12 +248,12 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("decision_table")
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         self.assertTrue(processor.get_spec_version().startswith('v1.1'))
         file_service = FileService()
 
         file_service.add_workflow_spec_file(workflow_spec_model, "new_file.txt", "txt", b'blahblah')
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         self.assertTrue(processor.get_spec_version().startswith('v1.1.1'))
 
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'docx', 'docx.bpmn')
@@ -260,16 +262,15 @@ class TestWorkflowProcessor(BaseTest):
 
         file_model = db.session.query(FileModel).filter(FileModel.name == "decision_table.bpmn").first()
         file_service.update_file(file_model, data, "txt")
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         self.assertTrue(processor.get_spec_version().startswith('v2.1.1'))
 
     def test_restart_workflow(self):
         self.load_example_data()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
-        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
-        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
+        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
         task = processor.next_task()
         task.data = {"key": "Value"}
         processor.complete_task(task)
@@ -287,9 +288,8 @@ class TestWorkflowProcessor(BaseTest):
         # Start the two_forms workflow, and enter some data in the first form.
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
-        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
-        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
+        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
         task = processor.next_task()
         task.data = {"color": "blue"}
         processor.complete_task(task)
@@ -299,14 +299,14 @@ class TestWorkflowProcessor(BaseTest):
         self.replace_file("two_forms.bpmn", file_path)
 
         # Setting up another processor should not error out, but doesn't pick up the update.
-        workflow_model.bpmn_workflow_json = processor.serialize()
-        processor2 = WorkflowProcessor(workflow_model)
+        processor.workflow_model.bpmn_workflow_json = processor.serialize()
+        processor2 = WorkflowProcessor(processor.workflow_model)
         self.assertEqual("Step 1", processor2.bpmn_workflow.last_task.task_spec.description)
         self.assertNotEqual("# This is some documentation I wanted to add.",
                           processor2.bpmn_workflow.last_task.task_spec.documentation)
 
         # You can do a soft update and get the right response.
-        processor3 = WorkflowProcessor(workflow_model, soft_reset=True)
+        processor3 = WorkflowProcessor(processor.workflow_model, soft_reset=True)
         self.assertEqual("Step 1", processor3.bpmn_workflow.last_task.task_spec.description)
         self.assertEqual("# This is some documentation I wanted to add.",
                           processor3.bpmn_workflow.last_task.task_spec.documentation)
@@ -319,9 +319,8 @@ class TestWorkflowProcessor(BaseTest):
         # Start the two_forms workflow, and enter some data in the first form.
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
-        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).first()
-        self.assertEqual(workflow_model.workflow_spec_id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
+        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
         task = processor.next_task()
         task.data = {"color": "blue"}
         processor.complete_task(task)
@@ -333,12 +332,12 @@ class TestWorkflowProcessor(BaseTest):
         self.replace_file("two_forms.bpmn", file_path)
 
         # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
-        workflow_model.bpmn_workflow_json = processor.serialize()
-        processor2 = WorkflowProcessor(workflow_model)
+        processor.workflow_model.bpmn_workflow_json = processor.serialize()
+        processor2 = WorkflowProcessor(processor.workflow_model)
         self.assertTrue(processor2.get_spec_version().startswith("v1 ")) # Still at version 1.
 
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
-        processor3 = WorkflowProcessor(workflow_model, hard_reset=True)
+        processor3 = WorkflowProcessor(processor.workflow_model, hard_reset=True)
         self.assertEqual("Step 1", processor3.next_task().task_spec.description)
         self.assertEqual({"color": "blue"}, processor3.next_task().data)
         processor3.complete_task(processor3.next_task())
@@ -357,9 +356,10 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
 
         study = session.query(StudyModel).first()
-        workflow_spec_model = self.load_test_spec("top_level_workflow", )
+        workflow_spec_model = db.session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.name=="top_level_workflow").first()
 
-        processor = WorkflowProcessor.create(study.id, workflow_spec_model.id)
+        processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
         self.assertTrue("Top level process is fully automatic.", processor.bpmn_workflow.is_completed())
         data = processor.bpmn_workflow.last_task.data

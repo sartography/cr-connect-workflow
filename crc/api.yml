@@ -198,33 +198,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Workflow"
-    post:
-      operationId: crc.api.study.add_workflow_to_study
-      summary: Starts a new workflow for the given study using the provided spec.  This is atypical, and should be left to the protocol builder.
-      tags:
-        - Studies
-      parameters:
-        - name: study_id
-          in: path
-          required: true
-          description: The id of the study for which a workflow should start
-          schema:
-            type: integer
-            format: int32
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkflowSpec'
-      responses:
-        '200':
-          description: An array of workflows
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Workflow"
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -898,7 +871,7 @@ components:
         primary_process_id:
           type: string
           nullable: true
-        workflow_spec_category_id:
+        category_id:
           type: integer
           nullable: true
         workflow_spec_category:

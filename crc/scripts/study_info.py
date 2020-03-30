@@ -1,6 +1,6 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.study import StudyModel, StudyModelSchema
+from crc.models.study import StudyModel, StudySchema
 from crc.scripts.script import Script
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -36,7 +36,7 @@ class StudyInfo(Script):
 
         if cmd == 'info':
             study = session.query(StudyModel).filter_by(id=study_id).first()
-            schema = StudyModelSchema()
+            schema = StudySchema()
             study_info["info"] = schema.dump(study)
         if cmd == 'investigators':
             study_info["investigators"] = self.pb.get_investigators(study_id, as_json=True)

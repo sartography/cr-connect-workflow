@@ -26,7 +26,6 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(0, len(self.validate_workflow("file_upload_form")))
         self.assertEqual(0, len(self.validate_workflow("random_fact")))
         self.assertEqual(0, len(self.validate_workflow("study_details")))
-        self.assertEqual(0, len(self.validate_workflow("top_level_workflow")))
         self.assertEqual(0, len(self.validate_workflow("two_forms")))
 
     @unittest.skip("There is one workflow that is failing right now, and I want that visible after deployment.")

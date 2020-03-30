@@ -4,9 +4,12 @@ import json
 import os
 import unittest
 import urllib.parse
+import datetime
 
+from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudyModel
 from crc.services.file_service import FileService
+from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 
 os.environ["TESTING"] = "true"
@@ -31,6 +34,43 @@ class BaseTest(unittest.TestCase):
 
     auths = {}
     test_uid = "dhf8r"
+
+    users = [
+        {
+            'uid':'dhf8r',
+            'email_address':'dhf8r@virginia.EDU',
+            'display_name':'Daniel Harold Funk',
+            'affiliation':'staff@virginia.edu;member@virginia.edu',
+            'eppn':'dhf8r@virginia.edu',
+            'first_name':'Daniel',
+            'last_name':'Funk',
+            'title':'SOFTWARE ENGINEER V'
+        }
+    ]
+
+    studies = [
+        {
+            'id':0,
+            'title':'The impact of fried pickles on beer consumption in bipedal software developers.',
+            'last_updated':datetime.datetime.now(),
+            'protocol_builder_status':ProtocolBuilderStatus.IN_PROCESS,
+            'primary_investigator_id':'dhf8r',
+            'sponsor':'Sartography Pharmaceuticals',
+            'ind_number':'1234',
+            'user_uid':'dhf8r'
+        },
+        {
+            'id':1,
+            'title':'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
+            'last_updated':datetime.datetime.now(),
+            'protocol_builder_status':ProtocolBuilderStatus.IN_PROCESS,
+            'primary_investigator_id':'dhf8r',
+            'sponsor':'Makerspace & Co.',
+            'ind_number':'5678',
+            'user_uid':'dhf8r'
+        }
+    ]
+
 
     @classmethod
     def setUpClass(cls):
@@ -77,6 +117,16 @@ class BaseTest(unittest.TestCase):
         ExampleDataLoader.clean_db()
         ExampleDataLoader().load_all()
 
+        for user_json in self.users:
+            db.session.add(UserModel(**user_json))
+        db.session.commit()
+        for study_json in self.studies:
+            study_model = StudyModel(**study_json)
+            db.session.add(study_model)
+            StudyService._add_all_workflow_specs_to_study(study_model)
+        db.session.commit()
+        db.session.flush()
+
         specs = session.query(WorkflowSpecModel).all()
         self.assertIsNotNone(specs)
 
@@ -85,18 +135,23 @@ class BaseTest(unittest.TestCase):
             self.assertIsNotNone(files)
             self.assertGreater(len(files), 0)
 
+        for spec in specs:
+            files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
+            self.assertIsNotNone(files)
+            self.assertGreater(len(files), 0)
             for file in files:
                 file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
                 self.assertIsNotNone(file_data)
                 self.assertGreater(len(file_data), 0)
 
     @staticmethod
-    def load_test_spec(dir_name, master_spec=False):
+    def load_test_spec(dir_name, master_spec=False, category_id=None):
         """Loads a spec into the database based on a directory in /tests/data"""
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
             return
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
-        return ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath, master_spec=master_spec)
+        return ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath, master_spec=master_spec,
+                                               category_id=category_id)
 
     @staticmethod
     def protocol_builder_response(file_name):
@@ -147,16 +202,12 @@ class BaseTest(unittest.TestCase):
         content_type = CONTENT_TYPES[file_extension[1:]]
         file_service.update_file(file_model, data, content_type)
 
-    def create_workflow(self, workflow_name):
-        study = session.query(StudyModel).first()
-        spec = self.load_test_spec(workflow_name)
-        processor = WorkflowProcessor.create(study.id, spec.id)
-        rv = self.app.post(
-            '/v1.0/study/%i/workflows' % study.id,
-            headers=self.logged_in_headers(),
-            content_type="application/json",
-            data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
-        self.assert_success(rv)
+    def create_workflow(self, workflow_name, study=None, category_id=None):
+        if study == None:
+            study = session.query(StudyModel).first()
+        spec = self.load_test_spec(workflow_name, category_id=category_id)
+        workflow_model = StudyService._create_workflow_model(study, spec)
+        processor = WorkflowProcessor(workflow_model)
         workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
         return workflow
 

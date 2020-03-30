@@ -26,7 +26,7 @@ class TestFilesApi(BaseTest):
 
     def test_list_multiple_files_for_workflow_spec(self):
         self.load_example_data()
-        spec = session.query(WorkflowSpecModel).first()
+        spec = self.load_test_spec("random_fact")
         svgFile = FileModel(name="test.svg", type=FileType.svg,
                             primary=False, workflow_spec_id=spec.id)
         session.add(svgFile)

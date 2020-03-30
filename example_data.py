@@ -25,46 +25,6 @@ class ExampleDataLoader:
 
         self.load_reference_documents()
 
-        users = [
-            UserModel(
-                uid='dhf8r',
-                email_address='dhf8r@virginia.EDU',
-                display_name='Daniel Harold Funk',
-                affiliation='staff@virginia.edu;member@virginia.edu',
-                eppn='dhf8r@virginia.edu',
-                first_name='Daniel',
-                last_name='Funk',
-                title='SOFTWARE ENGINEER V'
-            )
-        ]
-        db.session.add_all(users)
-        db.session.commit()
-
-        studies = [
-            StudyModel(
-                id=0,
-                title='The impact of fried pickles on beer consumption in bipedal software developers.',
-                last_updated=datetime.datetime.now(),
-                protocol_builder_status=ProtocolBuilderStatus.IN_PROCESS,
-                primary_investigator_id='dhf8r',
-                sponsor='Sartography Pharmaceuticals',
-                ind_number='1234',
-                user_uid='dhf8r'
-            ),
-            StudyModel(
-                id=1,
-                title='Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
-                last_updated=datetime.datetime.now(),
-                protocol_builder_status=ProtocolBuilderStatus.IN_PROCESS,
-                primary_investigator_id='dhf8r',
-                sponsor='Makerspace & Co.',
-                ind_number='5678',
-                user_uid='dhf8r'
-            ),
-        ]
-        db.session.add_all(studies)
-        db.session.commit()
-
         categories = [
             WorkflowSpecCategoryModel(
                 id=0,
@@ -105,7 +65,13 @@ class ExampleDataLoader:
         ]
         db.session.add_all(categories)
         db.session.commit()
-
+        self.create_spec(id="top_level_workflow",
+                         name="top_level_workflow",
+                         display_name="Top Level Workflow",
+                         description="Determines the status of other workflows in a study",
+                         category_id=0,
+                         master_spec=True
+                         )
         self.create_spec(id="irb_api_details",
                          name="irb_api_details",
                          display_name="IRB API Details",
@@ -159,7 +125,7 @@ class ExampleDataLoader:
                                  display_name=display_name,
                                  description=description,
                                  is_master_spec=master_spec,
-                                 workflow_spec_category_id=category_id)
+                                 category_id=category_id)
         db.session.add(spec)
         db.session.commit()
         if not filepath:
