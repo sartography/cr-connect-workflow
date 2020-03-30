@@ -43,11 +43,13 @@ class StudyModel(db.Model):
 
 
 class WorkflowMetadata(object):
-    def __init__(self, name, display_name, description, category_id, state: WorkflowState, status: WorkflowStatus,
+    def __init__(self, id, name, display_name, description, spec_version, category_id, state: WorkflowState, status: WorkflowStatus,
                  total_tasks, completed_tasks):
+        self.id = id
         self.name = name
         self.display_name = display_name
         self.description = description
+        self.spec_version = spec_version
         self.category_id = category_id
         self.state = state
         self.status = status
@@ -58,9 +60,11 @@ class WorkflowMetadata(object):
     @classmethod
     def from_workflow(cls, workflow: WorkflowModel):
         instance = cls(
+            id=workflow.id,
             name=workflow.workflow_spec.name,
             display_name=workflow.workflow_spec.display_name,
             description=workflow.workflow_spec.description,
+            spec_version=workflow.spec_version,
             category_id=workflow.workflow_spec.category_id,
             state=WorkflowState.optional,
             status=workflow.status,
@@ -74,7 +78,7 @@ class WorkflowMetadataSchema(ma.Schema):
     status = EnumField(WorkflowStatus)
     class Meta:
         model = WorkflowMetadata
-        additional = ["name", "display_name", "description",
+        additional = ["id", "name", "display_name", "description",
                  "total_tasks", "completed_tasks"]
         unknown = INCLUDE
 

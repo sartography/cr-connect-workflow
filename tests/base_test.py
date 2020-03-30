@@ -207,9 +207,9 @@ class BaseTest(unittest.TestCase):
             study = session.query(StudyModel).first()
         spec = self.load_test_spec(workflow_name, category_id=category_id)
         workflow_model = StudyService._create_workflow_model(study, spec)
-        processor = WorkflowProcessor(workflow_model)
-        workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
-        return workflow
+        #processor = WorkflowProcessor(workflow_model)
+        #workflow = session.query(WorkflowModel).filter_by(study_id=study.id, workflow_spec_id=workflow_name).first()
+        return workflow_model
 
     def create_reference_document(self):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'reference', 'irb_documents.xlsx')

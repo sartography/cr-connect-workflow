@@ -109,7 +109,11 @@ class StudyService(object):
     @staticmethod
     def __get_workflow_metas(study_id):
         # Add in the Workflows for each category
-        workflow_models = db.session.query(WorkflowModel).filter_by(study_id=study_id).all()
+        workflow_models = db.session.query(WorkflowModel).\
+            join(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.is_master_spec == False).\
+            filter(WorkflowModel.study_id == study_id).\
+            all()
         workflow_metas = []
         for workflow in workflow_models:
             workflow_metas.append(WorkflowMetadata.from_workflow(workflow))
@@ -127,15 +131,7 @@ class StudyService(object):
             raise ApiError("multiple_master_specs",
                            "There is more than one master specification, and I don't know what to do.")
 
-        master_spec = master_specs[0]
-        master_workflow = StudyService._create_workflow_model(study_model, master_spec)
-        processor = WorkflowProcessor(master_workflow)
-        processor.do_engine_steps()
-        if not processor.bpmn_workflow.is_completed():
-            raise ApiError("master_spec_not_automatic",
-                           "The master spec should only contain fully automated tasks, it failed to complete.")
-
-        return processor.bpmn_workflow.last_task.data
+        return WorkflowProcessor.run_master_spec(master_specs[0], study_model)
 
     @staticmethod
     def _add_all_workflow_specs_to_study(study):

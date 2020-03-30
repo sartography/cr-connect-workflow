@@ -838,6 +838,7 @@ components:
           example: "27b-6-42"
         hsr_number:
           type: string
+          x-nullable: true
           example: "27b-6-1212"
         categories:
           type: array

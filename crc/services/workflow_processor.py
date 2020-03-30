@@ -120,6 +120,21 @@ class WorkflowProcessor(object):
         self.workflow_spec_id = workflow_model.workflow_spec_id
         try:
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec)
+            self.bpmn_workflow.script_engine = self._script_engine
+
+            workflow_model.total_tasks = len(self.get_all_user_tasks())
+            workflow_model.completed_tasks = len(self.get_all_completed_tasks())
+            workflow_model.status = self.get_status()
+            session.add(workflow_model)
+            session.commit()
+
+            # Need to commit twice, first to get a unique id for the workflow model, and
+            # a second time to store the serialization so we can maintain this link within
+            # the spiff-workflow process.
+            self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
+            workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
+            session.add(workflow_model)
+
         except KeyError as ke:
             if soft_reset:
                 # Undo the soft-reset.
@@ -144,19 +159,22 @@ class WorkflowProcessor(object):
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
             bpmn_workflow.do_engine_steps()
-            session.add(workflow_model)
-            session.commit()
-
-        # Need to commit twice, first to get a unique id for the workflow model, and
-        # a second time to store the serialization so we can maintain this link within
-        # the spiff-workflow process.
-        bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-        workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(bpmn_workflow)
-        session.add(workflow_model)
-
-        # Assure the correct script engine is in use.
-        bpmn_workflow.script_engine = self._script_engine
         return bpmn_workflow
+
+    @staticmethod
+    def run_master_spec(spec_model, study):
+        """Executes a BPMN specification for the given study, without recording any information to the database
+        Useful for running the master specification, which should not persist. """
+        spec = WorkflowProcessor.get_spec(spec_model.id)
+        bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
+        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
+        bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+        bpmn_workflow.do_engine_steps()
+        if not bpmn_workflow.is_completed():
+            raise ApiError("master_spec_not_automatic",
+                           "The master spec should only contain fully automated tasks, it failed to complete.")
+
+        return bpmn_workflow.last_task.data
 
     @staticmethod
     def get_parser():
@@ -368,6 +386,10 @@ class WorkflowProcessor(object):
 
     def complete_task(self, task):
         self.bpmn_workflow.complete_task_from_id(task.id)
+        self.workflow_model.total_tasks = len(self.get_all_user_tasks())
+        self.workflow_model.completed_tasks = len(self.get_all_completed_tasks())
+        self.workflow_model.status = self.get_status()
+        session.add(self.workflow_model)
 
     def get_data(self):
         return self.bpmn_workflow.data
@@ -384,6 +406,11 @@ class WorkflowProcessor(object):
     def get_all_user_tasks(self):
         all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
         return [t for t in all_tasks if not self.bpmn_workflow._is_engine_task(t.task_spec)]
+
+    def get_all_completed_tasks(self):
+        all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
+        return [t for t in all_tasks
+                if not self.bpmn_workflow._is_engine_task(t.task_spec) and t.state in [t.COMPLETED, t.CANCELLED]]
 
     @staticmethod
     def get_process_id(et_root: ElementTree.Element):
