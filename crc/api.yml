@@ -175,56 +175,7 @@ paths:
           description: Study is currently up to date and does not need to be reloaded from Protocol Builder
         '202':
           description: Request accepted, will preform an update. Study state set to "updating"
-  /study/{study_id}/workflows:
-    get:
-      operationId: crc.api.study.get_study_workflows
-      summary: Provides a list of workflows to be completed for the given study.
-      tags:
-        - Studies
-      parameters:
-        - name: study_id
-          in: path
-          required: true
-          description: The id of the study for which workflows should be returned.
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '200':
-          description: An array of workflows
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Workflow"
-    post:
-      operationId: crc.api.study.add_workflow_to_study
-      summary: Starts a new workflow for the given study using the provided spec.  This is atypical, and should be left to the protocol builder.
-      tags:
-        - Studies
-      parameters:
-        - name: study_id
-          in: path
-          required: true
-          description: The id of the study for which a workflow should start
-          schema:
-            type: integer
-            format: int32
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WorkflowSpec'
-      responses:
-        '200':
-          description: An array of workflows
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Workflow"
+
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -302,12 +253,34 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
+  /workflow-specification/{spec_id}/validate:
+    parameters:
+      - name: spec_id
+        in: path
+        required: false
+        description: The unique id of an existing workflow specification to validate.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.workflow.validate_workflow_specification
+      summary: Loads and attempts to execute a Workflow Specification, returning a list of errors encountered
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow specification.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Error"
   /workflow-specification-category:
     get:
       operationId: crc.api.workflow.list_workflow_spec_categories
       summary: Provides a list of categories that can be added to a workflow spec.
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       responses:
         '200':
           description: An array of workflow specification categories
@@ -321,7 +294,7 @@ paths:
       operationId: crc.api.workflow.add_workflow_spec_category
       summary: Creates a new workflow spec category with the given parameters.
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       requestBody:
         content:
           application/json:
@@ -346,7 +319,7 @@ paths:
       operationId: crc.api.workflow.get_workflow_spec_category
       summary: Returns a single workflow spec category
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       responses:
         '200':
           description: Workflow spec category.
@@ -358,7 +331,7 @@ paths:
       operationId: crc.api.workflow.update_workflow_spec_category
       summary: Modifies an existing workflow spec category with the given parameters.
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       requestBody:
         content:
           application/json:
@@ -375,7 +348,7 @@ paths:
       operationId: crc.api.workflow.delete_workflow_spec_category
       summary: Removes an existing workflow spec category
       tags:
-        - Workflow Specifications
+        - Workflow Specification Category
       responses:
         '204':
           description: The workflow spec category has been removed.
@@ -533,13 +506,11 @@ paths:
                 - file
       responses:
         '200':
-          description: Returns the actual file
+          description: Returns the updated file model with the new version information.
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                type: string
-                format: binary
-                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+                $ref: "#/components/schemas/File"
   # /v1.0/workflow/0
   /reference_file:
     get:
@@ -849,22 +820,30 @@ components:
           type: string
           format: date_time
           example: "2019-12-25T09:12:33.001Z"
+        primary_investigator_id:
+          type: string
+          example: dhf8r
+        user_uid:
+          type: string
+          example: dhf8r
         protocol_builder_status:
           type: string
           enum: [DRAFT, IN_PROCESS, IN_REVIEW, REVIEW_COMPLETE, INACTIVE]
           example: done
-        user_uid:
-          type: string
-          example: dhf8r
-        primary_investigator_id:
-          type: string
-          example: dhf8r
         sponsor:
           type: string
           example: "Sartography Pharmaceuticals"
         ind_number:
           type: string
           example: "27b-6-42"
+        hsr_number:
+          type: string
+          x-nullable: true
+          example: "27b-6-1212"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/WorkflowSpecCategory"
     WorkflowSpec:
       properties:
         id:
@@ -878,7 +857,7 @@ components:
         primary_process_id:
           type: string
           nullable: true
-        workflow_spec_category_id:
+        category_id:
           type: integer
           nullable: true
         workflow_spec_category:
@@ -896,6 +875,10 @@ components:
           type: string
         display_order:
           type: integer
+        workflows:
+          type: array
+          items:
+            $ref: "#/components/schemas/Workflow"
     File:
       properties:
         id:

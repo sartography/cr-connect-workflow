@@ -1,6 +1,7 @@
 import json
 
 from crc import session
+from crc.api.common import ApiErrorSchema
 from crc.models.file import FileModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
 from tests.base_test import BaseTest
@@ -49,15 +50,16 @@ class TestWorkflowSpec(BaseTest):
     def test_update_workflow_specification(self):
         self.load_example_data()
 
-        category = WorkflowSpecCategoryModel(id=0, name='trap', display_name="It's a trap!", display_order=0)
+        category_id = 99
+        category = WorkflowSpecCategoryModel(id=category_id, name='trap', display_name="It's a trap!", display_order=0)
         session.add(category)
         session.commit()
 
         db_spec_before: WorkflowSpecModel = session.query(WorkflowSpecModel).first()
         spec_id = db_spec_before.id
-        self.assertIsNone(db_spec_before.workflow_spec_category_id)
+        self.assertNotEqual(db_spec_before.category_id, category_id)
 
-        db_spec_before.workflow_spec_category_id = 0
+        db_spec_before.category_id = category_id
         rv = self.app.put('/v1.0/workflow-specification/%s' % spec_id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
@@ -68,10 +70,10 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(db_spec_before, api_spec)
 
         db_spec_after: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
-        self.assertIsNotNone(db_spec_after.workflow_spec_category_id)
-        self.assertIsNotNone(db_spec_after.workflow_spec_category)
-        self.assertEqual(db_spec_after.workflow_spec_category.display_name, category.display_name)
-        self.assertEqual(db_spec_after.workflow_spec_category.display_order, category.display_order)
+        self.assertIsNotNone(db_spec_after.category_id)
+        self.assertIsNotNone(db_spec_after.category)
+        self.assertEqual(db_spec_after.category.display_name, category.display_name)
+        self.assertEqual(db_spec_after.category.display_order, category.display_order)
 
     def test_delete_workflow_specification(self):
         self.load_example_data()
@@ -94,3 +96,4 @@ class TestWorkflowSpec(BaseTest):
         num_files_after = session.query(FileModel).filter_by(workflow_spec_id=spec_id).count()
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertEqual(num_files_after + num_workflows_after, 0)
+

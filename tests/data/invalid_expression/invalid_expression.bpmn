@@ -15,7 +15,7 @@
       <bpmn:outgoing>SequenceFlow_1lmkn99</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_1lmkn99" sourceRef="Task_Has_Bananas" targetRef="ExclusiveGateway_003amsm" />
-    <bpmn:exclusiveGateway id="ExclusiveGateway_003amsm">
+    <bpmn:exclusiveGateway id="ExclusiveGateway_003amsm" name="Has Bananas Gateway">
       <bpmn:incoming>SequenceFlow_1lmkn99</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_Yes_Bananas</bpmn:outgoing>
       <bpmn:outgoing>SequenceFlow_No_Bananas</bpmn:outgoing>
@@ -24,7 +24,7 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">has_bananas == True</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="SequenceFlow_No_Bananas" name="no" sourceRef="ExclusiveGateway_003amsm" targetRef="Task_Why_No_Bananas">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">lower_case_true==true</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">this_value_does_not_exist==true</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:userTask id="Task_Num_Bananas" name="Number of Bananas" camunda:formKey="banana_count">
       <bpmn:extensionElements>
@@ -71,6 +71,9 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="ExclusiveGateway_14wqqsi_di" bpmnElement="ExclusiveGateway_003amsm" isMarkerVisible="true">
         <dc:Bounds x="425" y="92" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="417" y="62" width="67" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0f3vx1l_di" bpmnElement="SequenceFlow_Yes_Bananas">
         <di:waypoint x="475" y="117" />

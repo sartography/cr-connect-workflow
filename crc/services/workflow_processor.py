@@ -1,8 +1,9 @@
-import json
+import random
 import re
+import string
 import xml.etree.ElementTree as ElementTree
 
-from SpiffWorkflow import Task as SpiffTask, Workflow
+from SpiffWorkflow import Task as SpiffTask
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
@@ -10,9 +11,11 @@ from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
+from SpiffWorkflow.exceptions import WorkflowException
 from SpiffWorkflow.operators import Operator
+from SpiffWorkflow.specs import WorkflowSpec
 
-from crc import session, db
+from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus, WorkflowModel
@@ -24,7 +27,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
     Rather than execute arbitrary code, this assumes the script references a fully qualified python class
     such as myapp.RandomFact. """
 
-    def execute(self, task:SpiffTask, script, **kwargs):
+    def execute(self, task: SpiffTask, script, **kwargs):
         """
         Assume that the script read in from the BPMN file is a fully qualified python class. Instantiate
         that class, pass in any data available to the current task so that it might act on it.
@@ -45,14 +48,21 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             klass = getattr(mod, class_name)
             study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
             if not isinstance(klass(), Script):
-                raise ApiError("invalid_script",
-                               "This is an internal error. The script '%s:%s' you called  "
-                               "does not properly implement the CRC Script class." %
-                               (module_name, class_name))
-            klass().do_task(task, study_id, *commands[1:])
-        except ModuleNotFoundError as mnfe:
-            raise ApiError("invalid_script",
-                           "Unable to locate Script: '%s:%s'" % (module_name, class_name), 400)
+                raise ApiError.from_task("invalid_script",
+                                         "This is an internal error. The script '%s:%s' you called " %
+                                         (module_name, class_name) +
+                                         "does not properly implement the CRC Script class.",
+                                         task=task)
+            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+                """If this is running a validation, and not a normal process, then we want to 
+                mimic running the script, but not make any external calls or database changes."""
+                klass().do_task_validate_only(task, study_id, *commands[1:])
+            else:
+                klass().do_task(task, study_id, *commands[1:])
+        except ModuleNotFoundError:
+            raise ApiError.from_task("invalid_script",
+                                     "Unable to locate Script: '%s:%s'" % (module_name, class_name),
+                                     task=task)
 
     @staticmethod
     def camel_to_snake(camel):
@@ -71,12 +81,12 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
     def _eval(self, task, expression, **kwargs):
         locals().update(kwargs)
-        try :
+        try:
             return eval(expression)
         except NameError as ne:
-            raise ApiError('invalid_expression',
-                           'The expression you provided does not exist:' + expression)
-
+            raise ApiError.from_task('invalid_expression',
+                                     'The expression you provided does not exist:' + expression,
+                                     task=task)
 
 class MyCustomParser(BpmnDmnParser):
     """
@@ -91,6 +101,7 @@ class WorkflowProcessor(object):
     _serializer = BpmnSerializer()
     WORKFLOW_ID_KEY = "workflow_id"
     STUDY_ID_KEY = "study_id"
+    VALIDATION_PROCESS_KEY = "validate_only"
 
     def __init__(self, workflow_model: WorkflowModel, soft_reset=False, hard_reset=False):
         """Create a Workflow Processor based on the serialized information available in the workflow model.
@@ -99,30 +110,71 @@ class WorkflowProcessor(object):
         completed task in the previous workflow.
         If neither flag is set, it will use the same version of the specification that was used to originally
         create the workflow model. """
+        self.workflow_model = workflow_model
         orig_version = workflow_model.spec_version
         if soft_reset:
             spec = self.get_spec(workflow_model.workflow_spec_id)
-            workflow_model.spec_version = spec.description
         else:
             spec = self.get_spec(workflow_model.workflow_spec_id, workflow_model.spec_version)
 
         self.workflow_spec_id = workflow_model.workflow_spec_id
         try:
-            self.bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
+            self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec)
+            self.bpmn_workflow.script_engine = self._script_engine
+
+            workflow_model.total_tasks = len(self.get_all_user_tasks())
+            workflow_model.completed_tasks = len(self.get_all_completed_tasks())
+            workflow_model.status = self.get_status()
+            session.add(workflow_model)
+            session.commit()
+
+            # Need to commit twice, first to get a unique id for the workflow model, and
+            # a second time to store the serialization so we can maintain this link within
+            # the spiff-workflow process.
+            self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
+            workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
+            session.add(workflow_model)
+
         except KeyError as ke:
             if soft_reset:
                 # Undo the soft-reset.
                 workflow_model.spec_version = orig_version
-            orig_version = workflow_model.spec_version
             raise ApiError(code="unexpected_workflow_structure",
-                           message="Failed to deserialize workflow '%s' version %s, due to a mis-placed or missing task '%s'" %
+                           message="Failed to deserialize workflow"
+                                   " '%s' version %s, due to a mis-placed or missing task '%s'" %
                                    (self.workflow_spec_id, workflow_model.spec_version, str(ke)) +
                            " This is very likely due to a soft reset where there was a structural change.")
-        self.bpmn_workflow.script_engine = self._script_engine
-
         if hard_reset:
             # Now that the spec is loaded, get the data and rebuild the bpmn with the new details
             workflow_model.spec_version = self.hard_reset()
+
+    def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec):
+
+        workflow_model.spec_version = spec.description  # Very naughty.  But we keep the version in the spec desc.
+
+        if workflow_model.bpmn_workflow_json:
+            bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
+        else:
+            bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
+            bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
+            bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+            bpmn_workflow.do_engine_steps()
+        return bpmn_workflow
+
+    @staticmethod
+    def run_master_spec(spec_model, study):
+        """Executes a BPMN specification for the given study, without recording any information to the database
+        Useful for running the master specification, which should not persist. """
+        spec = WorkflowProcessor.get_spec(spec_model.id)
+        bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
+        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
+        bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+        bpmn_workflow.do_engine_steps()
+        if not bpmn_workflow.is_completed():
+            raise ApiError("master_spec_not_automatic",
+                           "The master spec should only contain fully automated tasks, it failed to complete.")
+
+        return bpmn_workflow.last_task.data
 
     @staticmethod
     def get_parser():
@@ -152,7 +204,7 @@ class WorkflowProcessor(object):
                 major_version = file_data.version
             else:
                 minor_version.append(file_data.version)
-        minor_version.insert(0, major_version) # Add major version to beginning.
+        minor_version.insert(0, major_version)  # Add major version to beginning.
         version = ".".join(str(x) for x in minor_version)
         files = ".".join(str(x) for x in file_ids)
         full_version = "v%s (%s)" % (version, files)
@@ -168,8 +220,9 @@ class WorkflowProcessor(object):
             .filter(FileDataModel.id.in_(file_ids)).all()
         if len(files) != len(file_ids):
             raise ApiError("invalid_version",
-                           "The version '%s' of workflow specification '%s' is invalid.  Unable to locate the correct files to recreate it." %
-                           (version, workflow_spec_id))
+                           "The version '%s' of workflow specification '%s' is invalid. " %
+                           (version, workflow_spec_id) +
+                           " Unable to locate the correct files to recreate it.")
         return files
 
     @staticmethod
@@ -181,7 +234,6 @@ class WorkflowProcessor(object):
             .filter(FileDataModel.version == FileModel.latest_version)\
             .order_by(FileModel.id)\
             .all()
-
 
     @staticmethod
     def get_spec(workflow_spec_id, version=None):
@@ -211,9 +263,54 @@ class WorkflowProcessor(object):
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
                            message="Failed to parse Workflow Specification '%s' %s." % (workflow_spec_id, version) +
-                                   "Error is %s" % str(ve))
+                                   "Error is %s" % str(ve),
+                           file_name=ve.filename,
+                           task_id=ve.id,
+                           tag=ve.tag)
         spec.description = version
         return spec
+
+    @classmethod
+    def test_spec(cls, spec_id):
+
+        spec = WorkflowProcessor.get_spec(spec_id)
+        bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
+        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = 1
+        bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = spec_id
+        bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = True
+
+        while not bpmn_workflow.is_completed():
+            try:
+                bpmn_workflow.do_engine_steps()
+                tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
+                for task in tasks:
+                    WorkflowProcessor.populate_form_with_random_data(task)
+                    task.complete()
+            except WorkflowException as we:
+                raise ApiError.from_task_spec("workflow_execution_exception", str(we),
+                                              we.sender)
+
+    @staticmethod
+    def populate_form_with_random_data(task):
+        """populates a task with random data - useful for testing a spec."""
+
+        form_data = {}
+        for field in task.task_spec.form.fields:
+            if field.type == "enum":
+                form_data[field.id] = random.choice(field.options)
+            elif field.type == "long":
+                form_data[field.id] = random.randint(1, 1000)
+            else:
+                form_data[field.id] = WorkflowProcessor._random_string()
+        if task.data is None:
+            task.data = {}
+        task.data.update(form_data)
+
+    @staticmethod
+    def _random_string(string_length=10):
+        """Generate a random string of fixed length """
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
     def status_of(bpmn_workflow):
@@ -224,29 +321,6 @@ class WorkflowProcessor(object):
             return WorkflowStatus.user_input_required
         else:
             return WorkflowStatus.waiting
-
-    @classmethod
-    def create(cls,  study_id, workflow_spec_id):
-        spec = WorkflowProcessor.get_spec(workflow_spec_id)
-        bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
-        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study_id
-        bpmn_workflow.do_engine_steps()
-        workflow_model = WorkflowModel(status=WorkflowProcessor.status_of(bpmn_workflow),
-                                       study_id=study_id,
-                                       workflow_spec_id=workflow_spec_id,
-                                       spec_version=spec.description)
-        session.add(workflow_model)
-        session.commit()
-        # Need to commit twice, first to get a unique id for the workflow model, and
-        # a second time to store the serialization so we can maintain this link within
-        # the spiff-workflow process.
-        bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-
-        workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(bpmn_workflow)
-        session.add(workflow_model)
-        session.commit()
-        processor = cls(workflow_model)
-        return processor
 
     def hard_reset(self):
         """Recreate this workflow, but keep the data from the last completed task and add it back into the first task.
@@ -290,7 +364,6 @@ class WorkflowProcessor(object):
 
         # If the whole blessed mess is done, return the end_event task in the tree
         if self.bpmn_workflow.is_completed():
-            last_task = None
             for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
                 if isinstance(task.task_spec, EndEvent):
                     return task
@@ -313,6 +386,10 @@ class WorkflowProcessor(object):
 
     def complete_task(self, task):
         self.bpmn_workflow.complete_task_from_id(task.id)
+        self.workflow_model.total_tasks = len(self.get_all_user_tasks())
+        self.workflow_model.completed_tasks = len(self.get_all_completed_tasks())
+        self.workflow_model.status = self.get_status()
+        session.add(self.workflow_model)
 
     def get_data(self):
         return self.bpmn_workflow.data
@@ -329,6 +406,11 @@ class WorkflowProcessor(object):
     def get_all_user_tasks(self):
         all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
         return [t for t in all_tasks if not self.bpmn_workflow._is_engine_task(t.task_spec)]
+
+    def get_all_completed_tasks(self):
+        all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
+        return [t for t in all_tasks
+                if not self.bpmn_workflow._is_engine_task(t.task_spec) and t.state in [t.COMPLETED, t.CANCELLED]]
 
     @staticmethod
     def get_process_id(et_root: ElementTree.Element):
@@ -353,3 +435,6 @@ class WorkflowProcessor(object):
             raise ValidationException('No start event found in %s' % et_root.attrib['id'])
 
         return process_elements[0].attrib['id']
+
+
+

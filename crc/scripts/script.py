@@ -15,8 +15,14 @@ class Script:
 
     def do_task(self, task, study_id, **kwargs):
         raise ApiError("invalid_script",
-                       "This is an internal error. The script you are trying to execute " +
+                       "This is an internal error. The script you are trying to execute '%s' " % self.__class__.__name__ +
                        "does not properly implement the do_task function.")
+
+    def do_task_validate_only(self, task, study_id, **kwargs):
+        raise ApiError("invalid_script",
+                       "This is an internal error. The script you are trying to execute '%s' " % self.__class__.__name__ +
+                       "does must provide a validate_only option that mimics the do_task, " +
+                       "but does not make external calls or database updates." )
 
     def validate(self):
         """Override this method to perform an early check that the script has access to

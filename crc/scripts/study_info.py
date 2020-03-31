@@ -1,8 +1,9 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.study import StudyModel, StudyModelSchema
+from crc.models.study import StudyModel, StudySchema
 from crc.scripts.script import Script
 from crc.services.protocol_builder import ProtocolBuilderService
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class StudyInfo(Script):
@@ -20,11 +21,14 @@ class StudyInfo(Script):
             this study. 
         """
 
+    def do_task_validate_only(self, task, study_id, *args, **kwargs):
+        """For validation only, pretend no results come back from pb"""
+        self.check_args(args)
+
+
     def do_task(self, task, study_id, *args, **kwargs):
-        if len(args) != 1 or (args[0] not in StudyInfo.type_options):
-            raise ApiError(code="missing_argument",
-                           message="The StudyInfo script requires a single argument which must be "
-                                   "one of %s" % ",".join(StudyInfo.type_options))
+        self.check_args(args)
+
         cmd = args[0]
         study_info = {}
         if "study" in task.data:
@@ -32,10 +36,17 @@ class StudyInfo(Script):
 
         if cmd == 'info':
             study = session.query(StudyModel).filter_by(id=study_id).first()
-            schema = StudyModelSchema()
+            schema = StudySchema()
             study_info["info"] = schema.dump(study)
         if cmd == 'investigators':
-            study_info["investigators"] = self.pb.get_investigators(study_id)
+            study_info["investigators"] = self.pb.get_investigators(study_id, as_json=True)
         if cmd == 'details':
-            study_info["details"] = self.pb.get_study_details(study_id)
+            study_info["details"] = self.pb.get_study_details(study_id, as_json=True)
         task.data["study"] = study_info
+
+
+    def check_args(self, args):
+        if len(args) != 1 or (args[0] not in StudyInfo.type_options):
+            raise ApiError(code="missing_argument",
+                           message="The StudyInfo script requires a single argument which must be "
+                                   "one of %s" % ",".join(StudyInfo.type_options))

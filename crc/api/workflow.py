@@ -36,6 +36,17 @@ def get_workflow_specification(spec_id):
     return WorkflowSpecModelSchema().dump(spec)
 
 
+def validate_workflow_specification(spec_id):
+
+    errors = []
+    try:
+        WorkflowProcessor.test_spec(spec_id)
+    except ApiError as ae:
+        errors.append(ae)
+    return ApiErrorSchema(many=True).dump(errors)
+
+
+
 def update_workflow_specification(spec_id, body):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Spec ID.')
@@ -89,7 +100,6 @@ def __get_workflow_api_model(processor: WorkflowProcessor, status_data=None):
         workflow_spec_id=processor.workflow_spec_id,
         spec_version=processor.get_spec_version(),
         is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
-        is_active=is_active
     )
     if processor.next_task():
         workflow_api.next_task = Task.from_spiff(processor.next_task())
@@ -102,6 +112,7 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     workflow_api_model = __get_workflow_api_model(processor)
     update_workflow_stats(workflow_model, workflow_api_model)
     return WorkflowApiSchema().dump(workflow_api_model)
+
 
 
 def delete(workflow_id):

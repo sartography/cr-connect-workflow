@@ -1,6 +1,6 @@
 import enum
 
-from marshmallow import INCLUDE
+from marshmallow import INCLUDE, post_load
 
 from crc import ma
 
@@ -43,10 +43,13 @@ class ProtocolBuilderStudySchema(ma.Schema):
         model = ProtocolBuilderStudy
         unknown = INCLUDE
 
+    @post_load
+    def make_pbs(self, data, **kwargs):
+        return ProtocolBuilderStudy(**data)
+
 
 class ProtocolBuilderInvestigator(object):
-    def __init__(self, STUDYID: int, NETBADGEID: str, INVESTIGATORTYPE: str, INVESTIGATORTYPEFULL: str):
-        self.STUDYID = STUDYID
+    def __init__(self, NETBADGEID: str, INVESTIGATORTYPE: str, INVESTIGATORTYPEFULL: str):
         self.NETBADGEID = NETBADGEID
         self.INVESTIGATORTYPE = INVESTIGATORTYPE
         self.INVESTIGATORTYPEFULL = INVESTIGATORTYPEFULL
@@ -57,6 +60,9 @@ class ProtocolBuilderInvestigatorSchema(ma.Schema):
         model = ProtocolBuilderInvestigator
         unknown = INCLUDE
 
+    @post_load
+    def make_inv(self, data, **kwargs):
+        return ProtocolBuilderInvestigator(**data)
 
 class ProtocolBuilderRequiredDocument(object):
     def __init__(self, AUXDOCID: str, AUXDOC: str):
@@ -69,78 +75,80 @@ class ProtocolBuilderRequiredDocumentSchema(ma.Schema):
         model = ProtocolBuilderRequiredDocument
         unknown = INCLUDE
 
+    @post_load
+    def make_req(self, data, **kwargs):
+        return ProtocolBuilderRequiredDocument(**data)
+
 
 class ProtocolBuilderStudyDetails(object):
 
     def __init__(
             self,
-            STUDYID: int,
-            IS_IND: int,
-            IND_1: str,
-            IND_2: str,
-            IND_3: str,
-            IS_UVA_IND: int,
-            IS_IDE: int,
-            IS_UVA_IDE: int,
-            IDE: str,
-            IS_CHART_REVIEW: int,
-            IS_RADIATION: int,
-            GCRC_NUMBER: str,
-            IS_GCRC: int,
-            IS_PRC_DSMP: int,
-            IS_PRC: int,
-            PRC_NUMBER: str,
-            IS_IBC: int,
-            IBC_NUMBER: str,
-            SPONSORS_PROTOCOL_REVISION_DATE: int,
-            IS_SPONSOR_MONITORING: int,
-            IS_AUX: int,
-            IS_SPONSOR: int,
-            IS_GRANT: int,
-            IS_COMMITTEE_CONFLICT: int,
-            DSMB: int,
-            DSMB_FREQUENCY: int,
-            IS_DB: int,
-            IS_UVA_DB: int,
-            IS_CENTRAL_REG_DB: int,
-            IS_CONSENT_WAIVER: int,
-            IS_HGT: int,
-            IS_GENE_TRANSFER: int,
-            IS_TISSUE_BANKING: int,
-            IS_SURROGATE_CONSENT: int,
-            IS_ADULT_PARTICIPANT: int,
-            IS_MINOR_PARTICIPANT: int,
-            IS_MINOR: int,
-            IS_BIOMEDICAL: int,
-            IS_QUALITATIVE: int,
-            IS_PI_SCHOOL: int,
-            IS_PRISONERS_POP: int,
-            IS_PREGNANT_POP: int,
-            IS_FETUS_POP: int,
-            IS_MENTAL_IMPAIRMENT_POP: int,
-            IS_ELDERLY_POP: int,
-            IS_OTHER_VULNERABLE_POP: int,
-            OTHER_VULNERABLE_DESC: str,
-            IS_MULTI_SITE: int,
-            IS_UVA_LOCATION: int,
-            NON_UVA_LOCATION: str,
-            MULTI_SITE_LOCATIONS: str,
-            IS_OUTSIDE_CONTRACT: int,
-            IS_UVA_PI_MULTI: int,
-            IS_NOT_PRC_WAIVER: int,
-            IS_CANCER_PATIENT: int,
-            UPLOAD_COMPLETE: int,
-            IS_FUNDING_SOURCE: int,
-            IS_PI_INITIATED: int,
-            IS_ENGAGED_RESEARCH: int,
-            IS_APPROVED_DEVICE: int,
-            IS_FINANCIAL_CONFLICT: int,
-            IS_NOT_CONSENT_WAIVER: int,
-            IS_FOR_CANCER_CENTER: int,
-            IS_REVIEW_BY_CENTRAL_IRB: int,
-            IRBREVIEWERADMIN: str
+            IS_IND: int = None,
+            IND_1: str = None,
+            IND_2: str = None,
+            IND_3: str = None,
+            IS_UVA_IND: int = None,
+            IS_IDE: int = None,
+            IS_UVA_IDE: int = None,
+            IDE: str = None,
+            IS_CHART_REVIEW: int = None,
+            IS_RADIATION: int = None,
+            GCRC_NUMBER: str = None,
+            IS_GCRC: int = None,
+            IS_PRC_DSMP: int = None,
+            IS_PRC: int = None,
+            PRC_NUMBER: str = None,
+            IS_IBC: int = None,
+            IBC_NUMBER: str = None,
+            SPONSORS_PROTOCOL_REVISION_DATE: int = None,
+            IS_SPONSOR_MONITORING: int = None,
+            IS_AUX: int = None,
+            IS_SPONSOR: int = None,
+            IS_GRANT: int = None,
+            IS_COMMITTEE_CONFLICT: int = None,
+            DSMB: int = None,
+            DSMB_FREQUENCY: int = None,
+            IS_DB: int = None,
+            IS_UVA_DB: int = None,
+            IS_CENTRAL_REG_DB: int = None,
+            IS_CONSENT_WAIVER: int = None,
+            IS_HGT: int = None,
+            IS_GENE_TRANSFER: int = None,
+            IS_TISSUE_BANKING: int = None,
+            IS_SURROGATE_CONSENT: int = None,
+            IS_ADULT_PARTICIPANT: int = None,
+            IS_MINOR_PARTICIPANT: int = None,
+            IS_MINOR: int = None,
+            IS_BIOMEDICAL: int = None,
+            IS_QUALITATIVE: int = None,
+            IS_PI_SCHOOL: int = None,
+            IS_PRISONERS_POP: int = None,
+            IS_PREGNANT_POP: int = None,
+            IS_FETUS_POP: int = None,
+            IS_MENTAL_IMPAIRMENT_POP: int = None,
+            IS_ELDERLY_POP: int = None,
+            IS_OTHER_VULNERABLE_POP: int = None,
+            OTHER_VULNERABLE_DESC: str = None,
+            IS_MULTI_SITE: int = None,
+            IS_UVA_LOCATION: int = None,
+            NON_UVA_LOCATION: str = None,
+            MULTI_SITE_LOCATIONS: str = None,
+            IS_OUTSIDE_CONTRACT: int = None,
+            IS_UVA_PI_MULTI: int = None,
+            IS_NOT_PRC_WAIVER: int = None,
+            IS_CANCER_PATIENT: int = None,
+            UPLOAD_COMPLETE: int = None,
+            IS_FUNDING_SOURCE: int = None,
+            IS_PI_INITIATED: int = None,
+            IS_ENGAGED_RESEARCH: int = None,
+            IS_APPROVED_DEVICE: int = None,
+            IS_FINANCIAL_CONFLICT: int = None,
+            IS_NOT_CONSENT_WAIVER: int = None,
+            IS_FOR_CANCER_CENTER: int = None,
+            IS_REVIEW_BY_CENTRAL_IRB: int = None,
+            IRBREVIEWERADMIN: str = None
     ):
-        self.STUDYID = STUDYID
         self.IS_IND = IS_IND
         self.IND_1 = IND_1
         self.IND_2 = IND_2
@@ -211,3 +219,7 @@ class ProtocolBuilderStudyDetailsSchema(ma.Schema):
     class Meta:
         model = ProtocolBuilderStudyDetails
         unknown = INCLUDE
+
+    @post_load
+    def make_details(self, data, **kwargs):
+        return ProtocolBuilderStudyDetails(**data)

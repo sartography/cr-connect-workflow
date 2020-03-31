@@ -29,9 +29,9 @@ class WorkflowSpecModel(db.Model):
     display_name = db.Column(db.String)
     description = db.Column(db.Text)
     primary_process_id = db.Column(db.String)
-    workflow_spec_category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'), nullable=True)
-    workflow_spec_category = db.relationship("WorkflowSpecCategoryModel")
-    is_status = db.Column(db.Boolean, default=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'), nullable=True)
+    category = db.relationship("WorkflowSpecCategoryModel")
+    is_master_spec = db.Column(db.Boolean, default=False)
 
 
 class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
@@ -42,11 +42,25 @@ class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
         include_fk = True  # Includes foreign keys
         unknown = EXCLUDE
 
-    workflow_spec_category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
+    category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
 
+
+class WorkflowState(enum.Enum):
+    hidden = "hidden"
+    disabled = "disabled"
+    required = "required"
+    optional = "optional"
+
+    @classmethod
+    def has_value(cls, value):
+        return value in cls._value2member_map_
+
+    @staticmethod
+    def list():
+        return list(map(lambda c: c.value, WorkflowState))
 
 class WorkflowStatus(enum.Enum):
-    new = "new"
+    not_started = "not_started"
     user_input_required = "user_input_required"
     waiting = "waiting"
     complete = "complete"
@@ -59,4 +73,7 @@ class WorkflowModel(db.Model):
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    workflow_spec = db.relationship("WorkflowSpecModel")
     spec_version = db.Column(db.String)
+    total_tasks = db.Column(db.Integer, default=0)
+    completed_tasks = db.Column(db.Integer, default=0)

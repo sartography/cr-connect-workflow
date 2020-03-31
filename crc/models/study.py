@@ -1,9 +1,13 @@
+import marshmallow
+from marshmallow import INCLUDE, fields
 from marshmallow_enum import EnumField
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func
 
-from crc import db
-from crc.models.protocol_builder import ProtocolBuilderStatus
+from crc import db, ma
+from crc.api.common import ApiErrorSchema
+from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
+from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
+    WorkflowModel
 
 
 class StudyModel(db.Model):
@@ -20,15 +24,132 @@ class StudyModel(db.Model):
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
     inactive = db.Column(db.Boolean, default=False)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
-    status_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
-    status_spec_version = db.Column(db.String)
+
+    def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
+        self.hsr_number = pbs.HSRNUMBER
+        self.title = pbs.TITLE
+        self.user_uid = pbs.NETBADGEID
+        self.last_updated = pbs.DATE_MODIFIED
+        self.protocol_builder_status = ProtocolBuilderStatus.DRAFT
+        self.inactive = False
+
+        if pbs.HSRNUMBER:  # And Up load complete?
+            self.protocol_builder_status = ProtocolBuilderStatus.REVIEW_COMPLETE
+        elif pbs.Q_COMPLETE:
+            self.protocol_builder_status = ProtocolBuilderStatus.IN_PROCESS
 
 
-class StudyModelSchema(SQLAlchemyAutoSchema):
+
+
+
+class WorkflowMetadata(object):
+    def __init__(self, id, name, display_name, description, spec_version, category_id, state: WorkflowState, status: WorkflowStatus,
+                 total_tasks, completed_tasks):
+        self.id = id
+        self.name = name
+        self.display_name = display_name
+        self.description = description
+        self.spec_version = spec_version
+        self.category_id = category_id
+        self.state = state
+        self.status = status
+        self.total_tasks = total_tasks
+        self.completed_tasks = completed_tasks
+
+
+    @classmethod
+    def from_workflow(cls, workflow: WorkflowModel):
+        instance = cls(
+            id=workflow.id,
+            name=workflow.workflow_spec.name,
+            display_name=workflow.workflow_spec.display_name,
+            description=workflow.workflow_spec.description,
+            spec_version=workflow.spec_version,
+            category_id=workflow.workflow_spec.category_id,
+            state=WorkflowState.optional,
+            status=workflow.status,
+            total_tasks=workflow.total_tasks,
+            completed_tasks=workflow.completed_tasks)
+        return instance
+
+
+class WorkflowMetadataSchema(ma.Schema):
+    state = EnumField(WorkflowState)
+    status = EnumField(WorkflowStatus)
     class Meta:
-        model = StudyModel
-        load_instance = True
-        include_relationships = True
-        include_fk = True  # Includes foreign keys
+        model = WorkflowMetadata
+        additional = ["id", "name", "display_name", "description",
+                 "total_tasks", "completed_tasks"]
+        unknown = INCLUDE
 
+
+class Category(object):
+    def __init__(self, model: WorkflowSpecCategoryModel):
+        self.id = model.id
+        self.name = model.name
+        self.display_name = model.display_name
+        self.display_order = model.display_order
+
+
+class CategorySchema(ma.Schema):
+    workflows = fields.List(fields.Nested(WorkflowMetadataSchema), dump_only=True)
+    class Meta:
+        model = Category
+        additional = ["id", "name", "display_name", "display_order"]
+        unknown = INCLUDE
+
+
+class Study(object):
+
+    def __init__(self, id, title, last_updated, primary_investigator_id, user_uid,
+                 protocol_builder_status=None,
+                 sponsor="", hsr_number="", ind_number="", inactive=False, categories=[], **argsv):
+        self.id = id
+        self.user_uid = user_uid
+        self.title = title
+        self.last_updated = last_updated
+        self.protocol_builder_status = protocol_builder_status
+        self.primary_investigator_id = primary_investigator_id
+        self.sponsor = sponsor
+        self.hsr_number = hsr_number
+        self.ind_number = ind_number
+        self.inactive = inactive
+        self.categories = categories
+        self.warnings = []
+
+    @classmethod
+    def from_model(cls, study_model: StudyModel):
+        args = {k: v for k, v in study_model.__dict__.items() if not k.startswith('_')}
+        instance = cls(**args)
+        return instance
+
+    def update_model(self, study_model: StudyModel):
+        for k,v in  self.__dict__.items():
+            if not k.startswith('_'):
+                study_model.__dict__[k] = v
+
+    def model_args(self):
+        """Arguments that can be passed into the Study Model to update it."""
+        self_dict = self.__dict__.copy()
+        del self_dict["categories"]
+        del self_dict["warnings"]
+        return self_dict
+
+
+class StudySchema(ma.Schema):
+
+    categories = fields.List(fields.Nested(CategorySchema), dump_only=True)
+    warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
     protocol_builder_status = EnumField(ProtocolBuilderStatus)
+    hsr_number = fields.String(allow_none=True)
+
+    class Meta:
+        model = Study
+        additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
+                      "sponsor", "ind_number", "inactive"]
+        unknown = INCLUDE
+
+    @marshmallow.post_load
+    def make_study(self, data, **kwargs):
+        """Can load the basic study data for updates to the database, but categories are write only"""
+        return Study(**data)

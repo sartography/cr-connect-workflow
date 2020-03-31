@@ -20,6 +20,9 @@ class FactService(Script):
         response = requests.get('https://api.chucknorris.io/jokes/random')
         return response.json()['value']
 
+    def do_task_validate_only(self, task, study_id, **kwargs):
+        self.do_task(task, study_id, **kwargs)
+
     def do_task(self, task, study_id, **kwargs):
         print(task.data)
 

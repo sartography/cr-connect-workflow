@@ -26,7 +26,7 @@ class TestFilesApi(BaseTest):
 
     def test_list_multiple_files_for_workflow_spec(self):
         self.load_example_data()
-        spec = session.query(WorkflowSpecModel).first()
+        spec = self.load_test_spec("random_fact")
         svgFile = FileModel(name="test.svg", type=FileType.svg,
                             primary=False, workflow_spec_id=spec.id)
         session.add(svgFile)
@@ -162,6 +162,11 @@ class TestFilesApi(BaseTest):
         self.assertEqual("application/octet-stream", file.content_type)
         self.assertEqual(spec.id, file.workflow_spec_id)
 
+        # Assure it is updated in the database and properly persisted.
+        file_model = session.query(FileModel).filter(FileModel.id == file.id).first()
+        self.assertEqual(2, file_model.latest_version)
+
+
         rv = self.app.get('/v1.0/file/%i/data' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         data = rv.get_data()
@@ -206,3 +211,4 @@ class TestFilesApi(BaseTest):
         rv = self.app.delete('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         self.assertEqual(404, rv.status_code)
+
