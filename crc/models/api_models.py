@@ -42,10 +42,10 @@ class Task(object):
         '''Runs markdown documentation through the Jinja2 processor to inject data
         create loops, etc...'''
 
-        template = Template(documentation)
         try:
+            template = Template(documentation)
             self.documentation = template.render(**self.data)
-        except jinja2.exceptions.UndefinedError as ue:
+        except jinja2.exceptions.TemplateError as ue:
             raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
                                                           (self.name, str(ue)), status_code=500)
         # TODO:  Catch additional errors and report back.
