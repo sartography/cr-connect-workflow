@@ -17,6 +17,7 @@ from SpiffWorkflow.specs import WorkflowSpec
 
 from crc import session
 from crc.api.common import ApiError
+from crc.models.api_models import Task
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus, WorkflowModel
 from crc.scripts.script import Script
@@ -284,6 +285,7 @@ class WorkflowProcessor(object):
                 bpmn_workflow.do_engine_steps()
                 tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:
+                    task_api = Task.from_spiff(task)  # Assure we try to process the documenation, and raise those errors.
                     WorkflowProcessor.populate_form_with_random_data(task)
                     task.complete()
             except WorkflowException as we:
@@ -300,6 +302,8 @@ class WorkflowProcessor(object):
                 form_data[field.id] = random.choice(field.options)
             elif field.type == "long":
                 form_data[field.id] = random.randint(1, 1000)
+            elif field.type == 'boolean':
+                form_data[field.id] = random.choice([True, False])
             else:
                 form_data[field.id] = WorkflowProcessor._random_string()
         if task.data is None:
