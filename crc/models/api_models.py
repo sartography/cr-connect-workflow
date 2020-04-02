@@ -48,6 +48,7 @@ class Task(object):
         except jinja2.exceptions.UndefinedError as ue:
             raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
                                                           (self.name, str(ue)), status_code=500)
+        # TODO:  Catch additional errors and report back.
 
 class OptionSchema(ma.Schema):
     class Meta:

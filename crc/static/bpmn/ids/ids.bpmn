@@ -4,7 +4,7 @@
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_0hr4ghe</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Task_0nz6wkk" name="Enter IDS Study Identification" camunda:formKey="FormKey_StudyID">
+    <bpmn:userTask id="Task_0nz6wkk" name="Enter IDS Study Identification" camunda:formKey="IDS Study ID">
       <bpmn:documentation>#### Instructions
 
 According to selected Study Type: Treatment (TRE), IDS applicable for this type of study: Yes</bpmn:documentation>
@@ -39,7 +39,7 @@ According to selected Study Type: Treatment (TRE), IDS applicable for this type 
       <bpmn:incoming>SequenceFlow_1guaev4</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1iiazgn</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="Task_10vwq9y" name="Enter IDS Fee Structure" camunda:formKey="FormKey_FeeStructure">
+    <bpmn:userTask id="Task_10vwq9y" name="Enter IDS Fee Structure" camunda:formKey="IDS Fee Structure">
       <bpmn:documentation>#### How to
 IDS service fees are based on the Protocol Owner identified in Common Study section of the workflow.
 
@@ -89,14 +89,15 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="SequenceFlow_0t9ss6z" sourceRef="ExclusiveGateway_1b69uum" targetRef="Task_0o7fpjo" />
     <bpmn:sequenceFlow id="SequenceFlow_0y21euo" sourceRef="ExclusiveGateway_14igy57" targetRef="Task_0euyl7m" />
-    <bpmn:userTask id="Task_0euyl7m" name="Review Pharmacy Manual Status" camunda:formKey="FormKey_PharManualStauts">
+    <bpmn:userTask id="Task_0euyl7m" name="Review Pharmacy Manual Status" camunda:formKey="Pharmacy Manual Status">
       <bpmn:documentation>{% if IRB_UplCnt.DrugDeviceDocument.PharmacyManual &gt; 0 %}
-	{% if IRB_UplCnt.DrugDeviceDocument.PharmacyManual = 1 %}
-    	{{IRB_UplCnt.DrugDeviceDocument.PharmacyManual ~ "Pharmacy Manual Uploaded"}}
+	{% if IRB_UplCnt.DrugDeviceDocument.PharmacyManual == 1 %}
+    	{{IRB_UplCnt.DrugDeviceDocument.PharmacyManual}} Pharmacy Manual Uploaded
 "This manual will be sent as part of your IDS Submission"
   	{% else %}
-    	{{IRB_UplCnt.DrugDeviceDocument.PharmacyManual ~ "Pharmacy Manuals Uploaded"}}
+    	{{IRB_UplCnt.DrugDeviceDocument.PharmacyManual}} Pharmacy Manuals Uploaded
 "These manuals will be sent as part of your IDS Submission
+{% endif %}
 {% else %}
 	"The Pharmacy Manual has not been uploaded.  If you do not intend to upload a manual before you IDS submission, please complete the questions below.  If you do intend to upload a manual, you do not need to complete them"
 {% endif %}</bpmn:documentation>
@@ -125,15 +126,10 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     <bpmn:userTask id="Task_0uxe1xf" name="Specify Submission Type" camunda:formKey="SubmissionType">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="isWaiver" label="Will Study submit an IDS Waiver?" type="enum">
-            <camunda:properties>
-              <camunda:property id="enum_type" value="radio" />
-            </camunda:properties>
+          <camunda:formField id="isWaiver" label="Will Study submit an IDS Waiver?" type="boolean">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
-            <camunda:value id="WaiverYes" name="Yes" />
-            <camunda:value id="WaiverNo" name="No" />
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
@@ -146,12 +142,12 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
       <bpmn:outgoing>SequenceFlow_1w7dlq7</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="SequenceFlow_14hktr4" name="Full Submission" sourceRef="ExclusiveGateway_1vv218v" targetRef="Task_06lq8jt">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">isWaiver = False</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">isWaiver == False</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="SequenceFlow_1w7dlq7" name="Waiver" sourceRef="ExclusiveGateway_1vv218v" targetRef="Task_03qocve">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">isWaiver == True</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:userTask id="Task_03qocve" name="Submit Waiver" camunda:formKey="FormKey_SubmitWaiver">
+    <bpmn:userTask id="Task_03qocve" name="Submit Waiver" camunda:formKey="Submit Waiver">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="FormField_Upload" label="Upload " type="file" />
@@ -161,19 +157,26 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
       <bpmn:outgoing>SequenceFlow_0yzkn64</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_0yzkn64" sourceRef="Task_03qocve" targetRef="Task_14y55zq" />
-    <bpmn:userTask id="Task_14y55zq" name="Approve Waiver">
+    <bpmn:userTask id="Task_14y55zq" name="Approve Waiver" camunda:formKey="Approve Waiver">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="FormField_isApporved" label="Waiver Approved?" type="boolean" />
+          <camunda:formField id="FormField_FileUpload" label="IDS Waiver Application approved by IDS" type="file" />
+        </camunda:formData>
+      </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0yzkn64</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0jqi0ps</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_0jqi0ps" sourceRef="Task_14y55zq" targetRef="ExclusiveGateway_0mat0ea" />
-    <bpmn:userTask id="UserTask_0uvz4r8" name="Review Investigator&#39;s Brochure Status" camunda:formKey="FormKey_InvestBrochStauts">
+    <bpmn:userTask id="UserTask_0uvz4r8" name="Review Investigator&#39;s Brochure Status" camunda:formKey="Investigator&#39;s Brochure Status">
       <bpmn:documentation>{% if IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure &gt; 0 %}
 	{% if IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure == 1 %}
-    	{{IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure ~ "Pharmacy Manual Uploaded"}}
+    	{{IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure}} Pharmacy Manual Uploaded
 "This brochure will be sent as part of your IDS Submission"
   	{% else %}
-    	{{IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure ~ "Pharmacy Manuals Uploaded"}}
+    	{{IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure}} Pharmacy Manuals Uploaded
 "These brochures will be sent as part of your IDS Submission
+{% endif %}
 {% else %}
 	"The Investigator's Brochure has not been uploaded.  If you do not intend to upload a manual before you IDS submission, please complete the questions below.  If you do intend to upload a manual, you do not need to complete them"
 {% endif %}</bpmn:documentation>
@@ -199,16 +202,17 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_0jwnfzy" sourceRef="ExclusiveGateway_14igy57" targetRef="UserTask_0uvz4r8" />
     <bpmn:sequenceFlow id="SequenceFlow_13fzv9y" sourceRef="UserTask_0uvz4r8" targetRef="ExclusiveGateway_1b69uum" />
-    <bpmn:userTask id="UserTask_06sfx4u" name="Review IVRS/IWRS/IXRS Manual Status" camunda:formKey="FormKey_IVRS/IWRS/IXRS ManualStauts">
+    <bpmn:userTask id="UserTask_06sfx4u" name="Review IVRS/IWRS/IXRS Manual Status" camunda:formKey="IVRS/IWRS/IXRS Manual Status">
       <bpmn:documentation>{% if IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual &gt; 0 %}
-	{% if IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual = 1 %}
-    	{{IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual ~ "Pharmacy Manual Uploaded"}}
+	{% if IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual == 1 %}
+{{IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual}} Pharmacy Manual Uploaded
 "This manual will be sent as part of your IDS Submission"
   	{% else %}
-    	{{IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual ~ "Pharmacy Manuals Uploaded"}}
+{{IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual}} Pharmacy Manuals Uploaded
 "These manuals will be sent as part of your IDS Submission
+  	{% endif %}
 {% else %}
-	"The IVRS/IWRS/IXRS Manual has not been uploaded.  If you do not intend to upload a manual before you IDS submission, please complete the questions below.  If you do intend to upload a manual, you do not need to complete them"
+"The IVRS/IWRS/IXRS Manual has not been uploaded.  If you do not intend to upload a manual before you IDS submission, please complete the questions below.  If you do intend to upload a manual, you do not need to complete them"
 {% endif %}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
@@ -252,7 +256,7 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     <bpmn:sequenceFlow id="SequenceFlow_1lys0jq" sourceRef="ExclusiveGateway_14igy57" targetRef="UserTask_06sfx4u" />
     <bpmn:sequenceFlow id="SequenceFlow_0m01j99" sourceRef="UserTask_06sfx4u" targetRef="ExclusiveGateway_1b69uum" />
     <bpmn:sequenceFlow id="SequenceFlow_06jbdfp" sourceRef="Task_0o7fpjo" targetRef="ExclusiveGateway_0mat0ea" />
-    <bpmn:userTask id="Task_0o7fpjo" name="Enter Staff Training" camunda:formKey="FormKey_StaffTraining">
+    <bpmn:userTask id="Task_0o7fpjo" name="Enter Staff Training" camunda:formKey="Staff Training">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="FormField_isStaffTraining" label="Is there any sponsor-required protocol training for IDS staff (web training, slide review, etc) that must be completed prior to beginning the study?" type="enum">

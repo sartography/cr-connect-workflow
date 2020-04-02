@@ -6,7 +6,7 @@ from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.file import delete_file
 from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
 from crc.models.file import FileModel
-from crc.models.stats import WorkflowStatsModel
+from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.workflow_processor import WorkflowProcessor
@@ -116,6 +116,8 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
 
 
 def delete(workflow_id):
+    session.query(TaskEventModel).filter_by(workflow_id=workflow_id).delete()
+    session.query(WorkflowStatsModel).filter_by(workflow_id=workflow_id).delete()
     session.query(WorkflowModel).filter_by(id=workflow_id).delete()
     session.commit()
 
