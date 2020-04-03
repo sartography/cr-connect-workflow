@@ -17,8 +17,7 @@ before_install:
   - psql -c 'create database crc_test;' -U postgres
 
 install:
-  - pip install pipenv pytest coverage awscli
-  - export PATH=$PATH:$HOME/.local/bin
+  - pip install pipenv pytest coverage
   - pipenv install
   - pytest              # <== This runs in Pipenv (a/k/a virtualenv)
 
@@ -27,6 +26,10 @@ script:
   - coverage run -m pytest
   - coverage xml -i
   - sonar-scanner
+
+after_success:
+  - pip install --user awscli
+  - export PATH=$PATH:$HOME/.local/bin
 
 deploy:
   provider: script
