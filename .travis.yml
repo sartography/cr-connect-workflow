@@ -28,15 +28,9 @@ script:
   - coverage xml -i
   - sonar-scanner
 
-# Would be better to directly test the docker image, may require setting
-# up a docker-compose with postgres image and this docker image and connecting
-# them.  Which was getting ugly.
-before_deploy:
-  - docker build -t sartography/cr-connect-workflow .
-
 deploy:
   provider: script
-  script: bash docker_push.sh
+  script: bash deploy.sh
   on:
     branch: master
 
