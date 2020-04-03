@@ -17,7 +17,8 @@ before_install:
   - psql -c 'create database crc_test;' -U postgres
 
 install:
-  - pip install pipenv pytest coverage
+  - pip install pipenv pytest coverage awscli
+  - export PATH=$PATH:$HOME/.local/bin
   - pipenv install
   - pytest              # <== This runs in Pipenv (a/k/a virtualenv)
 
@@ -38,3 +39,10 @@ deploy:
   script: bash docker_push.sh
   on:
     branch: master
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
+    recipients:
+      - dan@sartography.com
