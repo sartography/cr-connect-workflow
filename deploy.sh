@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build and push Docker image to Docker Hub
-echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin
 docker build --no-cache -t sartography/cr-connect-backend:latest . || exit 1;
 docker push sartography/cr-connect-backend:latest || exit 1;
 
