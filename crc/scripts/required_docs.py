@@ -43,7 +43,7 @@ For example:
     def do_task(self, task, study_id, *args, **kwargs):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories
          spreadsheet to return pertinent details about the required documents."""
-        pb_docs = self.pb.get_required_docs(study_id)
+        pb_docs = self.pb.get_required_docs(study_id, as_objects=True)
         self.get_required_docs(study_id, pb_docs)
         task.data["required_docs"] = self.get_required_docs(study_id, pb_docs)
 

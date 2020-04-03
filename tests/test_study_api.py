@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from crc import session
 from crc.models.api_models import WorkflowApiSchema
-from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudyDetailsSchema, \
+from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
@@ -125,7 +125,7 @@ class TestStudyApi(BaseTest):
         studies_response = self.protocol_builder_response('user_studies.json')
         mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
         details_response = self.protocol_builder_response('study_details.json')
-        mock_details.return_value = ProtocolBuilderStudyDetailsSchema().loads(details_response)
+        mock_details.return_value = json.loads(details_response)
 
         # Make the api call to get all studies
         api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
