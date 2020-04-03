@@ -59,6 +59,7 @@ class ProtocolBuilderInvestigatorSchema(ma.Schema):
     class Meta:
         model = ProtocolBuilderInvestigator
         unknown = INCLUDE
+        fields = ["NETBADGEID", "INVESTIGATORTYPE", "INVESTIGATORTYPEFULL"]
 
     @post_load
     def make_inv(self, data, **kwargs):
