@@ -27,10 +27,6 @@ script:
   - coverage xml -i
   - sonar-scanner
 
-after_success:
-  - pip install --user awscli
-  - export PATH=$PATH:$HOME/.local/bin
-
 deploy:
   provider: script
   script: bash deploy.sh
