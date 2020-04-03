@@ -6,9 +6,11 @@ from crc import session
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
+from crc.models.stats import WorkflowStatsModel
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
     WorkflowSpecCategoryModel
+from crc.services.workflow_processor import WorkflowProcessor
 from tests.base_test import BaseTest
 
 
@@ -174,6 +176,23 @@ class TestStudyApi(BaseTest):
         study = session.query(StudyModel).first()
         rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
         self.assert_success(rv)
+
+    def test_delete_study_with_workflow_and_status(self):
+        self.load_example_data()
+        study = session.query(StudyModel).first()
+        new_category = WorkflowSpecCategoryModel(id=21, name="test_cat", display_name="Test Category", display_order=0)
+        session.add(new_category)
+        session.commit()
+        # Create a workflow specification, and complete some stuff that would log stats
+        workflow = self.create_workflow("random_fact", study=study, category_id=new_category.id)
+        session.add(workflow)
+        session.commit()
+        stats = WorkflowStatsModel(study_id=study.id, workflow_id=workflow.id)
+        session.add(stats)
+        session.commit()
+        rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+
 
     # """
     # Workflow Specs that have been made available (or not) to a particular study via the status.bpmn should be flagged
