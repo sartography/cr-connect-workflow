@@ -31,7 +31,7 @@ class TestRequiredDocsScript(BaseTest):
         db.session.flush()
         errors = Documents.validate()
         self.assertTrue(len(errors) > 0)
-        self.assertEquals("file_not_found", errors[0].code)
+        self.assertEqual("file_not_found", errors[0].code)
 
     def test_no_validation_error_when_correct_file_exists(self):
         self.create_reference_document()
@@ -54,11 +54,11 @@ class TestRequiredDocsScript(BaseTest):
         documents = script.get_documents(12, pb_docs)  # Mocked out, any random study id works.
         self.assertIsNotNone(documents)
         self.assertTrue("UVACompl_PRCAppr" in documents.keys())
-        self.assertEquals("Cancer Center's PRC Approval Form", documents["UVACompl_PRCAppr"]['Name'])
-        self.assertEquals("UVA Compliance", documents["UVACompl_PRCAppr"]['category1'])
-        self.assertEquals("PRC Approval", documents["UVACompl_PRCAppr"]['category2'])
-        self.assertEquals("CRC", documents["UVACompl_PRCAppr"]['Who Uploads?'])
-        self.assertEquals(0, documents["UVACompl_PRCAppr"]['count'])
+        self.assertEqual("Cancer Center's PRC Approval Form", documents["UVACompl_PRCAppr"]['Name'])
+        self.assertEqual("UVA Compliance", documents["UVACompl_PRCAppr"]['category1'])
+        self.assertEqual("PRC Approval", documents["UVACompl_PRCAppr"]['category2'])
+        self.assertEqual("CRC", documents["UVACompl_PRCAppr"]['Who Uploads?'])
+        self.assertEqual(0, documents["UVACompl_PRCAppr"]['count'])
 
     def test_get_required_docs_has_correct_count_when_a_file_exists(self):
         self.load_example_data()
@@ -77,4 +77,4 @@ class TestRequiredDocsScript(BaseTest):
 
         docs = script.get_documents(workflow.study_id, pb_docs)
         self.assertIsNotNone(docs)
-        self.assertEquals(1, docs["UVACompl_PRCAppr"]['count'])
+        self.assertEqual(1, docs["UVACompl_PRCAppr"]['count'])
