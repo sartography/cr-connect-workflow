@@ -5,19 +5,27 @@
       <biodi:bounds x="190" y="80" width="180" height="80" />
     </extensionElements>
     <decisionTable id="DecisionTable_1mjqwlv">
-      <input id="InputClause_18pwfqu" label="Required Doc Keys">
-        <inputExpression id="LiteralExpression_1y84stb" typeRef="string" expressionLanguage="feel">
-          <text>required_docs.keys()</text>
+      <input id="InputClause_18pwfqu" label="Data Plan Required in PB?">
+        <inputExpression id="LiteralExpression_1y84stb" typeRef="boolean" expressionLanguage="feel">
+          <text>documents['Study_DataSecurityPlan']['required']</text>
         </inputExpression>
       </input>
       <output id="OutputClause_05y0j7c" label="data_security_plan" name="data_security_plan" typeRef="string" />
       <rule id="DecisionRule_17xsr74">
         <description></description>
         <inputEntry id="UnaryTests_05ldcq4">
-          <text>contains(6)</text>
+          <text>true</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_09oao3s">
           <text>"required"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1ucfx7k">
+        <inputEntry id="UnaryTests_0t09cyd">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1fk77fu">
+          <text>"disabled"</text>
         </outputEntry>
       </rule>
     </decisionTable>

@@ -368,13 +368,13 @@ class TestWorkflowProcessor(BaseTest):
 
         # It should mark Enter Core Data as required, because it is always required.
         self.assertTrue("enter_core_info" in data)
-        self.assertEquals("required", data["enter_core_info"])
+        self.assertEqual("required", data["enter_core_info"])
 
         # It should mark the Data Security Plan as required, because InfoSec Approval (24) is included in required docs.
         self.assertTrue("data_security_plan" in data)
-        self.assertEquals("required", data["data_security_plan"])
+        self.assertEqual("required", data["data_security_plan"])
 
         # It should mark the sponsor funding source as disabled since the funding required (12) is not included in the required docs.
         self.assertTrue("sponsor_funding_source" in data)
-        self.assertEquals("disabled", data["sponsor_funding_source"])
+        self.assertEqual("disabled", data["sponsor_funding_source"])
 

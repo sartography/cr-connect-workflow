@@ -4,7 +4,7 @@ from unittest.mock import patch
 from crc import db
 from crc.models.file import FileDataModel, FileModel
 from crc.models.protocol_builder import ProtocolBuilderRequiredDocumentSchema
-from crc.scripts.required_docs import RequiredDocs
+from crc.scripts.documents import Documents
 from crc.services.file_service import FileService
 from tests.base_test import BaseTest
 
@@ -29,13 +29,13 @@ class TestRequiredDocsScript(BaseTest):
             db.session.query(FileModel).filter(FileModel.id == file_model.id).delete()
         db.session.commit()
         db.session.flush()
-        errors = RequiredDocs.validate()
+        errors = Documents.validate()
         self.assertTrue(len(errors) > 0)
         self.assertEquals("file_not_found", errors[0].code)
 
     def test_no_validation_error_when_correct_file_exists(self):
         self.create_reference_document()
-        errors = RequiredDocs.validate()
+        errors = Documents.validate()
         self.assertTrue(len(errors) == 0)
 
     def test_load_lookup_data(self):
@@ -50,31 +50,31 @@ class TestRequiredDocsScript(BaseTest):
     def test_get_required_docs(self):
         pb_docs = self.get_required_docs()
         self.create_reference_document()
-        script = RequiredDocs()
-        required_docs = script.get_required_docs(12, pb_docs)  # Mocked out, any random study id works.
-        self.assertIsNotNone(required_docs)
-        self.assertTrue(6 in required_docs.keys())
-        self.assertEquals("Cancer Center's PRC Approval Form", required_docs[6]['name'])
-        self.assertEquals("UVA Compliance", required_docs[6]['category1'])
-        self.assertEquals("PRC Approval", required_docs[6]['category2'])
-        self.assertEquals("CRC", required_docs[6]['Who Uploads?'])
-        self.assertEquals(0, required_docs[6]['count'])
+        script = Documents()
+        documents = script.get_documents(12, pb_docs)  # Mocked out, any random study id works.
+        self.assertIsNotNone(documents)
+        self.assertTrue("UVACompl_PRCAppr" in documents.keys())
+        self.assertEquals("Cancer Center's PRC Approval Form", documents["UVACompl_PRCAppr"]['Name'])
+        self.assertEquals("UVA Compliance", documents["UVACompl_PRCAppr"]['category1'])
+        self.assertEquals("PRC Approval", documents["UVACompl_PRCAppr"]['category2'])
+        self.assertEquals("CRC", documents["UVACompl_PRCAppr"]['Who Uploads?'])
+        self.assertEquals(0, documents["UVACompl_PRCAppr"]['count'])
 
     def test_get_required_docs_has_correct_count_when_a_file_exists(self):
         self.load_example_data()
         pb_docs = self.get_required_docs()
         # Make sure the xslt reference document is in place.
         self.create_reference_document()
-        script = RequiredDocs()
+        script = Documents()
 
         # Add a document to the study with the correct code.
         workflow = self.create_workflow('docx')
-        irb_code = "UVACompliance.PRCApproval"  # The first file referenced in pb required docs.
+        irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_task_file(study_id=workflow.study_id, workflow_id=workflow.id,
                                   task_id="fakingthisout",
                                   name="anything.png", content_type="text",
                                   binary_data=b'1234', irb_doc_code=irb_code)
 
-        required_docs = script.get_required_docs(workflow.study_id, pb_docs)
-        self.assertIsNotNone(required_docs)
-        self.assertEquals(1, required_docs[6]['count'])
+        docs = script.get_documents(workflow.study_id, pb_docs)
+        self.assertIsNotNone(docs)
+        self.assertEquals(1, docs["UVACompl_PRCAppr"]['count'])

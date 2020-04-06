@@ -67,12 +67,12 @@ class FileService(object):
         data_model = FileService.get_reference_file_data(FileService.IRB_PRO_CATEGORIES_FILE)
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])
-        # Pandas is lovely, but weird. Here we drop records without an Id, and convert it to an integer.
-        df = df.drop_duplicates(subset='Id').astype({'Id': 'Int64'})
+        return df.set_index('Code').to_dict('index')
+#        # Pandas is lovely, but weird. Here we drop records without an Id, and convert it to an integer.
+#        df = df.drop_duplicates(subset='Id').astype({'Id': 'Int64'})
         # Now we index on the ID column and convert to a dictionary, where the key is the id, and the value
         #    is a dictionary with all the remaining data in it.  It's kinda pretty really.
-        all_dict = df.set_index('Id').to_dict('index')
-        return all_dict
+#        all_dict = df.set_index('Id').to_dict('index')
 
     @staticmethod
     def add_task_file(study_id, workflow_id, task_id, name, content_type, binary_data,

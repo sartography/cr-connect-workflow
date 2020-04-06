@@ -15,7 +15,7 @@
 OGC will upload the Non-Funded Executed Agreement after it has been negotiated by OSP contract negotiator.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="UVACompliance.PRCApproval" label="Non-Funded Executed Agreement" type="file">
+          <camunda:formField id="UVACompl_PRCAppr" label="Non-Funded Executed Agreement" type="file">
             <camunda:properties>
               <camunda:property id="group" value="upload" />
               <camunda:property id="repeat" value="upload" />

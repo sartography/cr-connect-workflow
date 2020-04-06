@@ -5,15 +5,15 @@
       <biodi:bounds x="190" y="70" width="180" height="80" />
     </extensionElements>
     <decisionTable id="DecisionTable_00zdxg0">
-      <input id="InputClause_02n3ccs" label="Required Doc Ids">
-        <inputExpression id="LiteralExpression_1ju4o1o" typeRef="string" expressionLanguage="feel">
-          <text>required_docs.keys()</text>
+      <input id="InputClause_02n3ccs" label="Sponsor Document Required in PB?">
+        <inputExpression id="LiteralExpression_1ju4o1o" typeRef="boolean" expressionLanguage="feel">
+          <text>documents['AD_LabManual']['required']</text>
         </inputExpression>
       </input>
       <output id="OutputClause_1ybi1ud" label="sponsor_funding_source" name="eat_my_shorts" typeRef="string" />
       <rule id="DecisionRule_1t97mw4">
         <inputEntry id="UnaryTests_0ym4ln2">
-          <text>contains(12)</text>
+          <text>true</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1pweuqc">
           <text>"required"</text>
@@ -21,7 +21,7 @@
       </rule>
       <rule id="DecisionRule_1q965wz">
         <inputEntry id="UnaryTests_1mlhh3t">
-          <text>not contains(12)</text>
+          <text>false</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_073vd6i">
           <text>"disabled"</text>

@@ -4,30 +4,31 @@ from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
 
 
-class RequiredDocs(Script):
+class Documents(Script):
     """Provides information about the documents required by Protocol Builder."""
     pb = ProtocolBuilderService()
 
     def get_description(self):
         return """
-Provides detailed information about the documents required by the Protocol Builder.
+Provides detailed information about the documents loaded as a part of completing tasks.
 Makes an immediate call to the IRB Protocol Builder API to get a list of currently required
 documents.  It then collects all the information in a reference file called 'irb_pro_categories.xls',
 if the Id from Protocol Builder matches an Id in this table, all data available in that row
 is also provided.
 
-This place a dictionary of values in the current task, where the key is the numeric id.
+This place a dictionary of values in the current task, where the key is the code in the lookup table.
 
 For example:
-``` "required_docs" :
+``` "documents" :
    {
-     6: {
+     "UVACompliance_PRCApproval": {
             "name": "Cancer Center's PRC Approval Form",
             "category1": "UVA Compliance",
             "category2": "PRC Approval",
             "category3": "",
             "Who Uploads?": "CRC",
             "required": True,
+            "requirement_id": 6
             "upload_count": 0
         },
      24: { ...
@@ -37,30 +38,30 @@ For example:
     def do_task_validate_only(self, task, study_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
         pb_docs = []
-        self.get_required_docs(study_id, pb_docs)
-        task.data["required_docs"] = self.get_required_docs(study_id, pb_docs)
+        task.data["required_docs"] = self.get_documents(study_id, pb_docs)
 
     def do_task(self, task, study_id, *args, **kwargs):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories
          spreadsheet to return pertinent details about the required documents."""
         pb_docs = self.pb.get_required_docs(study_id, as_objects=True)
-        self.get_required_docs(study_id, pb_docs)
-        task.data["required_docs"] = self.get_required_docs(study_id, pb_docs)
+        task.data["documents"] = self.get_documents(study_id, pb_docs)
 
-    def get_required_docs(self, study_id, pb_docs):
+    def get_documents(self, study_id, pb_docs):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories spreadsheet to return
         pertinant details about the required documents."""
 
         doc_dictionary = FileService.get_file_reference_dictionary()
         required_docs = {}
-        for doc in pb_docs:
-            id = int(doc.AUXDOCID)
-            required_doc = {'id': id, 'name': doc.AUXDOC, 'required': True,
-                            'count': 0}
-            if id in doc_dictionary:
-                required_doc = {**required_doc, **doc_dictionary[id]}
-                required_doc['count'] = self.get_count(study_id, doc_dictionary[id]["Code"])
-            required_docs[id] = required_doc
+        for code, required_doc in doc_dictionary.items():
+            try:
+                pb_data = next((item for item in pb_docs if int(item.AUXDOCID) == int(required_doc['Id'])), None)
+            except:
+                pb_data = None
+            required_doc['required'] = False
+            if pb_data:
+                required_doc['required'] = True
+                required_doc['count'] = self.get_count(study_id, code)
+            required_docs[code] = required_doc
         return required_docs
 
     def get_count(self, study_id, irb_doc_code):

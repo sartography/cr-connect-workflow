@@ -11,7 +11,7 @@
     <bpmn:scriptTask id="Task_Load_Requirements" name="Load Required Documents From PM">
       <bpmn:incoming>SequenceFlow_1ees8ka</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_17ct47v</bpmn:outgoing>
-      <bpmn:script>RequiredDocs</bpmn:script>
+      <bpmn:script>Documents</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:businessRuleTask id="Activity_1yqy50i" name="Enter Core Info&#10;" camunda:decisionRef="enter_core_info">
       <bpmn:incoming>Flow_1m8285h</bpmn:incoming>

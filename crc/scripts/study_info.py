@@ -24,7 +24,28 @@ class StudyInfo(Script):
     def do_task_validate_only(self, task, study_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
         self.check_args(args)
-
+        data = {
+            "study":{
+                "info": {
+                    "id": 12,
+                    "title": "test",
+                    "primary_investigator_id":21,
+                    "user_uid": "dif84",
+                    "sponsor": "sponsor",
+                    "ind_number": "1234",
+                    "inactive": False
+                },
+                "investigators":
+                    {
+                        "INVESTIGATORTYPE": "PI",
+                        "INVESTIGATORTYPEFULL": "Primary Investigator",
+                        "NETBADGEID": "dhf8r"
+                    },
+                "details":
+                    {}
+            }
+        }
+        task.data["study"] = data["study"]
 
     def do_task(self, task, study_id, *args, **kwargs):
         self.check_args(args)
