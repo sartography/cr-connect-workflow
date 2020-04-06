@@ -23,7 +23,7 @@
     <bpmn:startEvent id="StartEvent_1mhzkcr">
       <bpmn:outgoing>SequenceFlow_1r3yrhy</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="UserTask_1y1qon7" name="Enter Protocol Owner Info" camunda:formKey="FormKey_EnterProtocolOwnerInfo">
+    <bpmn:userTask id="UserTask_1y1qon7" name="Enter Protocol Owner Info" camunda:formKey="Protocol Owner Info">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="FormField_ProtocolOwnerInfo" label="What is the Protocol Owner?" type="enum">
@@ -54,7 +54,7 @@
       <bpmn:incoming>SequenceFlow_1idbomg</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0gsy7mo</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="UserTask_01zzzg9" name="Enter Clinical Trials.gov Info" camunda:formKey="form_key_enter_clinical_trials_info">
+    <bpmn:userTask id="UserTask_01zzzg9" name="Enter Clinical Trials.gov Info" camunda:formKey="Clinicalrials.gov Info">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="CTG_NA" label="Not Applicable" type="enum">
@@ -85,7 +85,7 @@
       <bpmn:incoming>SequenceFlow_0xj8i4c</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0rw17h2</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="UserTask_0gtuk1e" name="Enter Multi-Site Info" camunda:formKey="form_key_enter_multisite_info" camunda:priority="1">
+    <bpmn:userTask id="UserTask_0gtuk1e" name="Enter Multi-Site Info" camunda:formKey="Multi-Site Info" camunda:priority="1">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="SiteInvolvement" label="Site Involvement" type="enum">
@@ -118,7 +118,7 @@
       <bpmn:incoming>SequenceFlow_1tbhrhj</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1o39rt4</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="UserTask_0ebxkp7" name="Enter Study Info" camunda:formKey="form_key_enter_study_info">
+    <bpmn:userTask id="UserTask_0ebxkp7" name="Enter Study Info" camunda:formKey="Study Info">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="StudyShortName" label="Study Short Name" type="string">

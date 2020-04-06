@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1jxnugv" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_0eei9ll" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_0orzghi</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="ScriptTask_GenDSP" name="Generate DSP">
+      <bpmn:incoming>SequenceFlow_0orzghi</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0sx28e1</bpmn:outgoing>
+      <bpmn:script>CompleteTemplate NEW_DSP_template.docx Study.DataSecurityPlan</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0orzghi" sourceRef="StartEvent_1" targetRef="ScriptTask_GenDSP" />
+    <bpmn:endEvent id="EndEvent_1m6t5h4">
+      <bpmn:incoming>SequenceFlow_0sx28e1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0sx28e1" sourceRef="ScriptTask_GenDSP" targetRef="EndEvent_1m6t5h4" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0eei9ll">
+      <bpmndi:BPMNEdge id="SequenceFlow_0sx28e1_di" bpmnElement="SequenceFlow_0sx28e1">
+        <di:waypoint x="410" y="117" />
+        <di:waypoint x="512" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0orzghi_di" bpmnElement="SequenceFlow_0orzghi">
+        <di:waypoint x="228" y="117" />
+        <di:waypoint x="310" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="192" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_0priqvl_di" bpmnElement="ScriptTask_GenDSP">
+        <dc:Bounds x="310" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1m6t5h4_di" bpmnElement="EndEvent_1m6t5h4">
+        <dc:Bounds x="512" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
