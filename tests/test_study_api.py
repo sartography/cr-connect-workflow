@@ -6,7 +6,7 @@ from crc import session
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
-from crc.models.stats import WorkflowStatsModel
+from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
     WorkflowSpecCategoryModel
@@ -189,6 +189,9 @@ class TestStudyApi(BaseTest):
         session.commit()
         stats = WorkflowStatsModel(study_id=study.id, workflow_id=workflow.id)
         session.add(stats)
+        session.commit()
+        stats2 = TaskEventModel(study_id=study.id, workflow_id=workflow.id, user_uid=self.users[0]['uid'])
+        session.add(stats2)
         session.commit()
         rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
         self.assert_success(rv)
