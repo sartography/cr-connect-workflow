@@ -35,31 +35,31 @@ class ExampleDataLoader:
             WorkflowSpecCategoryModel(
                 id=1,
                 name='core_info',
-                display_name='Enter Core Info',
+                display_name='Core Info',
                 display_order=1
             ),
             WorkflowSpecCategoryModel(
                 id=2,
                 name='approvals',
-                display_name='Obtain Approvals',
+                display_name='Approvals',
                 display_order=2
             ),
             WorkflowSpecCategoryModel(
                 id=3,
                 name='data_security_plan',
-                display_name='Enter Data Security Plan',
+                display_name='Data Security Plan',
                 display_order=3
             ),
             WorkflowSpecCategoryModel(
                 id=4,
                 name='finance',
-                display_name='Enter Finance Data',
+                display_name='Finance',
                 display_order=4
             ),
             WorkflowSpecCategoryModel(
                 id=5,
                 name='notifications',
-                display_name='View and Send Notifications',
+                display_name='Notifications',
                 display_order=5
             ),
         ]
@@ -69,39 +69,69 @@ class ExampleDataLoader:
                          name="top_level_workflow",
                          display_name="Top Level Workflow",
                          description="Determines the status of other workflows in a study",
-                         category_id=0,
+                         category_id=None,
                          master_spec=True
                          )
-        self.create_spec(id="irb_api_details",
-                         name="irb_api_details",
-                         display_name="IRB API Details",
-                         description="TBD",
-                         category_id=0)
+
+        # Pass IRB Review
         self.create_spec(id="irb_api_personnel",
                          name="irb_api_personnel",
                          display_name="IRB API Personnel",
                          description="TBD",
                          category_id=0)
-        # self.create_spec(id="irb_api_required_docs",
-        #                  name="irb_api_required_docs",
-        #                  display_name="IRB API Required Documents",
-        #                  description="TBD",
-        #                  category_id=0)
+        self.create_spec(id="irb_api_details",
+                         name="irb_api_details",
+                         display_name="Protocol Builder Data",
+                         description="TBD",
+                         category_id=0)
+
+        # Core Info
         self.create_spec(id="core_info",
                          name="core_info",
-                         display_name="Core Data",
+                         display_name="Core Info",
                          description="TBD",
                          category_id=1)
-        self.create_spec(id="ids",
-                         name="ids",
-                         display_name="Investigative Drug Services (IDS)",
+        self.create_spec(id="core_info_approvals_ids",
+                         name="core_info_approvals_ids",
+                         display_name="Core Info - Approvals - IDS",
+                         description="TBD",
+                         category_id=1)
+        self.create_spec(id="core_info_data_security_plan_outside",
+                         name="core_info_data_security_plan_outside",
+                         display_name="Core Info - Data Security Plan - Outside",
+                         description="TBD",
+                         category_id=1)
+
+        # Approvals
+        self.create_spec(id="ids_full_submission",
+                         name="ids_full_submission",
+                         display_name="Investigative Drug Services (IDS) Full Submission",
                          description="TBD",
                          category_id=2)
-        self.create_spec(id="data_security_plan",
-                         name="data_security_plan",
-                         display_name="Data Security Plan",
+        self.create_spec(id="ids_waiver",
+                         name="ids_waiver",
+                         display_name="Investigational Drug Service (IDS) Waiver",
+                         description="TBD",
+                         category_id=2)
+
+        # Data Security Plan
+        self.create_spec(id="data_security_plan_inside",
+                         name="data_security_plan_inside",
+                         display_name="Data Security Plan - Inside",
                          description="TBD",
                          category_id=3)
+        self.create_spec(id="data_security_plan_outside",
+                         name="data_security_plan_outside",
+                         display_name="Data Security Plan - Outside",
+                         description="TBD",
+                         category_id=3)
+        self.create_spec(id="data_security_plan_generate",
+                         name="data_security_plan_generate",
+                         display_name="Data Security Plan - Generate",
+                         description="TBD",
+                         category_id=3)
+
+        # Finance
         self.create_spec(id="sponsor_funding_source",
                          name="sponsor_funding_source",
                          display_name="Sponsor Funding Source",
@@ -109,9 +139,16 @@ class ExampleDataLoader:
                          category_id=4)
         self.create_spec(id="finance",
                          name="finance",
-                         display_name="Finance",
+                         display_name="Finance Data",
                          description="TBD",
                          category_id=4)
+
+        # Notifications
+        self.create_spec(id="notifications",
+                         name="notifications",
+                         display_name="Notifications",
+                         description="TBD",
+                         category_id=5)
 
 
     def create_spec(self, id, name, display_name="", description="", filepath=None, master_spec=False, category_id=None):

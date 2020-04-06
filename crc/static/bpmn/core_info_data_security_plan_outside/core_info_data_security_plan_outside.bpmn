@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_04lawrx" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_1uc9iwo" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_17jq54v</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="UserTask_1ldw3tf" name="Enter Outside of UVA" camunda:formKey="EnterOutsideUVa">
+      <bpmn:documentation>Transmission to and/or storage of the human subject research data OUTSIDE of UVA, such as to a sponsor or a colleague at another institution
+
+##### Important 
+Indicate all the possible formats in which you will transmit your data outside of UVA. Options should be selected even if the data is only temporarily stored in that format. Also remember to select any location where a subject’s SSN, hospital billing or account number, or certificate/license number might be recorded either with the data or separately.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="DataTransmittedOutside" label="Will data be transmitted to a sponsor or a colleague at another institution?" type="boolean">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_17jq54v</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1i5u5im</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_17jq54v" sourceRef="StartEvent_1" targetRef="UserTask_1ldw3tf" />
+    <bpmn:endEvent id="EndEvent_0q7300v">
+      <bpmn:incoming>SequenceFlow_1i5u5im</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1i5u5im" sourceRef="UserTask_1ldw3tf" targetRef="EndEvent_0q7300v" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1uc9iwo">
+      <bpmndi:BPMNEdge id="SequenceFlow_1i5u5im_di" bpmnElement="SequenceFlow_1i5u5im">
+        <di:waypoint x="400" y="117" />
+        <di:waypoint x="492" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_17jq54v_di" bpmnElement="SequenceFlow_17jq54v">
+        <di:waypoint x="208" y="117" />
+        <di:waypoint x="300" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1ldw3tf_di" bpmnElement="UserTask_1ldw3tf">
+        <dc:Bounds x="300" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0q7300v_di" bpmnElement="EndEvent_0q7300v">
+        <dc:Bounds x="492" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="172" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
