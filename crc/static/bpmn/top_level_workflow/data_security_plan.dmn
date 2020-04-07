@@ -5,9 +5,9 @@
       <biodi:bounds x="190" y="80" width="180" height="80" />
     </extensionElements>
     <decisionTable id="DecisionTable_1mjqwlv">
-      <input id="InputClause_18pwfqu" label="Required Doc Keys">
+      <input id="InputClause_18pwfqu" label="Data Plan Required in PB?">
         <inputExpression id="LiteralExpression_1y84stb" typeRef="boolean" expressionLanguage="feel">
-          <text>documents['UVACompl_PRCAppr']['required']</text>
+          <text>Documents['Study_DataSecurityPlan']['required']</text>
         </inputExpression>
       </input>
       <output id="OutputClause_05y0j7c" label="data_security_plan" name="data_security_plan" typeRef="string" />

@@ -53,6 +53,8 @@ class Script:
 
         return all_subclasses
 
+    def add_data_to_task(self, task, data):
+        task.data[self.__class__.__name__] = data
 
 class ScriptValidationError:
 

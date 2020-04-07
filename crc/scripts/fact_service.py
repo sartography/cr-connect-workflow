@@ -40,6 +40,7 @@ class FactService(Script):
         else:
             details = "unknown fact type."
 
-        task.data['details'] = details
+        self.add_data_to_task(task, details)
+
         print(details)
         return details

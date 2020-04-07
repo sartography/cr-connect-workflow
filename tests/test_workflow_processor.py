@@ -48,7 +48,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(WorkflowStatus.complete, processor.get_status())
         data = processor.get_data()
         self.assertIsNotNone(data)
-        self.assertIn("details", data)
+        self.assertIn("FactService", data)
 
     def test_workflow_with_dmn(self):
         self.load_example_data()
@@ -152,7 +152,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(WorkflowStatus.complete, processor.get_status())
         task = processor.next_task()
         self.assertIsNotNone(task)
-        self.assertIn("details", task.data)
+        self.assertIn("FactService", task.data)
         self.assertIsInstance(task.task_spec, EndEvent)
 
     def test_workflow_validation_error_is_properly_raised(self):

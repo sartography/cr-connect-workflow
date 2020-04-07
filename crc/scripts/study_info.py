@@ -45,15 +45,15 @@ class StudyInfo(Script):
                     {}
             }
         }
-        task.data["study"] = data["study"]
+        self.add_data_to_task(task=task, data=data["study"])
 
     def do_task(self, task, study_id, *args, **kwargs):
         self.check_args(args)
 
         cmd = args[0]
         study_info = {}
-        if "study" in task.data:
-            study_info = task.data["study"]
+        if self.__class__.__name__ in task.data:
+            study_info = task.data[self.__class__.__name__]
 
         if cmd == 'info':
             study = session.query(StudyModel).filter_by(id=study_id).first()

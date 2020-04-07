@@ -19,7 +19,7 @@ is also provided.
 This place a dictionary of values in the current task, where the key is the code in the lookup table.
 
 For example:
-``` "documents" :
+``` "Documents" :
    {
      "UVACompliance_PRCApproval": {
             "name": "Cancer Center's PRC Approval Form",
@@ -28,8 +28,8 @@ For example:
             "category3": "",
             "Who Uploads?": "CRC",
             "required": True,
-            "requirement_id": 6
-            "upload_count": 0
+            "Id": 6
+            "count": 0
         },
      24: { ...
         }
@@ -38,13 +38,13 @@ For example:
     def do_task_validate_only(self, task, study_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
         pb_docs = []
-        task.data["required_docs"] = self.get_documents(study_id, pb_docs)
+        self.add_data_to_task(task, self.get_documents(study_id, pb_docs))
 
     def do_task(self, task, study_id, *args, **kwargs):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories
          spreadsheet to return pertinent details about the required documents."""
         pb_docs = self.pb.get_required_docs(study_id, as_objects=True)
-        task.data["documents"] = self.get_documents(study_id, pb_docs)
+        self.add_data_to_task(task, self.get_documents(study_id, pb_docs))
 
     def get_documents(self, study_id, pb_docs):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories spreadsheet to return
