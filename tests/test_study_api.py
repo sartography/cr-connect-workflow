@@ -93,7 +93,7 @@ class TestStudyApi(BaseTest):
         workflow_spec_count =session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == False).count()
         workflow_count = session.query(WorkflowModel).filter(WorkflowModel.study_id == 12345).count()
         error_count = len(study["errors"])
-        self.assertEquals(workflow_spec_count, workflow_count + error_count)
+        self.assertEqual(workflow_spec_count, workflow_count + error_count)
 
     def test_update_study(self):
         self.load_example_data()
