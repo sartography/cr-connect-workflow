@@ -57,10 +57,10 @@ For example:
                 pb_data = next((item for item in pb_docs if int(item.AUXDOCID) == int(required_doc['Id'])), None)
             except:
                 pb_data = None
+            required_doc['count'] = self.get_count(study_id, code)
             required_doc['required'] = False
             if pb_data:
                 required_doc['required'] = True
-                required_doc['count'] = self.get_count(study_id, code)
             required_docs[code] = required_doc
         return required_docs
 
