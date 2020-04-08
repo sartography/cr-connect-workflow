@@ -100,7 +100,8 @@ def get_file_data(file_id):
         io.BytesIO(file_data.data),
         attachment_filename=file_data.file_model.name,
         mimetype=file_data.file_model.content_type,
-        cache_timeout=-1  # Don't cache these files on the browser.
+        cache_timeout=-1,  # Don't cache these files on the browser.
+        last_modified=file_data.last_updated
     )
 
 

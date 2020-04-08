@@ -135,7 +135,7 @@ class FileService(object):
 
         file_model.latest_version = version
         file_data_model = FileDataModel(data=binary_data, file_model=file_model, version=version,
-                                        md5_hash=md5_checksum)
+                                        md5_hash=md5_checksum, last_updated=datetime.now())
 
         session.add_all([file_model, file_data_model])
         session.commit()
