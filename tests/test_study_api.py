@@ -195,6 +195,9 @@ class TestStudyApi(BaseTest):
         session.commit()
         rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
         self.assert_success(rv)
+        del_study = session.query(StudyModel).filter(StudyModel.id == study.id).first()
+        self.assertIsNone(del_study)
+
 
 
     # """

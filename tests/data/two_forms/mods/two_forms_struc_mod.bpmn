@@ -27,7 +27,6 @@
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_00p5po6</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_17ggqu2</bpmn:outgoing>
-      <bpmn:multiInstanceLoopCharacteristics />
     </bpmn:userTask>
     <bpmn:textAnnotation id="TextAnnotation_1haj11l">
       <bpmn:text>We have a test that replaces tow_forms with this file, which adds a new step to the process.  A breaking change.</bpmn:text>

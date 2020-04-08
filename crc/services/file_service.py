@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime
 from uuid import UUID
@@ -67,7 +68,14 @@ class FileService(object):
         data_model = FileService.get_reference_file_data(FileService.IRB_PRO_CATEGORIES_FILE)
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])
-        return df.set_index('Code').to_dict('index')
+        df['Id'] = df['Id'].fillna(0)
+        df = df.astype({'Id': 'Int64'})
+        df = df.fillna('')
+        df = df.applymap(str)
+        df = df.set_index('Code')
+        #        IF we need to convert the column names to something more sensible.
+        #        df.columns = [snakeCase(x) for x in df.columns]
+        return json.loads(df.to_json(orient='index'))
 #        # Pandas is lovely, but weird. Here we drop records without an Id, and convert it to an integer.
 #        df = df.drop_duplicates(subset='Id').astype({'Id': 'Int64'})
         # Now we index on the ID column and convert to a dictionary, where the key is the id, and the value
