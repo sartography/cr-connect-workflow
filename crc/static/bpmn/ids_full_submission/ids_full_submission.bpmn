@@ -89,17 +89,7 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="SequenceFlow_0y21euo" sourceRef="ExclusiveGateway_14igy57" targetRef="Task_ReviewPharmacyManualStatus" />
     <bpmn:userTask id="Task_ReviewPharmacyManualStatus" name="Review Pharmacy Manual Status" camunda:formKey="Pharmacy Manual Status">
-      <bpmn:documentation>{% if IRB_UplCnt.DrugDeviceDocument.PharmacyManual &gt; 0 %}
-	{% if IRB_UplCnt.DrugDeviceDocument.PharmacyManual == 1 %}
-    	{{IRB_UplCnt.DrugDeviceDocument.PharmacyManual}} Pharmacy Manual Uploaded
-"This manual will be sent as part of your IDS Submission"
-  	{% else %}
-    	{{IRB_UplCnt.DrugDeviceDocument.PharmacyManual}} Pharmacy Manuals Uploaded
-"These manuals will be sent as part of your IDS Submission
-{% endif %}
-{% else %}
-	"The Pharmacy Manual has not been uploaded.  If you do not intend to upload a manual before you IDS submission, please complete the questions below.  If you do intend to upload a manual, you do not need to complete them"
-{% endif %}</bpmn:documentation>
+      <bpmn:documentation>{{ElementDoc_PharmMan}}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="FormField_isSponsor" label="Will the sponsor be providing the Pharmacy Manual?" type="boolean">
@@ -122,17 +112,7 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_1pg0dkw" sourceRef="Task_ReviewPharmacyManualStatus" targetRef="ExclusiveGateway_1b69uum" />
     <bpmn:userTask id="UserTask_ReviewInvestigatorsBrochureStatus" name="Review Investigator&#39;s Brochure Status" camunda:formKey="Investigator&#39;s Brochure Status">
-      <bpmn:documentation>{% if IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure &gt; 0 %}
-	{% if IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure == 1 %}
-    	{{IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure}} Pharmacy Manual Uploaded
-"This brochure will be sent as part of your IDS Submission"
-  	{% else %}
-    	{{IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure}} Pharmacy Manuals Uploaded
-"These brochures will be sent as part of your IDS Submission
-{% endif %}
-{% else %}
-	"The Investigator's Brochure has not been uploaded.  If you do not intend to upload a manual before you IDS submission, please complete the questions below.  If you do intend to upload a manual, you do not need to complete them"
-{% endif %}</bpmn:documentation>
+      <bpmn:documentation>{{ElementDoc_InvestigatorsBrochure}}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="FormField_isSponsor" label="Will the sponsor be providing the Investigator&#39;s Brochure?" type="boolean">
@@ -156,17 +136,7 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     <bpmn:sequenceFlow id="SequenceFlow_0jwnfzy" sourceRef="ExclusiveGateway_14igy57" targetRef="UserTask_ReviewInvestigatorsBrochureStatus" />
     <bpmn:sequenceFlow id="SequenceFlow_13fzv9y" sourceRef="UserTask_ReviewInvestigatorsBrochureStatus" targetRef="ExclusiveGateway_1b69uum" />
     <bpmn:userTask id="UserTask_ReviewIVRS-IWRS-IXRSManualStatus" name="Review IVRS/IWRS/IXRS Manual Status" camunda:formKey="IVRS/IWRS/IXRS Manual Status">
-      <bpmn:documentation>{% if IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual &gt; 0 %}
-	{% if IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual == 1 %}
-{{IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual}} Pharmacy Manual Uploaded
-"This manual will be sent as part of your IDS Submission"
-  	{% else %}
-{{IRB_UplCnt.DrugDeviceDocument.IVRSIWRSIXRSManual}} Pharmacy Manuals Uploaded
-"These manuals will be sent as part of your IDS Submission
-  	{% endif %}
-{% else %}
-"The IVRS/IWRS/IXRS Manual has not been uploaded.  If you do not intend to upload a manual before you IDS submission, please complete the questions below.  If you do intend to upload a manual, you do not need to complete them"
-{% endif %}</bpmn:documentation>
+      <bpmn:documentation>{{ElementDoc_IVRSIWRSIXRS}}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="FormField_Required" label="Does the study require use of IVRS/IXRS/IWRS?" type="enum">
@@ -213,7 +183,7 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
       <bpmn:outgoing>SequenceFlow_1kam5in</bpmn:outgoing>
     </bpmn:businessRuleTask>
     <bpmn:businessRuleTask id="BusinessRuleTask_InvestigatorsBrochure" name="Investigator&#39;s Brochure" camunda:decisionRef="Decision_InvestigatorBrochure">
-      <bpmn:incoming>SequenceFlow_1dexemq</bpmn:incoming>
+      <bpmn:incoming>Flow_1x9d2mo</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1dcu8zu</bpmn:outgoing>
     </bpmn:businessRuleTask>
     <bpmn:businessRuleTask id="BusinessRuleTask_IVRS-IWRS-IXRSManual" name="IVRS/IWRS/IXRS Manual" camunda:decisionRef="Decision_IVRS-IWRS-IXRS">
@@ -223,7 +193,7 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     <bpmn:sequenceFlow id="SequenceFlow_1dcu8zu" sourceRef="BusinessRuleTask_InvestigatorsBrochure" targetRef="BusinessRuleTask_PharmacyManual" />
     <bpmn:sequenceFlow id="SequenceFlow_1kam5in" sourceRef="BusinessRuleTask_PharmacyManual" targetRef="BusinessRuleTask_IVRS-IWRS-IXRSManual" />
     <bpmn:sequenceFlow id="SequenceFlow_1bkjyhx" sourceRef="BusinessRuleTask_IVRS-IWRS-IXRSManual" targetRef="ExclusiveGateway_14igy57" />
-    <bpmn:sequenceFlow id="SequenceFlow_1dexemq" sourceRef="StartEvent_1" targetRef="BusinessRuleTask_InvestigatorsBrochure" />
+    <bpmn:sequenceFlow id="SequenceFlow_1dexemq" sourceRef="StartEvent_1" targetRef="Activity_LoadDocuments" />
     <bpmn:sequenceFlow id="SequenceFlow_0lixqzs" sourceRef="ExclusiveGateway_1b69uum" targetRef="UserTask_03o04d0" />
     <bpmn:userTask id="UserTask_03o04d0" name="Enter Staff Training" camunda:formKey="Staff Training">
       <bpmn:extensionElements>
@@ -243,9 +213,19 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
       <bpmn:outgoing>SequenceFlow_1r7kcks</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_1r7kcks" sourceRef="UserTask_03o04d0" targetRef="EndEvent_0jypqha" />
+    <bpmn:sequenceFlow id="Flow_1x9d2mo" sourceRef="Activity_LoadDocuments" targetRef="BusinessRuleTask_InvestigatorsBrochure" />
+    <bpmn:scriptTask id="Activity_LoadDocuments" name="Load Documents">
+      <bpmn:incoming>SequenceFlow_1dexemq</bpmn:incoming>
+      <bpmn:outgoing>Flow_1x9d2mo</bpmn:outgoing>
+      <bpmn:script>Documents</bpmn:script>
+    </bpmn:scriptTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_IDS">
+      <bpmndi:BPMNEdge id="Flow_1x9d2mo_di" bpmnElement="Flow_1x9d2mo">
+        <di:waypoint x="200" y="340" />
+        <di:waypoint x="270" y="340" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1r7kcks_di" bpmnElement="SequenceFlow_1r7kcks">
         <di:waypoint x="1180" y="340" />
         <di:waypoint x="1272" y="340" />
@@ -255,8 +235,8 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
         <di:waypoint x="1080" y="340" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1dexemq_di" bpmnElement="SequenceFlow_1dexemq">
-        <di:waypoint x="178" y="340" />
-        <di:waypoint x="270" y="340" />
+        <di:waypoint x="48" y="340" />
+        <di:waypoint x="100" y="340" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1bkjyhx_di" bpmnElement="SequenceFlow_1bkjyhx">
         <di:waypoint x="645" y="340" />
@@ -318,6 +298,9 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
         <di:waypoint x="720" y="120" />
         <di:waypoint x="790" y="120" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="12" y="322" width="36" height="36" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_0wr3vp4_di" bpmnElement="Task_EnterIDSStudyIdentification">
         <dc:Bounds x="790" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
@@ -354,8 +337,8 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
       <bpmndi:BPMNShape id="UserTask_03o04d0_di" bpmnElement="UserTask_03o04d0">
         <dc:Bounds x="1080" y="300" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="142" y="322" width="36" height="36" />
+      <bpmndi:BPMNShape id="Activity_0f5ox7w_di" bpmnElement="Activity_LoadDocuments">
+        <dc:Bounds x="100" y="300" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

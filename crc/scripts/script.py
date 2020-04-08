@@ -5,7 +5,7 @@ import pkgutil
 from crc.api.common import ApiError
 
 
-class Script:
+class Script(object):
     """ Provides an abstract class that defines how scripts should work, this
     must be extended in all Script Tasks."""
 

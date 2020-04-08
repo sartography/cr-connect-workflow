@@ -5,18 +5,44 @@
       <biodi:bounds x="150" y="150" width="180" height="80" />
     </extensionElements>
     <decisionTable id="decisionTable_1">
-      <input id="input_1">
-        <inputExpression id="inputExpression_1" typeRef="string">
-          <text></text>
+      <input id="input_1" label="Investigator&#39;s Brochure Form Upload Count">
+        <inputExpression id="inputExpression_1" typeRef="integer">
+          <text>Documents["DrugDevDoc_InvestBrochure"]["count"]</text>
         </inputExpression>
       </input>
-      <output id="output_1" label="IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure" name="IRB_UplCnt.DrugDeviceDocument.InvestigatorBrochure" typeRef="boolean" />
+      <output id="output_1" label="Investigator&#39;s Brochure(s) Uploaded?" name="isInvestigatorsBrochure" typeRef="boolean" />
+      <output id="OutputClause_1f3mlfn" label="Investigator&#39;s Broshure Form Banner" name="ElementDoc_InvestigatorsBrochure" typeRef="string" />
       <rule id="DecisionRule_0zvgaym">
         <inputEntry id="UnaryTests_0mwq0my">
-          <text></text>
+          <text>0</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1egtix6">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0syurh2">
+          <text>"The Investigator's Brochure has not been uploaded.  If you do not intend to upload a manual before you IDS submission, please complete the questions below.  If you do intend to upload a brochure, you do not need to complete them."</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1tex88t">
+        <inputEntry id="UnaryTests_02u2t7y">
+          <text>1</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_10fvqcp">
           <text>true</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_12xmgog">
+          <text>"This brochure will be sent as part of your IDS Submission."</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1h9ji9j">
+        <inputEntry id="UnaryTests_1q9mscj">
+          <text>&gt; 1</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0ybjs1p">
+          <text>true</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1fhucbl">
+          <text>"These brochures will be sent as part of your IDS Submission."</text>
         </outputEntry>
       </rule>
     </decisionTable>
