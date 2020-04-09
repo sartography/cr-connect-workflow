@@ -27,6 +27,7 @@ class WorkflowSpecModel(db.Model):
     id = db.Column(db.String, primary_key=True)
     name = db.Column(db.String)
     display_name = db.Column(db.String)
+    display_order = db.Column(db.Integer, nullable=True)
     description = db.Column(db.Text)
     primary_process_id = db.Column(db.String)
     category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'), nullable=True)
