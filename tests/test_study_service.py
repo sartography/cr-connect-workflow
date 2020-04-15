@@ -1,3 +1,6 @@
+import json
+from unittest.mock import patch
+
 from crc import db
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudyModel
@@ -13,9 +16,12 @@ from tests.base_test import BaseTest
 class TestStudyService(BaseTest):
     """Largely tested via the test_study_api, and time is tight, but adding new tests here."""
 
-
-    def test_total_tasks_updated(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
+    def test_total_tasks_updated(self, mock_docs):
         """Assure that as a users progress is available when getting a list of studies for that user."""
+
+        docs_response = self.protocol_builder_response('required_docs.json')
+        mock_docs.return_value = json.loads(docs_response)
 
         # Assure some basic models are in place, This is a damn mess.  Our database models need an overhaul to make
         # this easier - better relationship modeling is now critical.

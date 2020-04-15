@@ -17,7 +17,6 @@ from SpiffWorkflow.specs import WorkflowSpec
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.api_models import Task
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus, WorkflowModel
 from crc.scripts.script import Script
@@ -271,26 +270,7 @@ class WorkflowProcessor(object):
         spec.description = version
         return spec
 
-    @classmethod
-    def test_spec(cls, spec_id):
 
-        spec = WorkflowProcessor.get_spec(spec_id)
-        bpmn_workflow = BpmnWorkflow(spec, script_engine=cls._script_engine)
-        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = 1
-        bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = spec_id
-        bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = True
-
-        while not bpmn_workflow.is_completed():
-            try:
-                bpmn_workflow.do_engine_steps()
-                tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
-                for task in tasks:
-                    task_api = Task.from_spiff(task)  # Assure we try to process the documenation, and raise those errors.
-                    WorkflowProcessor.populate_form_with_random_data(task)
-                    task.complete()
-            except WorkflowException as we:
-                raise ApiError.from_task_spec("workflow_execution_exception", str(we),
-                                              we.sender)
 
     @staticmethod
     def populate_form_with_random_data(task):

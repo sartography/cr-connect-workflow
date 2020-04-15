@@ -2,17 +2,14 @@ import json
 import os
 
 from crc import session, app
-from crc.models.api_models import WorkflowApiSchema, Task
+from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModelSchema
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
-from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus
-from crc.services.workflow_processor import WorkflowProcessor
+from crc.models.workflow import WorkflowStatus
 from tests.base_test import BaseTest
 
 
 class TestTasksApi(BaseTest):
-
 
     def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False):
         rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
@@ -157,47 +154,6 @@ class TestTasksApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         files = FileModelSchema(many=True).load(json_data, session=session)
         self.assertTrue(len(files) == 1)
-
-    def test_documentation_processing_handles_replacements(self):
-
-        docs = "Some simple docs"
-        task = Task(1, "bill", "bill", "", "started", {}, docs, {})
-        task.process_documentation(docs)
-        self.assertEqual(docs, task.documentation)
-
-        task.data = {"replace_me": "new_thing"}
-        task.process_documentation("{{replace_me}}")
-        self.assertEqual("new_thing", task.documentation)
-
-        documentation = """
-# Bigger Test
-
-  * bullet one
-  * bullet two has {{replace_me}}
-
-# other stuff.       
-        """
-        expected = """
-# Bigger Test
-
-  * bullet one
-  * bullet two has new_thing
-
-# other stuff.       
-        """
-        task.process_documentation(documentation)
-        self.assertEqual(expected, task.documentation)
-
-    def test_documentation_processing_handles_conditionals(self):
-
-        docs = "This test {% if works == 'yes' %}works{% endif %}"
-        task = Task(1, "bill", "bill", "", "started", {}, docs, {})
-        task.process_documentation(docs)
-        self.assertEqual("This test ", task.documentation)
-
-        task.data = {"works": 'yes'}
-        task.process_documentation(docs)
-        self.assertEqual("This test works", task.documentation)
 
     def test_get_documentation_populated_in_end(self):
         self.load_example_data()
