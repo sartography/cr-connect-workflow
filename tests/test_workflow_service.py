@@ -63,6 +63,6 @@ class TestWorkflowService(BaseTest):
         task = processor.next_task()
         WorkflowService._process_options(task, task.task_spec.form.fields[0])
         options = task.task_spec.form.fields[0].options
-        self.assertEquals(5011, len(options))
+        self.assertEquals(19, len(options))
         self.assertEquals(1000, options[0]['id'])
         self.assertEquals("UVA - INTERNAL - GM USE ONLY", options[0]['name'])
