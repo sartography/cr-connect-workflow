@@ -6,6 +6,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 NAME = "CR Connect Workflow"
 CORS_ENABLED = False
 DEVELOPMENT = bool(environ.get('DEVELOPMENT', default="True"))
+TESTING = bool(environ.get('TESTING', default="False"))
 
 DB_HOST = environ.get('DB_HOST', default="localhost")
 DB_PORT = environ.get('DB_PORT', default="5432")
@@ -39,3 +40,9 @@ PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "
 PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "investigators?studyid=%i")
 PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
 PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
+
+print('=== USING DEFAULT CONFIG: ===')
+print('DB_HOST = ', DB_HOST)
+print('DEVELOPMENT = ', DEVELOPMENT)
+print('TESTING = ', TESTING)
+print('PB_BASE_URL = ', PB_BASE_URL)
