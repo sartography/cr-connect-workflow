@@ -50,7 +50,6 @@ Takes two arguments:
                                    "the name of the docx template to use.  The second "
                                    "argument is a code for the document, as "
                                    "set in the reference document %s. " % FileService.IRB_PRO_CATEGORIES_FILE)
-        workflow_spec_model = self.find_spec_model_in_db(task.workflow)
         task_study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         file_name = args[0]
 
@@ -58,21 +57,7 @@ Takes two arguments:
             raise ApiError(code="invalid_argument",
                            message="The given task does not match the given study.")
 
-        if workflow_spec_model is None:
-            raise ApiError(code="workflow_model_error",
-                           message="Something is wrong.  I can't find the workflow you are using.")
-
-        file_data_model = session.query(FileDataModel) \
-            .join(FileModel) \
-            .filter(FileModel.name == file_name) \
-            .filter(FileModel.workflow_spec_id == workflow_spec_model.id).first()
-
-        if file_data_model is None:
-            raise ApiError(code="file_missing",
-                           message="Can not find a file called '%s' within workflow specification '%s'"
-                                   % (args[0], workflow_spec_model.id))
-
-
+        file_data_model = FileService.get_workflow_file_data(task.workflow, file_name)
         return self.make_template(BytesIO(file_data_model.data), task.data)
 
 
@@ -85,15 +70,4 @@ Takes two arguments:
         target_stream.seek(0) # move to the beginning of the stream.
         return target_stream
 
-    def find_spec_model_in_db(self, workflow):
-        """ Search for the workflow """
-        # When the workflow spec model is created, we record the primary process id,
-        # then we can look it up.  As there is the potential for sub-workflows, we
-        # may need to travel up to locate the primary process.
-        spec = workflow.spec
-        workflow_model = session.query(WorkflowSpecModel). \
-            filter(WorkflowSpecModel.primary_process_id == spec.name).first()
-        if workflow_model is None and workflow != workflow.outer_workflow:
-            return self.find_spec_model_in_db(workflow.outer_workflow)
 
-        return workflow_model
