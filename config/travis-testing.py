@@ -21,3 +21,9 @@ SSO_ATTRIBUTE_MAP = {
     'displayName': (False, 'display_name'),  # Daniel Harold Funk
     'title': (False, 'title')  # SOFTWARE ENGINEER V
 }
+
+print('+++ USING TRAVIS TESTING CONFIG: +++')
+print('SQLALCHEMY_DATABASE_URI = ', SQLALCHEMY_DATABASE_URI)
+print('DEVELOPMENT = ', DEVELOPMENT)
+print('TESTING = ', TESTING)
+print('FRONTEND_AUTH_CALLBACK = ', FRONTEND_AUTH_CALLBACK)
