@@ -7,7 +7,7 @@
     <decisionTable id="decisionTable_1">
       <input id="input_1" label="IVRS-IWRS-IXRS Manual Count">
         <inputExpression id="inputExpression_1" typeRef="integer">
-          <text>Documents["DrugDevDoc_IVRSIWRSIXRSMan"]["count"]</text>
+          <text>Documents.DrugDevDoc_IVRSIWRSIXRSMan.count</text>
         </inputExpression>
       </input>
       <output id="output_1" label="IVRS-IWRS-IXRS Manual Uploaded?" name="isIVRS-IWRS-IXRS" typeRef="boolean" />

@@ -2,10 +2,10 @@
 <definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
   <decision id="sponsor_funding_source" name="Sponsor Funding Source">
     <extensionElements>
-      <biodi:bounds x="190" y="70" width="180" height="80" />
+      <biodi:bounds x="190" y="80" width="180" height="80" />
     </extensionElements>
     <decisionTable id="DecisionTable_00zdxg0">
-      <input id="InputClause_02n3ccs" label="Sponsor Document Required in PB?">
+      <input id="InputClause_02n3ccs" label="CoCApplication Required?">
         <inputExpression id="LiteralExpression_1ju4o1o" typeRef="boolean" expressionLanguage="feel">
           <text>Documents['AD_LabManual']['required']</text>
         </inputExpression>
