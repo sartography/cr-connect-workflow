@@ -44,17 +44,43 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
+
         task = next_user_tasks[0]
-        self.assertEqual("MutiInstanceTask", task.get_name())
+
+        self.assertEquals(
+            {
+                'DC': {'user_id': 'asd3v', 'type_full': 'Department Contact'},
+                'IRBC': {'user_id': 'asdf32', 'type_full': 'IRB Coordinator'},
+                'PI': {'user_id': 'dhf8r', 'type_full': 'Primary Investigator'}
+            },
+            task.data['StudyInfo']['investigators'])
 
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         self.assertEquals("asd3v", task.data["investigator"]["user_id"])
-        task.update_data({"investigator":{"email":"asd3v@virginia.edu"}})
+
+        self.assertEqual("MutiInstanceTask", task.get_name())
+        task.update_data({"email":"asd3v@virginia.edu"})
         processor.complete_task(task)
-
-
         processor.do_engine_steps()
+
+        task = next_user_tasks[0]
+        self.assertEqual("MutiInstanceTask", task.get_name())
+        task.update_data({"email":"asdf32@virginia.edu"})
+        processor.complete_task(task)
+        processor.do_engine_steps()
+
+        task = next_user_tasks[0]
+        self.assertEqual("MutiInstanceTask", task.get_name())
+        task.update_data({"email":"dhf8r@virginia.edu"})
+        processor.complete_task(task)
+        processor.do_engine_steps()
+
+        self.assertEquals(
+            {
+                'DC': {'user_id': 'asd3v', 'type_full': 'Department Contact', 'email': 'asd3v@virginia.edu'},
+                'IRBC': {'user_id': 'asdf32', 'type_full': 'IRB Coordinator', "email": "asdf32@virginia.edu"},
+                'PI': {'user_id': 'dhf8r', 'type_full': 'Primary Investigator', "email": "dhf8r@virginia.edu"}
+            },
+            task.data['StudyInfo']['investigators'])
+
         self.assertEqual(WorkflowStatus.complete, processor.get_status())
-        data = processor.get_data()
-        self.assertIsNotNone(data)
-        self.assertIn("FactService", data)
