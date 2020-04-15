@@ -10,6 +10,7 @@ from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_service import WorkflowService
 
 
 def all_specifications():
@@ -40,7 +41,7 @@ def validate_workflow_specification(spec_id):
 
     errors = []
     try:
-        WorkflowProcessor.test_spec(spec_id)
+        WorkflowService.test_spec(spec_id)
     except ApiError as ae:
         errors.append(ae)
     return ApiErrorSchema(many=True).dump(errors)
@@ -85,7 +86,7 @@ def delete_workflow_specification(spec_id):
 
 def __get_workflow_api_model(processor: WorkflowProcessor, status_data=None):
     spiff_tasks = processor.get_all_user_tasks()
-    user_tasks = list(map(Task.from_spiff, spiff_tasks))
+    user_tasks = list(map(WorkflowService.spiff_task_to_api_task, spiff_tasks))
     is_active = True
 
     if status_data is not None and processor.workflow_spec_id in status_data:
@@ -94,7 +95,7 @@ def __get_workflow_api_model(processor: WorkflowProcessor, status_data=None):
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),
-        last_task=Task.from_spiff(processor.bpmn_workflow.last_task),
+        last_task=WorkflowService.spiff_task_to_api_task(processor.bpmn_workflow.last_task),
         next_task=None,
         user_tasks=user_tasks,
         workflow_spec_id=processor.workflow_spec_id,
@@ -102,7 +103,7 @@ def __get_workflow_api_model(processor: WorkflowProcessor, status_data=None):
         is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
     )
     if processor.next_task():
-        workflow_api.next_task = Task.from_spiff(processor.next_task())
+        workflow_api.next_task = WorkflowService.spiff_task_to_api_task(processor.next_task())
     return workflow_api
 
 

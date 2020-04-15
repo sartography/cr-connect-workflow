@@ -4,7 +4,7 @@ import connexion
 from flask import send_file
 
 from crc import session
-from crc.api.common import ApiErrorSchema, ApiError
+from crc.api.common import ApiError
 from crc.models.file import FileModelSchema, FileModel, FileDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService

@@ -41,9 +41,14 @@ class TestStudyApi(BaseTest):
         study = session.query(StudyModel).first()
         self.assertIsNotNone(study)
 
-    def test_get_study(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
+    def test_get_study(self, mock_docs):
         """Generic test, but pretty detailed, in that the study should return a categorized list of workflows
         This starts with out loading the example data, to show that all the bases are covered from ground 0."""
+
+        docs_response = self.protocol_builder_response('required_docs.json')
+        mock_docs.return_value = json.loads(docs_response)
+
         new_study = self.add_test_study()
         new_study = session.query(StudyModel).filter_by(id=new_study["id"]).first()
         # Add a category
@@ -109,9 +114,10 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study.title, json_data['title'])
         self.assertEqual(study.protocol_builder_status.name, json_data['protocol_builder_status'])
 
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
-    def test_get_all_studies(self, mock_studies, mock_details):
+    def test_get_all_studies(self, mock_studies, mock_details, mock_docs):
         self.load_example_data()
         s = StudyModel(
             id=54321,  # This matches one of the ids from the study_details_json data.
@@ -128,6 +134,8 @@ class TestStudyApi(BaseTest):
         mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
         details_response = self.protocol_builder_response('study_details.json')
         mock_details.return_value = json.loads(details_response)
+        docs_response = self.protocol_builder_response('required_docs.json')
+        mock_docs.return_value = json.loads(docs_response)
 
         # Make the api call to get all studies
         api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
@@ -155,7 +163,12 @@ class TestStudyApi(BaseTest):
         test_study = session.query(StudyModel).filter_by(id=54321).first()
         self.assertFalse(test_study.inactive)
 
-    def test_get_single_study(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
+    def test_get_single_study(self, mock_docs):
+
+        docs_response = self.protocol_builder_response('required_docs.json')
+        mock_docs.return_value = json.loads(docs_response)
+
         self.load_example_data()
         study = session.query(StudyModel).first()
         rv = self.app.get('/v1.0/study/%i' % study.id,

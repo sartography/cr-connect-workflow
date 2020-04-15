@@ -14,8 +14,9 @@ class TestFilesApi(BaseTest):
 
     def test_list_files_for_workflow_spec(self):
         self.load_example_data()
-        spec = session.query(WorkflowSpecModel).first()
-        rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec.id,
+        spec_id = 'core_info'
+        spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+        rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec_id,
                           follow_redirects=True,
                           content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)

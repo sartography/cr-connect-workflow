@@ -192,3 +192,40 @@ class FileService(object):
         if not file_model:
             raise ApiError("file_not_found", "There is no reference file with the name '%s'" % file_name)
         return FileService.get_file_data(file_model.id, file_model)
+
+    @staticmethod
+    def get_workflow_file_data(workflow, file_name):
+        """Given a SPIFF Workflow Model, tracks down a file with the given name in the datbase and returns it's data"""
+        workflow_spec_model = FileService.__find_spec_model_in_db(workflow)
+        study_id = workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+
+        if workflow_spec_model is None:
+            raise ApiError(code="workflow_model_error",
+                           message="Something is wrong.  I can't find the workflow you are using.")
+
+        file_data_model = session.query(FileDataModel) \
+            .join(FileModel) \
+            .filter(FileModel.name == file_name) \
+            .filter(FileModel.workflow_spec_id == workflow_spec_model.id).first()
+
+        if file_data_model is None:
+            raise ApiError(code="file_missing",
+                           message="Can not find a file called '%s' within workflow specification '%s'"
+                                   % (file_name, workflow_spec_model.id))
+
+        return file_data_model
+
+    @staticmethod
+    def __find_spec_model_in_db(workflow):
+        """ Search for the workflow """
+        # When the workflow spec model is created, we record the primary process id,
+        # then we can look it up.  As there is the potential for sub-workflows, we
+        # may need to travel up to locate the primary process.
+        spec = workflow.spec
+        workflow_model = session.query(WorkflowSpecModel). \
+            filter(WorkflowSpecModel.primary_process_id == spec.name).first()
+        if workflow_model is None and workflow != workflow.outer_workflow:
+            return FileService.__find_spec_model_in_db(workflow.outer_workflow)
+
+        return workflow_model
+

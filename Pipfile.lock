@@ -241,11 +241,11 @@
         },
         "docxtpl": {
             "hashes": [
-                "sha256:216af2580b9f697c2f748faf06c0bfbf47a782f2dd10ad87824a4c5ecbd37008",
-                "sha256:f5fed6ff724d802f1b151c86ee6141b17cc6fc2fe1979b7840b11db4bd633e48"
+                "sha256:a46c9cd6ea6d7350a8f16b467c3b1cd09767c83e1da5753f306cc550a7b04959",
+                "sha256:ab92c5710b6774eff52a90529fb96af29aacfc2d14c0986b6f58ac5bfe403bdf"
             ],
             "index": "pypi",
-            "version": "==0.8.0"
+            "version": "==0.9.0"
         },
         "et-xmlfile": {
             "hashes": [
@@ -768,7 +768,7 @@
         "spiffworkflow": {
             "editable": true,
             "git": "https://github.com/sartography/SpiffWorkflow.git",
-            "ref": "618be41e7e6b20f87865cf9fdd96a79c3cbee065"
+            "ref": "d46213c9c20859b42ff26c12f852fd32a58d3280"
         },
         "sqlalchemy": {
             "hashes": [

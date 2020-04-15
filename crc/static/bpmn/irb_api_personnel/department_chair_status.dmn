@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_305b1db" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Decision_DepartmentChair" name="Department Chair Status">
+    <extensionElements>
+      <biodi:bounds x="200" y="150" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="Department Chair Status">
+        <inputExpression id="inputExpression_1" typeRef="boolean">
+          <text></text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Department Chair Form Banner" name="ElementDoc_DepartmentChair" typeRef="string" />
+      <rule id="DecisionRule_1by29jj">
+        <inputEntry id="UnaryTests_1gr92h8">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0xadafz">
+          <text>"DC Placeholder"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
