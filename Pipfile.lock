@@ -241,11 +241,11 @@
         },
         "docxtpl": {
             "hashes": [
-                "sha256:243722fb7d4e960a1d02a8b177bea62aaba9e4fa5a791bfb47f788aa86167540",
-                "sha256:fa751b8b0be23fdb2f5e307040c7ea6dbe367b5ed165b70a43ea5ad5ff45bd55"
+                "sha256:a46c9cd6ea6d7350a8f16b467c3b1cd09767c83e1da5753f306cc550a7b04959",
+                "sha256:ab92c5710b6774eff52a90529fb96af29aacfc2d14c0986b6f58ac5bfe403bdf"
             ],
             "index": "pypi",
-            "version": "==0.8.1"
+            "version": "==0.9.0"
         },
         "et-xmlfile": {
             "hashes": [

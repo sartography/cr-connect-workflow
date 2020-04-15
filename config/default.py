@@ -1,15 +1,22 @@
 import os
+from os import environ
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 NAME = "CR Connect Workflow"
 CORS_ENABLED = False
-DEVELOPMENT = True
-SQLALCHEMY_DATABASE_URI = "postgresql://crc_user:crc_pass@localhost:5432/crc_dev"
+DEVELOPMENT = environ.get('DEVELOPMENT', default="True")
+
+DB_HOST = environ.get('DB_HOST', default="localhost")
+DB_PORT = environ.get('DB_PORT', default="5432")
+DB_NAME = environ.get('DB_NAME', default="crc_dev")
+DB_USER = environ.get('DB_USER', default="crc_user")
+DB_PASSWORD = environ.get('DB_PASSWORD', default="crc_pass")
+SQLALCHEMY_DATABASE_URI = environ.get('SQLALCHEMY_DATABASE_URI', default="postgresql://%s:%s@%s:%s/%s" % (DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME))
 TOKEN_AUTH_TTL_HOURS = 2
-TOKEN_AUTH_SECRET_KEY = "Shhhh!!! This is secret!  And better darn well not show up in prod."
-FRONTEND_AUTH_CALLBACK = "http://localhost:4200/session"
-SWAGGER_AUTH_KEY = "SWAGGER"
+TOKEN_AUTH_SECRET_KEY = environ.get('TOKEN_AUTH_SECRET_KEY', default="Shhhh!!! This is secret!  And better darn well not show up in prod.")
+FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://localhost:4200/session")
+SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 
 #: Default attribute map for single signon.
 SSO_ATTRIBUTE_MAP = {
@@ -24,7 +31,8 @@ SSO_ATTRIBUTE_MAP = {
 }
 
 # %s/%i placeholders expected for uva_id and study_id in various calls.
-PB_USER_STUDIES_URL = "http://workflow.sartography.com:5001/pb/user_studies?uva_id=%s"
-PB_INVESTIGATORS_URL = "http://workflow.sartography.com:5001/pb/investigators?studyid=%i"
-PB_REQUIRED_DOCS_URL = "http://workflow.sartography.com:5001/pb/required_docs?studyid=%i"
-PB_STUDY_DETAILS_URL = "http://workflow.sartography.com:5001/pb/study?studyid=%i"
+PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/pb/")
+PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "user_studies?uva_id=%s")
+PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "investigators?studyid=%i")
+PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
+PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")

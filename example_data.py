@@ -65,13 +65,6 @@ class ExampleDataLoader:
         ]
         db.session.add_all(categories)
         db.session.commit()
-        self.create_spec(id="top_level_workflow",
-                         name="top_level_workflow",
-                         display_name="Top Level Workflow",
-                         description="Determines the status of other workflows in a study",
-                         category_id=None,
-                         master_spec=True
-                         )
 
         # Pass IRB Review
         self.create_spec(id="irb_api_personnel",
@@ -162,6 +155,14 @@ class ExampleDataLoader:
                          description="TBD",
                          category_id=5,
                          display_order=0)
+
+        # Top Level (Master Status) Workflow
+        self.create_spec(id="top_level_workflow",
+                         name="top_level_workflow",
+                         display_name="Top Level Workflow",
+                         description="Determines the status of other workflows in a study",
+                         category_id=None,
+                         master_spec=True)
 
 
     def create_spec(self, id, name, display_name="", description="", filepath=None, master_spec=False, category_id=None, display_order=None):
