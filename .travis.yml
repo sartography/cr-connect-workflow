@@ -21,6 +21,9 @@ install:
   - export PATH=$PATH:$HOME/.local/bin;
   - pipenv install
 
+env:
+  - PB_BASE_URL='http://workflow.sartography.com:5001/pb/'
+
 script:
   - pipenv run coverage run -m pytest
   - pipenv run coverage xml -i

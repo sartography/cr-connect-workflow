@@ -2,6 +2,12 @@
 
 # run migrations
 export FLASK_APP=./crc/__init__.py
+
+for entry in ./instance/* ; do
+  echo "$entry"
+  cat $entry
+done
+
 pipenv run flask db upgrade
 
 if [ "$RESET_DB" = "true" ]; then
