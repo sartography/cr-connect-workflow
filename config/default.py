@@ -5,8 +5,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 NAME = "CR Connect Workflow"
 CORS_ENABLED = False
-DEVELOPMENT = bool(environ.get('DEVELOPMENT', default="True"))
-TESTING = bool(environ.get('TESTING', default="False"))
+DEVELOPMENT = environ.get('DEVELOPMENT', default="true") == "true"
+TESTING = environ.get('TESTING', default="false") == "true"
+PRODUCTION = (environ.get('PRODUCTION', default="false") == "true") or (not DEVELOPMENT and not TESTING)
 
 DB_HOST = environ.get('DB_HOST', default="localhost")
 DB_PORT = environ.get('DB_PORT', default="5432")
