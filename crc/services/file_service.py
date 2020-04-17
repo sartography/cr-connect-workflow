@@ -26,14 +26,11 @@ class FileService(object):
             workflow_spec_id=workflow_spec.id,
             name=name,
             primary=primary,
-            is_status=is_status
+            is_status=is_status,
         )
-        if primary:
-            bpmn: ElementTree.Element = ElementTree.fromstring(binary_data)
-            workflow_spec.primary_process_id = WorkflowProcessor.get_process_id(bpmn)
-            print("Locating Process Id for " + name + "  " + workflow_spec.primary_process_id)
 
         return FileService.update_file(file_model, binary_data, content_type)
+
 
     @staticmethod
     def add_form_field_file(study_id, workflow_id, task_id, form_field_key, name, content_type, binary_data):
@@ -141,6 +138,11 @@ class FileService(object):
         else:
             version = file_data_model.version + 1
 
+        # If this is a BPMN, extract the process id.
+        if file_model.type == FileType.bpmn:
+            bpmn: ElementTree.Element = ElementTree.fromstring(binary_data)
+            file_model.primary_process_id = WorkflowProcessor.get_process_id(bpmn)
+
         file_model.latest_version = version
         file_data_model = FileDataModel(data=binary_data, file_model=file_model, version=version,
                                         md5_hash=md5_checksum, last_updated=datetime.now())
@@ -184,6 +186,7 @@ class FileService(object):
             .filter(FileDataModel.version == file_model.latest_version) \
             .first()
 
+
     @staticmethod
     def get_reference_file_data(file_name):
         file_model = session.query(FileModel). \
@@ -222,8 +225,8 @@ class FileService(object):
         # then we can look it up.  As there is the potential for sub-workflows, we
         # may need to travel up to locate the primary process.
         spec = workflow.spec
-        workflow_model = session.query(WorkflowSpecModel). \
-            filter(WorkflowSpecModel.primary_process_id == spec.name).first()
+        workflow_model = session.query(WorkflowSpecModel).join(FileModel). \
+            filter(FileModel.primary_process_id == spec.name).first()
         if workflow_model is None and workflow != workflow.outer_workflow:
             return FileService.__find_spec_model_in_db(workflow.outer_workflow)
 
