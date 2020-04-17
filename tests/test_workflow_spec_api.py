@@ -1,7 +1,6 @@
 import json
 
 from crc import session
-from crc.api.common import ApiErrorSchema
 from crc.models.file import FileModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
 from tests.base_test import BaseTest
@@ -24,7 +23,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(spec.description, spec2.description)
 
     def test_add_new_workflow_specification(self):
-        self.load_example_data();
+        self.load_example_data()
         num_before = session.query(WorkflowSpecModel).count()
         spec = WorkflowSpecModel(id='make_cookies', name='make_cookies', display_name='Cooooookies',
                                  description='Om nom nom delicious cookies')

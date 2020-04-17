@@ -12,6 +12,11 @@ from tests.base_test import BaseTest
 
 class TestFilesApi(BaseTest):
 
+    def minimal_bpmn(self, content):
+        """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
+        minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
+        return (minimal_dbpm % content).encode()
+
     def test_list_files_for_workflow_spec(self):
         self.load_example_data()
         spec_id = 'core_info'
@@ -145,13 +150,13 @@ class TestFilesApi(BaseTest):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
         data = {}
-        data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
+        data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
         rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
 
-        data['file'] = io.BytesIO(b"hijklim"), 'my_new_file.bpmn'
+        data['file'] = io.BytesIO(self.minimal_bpmn("efghijk")), 'my_new_file.bpmn'
         rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -172,20 +177,20 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         data = rv.get_data()
         self.assertIsNotNone(data)
-        self.assertEqual(b"hijklim", data)
+        self.assertEqual(self.minimal_bpmn("efghijk"), data)
 
     def test_update_with_same_exact_data_does_not_increment_version(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
         data = {}
-        data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
+        data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
         rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
         self.assertEqual(1, file.latest_version)
-        data['file'] = io.BytesIO(b"abcdef"), 'my_new_file.bpmn'
+        data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
         rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assertIsNotNone(rv.get_data())
@@ -212,4 +217,35 @@ class TestFilesApi(BaseTest):
         rv = self.app.delete('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         self.assertEqual(404, rv.status_code)
+
+    def test_change_primary_bpmn(self):
+        self.load_example_data()
+        spec = session.query(WorkflowSpecModel).first()
+        data = {}
+        data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
+
+        # Add a new BPMN file to the specification
+        rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        self.assertIsNotNone(rv.get_data())
+        json_data = json.loads(rv.get_data(as_text=True))
+        file = FileModelSchema().load(json_data, session=session)
+
+        # Delete the primary BPMN file for the workflow.
+        orig_model = session.query(FileModel).\
+            filter(FileModel.primary == True).\
+            filter(FileModel.workflow_spec_id == spec.id).first()
+        rv = self.app.delete('/v1.0/file?file_id=%s' % orig_model.id, headers=self.logged_in_headers())
+
+
+        # Set that new file to be the primary BPMN, assure it has a primary_process_id
+        file.primary = True
+        rv = self.app.put('/v1.0/file/%i' % file.id,
+                           content_type="application/json",
+                           data=json.dumps(FileModelSchema().dump(file)), headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertTrue(json_data['primary'])
+        self.assertIsNotNone(json_data['primary_process_id'])
 

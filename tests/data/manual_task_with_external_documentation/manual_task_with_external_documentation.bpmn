@@ -1,18 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1v1rp1q" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1v1rp1q" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
   <bpmn:process id="Process_1vu5nxl" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_0lvudp8</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="SequenceFlow_0lvudp8" sourceRef="StartEvent_1" targetRef="Task_With_Documentation" />
+    <bpmn:sequenceFlow id="SequenceFlow_0lvudp8" sourceRef="StartEvent_1" targetRef="Task_Form" />
     <bpmn:endEvent id="EndEvent_0q4qzl9">
       <bpmn:incoming>SequenceFlow_02vev7n</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="SequenceFlow_02vev7n" sourceRef="Task_With_Documentation" targetRef="EndEvent_0q4qzl9" />
-    <bpmn:manualTask id="Task_With_Documentation" name="Enum Lookup Form">
-      <bpmn:incoming>SequenceFlow_0lvudp8</bpmn:incoming>
+    <bpmn:sequenceFlow id="SequenceFlow_02vev7n" sourceRef="Task_Manual_One" targetRef="EndEvent_0q4qzl9" />
+    <bpmn:manualTask id="Task_Manual_One" name="Manual Task with Documentation">
+      <bpmn:incoming>SequenceFlow_1n97kpy</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_02vev7n</bpmn:outgoing>
     </bpmn:manualTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1n97kpy" sourceRef="Task_Form" targetRef="Task_Manual_One" />
+    <bpmn:userTask id="Task_Form" name="Name Form" camunda:formKey="my_form">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="name" label="Please Enter you Name:" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0lvudp8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1n97kpy</bpmn:outgoing>
+    </bpmn:userTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1vu5nxl">
@@ -21,17 +31,24 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_0lvudp8_di" bpmnElement="SequenceFlow_0lvudp8">
         <di:waypoint x="215" y="117" />
-        <di:waypoint x="270" y="117" />
+        <di:waypoint x="240" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="EndEvent_0q4qzl9_di" bpmnElement="EndEvent_0q4qzl9">
-        <dc:Bounds x="432" y="99" width="36" height="36" />
+        <dc:Bounds x="532" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_02vev7n_di" bpmnElement="SequenceFlow_02vev7n">
-        <di:waypoint x="370" y="117" />
-        <di:waypoint x="432" y="117" />
+        <di:waypoint x="480" y="117" />
+        <di:waypoint x="532" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="ManualTask_0nc8sr9_di" bpmnElement="Task_With_Documentation">
-        <dc:Bounds x="270" y="77" width="100" height="80" />
+      <bpmndi:BPMNShape id="ManualTask_0nc8sr9_di" bpmnElement="Task_Manual_One">
+        <dc:Bounds x="380" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1n97kpy_di" bpmnElement="SequenceFlow_1n97kpy">
+        <di:waypoint x="340" y="117" />
+        <di:waypoint x="380" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1qhb92h_di" bpmnElement="Task_Form">
+        <dc:Bounds x="240" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
