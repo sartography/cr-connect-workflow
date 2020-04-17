@@ -238,11 +238,11 @@ class TestWorkflowProcessor(BaseTest):
         processor.do_engine_steps()
         task = processor.bpmn_workflow.last_task
         self.assertIsNotNone(task.data)
-        self.assertIn("study", task.data)
-        self.assertIn("info", task.data["study"])
-        self.assertIn("title", task.data["study"]["info"])
-        self.assertIn("last_updated", task.data["study"]["info"])
-        self.assertIn("sponsor", task.data["study"]["info"])
+        self.assertIn("StudyInfo", task.data)
+        self.assertIn("info", task.data["StudyInfo"])
+        self.assertIn("title", task.data["StudyInfo"]["info"])
+        self.assertIn("last_updated", task.data["StudyInfo"]["info"])
+        self.assertIn("sponsor", task.data["StudyInfo"]["info"])
 
     def test_spec_versioning(self):
         self.load_example_data()
