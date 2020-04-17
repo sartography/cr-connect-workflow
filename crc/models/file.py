@@ -74,6 +74,7 @@ class FileModel(db.Model):
     content_type = db.Column(db.String)
     is_reference = db.Column(db.Boolean, nullable=False, default=False) # A global reference file.
     primary = db.Column(db.Boolean, nullable=False, default=False) # Is this the primary BPMN in a workflow?
+    primary_process_id = db.Column(db.String, nullable=True) # An id in the xml of BPMN documents, critical for primary BPMN.
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=True)

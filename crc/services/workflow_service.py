@@ -45,14 +45,13 @@ class WorkflowService(object):
 
     @staticmethod
     def spiff_task_to_api_task(spiff_task):
-        documentation = spiff_task.task_spec.documentation if hasattr(spiff_task.task_spec, "documentation") else ""
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
                     spiff_task.task_spec.description,
                     spiff_task.task_spec.__class__.__name__,
                     spiff_task.get_state_name(),
                     None,
-                    documentation,
+                    "",
                     spiff_task.data)
 
         # Only process the form and documentation if this is something that is ready or completed.
@@ -62,21 +61,33 @@ class WorkflowService(object):
                 for field in task.form.fields:
                     WorkflowService._process_options(spiff_task, field)
 
-            if documentation != "" and documentation is not None:
-                WorkflowService._process_documentation(task, documentation)
+            task.documentation = WorkflowService._process_documentation(spiff_task)
         return task
 
     @staticmethod
-    def _process_documentation(task, documentation):
+    def _process_documentation(spiff_task):
         """Runs the given documentation string through the Jinja2 processor to inject data
-        create loops, etc..."""
+        create loops, etc...  - If a markdown file exists with the same name as the task id,
+        it will use that file instead of the documentation. """
+
+        documentation = spiff_task.task_spec.documentation if hasattr(spiff_task.task_spec, "documentation") else ""
 
         try:
-            template = Template(documentation)
-            task.documentation = template.render(**task.data)
+            doc_file_name = spiff_task.task_spec.name + ".md"
+            data_model = FileService.get_workflow_file_data(spiff_task.workflow, doc_file_name)
+            raw_doc = data_model.data.decode("utf-8")
+        except ApiError:
+            raw_doc = documentation
+
+        if not raw_doc:
+            return ""
+
+        try:
+            template = Template(raw_doc)
+            return template.render(**spiff_task.data)
         except jinja2.exceptions.TemplateError as ue:
             raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
-                                                          (task.name, str(ue)), status_code=500)
+                                                          (spiff_task.task_spec.name, str(ue)), status_code=500)
         # TODO:  Catch additional errors and report back.
 
     @staticmethod
