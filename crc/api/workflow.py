@@ -133,7 +133,7 @@ def update_task(workflow_id, task_id, body):
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
-    task.data = body
+    task.update_data(body)
     processor.complete_task(task)
     processor.do_engine_steps()
     workflow_model.last_completed_task_id = task.id
