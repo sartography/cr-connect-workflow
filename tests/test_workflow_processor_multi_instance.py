@@ -13,6 +13,7 @@ from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus, WorkflowModel
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
+from crc.services.workflow_service import WorkflowService
 from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -42,6 +43,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         self.assertEqual(study.id, processor.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY])
         self.assertIsNotNone(processor)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
+        processor.bpmn_workflow.do_engine_steps()
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
 
@@ -59,19 +61,28 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         self.assertEquals("asd3v", task.data["investigator"]["user_id"])
 
         self.assertEqual("MutiInstanceTask", task.get_name())
+        api_task = WorkflowService.spiff_task_to_api_task(task)
+        self.assertEquals(3, api_task.mi_count)
+        self.assertEquals(1, api_task.mi_index)
         task.update_data({"email":"asd3v@virginia.edu"})
         processor.complete_task(task)
         processor.do_engine_steps()
 
         task = next_user_tasks[0]
-        self.assertEqual("MutiInstanceTask", task.get_name())
+        api_task = WorkflowService.spiff_task_to_api_task(task)
+        self.assertEqual("MutiInstanceTask", api_task.name)
         task.update_data({"email":"asdf32@virginia.edu"})
+        self.assertEquals(3, api_task.mi_count)
+        self.assertEquals(2, api_task.mi_index)
         processor.complete_task(task)
         processor.do_engine_steps()
 
         task = next_user_tasks[0]
+        api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", task.get_name())
         task.update_data({"email":"dhf8r@virginia.edu"})
+        self.assertEquals(3, api_task.mi_count)
+        self.assertEquals(3, api_task.mi_index)
         processor.complete_task(task)
         processor.do_engine_steps()
 

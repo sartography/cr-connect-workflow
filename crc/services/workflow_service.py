@@ -1,4 +1,11 @@
+from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
+from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
+from SpiffWorkflow.bpmn.specs.NoneTask import NoneTask
+from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
+from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
+from SpiffWorkflow.dmn.specs.BuisnessRuleTask import BusinessRuleTask
+from SpiffWorkflow.specs import CancelTask, StartTask
 from pandas import ExcelFile
 
 from crc.api.common import ApiError
@@ -45,14 +52,44 @@ class WorkflowService(object):
 
     @staticmethod
     def spiff_task_to_api_task(spiff_task):
+        task_type = spiff_task.task_spec.__class__.__name__
+
+        if isinstance(spiff_task.task_spec, UserTask):
+            task_type = "UserTask"
+        elif isinstance(spiff_task.task_spec, ManualTask):
+            task_type = "ManualTask"
+        elif isinstance(spiff_task.task_spec, BusinessRuleTask):
+            task_type = "BusinessRuleTask"
+        elif isinstance(spiff_task.task_spec, CancelTask):
+            task_type = "CancelTask"
+        elif isinstance(spiff_task.task_spec, ScriptTask):
+            task_type = "ScriptTask"
+        elif isinstance(spiff_task.task_spec, StartTask):
+            task_type = "StartTask"
+        else:
+            task_type = "NoneTask"
+
+        multi_instance = isinstance(spiff_task.task_spec, MultiInstanceTask)
+        mi_count = 0
+        mi_index = 0
+        if multi_instance:
+            mi_count = spiff_task.task_spec._get_count(spiff_task)
+            mi_index = int(spiff_task._get_internal_data('runtimes', 1))
+
+
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
                     spiff_task.task_spec.description,
-                    spiff_task.task_spec.__class__.__name__,
+                    task_type,
                     spiff_task.get_state_name(),
                     None,
                     "",
-                    spiff_task.data)
+                    spiff_task.data,
+                    multi_instance,
+                    mi_count,
+                    mi_index)
+
+
 
         # Only process the form and documentation if this is something that is ready or completed.
         if not (spiff_task._is_predicted()):
@@ -100,8 +137,8 @@ class WorkflowService(object):
                 raise ApiError.from_task("invalid_emum",
                                          "For emumerations based on an xls file, you must include 3 properties: %s, "
                                          "%s, and %s, you supplied %s" % (Task.ENUM_OPTIONS_FILE_PROP,
-                                                         Task.EMUM_OPTIONS_VALUE_COL_PROP,
-                                                         Task.EMUM_OPTIONS_LABEL_COL_PROP),
+                                                                          Task.EMUM_OPTIONS_VALUE_COL_PROP,
+                                                                          Task.EMUM_OPTIONS_LABEL_COL_PROP),
                                          task=spiff_task)
 
             # Get the file data from the File Service

@@ -584,7 +584,7 @@ paths:
             format: int32
     get:
       operationId: crc.api.workflow.get_workflow
-      summary: Detailed information for a specific workflow instance
+      summary: Returns a workflow, can also be used to do a soft or hard reset on the workflow.
       parameters:
         - name: soft_reset
           in: query
