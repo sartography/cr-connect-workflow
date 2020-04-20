@@ -42,6 +42,8 @@ PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL +
 PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
 PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
 
+LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu")
+
 print('=== USING DEFAULT CONFIG: ===')
 print('DB_HOST = ', DB_HOST)
 print('DEVELOPMENT = ', DEVELOPMENT)
