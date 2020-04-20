@@ -10,7 +10,7 @@
           <text></text>
         </inputExpression>
       </input>
-      <output id="output_1" label="message" name="message" typeRef="string" />
+      <output id="output_1" label="My Message" name="message" typeRef="string" />
       <rule id="DecisionRule_0gl355z">
         <inputEntry id="UnaryTests_06x22gk">
           <text>0</text>
