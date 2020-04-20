@@ -58,11 +58,12 @@ class StudyInfo(Script):
         if cmd == 'info':
             study = session.query(StudyModel).filter_by(id=study_id).first()
             schema = StudySchema()
-            study_info["info"] = schema.dump(study)
+            self.add_data_to_task(task, {cmd: schema.dump(study)})
         if cmd == 'investigators':
-            study_info["investigators"] = self.pb.get_investigators(study_id)
+            pb_response = self.pb.get_investigators(study_id)
+            self.add_data_to_task(task, {cmd: self.organize_investigators_by_type(pb_response)})
         if cmd == 'details':
-            study_info["details"] = self.pb.get_study_details(study_id)
+            self.add_data_to_task(task, {cmd: self.pb.get_study_details(study_id)})
         task.data["study"] = study_info
 
 
@@ -71,3 +72,11 @@ class StudyInfo(Script):
             raise ApiError(code="missing_argument",
                            message="The StudyInfo script requires a single argument which must be "
                                    "one of %s" % ",".join(StudyInfo.type_options))
+
+
+    def organize_investigators_by_type(self, pb_investigators):
+        """Convert array of investigators from protocol builder into a dictionary keyed on the type"""
+        output = {}
+        for i in pb_investigators:
+            output[i["INVESTIGATORTYPE"]] = {"user_id": i["NETBADGEID"], "type_full": i["INVESTIGATORTYPEFULL"]}
+        return output

@@ -12,7 +12,7 @@ class Task(object):
     EMUM_OPTIONS_VALUE_COL_PROP = "enum.options.value.column"
     EMUM_OPTIONS_LABEL_COL_PROP = "enum.options.label.column"
 
-    def __init__(self, id, name, title, type, state, form, documentation, data):
+    def __init__(self, id, name, title, type, state, form, documentation, data, is_multi_instance, mi_count, mi_index):
         self.id = id
         self.name = name
         self.title = title
@@ -21,7 +21,9 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
-
+        self.is_multi_instance = is_multi_instance
+        self.mi_count = mi_count
+        self.mi_index = mi_index
 
 class OptionSchema(ma.Schema):
     class Meta:
@@ -57,7 +59,8 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data"]
+        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "is_multi_instance",
+                  "mi_count", "mi_index"]
 
     documentation = marshmallow.fields.String(required=False, allow_none=True)
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)

@@ -1,5 +1,6 @@
 import json
 import os
+from unittest.mock import patch
 
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema
@@ -243,3 +244,35 @@ class TestTasksApi(BaseTest):
         self.assertGreater(db_stats_after.num_tasks_total, 0)
         self.assertEqual(db_stats_after.num_tasks_total,
                          db_stats_after.num_tasks_complete + db_stats_after.num_tasks_incomplete)
+
+    def test_manual_task_with_external_documentation(self):
+        self.load_example_data()
+        workflow = self.create_workflow('manual_task_with_external_documentation')
+
+        # get the first form in the two form workflow.
+        tasks = self.get_workflow_api(workflow).user_tasks
+        workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})
+
+        workflow = self.get_workflow_api(workflow)
+        self.assertEquals('Task_Manual_One', workflow.next_task['name'])
+        self.assertEquals('ManualTask', workflow_api.next_task['type'])
+        self.assertTrue('Markdown' in workflow_api.next_task['documentation'])
+        self.assertTrue('Dan' in workflow_api.next_task['documentation'])
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_multi_instance_task(self, mock_get):
+        # This depends on getting a list of investigators back from the protocol builder.
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('investigators.json')
+
+        self.load_example_data()
+        workflow = self.create_workflow('multi_instance')
+
+        # get the first form in the two form workflow.
+        tasks = self.get_workflow_api(workflow).user_tasks
+        self.assertEquals(1, len(tasks))
+        self.assertEquals("UserTask", tasks[0].type)
+        self.assertTrue(tasks[0].is_multi_instance)
+        self.assertEquals(3, tasks[0].mi_count)
+
+        workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})

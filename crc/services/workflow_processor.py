@@ -276,6 +276,8 @@ class WorkflowProcessor(object):
     def populate_form_with_random_data(task):
         """populates a task with random data - useful for testing a spec."""
 
+        if not hasattr(task.task_spec, 'form'): return
+
         form_data = {}
         for field in task.task_spec.form.fields:
             if field.type == "enum":
