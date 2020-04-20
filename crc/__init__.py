@@ -22,8 +22,6 @@ else:
     app.config.root_path = app.instance_path
     app.config.from_pyfile('config.py', silent=True)
 
-print(app.config)
-
 db = SQLAlchemy(app)
 """:type: sqlalchemy.orm.SQLAlchemy"""
 
