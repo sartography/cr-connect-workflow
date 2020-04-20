@@ -1,12 +1,16 @@
-from crc import session
+from ldap3.core.exceptions import LDAPSocketOpenError
+
+from crc import session, app
 from crc.api.common import ApiError
 from crc.models.study import StudyModel, StudySchema
 from crc.scripts.script import Script
+from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
 class StudyInfo(Script):
+
     """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
     pb = ProtocolBuilderService()
     type_options = ['info', 'investigators', 'details']
@@ -78,5 +82,18 @@ class StudyInfo(Script):
         """Convert array of investigators from protocol builder into a dictionary keyed on the type"""
         output = {}
         for i in pb_investigators:
-            output[i["INVESTIGATORTYPE"]] = {"user_id": i["NETBADGEID"], "type_full": i["INVESTIGATORTYPEFULL"]}
+            dict = {"user_id": i["NETBADGEID"], "type_full": i["INVESTIGATORTYPEFULL"]}
+            dict.update(self.get_ldap_dict_if_available(i["NETBADGEID"]))
+            output[i["INVESTIGATORTYPE"]] = dict
         return output
+
+    def get_ldap_dict_if_available(self, user_id):
+        try:
+            ldap_service = LdapService()
+            return ldap_service.user_info(user_id).__dict__
+        except ApiError:
+            app.logger.info(ApiError.message)
+            return {}
+        except LDAPSocketOpenError:
+            app.logger.info("Failed to connect to LDAP Server.")
+            return {}
