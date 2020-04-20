@@ -36,7 +36,9 @@ Takes two arguments:
 
         file_name = args[0]
         irb_doc_code = args[1]
-        FileService.add_task_file(study_id=study_id, workflow_id=workflow_id, task_id=task.id,
+        FileService.add_task_file(study_id=study_id,
+                                  workflow_id=workflow_id,
+                                  task_id=task.id,
                                   name=file_name,
                                   content_type=CONTENT_TYPES['docx'],
                                   binary_data=final_document_stream.read(),

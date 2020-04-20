@@ -199,7 +199,7 @@ class FileService(object):
     @staticmethod
     def get_workflow_file_data(workflow, file_name):
         """Given a SPIFF Workflow Model, tracks down a file with the given name in the datbase and returns it's data"""
-        workflow_spec_model = FileService.__find_spec_model_in_db(workflow)
+        workflow_spec_model = FileService.find_spec_model_in_db(workflow)
         study_id = workflow.data[WorkflowProcessor.STUDY_ID_KEY]
 
         if workflow_spec_model is None:
@@ -219,7 +219,7 @@ class FileService(object):
         return file_data_model
 
     @staticmethod
-    def __find_spec_model_in_db(workflow):
+    def find_spec_model_in_db(workflow):
         """ Search for the workflow """
         # When the workflow spec model is created, we record the primary process id,
         # then we can look it up.  As there is the potential for sub-workflows, we
@@ -228,7 +228,7 @@ class FileService(object):
         workflow_model = session.query(WorkflowSpecModel).join(FileModel). \
             filter(FileModel.primary_process_id == spec.name).first()
         if workflow_model is None and workflow != workflow.outer_workflow:
-            return FileService.__find_spec_model_in_db(workflow.outer_workflow)
+            return FileService.find_spec_model_in_db(workflow.outer_workflow)
 
         return workflow_model
 
