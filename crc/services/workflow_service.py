@@ -79,6 +79,11 @@ class WorkflowService(object):
         else:
             mi_type = MultiInstanceType.none
 
+        props = []
+        if hasattr(spiff_task.task_spec, 'extensions'):
+            for id, val in spiff_task.task_spec.extensions.items():
+                props.append({"id": id, "value": val})
+
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
                     spiff_task.task_spec.description,
@@ -89,7 +94,8 @@ class WorkflowService(object):
                     spiff_task.data,
                     mi_type,
                     info["mi_count"],
-                    info["mi_index"])
+                    info["mi_index"],
+                    properties=props)
 
         # Only process the form and documentation if this is something that is ready or completed.
         if not (spiff_task._is_predicted()):

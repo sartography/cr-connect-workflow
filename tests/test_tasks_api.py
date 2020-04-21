@@ -259,6 +259,16 @@ class TestTasksApi(BaseTest):
         self.assertTrue('Markdown' in workflow_api.next_task['documentation'])
         self.assertTrue('Dan' in workflow_api.next_task['documentation'])
 
+    def test_bpmn_extension_properties_are_populated(self):
+        self.load_example_data()
+        workflow = self.create_workflow('manual_task_with_external_documentation')
+
+        # get the first form in the two form workflow.
+        tasks = self.get_workflow_api(workflow).user_tasks
+        self.assertEquals("JustAKey", tasks[0].properties[0]['id'])
+        self.assertEquals("JustAValue", tasks[0].properties[0]['value'])
+
+
     @patch('crc.services.protocol_builder.requests.get')
     def test_multi_instance_task(self, mock_get):
         # This depends on getting a list of investigators back from the protocol builder.

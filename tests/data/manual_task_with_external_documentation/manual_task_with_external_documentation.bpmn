@@ -19,6 +19,9 @@
         <camunda:formData>
           <camunda:formField id="name" label="Please Enter you Name:" type="string" />
         </camunda:formData>
+        <camunda:properties>
+          <camunda:property name="JustAKey" value="JustAValue" />
+        </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0lvudp8</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1n97kpy</bpmn:outgoing>

@@ -22,7 +22,7 @@ class Task(object):
     EMUM_OPTIONS_LABEL_COL_PROP = "enum.options.label.column"
 
     def __init__(self, id, name, title, type, state, form, documentation, data,
-                 mi_type, mi_count, mi_index):
+                 mi_type, mi_count, mi_index, properties):
         self.id = id
         self.name = name
         self.title = title
@@ -31,9 +31,10 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
-        self.mi_type = mi_type
-        self.mi_count = mi_count
-        self.mi_index = mi_index
+        self.mi_type = mi_type # Some tasks have a repeat behavior.
+        self.mi_count = mi_count # This is the number of times the task could repeat.
+        self.mi_index = mi_index # And the index of the currently repeating task.
+        self.properties = properties # Arbitrary extension properties from BPMN editor.
 
 class OptionSchema(ma.Schema):
     class Meta:
@@ -70,12 +71,13 @@ class FormSchema(ma.Schema):
 class TaskSchema(ma.Schema):
     class Meta:
         fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "mi_type",
-                  "mi_count", "mi_index"]
+                  "mi_count", "mi_index", "properties"]
 
     mi_type = EnumField(MultiInstanceType)
     documentation = marshmallow.fields.String(required=False, allow_none=True)
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
+    properties = marshmallow.fields.List(marshmallow.fields.Nested(PropertiesSchema))
 
     @marshmallow.post_load
     def make_task(self, data, **kwargs):
