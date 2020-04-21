@@ -21,6 +21,7 @@ def upgrade():
     op.drop_column('study', 'inactive')
     # ### end Alembic commands ###
 
+    op.execute('update study set protocol_builder_status = NULL;')
     op.execute('ALTER TYPE protocolbuilderstatus RENAME TO pbs_old;')
     op.execute("CREATE TYPE protocolbuilderstatus AS ENUM('INCOMPLETE', 'ACTIVE', 'HOLD', 'OPEN', 'ABANDONED')")
     op.execute("ALTER TABLE study ALTER COLUMN protocol_builder_status TYPE protocolbuilderstatus USING protocol_builder_status::text::protocolbuilderstatus;")
@@ -32,6 +33,7 @@ def downgrade():
     op.drop_column('study', 'on_hold')
     # ### end Alembic commands ###
 
+    op.execute('update study set protocol_builder_status = NULL;')
     op.execute('ALTER TYPE protocolbuilderstatus RENAME TO pbs_old;')
     op.execute("CREATE TYPE protocolbuilderstatus AS ENUM('DRAFT', 'IN_PROCESS', 'IN_REVIEW', 'REVIEW_COMPLETE', 'INACTIVE')")
     op.execute("ALTER TABLE study ALTER COLUMN protocol_builder_status TYPE protocolbuilderstatus USING protocol_builder_status::text::protocolbuilderstatus;")
