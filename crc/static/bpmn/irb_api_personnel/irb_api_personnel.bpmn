@@ -1,182 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_06pyjz2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_06pyjz2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <bpmn:process id="Process_01143nb" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0kcrx5l</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:scriptTask id="ScriptTask_LoadPersonnel" name="Load IRB Personnel">
       <bpmn:incoming>Flow_0kcrx5l</bpmn:incoming>
-      <bpmn:outgoing>Flow_05aywbq</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1dcsioh</bpmn:outgoing>
       <bpmn:script>StudyInfo investigators</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:userTask id="UserTask_EditPrimaryInvestigator" name="Edit Primary Investigator" camunda:formKey="PrimaryInvestigator">
-      <bpmn:documentation>{{ElementDoc_PrimaryInvestigator}}</bpmn:documentation>
+    <bpmn:endEvent id="EndEvent_1qor16n">
+      <bpmn:incoming>Flow_1mplloa</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_EditOtherPersonnel" name="Supplement Personnel" camunda:formKey="Access &#38; Notifications">
+      <bpmn:documentation>### Please provide supplemental information for:
+#### Investigator : {{investigator.display_name}} 
+##### Role: {{investigator.type_full}}
+##### Title: {{investigator.title}}
+
+##### Department: {{investigator.department}}
+##### Affiliation: {{investigator.affiliation}}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="PI_Experience" label="Investigator&#39;s Experience" type="textarea">
-            <camunda:properties>
-              <camunda:property id="rows" value="5" />
-            </camunda:properties>
-            <camunda:validation>
-              <camunda:constraint name="required" config="true" />
-            </camunda:validation>
-          </camunda:formField>
-          <camunda:formField id="PI_EditAccess" label="Should the PI have Study Team editing access in the system?" type="boolean" defaultValue="true" />
-          <camunda:formField id="PI_AutomatedEmailNotifications" label="Should the PI receive automated email notifications?" type="boolean" defaultValue="true" />
+          <camunda:formField id="EditAccess" label="Should have Study Team editing access in the system?" type="boolean" defaultValue="false" />
+          <camunda:formField id="AutomatedEmailNotification" label="Should receive automated email notifications?" type="boolean" defaultValue="false" />
         </camunda:formData>
         <camunda:properties>
-          <camunda:property name="display_name" value="Primary Investigator" />
+          <camunda:property name="display_name" value="Hey Alex! Here&#39;s your custom field" />
         </camunda:properties>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0g0o593</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_122pp0f</bpmn:outgoing>
+      <bpmn:incoming>Flow_1dcsioh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1mplloa</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="StudyInfo.investigators" camunda:elementVariable="investigator" />
     </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_1qor16n">
-      <bpmn:incoming>Flow_14469u8</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="SequenceFlow_122pp0f" sourceRef="UserTask_EditPrimaryInvestigator" targetRef="Gateway_19lvya6" />
-    <bpmn:sequenceFlow id="Flow_0g0o593" sourceRef="Gateway_13kno0x" targetRef="UserTask_EditPrimaryInvestigator" />
-    <bpmn:parallelGateway id="Gateway_13kno0x">
-      <bpmn:incoming>Flow_19i1d30</bpmn:incoming>
-      <bpmn:outgoing>Flow_0g0o593</bpmn:outgoing>
-      <bpmn:outgoing>Flow_1nudg96</bpmn:outgoing>
-      <bpmn:outgoing>Flow_18ix81l</bpmn:outgoing>
-    </bpmn:parallelGateway>
-    <bpmn:sequenceFlow id="Flow_14469u8" sourceRef="Gateway_19lvya6" targetRef="EndEvent_1qor16n" />
-    <bpmn:parallelGateway id="Gateway_19lvya6">
-      <bpmn:incoming>SequenceFlow_122pp0f</bpmn:incoming>
-      <bpmn:incoming>Flow_00lv37g</bpmn:incoming>
-      <bpmn:incoming>Flow_0y1jvdw</bpmn:incoming>
-      <bpmn:outgoing>Flow_14469u8</bpmn:outgoing>
-    </bpmn:parallelGateway>
-    <bpmn:sequenceFlow id="Flow_1nudg96" sourceRef="Gateway_13kno0x" targetRef="Activity_EditCoordinator" />
-    <bpmn:userTask id="Activity_EditCoordinator" name="Edit Coordinator" camunda:formKey="Coordinator">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="CoordinatorI_EditAccess" label="Should this Coordinator have Study Team editing access in the system?" type="boolean" defaultValue="true" />
-          <camunda:formField id="CoordinatorI_AutomatedEmailNotifications" label="Should this Coordinator receive automated email notifications?" type="boolean" defaultValue="true" />
-        </camunda:formData>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1nudg96</bpmn:incoming>
-      <bpmn:outgoing>Flow_00lv37g</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_00lv37g" sourceRef="Activity_EditCoordinator" targetRef="Gateway_19lvya6" />
-    <bpmn:sequenceFlow id="Flow_18ix81l" sourceRef="Gateway_13kno0x" targetRef="Activity_EditDepartmentChair" />
-    <bpmn:userTask id="Activity_EditDepartmentChair" name="Edit Department Chair" camunda:formKey="DeptmentChair">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="DepartmentChair_EditAccess" label="Should the Department Chair have Study Team editing access in the system?" type="boolean" defaultValue="false" />
-          <camunda:formField id="DepartmentChair_AutomatedEmailNotification" label="Should the Department Chair receive automated email notifications?" type="boolean" defaultValue="false" />
-        </camunda:formData>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_18ix81l</bpmn:incoming>
-      <bpmn:outgoing>Flow_0y1jvdw</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_0y1jvdw" sourceRef="Activity_EditDepartmentChair" targetRef="Gateway_19lvya6" />
-    <bpmn:sequenceFlow id="Flow_05aywbq" sourceRef="ScriptTask_LoadPersonnel" targetRef="Activity_PI-Satus" />
     <bpmn:sequenceFlow id="Flow_0kcrx5l" sourceRef="StartEvent_1" targetRef="ScriptTask_LoadPersonnel" />
-    <bpmn:sequenceFlow id="Flow_12rh5aj" sourceRef="Activity_PI-Satus" targetRef="Activity_CoordinatorStatus" />
-    <bpmn:businessRuleTask id="Activity_PI-Satus" name="Primary Investigator Status" camunda:decisionRef="Decision_PrimaryInvestigator">
-      <bpmn:incoming>Flow_05aywbq</bpmn:incoming>
-      <bpmn:outgoing>Flow_12rh5aj</bpmn:outgoing>
-    </bpmn:businessRuleTask>
-    <bpmn:sequenceFlow id="Flow_04nzqn8" sourceRef="Activity_CoordinatorStatus" targetRef="Activity_DepartmentChairStatus" />
-    <bpmn:businessRuleTask id="Activity_CoordinatorStatus" name="Coordinator Status" camunda:decisionRef="Decision_Coordinator">
-      <bpmn:incoming>Flow_12rh5aj</bpmn:incoming>
-      <bpmn:outgoing>Flow_04nzqn8</bpmn:outgoing>
-    </bpmn:businessRuleTask>
-    <bpmn:sequenceFlow id="Flow_19i1d30" sourceRef="Activity_DepartmentChairStatus" targetRef="Gateway_13kno0x" />
-    <bpmn:businessRuleTask id="Activity_DepartmentChairStatus" name="Department Chair Status" camunda:decisionRef="Decision_DepartmentChair">
-      <bpmn:incoming>Flow_04nzqn8</bpmn:incoming>
-      <bpmn:outgoing>Flow_19i1d30</bpmn:outgoing>
-    </bpmn:businessRuleTask>
+    <bpmn:sequenceFlow id="Flow_1mplloa" sourceRef="Activity_EditOtherPersonnel" targetRef="EndEvent_1qor16n" />
+    <bpmn:sequenceFlow id="Flow_1dcsioh" sourceRef="ScriptTask_LoadPersonnel" targetRef="Activity_EditOtherPersonnel" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_01143nb">
-      <bpmndi:BPMNEdge id="Flow_19i1d30_di" bpmnElement="Flow_19i1d30">
-        <di:waypoint x="580" y="170" />
-        <di:waypoint x="645" y="170" />
+      <bpmndi:BPMNEdge id="Flow_1dcsioh_di" bpmnElement="Flow_1dcsioh">
+        <di:waypoint x="370" y="120" />
+        <di:waypoint x="450" y="120" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_04nzqn8_di" bpmnElement="Flow_04nzqn8">
-        <di:waypoint x="440" y="170" />
-        <di:waypoint x="480" y="170" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_12rh5aj_di" bpmnElement="Flow_12rh5aj">
-        <di:waypoint x="290" y="170" />
-        <di:waypoint x="340" y="170" />
+      <bpmndi:BPMNEdge id="Flow_1mplloa_di" bpmnElement="Flow_1mplloa">
+        <di:waypoint x="550" y="120" />
+        <di:waypoint x="652" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0kcrx5l_di" bpmnElement="Flow_0kcrx5l">
-        <di:waypoint x="-52" y="170" />
-        <di:waypoint x="30" y="170" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_05aywbq_di" bpmnElement="Flow_05aywbq">
-        <di:waypoint x="130" y="170" />
-        <di:waypoint x="190" y="170" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0y1jvdw_di" bpmnElement="Flow_0y1jvdw">
-        <di:waypoint x="880" y="300" />
-        <di:waypoint x="980" y="300" />
-        <di:waypoint x="980" y="195" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_18ix81l_di" bpmnElement="Flow_18ix81l">
-        <di:waypoint x="670" y="195" />
-        <di:waypoint x="670" y="300" />
-        <di:waypoint x="780" y="300" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_00lv37g_di" bpmnElement="Flow_00lv37g">
-        <di:waypoint x="880" y="170" />
-        <di:waypoint x="955" y="170" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1nudg96_di" bpmnElement="Flow_1nudg96">
-        <di:waypoint x="695" y="170" />
-        <di:waypoint x="780" y="170" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_14469u8_di" bpmnElement="Flow_14469u8">
-        <di:waypoint x="1005" y="170" />
-        <di:waypoint x="1102" y="170" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0g0o593_di" bpmnElement="Flow_0g0o593">
-        <di:waypoint x="670" y="145" />
-        <di:waypoint x="670" y="30" />
-        <di:waypoint x="780" y="30" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_122pp0f_di" bpmnElement="SequenceFlow_122pp0f">
-        <di:waypoint x="880" y="30" />
-        <di:waypoint x="980" y="30" />
-        <di:waypoint x="980" y="145" />
+        <di:waypoint x="188" y="120" />
+        <di:waypoint x="270" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="-88" y="152" width="36" height="36" />
+        <dc:Bounds x="152" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ScriptTask_0h49cmf_di" bpmnElement="ScriptTask_LoadPersonnel">
-        <dc:Bounds x="30" y="130" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_0hpnrm9_di" bpmnElement="UserTask_EditPrimaryInvestigator">
-        <dc:Bounds x="780" y="-10" width="100" height="80" />
+        <dc:Bounds x="270" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_1qor16n_di" bpmnElement="EndEvent_1qor16n">
-        <dc:Bounds x="1102" y="152" width="36" height="36" />
+        <dc:Bounds x="652" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_1lvmp6i_di" bpmnElement="Gateway_13kno0x">
-        <dc:Bounds x="645" y="145" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_0k9iptd_di" bpmnElement="Gateway_19lvya6">
-        <dc:Bounds x="955" y="145" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0fl86y3_di" bpmnElement="Activity_EditCoordinator">
-        <dc:Bounds x="780" y="130" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0d622qi_di" bpmnElement="Activity_EditDepartmentChair">
-        <dc:Bounds x="780" y="260" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1yggezg_di" bpmnElement="Activity_PI-Satus">
-        <dc:Bounds x="190" y="130" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_10gqxcp_di" bpmnElement="Activity_CoordinatorStatus">
-        <dc:Bounds x="340" y="130" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1g0yuo4_di" bpmnElement="Activity_DepartmentChairStatus">
-        <dc:Bounds x="480" y="130" width="100" height="80" />
+      <bpmndi:BPMNShape id="Activity_0d622qi_di" bpmnElement="Activity_EditOtherPersonnel">
+        <dc:Bounds x="450" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
