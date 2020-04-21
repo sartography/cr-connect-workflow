@@ -92,7 +92,7 @@ class StudyInfo(Script):
             ldap_service = LdapService()
             return ldap_service.user_info(user_id).__dict__
         except ApiError:
-            app.logger.info(ApiError.message)
+            app.logger.info(str(ApiError))
             return {}
         except LDAPSocketOpenError:
             app.logger.info("Failed to connect to LDAP Server.")

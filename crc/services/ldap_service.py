@@ -1,5 +1,7 @@
+import os
+
 from crc import app
-from ldap3 import Connection, Server
+from ldap3 import Connection, Server, MOCK_SYNC
 
 from crc.api.common import ApiError
 
@@ -25,16 +27,19 @@ class LdapService(object):
                   'telephoneNumber', 'title', 'uvaPersonIAMAffiliation', 'uvaPersonSponsoredType']
     search_string = "(&(objectclass=person)(uid=%s))"
 
-    def __init__(self, connection=None):
-        self.conn = None
-        if connection is None:
+    def __init__(self):
+        if app.config['TESTING']:
+            server = Server('my_fake_server')
+            self.conn = Connection(server, client_strategy=MOCK_SYNC)
+            file_path = os.path.abspath(os.path.join(app.root_path, '..', 'tests', 'data', 'ldap_response.json'))
+            self.conn.strategy.entries_from_json(file_path)
+            self.conn.bind()
+        else:
             server = Server(app.config['LDAP_URL'], connect_timeout=app.config['LDAP_TIMEOUT_SEC'])
             self.conn = Connection(server,
                                    auto_bind=True,
                                    receive_timeout=app.config['LDAP_TIMEOUT_SEC'],
                                    )
-        else:
-            self.conn = connection
 
     def __del__(self):
         if self.conn:

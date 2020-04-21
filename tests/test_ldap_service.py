@@ -10,15 +10,10 @@ from ldap3 import Server, Connection, ALL, MOCK_SYNC
 class TestLdapService(BaseTest):
 
     def setUp(self):
-        server = Server('my_fake_server')
-        self.connection = Connection(server, client_strategy=MOCK_SYNC)
-        file_path = os.path.abspath(os.path.join(app.root_path, '..', 'tests', 'data', 'ldap_response.json'))
-        self.connection.strategy.entries_from_json(file_path)
-        self.connection.bind()
-        self.ldap_service = LdapService(self.connection)
+        self.ldap_service = LdapService()
 
     def tearDown(self):
-        self.connection.unbind()
+        pass
 
     def test_get_single_user(self):
         user_info = self.ldap_service.user_info("lb3dp")
