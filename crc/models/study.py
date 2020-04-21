@@ -22,24 +22,22 @@ class StudyModel(db.Model):
     ind_number = db.Column(db.String, nullable=True)
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=False)
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
-    inactive = db.Column(db.Boolean, default=False)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
+    on_hold = db.Column(db.Boolean, default=False)
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
         self.hsr_number = pbs.HSRNUMBER
         self.title = pbs.TITLE
         self.user_uid = pbs.NETBADGEID
         self.last_updated = pbs.DATE_MODIFIED
-        self.protocol_builder_status = ProtocolBuilderStatus.DRAFT
-        self.inactive = False
+        self.protocol_builder_status = ProtocolBuilderStatus.INCOMPLETE
 
-        if pbs.HSRNUMBER:  # And Up load complete?
-            self.protocol_builder_status = ProtocolBuilderStatus.REVIEW_COMPLETE
-        elif pbs.Q_COMPLETE:
-            self.protocol_builder_status = ProtocolBuilderStatus.IN_PROCESS
-
-
-
+        if pbs.Q_COMPLETE:
+            self.protocol_builder_status = ProtocolBuilderStatus.ACTIVE
+        if pbs.HSRNUMBER:
+            self.protocol_builder_status = ProtocolBuilderStatus.OPEN
+        if self.on_hold:
+            self.protocol_builder_status = ProtocolBuilderStatus.HOLD
 
 
 class WorkflowMetadata(object):
@@ -106,7 +104,7 @@ class Study(object):
 
     def __init__(self, id, title, last_updated, primary_investigator_id, user_uid,
                  protocol_builder_status=None,
-                 sponsor="", hsr_number="", ind_number="", inactive=False, categories=[], **argsv):
+                 sponsor="", hsr_number="", ind_number="", categories=[], **argsv):
         self.id = id
         self.user_uid = user_uid
         self.title = title
@@ -116,7 +114,6 @@ class Study(object):
         self.sponsor = sponsor
         self.hsr_number = hsr_number
         self.ind_number = ind_number
-        self.inactive = inactive
         self.categories = categories
         self.warnings = []
 
@@ -149,7 +146,7 @@ class StudySchema(ma.Schema):
     class Meta:
         model = Study
         additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
-                      "sponsor", "ind_number", "inactive"]
+                      "sponsor", "ind_number"]
         unknown = INCLUDE
 
     @marshmallow.post_load
