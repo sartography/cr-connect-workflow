@@ -29,7 +29,7 @@ class TestStudyService(BaseTest):
         user = UserModel(uid="dhf8r", email_address="whatever@stuff.com", display_name="Stayathome Smellalots")
         db.session.add(user)
         db.session.commit()
-        study = StudyModel(title="My title", protocol_builder_status=ProtocolBuilderStatus.IN_PROCESS, user_uid=user.uid)
+        study = StudyModel(title="My title", protocol_builder_status=ProtocolBuilderStatus.ACTIVE, user_uid=user.uid)
         cat = WorkflowSpecCategoryModel(name="cat", display_name="cat", display_order=0)
         db.session.add_all([study, cat])
         db.session.commit()

@@ -21,7 +21,7 @@ class TestStudyApi(BaseTest):
         "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
                  "for Interstellar Spacecraft",
         "last_updated": datetime.now(tz=timezone.utc),
-        "protocol_builder_status": ProtocolBuilderStatus.IN_PROCESS,
+        "protocol_builder_status": ProtocolBuilderStatus.ACTIVE,
         "primary_investigator_id": "tricia.marie.mcmillan@heartofgold.edu",
         "sponsor": "Sirius Cybernetics Corporation",
         "ind_number": "567890",
@@ -104,7 +104,7 @@ class TestStudyApi(BaseTest):
         self.load_example_data()
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
-        study.protocol_builder_status = ProtocolBuilderStatus.REVIEW_COMPLETE
+        study.protocol_builder_status = ProtocolBuilderStatus.ACTIVE
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
@@ -142,26 +142,31 @@ class TestStudyApi(BaseTest):
         self.assert_success(api_response)
         json_data = json.loads(api_response.get_data(as_text=True))
 
-        num_inactive = 0
+        num_incomplete = 0
+        num_abandoned = 0
         num_active = 0
+        num_open = 0
 
         for study in json_data:
-            if study['inactive']:
-                num_inactive += 1
-            else:
+            if study['protocol_builder_status'] == 'INCOMPLETE':  # One study in user_studies.json is not q_complete
+                num_incomplete += 1
+            if study['protocol_builder_status'] == 'ABANDONED': # One study does not exist in user_studies.json
+                num_abandoned += 1
+            if study['protocol_builder_status'] == 'ACTIVE': # One study is marked complete without HSR Number
                 num_active += 1
+            if study['protocol_builder_status'] == 'OPEN':  # One study is marked complete and has an HSR Number
+                num_open += 1
 
         db_studies_after = session.query(StudyModel).all()
         num_db_studies_after = len(db_studies_after)
         self.assertGreater(num_db_studies_after, num_db_studies_before)
-        self.assertGreater(num_inactive, 0)
-        self.assertGreater(num_active, 0)
+        self.assertEquals(num_abandoned, 1)
+        self.assertEquals(num_open, 1)
+        self.assertEquals(num_active, 1)
+        self.assertEquals(num_incomplete, 1)
         self.assertEqual(len(json_data), num_db_studies_after)
-        self.assertEqual(num_active + num_inactive, num_db_studies_after)
+        self.assertEqual(num_open + num_active + num_incomplete + num_abandoned, num_db_studies_after)
 
-        # Assure that the existing study is properly updated.
-        test_study = session.query(StudyModel).filter_by(id=54321).first()
-        self.assertFalse(test_study.inactive)
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_get_single_study(self, mock_docs):

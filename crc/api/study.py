@@ -82,7 +82,7 @@ def post_update_study_from_protocol_builder(study_id):
         db_study.update_from_protocol_builder(pb_study)
     else:
         db_study.inactive = True
-        db_study.protocol_builder_status = ProtocolBuilderStatus.INACTIVE
+        db_study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
 
     return NoContent, 304
 

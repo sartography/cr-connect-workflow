@@ -88,8 +88,7 @@ class StudyService(object):
         for study in db_studies:
             pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
             if not pb_study:
-                study.inactive = True
-                study.protocol_builder_status = ProtocolBuilderStatus.INACTIVE
+                study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
 
         db.session.commit()
 

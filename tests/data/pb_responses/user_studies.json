@@ -9,7 +9,7 @@
   },
   {
     "DATE_MODIFIED": "2020-02-19T14:24:55.101695",
-    "HSRNUMBER": "56753",
+    "HSRNUMBER": "",
     "NETBADGEID": "dhf8r",
     "Q_COMPLETE": true,
     "STUDYID": 65432,
@@ -17,9 +17,9 @@
   },
   {
     "DATE_MODIFIED": "2020-02-19T14:24:55.101695",
-    "HSRNUMBER": "45678",
+    "HSRNUMBER": "",
     "NETBADGEID": "dhf8r",
-    "Q_COMPLETE": true,
+    "Q_COMPLETE": false,
     "STUDYID": 1,
     "TITLE": "Efficacy of xenomorph bio-augmented circuits on dexterity of cybernetic prostheses"
   }

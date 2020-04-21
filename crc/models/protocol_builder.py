@@ -18,11 +18,23 @@ class ProtocolBuilderInvestigatorType(enum.Enum):
 
 
 class ProtocolBuilderStatus(enum.Enum):
-    DRAFT = 'draft',                      # !Q_COMPLETE
-    IN_PROCESS = 'in_process',            # Q_COMPLETE && !UPLOAD_COMPLETE && !HSRNUMBER
-    IN_REVIEW = 'in_review',              # Q_COMPLETE && (!UPLOAD_COMPLETE || !HSRNUMBER)
-    REVIEW_COMPLETE = 'review_complete',  # Q_COMPLETE && UPLOAD_COMPLETE && HSRNUMBER
-    INACTIVE = 'inactive',                # Not found in PB
+    # • Active: found in PB and no HSR number and not hold
+    # • Hold: store boolean value in CR Connect (add to Study Model)
+    # • Open To Enrollment: has start date and HSR number?
+    # • Abandoned: deleted in PB
+    INCOMPLETE = 'incomplete' # Found in PB but not ready to start (not q_complete)
+    ACTIVE = 'active', # found in PB, marked as "q_complete" and no HSR number and not hold
+    HOLD = 'hold', # CR Connect side, if the Study ias marked as "hold".
+    OPEN = 'open', # Open To Enrollment: has start date and HSR number?
+    ABANDONED = 'Abandoned'  # Not found in PB
+
+
+    #DRAFT = 'draft',                      # !Q_COMPLETE
+    #IN_PROCESS = 'in_process',            # Q_COMPLETE && !UPLOAD_COMPLETE && !HSRNUMBER
+    #IN_REVIEW = 'in_review',              # Q_COMPLETE && (!UPLOAD_COMPLETE || !HSRNUMBER)
+    #REVIEW_COMPLETE = 'review_complete',  # Q_COMPLETE && UPLOAD_COMPLETE && HSRNUMBER
+    #INACTIVE = 'inactive',                # Not found in PB
+
 
 
 class ProtocolBuilderStudy(object):
