@@ -3,7 +3,7 @@ import os
 from unittest.mock import patch
 
 from crc import session, app
-from crc.models.api_models import WorkflowApiSchema
+from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.file import FileModelSchema
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.workflow import WorkflowStatus
@@ -272,7 +272,7 @@ class TestTasksApi(BaseTest):
         tasks = self.get_workflow_api(workflow).user_tasks
         self.assertEquals(1, len(tasks))
         self.assertEquals("UserTask", tasks[0].type)
-        self.assertTrue(tasks[0].is_multi_instance)
+        self.assertEquals(MultiInstanceType.sequential, tasks[0].mi_type)
         self.assertEquals(3, tasks[0].mi_count)
 
         workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})

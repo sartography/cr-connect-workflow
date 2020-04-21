@@ -9,7 +9,7 @@ from SpiffWorkflow.specs import CancelTask, StartTask
 from pandas import ExcelFile
 
 from crc.api.common import ApiError
-from crc.models.api_models import Task
+from crc.models.api_models import Task, MultiInstanceType
 import jinja2
 from jinja2 import Template
 
@@ -69,13 +69,15 @@ class WorkflowService(object):
         else:
             task_type = "NoneTask"
 
-        multi_instance = isinstance(spiff_task.task_spec, MultiInstanceTask)
-        mi_count = 0
-        mi_index = 0
-        if multi_instance:
-            mi_count = spiff_task.task_spec._get_count(spiff_task)
-            mi_index = int(spiff_task._get_internal_data('runtimes', 1))
-
+        info = spiff_task.task_info()
+        if info["is_looping"]:
+            mi_type = MultiInstanceType.looping
+        elif info["is_sequential_mi"]:
+            mi_type = MultiInstanceType.sequential
+        elif info["is_parallel_mi"]:
+            mi_type = MultiInstanceType.parallel
+        else:
+            mi_type = MultiInstanceType.none
 
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
@@ -85,11 +87,9 @@ class WorkflowService(object):
                     None,
                     "",
                     spiff_task.data,
-                    multi_instance,
-                    mi_count,
-                    mi_index)
-
-
+                    mi_type,
+                    info["mi_count"],
+                    info["mi_index"])
 
         # Only process the form and documentation if this is something that is ready or completed.
         if not (spiff_task._is_predicted()):

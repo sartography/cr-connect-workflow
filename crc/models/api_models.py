@@ -1,3 +1,5 @@
+import enum
+
 import marshmallow
 from marshmallow import INCLUDE
 from marshmallow_enum import EnumField
@@ -6,13 +8,21 @@ from crc import ma
 from crc.models.workflow import WorkflowStatus
 
 
+class MultiInstanceType(enum.Enum):
+    none = "none"
+    looping = "looping"
+    parallel = "parallel"
+    sequential = "sequential"
+
+
 class Task(object):
 
     ENUM_OPTIONS_FILE_PROP = "enum.options.file"
     EMUM_OPTIONS_VALUE_COL_PROP = "enum.options.value.column"
     EMUM_OPTIONS_LABEL_COL_PROP = "enum.options.label.column"
 
-    def __init__(self, id, name, title, type, state, form, documentation, data, is_multi_instance, mi_count, mi_index):
+    def __init__(self, id, name, title, type, state, form, documentation, data,
+                 mi_type, mi_count, mi_index):
         self.id = id
         self.name = name
         self.title = title
@@ -21,7 +31,7 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
-        self.is_multi_instance = is_multi_instance
+        self.mi_type = mi_type
         self.mi_count = mi_count
         self.mi_index = mi_index
 
@@ -59,9 +69,10 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "is_multi_instance",
+        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "mi_type",
                   "mi_count", "mi_index"]
 
+    mi_type = EnumField(MultiInstanceType)
     documentation = marshmallow.fields.String(required=False, allow_none=True)
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)

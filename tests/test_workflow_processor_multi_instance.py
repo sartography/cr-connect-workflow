@@ -8,6 +8,7 @@ from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 
 from crc import session, db, app
 from crc.api.common import ApiError
+from crc.models.api_models import MultiInstanceType
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus, WorkflowModel
@@ -35,7 +36,6 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('investigators.json')
 
-
         self.load_example_data()
         workflow_spec_model = self.load_test_spec("multi_instance")
         study = session.query(StudyModel).first()
@@ -62,6 +62,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
 
         self.assertEqual("MutiInstanceTask", task.get_name())
         api_task = WorkflowService.spiff_task_to_api_task(task)
+        self.assertEquals(MultiInstanceType.sequential, api_task.mi_type)
         self.assertEquals(3, api_task.mi_count)
         self.assertEquals(1, api_task.mi_index)
         task.update_data({"email":"asd3v@virginia.edu"})
