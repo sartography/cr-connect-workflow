@@ -117,6 +117,7 @@ class Study(object):
         self.categories = categories
         self.warnings = []
 
+
     @classmethod
     def from_model(cls, study_model: StudyModel):
         args = {k: v for k, v in study_model.__dict__.items() if not k.startswith('_')}

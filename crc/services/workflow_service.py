@@ -1,6 +1,4 @@
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
-from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
-from SpiffWorkflow.bpmn.specs.NoneTask import NoneTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
@@ -8,11 +6,13 @@ from SpiffWorkflow.dmn.specs.BuisnessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from pandas import ExcelFile
 
+from crc import db
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
 import jinja2
 from jinja2 import Template
 
+from crc.models.file import FileDataModel, LookupFileModel, LookupDataModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
@@ -141,10 +141,10 @@ class WorkflowService(object):
             if not field.has_property(Task.EMUM_OPTIONS_VALUE_COL_PROP) or \
                     not field.has_property(Task.EMUM_OPTIONS_LABEL_COL_PROP):
                 raise ApiError.from_task("invalid_emum",
-                                         "For emumerations based on an xls file, you must include 3 properties: %s, "
-                                         "%s, and %s, you supplied %s" % (Task.ENUM_OPTIONS_FILE_PROP,
-                                                                          Task.EMUM_OPTIONS_VALUE_COL_PROP,
-                                                                          Task.EMUM_OPTIONS_LABEL_COL_PROP),
+                                         "For enumerations based on an xls file, you must include 3 properties: %s, "
+                                         "%s, and %s" % (Task.ENUM_OPTIONS_FILE_PROP,
+                                                         Task.EMUM_OPTIONS_VALUE_COL_PROP,
+                                                         Task.EMUM_OPTIONS_LABEL_COL_PROP),
                                          task=spiff_task)
 
             # Get the file data from the File Service
@@ -152,15 +152,51 @@ class WorkflowService(object):
             value_column = field.get_property(Task.EMUM_OPTIONS_VALUE_COL_PROP)
             label_column = field.get_property(Task.EMUM_OPTIONS_LABEL_COL_PROP)
             data_model = FileService.get_workflow_file_data(spiff_task.workflow, file_name)
+            lookup_model = WorkflowService.get_lookup_table(data_model, value_column, label_column)
+
+            # If lookup is set to true, do not populate options, a lookup will happen later.
+            if field.has_property(Task.EMUM_OPTIONS_AS_LOOKUP) and field.get_property(Task.EMUM_OPTIONS_AS_LOOKUP):
+                pass
+            else:
+                data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
+                for d in data:
+                    field.options.append({"id": d.value, "name": d.label})
+
+
+    @staticmethod
+    def get_lookup_table(data_model: FileDataModel, value_column, label_column):
+        """ In some cases the lookup table can be very large.  This method will add all values to the database
+         in a way that can be searched and returned via an api call - rather than sending the full set of
+          options along with the form.  It will only open the file and process the options if something has
+          changed.  """
+
+        lookup_model = db.session.query(LookupFileModel) \
+            .filter(LookupFileModel.file_data_model_id == data_model.id) \
+            .filter(LookupFileModel.value_column == value_column) \
+            .filter(LookupFileModel.label_column == label_column).first()
+
+        if not lookup_model:
             xls = ExcelFile(data_model.data)
-            df = xls.parse(xls.sheet_names[0])
+            df = xls.parse(xls.sheet_names[0])  # Currently we only look at the fist sheet.
             if value_column not in df:
                 raise ApiError("invalid_emum",
-                               "The file %s does not contain a column named % s" % (file_name, value_column))
+                               "The file %s does not contain a column named % s" % (data_model.file_model.name,
+                                                                                    value_column))
             if label_column not in df:
                 raise ApiError("invalid_emum",
-                               "The file %s does not contain a column named % s" % (file_name, label_column))
+                               "The file %s does not contain a column named % s" % (data_model.file_model.name,
+                                                                                    label_column))
 
+            lookup_model = LookupFileModel(label_column=label_column, value_column=value_column,
+                                           file_data_model_id=data_model.id)
+
+            db.session.add(lookup_model)
             for index, row in df.iterrows():
-                field.options.append({"id": row[value_column],
-                                      "name": row[label_column]})
+                lookup_data = LookupDataModel(lookup_file_model=lookup_model,
+                                              value=row[value_column],
+                                              label=row[label_column],
+                                              data=row.to_json())
+                db.session.add(lookup_data)
+            db.session.commit()
+
+        return lookup_model

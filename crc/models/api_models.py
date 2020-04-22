@@ -20,6 +20,8 @@ class Task(object):
     ENUM_OPTIONS_FILE_PROP = "enum.options.file"
     EMUM_OPTIONS_VALUE_COL_PROP = "enum.options.value.column"
     EMUM_OPTIONS_LABEL_COL_PROP = "enum.options.label.column"
+    EMUM_OPTIONS_AS_LOOKUP = "enum.options.lookup"
+
 
     def __init__(self, id, name, title, type, state, form, documentation, data,
                  mi_type, mi_count, mi_index, properties):

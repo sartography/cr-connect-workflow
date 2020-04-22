@@ -1,8 +1,10 @@
 import enum
+from typing import cast
 
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from sqlalchemy import func
+from sqlalchemy import func, Index, text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.dialects.postgresql import UUID
 
 from crc import db
@@ -91,3 +93,42 @@ class FileModelSchema(SQLAlchemyAutoSchema):
         include_relationships = True
         include_fk = True  # Includes foreign keys
     type = EnumField(FileType)
+
+
+class LookupFileModel(db.Model):
+    """Takes the content of a file (like a xlsx, or csv file) and creates a key/value
+    store that can be used for lookups and searches. This table contains the metadata,
+    so we know the version of the file that was used, and what key column, and value column
+    were used to generate this lookup table.  ie, the same xls file might have multiple
+    lookup file models, if different keys and labels are used - or someone decides to
+    make a change.  We need to handle full text search over the label and value columns,
+    and not every column, because we don't know how much information will be in there. """
+    __tablename__ = 'lookup_file'
+    id = db.Column(db.Integer, primary_key=True)
+    label_column = db.Column(db.String)
+    value_column = db.Column(db.String)
+    file_data_model_id = db.Column(db.Integer, db.ForeignKey('file_data.id'))
+
+
+class LookupDataModel(db.Model):
+    __tablename__ = 'lookup_data'
+    id = db.Column(db.Integer, primary_key=True)
+    lookup_file_model_id = db.Column(db.Integer, db.ForeignKey('lookup_file.id'))
+    lookup_file_model = db.relationship(LookupFileModel)
+    value = db.Column(db.String)
+    label = db.Column(db.String)
+    # In the future, we might allow adding an additional "search" column if we want to search things not in label.
+    data = db.Column(db.JSON) # all data for the row is stored in a json structure here, but not searched presently.
+
+    # Assure there is a searchable index on the label column, so we can get fast results back.
+    # query with:
+    # search_results = LookupDataModel.query.filter(LookupDataModel.label.match("INTERNAL")).all()
+
+    __table_args__ = (
+        Index(
+            'ix_lookupdata_tsv',
+            func.to_tsvector('english', label),
+            postgresql_using='gin'
+            ),
+        )
+
