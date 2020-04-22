@@ -636,35 +636,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
-  # /v1.0/workflow/0/task/0
-  /workflow/{workflow_id}/task/{task_id}:
-    parameters:
-      - name: workflow_id
-        in: path
-        required: true
-        description: The id of the workflow
-        schema:
-          type: integer
-          format: int32
-      - name: task_id
-        in: path
-        required: true
-        description: The id of the task
-        schema:
-          type: string
-          format: uuid
-    get:
-      operationId: crc.api.workflow.get_task
-      summary: Get details of specific task in specific workflow instance
-      tags:
-        - Workflows and Tasks
-      responses:
-        '200':
-          description: Expected response to a valid request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Task"
   /workflow/{workflow_id}/task/{task_id}/data:
     parameters:
       - name: workflow_id
@@ -703,6 +674,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
+  /workflow/{workflow_id}/task/{task_id}/lookup/{field_id}:
+    parameters:
+      - name: workflow_id
+        in: path
+        required: true
+        description: The id of the workflow
+        schema:
+          type: integer
+          format: int32
+      - name: task_id
+        in: path
+        required: true
+        description: The id of the task
+        schema:
+          type: string
+          format: uuid
+      - name: field_id
+        in: path
+        required: true
+        description: The id of the field (as set in the bpmn editor) on which to do a lookup.
+        schema:
+          type: string
+      - name: query
+        in: query
+        required: false
+        description: The string to search for in the Value column of the lookup table.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        description: The total number of records to return, defaults to 10.
+        schema:
+          type: integer
+    get:
+      operationId: crc.api.workflow.lookup
+      summary: Provides type-ahead search against a lookup table associted with a form field.
+      tags:
+        - Workflows and Tasks
+      responses:
+        '201':
+          description: Returns the a list of values and labels for a lookup form.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LookupItem"
   /render_markdown:
     parameters:
       - name: data
@@ -1125,3 +1142,14 @@ components:
         description:
           type: string
           example: "Returns a random fact about a topic.  Provide an argument of either 'cat', 'norris', or 'buzzword'"
+    LookupItem:
+      properties:
+        value:
+          type: string
+          format: string
+          example: "1000"
+        label:
+          type: string
+          example: "Chuck Norris"
+        data:
+          type: any

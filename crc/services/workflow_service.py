@@ -102,7 +102,7 @@ class WorkflowService(object):
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
                 for field in task.form.fields:
-                    WorkflowService._process_options(spiff_task, field)
+                    WorkflowService.process_options(spiff_task, field)
 
             task.documentation = WorkflowService._process_documentation(spiff_task)
         return task
@@ -134,9 +134,22 @@ class WorkflowService(object):
         # TODO:  Catch additional errors and report back.
 
     @staticmethod
-    def _process_options(spiff_task, field):
+    def process_options(spiff_task, field):
+        lookup_model = WorkflowService.get_lookup_table(spiff_task, field);
+
+        # If lookup is set to true, do not populate options, a lookup will happen later.
+        if field.has_property(Task.EMUM_OPTIONS_AS_LOOKUP) and field.get_property(Task.EMUM_OPTIONS_AS_LOOKUP):
+            pass
+        else:
+            data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
+            for d in data:
+                field.options.append({"id": d.value, "name": d.label})
+
+    @staticmethod
+    def get_lookup_table(spiff_task, field):
         """ Checks to see if the options are provided in a separate lookup table associated with the
-        workflow, and populates these if possible. """
+        workflow, and if so, assures that data exists in the database, and return a model than can be used
+        to locate that data. """
         if field.has_property(Task.ENUM_OPTIONS_FILE_PROP):
             if not field.has_property(Task.EMUM_OPTIONS_VALUE_COL_PROP) or \
                     not field.has_property(Task.EMUM_OPTIONS_LABEL_COL_PROP):
@@ -152,19 +165,11 @@ class WorkflowService(object):
             value_column = field.get_property(Task.EMUM_OPTIONS_VALUE_COL_PROP)
             label_column = field.get_property(Task.EMUM_OPTIONS_LABEL_COL_PROP)
             data_model = FileService.get_workflow_file_data(spiff_task.workflow, file_name)
-            lookup_model = WorkflowService.get_lookup_table(data_model, value_column, label_column)
-
-            # If lookup is set to true, do not populate options, a lookup will happen later.
-            if field.has_property(Task.EMUM_OPTIONS_AS_LOOKUP) and field.get_property(Task.EMUM_OPTIONS_AS_LOOKUP):
-                pass
-            else:
-                data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
-                for d in data:
-                    field.options.append({"id": d.value, "name": d.label})
-
+            lookup_model = WorkflowService._get_lookup_table_from_data_model(data_model, value_column, label_column)
+            return lookup_model
 
     @staticmethod
-    def get_lookup_table(data_model: FileDataModel, value_column, label_column):
+    def _get_lookup_table_from_data_model(data_model: FileDataModel, value_column, label_column):
         """ In some cases the lookup table can be very large.  This method will add all values to the database
          in a way that can be searched and returned via an api call - rather than sending the full set of
           options along with the form.  It will only open the file and process the options if something has

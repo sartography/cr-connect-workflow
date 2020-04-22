@@ -5,7 +5,7 @@ from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.api.file import delete_file
 from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
-from crc.models.file import FileModel
+from crc.models.file import FileModel, LookupDataModel, LookupDataSchema
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
@@ -115,17 +115,11 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-
 def delete(workflow_id):
     session.query(TaskEventModel).filter_by(workflow_id=workflow_id).delete()
     session.query(WorkflowStatsModel).filter_by(workflow_id=workflow_id).delete()
     session.query(WorkflowModel).filter_by(id=workflow_id).delete()
     session.commit()
-
-
-def get_task(workflow_id, task_id):
-    workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    return workflow.bpmn_workflow().get_task(task_id)
 
 
 def update_task(workflow_id, task_id, body):
@@ -184,3 +178,32 @@ def update_workflow_spec_category(cat_id, body):
 def delete_workflow_spec_category(cat_id):
     session.query(WorkflowSpecCategoryModel).filter_by(id=cat_id).delete()
     session.commit()
+
+
+def lookup(workflow_id, task_id, field_id, query, limit):
+    """
+    given a field in a task, attempts to find the lookup table associated with that field
+    and runs a full-text query against it to locate the values and labels that would be
+    returned to a type-ahead box.
+    """
+    workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    if not workflow_model:
+        raise ApiError("unknown_workflow", "No workflow found with id: %i" % workflow_id)
+    processor = WorkflowProcessor(workflow_model)
+    task_id = uuid.UUID(task_id)
+    spiff_task = processor.bpmn_workflow.get_task(task_id)
+    if not spiff_task:
+        raise ApiError("unknown_task", "No task with %s found in workflow: %i" % (task_id, workflow_id))
+    field = None
+    for f in spiff_task.task_spec.form.fields:
+        if f.id == field_id:
+            field = f
+    if not field:
+        raise ApiError("unknown_field", "No field named %s in task %s" % (task_id, spiff_task.task_spec.name))
+
+    lookup_model = WorkflowService.get_lookup_table(spiff_task, field)
+    search_results = LookupDataModel.query.\
+        filter(LookupDataModel.lookup_file_model == lookup_model).\
+        filter(LookupDataModel.label.match("%s:*" % query)).limit(limit).all()
+
+    return LookupDataSchema(many=True).dump(search_results)

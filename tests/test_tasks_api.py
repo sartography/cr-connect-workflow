@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
-from crc.models.file import FileModelSchema
+from crc.models.file import FileModelSchema, LookupDataSchema
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.workflow import WorkflowStatus
 from tests.base_test import BaseTest
@@ -286,3 +286,18 @@ class TestTasksApi(BaseTest):
         self.assertEquals(3, tasks[0].mi_count)
 
         workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})
+
+    def test_lookup_endpoint_for_task_field_enumerations(self):
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_with_search')
+        # get the first form in the two form workflow.
+        tasks = self.get_workflow_api(workflow).user_tasks
+        task = tasks[0]
+        field_id = task.form['fields'][0]['id']
+        rv = self.app.get('/v1.0/workflow/%i/task/%s/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, task.id, field_id, 'c'), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(5, len(results))

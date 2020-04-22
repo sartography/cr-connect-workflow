@@ -132,3 +132,11 @@ class LookupDataModel(db.Model):
             ),
         )
 
+
+class LookupDataSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = LookupDataModel
+        load_instance = True
+        include_relationships = False
+        include_fk = False  # Includes foreign keys
+
