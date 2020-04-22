@@ -8,6 +8,11 @@ for entry in ./instance/* ; do
   cat $entry
 done
 
+if [ "$DOWNGRADE_DB" = "true" ]; then
+  echo 'Downgrading...'
+  pipenv run flask db downgrade
+fi
+
 pipenv run flask db upgrade
 
 if [ "$RESET_DB" = "true" ]; then
