@@ -30,10 +30,14 @@ class TestStudyService(BaseTest):
         db.session.add(user)
         db.session.commit()
         study = StudyModel(title="My title", protocol_builder_status=ProtocolBuilderStatus.ACTIVE, user_uid=user.uid)
-        cat = WorkflowSpecCategoryModel(name="cat", display_name="cat", display_order=0)
+        cat = WorkflowSpecCategoryModel(name="approvals", display_name="Approvals", display_order=0)
         db.session.add_all([study, cat])
         db.session.commit()
+
+        self.assertIsNotNone(cat.id)
         self.load_test_spec("random_fact", category_id=cat.id)
+
+        self.assertIsNotNone(study.id)
         workflow = WorkflowModel(workflow_spec_id="random_fact", study_id=study.id, status=WorkflowStatus.not_started)
         db.session.add(workflow)
         db.session.commit()
@@ -74,3 +78,7 @@ class TestStudyService(BaseTest):
         studies = StudyService.get_studies_for_user(user)
         workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
         self.assertEqual(1, workflow.completed_tasks)
+
+        # Get approvals
+        approvals = StudyService.get_approvals(studies[0].id)
+        self.assertGreater(len(approvals), 0)

@@ -63,6 +63,29 @@ class StudyService(object):
         return categories
 
     @staticmethod
+    def get_approvals(study_id):
+        """Returns a list of category objects, in the correct order."""
+        cat = session.query(WorkflowSpecCategoryModel).filter_by(name="approvals").first()
+        specs = session.query(WorkflowSpecModel).filter_by(category_id=cat.id).all()
+        spec_ids = [spec.id for spec in specs]
+        workflows = session.query(WorkflowModel)\
+            .filter(WorkflowModel.study_id == study_id)\
+            .filter(WorkflowModel.workflow_spec_id.in_(spec_ids))\
+            .all()
+
+        approvals = []
+        for workflow in workflows:
+            workflow: WorkflowModel = workflow
+            approvals.append({
+                'id': workflow.id,
+                'display_name': workflow.workflow_spec.display_name,
+                'name': workflow.workflow_spec.display_name,
+                'status': workflow.status,
+                'workflow_spec_id': workflow.workflow_spec_id,
+            })
+        return approvals
+
+    @staticmethod
     def synch_all_studies_with_protocol_builder(user):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
