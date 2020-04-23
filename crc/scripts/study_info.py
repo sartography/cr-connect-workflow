@@ -3,6 +3,7 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.study import StudyModel, StudySchema
+from crc.models.workflow import WorkflowStatus
 from crc.scripts.script import Script
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
@@ -14,7 +15,7 @@ class StudyInfo(Script):
 
     """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'details', 'approvals']
+    type_options = ['info', 'investigators', 'details', 'approvals', 'documents_status']
 
     def get_description(self):
         return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', or 'details'
@@ -47,7 +48,27 @@ class StudyInfo(Script):
                         "NETBADGEID": "dhf8r"
                     },
                 "details":
-                    {}
+                    {},
+                "approvals": {
+                    "id": 321,
+                    "display_name": "IRB API Details",
+                    "name": "irb_api_details",
+                    "status": WorkflowStatus.not_started.value,
+                    "workflow_spec_id": "irb_api_details",
+                },
+                "documents_status": [
+                    {
+                        'category1': 'Ancillary Document',
+                        'category2': 'CoC Application',
+                        'category3': '',
+                        'Who Uploads?': 'CRC',
+                        'Id': '12',
+                        'Name': 'Certificate of Confidentiality Application',
+                        'count': 0,
+                        'required': False,
+                        'code': 'AD_CoCApp'
+                    }
+                ]
             }
         }
         self.add_data_to_task(task=task, data=data["study"])
@@ -71,6 +92,9 @@ class StudyInfo(Script):
             self.add_data_to_task(task, {cmd: self.pb.get_study_details(study_id)})
         if cmd == 'approvals':
             self.add_data_to_task(task, {cmd: StudyService().get_approvals(study_id)})
+        if cmd == 'documents_status':
+            self.add_data_to_task(task, {cmd: StudyService().get_documents_status(study_id)})
+
         task.data["study"] = study_info
 
 

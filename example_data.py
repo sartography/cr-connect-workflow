@@ -79,6 +79,12 @@ class ExampleDataLoader:
                          description="TBD",
                          category_id=0,
                          display_order=1)
+        self.create_spec(id="documents_approvals",
+                         name="documents_approvals",
+                         display_name="Documents & Approvals",
+                         description="TBD",
+                         category_id=0,
+                         display_order=2)
 
         # Core Info
         self.create_spec(id="core_info",

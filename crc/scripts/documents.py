@@ -48,7 +48,7 @@ For example:
 
     def get_documents(self, study_id, pb_docs):
         """Takes data from the protocol builder, and merges it with data from the IRB Pro Categories spreadsheet to return
-        pertinant details about the required documents."""
+        pertinent details about the required documents."""
 
         doc_dictionary = FileService.get_file_reference_dictionary()
         required_docs = {}

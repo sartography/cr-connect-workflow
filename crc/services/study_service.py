@@ -4,11 +4,14 @@ from SpiffWorkflow import WorkflowException
 
 from crc import db, session
 from crc.api.common import ApiError
+from crc.models.file import FileModel
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
+from crc.scripts.documents import Documents
+from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -64,13 +67,13 @@ class StudyService(object):
 
     @staticmethod
     def get_approvals(study_id):
-        """Returns a list of category objects, in the correct order."""
+        """Returns a list of approval workflows."""
         cat = session.query(WorkflowSpecCategoryModel).filter_by(name="approvals").first()
         specs = session.query(WorkflowSpecModel).filter_by(category_id=cat.id).all()
         spec_ids = [spec.id for spec in specs]
-        workflows = session.query(WorkflowModel)\
-            .filter(WorkflowModel.study_id == study_id)\
-            .filter(WorkflowModel.workflow_spec_id.in_(spec_ids))\
+        workflows = session.query(WorkflowModel) \
+            .filter(WorkflowModel.study_id == study_id) \
+            .filter(WorkflowModel.workflow_spec_id.in_(spec_ids)) \
             .all()
 
         approvals = []
@@ -80,10 +83,43 @@ class StudyService(object):
                 'id': workflow.id,
                 'display_name': workflow.workflow_spec.display_name,
                 'name': workflow.workflow_spec.display_name,
-                'status': workflow.status,
+                'status': workflow.status.value,
                 'workflow_spec_id': workflow.workflow_spec_id,
             })
         return approvals
+
+    @staticmethod
+    def get_documents_status(study_id):
+        """Returns a list of required documents and related workflow status."""
+        doc_service = Documents()
+
+        # Get PB required docs
+        pb_docs = ProtocolBuilderService.get_required_docs(study_id)
+
+        # Get required docs for study
+        study_docs = doc_service.get_documents(study_id=study_id, pb_docs=pb_docs)
+
+        # Container for results
+        documents = []
+
+        # For each required doc, get file(s)
+        for code, doc in study_docs.items():
+            doc['study_id'] = study_id
+            doc['code'] = code
+            doc_files = FileService.get_files(study_id=study_id, irb_doc_code=code)
+
+            # For each file, get associated workflow status
+            for file in doc_files:
+                doc['file_id'] = file.id
+                doc['workflow_id'] = file.workflow_id
+
+                if doc['status'] is None:
+                    workflow: WorkflowModel = session.query(WorkflowModel).filter_by(id=file.workflow_id).first()
+                    doc['status'] = workflow.status.value
+
+            documents.append(doc)
+
+        return documents
 
     @staticmethod
     def synch_all_studies_with_protocol_builder(user):
@@ -135,10 +171,10 @@ class StudyService(object):
     @staticmethod
     def __get_workflow_metas(study_id):
         # Add in the Workflows for each category
-        workflow_models = db.session.query(WorkflowModel).\
-            join(WorkflowSpecModel).\
-            filter(WorkflowSpecModel.is_master_spec == False).\
-            filter(WorkflowModel.study_id == study_id).\
+        workflow_models = db.session.query(WorkflowModel). \
+            join(WorkflowSpecModel). \
+            filter(WorkflowSpecModel.is_master_spec == False). \
+            filter(WorkflowModel.study_id == study_id). \
             all()
         workflow_metas = []
         for workflow in workflow_models:
