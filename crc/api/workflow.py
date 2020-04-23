@@ -202,5 +202,5 @@ def lookup(workflow_id, task_id, field_id, query, limit):
         raise ApiError("unknown_field", "No field named %s in task %s" % (task_id, spiff_task.task_spec.name))
 
     lookup_table = WorkflowService.get_lookup_table(spiff_task, field)
-    lookup_data = WorkflowService.run_lookup_query(lookup_table.id, query, limit)
+    lookup_data = WorkflowService.run_lookup_query(lookup_table, query, limit)
     return LookupDataSchema(many=True).dump(lookup_data)

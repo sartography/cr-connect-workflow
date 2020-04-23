@@ -208,8 +208,8 @@ class WorkflowService(object):
         return lookup_model
 
     @staticmethod
-    def run_lookup_query(lookup_file_id, query, limit):
-        db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model_id == lookup_file_id)
+    def run_lookup_query(lookupFileModel, query, limit):
+        db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model == lookupFileModel)
 
         query = query.strip()
         if len(query) > 1:

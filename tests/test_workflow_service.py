@@ -136,40 +136,40 @@ class TestWorkflowService(BaseTest):
         lookup_table = WorkflowService._get_lookup_table_from_data_model(file_data_model, "CUSTOMER_NUMBER", "CUSTOMER_NAME")
         lookup_data = session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_table).all()
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "medicines", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "medicines", limit=10)
         self.assertEquals(1, len(results), "words in the middle of label are detected.")
         self.assertEquals("The Medicines Company", results[0].label)
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "", limit=10)
         self.assertEquals(10, len(results), "Blank queries return everything, to the limit")
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "UVA", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "UVA", limit=10)
         self.assertEquals(1, len(results), "Beginning of label is found.")
         self.assertEquals("UVA - INTERNAL - GM USE ONLY", results[0].label)
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "uva", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "uva", limit=10)
         self.assertEquals(1, len(results), "case does not matter.")
         self.assertEquals("UVA - INTERNAL - GM USE ONLY", results[0].label)
 
 
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "medici", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "medici", limit=10)
         self.assertEquals(1, len(results), "partial words are picked up.")
         self.assertEquals("The Medicines Company", results[0].label)
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "Genetics Savings", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "Genetics Savings", limit=10)
         self.assertEquals(1, len(results), "multiple terms are picked up..")
         self.assertEquals("Genetics Savings & Clone, Inc.", results[0].label)
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "Genetics Sav", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "Genetics Sav", limit=10)
         self.assertEquals(1, len(results), "prefix queries still work with partial terms")
         self.assertEquals("Genetics Savings & Clone, Inc.", results[0].label)
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "Gen Sav", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "Gen Sav", limit=10)
         self.assertEquals(1, len(results), "prefix queries still work with ALL the partial terms")
         self.assertEquals("Genetics Savings & Clone, Inc.", results[0].label)
 
-        results = WorkflowService.run_lookup_query(lookup_table.id, "Inc", limit=10)
+        results = WorkflowService.run_lookup_query(lookup_table, "Inc", limit=10)
         self.assertEquals(7, len(results), "short terms get multiple correct results.")
         self.assertEquals("Genetics Savings & Clone, Inc.", results[0].label)
 
