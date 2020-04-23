@@ -6,6 +6,7 @@ from crc.models.study import StudyModel, StudySchema
 from crc.scripts.script import Script
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
+from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -13,7 +14,7 @@ class StudyInfo(Script):
 
     """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'details']
+    type_options = ['info', 'investigators', 'details', 'approvals']
 
     def get_description(self):
         return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', or 'details'
@@ -68,6 +69,8 @@ class StudyInfo(Script):
             self.add_data_to_task(task, {cmd: self.organize_investigators_by_type(pb_response)})
         if cmd == 'details':
             self.add_data_to_task(task, {cmd: self.pb.get_study_details(study_id)})
+        if cmd == 'approvals':
+            self.add_data_to_task(task, {cmd: StudyService().get_approvals(study_id)})
         task.data["study"] = study_info
 
 
