@@ -5,6 +5,7 @@ from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.dmn.specs.BuisnessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from pandas import ExcelFile
+from sqlalchemy import func
 
 from crc import db
 from crc.api.common import ApiError
@@ -205,3 +206,24 @@ class WorkflowService(object):
             db.session.commit()
 
         return lookup_model
+
+    @staticmethod
+    def run_lookup_query(lookup_file_id, query, limit):
+        db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model_id == lookup_file_id)
+
+        query = query.strip()
+        if len(query) > 1:
+            if ' ' in query:
+                terms = query.split(' ')
+                query = ""
+                new_terms = []
+                for t in terms:
+                    new_terms.append(t + ":*")
+                query = '|'.join(new_terms)
+            else:
+                query = "%s:*" % query
+            db_query = db_query.filter(LookupDataModel.label.match(query))
+
+#            db_query = db_query.filter(text("lookup_data.label @@ to_tsquery('simple', '%s')" % query))
+
+        return db_query.limit(limit).all()

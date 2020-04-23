@@ -127,7 +127,7 @@ class LookupDataModel(db.Model):
     __table_args__ = (
         Index(
             'ix_lookupdata_tsv',
-            func.to_tsvector('english', label),
+            func.to_tsvector('simple', label),  # Use simple, not english to keep stop words in place.
             postgresql_using='gin'
             ),
         )
