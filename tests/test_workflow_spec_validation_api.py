@@ -41,7 +41,6 @@ class TestWorkflowSpecValidation(BaseTest):
             errors.extend(ApiErrorSchema(many=True).load(json_data))
         self.assertEqual(0, len(errors), json.dumps(errors))
 
-
     def test_invalid_expression(self):
         errors = self.validate_workflow("invalid_expression")
         self.assertEqual(1, len(errors))
@@ -49,7 +48,8 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("ExclusiveGateway_003amsm", errors[0]['task_id'])
         self.assertEqual("Has Bananas Gateway", errors[0]['task_name'])
         self.assertEqual("invalid_expression.bpmn", errors[0]['file_name'])
-        self.assertEqual("The expression you provided does not exist:this_value_does_not_exist==true", errors[0]["message"])
+        self.assertEqual("The expression 'this_value_does_not_exist==true' you provided has a missing value."
+                         " name 'this_value_does_not_exist' is not defined", errors[0]["message"])
 
     def test_validation_error(self):
         errors = self.validate_workflow("invalid_spec")
