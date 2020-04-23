@@ -129,3 +129,5 @@ class TestWorkflowService(BaseTest):
         self.assertIsNotNone(lookup_records)
         self.assertEqual(2, len(lookup_records))
 
+    def test_some_queries(self):
+        pass

@@ -85,7 +85,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             return eval(expression)
         except NameError as ne:
             raise ApiError.from_task('invalid_expression',
-                                     'The expression you provided does not exist:' + expression,
+                                     "The expression '%s' you provided has a missing value. % s" % (expression, str(ne)),
                                      task=task)
 
 class MyCustomParser(BpmnDmnParser):
