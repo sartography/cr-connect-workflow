@@ -67,26 +67,24 @@ class StudyService(object):
 
     @staticmethod
     def get_approvals(study_id):
-        """Returns a list of approval workflows."""
-        cat = session.query(WorkflowSpecCategoryModel).filter_by(name="approvals").first()
-        specs = session.query(WorkflowSpecModel).filter_by(category_id=cat.id).all()
-        spec_ids = [spec.id for spec in specs]
-        workflows = session.query(WorkflowModel) \
-            .filter(WorkflowModel.study_id == study_id) \
-            .filter(WorkflowModel.workflow_spec_id.in_(spec_ids)) \
-            .all()
+        """Returns a list of non-hidden approval workflows."""
+        study = StudyService.get_study(study_id)
+        cat = next(c for c in study.categories if c.name == 'approvals')
 
         approvals = []
-        for workflow in workflows:
-            workflow: WorkflowModel = workflow
-            spec: WorkflowSpecModel = next(s for s in specs if s.id == workflow.workflow_spec_id)
+        for wf in cat.workflows:
+            if wf.state is WorkflowState.hidden:
+                continue
+
+            workflow = db.session.query(WorkflowModel).filter_by(id=wf.id).first()
             approvals.append({
                 'study_id': study_id,
-                'workflow_id': workflow.id,
-                'display_name': workflow.workflow_spec.display_name,
-                'display_order': spec.display_order or 0,
-                'name': workflow.workflow_spec.display_name,
-                'status': workflow.status.value,
+                'workflow_id': wf.id,
+                'display_name': wf.display_name,
+                'display_order': wf.display_order or 0,
+                'name': wf.name,
+                'state': wf.state.value,
+                'status': wf.status.value,
                 'workflow_spec_id': workflow.workflow_spec_id,
             })
 
