@@ -10,20 +10,30 @@
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_0m7unlb" sourceRef="Activity_DisplayDocsAndApprovals" targetRef="EndEvent_1qvyxg7" />
     <bpmn:manualTask id="Activity_DisplayDocsAndApprovals" name="Display Documents and Approvals">
-      <bpmn:documentation>## Approvals
-| Name | Status | Help |
-|:-------------- |:-------- |:------ |
+      <bpmn:documentation># Documents &amp; Approvals
+
+&gt; ## Protocol Document Management
+&gt; [Upload Protocol Here](/)
+
+&gt; ## Approvals
+&gt; | Name | Status | Help |
+|:---- |:------ |:---- |
 {% for approval in StudyInfo.approvals -%}
-| [{{approval.display_name}}](/workflow/{{approval.id}}) | {{approval.status}} | [Context here](/help/{{approval.workflow_spec_id}}) |
+| [{{approval.display_name}}](/study/{{approval.study_id}}/workflow/{{approval.workflow_id}}) | {{approval.status}} | [Context here](/help/{{approval.workflow_spec_id}}) |
 {% endfor %}
 
-
-## Documents
-| Code | Status | Help |
-|:-------------- |:-------- |:------ |
+&gt; ## Documents
+&gt; | Name | Status | Help | Download |
+|:---- |:------ |:---- |:-------- |
 {% for doc in StudyInfo.documents_status -%}
-| [{{doc.code}}](/study/{{doc.study_id}}/workflow/{{doc.workflow_id}}) | {{doc.status}} | [Context here](/help/{{doc.workflow_spec_id}}) |
+    {% if doc.file_id is defined -%}
+        | [{{doc.display_name}}](/study/{{doc.study_id}}/workflow/{{doc.workflow_id}}/task/{{doc.task_id}}) | {{doc.status}} | [Context here](/help/documents/{{doc.code}}) | [Download](/file/{{doc.file_id}}) |
+    {%- else -%}
+        | {{doc.display_name}} | Not started | [Context here](/help/documents/{{doc.code}}) | No file yet |
+    {%- endif %}
 {% endfor %}
+
+
 </bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:properties>

@@ -80,7 +80,8 @@ class StudyService(object):
         for workflow in workflows:
             workflow: WorkflowModel = workflow
             approvals.append({
-                'id': workflow.id,
+                'study_id': study_id,
+                'workflow_id': workflow.id,
                 'display_name': workflow.workflow_spec.display_name,
                 'name': workflow.workflow_spec.display_name,
                 'status': workflow.status.value,
@@ -104,14 +105,29 @@ class StudyService(object):
 
         # For each required doc, get file(s)
         for code, doc in study_docs.items():
+            if not doc['required']:
+                continue
+
             doc['study_id'] = study_id
             doc['code'] = code
-            doc_files = FileService.get_files(study_id=study_id, irb_doc_code=code)
+
+            # Make a display name out of categories if none exists
+            if 'Name' in doc and len(doc['Name']) > 0:
+                doc['display_name'] = doc['Name']
+            else:
+                name_list = []
+                for cat_key in ['category1', 'category2', 'category3']:
+                    if doc[cat_key] not in ['', 'NULL']:
+                        name_list.append(doc[cat_key])
+                doc['display_name'] = ' '.join(name_list)
 
             # For each file, get associated workflow status
+            doc_files = FileService.get_files(study_id=study_id, irb_doc_code=code)
             for file in doc_files:
                 doc['file_id'] = file.id
+                doc['task_id'] = file.task_id
                 doc['workflow_id'] = file.workflow_id
+                doc['workflow_spec_id'] = file.workflow_spec_id
 
                 if doc['status'] is None:
                     workflow: WorkflowModel = session.query(WorkflowModel).filter_by(id=file.workflow_id).first()
