@@ -79,14 +79,18 @@ class StudyService(object):
         approvals = []
         for workflow in workflows:
             workflow: WorkflowModel = workflow
+            spec: WorkflowSpecModel = next(s for s in specs if s.id == workflow.workflow_spec_id)
             approvals.append({
                 'study_id': study_id,
                 'workflow_id': workflow.id,
                 'display_name': workflow.workflow_spec.display_name,
+                'display_order': spec.display_order or 0,
                 'name': workflow.workflow_spec.display_name,
                 'status': workflow.status.value,
                 'workflow_spec_id': workflow.workflow_spec_id,
             })
+
+        approvals.sort(key=lambda k: k['display_order'])
         return approvals
 
     @staticmethod

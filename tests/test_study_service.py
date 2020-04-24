@@ -82,3 +82,4 @@ class TestStudyService(BaseTest):
         # Get approvals
         approvals = StudyService.get_approvals(studies[0].id)
         self.assertGreater(len(approvals), 0)
+        self.assertIsNotNone(approvals[0]['display_order'])
