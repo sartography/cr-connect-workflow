@@ -54,7 +54,11 @@ class Script(object):
         return all_subclasses
 
     def add_data_to_task(self, task, data):
-        task.data[self.__class__.__name__] = data
+        key = self.__class__.__name__
+        if key in task.data:
+            task.data[key].update(data)
+        else:
+            task.data[key] = data
 
 class ScriptValidationError:
 

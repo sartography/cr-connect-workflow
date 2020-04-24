@@ -94,7 +94,7 @@ class StudyService(object):
         doc_service = Documents()
 
         # Get PB required docs
-        pb_docs = ProtocolBuilderService.get_required_docs(study_id)
+        pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id, as_objects=True)
 
         # Get required docs for study
         study_docs = doc_service.get_documents(study_id=study_id, pb_docs=pb_docs)

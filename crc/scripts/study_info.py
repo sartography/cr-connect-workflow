@@ -95,8 +95,6 @@ class StudyInfo(Script):
         if cmd == 'documents_status':
             self.add_data_to_task(task, {cmd: StudyService().get_documents_status(study_id)})
 
-        task.data["study"] = study_info
-
 
     def check_args(self, args):
         if len(args) != 1 or (args[0] not in StudyInfo.type_options):

@@ -15,15 +15,15 @@
 |:-------------- |:-------- |:------ |
 {% for approval in StudyInfo.approvals -%}
 | [{{approval.display_name}}](/workflow/{{approval.id}}) | {{approval.status}} | [Context here](/help/{{approval.workflow_spec_id}}) |
-{% endfor -%}
+{% endfor %}
 
 
 ## Documents
 | Code | Status | Help |
 |:-------------- |:-------- |:------ |
-{% for doc in study.documents_status -%}
+{% for doc in StudyInfo.documents_status -%}
 | [{{doc.code}}](/study/{{doc.study_id}}/workflow/{{doc.workflow_id}}) | {{doc.status}} | [Context here](/help/{{doc.workflow_spec_id}}) |
-{% endfor -%}
+{% endfor %}
 </bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:properties>
