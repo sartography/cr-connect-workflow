@@ -3,12 +3,12 @@ import uuid
 from crc.api.stats import update_workflow_stats, log_task_complete
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.api.file import delete_file
 from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
 from crc.models.file import FileModel, LookupDataModel, LookupDataSchema
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
+from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 
@@ -75,7 +75,7 @@ def delete_workflow_specification(spec_id):
     # Delete all items in the database related to the deleted workflow spec.
     files = session.query(FileModel).filter_by(workflow_spec_id=spec_id).all()
     for file in files:
-        delete_file(file.id)
+        FileService.delete_file(file.id)
 
     # Delete all stats and workflow models related to this specification
     session.query(WorkflowStatsModel).filter_by(workflow_spec_id=spec_id).delete()

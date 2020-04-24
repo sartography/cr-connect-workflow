@@ -33,7 +33,7 @@ class TestProtocolBuilder(BaseTest):
         response = ProtocolBuilderService.get_required_docs(self.test_study_id)
         self.assertIsNotNone(response)
         self.assertEqual(5, len(response))
-        self.assertEqual("6", response[0]['AUXDOCID'])
+        self.assertEqual(6, response[0]['AUXDOCID'])
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_get_details(self, mock_get):

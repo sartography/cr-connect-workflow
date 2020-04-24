@@ -128,6 +128,4 @@ def update_file_info(file_id, body):
 
 
 def delete_file(file_id):
-    session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
-    session.query(FileModel).filter_by(id=file_id).delete()
-    session.commit()
+    FileService.delete_file(file_id)

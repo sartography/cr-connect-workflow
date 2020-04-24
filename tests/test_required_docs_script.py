@@ -59,6 +59,8 @@ class TestRequiredDocsScript(BaseTest):
         self.assertEqual("PRC Approval", documents["UVACompl_PRCAppr"]['category2'])
         self.assertEqual("CRC", documents["UVACompl_PRCAppr"]['Who Uploads?'])
         self.assertEqual(0, documents["UVACompl_PRCAppr"]['count'])
+        self.assertEqual(True, documents["UVACompl_PRCAppr"]['required'])
+        self.assertEqual('6', documents["UVACompl_PRCAppr"]['Id'])
 
     def test_get_required_docs_has_correct_count_when_a_file_exists(self):
         self.load_example_data()

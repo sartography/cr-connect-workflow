@@ -128,6 +128,7 @@ class TestWorkflowService(BaseTest):
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
         self.assertEqual(2, len(lookup_records))
+        FileService.delete_file(file_model.id) ## Assure we can delete the file.
 
     def test_some_full_text_queries(self):
         self.load_test_spec('enum_options_from_file')

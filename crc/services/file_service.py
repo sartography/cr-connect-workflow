@@ -8,7 +8,7 @@ from pandas import ExcelFile
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileType, FileDataModel, FileModel
+from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
 import hashlib
@@ -232,3 +232,14 @@ class FileService(object):
 
         return workflow_model
 
+    @staticmethod
+    def delete_file(file_id):
+        data_models = session.query(FileDataModel).filter_by(file_model_id=file_id).all()
+        for dm in data_models:
+            lookup_files = session.query(LookupFileModel).filter_by(file_data_model_id=dm.id).all()
+            for lf in lookup_files:
+                session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
+                session.query(LookupFileModel).filter_by(id=lf.id).delete()
+        session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
+        session.query(FileModel).filter_by(id=file_id).delete()
+        session.commit()
