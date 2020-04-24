@@ -50,7 +50,8 @@ class StudyInfo(Script):
                 "details":
                     {},
                 "approvals": {
-                    "id": 321,
+                    "study_id": 12,
+                    "workflow_id": 321,
                     "display_name": "IRB API Details",
                     "name": "irb_api_details",
                     "status": WorkflowStatus.not_started.value,
@@ -65,8 +66,14 @@ class StudyInfo(Script):
                         'Id': '12',
                         'Name': 'Certificate of Confidentiality Application',
                         'count': 0,
-                        'required': False,
-                        'code': 'AD_CoCApp'
+                        'required': True,
+                        'code': 'AD_CoCApp',
+                        'display_name': 'Certificate of Confidentiality Application',
+                        'file_id': 123,
+                        'task_id': 'abcdef14236890',
+                        'workflow_id': 456,
+                        'workflow_spec_id': 'irb_api_details',
+                        'status': 'complete',
                     }
                 ]
             }
@@ -94,8 +101,6 @@ class StudyInfo(Script):
             self.add_data_to_task(task, {cmd: StudyService().get_approvals(study_id)})
         if cmd == 'documents_status':
             self.add_data_to_task(task, {cmd: StudyService().get_documents_status(study_id)})
-
-        task.data["study"] = study_info
 
 
     def check_args(self, args):
