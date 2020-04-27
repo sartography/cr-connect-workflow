@@ -4,7 +4,10 @@ import string
 import random
 from unittest.mock import patch
 
+from SpiffWorkflow import Task as SpiffTask
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
+from SpiffWorkflow.camunda.specs.UserTask import Form, FormField
+from SpiffWorkflow.specs import TaskSpec
 
 from crc import session, db, app
 from crc.api.common import ApiError
@@ -378,3 +381,21 @@ class TestWorkflowProcessor(BaseTest):
         self.assertTrue("sponsor_funding_source" in data)
         self.assertEqual("disabled", data["sponsor_funding_source"])
 
+    def test_enum_with_no_choices_raises_api_error(self):
+        self.load_example_data()
+        workflow_spec_model = self.load_test_spec("random_fact")
+        study = session.query(StudyModel).first()
+        processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
+        tasks = processor.next_user_tasks()
+        task = tasks[0]
+
+
+        field = FormField()
+        field.id = "test_enum_field"
+        field.type = "enum"
+        field.options = []
+        task.task_spec.form.fields.append(field)
+
+        with self.assertRaises(ApiError):
+            processor.populate_form_with_random_data(task)

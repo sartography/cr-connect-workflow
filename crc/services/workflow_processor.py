@@ -281,7 +281,12 @@ class WorkflowProcessor(object):
         form_data = {}
         for field in task.task_spec.form.fields:
             if field.type == "enum":
-                form_data[field.id] = random.choice(field.options)
+                if len(field.options) > 0:
+                    form_data[field.id] = random.choice(field.options)
+                else:
+                    raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
+                                                             " with no options" % field.id,
+                                             task)
             elif field.type == "long":
                 form_data[field.id] = random.randint(1, 1000)
             elif field.type == 'boolean':
