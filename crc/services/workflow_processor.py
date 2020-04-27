@@ -147,6 +147,9 @@ class WorkflowProcessor(object):
         if hard_reset:
             # Now that the spec is loaded, get the data and rebuild the bpmn with the new details
             workflow_model.spec_version = self.hard_reset()
+            workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
+            session.add(workflow_model)
+
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec):
 

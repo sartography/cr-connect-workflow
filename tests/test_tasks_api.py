@@ -192,6 +192,11 @@ class TestTasksApi(BaseTest):
         self.assertTrue(workflow_api.spec_version.startswith("v2 "))
         self.assertTrue(workflow_api.is_latest_spec)
 
+        # Assure this hard_reset sticks (added this after a bug was found)
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertTrue(workflow_api.spec_version.startswith("v2 "))
+        self.assertTrue(workflow_api.is_latest_spec)
+
     def test_soft_reset_errors_out_and_next_result_is_on_original_version(self):
 
         # Start the basic two_forms workflow and complete a task.
