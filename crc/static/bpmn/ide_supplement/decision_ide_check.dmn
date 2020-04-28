@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_0o0ff2r" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="decision_ide_check" name="IDE Check">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="IS_IDE">
+        <inputExpression id="inputExpression_1" typeRef="integer">
+          <text>StudyInfo.details.IS_IDE</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_0x1r5qo" label="IDE Set?">
+        <inputExpression id="LiteralExpression_1qxic4k" typeRef="string">
+          <text>StudyInfo.details.IDE</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Add Supplemental Data" name="add_supplement" typeRef="boolean" />
+      <rule id="DecisionRule_0h0od2e">
+        <inputEntry id="UnaryTests_09ctq71">
+          <text>1</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1w71u9t">
+          <text>not('')</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1we3duh">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_199dgpt">
+        <inputEntry id="UnaryTests_1ec0msc">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0w8ohet">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1fhlpya">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

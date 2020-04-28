@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_1gliwpz" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_support_lang" name="Template Type">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="Which Template?">
+        <inputExpression id="inputExpression_1" typeRef="string" expressionLanguage="feel">
+          <text>FormField_TemplateType</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Supporting Language" name="support_lang" typeRef="string" />
+      <rule id="DecisionRule_108leho">
+        <description>A</description>
+        <inputEntry id="UnaryTests_1y4s1cj">
+          <text>"A"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_07pason">
+          <text>"This study involves radiation exposure from (insert type of procedure(s) involving radiation exposure). As part of everyday living, everyone is exposed to a small amount of background radiation. Background radiation comes from space and naturally-occurring radioactive minerals. The radiation dose you will receive in this study will give your body the equivalent of about (insert number of days) worth of this natural radiation. This radiation dose is what you will receive from this study only and does not include any exposure you may have received or will receive from other tests. The risk from this dose is considered small. This radiation exposure is not necessary for your medical care but is necessary to obtain the research information desired."</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1xaui8q">
+        <description>B</description>
+        <inputEntry id="UnaryTests_1p42iqx">
+          <text>"B"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0zvl2cq">
+          <text>"This study involves radiation exposure from (insert maximum number) injections (scans or repetition) of (insert quantity of radioactive material, in units of millicuries; or type of x-ray procedure).[Using the standard way of describing radiation dose, from participating in this study, you will receive a total of XX rem to your (insert highest-dosed organ), XX rem to your (insert 2nd highest-dosed organ), and XX rem to your (insert 3rd highest-dosed organ). All other organs will receive smaller amounts of radiation.][Although each organ will receive a different dose,] the total effective radiation dose you will receive from these procedures is approximately XX rem. For comparison this dose is (XX times or XX% of) the annual radiation dose safely allowed for a radiation worker such as the person performing your (type of procedure). This radiation dose is what you will receive from this study only and does not include any exposure you may have received or will receive from other tests. The precise risk from this dose is not known but is thought to be small. This radiation exposure is not necessary for your medical care but is necessary to obtain the research information desired.If you are pregnant [or breastfeeding], you may not participate in this research study. It is best to avoid radiation exposure to unborn [or nursing] children since they are more sensitive to radiation than adults."</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1f9jyoj">
+        <description>C</description>
+        <inputEntry id="UnaryTests_0txh4ur">
+          <text>"C"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0n3accg">
+          <text>"This study involves radiation exposure from (insert maximum number) injections (scans or repetition) of (insert quantity of radioactive material, in units of millicuries; or type of x-ray procedure). Optional paragraph: Some organs will receive higher doses than others. you will receive of XX mSv to your (insert highest-dosed organ), XX mSv to your (insert 2nd highest-dosed organ), and XX mSv to your (insert 3rd highest-dosed organ). All other organs will receive smaller amounts of radiation.] The total effective radiation dose you will receive from these scans is approximately (insert effective dose in mSv). For comparison, this dose is about (insert fraction of or multiple of) the annual radiation dose that is safely allowed for a radiation worker such as the person performing your scans. The precise risk from this dose is not known but is thought to be small. This radiation dose is what you will receive from this study only and does not include any exposure you may have received or will receive from other tests. This radiation exposure is not necessary for your medical care but is necessary to obtain the research information desired If you are pregnant [or breastfeeding], you may not participate in this research study. It is best to avoid radiation exposure to unborn [or nursing] children since they are more sensitive to radiation than adults. Optional language if total dose is uncertain, therapy doses, etc.: This study involves radiation exposure from (insert type of X-ray procedure) of your (insert area of the body). The total effective radiation dose from just one of each of these scans is approximately (insert dose). The highest radiation doses are from the (insert type of X-ray procedure). Additional scans and X-rays will add additional dose. It is uncertain how many CTs and X-rays total you will need throughout the study. The possible benefits from the study should be weighed against the possible detrimental effects of radiation, including an increased risk of cancer at higher doses."</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

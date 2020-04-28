@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_dc7ea6f" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="ids_full_submission" name="IDS Full Submission">
+    <extensionElements>
+      <biodi:bounds x="240" y="130" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="IRB API IDS Waiver Status">
+        <inputExpression id="inputExpression_1" typeRef="boolean">
+          <text>Documents.UVACompl_IDSWaiverApp.required</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Menu Status" name="ids_full_submission" typeRef="string" />
+      <rule id="DecisionRule_0rj79pz">
+        <inputEntry id="UnaryTests_1w0ydbs">
+          <text>true</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_10u5hnp">
+          <text>"hidden"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1eyx8lf">
+        <inputEntry id="UnaryTests_02h1s2m">
+          <text>false</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0kdhxz2">
+          <text>"required"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1ds7sa4">
+        <inputEntry id="UnaryTests_0cy791h">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1joevdg">
+          <text>"disabled"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

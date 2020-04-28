@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <decision id="data_security_plan" name="Data Security Plan">
     <extensionElements>
-      <biodi:bounds x="180" y="80" width="180" height="80" />
+      <biodi:bounds x="250" y="120" width="180" height="80" />
     </extensionElements>
     <decisionTable id="DecisionTable_1mjqwlv">
       <input id="InputClause_18pwfqu" label="Required Doc Keys">
         <inputExpression id="LiteralExpression_1y84stb" typeRef="boolean" expressionLanguage="feel">
-          <text>Documents['UVACompl_PRCAppr']['required']</text>
+          <text>Documents['Study_DataSecurityPlan']['required']</text>
         </inputExpression>
       </input>
       <output id="OutputClause_05y0j7c" label="data_security_plan" name="data_security_plan" typeRef="string" />
@@ -22,10 +22,10 @@
       </rule>
       <rule id="DecisionRule_1ucfx7k">
         <inputEntry id="UnaryTests_0t09cyd">
-          <text>false</text>
+          <text></text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1fk77fu">
-          <text>"disabled"</text>
+          <text>"optional"</text>
         </outputEntry>
       </rule>
     </decisionTable>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_00j2iu5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
-  <bpmn:process id="Process_1gmf4la" isExecutable="true">
+  <bpmn:process id="Process_1gmf4la" name="Documents and Approvals" isExecutable="true">
     <bpmn:documentation />
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_1k3su2q</bpmn:outgoing>
@@ -31,10 +31,7 @@
     {%- else -%}
         | {{doc.display_name}} | Not started | [Context here](/help/documents/{{doc.code}}) | No file yet |
     {%- endif %}
-{% endfor %}
-
-
-</bpmn:documentation>
+{% endfor %}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:properties>
           <camunda:property name="display_name" value="Documents and Approvals" />
@@ -59,6 +56,18 @@
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1gmf4la">
+      <bpmndi:BPMNEdge id="Flow_1k3su2q_di" bpmnElement="Flow_1k3su2q">
+        <di:waypoint x="228" y="117" />
+        <di:waypoint x="290" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0c7ryff_di" bpmnElement="Flow_0c7ryff">
+        <di:waypoint x="390" y="117" />
+        <di:waypoint x="440" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_142jtxs_di" bpmnElement="Flow_142jtxs">
+        <di:waypoint x="540" y="117" />
+        <di:waypoint x="610" y="117" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0m7unlb_di" bpmnElement="Flow_0m7unlb">
         <di:waypoint x="710" y="117" />
         <di:waypoint x="782" y="117" />
@@ -78,18 +87,6 @@
       <bpmndi:BPMNShape id="Activity_07ytvmv_di" bpmnElement="Activity_1aju60t">
         <dc:Bounds x="290" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_142jtxs_di" bpmnElement="Flow_142jtxs">
-        <di:waypoint x="540" y="117" />
-        <di:waypoint x="610" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0c7ryff_di" bpmnElement="Flow_0c7ryff">
-        <di:waypoint x="390" y="117" />
-        <di:waypoint x="440" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1k3su2q_di" bpmnElement="Flow_1k3su2q">
-        <di:waypoint x="228" y="117" />
-        <di:waypoint x="290" y="117" />
-      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>

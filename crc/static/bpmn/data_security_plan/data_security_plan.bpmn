@@ -4,7 +4,7 @@
     <bpmn:startEvent id="StartEvent_1co48s3">
       <bpmn:outgoing>SequenceFlow_100w7co</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Task_EnterHIPAAIdentifiers" name="Enter HIPAA Identifiers" camunda:formKey="FormKey_EnterHIPAA_Identifiers">
+    <bpmn:userTask id="Task_EnterHIPAAIdentifiers" name="Enter HIPAA Identifiers" camunda:formKey="Enter_HIPAA_Identifiers">
       <bpmn:documentation>Add a box for each of the HIPAA Identifiers that you will receive, collect, record, store long term, or send outside of UVA during the course of your research..</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
@@ -42,7 +42,7 @@
               <camunda:property id="enum_type" value="checkbox" />
               <camunda:property id="group" value="hipaa" />
               <camunda:property id="repeat" value="hipaa" />
-              <camunda:property id="hide_expression" value="model.HIPAA_Ids === &#39;HIPAA_Ids0&#39;" />
+              <camunda:property id="hide_expression" value="console.log(&#39;this&#39;, this) || model.HIPAA_Ids === &#39;HIPAA_Ids0&#39;" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="!(model.HIPAA_Ids === &#39;HIPAA_Ids0&#39;) || model.HIPAA_Ids == null" />
@@ -52,13 +52,9 @@
             <camunda:value id="SendTransOutside" name="Send or transmit outside of UVA" />
           </camunda:formField>
         </camunda:formData>
-        <camunda:properties>
-          <camunda:property name="display_name" value="HIPAA_Identifiers" />
-        </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0jyty9m</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0blyor8</bpmn:outgoing>
-      <bpmn:standardLoopCharacteristics />
     </bpmn:userTask>
     <bpmn:parallelGateway id="ExclusiveGateway_0b16kmf">
       <bpmn:incoming>SequenceFlow_1oq4w2h</bpmn:incoming>
@@ -70,7 +66,7 @@
       <bpmn:outgoing>SequenceFlow_0obqjjx</bpmn:outgoing>
     </bpmn:parallelGateway>
     <bpmn:sequenceFlow id="SequenceFlow_1i6ac9a" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterPaperDocuments" />
-    <bpmn:userTask id="Task_EnterPaperDocuments" name="Enter Paper Documents" camunda:formKey="FormKey_EnterPaperDocuments">
+    <bpmn:userTask id="Task_EnterPaperDocuments" name="Enter Paper Documents" camunda:formKey="Enter_Paper_Documents">
       <bpmn:documentation>Paper documents:</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
@@ -84,9 +80,6 @@
           </camunda:formField>
           <camunda:formField id="CollStorUVaLocPaperOther" label="Other: (Please describe)" type="textarea" />
         </camunda:formData>
-        <camunda:properties>
-          <camunda:property name="display_name" value="Paper Documents" />
-        </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1i6ac9a</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1q6gf6w</bpmn:outgoing>
@@ -95,7 +88,7 @@
     <bpmn:sequenceFlow id="SequenceFlow_10g92nf" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterEMR" />
     <bpmn:sequenceFlow id="SequenceFlow_0pw57x9" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterUVAApprovedECRF" />
     <bpmn:sequenceFlow id="SequenceFlow_0ng3fm8" sourceRef="ExclusiveGateway_0b16kmf" targetRef="Task_EnterUVaServersWebsites" />
-    <bpmn:userTask id="Task_EnterEmailedUVAPersonnel" name="Enter Emailed to UVA Personnel" camunda:formKey="FormKey_EnterEmailedUVAPersonnel">
+    <bpmn:userTask id="Task_EnterEmailedUVAPersonnel" name="Enter Emailed to UVA Personnel" camunda:formKey="EnterEmailedUVAPersonnel">
       <bpmn:documentation>Emailed to other UVA personnel:</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
@@ -108,9 +101,6 @@
           </camunda:formField>
           <camunda:formField id="CollStorUVaLocEmailOther" label="Other Email Characteristics (Please describe)" type="textarea" />
         </camunda:formData>
-        <camunda:properties>
-          <camunda:property name="display_name" value="Emailed to UVA Personnel" />
-        </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_084dyht</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_12cos7w</bpmn:outgoing>
@@ -380,47 +370,187 @@
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0nc6lcs</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1j2f22j</bpmn:outgoing>
-      <bpmn:standardLoopCharacteristics />
+      <bpmn:outgoing>SequenceFlow_0gp2pjm</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:endEvent id="EndEvent_151cj59">
-      <bpmn:incoming>SequenceFlow_1j2f22j</bpmn:incoming>
-    </bpmn:endEvent>
-    <bpmn:sequenceFlow id="SequenceFlow_100w7co" sourceRef="StartEvent_1co48s3" targetRef="Task_0q6ir2l" />
-    <bpmn:userTask id="Task_196zozc" name="View Definitions &#38; Instructions" camunda:formKey="def_temp_ack">
-      <bpmn:documentation>#### Collection &amp; storage of research data at UVA
-
-• Include the HIPAA identifier if you are collecting, recording or receiving any of these items for a potential subject, an enrolled subject, a subject’s relative, household member or employer.
-
-• Include the HIPAA identifier even if you are recording any item below temporarily while the information is being collected.
-
-• Keep in mind that the information below includes data collected via photographs, video, audiotapes, and systems like IVRS (Interactive Voice Response System)
-
-• If you list no HIPAA identifier to all items it means you would never be able to go back and obtain any additional information about an individual.
+    <bpmn:sequenceFlow id="SequenceFlow_0gp2pjm" sourceRef="Task_EnterIndividualUseDevices" targetRef="Task_EnterOutsideUVA" />
+    <bpmn:sequenceFlow id="SequenceFlow_0mgwas4" sourceRef="Task_EnterOutsideUVA" targetRef="ExclusiveGateway_0pi0c2d" />
+    <bpmn:sequenceFlow id="SequenceFlow_1i8e52t" sourceRef="ExclusiveGateway_0x3t2vl" targetRef="Task_EnterEmailMethods" />
+    <bpmn:userTask id="Task_EnterOutsideUVA" name="Enter Outside of UVA" camunda:formKey="EnterOutsideUVa">
+      <bpmn:documentation>Transmission to and/or storage of the human subject research data OUTSIDE of UVA, such as to a sponsor or a colleague at another institution
 
 ##### Important 
-Indicate all the possible formats in which you will collect or receive your original source documentation at UVA. Also indicate any locations where it might be stored long term at UVA. Options should be selected even if the data is only temporarily stored in that format. Check all that apply for each category. If "Other" selected, please provide a brief description.</bpmn:documentation>
+Indicate all the possible formats in which you will transmit your data outside of UVA. Options should be selected even if the data is only temporarily stored in that format. Also remember to select any location where a subject’s SSN, hospital billing or account number, or certificate/license number might be recorded either with the data or separately.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="def_ack" label="I have read definitions" type="enum">
-            <camunda:properties>
-              <camunda:property id="enum_type" value="checkbox" />
-            </camunda:properties>
-            <camunda:value id="def_ack" name="Yes" />
+          <camunda:formField id="DateTransmittedOutside" label="Will data be transmitted to a sponsor or a colleague at another institution?" type="boolean">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
         </camunda:formData>
-        <camunda:properties>
-          <camunda:property name="form_key" value="Definitions &#38; Instructions" />
-        </camunda:properties>
       </bpmn:extensionElements>
-      <bpmn:incoming>SequenceFlow_0blyor8</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1oq4w2h</bpmn:outgoing>
+      <bpmn:incoming>SequenceFlow_0gp2pjm</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0mgwas4</bpmn:outgoing>
     </bpmn:userTask>
+    <bpmn:userTask id="Task_EnterEmailMethods" name="Enter Email Methods" camunda:formKey="EnterEmailMethods">
+      <bpmn:documentation>Since you answered "Yes" to question above, than complete questions below:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="DateTransmittedOutsideViaHSC" label="Data will be emailed to non-UVA personnel via HSC secure email:" type="boolean">
+            <camunda:properties>
+              <camunda:property id="help" value="For information regarding how to email data to non-UVA personnel via HSC secure email: http://hit.healthsystem.virginia.edu/index.cfm/departments/security/how-tos/how-to-encrypt-a-medical-center-email/" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="DateTransmittedOutsideRegEmail" label="Data will be emailed to non-UVA personnel via regular email" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1i8e52t</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0uewki3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_12bv2i4" sourceRef="ExclusiveGateway_0x3t2vl" targetRef="Task_EnterDataManagement" />
+    <bpmn:userTask id="Task_EnterDataManagement" name="Enter Data Management" camunda:formKey="EnterDataManagement">
+      <bpmn:documentation>Data will be sent to website/server/drive managed by the sponsor or CRO</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="EnterDataManagementWebwsiteServerDriveAck" label="I acknowledge that ANY electronic individual use devices used to connect to any servers/websites listed below are supported by UVA Health System IT." type="boolean">
+            <camunda:properties>
+              <camunda:property id="help" value="[Definition of electronic individual user devices](https://security.virginia.edu/individual%E2%80%93use-electronic-devices)" />
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="EnterDataManagementHIPAA_Ids" label="HIPAA Identifiers" type="enum">
+            <camunda:properties>
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="HIPAA_Ids0" name="No HIPAA identifiers will be recorded as part of this research" />
+            <camunda:value id="HIPAA_Ids1" name="1. Name - Highly Sensitive Data	" />
+            <camunda:value id="HIPAA_Ids2a" name="2a. Postal address includes street and/or PO Box, and town or city, state, and zip code - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids2b" name="2b. Postal address that includes only town or city, state, and/or zip code - Moderately Sensitive Data" />
+            <camunda:value id="HIPAA_Ids3" name="3. All date elements (except year) for dates related to an individual, e.g. service date" />
+            <camunda:value id="HIPAA_Ids4" name="4. Telephone numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids5" name="5. Fax numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids6" name="6. Electronic mail addresses - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids7" name="7. Social Security number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids8" name="8. Medical Record number - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids9" name="9. Health plan beneficiary numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids10" name="10. Account numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids11" name="11. Certificate/license numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids12" name="12. Vehicle identifiers and serial numbers, including license plate numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids13" name="13. Device identifiers and serial numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids14" name="14. Web Universal Resource Locators (URLs) - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids15" name="15. Internet Protocol (IP) address numbers - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids16" name="16. Biometric identifiers, including finger and voice prints - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids17" name="17. Full face photographic images and any comparable images - Highly Sensitive Data" />
+            <camunda:value id="HIPAA_Ids18" name="18. Other unique number, characteristic, code related to an individual, e.g. initials" />
+          </camunda:formField>
+          <camunda:formField id="EnterDataManagementSharingContract" label="If sharing data with anyone outside of UVA, do you confirm that you will obtain a contract with them via the School of Medicine Office of Grants and Contracts (OGC) or the Office of Sponsored Programs (OSP)?" type="boolean">
+            <camunda:properties>
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="EnterDataManagementWebsiteServerDriveEncrypted" label="Data will be sent and stored in an encrypted fashion (e.g. will only be shared and via Secure FX, Secure FTP, HTTPS, PGP) and the server/drive is configured to store data regulated by HIPAA" type="boolean">
+            <camunda:properties>
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="EnterDataManagementWebsiteServerDriveURL" label="Name (URL) of website (e.g. https://remote.sponsor.com/project name)" type="textarea">
+            <camunda:properties>
+              <camunda:property id="group" value="DataSentSponsorCRO" />
+              <camunda:property id="repeat" value="DataSentSponsorCRO" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_12bv2i4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_08rwbhm</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1mnmo6p" sourceRef="ExclusiveGateway_0x3t2vl" targetRef="Task_EnterTransmissionMethod" />
+    <bpmn:sequenceFlow id="SequenceFlow_08rwbhm" sourceRef="Task_EnterDataManagement" targetRef="ExclusiveGateway_1lpm3pa" />
+    <bpmn:parallelGateway id="ExclusiveGateway_1lpm3pa">
+      <bpmn:incoming>SequenceFlow_08rwbhm</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0uewki3</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0lere0k</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0k2r83n</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0uewki3" sourceRef="Task_EnterEmailMethods" targetRef="ExclusiveGateway_1lpm3pa" />
+    <bpmn:sequenceFlow id="SequenceFlow_0lere0k" sourceRef="Task_EnterTransmissionMethod" targetRef="ExclusiveGateway_1lpm3pa" />
+    <bpmn:userTask id="Task_EnterTransmissionMethod" name="Enter Transmission Method" camunda:formKey="EnterTransmissionMethod">
+      <bpmn:documentation>Transmission Method of data that will be mailed or faxed (FedEx, UPS, certified mail, etc.) Check all that apply:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="DataTransmissionMethodPaper" label="Paper documents" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="radio" />
+              <camunda:property id="markdown_description" value="**Note:** Paper documents shipped using non-trackable method - **Not Allowed.**" />
+            </camunda:properties>
+            <camunda:value id="Yes" name="Yes, paper documents will be shipped using trackable method" />
+            <camunda:value id="No" name="No, paper documents will not be shipped" />
+          </camunda:formField>
+          <camunda:formField id="DataTransmissionMethodEncrypted" label="Individual Use Devices" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="markdown_description" value="**Note:** Examples of individual use devices: CD, thumb drive, etc." />
+            </camunda:properties>
+            <camunda:value id="Yes" name="Yes, individual use devices will be shipped using a trackable method with data encrypted and password to the encrypted data transmitted separately" />
+            <camunda:value id="No" name="No, individual use devices will not be shipped" />
+          </camunda:formField>
+          <camunda:formField id="DataTransmissionMethodFaxed" label="Faxed" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+              <camunda:property id="markdown_description" value="**Note:** By checking this option, you are also confirming you will verify FAX numbers before faxing and use FAX cover sheet with a confidentiality statement." />
+            </camunda:properties>
+            <camunda:value id="Yes" name="Yes, data wile be faxed to a receiving machine in a restricted-access location with the intended recipient is clearly indicated, alerted to the pending transmission and available to pick up immediately." />
+            <camunda:value id="No" name="No, data will not be faxed" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1mnmo6p</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0lere0k</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="EndEvent_151cj59">
+      <bpmn:incoming>SequenceFlow_16kyite</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="ExclusiveGateway_0pi0c2d" name="Outside of UVa?">
+      <bpmn:incoming>SequenceFlow_0mgwas4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_01hl869</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0t6xl9i</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_01hl869" name="Yes" sourceRef="ExclusiveGateway_0pi0c2d" targetRef="ExclusiveGateway_0x3t2vl">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">DateTransmittedOutside == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:parallelGateway id="ExclusiveGateway_0x3t2vl">
+      <bpmn:incoming>SequenceFlow_01hl869</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1i8e52t</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_12bv2i4</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_1mnmo6p</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_100w7co" sourceRef="StartEvent_1co48s3" targetRef="Task_0q6ir2l" />
     <bpmn:sequenceFlow id="SequenceFlow_1oq4w2h" sourceRef="Task_196zozc" targetRef="ExclusiveGateway_0b16kmf" />
     <bpmn:sequenceFlow id="SequenceFlow_0m2op9s" sourceRef="Task_0q6ir2l" targetRef="Task_0uotpzg" />
     <bpmn:sequenceFlow id="SequenceFlow_0jyty9m" sourceRef="Task_0uotpzg" targetRef="Task_EnterHIPAAIdentifiers" />
     <bpmn:sequenceFlow id="SequenceFlow_0blyor8" sourceRef="Task_EnterHIPAAIdentifiers" targetRef="Task_196zozc" />
-    <bpmn:userTask id="Task_0q6ir2l" name="View Instructions" camunda:formKey="Instructions">
+    <bpmn:sequenceFlow id="SequenceFlow_0k2r83n" sourceRef="ExclusiveGateway_1lpm3pa" targetRef="Task_1ypw8ge" />
+    <bpmn:sequenceFlow id="SequenceFlow_0t6xl9i" sourceRef="ExclusiveGateway_0pi0c2d" targetRef="Task_1ypw8ge">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">DateTransmittedOutside == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_16kyite" sourceRef="Task_1ypw8ge" targetRef="EndEvent_151cj59" />
+    <bpmn:scriptTask id="Task_1ypw8ge" name="Generate DSP">
+      <bpmn:incoming>SequenceFlow_0k2r83n</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0t6xl9i</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_16kyite</bpmn:outgoing>
+      <bpmn:script>CompleteTemplate NEW_DSP_template.docx Study_DataSecurityPlan</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Task_0q6ir2l" name="View Instructions">
       <bpmn:documentation>##### Instructions
 
 Overview: You should consult with UVA Information Security (InfoSec) while completing this Step if your protocol will involve highly technical issues such as the creation of a website to collect data, software application development, the use of a smart phone app, or if you plan to store identifiable data onto an individual use device such as a tablet, laptop, or camera. Otherwise, answer the questions on this Step to create the Data Security Plan for your study. After you submit this Step, you can view the resulting Data Security Plan and assessment outcomes on the Data Security Plan Upload Step and submit your plan for UVA Information Security (InfoSec) or IRB-HSR Review.
@@ -443,14 +573,11 @@ Submit the step only when you are ready. After you "Submit" the step, the inform
         <camunda:formData>
           <camunda:formField id="FormField_23d42bc" label="asdg" type="boolean" />
         </camunda:formData>
-        <camunda:properties>
-          <camunda:property name="display_name" value="Instructions" />
-        </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_100w7co</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0m2op9s</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:userTask id="Task_0uotpzg" name="View HIPAA ID Instructions" camunda:formKey="HiPAA ID Instructions">
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_0uotpzg" name="View HIPAA ID Instructions">
       <bpmn:documentation>• Include the HIPAA identifier if you are collecting, recording or receiving any of these items for a potential subject, an enrolled subject, a subject’s relative, household member or employer.
 
 • Include the HIPAA identifier even if you are recording any item below temporarily while the information is being collected.
@@ -460,22 +587,58 @@ Submit the step only when you are ready. After you "Submit" the step, the inform
 • If you list no HIPAA identifier to all items it means you would never be able to go back and obtain any additional information about an individual.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_3l1fkli" label="Read?" type="boolean" />
+          <camunda:formField id="FormField_3l1fkli" label="Read?" type="boolean">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="console.log(&#39;this&#39;, this)" />
+            </camunda:properties>
+          </camunda:formField>
         </camunda:formData>
-        <camunda:properties>
-          <camunda:property name="display_name" value="HIPAA ID Instructions" />
-        </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0m2op9s</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0jyty9m</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:sequenceFlow id="SequenceFlow_1j2f22j" sourceRef="Task_EnterIndividualUseDevices" targetRef="EndEvent_151cj59" />
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_196zozc" name="View Definitions &#38; Instructions">
+      <bpmn:documentation>#### Collection &amp; storage of research data at UVA
+
+• Include the HIPAA identifier if you are collecting, recording or receiving any of these items for a potential subject, an enrolled subject, a subject’s relative, household member or employer.
+
+• Include the HIPAA identifier even if you are recording any item below temporarily while the information is being collected.
+
+• Keep in mind that the information below includes data collected via photographs, video, audiotapes, and systems like IVRS (Interactive Voice Response System)
+
+• If you list no HIPAA identifier to all items it means you would never be able to go back and obtain any additional information about an individual.
+
+##### Important 
+Indicate all the possible formats in which you will collect or receive your original source documentation at UVA. Also indicate any locations where it might be stored long term at UVA. Options should be selected even if the data is only temporarily stored in that format. Check all that apply for each category. If "Other" selected, please provide a brief description.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="def_ack" label="I have read definitions" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+            </camunda:properties>
+            <camunda:value id="def_ack" name="Yes" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0blyor8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1oq4w2h</bpmn:outgoing>
+    </bpmn:manualTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_19ej1y2">
-      <bpmndi:BPMNEdge id="SequenceFlow_1j2f22j_di" bpmnElement="SequenceFlow_1j2f22j">
-        <di:waypoint x="1380" y="390" />
-        <di:waypoint x="1471" y="390" />
+      <bpmndi:BPMNEdge id="SequenceFlow_16kyite_di" bpmnElement="SequenceFlow_16kyite">
+        <di:waypoint x="2240" y="390" />
+        <di:waypoint x="2322" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0t6xl9i_di" bpmnElement="SequenceFlow_0t6xl9i">
+        <di:waypoint x="1620" y="415" />
+        <di:waypoint x="1620" y="640" />
+        <di:waypoint x="2190" y="640" />
+        <di:waypoint x="2190" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0k2r83n_di" bpmnElement="SequenceFlow_0k2r83n">
+        <di:waypoint x="2075" y="390" />
+        <di:waypoint x="2140" y="390" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0blyor8_di" bpmnElement="SequenceFlow_0blyor8">
         <di:waypoint x="665" y="390" />
@@ -494,8 +657,51 @@ Submit the step only when you are ready. After you "Submit" the step, the inform
         <di:waypoint x="875" y="390" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_100w7co_di" bpmnElement="SequenceFlow_100w7co">
-        <di:waypoint x="168" y="390" />
+        <di:waypoint x="191" y="390" />
         <di:waypoint x="251" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_01hl869_di" bpmnElement="SequenceFlow_01hl869">
+        <di:waypoint x="1645" y="390" />
+        <di:waypoint x="1725" y="390" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1676" y="372" width="18" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0lere0k_di" bpmnElement="SequenceFlow_0lere0k">
+        <di:waypoint x="1950" y="530" />
+        <di:waypoint x="2050" y="530" />
+        <di:waypoint x="2050" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0uewki3_di" bpmnElement="SequenceFlow_0uewki3">
+        <di:waypoint x="1950" y="250" />
+        <di:waypoint x="2050" y="250" />
+        <di:waypoint x="2050" y="365" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_08rwbhm_di" bpmnElement="SequenceFlow_08rwbhm">
+        <di:waypoint x="1950" y="390" />
+        <di:waypoint x="2025" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1mnmo6p_di" bpmnElement="SequenceFlow_1mnmo6p">
+        <di:waypoint x="1750" y="415" />
+        <di:waypoint x="1750" y="530" />
+        <di:waypoint x="1850" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12bv2i4_di" bpmnElement="SequenceFlow_12bv2i4">
+        <di:waypoint x="1775" y="390" />
+        <di:waypoint x="1850" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1i8e52t_di" bpmnElement="SequenceFlow_1i8e52t">
+        <di:waypoint x="1750" y="365" />
+        <di:waypoint x="1750" y="250" />
+        <di:waypoint x="1850" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0mgwas4_di" bpmnElement="SequenceFlow_0mgwas4">
+        <di:waypoint x="1550" y="390" />
+        <di:waypoint x="1595" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0gp2pjm_di" bpmnElement="SequenceFlow_0gp2pjm">
+        <di:waypoint x="1380" y="390" />
+        <di:waypoint x="1450" y="390" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0nc6lcs_di" bpmnElement="SequenceFlow_0nc6lcs">
         <di:waypoint x="1185" y="390" />
@@ -561,6 +767,9 @@ Submit the step only when you are ready. After you "Submit" the step, the inform
         <di:waypoint x="900" y="120" />
         <di:waypoint x="980" y="120" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="StartEvent_1co48s3_di" bpmnElement="StartEvent_1co48s3">
+        <dc:Bounds x="155" y="372" width="36" height="36" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_16imtaa_di" bpmnElement="Task_EnterHIPAAIdentifiers">
         <dc:Bounds x="565" y="350" width="100" height="80" />
       </bpmndi:BPMNShape>
@@ -591,20 +800,44 @@ Submit the step only when you are ready. After you "Submit" the step, the inform
       <bpmndi:BPMNShape id="UserTask_0q8o038_di" bpmnElement="Task_EnterIndividualUseDevices">
         <dc:Bounds x="1280" y="350" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_10x8kgc_di" bpmnElement="Task_EnterOutsideUVA">
+        <dc:Bounds x="1450" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1x8azom_di" bpmnElement="Task_EnterEmailMethods">
+        <dc:Bounds x="1850" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1r640re_di" bpmnElement="Task_EnterDataManagement">
+        <dc:Bounds x="1850" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ParallelGateway_0cignbh_di" bpmnElement="ExclusiveGateway_1lpm3pa">
+        <dc:Bounds x="2025" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0ns9m8t_di" bpmnElement="Task_EnterTransmissionMethod">
+        <dc:Bounds x="1850" y="490" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_151cj59_di" bpmnElement="EndEvent_151cj59">
-        <dc:Bounds x="1471" y="372" width="36" height="36" />
+        <dc:Bounds x="2322" y="372" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_1nybxz8_di" bpmnElement="Task_196zozc">
-        <dc:Bounds x="717" y="350" width="100" height="80" />
+      <bpmndi:BPMNShape id="ExclusiveGateway_0pi0c2d_di" bpmnElement="ExclusiveGateway_0pi0c2d" isMarkerVisible="true">
+        <dc:Bounds x="1595" y="365" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1580" y="341" width="80" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_1la1kj4_di" bpmnElement="Task_0q6ir2l">
+      <bpmndi:BPMNShape id="ParallelGateway_1284xgu_di" bpmnElement="ExclusiveGateway_0x3t2vl">
+        <dc:Bounds x="1725" y="365" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1616pnb_di" bpmnElement="Task_1ypw8ge">
+        <dc:Bounds x="2140" y="350" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1l6rjbr_di" bpmnElement="Task_0q6ir2l">
         <dc:Bounds x="251" y="350" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_1x7d94b_di" bpmnElement="Task_0uotpzg">
+      <bpmndi:BPMNShape id="Activity_11u7de2_di" bpmnElement="Task_0uotpzg">
         <dc:Bounds x="398" y="350" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="StartEvent_1co48s3_di" bpmnElement="StartEvent_1co48s3">
-        <dc:Bounds x="132" y="372" width="36" height="36" />
+      <bpmndi:BPMNShape id="Activity_0nfmn0k_di" bpmnElement="Task_196zozc">
+        <dc:Bounds x="717" y="350" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

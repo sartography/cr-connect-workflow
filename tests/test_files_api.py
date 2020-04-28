@@ -26,9 +26,10 @@ class TestFilesApi(BaseTest):
                           content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        self.assertEqual(1, len(json_data))
-        file = FileModelSchema(many=True).load(json_data, session=session)
-        self.assertEqual("%s.bpmn" % spec.name, file[0].name)
+        self.assertEqual(5, len(json_data))
+        files = FileModelSchema(many=True).load(json_data, session=session)
+        file_names = [f.name for f in files]
+        self.assertTrue("%s.bpmn" % spec.name in file_names)
 
     def test_list_multiple_files_for_workflow_spec(self):
         self.load_example_data()
