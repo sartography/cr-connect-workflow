@@ -237,3 +237,4 @@ postgres/var/
 .env
 .coverage
 coverage.xml
+.~lock.*
