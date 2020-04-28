@@ -99,6 +99,7 @@ class MyCustomParser(BpmnDmnParser):
 class WorkflowProcessor(object):
     _script_engine = CustomBpmnScriptEngine()
     _serializer = BpmnSerializer()
+
     WORKFLOW_ID_KEY = "workflow_id"
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
@@ -112,11 +113,11 @@ class WorkflowProcessor(object):
         create the workflow model. """
         self.workflow_model = workflow_model
         orig_version = workflow_model.spec_version
-        if soft_reset:
-            spec = self.get_spec(workflow_model.workflow_spec_id)
-        else:
-            spec = self.get_spec(workflow_model.workflow_spec_id, workflow_model.spec_version)
+        if soft_reset or workflow_model.spec_version is None:
+            self.workflow_model.spec_version = WorkflowProcessor.get_latest_version_string(
+                workflow_model.workflow_spec_id)
 
+        spec = self.get_spec(workflow_model.workflow_spec_id, workflow_model.spec_version)
         self.workflow_spec_id = workflow_model.workflow_spec_id
         try:
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec)
@@ -153,8 +154,6 @@ class WorkflowProcessor(object):
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec):
 
-        workflow_model.spec_version = spec.description  # Very naughty.  But we keep the version in the spec desc.
-
         if workflow_model.bpmn_workflow_json:
             bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
         else:
@@ -168,7 +167,8 @@ class WorkflowProcessor(object):
     def run_master_spec(spec_model, study):
         """Executes a BPMN specification for the given study, without recording any information to the database
         Useful for running the master specification, which should not persist. """
-        spec = WorkflowProcessor.get_spec(spec_model.id)
+        version = WorkflowProcessor.get_latest_version_string(spec_model.id)
+        spec = WorkflowProcessor.get_spec(spec_model.id, version)
         bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
         bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
         bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
@@ -239,16 +239,12 @@ class WorkflowProcessor(object):
             .all()
 
     @staticmethod
-    def get_spec(workflow_spec_id, version=None):
+    def get_spec(workflow_spec_id, version):
         """Returns the requested version of the specification,
         or the lastest version if none is specified."""
         parser = WorkflowProcessor.get_parser()
         process_id = None
-        if version is None:
-            file_data_models = WorkflowProcessor.__get_latest_file_models(workflow_spec_id)
-            version = WorkflowProcessor.get_latest_version_string(workflow_spec_id)
-        else:
-            file_data_models = WorkflowProcessor.__get_file_models_for_version(workflow_spec_id, version)
+        file_data_models = WorkflowProcessor.__get_file_models_for_version(workflow_spec_id, version)
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
@@ -270,7 +266,6 @@ class WorkflowProcessor(object):
                            file_name=ve.filename,
                            task_id=ve.id,
                            tag=ve.tag)
-        spec.description = version
         return spec
 
 
@@ -323,21 +318,21 @@ class WorkflowProcessor(object):
 
          Returns the new version.
          """
-        spec = WorkflowProcessor.get_spec(self.workflow_spec_id)
+        version = WorkflowProcessor.get_latest_version_string(self.workflow_spec_id)
+        spec = WorkflowProcessor.get_spec(self.workflow_spec_id, version)
         bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
         bpmn_workflow.data = self.bpmn_workflow.data
         for task in bpmn_workflow.get_tasks(SpiffTask.READY):
             task.data = self.bpmn_workflow.last_task.data
         bpmn_workflow.do_engine_steps()
         self.bpmn_workflow = bpmn_workflow
-        return spec.description
+        return version
 
     def get_status(self):
         return self.status_of(self.bpmn_workflow)
 
     def get_spec_version(self):
-        """We use the spec's descrption field to store the version information"""
-        return self.bpmn_workflow.spec.description
+        return self.workflow_model.spec_version
 
     def do_engine_steps(self):
         self.bpmn_workflow.do_engine_steps()

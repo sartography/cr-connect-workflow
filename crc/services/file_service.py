@@ -200,7 +200,6 @@ class FileService(object):
     def get_workflow_file_data(workflow, file_name):
         """Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns it's data"""
         workflow_spec_model = FileService.find_spec_model_in_db(workflow)
-        study_id = workflow.data[WorkflowProcessor.STUDY_ID_KEY]
 
         if workflow_spec_model is None:
             raise ApiError(code="workflow_model_error",

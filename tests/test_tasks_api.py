@@ -24,7 +24,11 @@ class TestTasksApi(BaseTest):
         return workflow_api
 
     def complete_form(self, workflow, task, dict_data):
-        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, task.id),
+        if isinstance(task, dict):
+            task_id = task["id"]
+        else:
+            task_id = task.id
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, task_id),
                           headers=self.logged_in_headers(),
                           content_type="application/json",
                           data=json.dumps(dict_data))
@@ -39,7 +43,7 @@ class TestTasksApi(BaseTest):
 
         num_task_events = session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow.id) \
-            .filter_by(task_id=task.id) \
+            .filter_by(task_id=task_id) \
             .count()
         self.assertGreater(num_task_events, 0)
 
@@ -306,3 +310,22 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(5, len(results))
+
+    def test_sub_process(self):
+        self.load_example_data()
+        workflow = self.create_workflow('subprocess')
+
+        tasks = self.get_workflow_api(workflow).user_tasks
+        self.assertEquals(2, len(tasks))
+        self.assertEquals("UserTask", tasks[0].type)
+        self.assertEquals("Activity_A", tasks[0].name)
+        self.assertEquals("My Sub Process", tasks[0].process_name)
+        workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})
+        task = workflow_api.next_task
+        self.assertIsNotNone(task)
+
+        self.assertEquals("Activity_B", task['name'])
+        self.assertEquals("Sub Workflow Example", task['process_name'])
+        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
+        self.assertEquals(WorkflowStatus.complete, workflow_api.status)
+
