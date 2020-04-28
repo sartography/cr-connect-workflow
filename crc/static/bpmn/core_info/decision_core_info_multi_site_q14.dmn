@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_dc32393" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Decision_core_info_multi_site_q14" name="Core Info - Multi-Site - Q14">
+    <extensionElements>
+      <biodi:bounds x="230" y="160" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="PB - MultiSite UVA PI">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text>StudyInfo.details.IS_UVA_PI_MULTI</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Task Header" name="ElementDoc_MultiSite_Q14" typeRef="string" />
+      <rule id="DecisionRule_0ewhyrs">
+        <inputEntry id="UnaryTests_0hnjckp">
+          <text>1</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_14q7lmq">
+          <text>"Q14-Will the PI at UVA be the overall PI for all sites in the study: Yes"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1oewm3u">
+        <inputEntry id="UnaryTests_09jmcfo">
+          <text>0</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1yiqs5b">
+          <text>"Q14-Will the PI at UVA be the overall PI for all sites in the study: No"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_01wesg0">
+        <inputEntry id="UnaryTests_11lb1rb">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_07m1v2u">
+          <text>"Q14-Will the PI at UVA be the overall PI for all sites in the study: Question was not presented"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

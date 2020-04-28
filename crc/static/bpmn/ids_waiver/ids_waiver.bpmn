@@ -7,7 +7,7 @@
     <bpmn:userTask id="UserTask_SubmitWaiver" name="Submit Waiver" camunda:formKey="Submit Waiver">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_Upload" label="Upload " type="file" />
+          <camunda:formField id="UVACompl_IDSWaiverApp" label="Upload " type="file" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1aq1jk8</bpmn:incoming>
@@ -17,7 +17,7 @@
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="FormField_isApporved" label="Waiver Approved?" type="boolean" />
-          <camunda:formField id="FormField_FileUpload" label="IDS Waiver Application approved by IDS" type="file" />
+          <camunda:formField id="UVACompl_IDSNotification" label="IDS Waiver Application approved by IDS" type="file" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0wdpi62</bpmn:incoming>

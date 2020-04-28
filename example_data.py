@@ -29,7 +29,7 @@ class ExampleDataLoader:
             WorkflowSpecCategoryModel(
                 id=0,
                 name='irb_review',
-                display_name='Pass IRB Review',
+                display_name='From PB',
                 display_order=0
             ),
             WorkflowSpecCategoryModel(
@@ -62,6 +62,12 @@ class ExampleDataLoader:
                 display_name='Notifications',
                 display_order=5
             ),
+            WorkflowSpecCategoryModel(
+                id=6,
+                name='status',
+                display_name='Status',
+                display_order=6
+            ),
         ]
         db.session.add_all(categories)
         db.session.commit()
@@ -69,7 +75,7 @@ class ExampleDataLoader:
         # Pass IRB Review
         self.create_spec(id="irb_api_personnel",
                          name="irb_api_personnel",
-                         display_name="IRB API Personnel",
+                         display_name="Personnel",
                          description="TBD",
                          category_id=0,
                          display_order=0)
@@ -82,34 +88,40 @@ class ExampleDataLoader:
         self.create_spec(id="documents_approvals",
                          name="documents_approvals",
                          display_name="Documents & Approvals",
-                         description="TBD",
+                         description="Status of all approvals and documents required from Protocol Builder",
                          category_id=0,
                          display_order=2)
+        self.create_spec(id="ide_supplement",
+                         name="ide_supplement",
+                         display_name="IDE Supplement Info",
+                         description="Supplemental information for the IDE number entered in Protocol Builder",
+                         category_id=0,
+                         display_order=3)
+        self.create_spec(id="ind_supplement",
+                         name="ind_supplement",
+                         display_name="IND Supplement Info",
+                         description="Supplement information for the Investigational New Drug(s) specified in Protocol Builder",
+                         category_id=0,
+                         display_order=4)
 
         # Core Info
+        self.create_spec(id="protocol",
+                         name="protocol",
+                         display_name="Protocol",
+                         description="Upload the Study Protocol here.",
+                         category_id=1,
+                         display_order=0)
         self.create_spec(id="core_info",
                          name="core_info",
                          display_name="Core Info",
                          description="TBD",
                          category_id=1,
-                         display_order=0)
-        self.create_spec(id="core_info_approvals_ids",
-                         name="core_info_approvals_ids",
-                         display_name="Core Info - Approvals - IDS",
-                         description="TBD",
-                         category_id=1,
                          display_order=1)
-        self.create_spec(id="core_info_data_security_plan_outside",
-                         name="core_info_data_security_plan_outside",
-                         display_name="Core Info - Data Security Plan - Outside",
-                         description="TBD",
-                         category_id=1,
-                         display_order=2)
 
         # Approvals
         self.create_spec(id="ids_full_submission",
                          name="ids_full_submission",
-                         display_name="Investigative Drug Services (IDS) Full Submission",
+                         display_name="Investigational Drug Service (IDS) Full Submission",
                          description="TBD",
                          category_id=2,
                          display_order=0)
@@ -119,26 +131,26 @@ class ExampleDataLoader:
                          description="TBD",
                          category_id=2,
                          display_order=1)
+        self.create_spec(id="rsc_hire_submission",
+                         name="rsc_hire_submission",
+                         display_name="RSC/HIRE Submission",
+                         description="TBD",
+                         category_id=2,
+                         display_order=2)
+        self.create_spec(id="rsc_hire_committee",
+                         name="rsc_hire_committee",
+                         display_name="RSC/HIRE Committee",
+                         description="TBD",
+                         category_id=2,
+                         display_order=3)
 
         # Data Security Plan
-        self.create_spec(id="data_security_plan_inside",
-                         name="data_security_plan_inside",
-                         display_name="Data Security Plan - Inside",
-                         description="TBD",
+        self.create_spec(id="data_security_plan",
+                         name="data_security_plan",
+                         display_name="Data Security Plan",
+                         description="Create and generate Data Security Plan",
                          category_id=3,
                          display_order=0)
-        self.create_spec(id="data_security_plan_outside",
-                         name="data_security_plan_outside",
-                         display_name="Data Security Plan - Outside",
-                         description="TBD",
-                         category_id=3,
-                         display_order=1)
-        self.create_spec(id="data_security_plan_generate",
-                         name="data_security_plan_generate",
-                         display_name="Data Security Plan - Generate",
-                         description="TBD",
-                         category_id=3,
-                         display_order=2)
 
         # Finance
         self.create_spec(id="sponsor_funding_source",
@@ -161,6 +173,20 @@ class ExampleDataLoader:
                          description="TBD",
                          category_id=5,
                          display_order=0)
+
+        # Status
+        self.create_spec(id="enrollment_date",
+                         name="enrollment_date",
+                         display_name="Enrollment Date",
+                         description="Study enrollment date",
+                         category_id=6,
+                         display_order=0)
+        self.create_spec(id="abandoned",
+                         name="abandoned",
+                         display_name="Abandoned",
+                         description="Place study into Abandoned status",
+                         category_id=6,
+                         display_order=1)
 
         # Top Level (Master Status) Workflow
         self.create_spec(id="top_level_workflow",

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_0o0ff2r" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="decision_ind_check" name="IND Check">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="IS_IND">
+        <inputExpression id="inputExpression_1" typeRef="integer">
+          <text>StudyInfo.details.IS_IND</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_1yk6kx1" label="IND_1 Number?">
+        <inputExpression id="LiteralExpression_00xhtjw" typeRef="string">
+          <text>StudyInfo.details.IND_1</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_069sith" label="IND_2 Number?">
+        <inputExpression id="LiteralExpression_1h9kd8o" typeRef="string">
+          <text>StudyInfo.details.IND_2</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_0d0vpur" label="IND_3 Number?">
+        <inputExpression id="LiteralExpression_0zbsg01" typeRef="string">
+          <text>StudyInfo.details.IND_3</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Add Supplemental Data" name="ind_supplement" typeRef="boolean" />
+      <rule id="DecisionRule_0h0od2e">
+        <inputEntry id="UnaryTests_09ctq71">
+          <text>1</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1cub5pk">
+          <text>not('')</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0aubvru">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0rjeqez">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1we3duh">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_199dgpt">
+        <inputEntry id="UnaryTests_1ec0msc">
+          <text>1</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0h3sj7g">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1ji4kgh">
+          <text>not('')</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_10gxrx9">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1fhlpya">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0teanii">
+        <inputEntry id="UnaryTests_0akfjdp">
+          <text>1</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1c88e2t">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0zfrdlt">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_07drghr">
+          <text>not('')</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1i7dtia">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0m9aydp">
+        <inputEntry id="UnaryTests_003n37j">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1fcaod2">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0hmnsvb">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0y6xian">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1wuhxz7">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

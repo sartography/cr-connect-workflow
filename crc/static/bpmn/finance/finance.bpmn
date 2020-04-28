@@ -14,13 +14,13 @@
           </camunda:formField>
           <camunda:formField id="FormField_BudgetDraft" label="Draft Budget" type="file">
             <camunda:properties>
-              <camunda:property id="hide_expression" value="!(model.FormField_isBudget) | FormField_isBudget == null" />
+              <camunda:property id="hide_expression" value="!(model.FormField_isBudget) | model.FormField_isBudget == null" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="FormField_Budget Final" label="Final Budget" type="file">
             <camunda:properties>
               <camunda:property id="description" value="This is the budget that you will negotiate with your funding source." />
-              <camunda:property id="hide_expression" value="!(model.FormField_isBudget) | FormField_isBudget == null" />
+              <camunda:property id="hide_expression" value="!(model.FormField_isBudget) | model.FormField_isBudget == null" />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>
@@ -38,15 +38,11 @@
       <bpmn:outgoing>SequenceFlow_0bvhrqu</bpmn:outgoing>
       <bpmn:outgoing>SequenceFlow_157c6e9</bpmn:outgoing>
       <bpmn:outgoing>SequenceFlow_1oh6eq7</bpmn:outgoing>
-      <bpmn:outgoing>SequenceFlow_1602f3i</bpmn:outgoing>
-      <bpmn:outgoing>SequenceFlow_0eptro7</bpmn:outgoing>
     </bpmn:parallelGateway>
     <bpmn:sequenceFlow id="SequenceFlow_0afrh4e" sourceRef="UserTask_03iirsg" targetRef="ExclusiveGateway_0tqopul" />
     <bpmn:parallelGateway id="ExclusiveGateway_0tqopul">
       <bpmn:incoming>SequenceFlow_0afrh4e</bpmn:incoming>
       <bpmn:incoming>SequenceFlow_1mv3dp4</bpmn:incoming>
-      <bpmn:incoming>SequenceFlow_1h1a0cl</bpmn:incoming>
-      <bpmn:incoming>SequenceFlow_1gym4gm</bpmn:incoming>
       <bpmn:incoming>SequenceFlow_0rr7ods</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_160jfpk</bpmn:outgoing>
     </bpmn:parallelGateway>
@@ -54,7 +50,7 @@
     <bpmn:sequenceFlow id="SequenceFlow_157c6e9" sourceRef="ExclusiveGateway_0m1n8mu" targetRef="Task_0xn3d6z" />
     <bpmn:sequenceFlow id="SequenceFlow_1oh6eq7" sourceRef="ExclusiveGateway_0m1n8mu" targetRef="Task_0dj66yz" />
     <bpmn:userTask id="Task_0dj66yz" name="Enter Contract Funded" camunda:formKey="FormKey_ContractFunded">
-      <bpmn:documentation>#### Process: 
+      <bpmn:documentation>#### Process:
 
 The study team uploads the executed copy of the contract(s) after they receive it from the Office of Grants and Contracts, after the following process components are completed outside of the Clinical Research Connect:
 
@@ -77,57 +73,8 @@ If you have any questions about the process, contact contract negotiator or Offi
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1oh6eq7</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1mv3dp4</bpmn:outgoing>
-      <bpmn:standardLoopCharacteristics />
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_1mv3dp4" sourceRef="Task_0dj66yz" targetRef="ExclusiveGateway_0tqopul" />
-    <bpmn:sequenceFlow id="SequenceFlow_1602f3i" sourceRef="ExclusiveGateway_0m1n8mu" targetRef="Task_05tgs6y" />
-    <bpmn:userTask id="Task_05tgs6y" name="Enter Non-Funded" camunda:formKey="FormKey_NonFunded">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="FormField_ContractTemplate" label="Contract Template" type="file">
-            <camunda:properties>
-              <camunda:property id="help" value="Upload any contract template(s) received from an outside party." />
-            </camunda:properties>
-          </camunda:formField>
-          <camunda:formField id="FormField_Form" label="Non-Funded Agreement Request Form - Department Signed" type="file">
-            <camunda:properties>
-              <camunda:property id="group" value="nonfunded" />
-              <camunda:property id="repeat" value="nonfunded`" />
-              <camunda:property id="help" value="Non Funded Agreement Request Form: [Non Funded Agreement Request Form](https://sponsoredprograms.virginia.edu/sites/sponsoredprograms.virginia.edu/files/Non-Funded_Agreement_Form.pdf). Complete it, obtain the signatures, and upload the signed document here. The study team should not email anything directly to OSP." />
-            </camunda:properties>
-            <camunda:validation>
-              <camunda:constraint name="required" config="true" />
-            </camunda:validation>
-          </camunda:formField>
-        </camunda:formData>
-      </bpmn:extensionElements>
-      <bpmn:incoming>SequenceFlow_1602f3i</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1h1a0cl</bpmn:outgoing>
-      <bpmn:standardLoopCharacteristics />
-    </bpmn:userTask>
-    <bpmn:sequenceFlow id="SequenceFlow_1h1a0cl" sourceRef="Task_05tgs6y" targetRef="ExclusiveGateway_0tqopul" />
-    <bpmn:sequenceFlow id="SequenceFlow_0eptro7" sourceRef="ExclusiveGateway_0m1n8mu" targetRef="Task_112migv" />
-    <bpmn:userTask id="Task_112migv" name="Upload Executed Non-Funded" camunda:formKey="FormKey_ExecutedNonFunded">
-      <bpmn:documentation>#### Non-Funded Executed Agreement
-
-
-#### Process: 
-OGC will upload the Non-Funded Executed Agreement after it has been negotiated by OSP contract negotiator.</bpmn:documentation>
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="FormField_UploadExecutedNonFunded" label="Non-Funded Executed Agreement" type="file">
-            <camunda:properties>
-              <camunda:property id="group" value="upload" />
-              <camunda:property id="repeat" value="upload" />
-            </camunda:properties>
-          </camunda:formField>
-        </camunda:formData>
-      </bpmn:extensionElements>
-      <bpmn:incoming>SequenceFlow_0eptro7</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_1gym4gm</bpmn:outgoing>
-      <bpmn:standardLoopCharacteristics />
-    </bpmn:userTask>
-    <bpmn:sequenceFlow id="SequenceFlow_1gym4gm" sourceRef="Task_112migv" targetRef="ExclusiveGateway_0tqopul" />
     <bpmn:sequenceFlow id="SequenceFlow_0rr7ods" sourceRef="Task_0xn3d6z" targetRef="ExclusiveGateway_0tqopul" />
     <bpmn:userTask id="Task_0xn3d6z" name="Enter PTAO" camunda:formKey="FormKey_PTAO">
       <bpmn:documentation>#### Enter PTAO Number</bpmn:documentation>
@@ -150,56 +97,36 @@ OGC will upload the Non-Funded Executed Agreement after it has been negotiated b
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Finance">
       <bpmndi:BPMNEdge id="SequenceFlow_0rr7ods_di" bpmnElement="SequenceFlow_0rr7ods">
+        <di:waypoint x="460" y="470" />
+        <di:waypoint x="570" y="470" />
+        <di:waypoint x="570" y="362" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1mv3dp4_di" bpmnElement="SequenceFlow_1mv3dp4">
         <di:waypoint x="460" y="337" />
         <di:waypoint x="545" y="337" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_1gym4gm_di" bpmnElement="SequenceFlow_1gym4gm">
-        <di:waypoint x="460" y="580" />
-        <di:waypoint x="570" y="580" />
-        <di:waypoint x="570" y="362" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0eptro7_di" bpmnElement="SequenceFlow_0eptro7">
-        <di:waypoint x="250" y="362" />
-        <di:waypoint x="250" y="580" />
-        <di:waypoint x="360" y="580" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_1h1a0cl_di" bpmnElement="SequenceFlow_1h1a0cl">
-        <di:waypoint x="460" y="460" />
-        <di:waypoint x="570" y="460" />
-        <di:waypoint x="570" y="362" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_1602f3i_di" bpmnElement="SequenceFlow_1602f3i">
-        <di:waypoint x="250" y="362" />
-        <di:waypoint x="250" y="460" />
-        <di:waypoint x="360" y="460" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_1mv3dp4_di" bpmnElement="SequenceFlow_1mv3dp4">
-        <di:waypoint x="460" y="230" />
-        <di:waypoint x="570" y="230" />
-        <di:waypoint x="570" y="312" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1oh6eq7_di" bpmnElement="SequenceFlow_1oh6eq7">
-        <di:waypoint x="250" y="312" />
-        <di:waypoint x="250" y="230" />
-        <di:waypoint x="360" y="230" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_157c6e9_di" bpmnElement="SequenceFlow_157c6e9">
         <di:waypoint x="275" y="337" />
         <di:waypoint x="360" y="337" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_157c6e9_di" bpmnElement="SequenceFlow_157c6e9">
+        <di:waypoint x="250" y="362" />
+        <di:waypoint x="250" y="470" />
+        <di:waypoint x="360" y="470" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_160jfpk_di" bpmnElement="SequenceFlow_160jfpk">
         <di:waypoint x="595" y="337" />
         <di:waypoint x="682" y="337" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0afrh4e_di" bpmnElement="SequenceFlow_0afrh4e">
-        <di:waypoint x="460" y="120" />
-        <di:waypoint x="570" y="120" />
+        <di:waypoint x="460" y="160" />
+        <di:waypoint x="570" y="160" />
         <di:waypoint x="570" y="312" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0bvhrqu_di" bpmnElement="SequenceFlow_0bvhrqu">
         <di:waypoint x="250" y="312" />
-        <di:waypoint x="250" y="120" />
-        <di:waypoint x="360" y="120" />
+        <di:waypoint x="250" y="160" />
+        <di:waypoint x="360" y="160" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1uxqr6o_di" bpmnElement="SequenceFlow_1uxqr6o">
         <di:waypoint x="158" y="337" />
@@ -207,9 +134,6 @@ OGC will upload the Non-Funded Executed Agreement after it has been negotiated b
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="StartEvent_1p6s47e_di" bpmnElement="StartEvent_1p6s47e">
         <dc:Bounds x="122" y="319" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_03iirsg_di" bpmnElement="UserTask_03iirsg">
-        <dc:Bounds x="360" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_14p904o_di" bpmnElement="EndEvent_14p904o">
         <dc:Bounds x="682" y="319" width="36" height="36" />
@@ -220,17 +144,14 @@ OGC will upload the Non-Funded Executed Agreement after it has been negotiated b
       <bpmndi:BPMNShape id="ParallelGateway_0f68xmc_di" bpmnElement="ExclusiveGateway_0tqopul">
         <dc:Bounds x="545" y="312" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_0tz5ojx_di" bpmnElement="Task_0dj66yz">
-        <dc:Bounds x="360" y="190" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_14qknid_di" bpmnElement="Task_05tgs6y">
-        <dc:Bounds x="360" y="420" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_1peopdt_di" bpmnElement="Task_112migv">
-        <dc:Bounds x="360" y="540" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_1fv8l08_di" bpmnElement="Task_0xn3d6z">
+        <dc:Bounds x="360" y="430" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0tz5ojx_di" bpmnElement="Task_0dj66yz">
         <dc:Bounds x="360" y="297" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_03iirsg_di" bpmnElement="UserTask_03iirsg">
+        <dc:Bounds x="360" y="120" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
