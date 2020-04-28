@@ -783,7 +783,7 @@
         "spiffworkflow": {
             "editable": true,
             "git": "https://github.com/sartography/SpiffWorkflow.git",
-            "ref": "f7df6cfdc1487251a798930069a8a11a80fa30af"
+            "ref": "c3dc94deba2890a10d3b2b05d4a0dee54c83ed69"
         },
         "sqlalchemy": {
             "hashes": [

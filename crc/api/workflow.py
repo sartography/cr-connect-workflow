@@ -121,12 +121,28 @@ def delete(workflow_id):
     session.query(WorkflowModel).filter_by(id=workflow_id).delete()
     session.commit()
 
+def set_current_task(workflow_id, task_id):
+    workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    processor = WorkflowProcessor(workflow_model)
+    task_id = uuid.UUID(task_id)
+    task = processor.bpmn_workflow.get_task(task_id)
+    task.reset_token(reset_data=False)  # we could optionally clear the previous data.
+    workflow_model.bpmn_workflow_json = processor.serialize()
+    session.add(workflow_model)
+    session.commit()
+
+    workflow_api_model = __get_workflow_api_model(processor)
+    update_workflow_stats(workflow_model, workflow_api_model)
+    return WorkflowApiSchema().dump(workflow_api_model)
 
 def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
+    if task.state != task.READY:
+        raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
+                                        "Consider calling a token reset to make this task Ready.")
     task.update_data(body)
     processor.complete_task(task)
     processor.do_engine_steps()

@@ -3,6 +3,7 @@ import os
 from unittest.mock import patch
 
 from crc import session, app
+from crc.api.common import ApiError
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.file import FileModelSchema, LookupDataSchema
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
@@ -23,7 +24,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
-    def complete_form(self, workflow, task, dict_data):
+    def complete_form(self, workflow, task, dict_data, error_code = None):
         if isinstance(task, dict):
             task_id = task["id"]
         else:
@@ -32,6 +33,10 @@ class TestTasksApi(BaseTest):
                           headers=self.logged_in_headers(),
                           content_type="application/json",
                           data=json.dumps(dict_data))
+        if error_code:
+            self.assert_failure(rv, error_code=error_code)
+            return
+
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
 
@@ -329,3 +334,28 @@ class TestTasksApi(BaseTest):
         workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
         self.assertEquals(WorkflowStatus.complete, workflow_api.status)
 
+    def test_update_task_resets_token(self):
+        self.load_example_data()
+        workflow = self.create_workflow('exclusive_gateway')
+
+        # Start the workflow.
+        tasks = self.get_workflow_api(workflow).user_tasks
+        self.complete_form(workflow, tasks[0], {"has_bananas": True})
+        workflow = self.get_workflow_api(workflow)
+        self.assertEquals('Task_Num_Bananas', workflow.next_task['name'])
+
+        # Trying to re-submit the initial task, and answer differently, should result in an error.
+        self.complete_form(workflow, tasks[0], {"has_bananas": False}, error_code="invalid_state")
+
+        # Make the old task the current task.
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, tasks[0].id),
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        workflow = WorkflowApiSchema().load(json_data)
+
+        # The next task should be a different value.
+        self.complete_form(workflow, tasks[0], {"has_bananas": False})
+        workflow = self.get_workflow_api(workflow)
+        self.assertEquals('Task_Why_No_Bananas', workflow.next_task['name'])

@@ -669,7 +669,35 @@ paths:
                 capital_assyria: Assur
       responses:
         '201':
-          description: Returns the updated workflow with the task completed.
+          description: Returns the updated workflow with this task as the current task.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+  /workflow/{workflow_id}/task/{task_id}/set_token:
+    parameters:
+      - name: workflow_id
+        in: path
+        required: true
+        description: The id of the workflow
+        schema:
+          type: integer
+          format: int32
+      - name: task_id
+        in: path
+        required: true
+        description: The id of the task
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: crc.api.workflow.set_current_task
+      summary: Attempts to make the given task the Current Active Task
+      tags:
+        - Workflows and Tasks
+      responses:
+        '201':
+          description: Returns the updated workflow with this task as the current task.
           content:
             application/json:
               schema:
