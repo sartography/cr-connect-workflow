@@ -14,13 +14,13 @@
           </camunda:formField>
           <camunda:formField id="FormField_BudgetDraft" label="Draft Budget" type="file">
             <camunda:properties>
-              <camunda:property id="hide_expression" value="!(model.FormField_isBudget) | FormField_isBudget == null" />
+              <camunda:property id="hide_expression" value="!(model.FormField_isBudget) | model.FormField_isBudget == null" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="FormField_Budget Final" label="Final Budget" type="file">
             <camunda:properties>
               <camunda:property id="description" value="This is the budget that you will negotiate with your funding source." />
-              <camunda:property id="hide_expression" value="!(model.FormField_isBudget) | FormField_isBudget == null" />
+              <camunda:property id="hide_expression" value="!(model.FormField_isBudget) | model.FormField_isBudget == null" />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>
@@ -50,7 +50,7 @@
     <bpmn:sequenceFlow id="SequenceFlow_157c6e9" sourceRef="ExclusiveGateway_0m1n8mu" targetRef="Task_0xn3d6z" />
     <bpmn:sequenceFlow id="SequenceFlow_1oh6eq7" sourceRef="ExclusiveGateway_0m1n8mu" targetRef="Task_0dj66yz" />
     <bpmn:userTask id="Task_0dj66yz" name="Enter Contract Funded" camunda:formKey="FormKey_ContractFunded">
-      <bpmn:documentation>#### Process: 
+      <bpmn:documentation>#### Process:
 
 The study team uploads the executed copy of the contract(s) after they receive it from the Office of Grants and Contracts, after the following process components are completed outside of the Clinical Research Connect:
 
