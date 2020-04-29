@@ -1,10 +1,11 @@
+import json
 from typing import List
 
 from SpiffWorkflow import WorkflowException
 
 from crc import db, session
 from crc.api.common import ApiError
-from crc.models.file import FileModel
+from crc.models.file import FileModel, FileModelSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
@@ -105,6 +106,9 @@ class StudyService(object):
         # Container for results
         documents = []
 
+        # Study > Categories > Workflows
+        study = StudyService.get_study(study_id)
+
         # For each required doc, get file(s)
         for code, doc in study_docs.items():
             if not doc['required']:
@@ -123,6 +127,15 @@ class StudyService(object):
                         name_list.append(doc[cat_key])
                 doc['display_name'] = ' '.join(name_list)
 
+            # print('code', code)
+            #
+            # # Find which workflows have the associated irb_doc_code???
+            # wf = db.session.query(WorkflowModel)\
+            #     .filter_by(study_id=study_id)\
+            #     .filter(WorkflowModel.bpmn_workflow_json.contains(code))\
+            #     .first()
+            # print('wf', wf)
+
             # For each file, get associated workflow status
             doc_files = FileService.get_files(study_id=study_id, irb_doc_code=code)
             for file in doc_files:
@@ -138,6 +151,18 @@ class StudyService(object):
             documents.append(doc)
 
         return documents
+
+
+    @staticmethod
+    def get_protocol(study_id):
+        """Returns the study protocol, if it has been uploaded."""
+        file = db.session.query(FileModel)\
+            .filter_by(study_id=study_id)\
+            .filter_by(form_field_key='Study_Protocol_Document')\
+            .first()
+
+        return FileModelSchema().dump(file)
+
 
     @staticmethod
     def synch_all_studies_with_protocol_builder(user):

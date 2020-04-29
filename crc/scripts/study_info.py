@@ -15,7 +15,7 @@ class StudyInfo(Script):
 
     """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'details', 'approvals', 'documents_status']
+    type_options = ['info', 'investigators', 'details', 'approvals', 'documents_status', 'protocol']
 
     def get_description(self):
         return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', or 'details'
@@ -75,7 +75,10 @@ class StudyInfo(Script):
                         'workflow_spec_id': 'irb_api_details',
                         'status': 'complete',
                     }
-                ]
+                ],
+                'protocol': {
+                    id: 0,
+                }
             }
         }
         self.add_data_to_task(task=task, data=data["study"])
@@ -101,6 +104,8 @@ class StudyInfo(Script):
             self.add_data_to_task(task, {cmd: StudyService().get_approvals(study_id)})
         if cmd == 'documents_status':
             self.add_data_to_task(task, {cmd: StudyService().get_documents_status(study_id)})
+        if cmd == 'protocol':
+            self.add_data_to_task(task, {cmd: StudyService().get_protocol(study_id)})
 
 
     def check_args(self, args):

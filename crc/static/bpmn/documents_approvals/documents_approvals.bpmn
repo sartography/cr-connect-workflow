@@ -13,13 +13,19 @@
       <bpmn:documentation># Documents &amp; Approvals
 
 &gt; ## Protocol Document Management
-&gt; [Upload Protocol Here](/)
+{% if StudyInfo.protocol is defined -%}
+{%- set p = StudyInfo.protocol -%}
+
+&gt; [{{p.name}}](/study/{{p.study_id}}/workflow/{{p.workflow_id}}/task/{{p.task_id}})
+{%- else -%}
+&gt; No protocol uploaded yet.
+{% endif %}
 
 &gt; ## Approvals
 &gt; | Name | Status | Help |
 |:---- |:------ |:---- |
 {% for approval in StudyInfo.approvals -%}
-| [{{approval.display_name}}](/study/{{approval.study_id}}/workflow/{{approval.workflow_id}}) | {{approval.status}} | [Context here](/help/{{approval.workflow_spec_id}}) |
+| [{{approval.display_name}}](/study/{{approval.study_id}}/workflow/{{approval.workflow_id}}) | {{approval.status}} | [?](/help/{{approval.workflow_spec_id}}) |
 {% endfor %}
 
 &gt; ## Documents
@@ -27,9 +33,9 @@
 |:---- |:------ |:---- |:-------- |
 {% for doc in StudyInfo.documents_status -%}
     {% if doc.file_id is defined -%}
-        | [{{doc.display_name}}](/study/{{doc.study_id}}/workflow/{{doc.workflow_id}}/task/{{doc.task_id}}) | {{doc.status}} | [Context here](/help/documents/{{doc.code}}) | [Download](/file/{{doc.file_id}}) |
+        | [{{doc.display_name}}](/study/{{doc.study_id}}/workflow/{{doc.workflow_id}}/task/{{doc.task_id}}) | {{doc.status}} | [Context here](/help/documents/{{doc.code}}) | [Download](/file/{{doc.file_id}}/data) |
     {%- else -%}
-        | {{doc.display_name}} | Not started | [Context here](/help/documents/{{doc.code}}) | No file yet |
+        | {{doc.display_name}} | Not started | [?](/help/documents/{{doc.code}}) | No file yet |
     {%- endif %}
 {% endfor %}</bpmn:documentation>
       <bpmn:extensionElements>
@@ -46,47 +52,60 @@
       <bpmn:script>StudyInfo approvals</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_1aju60t" name="Load Documents">
-      <bpmn:incoming>Flow_1k3su2q</bpmn:incoming>
+      <bpmn:incoming>Flow_0w20w9j</bpmn:incoming>
       <bpmn:outgoing>Flow_0c7ryff</bpmn:outgoing>
       <bpmn:script>StudyInfo documents_status</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_142jtxs" sourceRef="Activity_0a14x7j" targetRef="Activity_DisplayDocsAndApprovals" />
     <bpmn:sequenceFlow id="Flow_0c7ryff" sourceRef="Activity_1aju60t" targetRef="Activity_0a14x7j" />
-    <bpmn:sequenceFlow id="Flow_1k3su2q" sourceRef="StartEvent_1" targetRef="Activity_1aju60t" />
+    <bpmn:sequenceFlow id="Flow_1k3su2q" sourceRef="StartEvent_1" targetRef="Activity_0b4ojeq" />
+    <bpmn:scriptTask id="Activity_0b4ojeq" name="Load Protocol">
+      <bpmn:incoming>Flow_1k3su2q</bpmn:incoming>
+      <bpmn:outgoing>Flow_0w20w9j</bpmn:outgoing>
+      <bpmn:script>StudyInfo protocol</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0w20w9j" sourceRef="Activity_0b4ojeq" targetRef="Activity_1aju60t" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1gmf4la">
       <bpmndi:BPMNEdge id="Flow_1k3su2q_di" bpmnElement="Flow_1k3su2q">
-        <di:waypoint x="228" y="117" />
-        <di:waypoint x="290" y="117" />
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="240" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0c7ryff_di" bpmnElement="Flow_0c7ryff">
-        <di:waypoint x="390" y="117" />
-        <di:waypoint x="440" y="117" />
+        <di:waypoint x="490" y="117" />
+        <di:waypoint x="540" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_142jtxs_di" bpmnElement="Flow_142jtxs">
-        <di:waypoint x="540" y="117" />
-        <di:waypoint x="610" y="117" />
+        <di:waypoint x="640" y="117" />
+        <di:waypoint x="710" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0m7unlb_di" bpmnElement="Flow_0m7unlb">
-        <di:waypoint x="710" y="117" />
-        <di:waypoint x="782" y="117" />
+        <di:waypoint x="810" y="117" />
+        <di:waypoint x="882" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="192" y="99" width="36" height="36" />
+        <dc:Bounds x="152" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_1qvyxg7_di" bpmnElement="EndEvent_1qvyxg7">
-        <dc:Bounds x="782" y="99" width="36" height="36" />
+        <dc:Bounds x="882" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_19nawos_di" bpmnElement="Activity_DisplayDocsAndApprovals">
-        <dc:Bounds x="610" y="77" width="100" height="80" />
+        <dc:Bounds x="710" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1bxk8h3_di" bpmnElement="Activity_0a14x7j">
-        <dc:Bounds x="440" y="77" width="100" height="80" />
+        <dc:Bounds x="540" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_07ytvmv_di" bpmnElement="Activity_1aju60t">
-        <dc:Bounds x="290" y="77" width="100" height="80" />
+        <dc:Bounds x="390" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wf6u3m_di" bpmnElement="Activity_0b4ojeq">
+        <dc:Bounds x="240" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0w20w9j_di" bpmnElement="Flow_0w20w9j">
+        <di:waypoint x="340" y="117" />
+        <di:waypoint x="390" y="117" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>

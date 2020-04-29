@@ -168,7 +168,7 @@ class FileService(object):
         if form_field_key:
             query = query.filter_by(form_field_key=form_field_key)
         if name:
-            query = query.filter_by(name=form_field_key)
+            query = query.filter_by(name=name)
         if irb_doc_code:
             query = query.filter_by(irb_doc_code=irb_doc_code)
 
