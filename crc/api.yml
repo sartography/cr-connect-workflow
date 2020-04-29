@@ -608,7 +608,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Workflow"
     delete:
-      operationId: crc.api.workflow.delete
+      operationId: crc.api.workflow.delete_workflow
       summary: Removes an existing workflow
       tags:
         - Workflows and Tasks

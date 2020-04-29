@@ -4,7 +4,7 @@ from SpiffWorkflow import WorkflowException
 
 from crc import db, session
 from crc.api.common import ApiError
-from crc.models.file import FileModel
+from crc.models.file import FileModel, FileDataModel
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
@@ -49,11 +49,20 @@ class StudyService(object):
 
     @staticmethod
     def delete_study(study_id):
-        session.query(WorkflowStatsModel).filter_by(study_id=study_id).delete()
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
-        session.query(WorkflowModel).filter_by(study_id=study_id).delete()
+        session.query(WorkflowStatsModel).filter_by(study_id=study_id).delete()
+        for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
+            StudyService.delete_workflow(workflow.id)
         session.query(StudyModel).filter_by(id=study_id).delete()
         session.commit()
+
+    @staticmethod
+    def delete_workflow(workflow_id):
+        for file in session.query(FileModel).filter_by(workflow_id=workflow_id).all():
+            FileService.delete_file(file.id)
+        session.query(TaskEventModel).filter_by(workflow_id=workflow_id).delete()
+        session.query(WorkflowStatsModel).filter_by(workflow_id=workflow_id).delete()
+        session.query(WorkflowModel).filter_by(id=workflow_id).delete()
 
     @staticmethod
     def get_categories():
