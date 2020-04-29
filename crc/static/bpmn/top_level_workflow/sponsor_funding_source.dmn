@@ -7,7 +7,7 @@
     <decisionTable id="DecisionTable_00zdxg0">
       <input id="InputClause_02n3ccs" label="CoCApplication Required?">
         <inputExpression id="LiteralExpression_1ju4o1o" typeRef="boolean" expressionLanguage="feel">
-          <text>Documents['AD_LabManual']['required']</text>
+          <text>StudyInfo.documents.AD_LabManual.required</text>
         </inputExpression>
       </input>
       <output id="OutputClause_1ybi1ud" label="sponsor_funding_source" name="sponsor_funding_source" typeRef="string" />

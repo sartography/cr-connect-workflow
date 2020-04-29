@@ -4,16 +4,12 @@ from connexion import NoContent
 from flask import g
 from sqlalchemy.exc import IntegrityError
 
-from crc import session, app
+from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.api.workflow import __get_workflow_api_model
-from crc.models.api_models import WorkflowApiSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.study import StudySchema, StudyModel, Study
-from crc.models.workflow import WorkflowModel, WorkflowSpecModel
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
-from crc.services.workflow_processor import WorkflowProcessor
 
 
 def add_study(body):

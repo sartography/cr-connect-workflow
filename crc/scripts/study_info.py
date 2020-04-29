@@ -4,7 +4,8 @@ from crc import session, app
 from crc.api.common import ApiError
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowStatus
-from crc.scripts.script import Script
+from crc.scripts.script import Script, ScriptValidationError
+from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
@@ -15,21 +16,24 @@ class StudyInfo(Script):
 
     """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'details', 'approvals', 'documents_status', 'protocol']
+    type_options = ['info', 'investigators', 'details', 'approvals', 'documents', 'protocol']
 
     def get_description(self):
-        return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', or 'details'
+        return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', or 'details', 'approvals',
+            'documents' or 'protocol'.
             Adds details about the current study to the Task Data.  The type of information required should be 
-            provided as an argument.  Basic returns the basic information such as the title.  Investigators provides
-            detailed information about each investigator in th study.  Details provides a large number
-            of details about the study, as gathered within the protocol builder, and 'required_docs', 
-            lists all the documents the Protocol Builder has determined will be required as a part of
-            this study. 
+            provided as an argument.  'info' returns the basic information such as the title.  'Investigators' provides
+            detailed information about each investigator in th study.  'Details' provides a large number
+            of details about the study, as gathered within the protocol builder, and 'documents', 
+            lists all the documents that can be a part of the study, with documents from Protocol Builder 
+            marked as required, and details about any files that were uploaded' . 
         """
 
     def do_task_validate_only(self, task, study_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
         self.check_args(args)
+        # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
+        FileService.get_file_reference_dictionary()
         data = {
             "study":{
                 "info": {
@@ -57,7 +61,8 @@ class StudyInfo(Script):
                     "status": WorkflowStatus.not_started.value,
                     "workflow_spec_id": "irb_api_details",
                 },
-                "documents_status": [
+                "documents": {
+                    "AD_CoCApp":
                     {
                         'category1': 'Ancillary Document',
                         'category2': 'CoC Application',
@@ -75,7 +80,7 @@ class StudyInfo(Script):
                         'workflow_spec_id': 'irb_api_details',
                         'status': 'complete',
                     }
-                ],
+                },
                 'protocol': {
                     id: 0,
                 }
@@ -102,7 +107,7 @@ class StudyInfo(Script):
             self.add_data_to_task(task, {cmd: self.pb.get_study_details(study_id)})
         if cmd == 'approvals':
             self.add_data_to_task(task, {cmd: StudyService().get_approvals(study_id)})
-        if cmd == 'documents_status':
+        if cmd == 'documents':
             self.add_data_to_task(task, {cmd: StudyService().get_documents_status(study_id)})
         if cmd == 'protocol':
             self.add_data_to_task(task, {cmd: StudyService().get_protocol(study_id)})

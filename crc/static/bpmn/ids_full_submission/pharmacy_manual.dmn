@@ -7,7 +7,7 @@
     <decisionTable id="decisionTable_1">
       <input id="input_1" label="Pharmacy Manual Upload Count">
         <inputExpression id="inputExpression_1" typeRef="integer">
-          <text>Documents["DrugDevDoc_PharmManual"]["count"]</text>
+          <text>StudyInfo.documents.DrugDevDoc_PharmManual.count</text>
         </inputExpression>
       </input>
       <output id="output_1" label="Pharmacy Manual(s) Uploaded?" name="isPharmacyManual" typeRef="boolean" />

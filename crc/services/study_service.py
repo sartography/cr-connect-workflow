@@ -11,7 +11,6 @@ from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
-from crc.scripts.documents import Documents
 from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -39,6 +38,9 @@ class StudyService(object):
         study = Study.from_model(study_model)
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
+
+        # Calling this line repeatedly is very very slow.  It creates the
+        # master spec and runs it.
         status = StudyService.__get_study_status(study_model)
         study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
@@ -94,63 +96,50 @@ class StudyService(object):
 
     @staticmethod
     def get_documents_status(study_id):
-        """Returns a list of required documents and related workflow status."""
-        doc_service = Documents()
+        """Returns a list of documents related to the study, if they are required, and any file information
+        that is available.."""
 
         # Get PB required docs
-        pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id, as_objects=True)
+        pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
 
-        # Get required docs for study
-        study_docs = doc_service.get_documents(study_id=study_id, pb_docs=pb_docs)
+        # Loop through all known document types, get the counts for those files, and use pb_docs to mark those required.
+        doc_dictionary = FileService.get_file_reference_dictionary()
+        documents = {}
+        for code, doc in doc_dictionary.items():
 
-        # Container for results
-        documents = []
-
-        # Study > Categories > Workflows
-        study = StudyService.get_study(study_id)
-
-        # For each required doc, get file(s)
-        for code, doc in study_docs.items():
-            if not doc['required']:
-                continue
-
+            pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
+            doc['required'] = False
+            if pb_data:
+                doc['required'] = True
             doc['study_id'] = study_id
             doc['code'] = code
 
-            # Make a display name out of categories if none exists
-            if 'Name' in doc and len(doc['Name']) > 0:
-                doc['display_name'] = doc['Name']
-            else:
-                name_list = []
-                for cat_key in ['category1', 'category2', 'category3']:
-                    if doc[cat_key] not in ['', 'NULL']:
-                        name_list.append(doc[cat_key])
-                doc['display_name'] = ' '.join(name_list)
-
-            # print('code', code)
-            #
-            # # Find which workflows have the associated irb_doc_code???
-            # wf = db.session.query(WorkflowModel)\
-            #     .filter_by(study_id=study_id)\
-            #     .filter(WorkflowModel.bpmn_workflow_json.contains(code))\
-            #     .first()
-            # print('wf', wf)
+            # Make a display name out of categories
+            name_list = []
+            for cat_key in ['category1', 'category2', 'category3']:
+                if doc[cat_key] not in ['', 'NULL']:
+                    name_list.append(doc[cat_key])
+            doc['display_name'] = ' / '.join(name_list)
 
             # For each file, get associated workflow status
             doc_files = FileService.get_files(study_id=study_id, irb_doc_code=code)
+            doc['count'] = len(doc_files)
+            doc['files'] = []
             for file in doc_files:
-                doc['file_id'] = file.id
-                doc['task_id'] = file.task_id
-                doc['workflow_id'] = file.workflow_id
-                doc['workflow_spec_id'] = file.workflow_spec_id
+                doc['files'].append({'file_id': file.id,
+                                     'task_id': file.task_id,
+                                     'workflow_id': file.workflow_id,
+                                     'workflow_spec_id': file.workflow_spec_id})
 
-                if doc['status'] is None:
+                # update the document status to match the status of the workflow it is in.
+                if not 'status' in doc or doc['status'] is None:
                     workflow: WorkflowModel = session.query(WorkflowModel).filter_by(id=file.workflow_id).first()
                     doc['status'] = workflow.status.value
 
-            documents.append(doc)
+            documents[code] = doc
 
         return documents
+
 
 
     @staticmethod
