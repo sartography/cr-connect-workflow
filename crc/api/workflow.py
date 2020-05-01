@@ -98,13 +98,16 @@ def __get_workflow_api_model(processor: WorkflowProcessor, status_data=None):
         status=processor.get_status(),
         last_task=WorkflowService.spiff_task_to_api_task(processor.bpmn_workflow.last_task),
         next_task=None,
+        previous_task=None,
         user_tasks=user_tasks,
         workflow_spec_id=processor.workflow_spec_id,
         spec_version=processor.get_spec_version(),
         is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
     )
-    if processor.next_task():
-        workflow_api.next_task = WorkflowService.spiff_task_to_api_task(processor.next_task())
+    next_task = processor.next_task()
+    if next_task:
+        workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task)
+        workflow_api.parent_task = processor.previous_task(next_task)
     return workflow_api
 
 
@@ -123,8 +126,10 @@ def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
+    last_task = processor.bpmn_workflow.last_task
     task = processor.bpmn_workflow.get_task(task_id)
     task.reset_token(reset_data=False)  # we could optionally clear the previous data.
+    #processor.bpmn_workflow.last_task = last_task
     workflow_model.bpmn_workflow_json = processor.serialize()
     session.add(workflow_model)
     session.commit()

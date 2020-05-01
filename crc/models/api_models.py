@@ -90,13 +90,14 @@ class TaskSchema(ma.Schema):
 
 
 class WorkflowApi(object):
-    def __init__(self, id, status, user_tasks, last_task, next_task,
+    def __init__(self, id, status, user_tasks, last_task, next_task, previous_task,
                  spec_version, is_latest_spec, workflow_spec_id):
         self.id = id
         self.status = status
         self.user_tasks = user_tasks
-        self.last_task = last_task
-        self.next_task = next_task
+        self.last_task = last_task  # The last task that was completed, may be different than previous.
+        self.next_task = next_task  # The next task that requires user input.
+        self.previous_task = previous_task  # The opposite of next task.
         self.workflow_spec_id = workflow_spec_id
         self.spec_version = spec_version
         self.is_latest_spec = is_latest_spec
@@ -104,7 +105,7 @@ class WorkflowApi(object):
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
-        fields = ["id", "status", "user_tasks", "last_task", "next_task",
+        fields = ["id", "status", "user_tasks", "last_task", "next_task", "previous_task",
                   "workflow_spec_id", "spec_version", "is_latest_spec"]
         unknown = INCLUDE
 
@@ -112,10 +113,11 @@ class WorkflowApiSchema(ma.Schema):
     user_tasks = marshmallow.fields.List(marshmallow.fields.Nested(TaskSchema, dump_only=True))
     last_task = marshmallow.fields.Nested(TaskSchema, dump_only=True)
     next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
+    previous_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
-        keys = ['id', 'status', 'user_tasks', 'last_task', 'next_task',
+        keys = ['id', 'status', 'user_tasks', 'last_task', 'next_task', 'previous_task',
                 'workflow_spec_id', 'spec_version', 'is_latest_spec']
         filtered_fields = {key: data[key] for key in keys}
         return WorkflowApi(**filtered_fields)

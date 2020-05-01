@@ -373,6 +373,41 @@ class WorkflowProcessor(object):
             next_task = task
         return next_task
 
+    def previous_task(self, next_task):
+        """Attempts to find the opposite of "next_task", given where you are at, what user task
+        would you have wish to complete when moving in the opposite direction.
+        """
+
+
+        # If the parent task is not an engine task, return that.
+        if not next_task.parent.is_engine_task:
+            return next_task.parent
+
+        if isinstance(Gateway)
+        # If the last task is a parent of this task,
+
+        # If the whole blessed mess is done, return the end_event task in the tree
+        if self.bpmn_workflow.is_completed():
+            for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
+                if isinstance(task.task_spec, EndEvent):
+                    return task
+
+        # If there are ready tasks to complete, return the next ready task, but return the one
+        # in the active parallel path if possible.
+        ready_tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
+        if len(ready_tasks) > 0:
+            for task in ready_tasks:
+                if task.parent == self.bpmn_workflow.last_task:
+                    return task
+            return ready_tasks[0]
+
+        # If there are no ready tasks, but the thing isn't complete yet, find the first non-complete task
+        # and return that
+        next_task = None
+        for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.NOT_FINISHED_MASK):
+            next_task = task
+        return next_task
+
     def complete_task(self, task):
         self.bpmn_workflow.complete_task_from_id(task.id)
         self.workflow_model.total_tasks = len(self.get_all_user_tasks())
