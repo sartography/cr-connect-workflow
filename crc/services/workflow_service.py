@@ -2,7 +2,7 @@ from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
-from SpiffWorkflow.dmn.specs.BuisnessRuleTask import BusinessRuleTask
+from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from pandas import ExcelFile
 from sqlalchemy import func
