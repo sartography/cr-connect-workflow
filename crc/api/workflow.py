@@ -9,6 +9,7 @@ from crc.models.stats import WorkflowStatsModel, TaskEventModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.file_service import FileService
+from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 
@@ -78,8 +79,8 @@ def delete_workflow_specification(spec_id):
         FileService.delete_file(file.id)
 
     # Delete all stats and workflow models related to this specification
-    session.query(WorkflowStatsModel).filter_by(workflow_spec_id=spec_id).delete()
-    session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).delete()
+    for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
+        StudyService.delete_workflow(workflow)
     session.query(WorkflowSpecModel).filter_by(id=spec_id).delete()
     session.commit()
 
@@ -115,11 +116,8 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def delete(workflow_id):
-    session.query(TaskEventModel).filter_by(workflow_id=workflow_id).delete()
-    session.query(WorkflowStatsModel).filter_by(workflow_id=workflow_id).delete()
-    session.query(WorkflowModel).filter_by(id=workflow_id).delete()
-    session.commit()
+def delete_workflow(workflow_id):
+    StudyService.delete_workflow(workflow_id)
 
 def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()

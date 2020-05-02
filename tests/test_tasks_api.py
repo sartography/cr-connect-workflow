@@ -164,6 +164,11 @@ class TestTasksApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         files = FileModelSchema(many=True).load(json_data, session=session)
         self.assertTrue(len(files) == 1)
+        # Assure we can still delete the study even when there is a file attached to a workflow.
+        rv = self.app.delete('/v1.0/study/%i' % workflow.study_id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+
+
 
     def test_get_documentation_populated_in_end(self):
         self.load_example_data()
