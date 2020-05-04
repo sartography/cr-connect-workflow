@@ -7,7 +7,7 @@
     <decisionTable id="decisionTable_1">
       <input id="input_1" label="Investigator&#39;s Brochure Form Upload Count">
         <inputExpression id="inputExpression_1" typeRef="integer">
-          <text>Documents.DrugDevDoc_InvestBrochure.count</text>
+          <text>StudyInfo.documents.DrugDevDoc_InvestBrochure.count</text>
         </inputExpression>
       </input>
       <output id="output_1" label="Investigator&#39;s Brochure(s) Uploaded?" name="isInvestigatorsBrochure" typeRef="boolean" />

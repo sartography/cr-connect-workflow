@@ -7,7 +7,7 @@
     <decisionTable id="DecisionTable_1mjqwlv">
       <input id="InputClause_18pwfqu" label="Required Doc Keys">
         <inputExpression id="LiteralExpression_1y84stb" typeRef="boolean" expressionLanguage="feel">
-          <text>Documents['Study_DataSecurityPlan']['required']</text>
+          <text>StudyInfo.documents.Study_DataSecurityPlan.required</text>
         </inputExpression>
       </input>
       <output id="OutputClause_05y0j7c" label="data_security_plan" name="data_security_plan" typeRef="string" />

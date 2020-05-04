@@ -217,7 +217,7 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
     <bpmn:scriptTask id="Activity_LoadDocuments" name="Load Documents">
       <bpmn:incoming>SequenceFlow_1dexemq</bpmn:incoming>
       <bpmn:outgoing>Flow_1x9d2mo</bpmn:outgoing>
-      <bpmn:script>Documents</bpmn:script>
+      <bpmn:script>StudyInfo documents</bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">

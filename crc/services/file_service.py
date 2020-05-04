@@ -56,7 +56,7 @@ class FileService(object):
         data_model = FileService.get_reference_file_data(FileService.IRB_PRO_CATEGORIES_FILE)
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])
-        return code in df['Code'].values
+        return code in df['code'].values
 
     @staticmethod
     def get_file_reference_dictionary():
@@ -65,11 +65,11 @@ class FileService(object):
         data_model = FileService.get_reference_file_data(FileService.IRB_PRO_CATEGORIES_FILE)
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])
-        df['Id'] = df['Id'].fillna(0)
-        df = df.astype({'Id': 'Int64'})
+        df['id'] = df['id'].fillna(0)
+        df = df.astype({'id': 'Int64'})
         df = df.fillna('')
         df = df.applymap(str)
-        df = df.set_index('Code')
+        df = df.set_index('code')
         #        IF we need to convert the column names to something more sensible.
         #        df.columns = [snakeCase(x) for x in df.columns]
         return json.loads(df.to_json(orient='index'))
@@ -80,12 +80,13 @@ class FileService(object):
 #        all_dict = df.set_index('Id').to_dict('index')
 
     @staticmethod
-    def add_task_file(study_id, workflow_id, task_id, name, content_type, binary_data,
+    def add_task_file(study_id, workflow_id, workflow_spec_id, task_id, name, content_type, binary_data,
                       irb_doc_code=None):
         """Create a new file and associate it with an executing task within a workflow."""
         file_model = FileModel(
             study_id=study_id,
             workflow_id=workflow_id,
+            workflow_spec_id=workflow_spec_id,
             task_id=task_id,
             name=name,
             irb_doc_code=irb_doc_code
@@ -168,7 +169,7 @@ class FileService(object):
         if form_field_key:
             query = query.filter_by(form_field_key=form_field_key)
         if name:
-            query = query.filter_by(name=form_field_key)
+            query = query.filter_by(name=name)
         if irb_doc_code:
             query = query.filter_by(irb_doc_code=irb_doc_code)
 

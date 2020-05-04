@@ -41,14 +41,11 @@ class ProtocolBuilderService(object):
                            (response.status_code, response.text))
 
     @staticmethod
-    def get_required_docs(study_id, as_objects=False) -> Optional[List[ProtocolBuilderRequiredDocument]]:
+    def get_required_docs(study_id) -> Optional[List[ProtocolBuilderRequiredDocument]]:
         ProtocolBuilderService.check_args(study_id)
         response = requests.get(ProtocolBuilderService.REQUIRED_DOCS_URL % study_id)
         if response.ok and response.text:
-            if as_objects:
-                return ProtocolBuilderRequiredDocumentSchema(many=True).loads(response.text)
-            else:
-                return json.loads(response.text)
+            return json.loads(response.text)
         else:
             raise ApiError("protocol_builder_error",
                            "Received an invalid response from the protocol builder (status %s): %s" %

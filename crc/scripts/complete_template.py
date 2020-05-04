@@ -5,7 +5,7 @@ from jinja2 import UndefinedError
 from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
-from crc.models.workflow import WorkflowSpecModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from docxtpl import DocxTemplate
 import jinja2
 
@@ -33,11 +33,12 @@ Takes two arguments:
     def do_task(self, task, study_id, *args, **kwargs):
         workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         final_document_stream = self.process_template(task, study_id, *args, **kwargs)
-
+        workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
         file_name = args[0]
         irb_doc_code = args[1]
         FileService.add_task_file(study_id=study_id,
                                   workflow_id=workflow_id,
+                                  workflow_spec_id=workflow.workflow_spec_id,
                                   task_id=task.id,
                                   name=file_name,
                                   content_type=CONTENT_TYPES['docx'],

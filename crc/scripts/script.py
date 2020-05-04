@@ -24,13 +24,6 @@ class Script(object):
                        "does must provide a validate_only option that mimics the do_task, " +
                        "but does not make external calls or database updates." )
 
-    def validate(self):
-        """Override this method to perform an early check that the script has access to
-        everything it needs to properly process requests.
-        Should return an array of ScriptValidationErrors.
-        """
-        return []
-
     @staticmethod
     def get_all_subclasses():
         return Script._get_all_subclasses(Script)
