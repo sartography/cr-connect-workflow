@@ -33,11 +33,11 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
-        self.mi_type = mi_type # Some tasks have a repeat behavior.
-        self.mi_count = mi_count # This is the number of times the task could repeat.
-        self.mi_index = mi_index # And the index of the currently repeating task.
+        self.mi_type = mi_type  # Some tasks have a repeat behavior.
+        self.mi_count = mi_count  # This is the number of times the task could repeat.
+        self.mi_index = mi_index  # And the index of the currently repeating task.
         self.process_name = process_name
-        self.properties = properties # Arbitrary extension properties from BPMN editor.
+        self.properties = properties  # Arbitrary extension properties from BPMN editor.
 
 
 class OptionSchema(ma.Schema):
@@ -91,7 +91,7 @@ class TaskSchema(ma.Schema):
 
 class WorkflowApi(object):
     def __init__(self, id, status, user_tasks, last_task, next_task, previous_task,
-                 spec_version, is_latest_spec, workflow_spec_id):
+                 spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks, last_updated):
         self.id = id
         self.status = status
         self.user_tasks = user_tasks
@@ -101,23 +101,28 @@ class WorkflowApi(object):
         self.workflow_spec_id = workflow_spec_id
         self.spec_version = spec_version
         self.is_latest_spec = is_latest_spec
+        self.total_tasks = total_tasks
+        self.completed_tasks = completed_tasks
+        self.last_updated = last_updated
 
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
         fields = ["id", "status", "user_tasks", "last_task", "next_task", "previous_task",
-                  "workflow_spec_id", "spec_version", "is_latest_spec"]
+                  "workflow_spec_id", "spec_version", "is_latest_spec", "total_tasks", "completed_tasks",
+                  "last_updated"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
     user_tasks = marshmallow.fields.List(marshmallow.fields.Nested(TaskSchema, dump_only=True))
-    last_task = marshmallow.fields.Nested(TaskSchema, dump_only=True)
+    last_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
     next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
     previous_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
         keys = ['id', 'status', 'user_tasks', 'last_task', 'next_task', 'previous_task',
-                'workflow_spec_id', 'spec_version', 'is_latest_spec']
+                'workflow_spec_id', 'spec_version', 'is_latest_spec', "total_tasks", "completed_tasks",
+                "last_updated"]
         filtered_fields = {key: data[key] for key in keys}
         return WorkflowApi(**filtered_fields)

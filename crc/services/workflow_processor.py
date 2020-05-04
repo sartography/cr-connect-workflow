@@ -2,6 +2,7 @@ import random
 import re
 import string
 import xml.etree.ElementTree as ElementTree
+from datetime import datetime
 
 from SpiffWorkflow import Task as SpiffTask
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
@@ -123,18 +124,17 @@ class WorkflowProcessor(object):
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec)
             self.bpmn_workflow.script_engine = self._script_engine
 
-            workflow_model.total_tasks = len(self.get_all_user_tasks())
-            workflow_model.completed_tasks = len(self.get_all_completed_tasks())
-            workflow_model.status = self.get_status()
-            session.add(workflow_model)
-            session.commit()
-
-            # Need to commit twice, first to get a unique id for the workflow model, and
-            # a second time to store the serialization so we can maintain this link within
-            # the spiff-workflow process.
-            self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-            workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
-            session.add(workflow_model)
+            if not self.WORKFLOW_ID_KEY in self.bpmn_workflow.data:
+                if not workflow_model.id:
+                    session.add(workflow_model)
+                    session.commit()
+                    # If the model is new, and has no id, save it, write it into the workflow model
+                    # and save it again.  In this way, the workflow process is always aware of the
+                    # database model to which it is associated, and scripts running within the model
+                    # can then load data as needed.
+                self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
+                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
+                self.save()
 
         except KeyError as ke:
             if soft_reset:
@@ -149,8 +149,7 @@ class WorkflowProcessor(object):
             # Now that the spec is loaded, get the data and rebuild the bpmn with the new details
             workflow_model.spec_version = self.hard_reset()
             workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
-            session.add(workflow_model)
-
+            self.save()
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec):
 
@@ -162,6 +161,19 @@ class WorkflowProcessor(object):
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
             bpmn_workflow.do_engine_steps()
         return bpmn_workflow
+
+    def save(self):
+        """Saves the current state of this processor to the database """
+        workflow_model = self.workflow_model
+        workflow_model.bpmn_workflow_json = self.serialize()
+        complete_states = [SpiffTask.CANCELLED, SpiffTask.COMPLETED]
+        tasks = list(self.get_all_user_tasks())
+        workflow_model.status = self.get_status()
+        workflow_model.total_tasks = len(tasks)
+        workflow_model.completed_tasks = sum(1 for t in tasks if t.state in complete_states)
+        workflow_model.last_updated = datetime.now()
+        session.add(workflow_model)
+        session.commit()
 
     @staticmethod
     def run_master_spec(spec_model, study):
@@ -373,53 +385,17 @@ class WorkflowProcessor(object):
             next_task = task
         return next_task
 
-    def previous_task(self, next_task):
-        """Attempts to find the opposite of "next_task", given where you are at, what user task
-        would you have wish to complete when moving in the opposite direction.
-        """
-
-
-        # If the parent task is not an engine task, return that.
-        if not next_task.parent.is_engine_task:
-            return next_task.parent
-
-        if isinstance(Gateway)
-        # If the last task is a parent of this task,
-
-        # If the whole blessed mess is done, return the end_event task in the tree
-        if self.bpmn_workflow.is_completed():
-            for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
-                if isinstance(task.task_spec, EndEvent):
-                    return task
-
-        # If there are ready tasks to complete, return the next ready task, but return the one
-        # in the active parallel path if possible.
-        ready_tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
-        if len(ready_tasks) > 0:
-            for task in ready_tasks:
-                if task.parent == self.bpmn_workflow.last_task:
-                    return task
-            return ready_tasks[0]
-
-        # If there are no ready tasks, but the thing isn't complete yet, find the first non-complete task
-        # and return that
-        next_task = None
-        for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.NOT_FINISHED_MASK):
-            next_task = task
-        return next_task
+    def previous_task(self):
+        return None
 
     def complete_task(self, task):
         self.bpmn_workflow.complete_task_from_id(task.id)
-        self.workflow_model.total_tasks = len(self.get_all_user_tasks())
-        self.workflow_model.completed_tasks = len(self.get_all_completed_tasks())
-        self.workflow_model.status = self.get_status()
-        session.add(self.workflow_model)
 
     def get_data(self):
         return self.bpmn_workflow.data
 
     def get_workflow_id(self):
-        return self.bpmn_workflow.data[self.WORKFLOW_ID_KEY]
+        return self.workflow_model.id
 
     def get_study_id(self):
         return self.bpmn_workflow.data[self.STUDY_ID_KEY]

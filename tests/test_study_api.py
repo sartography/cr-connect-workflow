@@ -3,14 +3,11 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 from crc import session
-from crc.models.api_models import WorkflowApiSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
-from crc.models.stats import WorkflowStatsModel, TaskEventModel
+from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel, StudySchema
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowStatus, \
-    WorkflowSpecCategoryModel
-from crc.services.workflow_processor import WorkflowProcessor
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecCategoryModel
 from tests.base_test import BaseTest
 
 
@@ -226,9 +223,6 @@ class TestStudyApi(BaseTest):
         # Create a workflow specification, and complete some stuff that would log stats
         workflow = self.create_workflow("random_fact", study=study, category_id=new_category.id)
         session.add(workflow)
-        session.commit()
-        stats = WorkflowStatsModel(study_id=study.id, workflow_id=workflow.id)
-        session.add(stats)
         session.commit()
         stats2 = TaskEventModel(study_id=study.id, workflow_id=workflow.id, user_uid=self.users[0]['uid'])
         session.add(stats2)

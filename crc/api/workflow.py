@@ -1,11 +1,9 @@
 import uuid
 
-from crc.api.stats import update_workflow_stats, log_task_complete
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.api_models import Task, WorkflowApi, WorkflowApiSchema
-from crc.models.file import FileModel, LookupDataModel, LookupDataSchema
-from crc.models.stats import WorkflowStatsModel, TaskEventModel
+from crc.models.api_models import WorkflowApi, WorkflowApiSchema
+from crc.models.file import FileModel, LookupDataSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.file_service import FileService
@@ -85,29 +83,28 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def __get_workflow_api_model(processor: WorkflowProcessor, status_data=None):
+def __get_workflow_api_model(processor: WorkflowProcessor):
     spiff_tasks = processor.get_all_user_tasks()
     user_tasks = list(map(WorkflowService.spiff_task_to_api_task, spiff_tasks))
-    is_active = True
-
-    if status_data is not None and processor.workflow_spec_id in status_data:
-        is_active = status_data[processor.workflow_spec_id]
 
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),
         last_task=WorkflowService.spiff_task_to_api_task(processor.bpmn_workflow.last_task),
         next_task=None,
-        previous_task=None,
+        previous_task=processor.previous_task(),
         user_tasks=user_tasks,
         workflow_spec_id=processor.workflow_spec_id,
         spec_version=processor.get_spec_version(),
         is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
+        total_tasks=processor.workflow_model.total_tasks,
+        completed_tasks=processor.workflow_model.completed_tasks,
+        last_updated=processor.workflow_model.last_updated
     )
     next_task = processor.next_task()
     if next_task:
         workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task)
-        workflow_api.parent_task = processor.previous_task(next_task)
+
     return workflow_api
 
 
@@ -115,7 +112,6 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
     workflow_api_model = __get_workflow_api_model(processor)
-    update_workflow_stats(workflow_model, workflow_api_model)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
@@ -126,17 +122,17 @@ def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
-    last_task = processor.bpmn_workflow.last_task
     task = processor.bpmn_workflow.get_task(task_id)
-    task.reset_token(reset_data=False)  # we could optionally clear the previous data.
-    #processor.bpmn_workflow.last_task = last_task
-    workflow_model.bpmn_workflow_json = processor.serialize()
-    session.add(workflow_model)
-    session.commit()
+    if task.state != task.COMPLETED:
+        raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
+                                        "currently set to COMPLETE.")
 
+    task.reset_token(reset_data=False)  # we could optionally clear the previous data.
+    processor.save()
+    WorkflowService.log_task_action(processor, task, WorkflowService.TASK_ACTION_TOKEN_RESET)
     workflow_api_model = __get_workflow_api_model(processor)
-    update_workflow_stats(workflow_model, workflow_api_model)
     return WorkflowApiSchema().dump(workflow_api_model)
+
 
 def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
@@ -149,14 +145,10 @@ def update_task(workflow_id, task_id, body):
     task.update_data(body)
     processor.complete_task(task)
     processor.do_engine_steps()
-    workflow_model.last_completed_task_id = task.id
-    workflow_model.bpmn_workflow_json = processor.serialize()
-    session.add(workflow_model)
-    session.commit()
+    processor.save()
+    WorkflowService.log_task_action(processor, task, WorkflowService.TASK_ACTION_COMPLETE)
 
     workflow_api_model = __get_workflow_api_model(processor)
-    update_workflow_stats(workflow_model, workflow_api_model)
-    log_task_complete(workflow_model, task_id)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 

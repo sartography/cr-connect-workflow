@@ -1,12 +1,13 @@
+from datetime import datetime
 from typing import List
 
 from SpiffWorkflow import WorkflowException
 
 from crc import db, session
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileModel
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.stats import WorkflowStatsModel, TaskEventModel
+from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
@@ -50,7 +51,6 @@ class StudyService(object):
     @staticmethod
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
-        session.query(WorkflowStatsModel).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
             StudyService.delete_workflow(workflow.id)
         session.query(StudyModel).filter_by(id=study_id).delete()
@@ -61,7 +61,6 @@ class StudyService(object):
         for file in session.query(FileModel).filter_by(workflow_id=workflow_id).all():
             FileService.delete_file(file.id)
         session.query(TaskEventModel).filter_by(workflow_id=workflow_id).delete()
-        session.query(WorkflowStatsModel).filter_by(workflow_id=workflow_id).delete()
         session.query(WorkflowModel).filter_by(id=workflow_id).delete()
 
     @staticmethod
@@ -242,7 +241,8 @@ class StudyService(object):
     def _create_workflow_model(study, spec):
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        study_id=study.id,
-                                       workflow_spec_id=spec.id)
+                                       workflow_spec_id=spec.id,
+                                       last_updated=datetime.now())
         session.add(workflow_model)
         session.commit()
         return workflow_model

@@ -1,9 +1,12 @@
+from datetime import datetime
+
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
-from SpiffWorkflow.dmn.specs.BuisnessRuleTask import BusinessRuleTask
+from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
+from flask import g
 from pandas import ExcelFile
 from sqlalchemy import func
 
@@ -14,12 +17,19 @@ import jinja2
 from jinja2 import Template
 
 from crc.models.file import FileDataModel, LookupFileModel, LookupDataModel
+from crc.models.stats import TaskEventModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
 
 
 class WorkflowService(object):
+
+    TASK_ACTION_COMPLETE = "Complete"
+    TASK_ACTION_TOKEN_RESET = "Backwards Move"
+    TASK_ACTION_HARD_RESET = "Restart (Hard)"
+    TASK_ACTION_SOFT_RESET = "Restart (Soft)"
+
     """Provides tools for processing workflows and tasks.  This
      should at some point, be the only way to work with Workflows, and
      the workflow Processor should be hidden behind this service.
@@ -225,6 +235,34 @@ class WorkflowService(object):
                 query = "%s:*" % query
             db_query = db_query.filter(LookupDataModel.label.match(query))
 
-#            db_query = db_query.filter(text("lookup_data.label @@ to_tsquery('simple', '%s')" % query))
+        #            db_query = db_query.filter(text("lookup_data.label @@ to_tsquery('simple', '%s')" % query))
 
         return db_query.limit(limit).all()
+
+    @staticmethod
+    def log_task_action(processor, spiff_task, action):
+        task = WorkflowService.spiff_task_to_api_task(spiff_task)
+        workflow_model = processor.workflow_model
+        task_event = TaskEventModel(
+            study_id=workflow_model.study_id,
+            user_uid=g.user.uid,
+            workflow_id=workflow_model.id,
+            workflow_spec_id=workflow_model.workflow_spec_id,
+            spec_version=workflow_model.spec_version,
+            action=action,
+            task_id=task.id,
+            task_name=task.name,
+            task_title=task.title,
+            task_type=str(task.type),
+            task_state=task.state,
+            mi_type=task.mi_type.value,  # Some tasks have a repeat behavior.
+            mi_count=task.mi_count,  # This is the number of times the task could repeat.
+            mi_index=task.mi_index,  # And the index of the currently repeating task.
+            process_name=task.process_name,
+            date=datetime.now(),
+        )
+        db.session.add(task_event)
+        db.session.commit()
+
+
+

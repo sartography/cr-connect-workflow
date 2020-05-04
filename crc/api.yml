@@ -615,27 +615,6 @@ paths:
       responses:
         '204':
           description: The workflow was removed
-  /workflow/{workflow_id}/stats:
-    parameters:
-        - name: workflow_id
-          in: path
-          required: true
-          description: The id of the workflow
-          schema:
-            type: integer
-            format: int32
-    get:
-      operationId: crc.api.stats.get_workflow_stats
-      summary: Stats about a given workflow
-      tags:
-        - Workflows and Tasks
-      responses:
-        '200':
-          description: Returns counts of complete, incomplete, and total number of tasks
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Workflow"
   /workflow/{workflow_id}/task/{task_id}/data:
     parameters:
       - name: workflow_id
@@ -1181,3 +1160,5 @@ components:
           example: "Chuck Norris"
         data:
           type: any
+
+

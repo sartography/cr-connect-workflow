@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from unittest.mock import patch
 
 from crc import db
@@ -38,7 +39,8 @@ class TestStudyService(BaseTest):
         self.load_test_spec("random_fact", category_id=cat.id)
 
         self.assertIsNotNone(study.id)
-        workflow = WorkflowModel(workflow_spec_id="random_fact", study_id=study.id, status=WorkflowStatus.not_started)
+        workflow = WorkflowModel(workflow_spec_id="random_fact", study_id=study.id,
+                                 status=WorkflowStatus.not_started, last_updated=datetime.now())
         db.session.add(workflow)
         db.session.commit()
         # Assure there is a master specification, one standard spec, and lookup tables.
@@ -73,6 +75,7 @@ class TestStudyService(BaseTest):
         # Complete a task
         task = processor.next_task()
         processor.complete_task(task)
+        processor.save()
 
         # Assure the workflow has moved on to the next task.
         studies = StudyService.get_studies_for_user(user)

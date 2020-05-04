@@ -59,6 +59,7 @@ class WorkflowState(enum.Enum):
     def list():
         return list(map(lambda c: c.value, WorkflowState))
 
+
 class WorkflowStatus(enum.Enum):
     not_started = "not_started"
     user_input_required = "user_input_required"
@@ -77,3 +78,5 @@ class WorkflowModel(db.Model):
     spec_version = db.Column(db.String)
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
+#    task_history = db.Column(db.ARRAY(db.String), default=[]) # The history stack of user completed tasks.
+    last_updated = db.Column(db.DateTime)

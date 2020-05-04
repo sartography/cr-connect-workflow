@@ -28,7 +28,6 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(0, len(self.validate_workflow("study_details")))
         self.assertEqual(0, len(self.validate_workflow("two_forms")))
 
-    @unittest.skip("There is one workflow that is failing right now, and I want that visible after deployment.")
     def test_successful_validation_of_auto_loaded_workflows(self):
         self.load_example_data()
         workflows = session.query(WorkflowSpecModel).all()

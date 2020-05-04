@@ -3,11 +3,11 @@ import os
 from unittest.mock import patch
 
 from crc import session, app
-from crc.api.common import ApiError
-from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
-from crc.models.file import FileModelSchema, LookupDataSchema
-from crc.models.stats import WorkflowStatsModel, TaskEventModel
+from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
+from crc.models.file import FileModelSchema
+from crc.models.stats import TaskEventModel
 from crc.models.workflow import WorkflowStatus
+from crc.services.workflow_service import WorkflowService
 from tests.base_test import BaseTest
 
 
@@ -24,12 +24,13 @@ class TestTasksApi(BaseTest):
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
-    def complete_form(self, workflow, task, dict_data, error_code = None):
-        if isinstance(task, dict):
-            task_id = task["id"]
+    def complete_form(self, workflow_in, task_in, dict_data, error_code = None):
+        prev_completed_task_count = workflow_in.completed_tasks
+        if isinstance(task_in, dict):
+            task_id = task_in["id"]
         else:
-            task_id = task.id
-        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow.id, task_id),
+            task_id = task_in.id
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
                           headers=self.logged_in_headers(),
                           content_type="application/json",
                           data=json.dumps(dict_data))
@@ -40,17 +41,36 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
 
-        num_stats = session.query(WorkflowStatsModel) \
-            .filter_by(workflow_id=workflow.id) \
-            .filter_by(workflow_spec_id=workflow.workflow_spec_id) \
-            .count()
-        self.assertGreater(num_stats, 0)
-
-        num_task_events = session.query(TaskEventModel) \
+        # Assure stats are updated on the model
+        workflow = WorkflowApiSchema().load(json_data)
+        # The total number of tasks may change over time, as users move through gateways
+        # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
+        self.assertIsNotNone(workflow.total_tasks)
+        self.assertEquals(prev_completed_task_count + 1, workflow.completed_tasks)
+        # Assure a record exists in the Task Events
+        task_events = session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow.id) \
             .filter_by(task_id=task_id) \
-            .count()
-        self.assertGreater(num_task_events, 0)
+            .order_by(TaskEventModel.date.desc()).all()
+        self.assertGreater(len(task_events), 0)
+        event = task_events[0]
+        self.assertIsNotNone(event.study_id)
+        self.assertEquals("dhf8r", event.user_uid)
+        self.assertEquals(workflow.id, event.workflow_id)
+        self.assertEquals(workflow.workflow_spec_id, event.workflow_spec_id)
+        self.assertEquals(workflow.spec_version, event.spec_version)
+        self.assertEquals(WorkflowService.TASK_ACTION_COMPLETE, event.action)
+        self.assertEquals(task_in.id, task_id)
+        self.assertEquals(task_in.name, event.task_name)
+        self.assertEquals(task_in.title, event.task_title)
+        self.assertEquals(task_in.type, event.task_type)
+        self.assertEquals("COMPLETED", event.task_state)
+        self.assertEquals(task_in.mi_type.value, event.mi_type)
+        self.assertEquals(task_in.mi_count, event.mi_count)
+        self.assertEquals(task_in.mi_index, event.mi_index)
+        self.assertEquals(task_in.process_name, event.process_name)
+        self.assertIsNotNone(event.date)
+
 
         workflow = WorkflowApiSchema().load(json_data)
         return workflow
@@ -237,32 +257,6 @@ class TestTasksApi(BaseTest):
         self.assertTrue(workflow_api.spec_version.startswith("v1 "))
         self.assertFalse(workflow_api.is_latest_spec)
 
-    def test_get_workflow_stats(self):
-        self.load_example_data()
-        workflow = self.create_workflow('exclusive_gateway')
-
-        response_before = self.app.get('/v1.0/workflow/%i/stats' % workflow.id,
-                                       content_type="application/json",
-                                       headers=self.logged_in_headers())
-        self.assert_success(response_before)
-        db_stats_before = session.query(WorkflowStatsModel).filter_by(workflow_id=workflow.id).first()
-        self.assertIsNone(db_stats_before)
-
-        # Start the workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.complete_form(workflow, tasks[0], {"has_bananas": True})
-
-        response_after = self.app.get('/v1.0/workflow/%i/stats' % workflow.id,
-                                      content_type="application/json",
-                                      headers=self.logged_in_headers())
-        self.assert_success(response_after)
-        db_stats_after = session.query(WorkflowStatsModel).filter_by(workflow_id=workflow.id).first()
-        self.assertIsNotNone(db_stats_after)
-        self.assertGreater(db_stats_after.num_tasks_complete, 0)
-        self.assertGreater(db_stats_after.num_tasks_incomplete, 0)
-        self.assertGreater(db_stats_after.num_tasks_total, 0)
-        self.assertEqual(db_stats_after.num_tasks_total,
-                         db_stats_after.num_tasks_complete + db_stats_after.num_tasks_incomplete)
 
     def test_manual_task_with_external_documentation(self):
         self.load_example_data()
@@ -304,7 +298,6 @@ class TestTasksApi(BaseTest):
         self.assertEquals(MultiInstanceType.sequential, tasks[0].mi_type)
         self.assertEquals(3, tasks[0].mi_count)
 
-        workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})
 
     def test_lookup_endpoint_for_task_field_enumerations(self):
         self.load_example_data()
@@ -331,11 +324,11 @@ class TestTasksApi(BaseTest):
         self.assertEquals("Activity_A", tasks[0].name)
         self.assertEquals("My Sub Process", tasks[0].process_name)
         workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})
-        task = workflow_api.next_task
+        task = TaskSchema().load(workflow_api.next_task)
         self.assertIsNotNone(task)
 
-        self.assertEquals("Activity_B", task['name'])
-        self.assertEquals("Sub Workflow Example", task['process_name'])
+        self.assertEquals("Activity_B", task.name)
+        self.assertEquals("Sub Workflow Example", task.process_name)
         workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
         self.assertEquals(WorkflowStatus.complete, workflow_api.status)
 
@@ -352,6 +345,13 @@ class TestTasksApi(BaseTest):
         # Trying to re-submit the initial task, and answer differently, should result in an error.
         self.complete_form(workflow, tasks[0], {"has_bananas": False}, error_code="invalid_state")
 
+        # Go ahead and set the number of bananas.
+        workflow = self.get_workflow_api(workflow)
+        task = TaskSchema().load(workflow.next_task)
+
+        self.complete_form(workflow, task, {"num_bananas": 4})
+        # We are now at the end of the workflow.
+
         # Make the old task the current task.
         rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, tasks[0].id),
                           headers=self.logged_in_headers(),
@@ -360,7 +360,33 @@ class TestTasksApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         workflow = WorkflowApiSchema().load(json_data)
 
+        # Assure the last task is the task we were on before the reset,
+        # and the Next Task is the one we just reset the token to be on.
+        self.assertEquals("Task_Has_Bananas", workflow.next_task['name'])
+        self.assertEquals("End", workflow.last_task['name'])
+
+        # Go ahead and get that workflow one more time, it should still be right.
+        workflow = self.get_workflow_api(workflow)
+
+        # Assure the last task is the task we were on before the reset,
+        # and the Next Task is the one we just reset the token to be on.
+        self.assertEquals("Task_Has_Bananas", workflow.next_task['name'])
+        self.assertEquals("End", workflow.last_task['name'])
+
         # The next task should be a different value.
         self.complete_form(workflow, tasks[0], {"has_bananas": False})
         workflow = self.get_workflow_api(workflow)
         self.assertEquals('Task_Why_No_Bananas', workflow.next_task['name'])
+
+
+    # def test_parent_task_set_on_tasks(self):
+    #     self.load_example_data()
+    #     workflow = self.create_workflow('exclusive_gateway')
+    #
+    #     # Start the workflow.
+    #     workflow = self.get_workflow_api(workflow)
+    #     self.assertEquals(None, workflow.previous_task)
+    #     self.complete_form(workflow, workflow.next_task, {"has_bananas": True})
+    #     workflow = self.get_workflow_api(workflow)
+    #     self.assertEquals('Task_Num_Bananas', workflow.next_task['name'])
+    #     self.assertEquals('has_bananas', workflow.previous_task['name'])
