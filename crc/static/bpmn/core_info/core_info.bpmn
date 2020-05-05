@@ -70,6 +70,9 @@
               <camunda:property id="placeholder" value="Limit Length: 11" />
               <camunda:property id="hide_expression" value="model.CTG_NA &#38;&#38; model.CTG_NA.enumNoRegister" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="max_length" config="11" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="CTG_StudyType" label="ClinicalTrials.gov Study Type" type="enum">
             <camunda:properties>
@@ -307,6 +310,18 @@
       <bpmndi:BPMNShape id="StartEvent_1mhzkcr_di" bpmnElement="StartEvent_1mhzkcr">
         <dc:Bounds x="-218" y="307" width="36" height="36" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1y1qon7_di" bpmnElement="UserTask_1y1qon7">
+        <dc:Bounds x="620" y="340" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_01zzzg9_di" bpmnElement="UserTask_01zzzg9">
+        <dc:Bounds x="620" y="460" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0gtuk1e_di" bpmnElement="UserTask_EnterMultiSiteInfo">
+        <dc:Bounds x="620" y="210" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0ebxkp7_di" bpmnElement="UserTask_0ebxkp7">
+        <dc:Bounds x="620" y="90" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0vthni9_di" bpmnElement="Activity_10nxpt2">
         <dc:Bounds x="-120" y="285" width="100" height="80" />
       </bpmndi:BPMNShape>
@@ -318,18 +333,6 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0x7b58m_di" bpmnElement="Activity_PBMultiSiteCheckQ28">
         <dc:Bounds x="350" y="285" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_01zzzg9_di" bpmnElement="UserTask_01zzzg9">
-        <dc:Bounds x="620" y="460" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_1y1qon7_di" bpmnElement="UserTask_1y1qon7">
-        <dc:Bounds x="620" y="340" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_0gtuk1e_di" bpmnElement="UserTask_EnterMultiSiteInfo">
-        <dc:Bounds x="620" y="210" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_0ebxkp7_di" bpmnElement="UserTask_0ebxkp7">
-        <dc:Bounds x="620" y="90" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

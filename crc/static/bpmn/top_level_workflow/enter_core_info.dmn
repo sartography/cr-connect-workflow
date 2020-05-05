@@ -7,7 +7,7 @@
     <decisionTable id="decisionTable_1">
       <input id="InputClause_1ki80j6" label="required doc ids">
         <inputExpression id="LiteralExpression_10mfcy7" typeRef="boolean" expressionLanguage="Python">
-          <text>StudyInfo.documents.UVACompl_PRCAppr.required</text>
+          <text>StudyInfo.documents['UVACompl_PRCAppr']['required']</text>
         </inputExpression>
       </input>
       <output id="output_1" label="enter_core_info" name="enter_core_info" typeRef="string" />

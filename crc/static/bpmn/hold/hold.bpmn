@@ -17,6 +17,8 @@
           <camunda:formField id="HoldNotes" label="Why was this study moved to Hold Status?" type="textarea">
             <camunda:properties>
               <camunda:property id="rows" value="5" />
+              <camunda:property id="group" value="Reason for Hold Notes" />
+              <camunda:property id="repeat" value="Reason for Hold Notes" />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>

@@ -221,6 +221,7 @@ class ExampleDataLoader:
 
             is_status = filename.lower() == 'status.bpmn'
             is_primary = filename.lower() == id + '.bpmn'
+            file = None
             try:
                 file = open(file_path, 'rb')
                 data = file.read()
