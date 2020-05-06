@@ -27,11 +27,11 @@ def get_reference_files():
 
 def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
     all_none = all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key])
-    missing_some = (workflow_spec_id is None) and (None in [study_id, workflow_id, task_id, form_field_key])
+    missing_some = (workflow_spec_id is None) and (None in [study_id, workflow_id, form_field_key])
     if all_none or missing_some:
         raise ApiError('missing_parameter',
                        'Please specify either a workflow_spec_id or all 3 of study_id, '
-                       'workflow_id, task_id and field_id for this file in the HTTP parameters')
+                       'workflow_id, and field_id for this file in the HTTP parameters')
     if 'file' not in connexion.request.files:
         raise ApiError('invalid_file',
                        'Expected a file named "file" in the multipart form request')
