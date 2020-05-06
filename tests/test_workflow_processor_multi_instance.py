@@ -56,14 +56,14 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         self.assertEquals(MultiInstanceType.sequential, api_task.mi_type)
         self.assertEquals(3, api_task.mi_count)
         self.assertEquals(1, api_task.mi_index)
-        task.update_data({"email":"asd3v@virginia.edu"})
+        task.update_data({"investigator":{"email":"asd3v@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
 
         task = next_user_tasks[0]
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", api_task.name)
-        task.update_data({"email":"asdf32@virginia.edu"})
+        task.update_data({"investigator":{"email":"asdf32@virginia.edu"}})
         self.assertEquals(3, api_task.mi_count)
         self.assertEquals(2, api_task.mi_index)
         processor.complete_task(task)
@@ -72,11 +72,12 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         task = next_user_tasks[0]
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", task.get_name())
-        task.update_data({"email":"dhf8r@virginia.edu"})
+        task.update_data({"investigator":{"email":"dhf8r@virginia.edu"}})
         self.assertEquals(3, api_task.mi_count)
         self.assertEquals(3, api_task.mi_index)
         processor.complete_task(task)
         processor.do_engine_steps()
+        task = processor.bpmn_workflow.last_task
 
         self.assertEquals(
             {
@@ -122,21 +123,21 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
 
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEquals(MultiInstanceType.parallel, api_task.mi_type)
-        task.update_data({"email":"dhf8r@virginia.edu"})
+        task.update_data({"investigator":{"email":"dhf8r@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
 
         task = next_user_tasks[0]
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", api_task.name)
-        task.update_data({"email":"asd3v@virginia.edu"})
+        task.update_data({"investigator":{"email":"asd3v@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
 
         task = next_user_tasks[1]
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", task.get_name())
-        task.update_data({"email":"asdf32@virginia.edu"})
+        task.update_data({"investigator":{"email":"asdf32@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
 

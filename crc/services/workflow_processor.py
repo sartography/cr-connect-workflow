@@ -12,7 +12,6 @@ from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
-from SpiffWorkflow.exceptions import WorkflowException
 from SpiffWorkflow.operators import Operator
 from SpiffWorkflow.specs import WorkflowSpec
 

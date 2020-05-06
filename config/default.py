@@ -3,6 +3,8 @@ from os import environ
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values to the front end.
+
 NAME = "CR Connect Workflow"
 CORS_ENABLED = False
 DEVELOPMENT = environ.get('DEVELOPMENT', default="true") == "true"

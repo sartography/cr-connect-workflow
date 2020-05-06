@@ -378,6 +378,34 @@ class TestTasksApi(BaseTest):
         workflow = self.get_workflow_api(workflow)
         self.assertEquals('Task_Why_No_Bananas', workflow.next_task['name'])
 
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_parallel_multi_instance(self, mock_get):
+
+        # Assure we get three investigators back from the API Call, as set in the investigators.json file.
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('investigators.json')
+
+
+        self.load_example_data()
+        workflow = self.create_workflow('multi_instance_parallel')
+
+        tasks = self.get_workflow_api(workflow).user_tasks
+        self.assertEquals(3, len(tasks))
+        self.assertEquals("UserTask", tasks[0].type)
+        self.assertEquals("MutiInstanceTask", tasks[0].name)
+        self.assertEquals("Gather more information", tasks[0].title)
+
+        self.complete_form(workflow, tasks[0], {"email": "dhf8r@virginia.edu"})
+        tasks = self.get_workflow_api(workflow).user_tasks
+
+        self.complete_form(workflow, tasks[2], {"email": "abc@virginia.edu"})
+        tasks = self.get_workflow_api(workflow).user_tasks
+
+        self.complete_form(workflow, tasks[1], {"email": "def@virginia.edu"})
+        tasks = self.get_workflow_api(workflow).user_tasks
+
+        workflow = self.get_workflow_api(workflow)
+        self.assertEquals(WorkflowStatus.complete, workflow.status)
 
     # def test_parent_task_set_on_tasks(self):
     #     self.load_example_data()
