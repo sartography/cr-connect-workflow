@@ -79,10 +79,11 @@ class TestTasksApi(BaseTest):
     def test_get_current_user_tasks(self):
         self.load_example_data()
         workflow = self.create_workflow('random_fact')
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.assertEqual("Task_User_Select_Type", tasks[0].name)
-        self.assertEqual(3, len(tasks[0].form["fields"][0]["options"]))
-        self.assertIsNotNone(tasks[0].documentation)
+        workflow = self.get_workflow_api(workflow)
+        task = workflow.next_task
+        self.assertEqual("Task_User_Select_Type", task['name'])
+        self.assertEqual(3, len(task['form']["fields"][0]["options"]))
+        self.assertIsNotNone(task['documentation'])
         expected_docs = """# h1 Heading 8-)
 ## h2 Heading
 ### h3 Heading
@@ -90,7 +91,7 @@ class TestTasksApi(BaseTest):
 ##### h5 Heading
 ###### h6 Heading
 """
-        self.assertTrue(str.startswith(tasks[0].documentation, expected_docs))
+        self.assertTrue(str.startswith(task['documentation'], expected_docs))
 
     def test_two_forms_task(self):
         # Set up a new workflow
@@ -100,7 +101,7 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('two_forms', workflow_api.workflow_spec_id)
         self.assertEqual(2, len(workflow_api.user_tasks))
-        self.assertIsNotNone(workflow_api.user_tasks[0].form)
+        self.assertIsNotNone(workflow_api.next_task['form'])
         self.assertEqual("UserTask", workflow_api.next_task['type'])
         self.assertEqual("StepOne", workflow_api.next_task['name'])
         self.assertEqual(1, len(workflow_api.next_task['form']['fields']))
@@ -194,10 +195,10 @@ class TestTasksApi(BaseTest):
         self.load_example_data()
         workflow = self.create_workflow('random_fact')
         workflow_api = self.get_workflow_api(workflow)
-        tasks = workflow_api.user_tasks
-        self.assertEqual("Task_User_Select_Type", tasks[0].name)
-        self.assertEqual(3, len(tasks[0].form["fields"][0]["options"]))
-        self.assertIsNotNone(tasks[0].documentation)
+        task = workflow_api.next_task
+        self.assertEqual("Task_User_Select_Type", task['name'])
+        self.assertEqual(3, len(task['form']["fields"][0]["options"]))
+        self.assertIsNotNone(task['documentation'])
         self.complete_form(workflow, workflow_api.user_tasks[0], {"type": "norris"})
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual("EndEvent_0u1cgrf", workflow_api.next_task['name'])
@@ -303,11 +304,11 @@ class TestTasksApi(BaseTest):
         self.load_example_data()
         workflow = self.create_workflow('enum_options_with_search')
         # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        task = tasks[0]
-        field_id = task.form['fields'][0]['id']
+        workflow = self.get_workflow_api(workflow)
+        task = workflow.next_task
+        field_id = task['form']['fields'][0]['id']
         rv = self.app.get('/v1.0/workflow/%i/task/%s/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, task.id, field_id, 'c'), # All records with a word that starts with 'c'
+                          (workflow.id, task['id'], field_id, 'c'), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
@@ -395,13 +396,13 @@ class TestTasksApi(BaseTest):
         self.assertEquals("MutiInstanceTask", tasks[0].name)
         self.assertEquals("Gather more information", tasks[0].title)
 
-        self.complete_form(workflow, tasks[0], {"email": "dhf8r@virginia.edu"})
+        self.complete_form(workflow, tasks[0], {"investigator":{"email": "dhf8r@virginia.edu"}})
         tasks = self.get_workflow_api(workflow).user_tasks
 
-        self.complete_form(workflow, tasks[2], {"email": "abc@virginia.edu"})
+        self.complete_form(workflow, tasks[2],  {"investigator":{"email": "abc@virginia.edu"}})
         tasks = self.get_workflow_api(workflow).user_tasks
 
-        self.complete_form(workflow, tasks[1], {"email": "def@virginia.edu"})
+        self.complete_form(workflow, tasks[1],  {"investigator":{"email": "def@virginia.edu"}})
         tasks = self.get_workflow_api(workflow).user_tasks
 
         workflow = self.get_workflow_api(workflow)

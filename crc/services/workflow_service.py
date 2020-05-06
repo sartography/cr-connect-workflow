@@ -62,7 +62,7 @@ class WorkflowService(object):
                                               we.sender)
 
     @staticmethod
-    def spiff_task_to_api_task(spiff_task):
+    def spiff_task_to_api_task(spiff_task, add_docs_and_forms=False):
         task_type = spiff_task.task_spec.__class__.__name__
 
         if isinstance(spiff_task.task_spec, UserTask):
@@ -109,8 +109,10 @@ class WorkflowService(object):
                     process_name=spiff_task.task_spec._wf_spec.description,
                     properties=props)
 
-        # Only process the form and documentation if this is something that is ready or completed.
-        if not (spiff_task._is_predicted()):
+        # Only process the form and documentation if requested.
+        # The task should be in a completed or a ready state, and should
+        # not be a previously completed MI Task.
+        if add_docs_and_forms:
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
                 for field in task.form.fields:

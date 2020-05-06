@@ -103,7 +103,7 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
     )
     next_task = processor.next_task()
     if next_task:
-        workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task)
+        workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
 
     return workflow_api
 
