@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_06pyjz2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_06pyjz2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
   <bpmn:process id="Process_01143nb" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0kcrx5l</bpmn:outgoing>
@@ -34,7 +34,7 @@
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1dcsioh</bpmn:incoming>
       <bpmn:outgoing>Flow_1mplloa</bpmn:outgoing>
-      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="StudyInfo.investigators" camunda:elementVariable="investigator" />
+      <bpmn:multiInstanceLoopCharacteristics camunda:collection="StudyInfo.investigators" camunda:elementVariable="investigator" />
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_0kcrx5l" sourceRef="StartEvent_1" targetRef="ScriptTask_LoadPersonnel" />
     <bpmn:sequenceFlow id="Flow_1mplloa" sourceRef="Activity_EditOtherPersonnel" targetRef="EndEvent_1qor16n" />
@@ -43,28 +43,28 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_01143nb">
       <bpmndi:BPMNEdge id="Flow_1dcsioh_di" bpmnElement="Flow_1dcsioh">
-        <di:waypoint x="130" y="170" />
-        <di:waypoint x="210" y="170" />
+        <di:waypoint x="370" y="120" />
+        <di:waypoint x="450" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1mplloa_di" bpmnElement="Flow_1mplloa">
-        <di:waypoint x="310" y="170" />
-        <di:waypoint x="402" y="170" />
+        <di:waypoint x="550" y="120" />
+        <di:waypoint x="642" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0kcrx5l_di" bpmnElement="Flow_0kcrx5l">
-        <di:waypoint x="-52" y="170" />
-        <di:waypoint x="30" y="170" />
+        <di:waypoint x="188" y="120" />
+        <di:waypoint x="270" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="-88" y="152" width="36" height="36" />
+        <dc:Bounds x="152" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ScriptTask_0h49cmf_di" bpmnElement="ScriptTask_LoadPersonnel">
-        <dc:Bounds x="30" y="130" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0d622qi_di" bpmnElement="Activity_EditOtherPersonnel">
-        <dc:Bounds x="210" y="130" width="100" height="80" />
+        <dc:Bounds x="270" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_1qor16n_di" bpmnElement="EndEvent_1qor16n">
-        <dc:Bounds x="402" y="152" width="36" height="36" />
+        <dc:Bounds x="642" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0d622qi_di" bpmnElement="Activity_EditOtherPersonnel">
+        <dc:Bounds x="450" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
