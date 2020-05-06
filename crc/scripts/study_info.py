@@ -61,32 +61,13 @@ class StudyInfo(Script):
                     "status": WorkflowStatus.not_started.value,
                     "workflow_spec_id": "irb_api_details",
                 },
-                "documents": {
-                    "AD_CoCApp":
-                    {
-                        'category1': 'Ancillary Document',
-                        'category2': 'CoC Application',
-                        'category3': '',
-                        'Who Uploads?': 'CRC',
-                        'Id': '12',
-                        'Name': 'Certificate of Confidentiality Application',
-                        'count': 0,
-                        'required': True,
-                        'code': 'AD_CoCApp',
-                        'display_name': 'Certificate of Confidentiality Application',
-                        'file_id': 123,
-                        'task_id': 'abcdef14236890',
-                        'workflow_id': 456,
-                        'workflow_spec_id': 'irb_api_details',
-                        'status': 'complete',
-                    }
-                },
                 'protocol': {
                     id: 0,
                 }
             }
         }
         self.add_data_to_task(task=task, data=data["study"])
+        self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
     def do_task(self, task, study_id, *args, **kwargs):
         self.check_args(args)

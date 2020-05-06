@@ -104,7 +104,7 @@ class StudyService(object):
 
     @staticmethod
     def get_documents_status(study_id):
-        """Returns a list of documents related to the study, if they are required, and any file information
+        """Returns a list of documents related to the study, and any file information
         that is available.."""
 
         # Get PB required docs

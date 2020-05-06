@@ -11,7 +11,7 @@
         </inputExpression>
       </input>
       <output id="output_1" label="Investigator&#39;s Brochure(s) Uploaded?" name="isInvestigatorsBrochure" typeRef="boolean" />
-      <output id="OutputClause_1f3mlfn" label="Investigator&#39;s Broshure Form Banner" name="ElementDoc_InvestigatorsBrochure" typeRef="string" />
+      <output id="OutputClause_1f3mlfn" label="Investigator&#39;s Brochure Form Banner" name="ElementDoc_InvestigatorsBrochure" typeRef="string" />
       <rule id="DecisionRule_0zvgaym">
         <inputEntry id="UnaryTests_0mwq0my">
           <text>0</text>
