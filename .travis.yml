@@ -24,9 +24,6 @@ install:
 env:
   - PB_BASE_URL='http://workflow.sartography.com:5001/pb/'
 
-  global:
-    - COMMIT=${TRAVIS_COMMIT::8}
-
 script:
   - pipenv run coverage run -m pytest
   - pipenv run coverage xml -i
