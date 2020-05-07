@@ -3,8 +3,9 @@ import json
 from typing import List
 
 from SpiffWorkflow import WorkflowException
+from ldap3.core.exceptions import LDAPSocketOpenError
 
-from crc import db, session
+from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileModelSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
@@ -13,6 +14,7 @@ from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
 from crc.services.file_service import FileService
+from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -111,7 +113,8 @@ class StudyService(object):
         pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
 
         # Loop through all known document types, get the counts for those files, and use pb_docs to mark those required.
-        doc_dictionary = FileService.get_file_reference_dictionary()
+        doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
+
         documents = {}
         for code, doc in doc_dictionary.items():
 
@@ -149,6 +152,37 @@ class StudyService(object):
         return documents
 
 
+    @staticmethod
+    def get_investigators(study_id):
+
+        # Loop through all known investigator types as set in the reference file
+        inv_dictionary = FileService.get_reference_data(FileService.INVESTIGATOR_LIST, 'code')
+
+        # Get PB required docs
+        pb_investigators = ProtocolBuilderService.get_investigators(study_id=study_id)
+
+        """Convert array of investigators from protocol builder into a dictionary keyed on the type"""
+        for i_type in inv_dictionary:
+            pb_data = next((item for item in pb_investigators if item['INVESTIGATORTYPE'] == i_type), None)
+            if pb_data:
+                inv_dictionary[i_type]['user_id'] = pb_data["NETBADGEID"]
+                inv_dictionary[i_type].update(StudyService.get_ldap_dict_if_available(pb_data["NETBADGEID"]))
+            else:
+                inv_dictionary[i_type]['user_id'] = None
+
+        return inv_dictionary
+
+    @staticmethod
+    def get_ldap_dict_if_available(user_id):
+        try:
+            ldap_service = LdapService()
+            return ldap_service.user_info(user_id).__dict__
+        except ApiError as ae:
+            app.logger.info(str(ae))
+            return {"error": str(ae)}
+        except LDAPSocketOpenError:
+            app.logger.info("Failed to connect to LDAP Server.")
+            return {}
 
     @staticmethod
     def get_protocol(study_id):
