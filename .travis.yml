@@ -22,10 +22,7 @@ install:
   - pipenv install
 
 env:
-#  global:
-#    - COMMIT=${$TRAVIS_COMMIT::8}
-  matrix:
-    - PB_BASE_URL='http://workflow.sartography.com:5001/pb/'
+  - PB_BASE_URL='http://workflow.sartography.com:5001/pb/'
 
 script:
   - pipenv run coverage run -m pytest
@@ -40,7 +37,7 @@ deploy:
   skip_cleanup: true
   on:
     all_branches: true
-#    condition: $TRAVIS_BRANCH =~ ^(testing|staging|master)$
+    condition: $TRAVIS_BRANCH =~ ^(testing|staging|master)$
 
 notifications:
   email:
