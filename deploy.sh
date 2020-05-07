@@ -4,7 +4,7 @@
 echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin || exit 1
 REPO="sartography/cr-connect-workflow"
 TAG=$(if [ "$TRAVIS_BRANCH" == "master" ]; then echo "latest"; else echo "$TRAVIS_BRANCH" ; fi)
-COMMIT=${$TRAVIS_COMMIT::8}
+COMMIT=${TRAVIS_COMMIT::8}
 
 echo "REPO = $REPO"
 echo "TAG = $TAG"
