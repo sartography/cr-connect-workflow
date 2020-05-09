@@ -36,7 +36,8 @@ deploy:
   script: bash deploy.sh
   skip_cleanup: true
   on:
-    branch: master
+    all_branches: true
+    condition: $TRAVIS_BRANCH =~ ^(testing|staging|master)$
 
 notifications:
   email:
