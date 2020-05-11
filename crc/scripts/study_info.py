@@ -5,6 +5,7 @@ from crc.api.common import ApiError
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowStatus
 from crc.scripts.script import Script
+from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
 
@@ -141,7 +142,8 @@ Returns information specific to the protocol.
         """For validation only, pretend no results come back from pb"""
         self.check_args(args)
         # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
-        FileService.get_file_reference_dictionary()
+        FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
+        FileService.get_reference_file_data(FileService.INVESTIGATOR_LIST)
         data = {
             "study":{
                 "info": {
