@@ -37,7 +37,7 @@ deploy:
   skip_cleanup: true
   on:
     all_branches: true
-    condition: $TRAVIS_BRANCH =~ ^(testing|staging|master)$
+    condition: $TRAVIS_BRANCH =~ ^(dev|testing|demo|training|staging|master)$
 
 notifications:
   email:
