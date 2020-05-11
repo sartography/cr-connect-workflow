@@ -316,6 +316,7 @@ class TestTasksApi(BaseTest):
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(5, len(results))
 
+
     def test_sub_process(self):
         self.load_example_data()
         workflow = self.create_workflow('subprocess')

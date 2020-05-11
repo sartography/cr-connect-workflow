@@ -75,12 +75,12 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_invalid_expression(self):
         errors = self.validate_workflow("invalid_expression")
         self.assertEqual(1, len(errors))
-        self.assertEqual("invalid_expression", errors[0]['code'])
+        self.assertEqual("workflow_execution_exception", errors[0]['code'])
         self.assertEqual("ExclusiveGateway_003amsm", errors[0]['task_id'])
         self.assertEqual("Has Bananas Gateway", errors[0]['task_name'])
         self.assertEqual("invalid_expression.bpmn", errors[0]['file_name'])
-        self.assertEqual("The expression 'this_value_does_not_exist==true' you provided has a missing value."
-                         " name 'this_value_does_not_exist' is not defined", errors[0]["message"])
+        self.assertEqual('ExclusiveGateway_003amsm: Error evaluating expression \'this_value_does_not_exist==true\', '
+                         'name \'this_value_does_not_exist\' is not defined', errors[0]["message"])
 
     def test_validation_error(self):
         errors = self.validate_workflow("invalid_spec")

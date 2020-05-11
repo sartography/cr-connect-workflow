@@ -2,6 +2,7 @@ from datetime import datetime
 import json
 from typing import List
 
+import requests
 from SpiffWorkflow import WorkflowException
 from ldap3.core.exceptions import LDAPSocketOpenError
 
@@ -110,7 +111,11 @@ class StudyService(object):
         that is available.."""
 
         # Get PB required docs
-        pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
+        try:
+            pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
+        except requests.exceptions.ConnectionError as ce:
+            app.logger.error("Failed to connect to the Protocol Builder - %s" % str(ce))
+            pb_docs = []
 
         # Loop through all known document types, get the counts for those files, and use pb_docs to mark those required.
         doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])

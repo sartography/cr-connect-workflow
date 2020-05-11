@@ -140,8 +140,46 @@ Returns information specific to the protocol.
     def do_task_validate_only(self, task, study_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
         self.check_args(args)
-        self.add_data_to_task(task=task, data=self.example_data["StudyInfo"])
-        # Make sure all avaialble document information shows up or we can get errors on validation.
+        # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
+        FileService.get_file_reference_dictionary()
+        data = {
+            "study":{
+                "info": {
+                    "id": 12,
+                    "title": "test",
+                    "primary_investigator_id":21,
+                    "user_uid": "dif84",
+                    "sponsor": "sponsor",
+                    "ind_number": "1234",
+                    "inactive": False
+                },
+                "investigators":
+                    {
+                        "INVESTIGATORTYPE": "PI",
+                        "INVESTIGATORTYPEFULL": "Primary Investigator",
+                        "NETBADGEID": "dhf8r"
+                    },
+                "details":
+                    {
+                        "IS_IND": 0,
+                        "IS_IDE": 0,
+                        "IS_MULTI_SITE": 0,
+                        "IS_UVA_PI_MULTI": 0
+                    },
+                "approvals": {
+                    "study_id": 12,
+                    "workflow_id": 321,
+                    "display_name": "IRB API Details",
+                    "name": "irb_api_details",
+                    "status": WorkflowStatus.not_started.value,
+                    "workflow_spec_id": "irb_api_details",
+                },
+                'protocol': {
+                    id: 0,
+                }
+            }
+        }
+        self.add_data_to_task(task=task, data=data["study"])
         self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
     def do_task(self, task, study_id, *args, **kwargs):
