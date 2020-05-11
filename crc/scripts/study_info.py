@@ -52,7 +52,12 @@ class StudyInfo(Script):
                         "NETBADGEID": "dhf8r"
                     },
                 "details":
-                    {},
+                    {
+                        "IS_IND": 0,
+                        "IS_IDE": 0,
+                        "IS_MULTI_SITE": 0,
+                        "IS_UVA_PI_MULTI": 0
+                    },
                 "approvals": {
                     "study_id": 12,
                     "workflow_id": 321,
