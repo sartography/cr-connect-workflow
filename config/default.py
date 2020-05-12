@@ -1,4 +1,5 @@
 import os
+import re
 from os import environ
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -6,7 +7,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values to the front end.
 
 NAME = "CR Connect Workflow"
-CORS_ENABLED = False
+CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default="localhost:4200, localhost:5002"))
 DEVELOPMENT = environ.get('DEVELOPMENT', default="true") == "true"
 TESTING = environ.get('TESTING', default="false") == "true"
 PRODUCTION = (environ.get('PRODUCTION', default="false") == "true") or (not DEVELOPMENT and not TESTING)
@@ -48,8 +49,10 @@ LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu")
 LDAP_TIMEOUT_SEC = environ.get('LDAP_TIMEOUT_SEC', default=3)
 print('=== USING DEFAULT CONFIG: ===')
 print('DB_HOST = ', DB_HOST)
+print('CORS_ALLOW_ORIGINS = ', CORS_ALLOW_ORIGINS)
 print('DEVELOPMENT = ', DEVELOPMENT)
 print('TESTING = ', TESTING)
 print('PRODUCTION = ', PRODUCTION)
 print('PB_BASE_URL = ', PB_BASE_URL)
 print('LDAP_URL = ', LDAP_URL)
+
