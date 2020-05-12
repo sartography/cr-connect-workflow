@@ -1,9 +1,11 @@
 import json
 import unittest
+from unittest.mock import patch
 
 from crc import session
 from crc.api.common import ApiErrorSchema
 from crc.models.file import FileModel
+from crc.models.protocol_builder import ProtocolBuilderStudySchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
 from tests.base_test import BaseTest
 
@@ -18,7 +20,22 @@ class TestWorkflowSpecValidation(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         return ApiErrorSchema(many=True).load(json_data)
 
-    def test_successful_validation_of_test_workflows(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
+    def test_successful_validation_of_test_workflows(self, mock_studies, mock_details, mock_docs, mock_investigators):
+
+        # Mock Protocol Builder responses
+        studies_response = self.protocol_builder_response('user_studies.json')
+        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
+        docs_response = self.protocol_builder_response('required_docs.json')
+        mock_docs.return_value = json.loads(docs_response)
+        investigators_response = self.protocol_builder_response('investigators.json')
+        mock_investigators.return_value = json.loads(investigators_response)
+
         self.assertEqual(0, len(self.validate_workflow("parallel_tasks")))
         self.assertEqual(0, len(self.validate_workflow("decision_table")))
         self.assertEqual(0, len(self.validate_workflow("docx")))
@@ -28,7 +45,22 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(0, len(self.validate_workflow("study_details")))
         self.assertEqual(0, len(self.validate_workflow("two_forms")))
 
-    def test_successful_validation_of_auto_loaded_workflows(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
+    def test_successful_validation_of_auto_loaded_workflows(self, mock_studies, mock_details, mock_docs, mock_investigators):
+
+        # Mock Protocol Builder responses
+        studies_response = self.protocol_builder_response('user_studies.json')
+        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
+        docs_response = self.protocol_builder_response('required_docs.json')
+        mock_docs.return_value = json.loads(docs_response)
+        investigators_response = self.protocol_builder_response('investigators.json')
+        mock_investigators.return_value = json.loads(investigators_response)
+
         self.load_example_data()
         workflows = session.query(WorkflowSpecModel).all()
         errors = []
@@ -43,12 +75,12 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_invalid_expression(self):
         errors = self.validate_workflow("invalid_expression")
         self.assertEqual(1, len(errors))
-        self.assertEqual("invalid_expression", errors[0]['code'])
+        self.assertEqual("workflow_execution_exception", errors[0]['code'])
         self.assertEqual("ExclusiveGateway_003amsm", errors[0]['task_id'])
         self.assertEqual("Has Bananas Gateway", errors[0]['task_name'])
         self.assertEqual("invalid_expression.bpmn", errors[0]['file_name'])
-        self.assertEqual("The expression 'this_value_does_not_exist==true' you provided has a missing value."
-                         " name 'this_value_does_not_exist' is not defined", errors[0]["message"])
+        self.assertEqual('ExclusiveGateway_003amsm: Error evaluating expression \'this_value_does_not_exist==true\', '
+                         'name \'this_value_does_not_exist\' is not defined', errors[0]["message"])
 
     def test_validation_error(self):
         errors = self.validate_workflow("invalid_spec")

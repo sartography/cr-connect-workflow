@@ -54,8 +54,8 @@ class WorkflowService(object):
                 tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:
                     task_api = WorkflowService.spiff_task_to_api_task(
-                        task)  # Assure we try to process the documenation, and raise those errors.
-                    WorkflowProcessor.populate_form_with_random_data(task)
+                        task, add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
+                    WorkflowProcessor.populate_form_with_random_data(task, task_api)
                     task.complete()
             except WorkflowException as we:
                 raise ApiError.from_task_spec("workflow_execution_exception", str(we),
@@ -151,13 +151,15 @@ class WorkflowService(object):
 
     @staticmethod
     def process_options(spiff_task, field):
-        lookup_model = WorkflowService.get_lookup_table(spiff_task, field);
+        lookup_model = WorkflowService.get_lookup_table(spiff_task, field)
 
         # If lookup is set to true, do not populate options, a lookup will happen later.
         if field.has_property(Task.EMUM_OPTIONS_AS_LOOKUP) and field.get_property(Task.EMUM_OPTIONS_AS_LOOKUP):
             pass
         else:
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
+            if not hasattr(field, 'options'):
+                field.options = []
             for d in data:
                 field.options.append({"id": d.value, "name": d.label})
 

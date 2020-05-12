@@ -163,3 +163,29 @@ class TestStudyService(BaseTest):
     # 'workflow_id': 456,
     # 'workflow_spec_id': 'irb_api_details',
     # 'status': 'complete',
+
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_docs
+    def test_get_personnel(self, mock_docs):
+        self.load_example_data()
+
+        # mock out the protocol builder
+        docs_response = self.protocol_builder_response('investigators.json')
+        mock_docs.return_value = json.loads(docs_response)
+
+        workflow = self.create_workflow('docx') # The workflow really doesnt matter in this case.
+        investigators = StudyService().get_investigators(workflow.study_id)
+
+        self.assertEquals(9, len(investigators))
+
+        # dhf8r is in the ldap mock data.
+        self.assertEquals("dhf8r", investigators['PI']['user_id'])
+        self.assertEquals("Dan Funk", investigators['PI']['display_name']) # Data from ldap
+        self.assertEquals("Primary Investigator", investigators['PI']['label']) # Data from xls file.
+        self.assertEquals("Always", investigators['PI']['display']) # Data from xls file.
+
+        # asd3v is not in ldap, so an error should be returned.
+        self.assertEquals("asd3v", investigators['DC']['user_id'])
+        self.assertEquals("Unable to locate a user with id asd3v in LDAP", investigators['DC']['error']) # Data from ldap
+
+        # No value is provided for Department Chair
+        self.assertIsNone(investigators['DEPT_CH']['user_id'])

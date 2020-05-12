@@ -239,7 +239,14 @@ class ExampleDataLoader:
     def load_reference_documents(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.IRB_PRO_CATEGORIES_FILE,
+        FileService.add_reference_file(FileService.DOCUMENT_LIST,
+                                       binary_data=file.read(),
+                                       content_type=CONTENT_TYPES['xls'])
+        file.close()
+
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
+        file = open(file_path, "rb")
+        FileService.add_reference_file(FileService.INVESTIGATOR_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()

@@ -19,6 +19,7 @@ from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuilderInvestigatorSchema, \
     ProtocolBuilderRequiredDocumentSchema
+from crc.services.workflow_service import WorkflowService
 from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -26,7 +27,8 @@ from crc.services.workflow_processor import WorkflowProcessor
 class TestWorkflowProcessor(BaseTest):
 
     def _populate_form_with_random_data(self, task):
-        WorkflowProcessor.populate_form_with_random_data(task)
+        api_task = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
+        WorkflowProcessor.populate_form_with_random_data(task, api_task)
 
     def get_processor(self, study_model, spec_model):
         workflow_model = StudyService._create_workflow_model(study_model, spec_model)
@@ -206,7 +208,7 @@ class TestWorkflowProcessor(BaseTest):
         processor.complete_task(next_user_tasks[0])
         with self.assertRaises(ApiError) as context:
             processor.do_engine_steps()
-        self.assertEqual("invalid_expression", context.exception.code)
+        self.assertEqual("task_error", context.exception.code)
 
     def test_workflow_with_docx_template(self):
         self.load_example_data()
@@ -417,4 +419,4 @@ class TestWorkflowProcessor(BaseTest):
         task.task_spec.form.fields.append(field)
 
         with self.assertRaises(ApiError):
-            processor.populate_form_with_random_data(task)
+            self._populate_form_with_random_data(task)
