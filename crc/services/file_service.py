@@ -16,7 +16,8 @@ import hashlib
 
 class FileService(object):
     """Provides consistent management and rules for storing, retrieving and processing files."""
-    IRB_PRO_CATEGORIES_FILE = "irb_documents.xlsx"
+    DOCUMENT_LIST = "irb_documents.xlsx"
+    INVESTIGATOR_LIST = "investigators.xlsx"
 
     @staticmethod
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
@@ -31,12 +32,18 @@ class FileService(object):
 
         return FileService.update_file(file_model, binary_data, content_type)
 
+    @staticmethod
+    def is_allowed_document(code):
+        data_model = FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
+        xls = ExcelFile(data_model.data)
+        df = xls.parse(xls.sheet_names[0])
+        return code in df['code'].values
 
     @staticmethod
     def add_form_field_file(study_id, workflow_id, task_id, form_field_key, name, content_type, binary_data):
         """Create a new file and associate it with a user task form field within a workflow.
         Please note that the form_field_key MUST be a known file in the irb_documents.xslx reference document."""
-        if not FileService.irb_document_reference_exists(form_field_key):
+        if not FileService.is_allowed_document(form_field_key):
             raise ApiError("invalid_form_field_key",
                            "When uploading files, the form field id must match a known document in the "
                            "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % form_field_key)
@@ -52,32 +59,21 @@ class FileService(object):
         return FileService.update_file(file_model, binary_data, content_type)
 
     @staticmethod
-    def irb_document_reference_exists(code):
-        data_model = FileService.get_reference_file_data(FileService.IRB_PRO_CATEGORIES_FILE)
+    def get_reference_data(reference_file_name, index_column, int_columns=[]):
+        """ Opens a reference file (assumes that it is xls file) and returns the data as a
+        dictionary, each row keyed on the given index_column name. If there are columns
+          that should be represented as integers, pass these as an array of int_columns, lest
+          you get '1.0' rather than '1' """
+        data_model = FileService.get_reference_file_data(reference_file_name)
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])
-        return code in df['code'].values
-
-    @staticmethod
-    def get_file_reference_dictionary():
-        """Loads up the xsl file that contains the IRB Pro Categories and converts it to
-        a Panda's data frame for processing."""
-        data_model = FileService.get_reference_file_data(FileService.IRB_PRO_CATEGORIES_FILE)
-        xls = ExcelFile(data_model.data)
-        df = xls.parse(xls.sheet_names[0])
-        df['id'] = df['id'].fillna(0)
-        df = df.astype({'id': 'Int64'})
+        for c in int_columns:
+            df[c] = df[c].fillna(0)
+            df = df.astype({c: 'Int64'})
         df = df.fillna('')
         df = df.applymap(str)
-        df = df.set_index('code')
-        #        IF we need to convert the column names to something more sensible.
-        #        df.columns = [snakeCase(x) for x in df.columns]
+        df = df.set_index(index_column)
         return json.loads(df.to_json(orient='index'))
-#        # Pandas is lovely, but weird. Here we drop records without an Id, and convert it to an integer.
-#        df = df.drop_duplicates(subset='Id').astype({'Id': 'Int64'})
-        # Now we index on the ID column and convert to a dictionary, where the key is the id, and the value
-        #    is a dictionary with all the remaining data in it.  It's kinda pretty really.
-#        all_dict = df.set_index('Id').to_dict('index')
 
     @staticmethod
     def add_task_file(study_id, workflow_id, workflow_spec_id, task_id, name, content_type, binary_data,
@@ -115,12 +111,12 @@ class FileService(object):
     @staticmethod
     def update_file(file_model, binary_data, content_type):
 
-        file_data_model = session.query(FileDataModel).\
+        file_data_model = session.query(FileDataModel). \
             filter_by(file_model_id=file_model.id,
                       version=file_model.latest_version
                       ).with_for_update().first()
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
-        if(file_data_model is not None and md5_checksum == file_data_model.md5_hash):
+        if (file_data_model is not None and md5_checksum == file_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.
             return file_model
 
@@ -186,7 +182,6 @@ class FileService(object):
             .filter(FileDataModel.file_model_id == file_id) \
             .filter(FileDataModel.version == file_model.latest_version) \
             .first()
-
 
     @staticmethod
     def get_reference_file_data(file_name):

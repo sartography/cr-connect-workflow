@@ -163,10 +163,14 @@ class WorkflowProcessor(object):
         Useful for running the master specification, which should not persist. """
         version = WorkflowProcessor.get_latest_version_string(spec_model.id)
         spec = WorkflowProcessor.get_spec(spec_model.id, version)
-        bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
-        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
-        bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
-        bpmn_workflow.do_engine_steps()
+        try:
+            bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
+            bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
+            bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+            bpmn_workflow.do_engine_steps()
+        except WorkflowException as we:
+            raise ApiError.from_task_spec("error_running_master_spec",  str(we), we.sender)
+
         if not bpmn_workflow.is_completed():
             raise ApiError("master_spec_not_automatic",
                            "The master spec should only contain fully automated tasks, it failed to complete.")

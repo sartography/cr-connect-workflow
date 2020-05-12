@@ -52,7 +52,7 @@ Takes two arguments:
                            message="The CompleteTemplate script requires 2 arguments.  The first argument is "
                                    "the name of the docx template to use.  The second "
                                    "argument is a code for the document, as "
-                                   "set in the reference document %s. " % FileService.IRB_PRO_CATEGORIES_FILE)
+                                   "set in the reference document %s. " % FileService.DOCUMENT_LIST)
         task_study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         file_name = args[0]
 
