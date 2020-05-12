@@ -38,7 +38,8 @@ from crc import api
 connexion_app.add_api('api.yml')
 
 # Convert list of allowed origins to list of regexes
-origins_re = [r"^https?:\/\/%s(.*)" % o for o in app.config['CORS_ALLOW_ORIGINS']]
+origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
+print('Allowing connections from origins matching the following regexes:', origins_re)
 cors = CORS(connexion_app.app, resources={r"/*": {"origins": origins_re}})
 
 
