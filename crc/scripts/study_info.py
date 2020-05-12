@@ -1,39 +1,149 @@
-from ldap3.core.exceptions import LDAPSocketOpenError
+import json
 
-from crc import session, app
+from crc import session
 from crc.api.common import ApiError
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowStatus
-from crc.scripts.script import Script, ScriptValidationError
+from crc.scripts.script import Script
 from crc.services.file_service import FileService
-from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
-from crc.services.workflow_processor import WorkflowProcessor
 
 
 class StudyInfo(Script):
+    """Please see the detailed description that is provided below. """
 
-    """Just your basic class that can pull in data from a few api endpoints and do a basic task."""
     pb = ProtocolBuilderService()
     type_options = ['info', 'investigators', 'details', 'approvals', 'documents', 'protocol']
 
+    # This is used for test/workflow validation, as well as documentation.
+    example_data = {
+        "StudyInfo": {
+            "info": {
+                "id": 12,
+                "title": "test",
+                "primary_investigator_id": 21,
+                "user_uid": "dif84",
+                "sponsor": "sponsor",
+                "ind_number": "1234",
+                "inactive": False
+            },
+            "investigators": {
+                'PI': {
+                    'label': 'Primary Investigator',
+                    'display': 'Always',
+                    'unique': 'Yes',
+                    'user_id': 'dhf8r',
+                    'display_name': 'Dan Funk',
+                    'given_name': 'Dan',
+                    'email': 'dhf8r@virginia.edu',
+                    'telephone_number': '+1 (434) 924-1723',
+                    'title': "E42:He's a hoopy frood",
+                    'department': 'E0:EN-Eng Study of Parallel Universes',
+                    'affiliation': 'faculty',
+                    'sponsor_type': 'Staff'},
+                'SC_I': {
+                    'label': 'Study Coordinator I',
+                    'display': 'Always',
+                    'unique': 'Yes',
+                    'user_id': None},
+                'DC': {
+                    'label': 'Department Contact',
+                    'display': 'Optional',
+                    'unique': 'Yes',
+                    'user_id': 'asd3v',
+                    'error': 'Unable to locate a user with id asd3v in LDAP'}
+            },
+            "documents": {
+                'AD_CoCApp': {'category1': 'Ancillary Document', 'category2': 'CoC Application', 'category3': '',
+                               'Who Uploads?': 'CRC', 'id': '12',
+                               'description': 'Certificate of Confidentiality Application', 'required': False,
+                               'study_id': 1, 'code': 'AD_CoCApp', 'display_name': 'Ancillary Document / CoC Application',
+                               'count': 0, 'files': []},
+                'UVACompl_PRCAppr': {'category1': 'UVA Compliance', 'category2': 'PRC Approval', 'category3': '',
+                                  'Who Uploads?': 'CRC', 'id': '6', 'description': "Cancer Center's PRC Approval Form",
+                                  'required': True, 'study_id': 1, 'code': 'UVACompl_PRCAppr',
+                                  'display_name': 'UVA Compliance / PRC Approval', 'count': 1, 'files': [
+                                     {'file_id': 10,
+                                      'task_id': 'fakingthisout',
+                                      'workflow_id': 2,
+                                      'workflow_spec_id': 'docx'}],
+                                      'status': 'complete'}
+            },
+            "details":
+                {},
+            "approvals": {
+                "study_id": 12,
+                "workflow_id": 321,
+                "display_name": "IRB API Details",
+                "name": "irb_api_details",
+                "status": WorkflowStatus.not_started.value,
+                "workflow_spec_id": "irb_api_details",
+            },
+            'protocol': {
+                id: 0,
+            }
+        }
+    }
+
+    def example_to_string(self, key):
+        return json.dumps(self.example_data['StudyInfo'][key], indent=2, separators=(',', ': '))
+
     def get_description(self):
-        return """StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', or 'details', 'approvals',
-            'documents' or 'protocol'.
-            Adds details about the current study to the Task Data.  The type of information required should be 
-            provided as an argument.  'info' returns the basic information such as the title.  'Investigators' provides
-            detailed information about each investigator in th study.  'Details' provides a large number
-            of details about the study, as gathered within the protocol builder, and 'documents', 
-            lists all the documents that can be a part of the study, with documents from Protocol Builder 
-            marked as required, and details about any files that were uploaded' . 
-        """
+        return """
+StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', 'details', 'approvals',
+'documents' or 'protocol'.
+
+Adds details about the current study to the Task Data.  The type of information required should be 
+provided as an argument.  The following arguments are available:
+
+### Info ###
+Returns the basic information such as the id and title
+```
+{info_example}
+```
+
+### Investigators ###
+Returns detailed information about related personnel.
+The order returned is guaranteed to match the order provided in the investigators.xslx reference file.
+If possible, detailed information is added in from LDAP about each personnel based on their user_id.
+```
+{investigators_example}
+```
+
+### Details ###
+Returns detailed information about variable keys read in from the Protocol Builder.
+
+### Approvals ###
+Returns data about the status of approvals related to a study.
+```
+{approvals_example}
+```
+
+### Documents ###
+Returns a list of all documents that might be related to a study, reading all columns from the irb_documents.xsl 
+file. Including information about any files that were uploaded or generated that relate to a given document. 
+Please note this is just a few examples, ALL known document types are returned in an actual call.
+```
+{documents_example}
+```
+
+### Protocol ###
+Returns information specific to the protocol. 
+
+
+        """.format(info_example=self.example_to_string("info"),
+                   investigators_example=self.example_to_string("investigators"),
+                   approvals_example=self.example_to_string("approvals"),
+                   documents_example=self.example_to_string("documents"),
+                   )
 
     def do_task_validate_only(self, task, study_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
         self.check_args(args)
         # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
-        FileService.get_file_reference_dictionary()
+        FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
+        FileService.get_reference_file_data(FileService.INVESTIGATOR_LIST)
         data = {
             "study":{
                 "info": {
@@ -87,8 +197,7 @@ class StudyInfo(Script):
             schema = StudySchema()
             self.add_data_to_task(task, {cmd: schema.dump(study)})
         if cmd == 'investigators':
-            pb_response = self.pb.get_investigators(study_id)
-            self.add_data_to_task(task, {cmd: self.organize_investigators_by_type(pb_response)})
+            self.add_data_to_task(task, {cmd: StudyService().get_investigators(study_id)})
         if cmd == 'details':
             self.add_data_to_task(task, {cmd: self.pb.get_study_details(study_id)})
         if cmd == 'approvals':
@@ -106,22 +215,3 @@ class StudyInfo(Script):
                                    "one of %s" % ",".join(StudyInfo.type_options))
 
 
-    def organize_investigators_by_type(self, pb_investigators):
-        """Convert array of investigators from protocol builder into a dictionary keyed on the type"""
-        output = {}
-        for i in pb_investigators:
-            dict = {"user_id": i["NETBADGEID"], "type_full": i["INVESTIGATORTYPEFULL"]}
-            dict.update(self.get_ldap_dict_if_available(i["NETBADGEID"]))
-            output[i["INVESTIGATORTYPE"]] = dict
-        return output
-
-    def get_ldap_dict_if_available(self, user_id):
-        try:
-            ldap_service = LdapService()
-            return ldap_service.user_info(user_id).__dict__
-        except ApiError:
-            app.logger.info(str(ApiError))
-            return {}
-        except LDAPSocketOpenError:
-            app.logger.info("Failed to connect to LDAP Server.")
-            return {}

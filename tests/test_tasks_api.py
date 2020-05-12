@@ -1,5 +1,6 @@
 import json
 import os
+import random
 from unittest.mock import patch
 
 from crc import session, app
@@ -297,7 +298,7 @@ class TestTasksApi(BaseTest):
         self.assertEquals(1, len(tasks))
         self.assertEquals("UserTask", tasks[0].type)
         self.assertEquals(MultiInstanceType.sequential, tasks[0].mi_type)
-        self.assertEquals(3, tasks[0].mi_count)
+        self.assertEquals(9, tasks[0].mi_count)
 
 
     def test_lookup_endpoint_for_task_field_enumerations(self):
@@ -383,7 +384,7 @@ class TestTasksApi(BaseTest):
     @patch('crc.services.protocol_builder.requests.get')
     def test_parallel_multi_instance(self, mock_get):
 
-        # Assure we get three investigators back from the API Call, as set in the investigators.json file.
+        # Assure we get nine investigators back from the API Call, as set in the investigators.json file.
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('investigators.json')
 
@@ -392,19 +393,14 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance_parallel')
 
         tasks = self.get_workflow_api(workflow).user_tasks
-        self.assertEquals(3, len(tasks))
+        self.assertEquals(9, len(tasks))
         self.assertEquals("UserTask", tasks[0].type)
         self.assertEquals("MutiInstanceTask", tasks[0].name)
         self.assertEquals("Gather more information", tasks[0].title)
 
-        self.complete_form(workflow, tasks[0], {"investigator":{"email": "dhf8r@virginia.edu"}})
-        tasks = self.get_workflow_api(workflow).user_tasks
-
-        self.complete_form(workflow, tasks[2],  {"investigator":{"email": "abc@virginia.edu"}})
-        tasks = self.get_workflow_api(workflow).user_tasks
-
-        self.complete_form(workflow, tasks[1],  {"investigator":{"email": "def@virginia.edu"}})
-        tasks = self.get_workflow_api(workflow).user_tasks
+        for i in random.sample(range(9), 9):
+            self.complete_form(workflow, tasks[i], {"investigator":{"email": "dhf8r@virginia.edu"}})
+            tasks = self.get_workflow_api(workflow).user_tasks
 
         workflow = self.get_workflow_api(workflow)
         self.assertEquals(WorkflowStatus.complete, workflow.status)
