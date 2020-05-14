@@ -49,6 +49,11 @@ class ValidationSchema(ma.Schema):
     class Meta:
         fields = ["name", "config"]
 
+class FormFieldPropertySchema(ma.Schema):
+    class Meta:
+        fields = [
+            "id", "value"
+        ]
 
 
 class FormFieldSchema(ma.Schema):
@@ -60,6 +65,7 @@ class FormFieldSchema(ma.Schema):
     default_value = marshmallow.fields.String(required=False, allow_none=True)
     options = marshmallow.fields.List(marshmallow.fields.Nested(OptionSchema))
     validation = marshmallow.fields.List(marshmallow.fields.Nested(ValidationSchema))
+    properties = marshmallow.fields.List(marshmallow.fields.Nested(FormFieldPropertySchema))
 
 
 class FormSchema(ma.Schema):
@@ -93,6 +99,7 @@ class WorkflowApi(object):
         self.last_task = last_task  # The last task that was completed, may be different than previous.
         self.next_task = next_task  # The next task that requires user input.
         self.previous_task = previous_task  # The opposite of next task.
+
         self.workflow_spec_id = workflow_spec_id
         self.spec_version = spec_version
         self.is_latest_spec = is_latest_spec

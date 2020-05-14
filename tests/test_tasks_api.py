@@ -290,8 +290,7 @@ class TestTasksApi(BaseTest):
 
         # get the first form in the two form workflow.
         tasks = self.get_workflow_api(workflow).user_tasks
-        self.assertEquals("JustAKey", tasks[0].properties[0]['id'])
-        self.assertEquals("JustAValue", tasks[0].properties[0]['value'])
+        self.assertEquals("JustAValue", tasks[0].properties['JustAKey'])
 
 
     @patch('crc.services.protocol_builder.requests.get')
