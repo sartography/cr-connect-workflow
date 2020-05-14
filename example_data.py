@@ -19,7 +19,7 @@ class ExampleDataLoader:
         session.flush()  # Clear out any transactions before deleting it all to avoid spurious errors.
         for table in reversed(db.metadata.sorted_tables):
             session.execute(table.delete())
-        session.flush()
+            session.flush()
 
     def load_all(self):
 
