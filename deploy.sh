@@ -14,7 +14,6 @@ function branch_to_deploy_stage () {
 
 REPO="sartography/cr-connect-workflow"
 TAG=$(branch_to_tag "$TRAVIS_BRANCH")
-COMMIT=${TRAVIS_COMMIT::8}
 
 DEPLOY_APP="backend"
 DEPLOY_GROUP=$(branch_to_deploy_group "$TRAVIS_BRANCH")
@@ -29,14 +28,11 @@ fi
 DEPLOY_PATH="$DEPLOY_GROUP/$DEPLOY_STAGE/$DEPLOY_APP"
 echo "REPO = $REPO"
 echo "TAG = $TAG"
-echo "COMMIT = $COMMIT"
 echo "DEPLOY_PATH = $DEPLOY_PATH"
 
 # Build and push Docker image to Docker Hub
 echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin || exit 1
-docker build -f Dockerfile -t "$REPO:$COMMIT" . || exit 1
-docker tag "$REPO:$COMMIT" "$REPO:$TAG" || exit 1
-docker tag "$REPO:$COMMIT" "$REPO:travis-$TRAVIS_BUILD_NUMBER" || exit 1
+docker build -f Dockerfile -t "$REPO:$TAG" . || exit 1
 docker push "$REPO" || exit 1
 
 # Wait for Docker Hub
