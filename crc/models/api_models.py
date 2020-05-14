@@ -50,10 +50,6 @@ class ValidationSchema(ma.Schema):
         fields = ["name", "config"]
 
 
-class PropertiesSchema(ma.Schema):
-    class Meta:
-        fields = ["id", "value"]
-
 
 class FormFieldSchema(ma.Schema):
     class Meta:
@@ -64,7 +60,6 @@ class FormFieldSchema(ma.Schema):
     default_value = marshmallow.fields.String(required=False, allow_none=True)
     options = marshmallow.fields.List(marshmallow.fields.Nested(OptionSchema))
     validation = marshmallow.fields.List(marshmallow.fields.Nested(ValidationSchema))
-    properties = marshmallow.fields.List(marshmallow.fields.Nested(PropertiesSchema))
 
 
 class FormSchema(ma.Schema):
@@ -81,7 +76,6 @@ class TaskSchema(ma.Schema):
     documentation = marshmallow.fields.String(required=False, allow_none=True)
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
-    properties = marshmallow.fields.List(marshmallow.fields.Nested(PropertiesSchema))
     process_name = marshmallow.fields.String(required=False, allow_none=True)
 
     @marshmallow.post_load
@@ -90,10 +84,11 @@ class TaskSchema(ma.Schema):
 
 
 class WorkflowApi(object):
-    def __init__(self, id, status, user_tasks, last_task, next_task, previous_task,
+    def __init__(self, id, status, navigation, user_tasks, last_task, next_task, previous_task,
                  spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks, last_updated):
         self.id = id
         self.status = status
+        self.navigation = navigation
         self.user_tasks = user_tasks
         self.last_task = last_task  # The last task that was completed, may be different than previous.
         self.next_task = next_task  # The next task that requires user input.
@@ -108,7 +103,7 @@ class WorkflowApi(object):
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
-        fields = ["id", "status", "user_tasks", "last_task", "next_task", "previous_task",
+        fields = ["id", "status", "navigation", "user_tasks", "last_task", "next_task", "previous_task",
                   "workflow_spec_id", "spec_version", "is_latest_spec", "total_tasks", "completed_tasks",
                   "last_updated"]
         unknown = INCLUDE
@@ -121,7 +116,7 @@ class WorkflowApiSchema(ma.Schema):
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
-        keys = ['id', 'status', 'user_tasks', 'last_task', 'next_task', 'previous_task',
+        keys = ['id', 'status', 'navigation', 'user_tasks', 'last_task', 'next_task', 'previous_task',
                 'workflow_spec_id', 'spec_version', 'is_latest_spec', "total_tasks", "completed_tasks",
                 "last_updated"]
         filtered_fields = {key: data[key] for key in keys}

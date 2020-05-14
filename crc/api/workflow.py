@@ -89,6 +89,7 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),
+        navigation=processor.bpmn_workflow.get_nav_list(),
         last_task=WorkflowService.spiff_task_to_api_task(processor.bpmn_workflow.last_task),
         next_task=None,
         previous_task=processor.previous_task(),

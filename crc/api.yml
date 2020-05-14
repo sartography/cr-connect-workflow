@@ -939,6 +939,10 @@ components:
         status:
           type: enum
           enum: ['new','user_input_required','waiting','complete']
+        navigation:
+          type: array
+          items:
+            $ref: "#/components/schemas/NavigationItem"
         user_tasks:
           type: array
           items:
@@ -1160,5 +1164,36 @@ components:
           example: "Chuck Norris"
         data:
           type: any
+    NavigationItem:
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 5
+        name:
+          type: string
+          example: "Task_Has_bananas"
+        description:
+          type: string
+          example: "Has Bananas?"
+        backtracks:
+          type: booean
+          example: false
+        level:
+          type: integer
+          example: 1
+        indent:
+          type: integer
+          example: 2
+        childcount:
+          type: integer
+          example: 4
+        state:
+          type: enum
+          enum: ['FUTURE', 'WAITING', 'READY', 'CANCELLED', 'COMPLETED','LIKELY','MAYBE']
+          readOnly: true
+
+
+
 
 

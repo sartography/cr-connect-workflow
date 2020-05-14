@@ -140,6 +140,16 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual("Task_Num_Bananas", workflow_api.next_task['name'])
 
+    def test_navigation_with_parallel_forms(self):
+        self.load_example_data()
+        workflow = self.create_workflow('exclusive_gateway')
+
+        # get the first form in the two form workflow.
+        workflow_api = self.get_workflow_api(workflow)
+
+        self.assertIsNotNone(workflow_api.navigation)
+
+
     def test_get_workflow_contains_details_about_last_task_data(self):
         self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway')
@@ -299,6 +309,9 @@ class TestTasksApi(BaseTest):
         self.assertEquals("UserTask", tasks[0].type)
         self.assertEquals(MultiInstanceType.sequential, tasks[0].mi_type)
         self.assertEquals(9, tasks[0].mi_count)
+
+        # Assure that the names for each task are properly updated, so they aren't all the same.
+        self.assertEquals("Primary Investigator", tasks[0].properties['display_name'])
 
 
     def test_lookup_endpoint_for_task_field_enumerations(self):

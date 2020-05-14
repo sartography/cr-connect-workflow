@@ -10,7 +10,7 @@ from flask import g
 from pandas import ExcelFile
 from sqlalchemy import func
 
-from crc import db
+from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
 import jinja2
@@ -90,10 +90,10 @@ class WorkflowService(object):
         else:
             mi_type = MultiInstanceType.none
 
-        props = []
+        props = {}
         if hasattr(spiff_task.task_spec, 'extensions'):
             for id, val in spiff_task.task_spec.extensions.items():
-                props.append({"id": id, "value": val})
+                props[id] = val
 
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
@@ -117,9 +117,20 @@ class WorkflowService(object):
                 task.form = spiff_task.task_spec.form
                 for field in task.form.fields:
                     WorkflowService.process_options(spiff_task, field)
-
             task.documentation = WorkflowService._process_documentation(spiff_task)
+            task.props = WorkflowService._process_properties(spiff_task, props)
+
         return task
+
+    @staticmethod
+    def _process_properties(spiff_task, props):
+        """Runs all the property values through the Jinja2 processor to inject data."""
+        for k,v in props.items():
+            try:
+                template = Template(v)
+                props[k] = template.render(**spiff_task.data)
+            except jinja2.exceptions.TemplateError as ue:
+                app.logger.error("Failed to process task property %s " % str(ue))
 
     @staticmethod
     def _process_documentation(spiff_task):
