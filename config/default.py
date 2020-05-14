@@ -27,6 +27,7 @@ FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://l
 SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 
 #: Default attribute map for single signon.
+SSO_LOGIN_URL = '/login'
 SSO_ATTRIBUTE_MAP = {
     'eppn': (False, 'eppn'),  # dhf8r@virginia.edu
     'uid': (True, 'uid'),  # dhf8r
