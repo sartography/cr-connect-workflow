@@ -118,7 +118,13 @@ class WorkflowService(object):
                 for field in task.form.fields:
                     WorkflowService.process_options(spiff_task, field)
             task.documentation = WorkflowService._process_documentation(spiff_task)
+
+        # All ready tasks should have a valid name, and this can be computed for
+        # some tasks, particularly multi-instance tasks that all have the same spec
+        # but need different labels.
+        if spiff_task.state == SpiffTask.READY:
             task.props = WorkflowService._process_properties(spiff_task, props)
+
 
         return task
 

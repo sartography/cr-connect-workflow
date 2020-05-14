@@ -84,8 +84,8 @@ def delete_workflow_specification(spec_id):
 
 
 def __get_workflow_api_model(processor: WorkflowProcessor):
-    spiff_tasks = processor.get_all_user_tasks()
-    user_tasks = [WorkflowService.spiff_task_to_api_task(t, add_docs_and_forms=True) for t in spiff_tasks]
+    spiff_tasks = processor.get_ready_user_tasks()
+    user_tasks = [WorkflowService.spiff_task_to_api_task(t, add_docs_and_forms=False) for t in spiff_tasks]
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),

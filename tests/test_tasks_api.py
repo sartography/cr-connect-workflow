@@ -101,7 +101,7 @@ class TestTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('two_forms', workflow_api.workflow_spec_id)
-        self.assertEqual(2, len(workflow_api.user_tasks))
+        self.assertEqual(1, len(workflow_api.user_tasks))
         self.assertIsNotNone(workflow_api.next_task['form'])
         self.assertEqual("UserTask", workflow_api.next_task['type'])
         self.assertEqual("StepOne", workflow_api.next_task['name'])
@@ -334,7 +334,7 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('subprocess')
 
         tasks = self.get_workflow_api(workflow).user_tasks
-        self.assertEquals(2, len(tasks))
+        self.assertEquals(1, len(tasks))
         self.assertEquals("UserTask", tasks[0].type)
         self.assertEquals("Activity_A", tasks[0].name)
         self.assertEquals("My Sub Process", tasks[0].process_name)
@@ -412,19 +412,8 @@ class TestTasksApi(BaseTest):
 
         for i in random.sample(range(9), 9):
             self.complete_form(workflow, tasks[i], {"investigator":{"email": "dhf8r@virginia.edu"}})
-            tasks = self.get_workflow_api(workflow).user_tasks
+            #tasks = self.get_workflow_api(workflow).user_tasks
 
         workflow = self.get_workflow_api(workflow)
         self.assertEquals(WorkflowStatus.complete, workflow.status)
 
-    # def test_parent_task_set_on_tasks(self):
-    #     self.load_example_data()
-    #     workflow = self.create_workflow('exclusive_gateway')
-    #
-    #     # Start the workflow.
-    #     workflow = self.get_workflow_api(workflow)
-    #     self.assertEquals(None, workflow.previous_task)
-    #     self.complete_form(workflow, workflow.next_task, {"has_bananas": True})
-    #     workflow = self.get_workflow_api(workflow)
-    #     self.assertEquals('Task_Num_Bananas', workflow.next_task['name'])
-    #     self.assertEquals('has_bananas', workflow.previous_task['name'])
