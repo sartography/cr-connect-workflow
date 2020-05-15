@@ -67,14 +67,14 @@ class TestTasksApi(BaseTest):
         self.assertEquals(task_in.type, event.task_type)
         self.assertEquals("COMPLETED", event.task_state)
         # Not sure what vodoo is happening inside of marshmallow to get me in this state.
-        if isinstance(task_in.multiInstanceType,MultiInstanceType):
-            self.assertEquals(task_in.multiInstanceType.value, event.mi_type)
+        if isinstance(task_in.multi_instance_type, MultiInstanceType):
+            self.assertEquals(task_in.multi_instance_type.value, event.mi_type)
         else:
-            self.assertEquals(task_in.multiInstanceType, event.mi_type)
+            self.assertEquals(task_in.multi_instance_type, event.mi_type)
 
-        self.assertEquals(task_in.multiInstanceCount, event.mi_count)
-        self.assertEquals(task_in.multiInstanceIndex, event.mi_index)
-        self.assertEquals(task_in.processName, event.process_name)
+        self.assertEquals(task_in.multi_instance_count, event.mi_count)
+        self.assertEquals(task_in.multi_instance_index, event.mi_index)
+        self.assertEquals(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 
 
@@ -296,8 +296,8 @@ class TestTasksApi(BaseTest):
         navigation = self.get_workflow_api(workflow).navigation
         self.assertEquals(4, len(navigation)) # Start task, form_task, multi_task, end task
         self.assertEquals("UserTask", workflow.next_task.type)
-        self.assertEquals(MultiInstanceType.sequential.value, workflow.next_task.multiInstanceType)
-        self.assertEquals(9, workflow.next_task.multiInstanceCount)
+        self.assertEquals(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
+        self.assertEquals(9, workflow.next_task.multi_instance_count)
 
         # Assure that the names for each task are properly updated, so they aren't all the same.
         self.assertEquals("Primary Investigator", workflow.next_task.properties['display_name'])
@@ -330,13 +330,13 @@ class TestTasksApi(BaseTest):
         self.assertEquals(2, len(navigation))
         self.assertEquals("UserTask", task.type)
         self.assertEquals("Activity_A", task.name)
-        self.assertEquals("My Sub Process", task.processName)
+        self.assertEquals("My Sub Process", task.process_name)
         workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
         task = workflow_api.next_task
         self.assertIsNotNone(task)
 
         self.assertEquals("Activity_B", task.name)
-        self.assertEquals("Sub Workflow Example", task.processName)
+        self.assertEquals("Sub Workflow Example", task.process_name)
         workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
         self.assertEquals(WorkflowStatus.complete, workflow_api.status)
 

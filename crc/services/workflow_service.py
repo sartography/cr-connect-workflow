@@ -106,7 +106,7 @@ class WorkflowService(object):
                     mi_type,
                     info["mi_count"],
                     info["mi_index"],
-                    processName=spiff_task.task_spec._wf_spec.description,
+                    process_name=spiff_task.task_spec._wf_spec.description,
                     properties=props
                     )
 
@@ -288,10 +288,10 @@ class WorkflowService(object):
             task_title=task.title,
             task_type=str(task.type),
             task_state=task.state,
-            mi_type=task.multiInstanceType.value,  # Some tasks have a repeat behavior.
-            mi_count=task.multiInstanceCount,  # This is the number of times the task could repeat.
-            mi_index=task.multiInstanceIndex,  # And the index of the currently repeating task.
-            process_name=task.processName,
+            mi_type=task.multi_instance_type.value,  # Some tasks have a repeat behavior.
+            mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
+            mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
+            process_name=task.process_name,
             date=datetime.now(),
         )
         db.session.add(task_event)

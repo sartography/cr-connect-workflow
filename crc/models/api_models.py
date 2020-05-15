@@ -16,7 +16,7 @@ class MultiInstanceType(enum.Enum):
 
 
 class NavigationItem(object):
-    def __init__(self, id, task_id, name, title, backtracks, level, indent, childCount, state, isDecision, task=None):
+    def __init__(self, id, task_id, name, title, backtracks, level, indent, child_count, state, is_decision, task=None):
         self.id = id
         self.task_id = task_id
         self.name = name,
@@ -24,9 +24,9 @@ class NavigationItem(object):
         self.backtracks = backtracks
         self.level = level
         self.indent = indent
-        self.childCount = childCount
+        self.child_count = child_count
         self.state = state
-        self.isDecision = isDecision
+        self.is_decision = is_decision
         self.task = task
 
 class Task(object):
@@ -36,9 +36,8 @@ class Task(object):
     EMUM_OPTIONS_LABEL_COL_PROP = "enum.options.label.column"
     EMUM_OPTIONS_AS_LOOKUP = "enum.options.lookup"
 
-
     def __init__(self, id, name, title, type, state, form, documentation, data,
-                 multiInstanceType, multiInstanceCount, multiInstanceIndex, processName, properties):
+                 multi_instance_type, multi_instance_count, multi_instance_index, process_name, properties):
         self.id = id
         self.name = name
         self.title = title
@@ -47,10 +46,10 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
-        self.multiInstanceType = multiInstanceType  # Some tasks have a repeat behavior.
-        self.multiInstanceCount = multiInstanceCount  # This is the number of times the task could repeat.
-        self.multiInstanceIndex = multiInstanceIndex  # And the index of the currently repeating task.
-        self.processName = processName
+        self.multi_instance_type = multi_instance_type  # Some tasks have a repeat behavior.
+        self.multi_instance_count = multi_instance_count  # This is the number of times the task could repeat.
+        self.multi_instance_index = multi_instance_index  # And the index of the currently repeating task.
+        self.process_name = process_name
         self.properties = properties  # Arbitrary extension properties from BPMN editor.
 
 
@@ -62,6 +61,7 @@ class OptionSchema(ma.Schema):
 class ValidationSchema(ma.Schema):
     class Meta:
         fields = ["name", "config"]
+
 
 class FormFieldPropertySchema(ma.Schema):
     class Meta:
@@ -88,14 +88,14 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "multiInstanceType",
-                  "multiInstanceCount", "multiInstanceIndex", "processName", "properties"]
+        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "multi_instance_type",
+                  "multi_instance_count", "multi_instance_index", "process_name", "properties"]
 
-    multiInstanceType = EnumField(MultiInstanceType)
+    multi_instance_type = EnumField(MultiInstanceType)
     documentation = marshmallow.fields.String(required=False, allow_none=True)
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
-    processName = marshmallow.fields.String(required=False, allow_none=True)
+    process_name = marshmallow.fields.String(required=False, allow_none=True)
 
     @marshmallow.post_load
     def make_task(self, data, **kwargs):
@@ -104,8 +104,8 @@ class TaskSchema(ma.Schema):
 
 class NavigationItemSchema(ma.Schema):
     class Meta:
-        fields = ["id", "task_id", "name", "title", "backtracks", "level", "indent", "childCount", "state",
-                  "isDecision", "task"]
+        fields = ["id", "task_id", "name", "title", "backtracks", "level", "indent", "child_count", "state",
+                  "is_decision", "task"]
         unknown = INCLUDE
     task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False, allow_none=True)
     backtracks = marshmallow.fields.String(required=False, allow_none=True)

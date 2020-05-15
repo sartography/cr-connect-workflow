@@ -61,9 +61,9 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
 
         self.assertEqual("MutiInstanceTask", task.get_name())
         api_task = WorkflowService.spiff_task_to_api_task(task)
-        self.assertEquals(MultiInstanceType.sequential, api_task.multiInstanceType)
-        self.assertEquals(3, api_task.multiInstanceCount)
-        self.assertEquals(1, api_task.multiInstanceIndex)
+        self.assertEquals(MultiInstanceType.sequential, api_task.multi_instance_type)
+        self.assertEquals(3, api_task.multi_instance_count)
+        self.assertEquals(1, api_task.multi_instance_index)
         task.update_data({"investigator":{"email":"asd3v@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
@@ -72,8 +72,8 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", api_task.name)
         task.update_data({"investigator":{"email":"asdf32@virginia.edu"}})
-        self.assertEquals(3, api_task.multiInstanceCount)
-        self.assertEquals(2, api_task.multiInstanceIndex)
+        self.assertEquals(3, api_task.multi_instance_count)
+        self.assertEquals(2, api_task.multi_instance_index)
         processor.complete_task(task)
         processor.do_engine_steps()
 
@@ -81,8 +81,8 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", task.get_name())
         task.update_data({"investigator":{"email":"dhf8r@virginia.edu"}})
-        self.assertEquals(3, api_task.multiInstanceCount)
-        self.assertEquals(3, api_task.multiInstanceIndex)
+        self.assertEquals(3, api_task.multi_instance_count)
+        self.assertEquals(3, api_task.multi_instance_index)
         processor.complete_task(task)
         processor.do_engine_steps()
         task = processor.bpmn_workflow.last_task
@@ -120,7 +120,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         self.assertEquals("asd3v", task.data["investigator"]["user_id"])  # The last of the tasks
 
         api_task = WorkflowService.spiff_task_to_api_task(task)
-        self.assertEquals(MultiInstanceType.parallel, api_task.multiInstanceType)
+        self.assertEquals(MultiInstanceType.parallel, api_task.multi_instance_type)
         task.update_data({"investigator":{"email":"dhf8r@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()

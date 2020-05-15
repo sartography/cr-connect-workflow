@@ -100,11 +100,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
             nav_item['title'] = nav_item['task'].title # Prefer the task title.
         else:
             nav_item['task'] = None
-        nav_item['childCount'] = nav_item.pop('child_count')
-        if 'is_decision' in nav_item:
-            nav_item['isDecision'] = nav_item.pop('is_decision')
-        else:
-            nav_item['isDecision'] = False
+        if not 'is_decision' in nav_item:
+            nav_item['is_decision'] = False
 
         navigation.append(NavigationItem(**nav_item))
         NavigationItemSchema().dump(nav_item)

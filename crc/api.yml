@@ -990,14 +990,14 @@ components:
           type: string
         data:
           type: object
-        multiInstanceType:
+        multi_instance_type:
           type: enum
           enum: ['none', 'looping', 'parallel', 'sequential']
-        multiInstanceCount:
+        multi_instance_count:
           type: number
-        multiInstanceIndex:
+        multi_instance_index:
           type: number
-        processName:
+        process_name:
           type: string
         properties:
           type: object
@@ -1196,14 +1196,14 @@ components:
         indent:
           type: integer
           example: 2
-        childCount:
+        child_count:
           type: integer
           example: 4
         state:
           type: enum
           enum: ['FUTURE', 'WAITING', 'READY', 'CANCELLED', 'COMPLETED','LIKELY','MAYBE']
           readOnly: true
-        isDecision:
+        is_decision:
           type: boolean
           example: False
           readOnly: true
