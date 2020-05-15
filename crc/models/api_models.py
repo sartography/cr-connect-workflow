@@ -15,6 +15,20 @@ class MultiInstanceType(enum.Enum):
     sequential = "sequential"
 
 
+class NavigationItem(object):
+    def __init__(self, id, task_id, name, title, backtracks, level, indent, childCount, state, isDecision, task=None):
+        self.id = id
+        self.task_id = task_id
+        self.name = name,
+        self.title = title
+        self.backtracks = backtracks
+        self.level = level
+        self.indent = indent
+        self.childCount = childCount
+        self.state = state
+        self.isDecision = isDecision
+        self.task = task
+
 class Task(object):
 
     ENUM_OPTIONS_FILE_PROP = "enum.options.file"
@@ -24,7 +38,7 @@ class Task(object):
 
 
     def __init__(self, id, name, title, type, state, form, documentation, data,
-                 mi_type, mi_count, mi_index, process_name, properties):
+                 multiInstanceType, multiInstanceCount, multiInstanceIndex, processName, properties):
         self.id = id
         self.name = name
         self.title = title
@@ -33,10 +47,10 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
-        self.mi_type = mi_type  # Some tasks have a repeat behavior.
-        self.mi_count = mi_count  # This is the number of times the task could repeat.
-        self.mi_index = mi_index  # And the index of the currently repeating task.
-        self.process_name = process_name
+        self.multiInstanceType = multiInstanceType  # Some tasks have a repeat behavior.
+        self.multiInstanceCount = multiInstanceCount  # This is the number of times the task could repeat.
+        self.multiInstanceIndex = multiInstanceIndex  # And the index of the currently repeating task.
+        self.processName = processName
         self.properties = properties  # Arbitrary extension properties from BPMN editor.
 
 
@@ -54,7 +68,6 @@ class FormFieldPropertySchema(ma.Schema):
         fields = [
             "id", "value"
         ]
-
 
 class FormFieldSchema(ma.Schema):
     class Meta:
@@ -75,31 +88,38 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "mi_type",
-                  "mi_count", "mi_index", "process_name", "properties"]
+        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "multiInstanceType",
+                  "multiInstanceCount", "multiInstanceIndex", "processName", "properties"]
 
-    mi_type = EnumField(MultiInstanceType)
+    multiInstanceType = EnumField(MultiInstanceType)
     documentation = marshmallow.fields.String(required=False, allow_none=True)
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
-    process_name = marshmallow.fields.String(required=False, allow_none=True)
+    processName = marshmallow.fields.String(required=False, allow_none=True)
 
     @marshmallow.post_load
     def make_task(self, data, **kwargs):
         return Task(**data)
 
 
+class NavigationItemSchema(ma.Schema):
+    class Meta:
+        fields = ["id", "task_id", "name", "title", "backtracks", "level", "indent", "childCount", "state",
+                  "isDecision", "task"]
+        unknown = INCLUDE
+    task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False, allow_none=True)
+    backtracks = marshmallow.fields.String(required=False, allow_none=True)
+    title = marshmallow.fields.String(required=False, allow_none=True)
+    task_id = marshmallow.fields.String(required=False, allow_none=True)
+
+
 class WorkflowApi(object):
-    def __init__(self, id, status, navigation, user_tasks, last_task, next_task, previous_task,
+    def __init__(self, id, status, next_task, navigation,
                  spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks, last_updated):
         self.id = id
         self.status = status
-        self.navigation = navigation
-        self.user_tasks = user_tasks
-        self.last_task = last_task  # The last task that was completed, may be different than previous.
         self.next_task = next_task  # The next task that requires user input.
-        self.previous_task = previous_task  # The opposite of next task.
-
+        self.navigation = navigation
         self.workflow_spec_id = workflow_spec_id
         self.spec_version = spec_version
         self.is_latest_spec = is_latest_spec
@@ -110,21 +130,20 @@ class WorkflowApi(object):
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
-        fields = ["id", "status", "navigation", "user_tasks", "last_task", "next_task", "previous_task",
+        fields = ["id", "status", "next_task", "navigation",
                   "workflow_spec_id", "spec_version", "is_latest_spec", "total_tasks", "completed_tasks",
                   "last_updated"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
-    user_tasks = marshmallow.fields.List(marshmallow.fields.Nested(TaskSchema, dump_only=True))
-    last_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
     next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
-    previous_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
+    navigation = marshmallow.fields.List(marshmallow.fields.Nested(NavigationItemSchema, dump_only=True))
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
-        keys = ['id', 'status', 'navigation', 'user_tasks', 'last_task', 'next_task', 'previous_task',
+        keys = ['id', 'status', 'next_task', 'navigation',
                 'workflow_spec_id', 'spec_version', 'is_latest_spec', "total_tasks", "completed_tasks",
                 "last_updated"]
         filtered_fields = {key: data[key] for key in keys}
+        filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])
         return WorkflowApi(**filtered_fields)

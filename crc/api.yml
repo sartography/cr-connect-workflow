@@ -943,12 +943,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/NavigationItem"
-        user_tasks:
-          type: array
-          items:
-            $ref: "#/components/schemas/Task"
-        last_task:
-          $ref: "#/components/schemas/Task"
         next_task:
           $ref: "#/components/schemas/Task"
         workflow_spec_id:
@@ -994,6 +988,19 @@ components:
           $ref: "#/components/schemas/Form"
         documentation:
           type: string
+        data:
+          type: object
+        multiInstanceType:
+          type: enum
+          enum: ['none', 'looping', 'parallel', 'sequential']
+        multiInstanceCount:
+          type: number
+        multiInstanceIndex:
+          type: number
+        processName:
+          type: string
+        properties:
+          type: object
       example:
         id: study_identification
         name: Study Identification
@@ -1170,6 +1177,10 @@ components:
           type: number
           format: integer
           example: 5
+        task_id:
+          type: string
+          format: uuid
+          example: "1234123uuid1234"
         name:
           type: string
           example: "Task_Has_bananas"
@@ -1177,7 +1188,7 @@ components:
           type: string
           example: "Has Bananas?"
         backtracks:
-          type: booean
+          type: boolean
           example: false
         level:
           type: integer
@@ -1185,14 +1196,19 @@ components:
         indent:
           type: integer
           example: 2
-        childcount:
+        childCount:
           type: integer
           example: 4
         state:
           type: enum
           enum: ['FUTURE', 'WAITING', 'READY', 'CANCELLED', 'COMPLETED','LIKELY','MAYBE']
           readOnly: true
-
+        isDecision:
+          type: boolean
+          example: False
+          readOnly: true
+        task:
+          $ref: "#/components/schemas/Task"
 
 
 

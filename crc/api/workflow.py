@@ -2,7 +2,7 @@ import uuid
 
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.api_models import WorkflowApi, WorkflowApiSchema
+from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
 from crc.models.file import FileModel, LookupDataSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
@@ -83,17 +83,36 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def __get_workflow_api_model(processor: WorkflowProcessor):
-    spiff_tasks = processor.get_ready_user_tasks()
-    user_tasks = [WorkflowService.spiff_task_to_api_task(t, add_docs_and_forms=False) for t in spiff_tasks]
+def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
+    """Returns an API model representing the state of the current workflow, if requested, and
+    possible, next_task is set to the current_task."""
+
+    nav_dict = processor.bpmn_workflow.get_nav_list()
+    navigation = []
+    for nav_item in nav_dict:
+        spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
+        if 'description' in nav_item:
+            nav_item['title'] = nav_item.pop('description')
+        else:
+            nav_item['title'] = ""
+        if spiff_task:
+            nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
+            nav_item['title'] = nav_item['task'].title # Prefer the task title.
+        else:
+            nav_item['task'] = None
+        nav_item['childCount'] = nav_item.pop('child_count')
+        if 'is_decision' in nav_item:
+            nav_item['isDecision'] = nav_item.pop('is_decision')
+        else:
+            nav_item['isDecision'] = False
+
+        navigation.append(NavigationItem(**nav_item))
+        NavigationItemSchema().dump(nav_item)
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),
-        navigation=processor.bpmn_workflow.get_nav_list(),
-        last_task=WorkflowService.spiff_task_to_api_task(processor.bpmn_workflow.last_task),
         next_task=None,
-        previous_task=processor.previous_task(),
-        user_tasks=user_tasks,
+        navigation=navigation,
         workflow_spec_id=processor.workflow_spec_id,
         spec_version=processor.get_spec_version(),
         is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
@@ -101,7 +120,9 @@ def __get_workflow_api_model(processor: WorkflowProcessor):
         completed_tasks=processor.workflow_model.completed_tasks,
         last_updated=processor.workflow_model.last_updated
     )
-    next_task = processor.next_task()
+    if not next_task: # The Next Task can be requested to be a certain task, useful for parallel tasks.
+        # This may or may not work, sometimes there is no next task to complete.
+        next_task = processor.next_task()
     if next_task:
         workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
 
@@ -118,19 +139,20 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
 def delete_workflow(workflow_id):
     StudyService.delete_workflow(workflow_id)
 
+
 def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
-    if task.state != task.COMPLETED:
+    if task.state != task.COMPLETED and task.state != task.READY:
         raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
-                                        "currently set to COMPLETE.")
+                                        "currently set to COMPLETE or READY.")
 
     task.reset_token(reset_data=False)  # we could optionally clear the previous data.
     processor.save()
     WorkflowService.log_task_action(processor, task, WorkflowService.TASK_ACTION_TOKEN_RESET)
-    workflow_api_model = __get_workflow_api_model(processor)
+    workflow_api_model = __get_workflow_api_model(processor, task)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
