@@ -1,3 +1,5 @@
+import json
+
 import connexion
 from flask import redirect, g
 
@@ -33,6 +35,7 @@ def get_current_user():
 
 @sso.login_handler
 def sso_login(user_info):
+    app.logger.info("Login from Shibboleth happening. " + json.dump(user_info))
     # TODO: Get redirect URL from Shibboleth request header
     _handle_login(user_info)
 
