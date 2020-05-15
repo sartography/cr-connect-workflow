@@ -10,7 +10,7 @@ from flask import g
 from pandas import ExcelFile
 from sqlalchemy import func
 
-from crc import db
+from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
 import jinja2
@@ -24,7 +24,6 @@ from SpiffWorkflow import Task as SpiffTask, WorkflowException
 
 
 class WorkflowService(object):
-
     TASK_ACTION_COMPLETE = "Complete"
     TASK_ACTION_TOKEN_RESET = "Backwards Move"
     TASK_ACTION_HARD_RESET = "Restart (Hard)"
@@ -54,7 +53,8 @@ class WorkflowService(object):
                 tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:
                     task_api = WorkflowService.spiff_task_to_api_task(
-                        task, add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
+                        task,
+                        add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
                     WorkflowProcessor.populate_form_with_random_data(task, task_api)
                     task.complete()
             except WorkflowException as we:
@@ -90,10 +90,10 @@ class WorkflowService(object):
         else:
             mi_type = MultiInstanceType.none
 
-        props = []
+        props = {}
         if hasattr(spiff_task.task_spec, 'extensions'):
             for id, val in spiff_task.task_spec.extensions.items():
-                props.append({"id": id, "value": val})
+                props[id] = val
 
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
@@ -102,24 +102,51 @@ class WorkflowService(object):
                     spiff_task.get_state_name(),
                     None,
                     "",
-                    spiff_task.data,
+                    {},
                     mi_type,
                     info["mi_count"],
                     info["mi_index"],
                     process_name=spiff_task.task_spec._wf_spec.description,
-                    properties=props)
+                    properties=props
+                    )
 
         # Only process the form and documentation if requested.
         # The task should be in a completed or a ready state, and should
         # not be a previously completed MI Task.
         if add_docs_and_forms:
+            task.data = spiff_task.data
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
                 for field in task.form.fields:
                     WorkflowService.process_options(spiff_task, field)
-
             task.documentation = WorkflowService._process_documentation(spiff_task)
+
+        # All ready tasks should have a valid name, and this can be computed for
+        # some tasks, particularly multi-instance tasks that all have the same spec
+        # but need different labels.
+        if spiff_task.state == SpiffTask.READY:
+            task.properties = WorkflowService._process_properties(spiff_task, props)
+
+        # Replace the title with the display name if it is set in the task properties,
+        # otherwise strip off the first word of the task, as that should be following
+        # a BPMN standard, and should not be included in the display.
+        if task.properties and "display_name" in task.properties:
+            task.title = task.properties['display_name']
+        elif task.title and ' ' in task.title:
+            task.title = task.title.partition(' ')[2]
+
         return task
+
+    @staticmethod
+    def _process_properties(spiff_task, props):
+        """Runs all the property values through the Jinja2 processor to inject data."""
+        for k, v in props.items():
+            try:
+                template = Template(v)
+                props[k] = template.render(**spiff_task.data)
+            except jinja2.exceptions.TemplateError as ue:
+                app.logger.error("Failed to process task property %s " % str(ue))
+        return props
 
     @staticmethod
     def _process_documentation(spiff_task):
@@ -144,7 +171,7 @@ class WorkflowService(object):
             return template.render(**spiff_task.data)
         except jinja2.exceptions.TemplateError as ue:
 
-#            return "Error processing template. %s" % ue.message
+            #            return "Error processing template. %s" % ue.message
             raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
                                                           (spiff_task.task_spec.name, str(ue)), status_code=500)
         # TODO:  Catch additional errors and report back.
@@ -261,14 +288,11 @@ class WorkflowService(object):
             task_title=task.title,
             task_type=str(task.type),
             task_state=task.state,
-            mi_type=task.mi_type.value,  # Some tasks have a repeat behavior.
-            mi_count=task.mi_count,  # This is the number of times the task could repeat.
-            mi_index=task.mi_index,  # And the index of the currently repeating task.
+            mi_type=task.multi_instance_type.value,  # Some tasks have a repeat behavior.
+            mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
+            mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
             process_name=task.process_name,
             date=datetime.now(),
         )
         db.session.add(task_event)
         db.session.commit()
-
-
-

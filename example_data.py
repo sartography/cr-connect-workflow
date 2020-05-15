@@ -1,16 +1,11 @@
-import datetime
+import glob
 import glob
 import os
-import xml.etree.ElementTree as ElementTree
 
 from crc import app, db, session
-from crc.models.file import FileType, FileModel, FileDataModel, CONTENT_TYPES
-from crc.models.study import StudyModel
-from crc.models.user import UserModel
+from crc.models.file import CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
-from crc.services.workflow_processor import WorkflowProcessor
-from crc.models.protocol_builder import ProtocolBuilderStatus
 
 
 class ExampleDataLoader:

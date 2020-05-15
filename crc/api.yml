@@ -939,12 +939,10 @@ components:
         status:
           type: enum
           enum: ['new','user_input_required','waiting','complete']
-        user_tasks:
+        navigation:
           type: array
           items:
-            $ref: "#/components/schemas/Task"
-        last_task:
-          $ref: "#/components/schemas/Task"
+            $ref: "#/components/schemas/NavigationItem"
         next_task:
           $ref: "#/components/schemas/Task"
         workflow_spec_id:
@@ -990,6 +988,19 @@ components:
           $ref: "#/components/schemas/Form"
         documentation:
           type: string
+        data:
+          type: object
+        multi_instance_type:
+          type: enum
+          enum: ['none', 'looping', 'parallel', 'sequential']
+        multi_instance_count:
+          type: number
+        multi_instance_index:
+          type: number
+        process_name:
+          type: string
+        properties:
+          type: object
       example:
         id: study_identification
         name: Study Identification
@@ -1160,5 +1171,45 @@ components:
           example: "Chuck Norris"
         data:
           type: any
+    NavigationItem:
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 5
+        task_id:
+          type: string
+          format: uuid
+          example: "1234123uuid1234"
+        name:
+          type: string
+          example: "Task_Has_bananas"
+        description:
+          type: string
+          example: "Has Bananas?"
+        backtracks:
+          type: boolean
+          example: false
+        level:
+          type: integer
+          example: 1
+        indent:
+          type: integer
+          example: 2
+        child_count:
+          type: integer
+          example: 4
+        state:
+          type: enum
+          enum: ['FUTURE', 'WAITING', 'READY', 'CANCELLED', 'COMPLETED','LIKELY','MAYBE']
+          readOnly: true
+        is_decision:
+          type: boolean
+          example: False
+          readOnly: true
+        task:
+          $ref: "#/components/schemas/Task"
+
+
 
 
