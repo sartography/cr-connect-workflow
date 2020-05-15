@@ -66,9 +66,14 @@ class TestTasksApi(BaseTest):
         self.assertEquals(task_in.title, event.task_title)
         self.assertEquals(task_in.type, event.task_type)
         self.assertEquals("COMPLETED", event.task_state)
-        self.assertEquals(task_in.mi_type.value, event.mi_type)
-        self.assertEquals(task_in.mi_count, event.mi_count)
-        self.assertEquals(task_in.mi_index, event.mi_index)
+        # Not sure what vodoo is happening inside of marshmallow to get me in this state.
+        if isinstance(task_in.multi_instance_type, MultiInstanceType):
+            self.assertEquals(task_in.multi_instance_type.value, event.mi_type)
+        else:
+            self.assertEquals(task_in.multi_instance_type, event.mi_type)
+
+        self.assertEquals(task_in.multi_instance_count, event.mi_count)
+        self.assertEquals(task_in.multi_instance_index, event.mi_index)
         self.assertEquals(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 
@@ -82,9 +87,9 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('random_fact')
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
-        self.assertEqual("Task_User_Select_Type", task['name'])
-        self.assertEqual(3, len(task['form']["fields"][0]["options"]))
-        self.assertIsNotNone(task['documentation'])
+        self.assertEqual("Task_User_Select_Type", task.name)
+        self.assertEqual(3, len(task.form["fields"][0]["options"]))
+        self.assertIsNotNone(task.documentation)
         expected_docs = """# h1 Heading 8-)
 ## h2 Heading
 ### h3 Heading
@@ -92,7 +97,7 @@ class TestTasksApi(BaseTest):
 ##### h5 Heading
 ###### h6 Heading
 """
-        self.assertTrue(str.startswith(task['documentation'], expected_docs))
+        self.assertTrue(str.startswith(task.documentation, expected_docs))
 
     def test_two_forms_task(self):
         # Set up a new workflow
@@ -101,67 +106,61 @@ class TestTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('two_forms', workflow_api.workflow_spec_id)
-        self.assertEqual(2, len(workflow_api.user_tasks))
-        self.assertIsNotNone(workflow_api.next_task['form'])
-        self.assertEqual("UserTask", workflow_api.next_task['type'])
-        self.assertEqual("StepOne", workflow_api.next_task['name'])
-        self.assertEqual(1, len(workflow_api.next_task['form']['fields']))
+        self.assertEqual(2, len(workflow_api.navigation))
+        self.assertIsNotNone(workflow_api.next_task.form)
+        self.assertEqual("UserTask", workflow_api.next_task.type)
+        self.assertEqual("StepOne", workflow_api.next_task.name)
+        self.assertEqual(1, len(workflow_api.next_task.form['fields']))
 
         # Complete the form for Step one and post it.
-        self.complete_form(workflow, workflow_api.user_tasks[0], {"color": "blue"})
+        self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
 
         # Get the next Task
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual("StepTwo", workflow_api.next_task['name'])
+        self.assertEqual("StepTwo", workflow_api.next_task.name)
 
         # Get all user Tasks and check that the data have been saved
-        for task in workflow_api.user_tasks:
-            self.assertIsNotNone(task.data)
-            for val in task.data.values():
-                self.assertIsNotNone(val)
+        task = workflow_api.next_task
+        self.assertIsNotNone(task.data)
+        for val in task.data.values():
+            self.assertIsNotNone(val)
 
     def test_error_message_on_bad_gateway_expression(self):
         self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway')
 
         # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.complete_form(workflow, tasks[0], {"has_bananas": True})
+        task = self.get_workflow_api(workflow).next_task
+        self.complete_form(workflow, task, {"has_bananas": True})
 
     def test_workflow_with_parallel_forms(self):
         self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway')
 
         # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.complete_form(workflow, tasks[0], {"has_bananas": True})
+        task = self.get_workflow_api(workflow).next_task
+        self.complete_form(workflow, task, {"has_bananas": True})
 
         # Get the next Task
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual("Task_Num_Bananas", workflow_api.next_task['name'])
+        self.assertEqual("Task_Num_Bananas", workflow_api.next_task.name)
 
-    def test_get_workflow_contains_details_about_last_task_data(self):
+    def test_navigation_with_parallel_forms(self):
         self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway')
 
         # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        workflow_api = self.complete_form(workflow, tasks[0], {"has_bananas": True})
-
-        self.assertIsNotNone(workflow_api.last_task)
-        self.assertEqual({"has_bananas": True}, workflow_api.last_task['data'])
-
-    def test_get_workflow_contains_reference_to_last_task_and_next_task(self):
-        self.load_example_data()
-        workflow = self.create_workflow('exclusive_gateway')
-
-        # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.complete_form(workflow, tasks[0], {"has_bananas": True})
-
         workflow_api = self.get_workflow_api(workflow)
-        self.assertIsNotNone(workflow_api.last_task)
-        self.assertIsNotNone(workflow_api.next_task)
+
+        self.assertIsNotNone(workflow_api.navigation)
+        nav = workflow_api.navigation
+        self.assertEquals(5, len(nav))
+        self.assertEquals("Do You Have Bananas", nav[0]['title'])
+        self.assertEquals("READY", nav[0]['state'])
+        self.assertEquals("Bananas?", nav[1]['title'])
+        self.assertEquals("FUTURE", nav[1]['state'])
+        self.assertEquals("yes", nav[2]['title'])
+        self.assertEquals("NOOP", nav[2]['state'])
 
 
     def test_document_added_to_workflow_shows_up_in_file_list(self):
@@ -169,7 +168,7 @@ class TestTasksApi(BaseTest):
         self.create_reference_document()
         workflow = self.create_workflow('docx')
         # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
+        task = self.get_workflow_api(workflow).next_task
         data = {
             "full_name": "Buck of the Wild",
             "date": "5/1/2020",
@@ -177,9 +176,9 @@ class TestTasksApi(BaseTest):
             "company": "In the company of wolves",
             "last_name": "Mr. Wolf"
         }
-        workflow_api = self.complete_form(workflow, tasks[0], data)
+        workflow_api = self.complete_form(workflow, task, data)
         self.assertIsNotNone(workflow_api.next_task)
-        self.assertEqual("EndEvent_0evb22x", workflow_api.next_task['name'])
+        self.assertEqual("EndEvent_0evb22x", workflow_api.next_task.name)
         self.assertTrue(workflow_api.status == WorkflowStatus.complete)
         rv = self.app.get('/v1.0/file?workflow_id=%i' % workflow.id, headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -197,14 +196,14 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('random_fact')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
-        self.assertEqual("Task_User_Select_Type", task['name'])
-        self.assertEqual(3, len(task['form']["fields"][0]["options"]))
-        self.assertIsNotNone(task['documentation'])
-        self.complete_form(workflow, workflow_api.user_tasks[0], {"type": "norris"})
+        self.assertEqual("Task_User_Select_Type", task.name)
+        self.assertEqual(3, len(task.form["fields"][0]["options"]))
+        self.assertIsNotNone(task.documentation)
+        self.complete_form(workflow, workflow_api.next_task, {"type": "norris"})
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual("EndEvent_0u1cgrf", workflow_api.next_task['name'])
-        self.assertIsNotNone(workflow_api.next_task['documentation'])
-        self.assertTrue("norris" in workflow_api.next_task['documentation'])
+        self.assertEqual("EndEvent_0u1cgrf", workflow_api.next_task.name)
+        self.assertIsNotNone(workflow_api.next_task.documentation)
+        self.assertTrue("norris" in workflow_api.next_task.documentation)
 
     def test_load_workflow_from_outdated_spec(self):
 
@@ -212,7 +211,7 @@ class TestTasksApi(BaseTest):
         self.load_example_data()
         workflow = self.create_workflow('two_forms')
         workflow_api = self.get_workflow_api(workflow)
-        self.complete_form(workflow, workflow_api.user_tasks[0], {"color": "blue"})
+        self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
         self.assertTrue(workflow_api.is_latest_spec)
 
         # Modify the specification, with a major change that alters the flow and can't be deserialized
@@ -239,7 +238,7 @@ class TestTasksApi(BaseTest):
         self.load_example_data()
         workflow = self.create_workflow('two_forms')
         workflow_api = self.get_workflow_api(workflow)
-        self.complete_form(workflow, workflow_api.user_tasks[0], {"color": "blue"})
+        self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
         self.assertTrue(workflow_api.is_latest_spec)
 
         # Modify the specification, with a major change that alters the flow and can't be deserialized
@@ -265,23 +264,22 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('manual_task_with_external_documentation')
 
         # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})
+        task = self.get_workflow_api(workflow).next_task
+        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
 
         workflow = self.get_workflow_api(workflow)
-        self.assertEquals('Task_Manual_One', workflow.next_task['name'])
-        self.assertEquals('ManualTask', workflow_api.next_task['type'])
-        self.assertTrue('Markdown' in workflow_api.next_task['documentation'])
-        self.assertTrue('Dan' in workflow_api.next_task['documentation'])
+        self.assertEquals('Task_Manual_One', workflow.next_task.name)
+        self.assertEquals('ManualTask', workflow_api.next_task.type)
+        self.assertTrue('Markdown' in workflow_api.next_task.documentation)
+        self.assertTrue('Dan' in workflow_api.next_task.documentation)
 
     def test_bpmn_extension_properties_are_populated(self):
         self.load_example_data()
         workflow = self.create_workflow('manual_task_with_external_documentation')
 
         # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.assertEquals("JustAKey", tasks[0].properties[0]['id'])
-        self.assertEquals("JustAValue", tasks[0].properties[0]['value'])
+        task = self.get_workflow_api(workflow).next_task
+        self.assertEquals("JustAValue", task.properties['JustAKey'])
 
 
     @patch('crc.services.protocol_builder.requests.get')
@@ -294,11 +292,15 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance')
 
         # get the first form in the two form workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.assertEquals(1, len(tasks))
-        self.assertEquals("UserTask", tasks[0].type)
-        self.assertEquals(MultiInstanceType.sequential, tasks[0].mi_type)
-        self.assertEquals(9, tasks[0].mi_count)
+        workflow = self.get_workflow_api(workflow)
+        navigation = self.get_workflow_api(workflow).navigation
+        self.assertEquals(4, len(navigation)) # Start task, form_task, multi_task, end task
+        self.assertEquals("UserTask", workflow.next_task.type)
+        self.assertEquals(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
+        self.assertEquals(9, workflow.next_task.multi_instance_count)
+
+        # Assure that the names for each task are properly updated, so they aren't all the same.
+        self.assertEquals("Primary Investigator", workflow.next_task.properties['display_name'])
 
 
     def test_lookup_endpoint_for_task_field_enumerations(self):
@@ -307,9 +309,9 @@ class TestTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
-        field_id = task['form']['fields'][0]['id']
+        field_id = task.form['fields'][0]['id']
         rv = self.app.get('/v1.0/workflow/%i/task/%s/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, task['id'], field_id, 'c'), # All records with a word that starts with 'c'
+                          (workflow.id, task.id, field_id, 'c'), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
@@ -321,13 +323,16 @@ class TestTasksApi(BaseTest):
         self.load_example_data()
         workflow = self.create_workflow('subprocess')
 
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.assertEquals(2, len(tasks))
-        self.assertEquals("UserTask", tasks[0].type)
-        self.assertEquals("Activity_A", tasks[0].name)
-        self.assertEquals("My Sub Process", tasks[0].process_name)
-        workflow_api = self.complete_form(workflow, tasks[0], {"name": "Dan"})
-        task = TaskSchema().load(workflow_api.next_task)
+        workflow_api = self.get_workflow_api(workflow)
+        navigation = workflow_api.navigation
+        task = workflow_api.next_task
+
+        self.assertEquals(2, len(navigation))
+        self.assertEquals("UserTask", task.type)
+        self.assertEquals("Activity_A", task.name)
+        self.assertEquals("My Sub Process", task.process_name)
+        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
+        task = workflow_api.next_task
         self.assertIsNotNone(task)
 
         self.assertEquals("Activity_B", task.name)
@@ -340,46 +345,42 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('exclusive_gateway')
 
         # Start the workflow.
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.complete_form(workflow, tasks[0], {"has_bananas": True})
+        first_task = self.get_workflow_api(workflow).next_task
+        self.complete_form(workflow, first_task, {"has_bananas": True})
         workflow = self.get_workflow_api(workflow)
-        self.assertEquals('Task_Num_Bananas', workflow.next_task['name'])
+        self.assertEquals('Task_Num_Bananas', workflow.next_task.name)
 
         # Trying to re-submit the initial task, and answer differently, should result in an error.
-        self.complete_form(workflow, tasks[0], {"has_bananas": False}, error_code="invalid_state")
+        self.complete_form(workflow, first_task, {"has_bananas": False}, error_code="invalid_state")
 
         # Go ahead and set the number of bananas.
         workflow = self.get_workflow_api(workflow)
-        task = TaskSchema().load(workflow.next_task)
+        task = workflow.next_task
 
         self.complete_form(workflow, task, {"num_bananas": 4})
         # We are now at the end of the workflow.
 
         # Make the old task the current task.
-        rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, tasks[0].id),
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, first_task.id),
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         workflow = WorkflowApiSchema().load(json_data)
 
-        # Assure the last task is the task we were on before the reset,
-        # and the Next Task is the one we just reset the token to be on.
-        self.assertEquals("Task_Has_Bananas", workflow.next_task['name'])
-        self.assertEquals("End", workflow.last_task['name'])
+        # Assure the Next Task is the one we just reset the token to be on.
+        self.assertEquals("Task_Has_Bananas", workflow.next_task.name)
 
         # Go ahead and get that workflow one more time, it should still be right.
         workflow = self.get_workflow_api(workflow)
 
-        # Assure the last task is the task we were on before the reset,
-        # and the Next Task is the one we just reset the token to be on.
-        self.assertEquals("Task_Has_Bananas", workflow.next_task['name'])
-        self.assertEquals("End", workflow.last_task['name'])
+        # Assure the Next Task is the one we just reset the token to be on.
+        self.assertEquals("Task_Has_Bananas", workflow.next_task.name)
 
         # The next task should be a different value.
-        self.complete_form(workflow, tasks[0], {"has_bananas": False})
+        self.complete_form(workflow, workflow.next_task, {"has_bananas": False})
         workflow = self.get_workflow_api(workflow)
-        self.assertEquals('Task_Why_No_Bananas', workflow.next_task['name'])
+        self.assertEquals('Task_Why_No_Bananas', workflow.next_task.name)
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_parallel_multi_instance(self, mock_get):
@@ -392,27 +393,20 @@ class TestTasksApi(BaseTest):
         self.load_example_data()
         workflow = self.create_workflow('multi_instance_parallel')
 
-        tasks = self.get_workflow_api(workflow).user_tasks
-        self.assertEquals(9, len(tasks))
-        self.assertEquals("UserTask", tasks[0].type)
-        self.assertEquals("MutiInstanceTask", tasks[0].name)
-        self.assertEquals("Gather more information", tasks[0].title)
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertEquals(12, len(workflow_api.navigation))
+        ready_items = [nav for nav in workflow_api.navigation if nav['state'] == "READY"]
+        self.assertEquals(9, len(ready_items))
+
+        self.assertEquals("UserTask", workflow_api.next_task.type)
+        self.assertEquals("MutiInstanceTask",workflow_api.next_task.name)
+        self.assertEquals("more information", workflow_api.next_task.title)
 
         for i in random.sample(range(9), 9):
-            self.complete_form(workflow, tasks[i], {"investigator":{"email": "dhf8r@virginia.edu"}})
-            tasks = self.get_workflow_api(workflow).user_tasks
+            task = TaskSchema().load(ready_items[i]['task'])
+            self.complete_form(workflow, task, {"investigator":{"email": "dhf8r@virginia.edu"}})
+            #tasks = self.get_workflow_api(workflow).user_tasks
 
         workflow = self.get_workflow_api(workflow)
         self.assertEquals(WorkflowStatus.complete, workflow.status)
 
-    # def test_parent_task_set_on_tasks(self):
-    #     self.load_example_data()
-    #     workflow = self.create_workflow('exclusive_gateway')
-    #
-    #     # Start the workflow.
-    #     workflow = self.get_workflow_api(workflow)
-    #     self.assertEquals(None, workflow.previous_task)
-    #     self.complete_form(workflow, workflow.next_task, {"has_bananas": True})
-    #     workflow = self.get_workflow_api(workflow)
-    #     self.assertEquals('Task_Num_Bananas', workflow.next_task['name'])
-    #     self.assertEquals('has_bananas', workflow.previous_task['name'])
