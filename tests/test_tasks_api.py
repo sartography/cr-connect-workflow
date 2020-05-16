@@ -154,7 +154,7 @@ class TestTasksApi(BaseTest):
 
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
-        self.assertEquals(5, len(nav))
+        self.assertEquals(6, len(nav))
         self.assertEquals("Do You Have Bananas", nav[0]['title'])
         self.assertEquals("READY", nav[0]['state'])
         self.assertEquals("Bananas?", nav[1]['title'])
