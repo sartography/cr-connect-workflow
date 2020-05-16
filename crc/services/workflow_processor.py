@@ -392,6 +392,17 @@ class WorkflowProcessor(object):
     def get_ready_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
 
+    def get_current_user_tasks(self):
+        """Return a list of all user tasks that are READY or
+        COMPLETE and are parallel to the READY Task."""
+        ready_tasks = self.bpmn_workflow.get_ready_user_tasks()
+        additional_tasks = []
+        if len(ready_tasks) > 0:
+            for child in ready_tasks[0].parent.children:
+                if child.state == SpiffTask.COMPLETED:
+                    additional_tasks.append(child)
+        return ready_tasks + additional_tasks
+
     def get_all_user_tasks(self):
         all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
         return [t for t in all_tasks if not self.bpmn_workflow._is_engine_task(t.task_spec)]
@@ -425,5 +436,8 @@ class WorkflowProcessor(object):
 
         return process_elements[0].attrib['id']
 
-
+    def get_nav_item(self, task):
+        for nav_item in self.bpmn_workflow.get_nav_list():
+            if nav_item['task_id'] == task.id:
+                return nav_item
 
