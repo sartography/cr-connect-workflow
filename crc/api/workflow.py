@@ -93,6 +93,9 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
         spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
         if 'description' in nav_item:
             nav_item['title'] = nav_item.pop('description')
+            # fixme: duplicate code from the workflow_service. Should only do this in one place.
+            if ' ' in nav_item['title']:
+                nav_item['title'] = nav_item['title'].partition(' ')[2]
         else:
             nav_item['title'] = ""
         if spiff_task:

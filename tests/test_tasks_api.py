@@ -154,13 +154,30 @@ class TestTasksApi(BaseTest):
 
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
-        self.assertEquals(5, len(nav))
+        self.assertEquals(6, len(nav))
         self.assertEquals("Do You Have Bananas", nav[0]['title'])
         self.assertEquals("READY", nav[0]['state'])
         self.assertEquals("Bananas?", nav[1]['title'])
         self.assertEquals("FUTURE", nav[1]['state'])
         self.assertEquals("yes", nav[2]['title'])
         self.assertEquals("NOOP", nav[2]['state'])
+
+    def test_navigation_with_exclusive_gateway(self):
+        self.load_example_data()
+        workflow = self.create_workflow('exclusive_gateway_2')
+
+        # get the first form in the two form workflow.
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertIsNotNone(workflow_api.navigation)
+        nav = workflow_api.navigation
+        self.assertEquals(7, len(nav))
+        self.assertEquals("Task 1", nav[0]['title'])
+        self.assertEquals("Which Branch?", nav[1]['title'])
+        self.assertEquals("a", nav[2]['title'])
+        self.assertEquals("Task 2a", nav[3]['title'])
+        self.assertEquals("b", nav[4]['title'])
+        self.assertEquals("Task 2b", nav[5]['title'])
+        self.assertEquals("Task 3", nav[6]['title'])
 
 
     def test_document_added_to_workflow_shows_up_in_file_list(self):
