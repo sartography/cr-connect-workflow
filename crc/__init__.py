@@ -40,9 +40,7 @@ connexion_app.add_api('api.yml')
 
 # Convert list of allowed origins to list of regexes
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
-logging.getLogger('flask_cors').level = logging.DEBUG
-cors = CORS(connexion_app.app)
-# cors = CORS(connexion_app.app, origins=origins_re)
+cors = CORS(connexion_app.app, origins=origins_re)
 
 
 @app.cli.command()
