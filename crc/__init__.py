@@ -4,9 +4,10 @@ import os
 import connexion
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 from flask_sso import SSO
+
 logging.basicConfig(level=logging.INFO)
 
 connexion_app = connexion.FlaskApp(__name__)
@@ -36,7 +37,10 @@ from crc import models
 from crc import api
 
 connexion_app.add_api('api.yml')
-cors = CORS(connexion_app.app)
+
+# Convert list of allowed origins to list of regexes
+origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
+cors = CORS(connexion_app.app, origins=origins_re)
 
 
 @app.cli.command()

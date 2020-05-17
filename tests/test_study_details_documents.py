@@ -24,7 +24,11 @@ class TestStudyDetailsDocumentsScript(BaseTest):
             convention that we are implementing for the IRB.
     """
 
-    def test_validate_returns_error_if_reference_files_do_not_exist(self):
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_validate_returns_error_if_reference_files_do_not_exist(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
+
         self.load_example_data()
         self.create_reference_document()
         study = session.query(StudyModel).first()
@@ -36,7 +40,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         # Remove the reference file.
         file_model = db.session.query(FileModel). \
             filter(FileModel.is_reference == True). \
-            filter(FileModel.name == FileService.IRB_PRO_CATEGORIES_FILE).first()
+            filter(FileModel.name == FileService.DOCUMENT_LIST).first()
         if file_model:
             db.session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model.id).delete()
             db.session.query(FileModel).filter(FileModel.id == file_model.id).delete()
@@ -46,7 +50,12 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         with self.assertRaises(ApiError):
             StudyInfo().do_task_validate_only(task, study.id, "documents")
 
-    def test_no_validation_error_when_correct_file_exists(self):
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_no_validation_error_when_correct_file_exists(self, mock_get):
+
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
+
         self.load_example_data()
         self.create_reference_document()
         study = session.query(StudyModel).first()
@@ -58,7 +67,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
 
     def test_load_lookup_data(self):
         self.create_reference_document()
-        dict = FileService.get_file_reference_dictionary()
+        dict = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
         self.assertIsNotNone(dict)
 
     def get_required_docs(self):

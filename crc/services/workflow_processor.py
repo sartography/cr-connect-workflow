@@ -4,7 +4,7 @@ import string
 import xml.etree.ElementTree as ElementTree
 from datetime import datetime
 
-from SpiffWorkflow import Task as SpiffTask
+from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
@@ -12,6 +12,7 @@ from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.operators import Operator
 from SpiffWorkflow.specs import WorkflowSpec
 
@@ -69,24 +70,6 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         camel = camel.strip()
         return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
 
-    def evaluate(self, task, expression):
-        """
-        Evaluate the given expression, within the context of the given task and
-        return the result.
-        """
-        if isinstance(expression, Operator):
-            return expression._matches(task)
-        else:
-            return self._eval(task, expression, **task.data)
-
-    def _eval(self, task, expression, **kwargs):
-        locals().update(kwargs)
-        try:
-            return eval(expression)
-        except NameError as ne:
-            raise ApiError.from_task('invalid_expression',
-                                     "The expression '%s' you provided has a missing value. % s" % (expression, str(ne)),
-                                     task=task)
 
 class MyCustomParser(BpmnDmnParser):
     """
@@ -180,10 +163,14 @@ class WorkflowProcessor(object):
         Useful for running the master specification, which should not persist. """
         version = WorkflowProcessor.get_latest_version_string(spec_model.id)
         spec = WorkflowProcessor.get_spec(spec_model.id, version)
-        bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
-        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
-        bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
-        bpmn_workflow.do_engine_steps()
+        try:
+            bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
+            bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
+            bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+            bpmn_workflow.do_engine_steps()
+        except WorkflowException as we:
+            raise ApiError.from_task_spec("error_running_master_spec",  str(we), we.sender)
+
         if not bpmn_workflow.is_completed():
             raise ApiError("master_spec_not_automatic",
                            "The master spec should only contain fully automated tasks, it failed to complete.")
@@ -282,13 +269,13 @@ class WorkflowProcessor(object):
 
 
     @staticmethod
-    def populate_form_with_random_data(task):
+    def populate_form_with_random_data(task, task_api):
         """populates a task with random data - useful for testing a spec."""
 
         if not hasattr(task.task_spec, 'form'): return
 
         form_data = {}
-        for field in task.task_spec.form.fields:
+        for field in task_api.form.fields:
             if field.type == "enum":
                 if len(field.options) > 0:
                     form_data[field.id] = random.choice(field.options)
@@ -346,7 +333,10 @@ class WorkflowProcessor(object):
         return self.workflow_model.spec_version
 
     def do_engine_steps(self):
-        self.bpmn_workflow.do_engine_steps()
+        try:
+            self.bpmn_workflow.do_engine_steps()
+        except WorkflowTaskExecException as we:
+            raise ApiError.from_task("task_error", str(we), we.task)
 
     def serialize(self):
         return self._serializer.serialize_workflow(self.bpmn_workflow)
@@ -402,6 +392,17 @@ class WorkflowProcessor(object):
     def get_ready_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
 
+    def get_current_user_tasks(self):
+        """Return a list of all user tasks that are READY or
+        COMPLETE and are parallel to the READY Task."""
+        ready_tasks = self.bpmn_workflow.get_ready_user_tasks()
+        additional_tasks = []
+        if len(ready_tasks) > 0:
+            for child in ready_tasks[0].parent.children:
+                if child.state == SpiffTask.COMPLETED:
+                    additional_tasks.append(child)
+        return ready_tasks + additional_tasks
+
     def get_all_user_tasks(self):
         all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
         return [t for t in all_tasks if not self.bpmn_workflow._is_engine_task(t.task_spec)]
@@ -435,5 +436,8 @@ class WorkflowProcessor(object):
 
         return process_elements[0].attrib['id']
 
-
+    def get_nav_item(self, task):
+        for nav_item in self.bpmn_workflow.get_nav_list():
+            if nav_item['task_id'] == task.id:
+                return nav_item
 

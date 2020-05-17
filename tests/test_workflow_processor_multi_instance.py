@@ -13,6 +13,23 @@ from tests.base_test import BaseTest
 class TestWorkflowProcessorMultiInstance(BaseTest):
     """Tests the Workflow Processor as it deals with a Multi-Instance task"""
 
+    mock_investigator_response = {'PI': {
+                    'label': 'Primary Investigator',
+                    'display': 'Always',
+                    'unique': 'Yes',
+                    'user_id': 'dhf8r',
+                    'display_name': 'Dan Funk'},
+                'SC_I': {
+                    'label': 'Study Coordinator I',
+                    'display': 'Always',
+                    'unique': 'Yes',
+                    'user_id': None},
+                'DC': {
+                    'label': 'Department Contact',
+                    'display': 'Optional',
+                    'unique': 'Yes',
+                    'user_id': 'asd3v',
+                    'error': 'Unable to locate a user with id asd3v in LDAP'}}
 
     def _populate_form_with_random_data(self, task):
         WorkflowProcessor.populate_form_with_random_data(task)
@@ -21,11 +38,10 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         workflow_model = StudyService._create_workflow_model(study_model, spec_model)
         return WorkflowProcessor(workflow_model)
 
-    @patch('crc.services.protocol_builder.requests.get')
-    def test_create_and_complete_workflow(self, mock_get):
+    @patch('crc.services.study_service.StudyService.get_investigators')
+    def test_create_and_complete_workflow(self, mock_study_service):
         # This depends on getting a list of investigators back from the protocol builder.
-        mock_get.return_value.ok = True
-        mock_get.return_value.text = self.protocol_builder_response('investigators.json')
+        mock_study_service.return_value = self.mock_investigator_response
 
         self.load_example_data()
         workflow_spec_model = self.load_test_spec("multi_instance")
@@ -40,22 +56,14 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
 
         task = next_user_tasks[0]
 
-        self.assertEquals(
-            {
-                'DC': {'user_id': 'asd3v', 'type_full': 'Department Contact'},
-                'IRBC': {'user_id': 'asdf32', 'type_full': 'IRB Coordinator'},
-                'PI': {'user_id': 'dhf8r', 'type_full': 'Primary Investigator'}
-            },
-            task.data['StudyInfo']['investigators'])
-
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
-        self.assertEquals("asd3v", task.data["investigator"]["user_id"])
+        self.assertEquals("dhf8r", task.data["investigator"]["user_id"])
 
         self.assertEqual("MutiInstanceTask", task.get_name())
         api_task = WorkflowService.spiff_task_to_api_task(task)
-        self.assertEquals(MultiInstanceType.sequential, api_task.mi_type)
-        self.assertEquals(3, api_task.mi_count)
-        self.assertEquals(1, api_task.mi_index)
+        self.assertEquals(MultiInstanceType.sequential, api_task.multi_instance_type)
+        self.assertEquals(3, api_task.multi_instance_count)
+        self.assertEquals(1, api_task.multi_instance_index)
         task.update_data({"investigator":{"email":"asd3v@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
@@ -64,8 +72,8 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", api_task.name)
         task.update_data({"investigator":{"email":"asdf32@virginia.edu"}})
-        self.assertEquals(3, api_task.mi_count)
-        self.assertEquals(2, api_task.mi_index)
+        self.assertEquals(3, api_task.multi_instance_count)
+        self.assertEquals(2, api_task.multi_instance_index)
         processor.complete_task(task)
         processor.do_engine_steps()
 
@@ -73,29 +81,27 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual("MutiInstanceTask", task.get_name())
         task.update_data({"investigator":{"email":"dhf8r@virginia.edu"}})
-        self.assertEquals(3, api_task.mi_count)
-        self.assertEquals(3, api_task.mi_index)
+        self.assertEquals(3, api_task.multi_instance_count)
+        self.assertEquals(3, api_task.multi_instance_index)
         processor.complete_task(task)
         processor.do_engine_steps()
         task = processor.bpmn_workflow.last_task
 
-        self.assertEquals(
-            {
-                'DC': {'user_id': 'asd3v', 'type_full': 'Department Contact', 'email': 'asd3v@virginia.edu'},
-                'IRBC': {'user_id': 'asdf32', 'type_full': 'IRB Coordinator', "email": "asdf32@virginia.edu"},
-                'PI': {'user_id': 'dhf8r', 'type_full': 'Primary Investigator', "email": "dhf8r@virginia.edu"}
-            },
+        expected = self.mock_investigator_response
+        expected['PI']['email'] = "asd3v@virginia.edu"
+        expected['SC_I']['email'] = "asdf32@virginia.edu"
+        expected['DC']['email'] = "dhf8r@virginia.edu"
+        self.assertEquals(expected,
             task.data['StudyInfo']['investigators'])
 
         self.assertEqual(WorkflowStatus.complete, processor.get_status())
 
-
-    @patch('crc.services.protocol_builder.requests.get')
-    def test_create_and_complete_workflow_parallel(self, mock_get):
+    @patch('crc.services.study_service.StudyService.get_investigators')
+    def test_create_and_complete_workflow_parallel(self, mock_study_service):
         """Unlike the test above, the parallel task allows us to complete the items in any order."""
 
-        mock_get.return_value.ok = True
-        mock_get.return_value.text = self.protocol_builder_response('investigators.json')
+        # This depends on getting a list of investigators back from the protocol builder.
+        mock_study_service.return_value = self.mock_investigator_response
 
         self.load_example_data()
         workflow_spec_model = self.load_test_spec("multi_instance_parallel")
@@ -110,19 +116,11 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         # We can complete the tasks out of order.
         task = next_user_tasks[2]
 
-        self.assertEquals(
-            {
-                'DC': {'user_id': 'asd3v', 'type_full': 'Department Contact'},
-                'IRBC': {'user_id': 'asdf32', 'type_full': 'IRB Coordinator'},
-                'PI': {'user_id': 'dhf8r', 'type_full': 'Primary Investigator'}
-            },
-            task.data['StudyInfo']['investigators'])
-
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
-        self.assertEquals("dhf8r", task.data["investigator"]["user_id"])  # The last of the tasks
+        self.assertEquals("asd3v", task.data["investigator"]["user_id"])  # The last of the tasks
 
         api_task = WorkflowService.spiff_task_to_api_task(task)
-        self.assertEquals(MultiInstanceType.parallel, api_task.mi_type)
+        self.assertEquals(MultiInstanceType.parallel, api_task.multi_instance_type)
         task.update_data({"investigator":{"email":"dhf8r@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
@@ -142,12 +140,11 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         processor.do_engine_steps()
 
         # Completing the tasks out of order, still provides the correct information.
-        self.assertEquals(
-            {
-                'DC': {'user_id': 'asd3v', 'type_full': 'Department Contact', 'email': 'asd3v@virginia.edu'},
-                'IRBC': {'user_id': 'asdf32', 'type_full': 'IRB Coordinator', "email": "asdf32@virginia.edu"},
-                'PI': {'user_id': 'dhf8r', 'type_full': 'Primary Investigator', "email": "dhf8r@virginia.edu"}
-            },
+        expected = self.mock_investigator_response
+        expected['PI']['email'] = "asd3v@virginia.edu"
+        expected['SC_I']['email'] = "asdf32@virginia.edu"
+        expected['DC']['email'] = "dhf8r@virginia.edu"
+        self.assertEquals(expected,
             task.data['StudyInfo']['investigators'])
 
         self.assertEqual(WorkflowStatus.complete, processor.get_status())

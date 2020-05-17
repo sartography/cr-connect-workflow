@@ -1,16 +1,11 @@
-import datetime
+import glob
 import glob
 import os
-import xml.etree.ElementTree as ElementTree
 
 from crc import app, db, session
-from crc.models.file import FileType, FileModel, FileDataModel, CONTENT_TYPES
-from crc.models.study import StudyModel
-from crc.models.user import UserModel
+from crc.models.file import CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
-from crc.services.workflow_processor import WorkflowProcessor
-from crc.models.protocol_builder import ProtocolBuilderStatus
 
 
 class ExampleDataLoader:
@@ -19,7 +14,7 @@ class ExampleDataLoader:
         session.flush()  # Clear out any transactions before deleting it all to avoid spurious errors.
         for table in reversed(db.metadata.sorted_tables):
             session.execute(table.delete())
-        session.flush()
+            session.flush()
 
     def load_all(self):
 
@@ -239,7 +234,14 @@ class ExampleDataLoader:
     def load_reference_documents(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.IRB_PRO_CATEGORIES_FILE,
+        FileService.add_reference_file(FileService.DOCUMENT_LIST,
+                                       binary_data=file.read(),
+                                       content_type=CONTENT_TYPES['xls'])
+        file.close()
+
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
+        file = open(file_path, "rb")
+        FileService.add_reference_file(FileService.INVESTIGATOR_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()

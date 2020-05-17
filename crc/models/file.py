@@ -3,8 +3,7 @@ from typing import cast
 
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from sqlalchemy import func, Index, text
-from sqlalchemy.dialects import postgresql
+from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
 
 from crc import db
