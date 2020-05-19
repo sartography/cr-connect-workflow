@@ -9,14 +9,12 @@
       <bpmn:incoming>SequenceFlow_02vev7n</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="SequenceFlow_02vev7n" sourceRef="Task_14svgcu" targetRef="EndEvent_0q4qzl9" />
-    <bpmn:userTask id="Task_14svgcu" name="Enum Lookup Form" camunda:formKey="EnumForm">
+    <bpmn:userTask id="Task_14svgcu" name="Enum Lookup Form in Ldap" camunda:formKey="EnumForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="sponsor" label="Select a value" type="autocomplete">
+          <camunda:formField id="Person" label="Select a value" type="autocomplete">
             <camunda:properties>
-              <camunda:property id="spreadsheet.name" value="sponsors.xls" />
-              <camunda:property id="spreadsheet.value.column" value="CUSTOMER_NUMBER" />
-              <camunda:property id="spreadsheet.label.column" value="CUSTOMER_NAME" />
+              <camunda:property id="ldap.lookup" value="true" />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>
