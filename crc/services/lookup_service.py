@@ -137,7 +137,7 @@ class LookupService(object):
         user_list = []
         for user in users:
             user_list.append( {"value": user.uid,
-                                "label": user.display_name + "(" + user.uid + ")",
+                                "label": user.display_name + " (" + user.uid + ")",
                                 "data": user.__dict__
                                })
         return user_list
