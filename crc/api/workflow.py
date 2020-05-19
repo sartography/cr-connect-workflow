@@ -93,6 +93,9 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
         spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
         if 'description' in nav_item:
             nav_item['title'] = nav_item.pop('description')
+            # fixme: duplicate code from the workflow_service. Should only do this in one place.
+            if ' ' in nav_item['title']:
+                nav_item['title'] = nav_item['title'].partition(' ')[2]
         else:
             nav_item['title'] = ""
         if spiff_task:
@@ -146,7 +149,9 @@ def set_current_task(workflow_id, task_id):
         raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
                                         "currently set to COMPLETE or READY.")
 
-    task.reset_token(reset_data=False)  # we could optionally clear the previous data.
+    # Only reset the token if the task doesn't already have it.
+    if task.state == task.COMPLETED:
+        task.reset_token(reset_data=False)  # we could optionally clear the previous data.
     processor.save()
     WorkflowService.log_task_action(processor, task, WorkflowService.TASK_ACTION_TOKEN_RESET)
     workflow_api_model = __get_workflow_api_model(processor, task)

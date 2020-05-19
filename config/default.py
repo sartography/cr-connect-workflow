@@ -7,6 +7,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values to the front end.
 
 NAME = "CR Connect Workflow"
+FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default="5000")
 CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default="localhost:4200, localhost:5002"))
 DEVELOPMENT = environ.get('DEVELOPMENT', default="true") == "true"
 TESTING = environ.get('TESTING', default="false") == "true"
