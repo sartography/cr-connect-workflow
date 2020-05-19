@@ -336,6 +336,21 @@ class TestTasksApi(BaseTest):
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(5, len(results))
 
+    def test_lookup_endpoint_for_task_ldap_field_lookup(self):
+        self.load_example_data()
+        workflow = self.create_workflow('ldap_lookup')
+        # get the first form
+        workflow = self.get_workflow_api(workflow)
+        task = workflow.next_task
+        field_id = task.form['fields'][0]['id']
+        # lb3dp is a user record in the mock ldap responses for tests.
+        rv = self.app.get('/v1.0/workflow/%i/task/%s/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, task.id, field_id, 'lb3dp'),
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(1, len(results))
 
     def test_sub_process(self):
         self.load_example_data()
