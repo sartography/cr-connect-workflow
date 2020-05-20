@@ -110,6 +110,7 @@ class FileService(object):
 
     @staticmethod
     def update_file(file_model, binary_data, content_type):
+        session.flush()  # Assure the database is up-to-date before running this.
 
         file_data_model = session.query(FileDataModel). \
             filter_by(file_model_id=file_model.id,
