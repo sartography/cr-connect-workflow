@@ -1,4 +1,4 @@
-opython_home = '/usr/local/envs/crcpython3'
+python_home = '/usr/local/envs/crcpython3'
 
 import os
 import sys
