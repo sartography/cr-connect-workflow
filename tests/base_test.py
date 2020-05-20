@@ -77,20 +77,21 @@ class BaseTest(unittest.TestCase):
         app.config.from_object('config.testing')
         cls.ctx = app.test_request_context()
         cls.app = app.test_client()
+        cls.ctx.push()
         db.create_all()
 
     @classmethod
     def tearDownClass(cls):
-        db.drop_all()
+        cls.ctx.pop()
         session.remove()
         pass
 
     def setUp(self):
-        self.ctx.push()
+        pass
 
     def tearDown(self):
-        ExampleDataLoader.clean_db()  # This does not seem to work, some colision of sessions.
-        self.ctx.pop()
+        ExampleDataLoader.clean_db()
+        session.flush()
         self.auths = {}
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
