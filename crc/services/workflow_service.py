@@ -36,7 +36,7 @@ class WorkflowService(object):
 
     @classmethod
     def test_spec(cls, spec_id):
-        """Runs a spec through it's paces to see if it results in any errors.  Not full proof, but a good
+        """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
         sanity check."""
         version = WorkflowProcessor.get_latest_version_string(spec_id)
         spec = WorkflowProcessor.get_spec(spec_id, version)

@@ -1,12 +1,14 @@
 import copy
+import re
 from io import BytesIO
 
 import jinja2
-from docxtpl import DocxTemplate, Listing
+from docx.shared import Inches
+from docxtpl import DocxTemplate, Listing, InlineImage
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import CONTENT_TYPES
+from crc.models.file import CONTENT_TYPES, FileModel, FileDataModel
 from crc.models.workflow import WorkflowModel
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
@@ -46,7 +48,7 @@ Takes two arguments:
 
     def process_template(self, task, study_id, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""
-        if len(args) != 2:
+        if len(args) < 2 or len(args) > 3:
             raise ApiError(code="missing_argument",
                            message="The CompleteTemplate script requires 2 arguments.  The first argument is "
                                    "the name of the docx template to use.  The second "
@@ -60,19 +62,65 @@ Takes two arguments:
                            message="The given task does not match the given study.")
 
         file_data_model = FileService.get_workflow_file_data(task.workflow, file_name)
-        return self.make_template(BytesIO(file_data_model.data), task.data)
 
+        # Get images from file/files fields
+        image_file_data = []
+        if len(args) == 3:
+            images_field_str = re.sub(r'[\[\]]', '', args[2])
+            images_field_keys = [v.strip() for v in images_field_str.strip().split(',')]
+            for field_key in images_field_keys:
+                if field_key in task.data:
+                    v = task.data[field_key]
+                    file_ids = v if isinstance(v, list) else [v]
 
-    def make_template(self, binary_stream, context):
+                    for file_id in file_ids:
+                        if isinstance(file_id, str) and file_id.isnumeric():
+                            file_id = int(file_id)
+
+                        if file_id is not None and isinstance(file_id, int):
+                            if not task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+                                # Get the actual image data
+                                image_file_model = session.query(FileModel).filter_by(id=file_id).first()
+                                image_file_data_model = FileService.get_file_data(file_id, image_file_model)
+                                if image_file_data_model is not None:
+                                    image_file_data.append(image_file_data_model)
+
+                        else:
+                            raise ApiError(
+                                code="not_a_file_id",
+                                message="The CompleteTemplate script requires 2-3 arguments. The third argument should "
+                                        "be a comma-delimited list of File IDs")
+
+        return self.make_template(BytesIO(file_data_model.data), task.data, image_file_data)
+
+    def make_template(self, binary_stream, context, image_file_data=None):
         doc = DocxTemplate(binary_stream)
         doc_context = copy.deepcopy(context)
         doc_context = self.rich_text_update(doc_context)
+        doc_context = self.append_images(doc, doc_context, image_file_data)
         jinja_env = jinja2.Environment(autoescape=True)
         doc.render(doc_context, jinja_env)
         target_stream = BytesIO()
         doc.save(target_stream)
-        target_stream.seek(0) # move to the beginning of the stream.
+        target_stream.seek(0)  # move to the beginning of the stream.
         return target_stream
+
+    def append_images(self, template, context, image_file_data):
+        context['images'] = {}
+        if image_file_data is not None:
+            for file_data_model in image_file_data:
+                fm = file_data_model.file_model
+                if fm is not None:
+                    context['images'][fm.id] = {
+                        'name': fm.name,
+                        'url': '/v1.0/file/%s/data' % fm.id,
+                        'image': self.make_image(file_data_model, template)
+                    }
+
+        return context
+
+    def make_image(self, file_data_model, template):
+        return InlineImage(template, BytesIO(file_data_model.data), width=Inches(6.5))
 
     def rich_text_update(self, context):
         """This is a bit of a hack.  If we find that /n characters exist in the data, we want

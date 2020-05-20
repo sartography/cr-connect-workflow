@@ -287,6 +287,10 @@ class WorkflowProcessor(object):
                 form_data[field.id] = random.randint(1, 1000)
             elif field.type == 'boolean':
                 form_data[field.id] = random.choice([True, False])
+            elif field.type == 'file':
+                form_data[field.id] = random.randint(1, 100)
+            elif field.type == 'files':
+                form_data[field.id] = random.randrange(1, 100)
             else:
                 form_data[field.id] = WorkflowProcessor._random_string()
         if task.data is None:

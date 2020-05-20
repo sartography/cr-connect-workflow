@@ -156,18 +156,26 @@ class FileService(object):
         query = session.query(FileModel).filter_by(is_reference=is_reference)
         if workflow_spec_id:
             query = query.filter_by(workflow_spec_id=workflow_spec_id)
-        if study_id:
-            query = query.filter_by(study_id=study_id)
-        if workflow_id:
-            query = query.filter_by(workflow_id=workflow_id)
-        if task_id:
-            query = query.filter_by(task_id=str(task_id))
-        if form_field_key:
-            query = query.filter_by(form_field_key=form_field_key)
-        if name:
-            query = query.filter_by(name=name)
-        if irb_doc_code:
-            query = query.filter_by(irb_doc_code=irb_doc_code)
+        if all(v is None for v in [study_id, workflow_id, task_id, form_field_key]):
+            query = query.filter_by(
+                study_id=None,
+                workflow_id=None,
+                task_id=None,
+                form_field_key=None,
+            )
+        else:
+            if study_id:
+                query = query.filter_by(study_id=study_id)
+            if workflow_id:
+                query = query.filter_by(workflow_id=workflow_id)
+            if task_id:
+                query = query.filter_by(task_id=str(task_id))
+            if form_field_key:
+                query = query.filter_by(form_field_key=form_field_key)
+            if name:
+                query = query.filter_by(name=name)
+            if irb_doc_code:
+                query = query.filter_by(irb_doc_code=irb_doc_code)
 
         results = query.all()
         return results
