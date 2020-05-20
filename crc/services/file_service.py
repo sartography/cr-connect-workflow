@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 from datetime import datetime
@@ -11,7 +12,6 @@ from crc.api.common import ApiError
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
-import hashlib
 
 
 class FileService(object):
@@ -150,8 +150,6 @@ class FileService(object):
         session.commit()
         session.flush()  # Assure the id is set on the model before returning it.
 
-        db_file_model = session.query(FileModel).filter_by(id=file_model.id).first()
-        print('db_file_model', db_file_model)
         return file_model
 
     @staticmethod

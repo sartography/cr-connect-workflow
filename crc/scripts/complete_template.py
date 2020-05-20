@@ -108,7 +108,7 @@ Takes two arguments:
                             code="not_a_file_id",
                             message="The CompleteTemplate script requires 2-3 arguments. The third argument should "
                                     "be a comma-delimited list of File IDs")
-                    
+
         return image_file_data
 
     def make_template(self, binary_stream, context, image_file_data=None):
