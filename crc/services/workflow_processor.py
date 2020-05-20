@@ -212,7 +212,7 @@ class WorkflowProcessor(object):
         return full_version
 
     @staticmethod
-    def __get_file_models_for_version(workflow_spec_id, version):
+    def get_file_models_for_version(workflow_spec_id, version):
         file_id_strings = re.findall('\((.*)\)', version)[0].split(".")
         file_ids = [int(i) for i in file_id_strings]
         files = session.query(FileDataModel)\
@@ -237,12 +237,17 @@ class WorkflowProcessor(object):
             .all()
 
     @staticmethod
-    def get_spec(workflow_spec_id, version):
+    def get_spec(workflow_spec_id, version=None):
         """Returns the requested version of the specification,
-        or the lastest version if none is specified."""
+        or the latest version if none is specified."""
         parser = WorkflowProcessor.get_parser()
         process_id = None
-        file_data_models = WorkflowProcessor.__get_file_models_for_version(workflow_spec_id, version)
+
+        if version is None:
+            file_data_models = WorkflowProcessor.__get_latest_file_models(workflow_spec_id)
+        else:
+            file_data_models = WorkflowProcessor.get_file_models_for_version(workflow_spec_id, version)
+
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
@@ -321,7 +326,8 @@ class WorkflowProcessor(object):
          Returns the new version.
          """
         version = WorkflowProcessor.get_latest_version_string(self.workflow_spec_id)
-        spec = WorkflowProcessor.get_spec(self.workflow_spec_id, version)
+        spec = WorkflowProcessor.get_spec(self.workflow_spec_id)  # Force latest version by NOT specifying version
+        # spec = WorkflowProcessor.get_spec(self.workflow_spec_id, version)
         bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
         bpmn_workflow.data = self.bpmn_workflow.data
         for task in bpmn_workflow.get_tasks(SpiffTask.READY):

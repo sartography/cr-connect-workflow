@@ -116,7 +116,7 @@ class FileService(object):
                       version=file_model.latest_version
                       ).with_for_update().first()
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
-        if (file_data_model is not None and md5_checksum == file_data_model.md5_hash):
+        if (file_data_model is not None) and (md5_checksum == file_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.
             return file_model
 
@@ -141,12 +141,17 @@ class FileService(object):
             file_model.primary_process_id = WorkflowProcessor.get_process_id(bpmn)
 
         file_model.latest_version = version
-        file_data_model = FileDataModel(data=binary_data, file_model=file_model, version=version,
-                                        md5_hash=md5_checksum, last_updated=datetime.now())
+        new_file_data_model = FileDataModel(
+            data=binary_data, file_model_id=file_model.id, file_model=file_model,
+            version=version, md5_hash=md5_checksum, last_updated=datetime.now()
+        )
 
-        session.add_all([file_model, file_data_model])
+        session.add_all([file_model, new_file_data_model])
         session.commit()
         session.flush()  # Assure the id is set on the model before returning it.
+
+        db_file_model = session.query(FileModel).filter_by(id=file_model.id).first()
+        print('db_file_model', db_file_model)
         return file_model
 
     @staticmethod
@@ -202,7 +207,7 @@ class FileService(object):
 
     @staticmethod
     def get_workflow_file_data(workflow, file_name):
-        """Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns it's data"""
+        """Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns its data"""
         workflow_spec_model = FileService.find_spec_model_in_db(workflow)
 
         if workflow_spec_model is None:

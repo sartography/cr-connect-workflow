@@ -29,12 +29,12 @@ Takes two arguments:
 
     def do_task_validate_only(self, task, study_id, *args, **kwargs):
         """For validation only, process the template, but do not store it in the database."""
-        self.process_template(task, study_id, *args, **kwargs)
+        self.process_template(task, study_id, None, *args, **kwargs)
 
     def do_task(self, task, study_id, *args, **kwargs):
         workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-        final_document_stream = self.process_template(task, study_id, *args, **kwargs)
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+        final_document_stream = self.process_template(task, study_id, workflow, *args, **kwargs)
         file_name = args[0]
         irb_doc_code = args[1]
         FileService.add_task_file(study_id=study_id,
@@ -46,7 +46,7 @@ Takes two arguments:
                                   binary_data=final_document_stream.read(),
                                   irb_doc_code=irb_doc_code)
 
-    def process_template(self, task, study_id, *args, **kwargs):
+    def process_template(self, task, study_id, workflow=None, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""
         if len(args) < 2 or len(args) > 3:
             raise ApiError(code="missing_argument",
@@ -61,37 +61,55 @@ Takes two arguments:
             raise ApiError(code="invalid_argument",
                            message="The given task does not match the given study.")
 
-        file_data_model = FileService.get_workflow_file_data(task.workflow, file_name)
+        file_data_model = None
+        if workflow is not None:
+            # Get the workflow's latest files
+            joined_file_data_models = WorkflowProcessor\
+                .get_file_models_for_version(workflow.workflow_spec_id, workflow.spec_version)
+
+            for joined_file_data in joined_file_data_models:
+                if joined_file_data.file_model.name == file_name:
+                    file_data_model = session.query(FileDataModel).filter_by(id=joined_file_data.id).first()
+
+        if workflow is None or file_data_model is None:
+            file_data_model = FileService.get_workflow_file_data(task.workflow, file_name)
 
         # Get images from file/files fields
-        image_file_data = []
         if len(args) == 3:
-            images_field_str = re.sub(r'[\[\]]', '', args[2])
-            images_field_keys = [v.strip() for v in images_field_str.strip().split(',')]
-            for field_key in images_field_keys:
-                if field_key in task.data:
-                    v = task.data[field_key]
-                    file_ids = v if isinstance(v, list) else [v]
-
-                    for file_id in file_ids:
-                        if isinstance(file_id, str) and file_id.isnumeric():
-                            file_id = int(file_id)
-
-                        if file_id is not None and isinstance(file_id, int):
-                            if not task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                                # Get the actual image data
-                                image_file_model = session.query(FileModel).filter_by(id=file_id).first()
-                                image_file_data_model = FileService.get_file_data(file_id, image_file_model)
-                                if image_file_data_model is not None:
-                                    image_file_data.append(image_file_data_model)
-
-                        else:
-                            raise ApiError(
-                                code="not_a_file_id",
-                                message="The CompleteTemplate script requires 2-3 arguments. The third argument should "
-                                        "be a comma-delimited list of File IDs")
+            image_file_data = self.get_image_file_data(args[2], task)
+        else:
+            image_file_data = None
 
         return self.make_template(BytesIO(file_data_model.data), task.data, image_file_data)
+
+    def get_image_file_data(self, fields_str, task):
+        image_file_data = []
+        images_field_str = re.sub(r'[\[\]]', '', fields_str)
+        images_field_keys = [v.strip() for v in images_field_str.strip().split(',')]
+        for field_key in images_field_keys:
+            if field_key in task.data:
+                v = task.data[field_key]
+                file_ids = v if isinstance(v, list) else [v]
+
+                for file_id in file_ids:
+                    if isinstance(file_id, str) and file_id.isnumeric():
+                        file_id = int(file_id)
+
+                    if file_id is not None and isinstance(file_id, int):
+                        if not task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+                            # Get the actual image data
+                            image_file_model = session.query(FileModel).filter_by(id=file_id).first()
+                            image_file_data_model = FileService.get_file_data(file_id, image_file_model)
+                            if image_file_data_model is not None:
+                                image_file_data.append(image_file_data_model)
+
+                    else:
+                        raise ApiError(
+                            code="not_a_file_id",
+                            message="The CompleteTemplate script requires 2-3 arguments. The third argument should "
+                                    "be a comma-delimited list of File IDs")
+                    
+        return image_file_data
 
     def make_template(self, binary_stream, context, image_file_data=None):
         doc = DocxTemplate(binary_stream)
