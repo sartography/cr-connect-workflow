@@ -1,5 +1,7 @@
 from datetime import datetime
 
+import jinja2
+from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
@@ -7,20 +9,16 @@ from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from flask import g
-from pandas import ExcelFile
-from sqlalchemy import func
+from jinja2 import Template
 
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
-import jinja2
-from jinja2 import Template
-
-from crc.models.file import FileDataModel, LookupFileModel, LookupDataModel
+from crc.models.file import LookupDataModel
 from crc.models.stats import TaskEventModel
 from crc.services.file_service import FileService
+from crc.services.lookup_service import LookupService
 from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
-from SpiffWorkflow import Task as SpiffTask, WorkflowException
 
 
 class WorkflowService(object):
@@ -38,7 +36,7 @@ class WorkflowService(object):
 
     @classmethod
     def test_spec(cls, spec_id):
-        """Runs a spec through it's paces to see if it results in any errors.  Not full proof, but a good
+        """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
         sanity check."""
         version = WorkflowProcessor.get_latest_version_string(spec_id)
         spec = WorkflowProcessor.get_spec(spec_id, version)
@@ -178,10 +176,10 @@ class WorkflowService(object):
 
     @staticmethod
     def process_options(spiff_task, field):
-        lookup_model = WorkflowService.get_lookup_table(spiff_task, field)
+        lookup_model = LookupService.get_lookup_table(spiff_task, field)
 
-        # If lookup is set to true, do not populate options, a lookup will happen later.
-        if field.has_property(Task.EMUM_OPTIONS_AS_LOOKUP) and field.get_property(Task.EMUM_OPTIONS_AS_LOOKUP):
+        # If this is an auto-complete field, do not populate options, a lookup will happen later.
+        if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             pass
         else:
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
@@ -189,88 +187,6 @@ class WorkflowService(object):
                 field.options = []
             for d in data:
                 field.options.append({"id": d.value, "name": d.label})
-
-    @staticmethod
-    def get_lookup_table(spiff_task, field):
-        """ Checks to see if the options are provided in a separate lookup table associated with the
-        workflow, and if so, assures that data exists in the database, and return a model than can be used
-        to locate that data. """
-        if field.has_property(Task.ENUM_OPTIONS_FILE_PROP):
-            if not field.has_property(Task.EMUM_OPTIONS_VALUE_COL_PROP) or \
-                    not field.has_property(Task.EMUM_OPTIONS_LABEL_COL_PROP):
-                raise ApiError.from_task("invalid_emum",
-                                         "For enumerations based on an xls file, you must include 3 properties: %s, "
-                                         "%s, and %s" % (Task.ENUM_OPTIONS_FILE_PROP,
-                                                         Task.EMUM_OPTIONS_VALUE_COL_PROP,
-                                                         Task.EMUM_OPTIONS_LABEL_COL_PROP),
-                                         task=spiff_task)
-
-            # Get the file data from the File Service
-            file_name = field.get_property(Task.ENUM_OPTIONS_FILE_PROP)
-            value_column = field.get_property(Task.EMUM_OPTIONS_VALUE_COL_PROP)
-            label_column = field.get_property(Task.EMUM_OPTIONS_LABEL_COL_PROP)
-            data_model = FileService.get_workflow_file_data(spiff_task.workflow, file_name)
-            lookup_model = WorkflowService._get_lookup_table_from_data_model(data_model, value_column, label_column)
-            return lookup_model
-
-    @staticmethod
-    def _get_lookup_table_from_data_model(data_model: FileDataModel, value_column, label_column):
-        """ In some cases the lookup table can be very large.  This method will add all values to the database
-         in a way that can be searched and returned via an api call - rather than sending the full set of
-          options along with the form.  It will only open the file and process the options if something has
-          changed.  """
-
-        lookup_model = db.session.query(LookupFileModel) \
-            .filter(LookupFileModel.file_data_model_id == data_model.id) \
-            .filter(LookupFileModel.value_column == value_column) \
-            .filter(LookupFileModel.label_column == label_column).first()
-
-        if not lookup_model:
-            xls = ExcelFile(data_model.data)
-            df = xls.parse(xls.sheet_names[0])  # Currently we only look at the fist sheet.
-            if value_column not in df:
-                raise ApiError("invalid_emum",
-                               "The file %s does not contain a column named % s" % (data_model.file_model.name,
-                                                                                    value_column))
-            if label_column not in df:
-                raise ApiError("invalid_emum",
-                               "The file %s does not contain a column named % s" % (data_model.file_model.name,
-                                                                                    label_column))
-
-            lookup_model = LookupFileModel(label_column=label_column, value_column=value_column,
-                                           file_data_model_id=data_model.id)
-
-            db.session.add(lookup_model)
-            for index, row in df.iterrows():
-                lookup_data = LookupDataModel(lookup_file_model=lookup_model,
-                                              value=row[value_column],
-                                              label=row[label_column],
-                                              data=row.to_json())
-                db.session.add(lookup_data)
-            db.session.commit()
-
-        return lookup_model
-
-    @staticmethod
-    def run_lookup_query(lookupFileModel, query, limit):
-        db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model == lookupFileModel)
-
-        query = query.strip()
-        if len(query) > 1:
-            if ' ' in query:
-                terms = query.split(' ')
-                query = ""
-                new_terms = []
-                for t in terms:
-                    new_terms.append(t + ":*")
-                query = '|'.join(new_terms)
-            else:
-                query = "%s:*" % query
-            db_query = db_query.filter(LookupDataModel.label.match(query))
-
-        #            db_query = db_query.filter(text("lookup_data.label @@ to_tsquery('simple', '%s')" % query))
-
-        return db_query.limit(limit).all()
 
     @staticmethod
     def log_task_action(processor, spiff_task, action):
