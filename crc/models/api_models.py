@@ -31,10 +31,12 @@ class NavigationItem(object):
 
 class Task(object):
 
-    ENUM_OPTIONS_FILE_PROP = "enum.options.file"
-    EMUM_OPTIONS_VALUE_COL_PROP = "enum.options.value.column"
-    EMUM_OPTIONS_LABEL_COL_PROP = "enum.options.label.column"
-    EMUM_OPTIONS_AS_LOOKUP = "enum.options.lookup"
+    PROP_OPTIONS_FILE = "spreadsheet.name"
+    PROP_OPTIONS_VALUE_COLUMN = "spreadsheet.value.column"
+    PROP_OPTIONS_LABEL_COL = "spreadsheet.label.column"
+    PROP_LDAP_LOOKUP = "ldap.lookup"
+    FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
+
 
     def __init__(self, id, name, title, type, state, form, documentation, data,
                  multi_instance_type, multi_instance_count, multi_instance_index, process_name, properties):

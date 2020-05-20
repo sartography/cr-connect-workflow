@@ -7,6 +7,7 @@ from crc.models.file import FileModel, LookupDataSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.file_service import FileService
+from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
@@ -217,9 +218,9 @@ def delete_workflow_spec_category(cat_id):
 
 def lookup(workflow_id, task_id, field_id, query, limit):
     """
-    given a field in a task, attempts to find the lookup table associated with that field
-    and runs a full-text query against it to locate the values and labels that would be
-    returned to a type-ahead box.
+    given a field in a task, attempts to find the lookup table or function associated
+    with that field and runs a full-text query against it to locate the values and
+    labels that would be returned to a type-ahead box.
     """
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     if not workflow_model:
@@ -236,6 +237,5 @@ def lookup(workflow_id, task_id, field_id, query, limit):
     if not field:
         raise ApiError("unknown_field", "No field named %s in task %s" % (task_id, spiff_task.task_spec.name))
 
-    lookup_table = WorkflowService.get_lookup_table(spiff_task, field)
-    lookup_data = WorkflowService.run_lookup_query(lookup_table, query, limit)
+    lookup_data = LookupService.lookup(spiff_task, field, query, limit)
     return LookupDataSchema(many=True).dump(lookup_data)
