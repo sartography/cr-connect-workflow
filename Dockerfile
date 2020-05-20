@@ -6,7 +6,7 @@ COPY Pipfile Pipfile.lock ./
 
 RUN pip install pipenv && \
   apt-get update && \
-  apt-get -y install --no-install-recommends gcc python3-dev libssl-dev postgresql-client && \
+  apt-get -y install --no-install-recommends gcc python3-dev libssl-dev postgresql-client git && \
   pipenv install --deploy --system && \
   apt-get remove -y gcc python3-dev libssl-dev && \
   apt-get autoremove -y
