@@ -13,10 +13,10 @@ RUN pip install pipenv && \
   apt-get purge -y --auto-remove && \
   rm -rf /var/lib/apt/lists/ *
 
-COPY app ./
+COPY . /app
 
-ENV FLASK_APP=./crc/__init__.py
-CMD ["pipenv", "run", "python", "./run.py"]
+ENV FLASK_APP=/app/crc/__init__.py
+CMD ["pipenv", "run", "python", "/app/run.py"]
 
 # expose ports
 EXPOSE 5000
