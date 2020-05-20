@@ -24,7 +24,7 @@ pyjwt = "*"
 requests = "*"
 xlsxwriter = "*"
 webtest = "*"
-spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "bug/the_horror"}
+spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "master"}
 alembic = "*"
 coverage = "*"
 sphinx = "*"
@@ -38,4 +38,4 @@ xlrd = "*"
 ldap3 = "*"
 
 [requires]
-python_version = "3.7"
+python_version = "3.6.9"
