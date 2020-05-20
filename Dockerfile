@@ -1,25 +1,18 @@
-FROM python:3.7
+FROM python:3.7-slim
 
-ENV PATH=/root/.local/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+WORKDIR /app
 
-# install node and yarn
-RUN apt-get update
-RUN apt-get -y install postgresql-client
+COPY Pipfile Pipfile.lock ./
 
-# config project dir
-RUN mkdir /crc-workflow
-WORKDIR /crc-workflow
+RUN pip install pipenv && \
+  apt-get update && \
+  apt-get -y install --no-install-recommends gcc python3-dev libssl-dev postgresql-client && \
+  pipenv install --deploy --system && \
+  apt-get remove -y gcc python3-dev libssl-dev && \
+  apt-get autoremove -y
 
-# install python requirements
-RUN pip install pipenv
-ADD Pipfile /crc-workflow/
-ADD Pipfile.lock /crc-workflow/
-RUN pipenv install --dev
+COPY app ./
 
-# include rejoiner code (gets overriden by local changes)
-COPY . /crc-workflow/
-
-# run webserver by default
 ENV FLASK_APP=./crc/__init__.py
 CMD ["pipenv", "run", "python", "./run.py"]
 
