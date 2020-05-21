@@ -30,15 +30,30 @@ SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 #: Default attribute map for single signon.
 SSO_LOGIN_URL = '/login'
 SSO_ATTRIBUTE_MAP = {
-    'eppn': (False, 'eppn'),  # dhf8r@virginia.edu
-    'uid': (True, 'uid'),  # dhf8r
+    'Eppn': (False, 'eppn'),  # dhf8r@virginia.edu
+    'Uid': (True, 'uid'),  # dhf8r
     'givenName': (False, 'first_name'),  # Daniel
-    'mail': (False, 'email_address'),  # dhf8r@Virginia.EDU
-    'sn': (False, 'last_name'),  # Funk
+    'Sn': (False, 'last_name'),  # Funk
     'affiliation': (False, 'affiliation'),  # 'staff@virginia.edu;member@virginia.edu'
     'displayName': (False, 'display_name'),  # Daniel Harold Funk
     'title': (False, 'title')  # SOFTWARE ENGINEER V
 }
+
+# This what I see coming back:
+# X-Remote-Cn: Daniel Harold Funk (dhf8r)
+# X-Remote-Sn: Funk
+# X-Remote-Givenname: Daniel
+# X-Remote-Uid: dhf8r
+# Eppn: dhf8r@virginia.edu
+# Cn: Daniel Harold Funk (dhf8r)
+# Sn: Funk
+# Givenname: Daniel
+# Uid: dhf8r
+# X-Remote-User: dhf8r@virginia.edu
+# X-Forwarded-For: 128.143.0.10
+# X-Forwarded-Host: dev.crconnect.uvadcos.io
+# X-Forwarded-Server: dev.crconnect.uvadcos.io
+# Connection: Keep-Alive
 
 # %s/%i placeholders expected for uva_id and study_id in various calls.
 PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/pb/")
