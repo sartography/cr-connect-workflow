@@ -42,6 +42,10 @@ def sso_login(user_info):
     # TODO: Get redirect URL from Shibboleth request header
     _handle_login(user_info, redirect)
 
+@app.route('/sso')
+def index():
+    return str(request.headers)
+
 
 def _handle_login(user_info, redirect_url=app.config['FRONTEND_AUTH_CALLBACK']):
     """On successful login, adds user to database if the user is not already in the system,
