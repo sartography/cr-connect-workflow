@@ -1,7 +1,7 @@
 import json
 
 import connexion
-from flask import redirect, g
+from flask import redirect, g, request
 
 from crc import sso, app, db
 from crc.api.common import ApiError
@@ -35,9 +35,12 @@ def get_current_user():
 
 @sso.login_handler
 def sso_login(user_info):
-    app.logger.info("Login from Shibboleth happening. " + json.dump(user_info))
+    redirect = request.args.get('redirect')
+    app.logger.info("SSO_LOGIN: Full URL: " + request.url)
+    app.logger.info("SSO_LOGIN: User Details: " + json.dump(user_info))
+    app.logger.info("SSO_LOGIN: Will try to redirect to : " + redirect)
     # TODO: Get redirect URL from Shibboleth request header
-    _handle_login(user_info)
+    _handle_login(user_info, redirect)
 
 
 def _handle_login(user_info, redirect_url=app.config['FRONTEND_AUTH_CALLBACK']):
@@ -86,8 +89,10 @@ def _handle_login(user_info, redirect_url=app.config['FRONTEND_AUTH_CALLBACK']):
     # Return the frontend auth callback URL, with auth token appended.
     auth_token = user.encode_auth_token().decode()
     if redirect_url is not None:
+        app.logger.info("SSO_LOGIN: REDIRECTING TO: " + redirect_url)
         return redirect('%s/%s' % (redirect_url, auth_token))
     else:
+        app.logger.info("SSO_LOGIN:  NO REDIRECT, JUST RETURNING AUTH TOKEN.")
         return auth_token
 
 def backdoor(
