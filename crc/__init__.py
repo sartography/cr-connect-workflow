@@ -31,7 +31,6 @@ session = db.session
 
 migrate = Migrate(app, db)
 ma = Marshmallow(app)
-sso = SSO(app=app)
 
 from crc import models
 from crc import api

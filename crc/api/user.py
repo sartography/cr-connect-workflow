@@ -3,10 +3,10 @@ import json
 import connexion
 from flask import redirect, g, request
 
-from crc import sso, app, db
+from crc import app, db
 from crc.api.common import ApiError
 from crc.models.user import UserModel, UserModelSchema
-
+from crc.services.ldap_service import LdapService
 
 """
 .. module:: crc.api.user
@@ -32,21 +32,55 @@ def verify_token(token):
 def get_current_user():
     return UserModelSchema().dump(g.user)
 
+def sso_login():
+    # This what I see coming back:
+    # X-Remote-Cn: Daniel Harold Funk (dhf8r)
+    # X-Remote-Sn: Funk
+    # X-Remote-Givenname: Daniel
+    # X-Remote-Uid: dhf8r
+    # Eppn: dhf8r@virginia.edu
+    # Cn: Daniel Harold Funk (dhf8r)
+    # Sn: Funk
+    # Givenname: Daniel
+    # Uid: dhf8r
+    # X-Remote-User: dhf8r@virginia.edu
+    # X-Forwarded-For: 128.143.0.10
+    # X-Forwarded-Host: dev.crconnect.uvadcos.io
+    # X-Forwarded-Server: dev.crconnect.uvadcos.io
+    # Connection: Keep-Alive
+    uid = request.headers.get("Uid")
+    if not uid:
+        uid = request.headers.get("X-Remote-Uid")
 
-@sso.login_handler
-def sso_login(user_info):
+    if not uid:
+        raise ApiError("invalid_sso_credentials", "'Uid' nor 'X-Remote-Uid' were present in the headers: %s"
+                       % str(request.headers))
+
     redirect = request.args.get('redirect')
     app.logger.info("SSO_LOGIN: Full URL: " + request.url)
-    app.logger.info("SSO_LOGIN: User Details: " + json.dump(user_info))
+    app.logger.info("SSO_LOGIN: User Id: " + uid)
     app.logger.info("SSO_LOGIN: Will try to redirect to : " + redirect)
+
+    ldap_service = LdapService()
+    info = ldap_service.user_info(uid)
+
+    user = UserModel(uid=uid, email_address=info.email, display_name=info.display_name,
+                     affiliation=info.affiliation, title=info.title)
+
     # TODO: Get redirect URL from Shibboleth request header
-    _handle_login(user_info, redirect)
+    _handle_login(user, redirect)
 
 @app.route('/sso')
-def index():
-    return str(request.headers)
+def sso():
+    response = ""
+    response += "<h1>Headers</h1>"
+    response += str(request.headers)
+    response += "<h1>Environment</h1>"
+    response += str(request.environ)
+    return response
 
 
+@app.route('/login')
 def _handle_login(user_info, redirect_url=app.config['FRONTEND_AUTH_CALLBACK']):
     """On successful login, adds user to database if the user is not already in the system,
        then returns the frontend auth callback URL, with auth token appended.
