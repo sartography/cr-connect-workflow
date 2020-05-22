@@ -1,20 +1,16 @@
-from typing import List
-
-from connexion import NoContent
 from flask import g
 from sqlalchemy.exc import IntegrityError
 
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
-from crc.models.study import StudySchema, StudyModel, Study
+from crc.models.study import StudySchema, StudyFilesSchema, StudyModel, Study
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
 
 
 def add_study(body):
-    """This should never get called, and is subject to deprication.  Studies
-    should be added through the protocol builder only."""
+    """Or any study like object. """
     study: Study = StudySchema().load(body)
     study_model = StudyModel(**study.model_args())
     session.add(study_model)
@@ -59,30 +55,17 @@ def delete_study(study_id):
 
 
 def all_studies():
-    """Returns all the studies associated with the current user.  Assures we are
-    in sync with values read in from the protocol builder. """
-    StudyService.synch_all_studies_with_protocol_builder(g.user)
+    """Returns all the studies associated with the current user. """
+    StudyService.synch_with_protocol_builder_if_enabled(g.user)
     studies = StudyService.get_studies_for_user(g.user)
     results = StudySchema(many=True).dump(studies)
     return results
 
 
-def post_update_study_from_protocol_builder(study_id):
-    """Update a single study based on data received from
-    the protocol builder."""
-
-    db_study = session.query(StudyModel).filter_by(study_id=study_id).all()
-    pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(g.user.uid)
-    pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study_id), None)
-    if pb_study:
-        db_study.update_from_protocol_builder(pb_study)
-    else:
-        db_study.inactive = True
-        db_study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
-
-    return NoContent, 304
-
-
-
+def all_studies_and_files():
+    """Returns all studies with submitted files"""
+    studies = StudyService.get_studies_with_files()
+    results = StudyFilesSchema(many=True).dump(studies)
+    return results
 
 

@@ -73,10 +73,12 @@ class WorkflowModel(db.Model):
     bpmn_workflow_json = db.Column(db.JSON)
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
+    study = db.relationship("StudyModel", backref='workflow')
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
     workflow_spec = db.relationship("WorkflowSpecModel")
     spec_version = db.Column(db.String)
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
-#    task_history = db.Column(db.ARRAY(db.String), default=[]) # The history stack of user completed tasks.
     last_updated = db.Column(db.DateTime)
+    # todo: Add a version that represents the files associated with this workflow
+    # version = "32"
