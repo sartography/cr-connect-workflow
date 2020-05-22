@@ -110,6 +110,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
+  /study-files:
+    get:
+      operationId: crc.api.study.all_studies_and_files
+      summary: Provides a list of studies with submitted files
+      tags:
+        - Studies
+      responses:
+        '200':
+          description: An array of studies, with submitted files, ordered by the last modified date.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
   /study/{study_id}:
     parameters:
       - name: study_id

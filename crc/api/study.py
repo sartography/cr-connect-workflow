@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
-from crc.models.study import StudySchema, StudyModel, Study
+from crc.models.study import StudySchema, StudyFilesSchema, StudyModel, Study
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
 
@@ -64,6 +64,13 @@ def all_studies():
     StudyService.synch_all_studies_with_protocol_builder(g.user)
     studies = StudyService.get_studies_for_user(g.user)
     results = StudySchema(many=True).dump(studies)
+    return results
+
+
+def all_studies_and_files():
+    """Returns all studies with submitted files"""
+    studies = StudyService.get_studies_with_files()
+    results = StudyFilesSchema(many=True).dump(studies)
     return results
 
 

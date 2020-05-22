@@ -33,6 +33,12 @@ class StudyService(object):
         return studies
 
     @staticmethod
+    def get_studies_with_files():
+        """Returns a list of all studies"""
+        db_studies = session.query(StudyModel).all()
+        return db_studies
+
+    @staticmethod
     def get_study(study_id, study_model: StudyModel = None):
         """Returns a study model that contains all the workflows organized by category.
         IMPORTANT:  This is intended to be a lightweight call, it should never involve
