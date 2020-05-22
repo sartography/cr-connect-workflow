@@ -7,6 +7,12 @@ from crc import db, app
 from crc.api.common import ApiError
 
 
+class Approvals(db.Model):
+    approval_uid = db.Column(db.String, unique=True)
+    workflow_id = db.Column(db.Integer, primary_key=True)
+    workflow_version = db.Column(db.String)
+    is_approved = db.Column(db.Boolean)
+
 class UserModel(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -18,6 +24,8 @@ class UserModel(db.Model):
     first_name = db.Column(db.String, nullable=True)
     last_name = db.Column(db.String, nullable=True)
     title = db.Column(db.String, nullable=True)
+
+    # Add Department and School
 
 
     def encode_auth_token(self):

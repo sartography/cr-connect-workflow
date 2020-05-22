@@ -6,7 +6,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
 
-from crc import db
+from crc import db, ma
 
 
 class FileType(enum.Enum):
@@ -139,3 +139,9 @@ class LookupDataSchema(SQLAlchemyAutoSchema):
         include_relationships = False
         include_fk = False  # Includes foreign keys
 
+
+class SimpleFileSchema(ma.Schema):
+
+    class Meta:
+        model = FileModel
+        fields = ["name"]
