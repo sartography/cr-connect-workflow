@@ -795,6 +795,54 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Script"
+  /approval:
+    parameters:
+      - name: approver_uid
+        in: query
+        required: false
+        description: Restrict results to a given approver uid, maybe we restrict the use of this at somepoint.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.approval.get_approvals
+      summary: Provides a list of workflows approvals
+      tags:
+      - Approvals
+      responses:
+        '200':
+          description: An array of approvals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
+  /approval/{approval_id}:
+    parameters:
+      - name: approval_id
+        in: path
+        required: true
+        description: The id of the approval in question.
+        schema:
+          type: integer
+          format: int32
+    put:
+      operationId: crc.api.approval.update_approval
+      summary: Updates an approval with the given parameters
+      tags:
+        - Approvals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Approval'
+      responses:
+        '200':
+          description: Study updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Approval"
 components:
   securitySchemes:
     jwt:
@@ -1202,7 +1250,10 @@ components:
           readOnly: true
         task:
           $ref: "#/components/schemas/Task"
-
-
-
+    Approval:
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 5
 

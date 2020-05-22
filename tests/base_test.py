@@ -31,8 +31,8 @@ class BaseTest(unittest.TestCase):
     """
 
     if not app.config['TESTING']:
-        raise ("INVALID TEST CONFIGURATION. This is almost always in import order issue."
-               "The first class to import in each test should be the base_test.py file.")
+        raise (Exception("INVALID TEST CONFIGURATION. This is almost always in import order issue."
+               "The first class to import in each test should be the base_test.py file."))
 
     auths = {}
     test_uid = "dhf8r"
