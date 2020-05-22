@@ -156,26 +156,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
-  /study-update/{study_id}:
-    post:
-      operationId: crc.api.study.post_update_study_from_protocol_builder
-      summary: If the study is up-to-date with Protocol Builder, returns a 304 Not Modified. If out of date, return a 202 Accepted and study state changes to updating.
-      tags:
-        - Study Status
-      parameters:
-        - name: study_id
-          in: path
-          required: true
-          description: The id of the study that should be checked for updates.
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '304':
-          description: Study is currently up to date and does not need to be reloaded from Protocol Builder
-        '202':
-          description: Request accepted, will preform an update. Study state set to "updating"
-
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications

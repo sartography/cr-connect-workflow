@@ -1,7 +1,9 @@
 # Set environment variable to testing before loading.
 # IMPORTANT - Environment must be loaded before app, models, etc....
-import json
 import os
+os.environ["TESTING"] = "true"
+
+import json
 import unittest
 import urllib.parse
 import datetime
@@ -10,10 +12,6 @@ from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudyModel
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
-from crc.services.workflow_processor import WorkflowProcessor
-
-os.environ["TESTING"] = "true"
-
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel
 from crc.models.user import UserModel
@@ -31,6 +29,10 @@ class BaseTest(unittest.TestCase):
     """ Great class to inherit from, as it sets up and tears down classes
         efficiently when we have a database in place.
     """
+
+    if not app.config['TESTING']:
+        raise ("INVALID TEST CONFIGURATION. This is almost always in import order issue."
+               "The first class to import in each test should be the base_test.py file.")
 
     auths = {}
     test_uid = "dhf8r"
