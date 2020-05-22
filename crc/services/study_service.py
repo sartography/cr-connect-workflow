@@ -116,23 +116,29 @@ class StudyService(object):
         """Returns a list of documents related to the study, and any file information
         that is available.."""
 
-        # Get PB required docs
-        try:
-            pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
-        except requests.exceptions.ConnectionError as ce:
-            app.logger.error("Failed to connect to the Protocol Builder - %s" % str(ce))
+        # Get PB required docs, if Protocol Builder Service is enabled.
+        if ProtocolBuilderService.ENABLED:
+            try:
+                pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
+            except requests.exceptions.ConnectionError as ce:
+                app.logger.error("Failed to connect to the Protocol Builder - %s" % str(ce))
+                pb_docs = []
+        else:
             pb_docs = []
 
-        # Loop through all known document types, get the counts for those files, and use pb_docs to mark those required.
+        # Loop through all known document types, get the counts for those files,
+        # and use pb_docs to mark those as required.
         doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
 
         documents = {}
         for code, doc in doc_dictionary.items():
 
-            pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
-            doc['required'] = False
-            if pb_data:
-                doc['required'] = True
+            if ProtocolBuilderService.ENABLED:
+                pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
+                doc['required'] = False
+                if pb_data:
+                    doc['required'] = True
+
             doc['study_id'] = study_id
             doc['code'] = code
 
@@ -159,7 +165,6 @@ class StudyService(object):
                     doc['status'] = workflow.status.value
 
             documents[code] = doc
-
         return documents
 
 
@@ -207,9 +212,13 @@ class StudyService(object):
 
 
     @staticmethod
-    def synch_all_studies_with_protocol_builder(user):
+    def synch_with_protocol_builder_if_enabled(user):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
+
+        if not ProtocolBuilderService.ENABLED:
+            return
+
         # Get studies matching this user from Protocol Builder
         pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(user.uid)
 
