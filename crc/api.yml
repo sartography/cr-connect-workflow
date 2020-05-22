@@ -755,13 +755,6 @@ paths:
               schema:
                 type: string
   /render_docx:
-    parameters:
-      - name: data
-        in: query
-        required: true
-        description: The json data to use in populating the template
-        schema:
-          type: string
     put:
       operationId: crc.api.tools.render_docx
       security: []  # Disable security for this endpoint only.
@@ -777,6 +770,9 @@ paths:
                 file:
                   type: string
                   format: binary
+                data:
+                  type: string
+                  format: json
       responses:
         '200':
           description: Returns the generated document.
