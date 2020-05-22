@@ -27,19 +27,6 @@ TOKEN_AUTH_SECRET_KEY = environ.get('TOKEN_AUTH_SECRET_KEY', default="Shhhh!!! T
 FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://localhost:4200/session")
 SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 
-#: Default attribute map for single signon.
-SSO_LOGIN_URL = '/login'
-SSO_ATTRIBUTE_MAP = {
-    'eppn': (False, 'eppn'),  # dhf8r@virginia.edu
-    'uid': (True, 'uid'),  # dhf8r
-    'givenName': (False, 'first_name'),  # Daniel
-    'mail': (False, 'email_address'),  # dhf8r@Virginia.EDU
-    'sn': (False, 'last_name'),  # Funk
-    'affiliation': (False, 'affiliation'),  # 'staff@virginia.edu;member@virginia.edu'
-    'displayName': (False, 'display_name'),  # Daniel Harold Funk
-    'title': (False, 'title')  # SOFTWARE ENGINEER V
-}
-
 # %s/%i placeholders expected for uva_id and study_id in various calls.
 PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/pb/")
 PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "user_studies?uva_id=%s")
