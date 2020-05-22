@@ -6,7 +6,6 @@ from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask_sso import SSO
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,7 +30,6 @@ session = db.session
 
 migrate = Migrate(app, db)
 ma = Marshmallow(app)
-sso = SSO(app=app)
 
 from crc import models
 from crc import api

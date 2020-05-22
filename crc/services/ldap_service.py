@@ -8,24 +8,36 @@ from crc.api.common import ApiError
 
 class LdapUserInfo(object):
 
-    def __init__(self, entry):
-        self.display_name = entry.displayName.value
-        self.given_name = ", ".join(entry.givenName)
-        self.email = entry.mail.value
-        self.telephone_number= ", ".join(entry.telephoneNumber)
-        self.title = ", ".join(entry.title)
-        self.department = ", ".join(entry.uvaDisplayDepartment)
-        self.affiliation = ", ".join(entry.uvaPersonIAMAffiliation)
-        self.sponsor_type = ", ".join(entry.uvaPersonSponsoredType)
+    def __init__(self):
+        self.display_name = ''
+        self.given_name = ''
+        self.email_address = ''
+        self.telephone_number = ''
+        self.title = ''
+        self.department = ''
+        self.affiliation = ''
+        self.sponsor_type = ''
+        self.uid = ''
 
-
-
+    @classmethod
+    def from_entry(cls, entry):
+        instance = cls()
+        instance.display_name = entry.displayName.value
+        instance.given_name = ", ".join(entry.givenName)
+        instance.email_address = entry.mail.value
+        instance.telephone_number = ", ".join(entry.telephoneNumber)
+        instance.title = ", ".join(entry.title)
+        instance.department = ", ".join(entry.uvaDisplayDepartment)
+        instance.affiliation = ", ".join(entry.uvaPersonIAMAffiliation)
+        instance.sponsor_type = ", ".join(entry.uvaPersonSponsoredType)
+        instance.uid = entry.uid.value
+        return instance
 
 class LdapService(object):
     search_base = "ou=People,o=University of Virginia,c=US"
-    attributes = ['cn', 'displayName', 'givenName', 'mail', 'objectClass', 'UvaDisplayDepartment',
+    attributes = ['uid', 'cn', 'displayName', 'givenName', 'mail', 'objectClass', 'UvaDisplayDepartment',
                   'telephoneNumber', 'title', 'uvaPersonIAMAffiliation', 'uvaPersonSponsoredType']
-    search_string = "(&(objectclass=person)(uid=%s))"
+    uid_search_string = "(&(objectclass=person)(uid=%s))"
 
     def __init__(self):
         if app.config['TESTING']:
@@ -46,9 +58,25 @@ class LdapService(object):
             self.conn.unbind()
 
     def user_info(self, uva_uid):
-        search_string = LdapService.search_string % uva_uid
+        search_string = LdapService.uid_search_string % uva_uid
         self.conn.search(LdapService.search_base, search_string, attributes=LdapService.attributes)
         if len(self.conn.entries) < 1:
             raise ApiError("missing_ldap_record", "Unable to locate a user with id %s in LDAP" % uva_uid)
         entry = self.conn.entries[0]
-        return(LdapUserInfo(entry))
+        return LdapUserInfo.from_entry(entry)
+
+    def search_users(self, query, limit):
+        search_string = LdapService.uid_search_string % query
+        self.conn.search(LdapService.search_base, search_string, attributes=LdapService.attributes)
+
+        # Entries are returned as a generator, accessing entries
+        # can make subsequent calls to the ldap service, so limit
+        # those here.
+        count = 0
+        results = []
+        for entry in self.conn.entries:
+            if count > limit:
+                break
+            results.append(LdapUserInfo.from_entry(entry))
+            count += 1
+        return results

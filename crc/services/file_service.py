@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 from datetime import datetime
@@ -11,7 +12,6 @@ from crc.api.common import ApiError
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.workflow_processor import WorkflowProcessor
-import hashlib
 
 
 class FileService(object):
@@ -110,13 +110,14 @@ class FileService(object):
 
     @staticmethod
     def update_file(file_model, binary_data, content_type):
+        session.flush()  # Assure the database is up-to-date before running this.
 
         file_data_model = session.query(FileDataModel). \
             filter_by(file_model_id=file_model.id,
                       version=file_model.latest_version
                       ).with_for_update().first()
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
-        if (file_data_model is not None and md5_checksum == file_data_model.md5_hash):
+        if (file_data_model is not None) and (md5_checksum == file_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.
             return file_model
 
@@ -141,12 +142,15 @@ class FileService(object):
             file_model.primary_process_id = WorkflowProcessor.get_process_id(bpmn)
 
         file_model.latest_version = version
-        file_data_model = FileDataModel(data=binary_data, file_model=file_model, version=version,
-                                        md5_hash=md5_checksum, last_updated=datetime.now())
+        new_file_data_model = FileDataModel(
+            data=binary_data, file_model_id=file_model.id, file_model=file_model,
+            version=version, md5_hash=md5_checksum, last_updated=datetime.now()
+        )
 
-        session.add_all([file_model, file_data_model])
+        session.add_all([file_model, new_file_data_model])
         session.commit()
         session.flush()  # Assure the id is set on the model before returning it.
+
         return file_model
 
     @staticmethod
@@ -156,18 +160,26 @@ class FileService(object):
         query = session.query(FileModel).filter_by(is_reference=is_reference)
         if workflow_spec_id:
             query = query.filter_by(workflow_spec_id=workflow_spec_id)
-        if study_id:
-            query = query.filter_by(study_id=study_id)
-        if workflow_id:
-            query = query.filter_by(workflow_id=workflow_id)
-        if task_id:
-            query = query.filter_by(task_id=str(task_id))
-        if form_field_key:
-            query = query.filter_by(form_field_key=form_field_key)
-        if name:
-            query = query.filter_by(name=name)
-        if irb_doc_code:
-            query = query.filter_by(irb_doc_code=irb_doc_code)
+        if all(v is None for v in [study_id, workflow_id, task_id, form_field_key]):
+            query = query.filter_by(
+                study_id=None,
+                workflow_id=None,
+                task_id=None,
+                form_field_key=None,
+            )
+        else:
+            if study_id:
+                query = query.filter_by(study_id=study_id)
+            if workflow_id:
+                query = query.filter_by(workflow_id=workflow_id)
+            if task_id:
+                query = query.filter_by(task_id=str(task_id))
+            if form_field_key:
+                query = query.filter_by(form_field_key=form_field_key)
+            if name:
+                query = query.filter_by(name=name)
+            if irb_doc_code:
+                query = query.filter_by(irb_doc_code=irb_doc_code)
 
         results = query.all()
         return results
@@ -194,7 +206,7 @@ class FileService(object):
 
     @staticmethod
     def get_workflow_file_data(workflow, file_name):
-        """Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns it's data"""
+        """Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns its data"""
         workflow_spec_model = FileService.find_spec_model_in_db(workflow)
 
         if workflow_spec_model is None:
