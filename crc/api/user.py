@@ -32,7 +32,7 @@ def verify_token(token):
 def get_current_user():
     return UserModelSchema().dump(g.user)
 
-@app.route('/login')
+@app.route('/v1.0/login')
 def sso_login():
     # This what I see coming back:
     # X-Remote-Cn: Daniel Harold Funk (dhf8r)
