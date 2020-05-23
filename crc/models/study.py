@@ -5,6 +5,7 @@ from sqlalchemy import func
 
 from crc import db, ma
 from crc.api.common import ApiErrorSchema
+from crc.models.file import FileModel, SimpleFileSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
     WorkflowModel
@@ -38,6 +39,10 @@ class StudyModel(db.Model):
             self.protocol_builder_status = ProtocolBuilderStatus.OPEN
         if self.on_hold:
             self.protocol_builder_status = ProtocolBuilderStatus.HOLD
+
+    def files(self):
+        _files = FileModel.query.filter_by(workflow_id=self.workflow[0].id)
+        return _files
 
 
 class WorkflowMetadata(object):
@@ -154,3 +159,16 @@ class StudySchema(ma.Schema):
     def make_study(self, data, **kwargs):
         """Can load the basic study data for updates to the database, but categories are write only"""
         return Study(**data)
+
+
+class StudyFilesSchema(ma.Schema):
+
+    # files = fields.List(fields.Nested(SimpleFileSchema), dump_only=True)
+    files = fields.Method('_files')
+
+    class Meta:
+        model = Study
+        additional = ["id", "title", "last_updated", "primary_investigator_id"]
+
+    def _files(self, obj):
+        return [file.name for file in obj.files()]

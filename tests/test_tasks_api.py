@@ -8,6 +8,7 @@ from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSche
 from crc.models.file import FileModelSchema
 from crc.models.stats import TaskEventModel
 from crc.models.workflow import WorkflowStatus
+from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_service import WorkflowService
 from tests.base_test import BaseTest
 
@@ -302,6 +303,9 @@ class TestTasksApi(BaseTest):
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_multi_instance_task(self, mock_get):
+        # Enable the protocol builder.
+        ProtocolBuilderService.ENABLED = True
+
         # This depends on getting a list of investigators back from the protocol builder.
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('investigators.json')
