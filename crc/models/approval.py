@@ -18,7 +18,7 @@ class ApprovalModel(db.Model):
     __tablename__ = 'approval'
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
-    study = db.relationship(StudyModel, backref='approval')
+    study = db.relationship(StudyModel, backref='approval', cascade='all,delete')
     workflow_id = db.Column(db.Integer, db.ForeignKey(WorkflowModel.id), nullable=False)
     workflow_version = db.Column(db.String)
     approver_uid = db.Column(db.String)  # Not linked to user model, as they may not have logged in yet.
