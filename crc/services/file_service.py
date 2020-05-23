@@ -48,14 +48,24 @@ class FileService(object):
                            "When uploading files, the form field id must match a known document in the "
                            "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % form_field_key)
 
-        file_model = FileModel(
-            study_id=study_id,
-            workflow_id=workflow_id,
-            task_id=task_id,
-            name=name,
-            form_field_key=form_field_key,
-            irb_doc_code=form_field_key
-        )
+        """Assure this is unique to the workflow, task, and document code AND the Name
+           Because we will allow users to upload multiple files for the same form field 
+            in some cases """
+        file_model = session.query(FileModel)\
+            .filter(FileModel.workflow_id == workflow_id)\
+            .filter(FileModel.task_id == str(task_id))\
+            .filter(FileModel.name == name)\
+            .filter(FileModel.irb_doc_code == form_field_key).first()
+
+        if not file_model:
+            file_model = FileModel(
+                study_id=study_id,
+                workflow_id=workflow_id,
+                task_id=task_id,
+                name=name,
+                form_field_key=form_field_key,
+                irb_doc_code=form_field_key
+            )
         return FileService.update_file(file_model, binary_data, content_type)
 
     @staticmethod
@@ -78,16 +88,30 @@ class FileService(object):
     @staticmethod
     def add_task_file(study_id, workflow_id, workflow_spec_id, task_id, name, content_type, binary_data,
                       irb_doc_code=None):
-        """Create a new file and associate it with an executing task within a workflow."""
-        file_model = FileModel(
-            study_id=study_id,
-            workflow_id=workflow_id,
-            workflow_spec_id=workflow_spec_id,
-            task_id=task_id,
-            name=name,
-            irb_doc_code=irb_doc_code
-        )
+
+        """Assure this is unique to the workflow, task, and document code.  Disregard name."""
+        file_model = session.query(FileModel)\
+            .filter(FileModel.workflow_id == workflow_id)\
+            .filter(FileModel.task_id == str(task_id))\
+            .filter(FileModel.irb_doc_code == irb_doc_code).first()
+
+        if not file_model:
+            """Create a new file and associate it with an executing task within a workflow."""
+            file_model = FileModel(
+                study_id=study_id,
+                workflow_id=workflow_id,
+                workflow_spec_id=workflow_spec_id,
+                task_id=task_id,
+                name=name,
+                irb_doc_code=irb_doc_code
+            )
         return FileService.update_file(file_model, binary_data, content_type)
+
+    @staticmethod
+    def get_workflow_files(workflow_id):
+        """Returns all the file models associated with a running workflow."""
+        return session.query(FileModel).filter(FileModel.workflow_id == workflow_id).\
+            order_by(FileModel.id).all()
 
     @staticmethod
     def add_reference_file(name, content_type, binary_data):
@@ -109,6 +133,7 @@ class FileService(object):
         return file_extension.lower().strip()[1:]
 
     @staticmethod
+
     def update_file(file_model, binary_data, content_type):
         session.flush()  # Assure the database is up-to-date before running this.
 

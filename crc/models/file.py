@@ -85,6 +85,7 @@ class FileModel(db.Model):
     latest_version = db.Column(db.Integer, default=0)
 
 
+
 class FileModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = FileModel

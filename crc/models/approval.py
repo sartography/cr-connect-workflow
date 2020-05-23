@@ -1,8 +1,10 @@
 import enum
 
 from marshmallow import INCLUDE
+from sqlalchemy import func
 
 from crc import db, ma
+from crc.models.file import FileModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 
@@ -14,16 +16,32 @@ class ApprovalStatus(enum.Enum):
     CANCELED = "CANCELED" # The document was replaced with a new version and this review is no longer needed.
 
 
+class ApprovalFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    file_id = db.Column(db.Integer, db.ForeignKey(FileModel.id), nullable=False)
+    approval_id = db.Column(db.Integer, db.ForeignKey("approval.id"), nullable=False)
+    file_version = db.Column(db.Integer, nullable=False)
+
+    approval = db.relationship("ApprovalModel")
+    file = db.relationship(FileModel)
+
+
 class ApprovalModel(db.Model):
     __tablename__ = 'approval'
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
-    study = db.relationship(StudyModel, backref='approval')
     workflow_id = db.Column(db.Integer, db.ForeignKey(WorkflowModel.id), nullable=False)
-    workflow_version = db.Column(db.String)
     approver_uid = db.Column(db.String)  # Not linked to user model, as they may not have logged in yet.
     status = db.Column(db.String)
     message = db.Column(db.String)
+    date_created = db.Column(db.DateTime(timezone=True), default=func.now())
+    version = db.Column(db.Integer) # Incremented integer, so 1,2,3 as requests are made.
+    workflow_hash = db.Column(db.String) # A hash of the workflow at the moment the approval was created.
+
+    study = db.relationship(StudyModel)
+    workflow = db.relationship(WorkflowModel)
+    approval_files = db.relationship(ApprovalFile, back_populates="approval")
+
 
 
 class Approval(object):
@@ -31,9 +49,8 @@ class Approval(object):
     @classmethod
     def from_model(cls, model: ApprovalModel):
         instance = cls()
-
         instance.id = model.id
-        instance.workflow_version = model.workflow_version
+        instance.version = model.version
         instance.approver_uid = model.approver_uid
         instance.status = model.status
         instance.study_id = model.study_id
