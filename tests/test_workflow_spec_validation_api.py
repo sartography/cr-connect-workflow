@@ -20,21 +20,7 @@ class TestWorkflowSpecValidation(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         return ApiErrorSchema(many=True).load(json_data)
 
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
-    def test_successful_validation_of_test_workflows(self, mock_studies, mock_details, mock_docs, mock_investigators):
-
-        # Mock Protocol Builder responses
-        studies_response = self.protocol_builder_response('user_studies.json')
-        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
-        details_response = self.protocol_builder_response('study_details.json')
-        mock_details.return_value = json.loads(details_response)
-        docs_response = self.protocol_builder_response('required_docs.json')
-        mock_docs.return_value = json.loads(docs_response)
-        investigators_response = self.protocol_builder_response('investigators.json')
-        mock_investigators.return_value = json.loads(investigators_response)
+    def test_successful_validation_of_test_workflows(self):
 
         self.assertEqual(0, len(self.validate_workflow("parallel_tasks")))
         self.assertEqual(0, len(self.validate_workflow("decision_table")))

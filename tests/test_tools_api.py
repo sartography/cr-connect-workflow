@@ -1,8 +1,8 @@
 import json
 import os
 
-from crc import app
 from tests.base_test import BaseTest
+from crc import app
 
 
 class TestStudyApi(BaseTest):
@@ -22,11 +22,13 @@ class TestStudyApi(BaseTest):
                    {"option": "Address", "selected": False},
                    {"option": "Phone", "selected": True, "stored": ["Send or Transmit outside of UVA"]}]}
         with open(filepath, 'rb') as f:
-            file_data = {'file': (f, 'my_new_file.bpmn')}
-            rv = self.app.put('/v1.0/render_docx?data=%s' % json.dumps(template_data),
+            file_data = {'file': (f, 'my_new_file.bpmn'), 'data': json.dumps(template_data)}
+            rv = self.app.put('/v1.0/render_docx',
                               data=file_data, follow_redirects=True,
                               content_type='multipart/form-data')
             self.assert_success(rv)
+            self.assertIsNotNone(rv.data)
+            self.assertEquals('application/octet-stream', rv.content_type)
 
     def test_list_scripts(self):
         rv = self.app.get('/v1.0/list_scripts')
