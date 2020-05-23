@@ -3,17 +3,15 @@
 # run migrations
 export FLASK_APP=./crc/__init__.py
 
-for entry in ./instance/* ; do
-  echo "$entry"
-  cat $entry
-done
-
 if [ "$DOWNGRADE_DB" = "true" ]; then
-  echo 'Downgrading...'
+  echo 'Downgrading database...'
   pipenv run flask db downgrade
 fi
 
-pipenv run flask db upgrade
+if [ "$UPGRADE_DB" = "true" ]; then
+  echo 'Upgrading database...'
+  pipenv run flask db upgrade
+fi
 
 if [ "$RESET_DB" = "true" ]; then
   echo 'Resetting database...'

@@ -17,7 +17,6 @@ RUN pip install pipenv && \
 COPY . /app/
 
 ENV FLASK_APP=/app/crc/__init__.py
-CMD ["pipenv", "run", "flask", "db", "upgrade"]
 CMD ["pipenv", "run", "python", "/app/run.py"]
 
 # expose ports

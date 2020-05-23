@@ -44,7 +44,7 @@ class TestAuthentication(BaseTest):
         self.assertIsNone(user)
         redirect_url = 'http://worlds.best.website/admin'
         headers = dict(Uid=new_uid)
-        rv = self.app.get('login', follow_redirects=False, headers=headers)
+        rv = self.app.get('v1.0/login', follow_redirects=False, headers=headers)
         self.assert_success(rv)
         user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNotNone(user)
