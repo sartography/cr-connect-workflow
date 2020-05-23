@@ -210,14 +210,17 @@ class FileService(object):
         return results
 
     @staticmethod
-    def get_file_data(file_id, file_model=None):
+    def get_file_data(file_id, file_model=None, version=None):
+
         """Returns the file_data that is associated with the file model id, if an actual file_model
         is provided, uses that rather than looking it up again."""
         if file_model is None:
             file_model = session.query(FileModel).filter(FileModel.id == file_id).first()
+        if version is None:
+            version = file_model.latest_version
         return session.query(FileDataModel) \
             .filter(FileDataModel.file_model_id == file_id) \
-            .filter(FileDataModel.version == file_model.latest_version) \
+            .filter(FileDataModel.version == version) \
             .first()
 
     @staticmethod

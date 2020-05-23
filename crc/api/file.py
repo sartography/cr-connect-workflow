@@ -92,8 +92,8 @@ def update_file_data(file_id):
     return FileModelSchema().dump(file_model)
 
 
-def get_file_data(file_id):
-    file_data = FileService.get_file_data(file_id)
+def get_file_data(file_id, version=None):
+    file_data = FileService.get_file_data(file_id, version)
     if file_data is None:
         raise ApiError('no_such_file', 'The file id you provided does not exist')
     return send_file(

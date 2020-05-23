@@ -458,12 +458,18 @@ paths:
       responses:
         '204':
           description: The file has been removed.
-  /file/{file_id}/data:
+  /file/{file_id}/data/{version}:
     parameters:
       - name: file_id
         in: path
         required: true
         description: The id of the File requested
+        schema:
+          type: integer
+      - name: version
+        in: path
+        required: false
+        description: The version of the file, or none for latest version
         schema:
           type: integer
     get:
