@@ -1,23 +1,45 @@
-FROM python:3.6.9-slim
+#
+# https://medium.com/@greut/building-a-python-package-a-docker-image-using-pipenv-233d8793b6cc
+# https://github.com/greut/pipenv-to-wheel
+#
+FROM kennethreitz/pipenv as pipenv
 
+ADD . /app
 WORKDIR /app
 
-COPY Pipfile Pipfile.lock /app/
+RUN pipenv install --dev \
+ && pipenv lock -r > requirements.txt \
+ && pipenv run python setup.py bdist_wheel
 
-RUN pip install pipenv && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends \
-    gcc python3-dev libssl-dev \
-    curl postgresql-client git-core && \
-  pipenv install --dev && \
-  apt-get remove -y gcc python3-dev libssl-dev && \
-  apt-get purge -y --auto-remove && \
-  rm -rf /var/lib/apt/lists/ *
+# ----------------------------------------------------------------------------
+FROM ubuntu:bionic
 
-COPY . /app/
+ARG DEBIAN_FRONTEND=noninteractive
 
-ENV FLASK_APP=/app/crc/__init__.py
-CMD ["pipenv", "run", "python", "/app/run.py"]
+COPY --from=pipenv /app/dist/*.whl .
 
-# expose ports
-EXPOSE 5000
+RUN set -xe \
+ && apt-get update -q \
+ && apt-get install -y -q \
+        python3-minimal \
+        python3-wheel \
+        python3-pip \
+        gunicorn3 \
+        postgresql-client \
+ && python3 -m pip install *.whl \
+ && apt-get remove -y python3-pip python3-wheel \
+ && apt-get autoremove -y \
+ && apt-get clean -y \
+ && rm -f *.whl \
+ && rm -rf /root/.cache \
+ && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p /app \
+ && useradd _gunicorn --no-create-home --user-group
+
+USER _gunicorn
+ADD static /app/static
+WORKDIR /app
+
+CMD ["gunicorn3", \
+     "--bind", "0.0.0.0:8000", \
+     "crc:app"]
