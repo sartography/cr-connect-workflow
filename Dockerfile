@@ -17,7 +17,6 @@ FROM ubuntu:bionic
 ARG DEBIAN_FRONTEND=noninteractive
 
 COPY --from=pipenv /app/dist/*.whl .
-COPY wait-for-it.sh .
 
 RUN set -xe \
  && apt-get update -q \
@@ -27,7 +26,7 @@ RUN set -xe \
         python3-pip \
         gunicorn3 \
         postgresql-client \
- && python3 -m pip install *.whl \
+ && python3 -m pip install --target=/app *.whl \
  && apt-get remove -y python3-pip python3-wheel \
  && apt-get autoremove -y \
  && apt-get clean -y \
@@ -38,7 +37,10 @@ RUN set -xe \
  && useradd _gunicorn --no-create-home --user-group
 
 USER _gunicorn
-ADD crc/static /app/static
+
+COPY crc/static /app/static
+COPY docker_run.sh /app
+COPY wait-for-it.sh /app
 WORKDIR /app
 
 CMD ["gunicorn3", \
