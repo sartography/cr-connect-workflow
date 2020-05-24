@@ -27,12 +27,11 @@ Takes two arguments:
 2. The 'code' of the IRB Document as set in the irb_documents.xlsx file."
 """
 
-    def do_task_validate_only(self, task, study_id, *args, **kwargs):
+    def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         """For validation only, process the template, but do not store it in the database."""
         self.process_template(task, study_id, None, *args, **kwargs)
 
-    def do_task(self, task, study_id, *args, **kwargs):
-        workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+    def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
         final_document_stream = self.process_template(task, study_id, workflow, *args, **kwargs)
         file_name = args[0]
