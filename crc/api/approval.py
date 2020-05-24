@@ -10,7 +10,6 @@ def get_approvals(approver_uid = None):
     return results
 
 def update_approval(approval_id, body):
-
     if approval_id is None:
         raise ApiError('unknown_approval', 'Please provide a valid Approval ID.')
 
