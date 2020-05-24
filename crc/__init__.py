@@ -34,7 +34,7 @@ ma = Marshmallow(app)
 from crc import models
 from crc import api
 
-connexion_app.add_api('api.yml', base_path=app.config['BASE_HREF'] + 'v1.0')
+connexion_app.add_api('api.yml', base_path='/v1.0')
 
 # Convert list of allowed origins to list of regexes
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]

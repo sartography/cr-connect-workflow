@@ -32,7 +32,7 @@ def verify_token(token):
 def get_current_user():
     return UserModelSchema().dump(g.user)
 
-@app.route(app.config['BASE_HREF'] + 'v1.0/login')
+@app.route('/v1.0/login')
 def sso_login():
     # This what I see coming back:
     # X-Remote-Cn: Daniel Harold Funk (dhf8r)
@@ -67,7 +67,7 @@ def sso_login():
 
     return _handle_login(info, redirect)
 
-@app.route(app.config['BASE_HREF'] + 'sso')
+@app.route('/sso')
 def sso():
     response = ""
     response += "<h1>Headers</h1>"
