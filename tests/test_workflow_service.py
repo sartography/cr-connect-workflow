@@ -31,7 +31,7 @@ class TestWorkflowService(BaseTest):
   * bullet one
   * bullet two has {{replace_me}}
 
-# other stuff.       
+# other stuff.
         """
         expected = """
 # Bigger Test
@@ -39,7 +39,7 @@ class TestWorkflowService(BaseTest):
   * bullet one
   * bullet two has new_thing
 
-# other stuff.       
+# other stuff.
         """
         task.task_spec.documentation = documentation
         result = WorkflowService._process_documentation(task)

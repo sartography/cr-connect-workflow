@@ -163,7 +163,6 @@ class StudySchema(ma.Schema):
 
 class StudyFilesSchema(ma.Schema):
 
-    # files = fields.List(fields.Nested(SimpleFileSchema), dump_only=True)
     files = fields.Method('_files')
 
     class Meta:

@@ -30,7 +30,9 @@ class ApprovalModel(db.Model):
     __tablename__ = 'approval'
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
+    study = db.relationship(StudyModel)
     workflow_id = db.Column(db.Integer, db.ForeignKey(WorkflowModel.id), nullable=False)
+    workflow = db.relationship(WorkflowModel)
     approver_uid = db.Column(db.String)  # Not linked to user model, as they may not have logged in yet.
     status = db.Column(db.String)
     message = db.Column(db.String)
@@ -38,10 +40,7 @@ class ApprovalModel(db.Model):
     version = db.Column(db.Integer) # Incremented integer, so 1,2,3 as requests are made.
     workflow_hash = db.Column(db.String) # A hash of the workflow at the moment the approval was created.
 
-    study = db.relationship(StudyModel)
-    workflow = db.relationship(WorkflowModel)
     approval_files = db.relationship(ApprovalFile, back_populates="approval")
-
 
 
 class Approval(object):
@@ -50,20 +49,44 @@ class Approval(object):
     def from_model(cls, model: ApprovalModel):
         instance = cls()
         instance.id = model.id
+        instance.study_id = model.study_id
+        instance.workflow_id = model.workflow_id
         instance.version = model.version
         instance.approver_uid = model.approver_uid
         instance.status = model.status
-        instance.study_id = model.study_id
+        instance.message = model.message
+        instance.date_created = model.date_created
+        instance.version = model.version
+        instance.workflow_hash = model.workflow_hash
+        instance.title = ''
         if model.study:
             instance.title = model.study.title
+
+        # TODO: Use ldap lookup
+        instance.approver = {}
+        instance.approver['uid'] = 'bgb22'
+        instance.approver['display_name'] = 'Billy Bob (bgb22)'
+        instance.approver['title'] = 'E42:He\'s a hoopy frood'
+        instance.approver['department'] = 'E0:EN-Eng Study of Parallel Universes'
+
+        instance.associated_files = []
+        for approval_file in model.approval_files:
+            associated_file = {}
+            associated_file['id'] = approval_file.file.id
+            associated_file['name'] = approval_file.file.name
+            associated_file['content_type'] = approval_file.file.content_type
+            instance.associated_files.append(associated_file)
+
+        return instance
 
 
 class ApprovalSchema(ma.Schema):
     class Meta:
         model = Approval
-        fields = ["id", "workflow_version", "approver_uid", "status",
-                  "study_id", "title"]
+        fields = ["id", "study_id", "workflow_id", "version", "title",
+            "version", "status", "approver", "associated_files"]
         unknown = INCLUDE
+
 
 # Carlos:  Here is the data structure I was trying to imagine.
 # If I were to continue down my current traing of thought, I'd create
