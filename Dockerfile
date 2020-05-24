@@ -17,6 +17,7 @@ FROM ubuntu:bionic
 ARG DEBIAN_FRONTEND=noninteractive
 
 COPY --from=pipenv /app/dist/*.whl .
+COPY wait-for-it.sh .
 
 RUN set -xe \
  && apt-get update -q \
