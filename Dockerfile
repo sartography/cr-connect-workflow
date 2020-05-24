@@ -26,7 +26,7 @@ RUN set -xe \
         python3-pip \
         gunicorn3 \
         postgresql-client \
- && python3 -m pip install --target=/app *.whl \
+ && python3 -m pip install *.whl \
  && apt-get remove -y python3-pip python3-wheel \
  && apt-get autoremove -y \
  && apt-get clean -y \
@@ -38,9 +38,9 @@ RUN set -xe \
 
 USER _gunicorn
 
-COPY crc/static /app/static
-COPY docker_run.sh /app
-COPY wait-for-it.sh /app
+COPY ./crc/static /app/static
+COPY ./docker_run.sh /app/
+COPY ./wait-for-it.sh /app/
 WORKDIR /app
 
 CMD ["gunicorn3", \
