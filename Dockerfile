@@ -37,7 +37,7 @@ RUN set -xe \
  && useradd _gunicorn --no-create-home --user-group
 
 USER _gunicorn
-ADD static /app/static
+ADD crc/static /app/static
 WORKDIR /app
 
 CMD ["gunicorn3", \
