@@ -35,7 +35,7 @@ RequestApproval required_approvals.uids
                                    "the name of the variable in the task data that contains user"
                                    "ids to process.")
 
-        uids = task.workflow.script_engine.evaluate(task, args[0])
+        uids = task.workflow.script_engine.evaluate_expression(task, args[0])
 
         if not isinstance(uids, str) and not isinstance(uids, list):
             raise ApiError(code="invalid_argument",

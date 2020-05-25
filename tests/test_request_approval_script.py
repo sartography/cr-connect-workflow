@@ -16,10 +16,10 @@ class TestRequestApprovalScript(BaseTest):
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
-        task.data = {"approvals": ['dhf8r', 'lb3dp']}
+        task.data = {"study": {"approvals": ['dhf8r', 'lb3dp']}}
 
         script = RequestApproval()
-        script.do_task(task, workflow.study_id, workflow.id, "approvals")
+        script.do_task(task, workflow.study_id, workflow.id, "study.approvals")
         self.assertEquals(2, db.session.query(ApprovalModel).count())
 
     def test_do_task_with_incorrect_argument(self):
