@@ -19,7 +19,6 @@ RUN set -xe \
   && useradd _gunicorn --no-create-home --user-group
 
 COPY . /app/
-USER _gunicorn
 WORKDIR /app
 ENV FLASK_APP=/app/crc/__init__.py
 
