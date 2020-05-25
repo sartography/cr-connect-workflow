@@ -4,7 +4,7 @@ WORKDIR /app
 COPY Pipfile Pipfile.lock /app/
 
 RUN set -xe \
-  && pip install pipenv
+  && pip install pipenv \
   && apt-get update -q \
   && apt-get install -y -q \
         gcc python3-dev libssl-dev \
