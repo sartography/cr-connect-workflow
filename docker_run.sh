@@ -18,4 +18,8 @@ if [ "$RESET_DB" = "true" ]; then
   pipenv run flask load-example-data
 fi
 
-pipenv run gunicorn -e SCRIPT_NAME="$APPLICATION_ROOT" --bind 0.0.0.0:"$PORT0" wsgi:app
+if [ "$APPLICATION_ROOT" = "/" ]; then
+  pipenv run gunicorn -e --bind 0.0.0.0:$PORT0 wsgi:app
+else
+  pipenv run gunicorn -e SCRIPT_NAME="$APPLICATION_ROOT" --bind 0.0.0.0:$PORT0 wsgi:app
+fi
