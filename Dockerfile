@@ -20,11 +20,3 @@ RUN set -xe \
 
 COPY . /app/
 WORKDIR /app
-ENV FLASK_APP=/app/crc/__init__.py
-
-# Don't run gunicorn until the DC/OS container actually starts.
-# Otherwise, environment variables will not be available.
-#CMD ["pipenv", "run", "gunicorn", \
-#     "--bind", "0.0.0.0:8000", \
-#     "-e", "SCRIPT_NAME=/api", \
-#     "wsgi:app"]

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # run migrations
-export FLASK_APP=./crc/__init__.py
+export FLASK_APP=/app/crc/__init__.py
 
 if [ "$DOWNGRADE_DB" = "true" ]; then
   echo 'Downgrading database...'
@@ -18,4 +18,4 @@ if [ "$RESET_DB" = "true" ]; then
   pipenv run flask load-example-data
 fi
 
-pipenv run gunicorn -e SCRIPT_NAME="$APPLICATION_ROOT" --bind 0.0.0.0:$PORT0 wsgi:app
+pipenv run gunicorn -e SCRIPT_NAME="$APPLICATION_ROOT" --bind 0.0.0.0:"$PORT0" wsgi:app
