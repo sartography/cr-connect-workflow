@@ -1,48 +1,31 @@
-#
-# https://medium.com/@greut/building-a-python-package-a-docker-image-using-pipenv-233d8793b6cc
-# https://github.com/greut/pipenv-to-wheel
-#
-FROM kennethreitz/pipenv as pipenv
+FROM python:3.7-slim
 
-ADD . /app
 WORKDIR /app
-
-RUN pipenv install --dev \
- && pipenv lock -r > requirements.txt \
- && pipenv run python setup.py bdist_wheel
-
-# ----------------------------------------------------------------------------
-FROM ubuntu:bionic
-
-ARG DEBIAN_FRONTEND=noninteractive
-
-COPY --from=pipenv /app/dist/*.whl .
+COPY Pipfile Pipfile.lock /app/
 
 RUN set -xe \
- && apt-get update -q \
- && apt-get install -y -q \
-        python3-minimal \
-        python3-wheel \
-        python3-pip \
-        gunicorn3 \
-        postgresql-client \
- && python3 -m pip install *.whl \
- && apt-get remove -y python3-pip python3-wheel \
- && apt-get autoremove -y \
- && apt-get clean -y \
- && rm -f *.whl \
- && rm -rf /root/.cache \
- && rm -rf /var/lib/apt/lists/* \
- && mkdir -p /app \
- && useradd _gunicorn --no-create-home --user-group
+  && pip install pipenv
+  && apt-get update -q \
+  && apt-get install -y -q \
+        gcc python3-dev libssl-dev \
+        curl postgresql-client git-core \
+        gunicorn3 postgresql-client \
+  && pipenv install --dev \
+  && apt-get remove -y gcc python3-dev libssl-dev \
+  && apt-get autoremove -y \
+  && apt-get clean -y \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /app \
+  && useradd _gunicorn --no-create-home --user-group
 
+COPY . /app/
 USER _gunicorn
-
-COPY ./crc/static /app/static
-COPY ./docker_run.sh /app/
-COPY ./wait-for-it.sh /app/
 WORKDIR /app
+ENV FLASK_APP=/app/crc/__init__.py
 
-CMD ["gunicorn3", \
-     "--bind", "0.0.0.0:8000", \
-     "crc:app"]
+# Don't run gunicorn until the DC/OS container actually starts.
+# Otherwise, environment variables will not be availabele.
+#CMD ["pipenv", "run", "gunicorn", \
+#     "--bind", "0.0.0.0:8000", \
+#     "-e", "SCRIPT_NAME=/api", \
+#     "crc:app"]
