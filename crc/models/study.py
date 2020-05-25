@@ -107,7 +107,8 @@ class CategorySchema(ma.Schema):
 
 class Study(object):
 
-    def __init__(self, id, title, last_updated, primary_investigator_id, user_uid,
+    def __init__(self, title, last_updated, primary_investigator_id, user_uid,
+                 id=None,
                  protocol_builder_status=None,
                  sponsor="", hsr_number="", ind_number="", categories=[], **argsv):
         self.id = id
@@ -125,7 +126,8 @@ class Study(object):
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
-        args = {k: v for k, v in study_model.__dict__.items() if not k.startswith('_')}
+        id = study_model.id # Just read some value, in case the dict expired, otherwise dict may be empty.
+        args = dict((k, v) for k, v in study_model.__dict__.items() if not k.startswith('_'))
         instance = cls(**args)
         return instance
 
@@ -144,10 +146,13 @@ class Study(object):
 
 class StudySchema(ma.Schema):
 
+    id = fields.Integer(required=False, allow_none=True)
     categories = fields.List(fields.Nested(CategorySchema), dump_only=True)
     warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
     protocol_builder_status = EnumField(ProtocolBuilderStatus)
     hsr_number = fields.String(allow_none=True)
+    sponsor = fields.String(allow_none=True)
+    ind_number = fields.String(allow_none=True)
 
     class Meta:
         model = Study

@@ -149,9 +149,8 @@ def backdoor(
            ApiError.  If on production, returns a 404 error.
    """
     if not 'PRODUCTION' in app.config or not app.config['PRODUCTION']:
-        ldap_info = LdapUserInfo()
-        ldap_info.uid = connexion.request.args["uid"]
-        ldap_info.email_address = connexion.request.args["email_address"]
+
+        ldap_info = LdapService().user_info(uid)
         return _handle_login(ldap_info, redirect_url)
     else:
         raise ApiError('404', 'unknown')

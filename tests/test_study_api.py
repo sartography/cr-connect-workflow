@@ -15,14 +15,11 @@ from crc.services.protocol_builder import ProtocolBuilderService
 class TestStudyApi(BaseTest):
 
     TEST_STUDY = {
-        "id": 12345,
         "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
                  "for Interstellar Spacecraft",
         "last_updated": datetime.now(tz=timezone.utc),
         "protocol_builder_status": ProtocolBuilderStatus.ACTIVE,
-        "primary_investigator_id": "tricia.marie.mcmillan@heartofgold.edu",
-        "sponsor": "Sirius Cybernetics Corporation",
-        "ind_number": "567890",
+        "primary_investigator_id": "tmm2x",
         "user_uid": "dhf8r",
     }
 
@@ -45,17 +42,9 @@ class TestStudyApi(BaseTest):
 
         """NOTE:  The protocol builder is not enabled or mocked out.  As the master workflow (which is empty),
         and the test workflow do not need it, and it is disabled in the configuration."""
+        self.load_example_data()
         new_study = self.add_test_study()
         new_study = session.query(StudyModel).filter_by(id=new_study["id"]).first()
-        # Add a category
-        new_category = WorkflowSpecCategoryModel(id=21, name="test_cat", display_name="Test Category", display_order=0)
-        session.add(new_category)
-        session.commit()
-        # Create a workflow specification
-        self.create_workflow("random_fact", study=new_study, category_id=new_category.id)
-        # Assure there is a master specification, and it has the lookup files it needs.
-        spec = self.load_test_spec("empty_workflow", master_spec=True)
-        self.create_reference_document()
 
         api_response = self.app.get('/v1.0/study/%i' % new_study.id,
                                     headers=self.logged_in_headers(), content_type="application/json")
@@ -64,13 +53,12 @@ class TestStudyApi(BaseTest):
 
         self.assertEqual(study.title, self.TEST_STUDY['title'])
         self.assertEqual(study.primary_investigator_id, self.TEST_STUDY['primary_investigator_id'])
-        self.assertEqual(study.sponsor, self.TEST_STUDY['sponsor'])
-        self.assertEqual(study.ind_number, self.TEST_STUDY['ind_number'])
         self.assertEqual(study.user_uid, self.TEST_STUDY['user_uid'])
 
         # Categories are read only, so switching to sub-scripting here.
-        category = [c for c in study.categories if c['name'] == "test_cat"][0]
-        self.assertEqual("test_cat", category['name'])
+        # This assumes there is one test category set up in the example data.
+        category = study.categories[0]
+        self.assertEqual("test_category", category['name'])
         self.assertEqual("Test Category", category['display_name'])
         self.assertEqual(1, len(category["workflows"]))
         workflow = category["workflows"][0]
@@ -83,7 +71,7 @@ class TestStudyApi(BaseTest):
     def test_add_study(self):
         self.load_example_data()
         study = self.add_test_study()
-        db_study = session.query(StudyModel).filter_by(id=12345).first()
+        db_study = session.query(StudyModel).filter_by(id=study['id']).first()
         self.assertIsNotNone(db_study)
         self.assertEqual(study["title"], db_study.title)
         self.assertEqual(study["primary_investigator_id"], db_study.primary_investigator_id)
@@ -92,7 +80,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study["user_uid"], db_study.user_uid)
 
         workflow_spec_count =session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == False).count()
-        workflow_count = session.query(WorkflowModel).filter(WorkflowModel.study_id == 12345).count()
+        workflow_count = session.query(WorkflowModel).filter(WorkflowModel.study_id == study['id']).count()
         error_count = len(study["errors"])
         self.assertEqual(workflow_spec_count, workflow_count + error_count)
 
@@ -209,20 +197,13 @@ class TestStudyApi(BaseTest):
 
     def test_delete_study_with_workflow_and_status(self):
         self.load_example_data()
-        study = session.query(StudyModel).first()
-        new_category = WorkflowSpecCategoryModel(id=21, name="test_cat", display_name="Test Category", display_order=0)
-        session.add(new_category)
-        session.commit()
-        # Create a workflow specification, and complete some stuff that would log stats
-        workflow = self.create_workflow("random_fact", study=study, category_id=new_category.id)
-        session.add(workflow)
-        session.commit()
-        stats2 = TaskEventModel(study_id=study.id, workflow_id=workflow.id, user_uid=self.users[0]['uid'])
+        workflow = session.query(WorkflowModel).first()
+        stats2 = TaskEventModel(study_id=workflow.study_id, workflow_id=workflow.id, user_uid=self.users[0]['uid'])
         session.add(stats2)
         session.commit()
-        rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
+        rv = self.app.delete('/v1.0/study/%i' % workflow.study_id, headers=self.logged_in_headers())
         self.assert_success(rv)
-        del_study = session.query(StudyModel).filter(StudyModel.id == study.id).first()
+        del_study = session.query(StudyModel).filter(StudyModel.id == workflow.study_id).first()
         self.assertIsNone(del_study)
 
 

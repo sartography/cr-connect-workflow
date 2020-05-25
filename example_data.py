@@ -191,8 +191,69 @@ class ExampleDataLoader:
                          category_id=None,
                          master_spec=True)
 
+    def load_rrt(self):
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'rrt_documents.xlsx')
+        file = open(file_path, "rb")
+        FileService.add_reference_file(FileService.DOCUMENT_LIST,
+                                       binary_data=file.read(),
+                                       content_type=CONTENT_TYPES['xls'])
+        file.close()
 
-    def create_spec(self, id, name, display_name="", description="", filepath=None, master_spec=False, category_id=None, display_order=None):
+        category = WorkflowSpecCategoryModel(
+            id=0,
+            name='research_rampup_category',
+            display_name='Research Ramp-up Category',
+            display_order=0
+        )
+        db.session.add(category)
+        db.session.commit()
+
+
+        self.create_spec(id="empty_workflow",
+                         name="empty_workflow",
+                         display_name="Top Level Workflow",
+                         description="Does nothing, we don't use the master workflow here.",
+                         category_id=None,
+                         master_spec=True)
+
+        self.create_spec(id="rrt",
+                         name="rrt",
+                         display_name="Research Ramp-up Toolkit",
+                         description="The workflow for the Research Ramp-up.",
+                         category_id=0,
+                         master_spec=False)
+
+    def load_test_data(self):
+        self.load_reference_documents()
+
+        category = WorkflowSpecCategoryModel(
+            id=0,
+            name='test_category',
+            display_name='Test Category',
+            display_order=0
+        )
+        db.session.add(category)
+        db.session.commit()
+
+        self.create_spec(id="empty_workflow",
+                         name="empty_workflow",
+                         display_name="Top Level Workflow",
+                         description="Does nothing, we don't use the master workflow here.",
+                         category_id=None,
+                         master_spec=True,
+                         from_tests = True)
+
+        self.create_spec(id="random_fact",
+                         name="random_fact",
+                         display_name="Random Fact",
+                         description="The workflow for a Random Fact.",
+                         category_id=0,
+                         master_spec=False,
+                         from_tests=True)
+
+
+    def create_spec(self, id, name, display_name="", description="", filepath=None, master_spec=False,
+                    category_id=None, display_order=None, from_tests=False):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
@@ -207,8 +268,11 @@ class ExampleDataLoader:
                                  display_order=display_order)
         db.session.add(spec)
         db.session.commit()
-        if not filepath:
+        if not filepath and not from_tests:
             filepath = os.path.join(app.root_path, 'static', 'bpmn', id, "*")
+        if not filepath and from_tests:
+            filepath = os.path.join(app.root_path, '..', 'tests', 'data', id, "*")
+
         files = glob.glob(filepath)
         for file_path in files:
             noise, file_extension = os.path.splitext(file_path)

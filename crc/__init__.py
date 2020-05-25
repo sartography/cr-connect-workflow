@@ -47,3 +47,11 @@ def load_example_data():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
     ExampleDataLoader().load_all()
+
+
+@app.cli.command()
+def load_example_rrt_data():
+    """Load example data into the database."""
+    from example_data import ExampleDataLoader
+    ExampleDataLoader.clean_db()
+    ExampleDataLoader().load_rrt()

@@ -1,6 +1,9 @@
 # Set environment variable to testing before loading.
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import os
+
+from sqlalchemy import Sequence
+
 os.environ["TESTING"] = "true"
 
 import json
@@ -115,10 +118,17 @@ class BaseTest(unittest.TestCase):
         self.assertIsNotNone(user_model.display_name)
         return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
 
-    def load_example_data(self):
+    def load_example_data(self, use_crc_data=False):
+        """use_crc_data will cause this to load the mammoth collection of documents
+        we built up developing crc, otherwise it depends on a small setup for
+        running tests."""
+
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
-        ExampleDataLoader().load_all()
+        if(use_crc_data):
+            ExampleDataLoader().load_all()
+        else:
+            ExampleDataLoader().load_test_data()
 
         for user_json in self.users:
             db.session.add(UserModel(**user_json))
@@ -127,6 +137,7 @@ class BaseTest(unittest.TestCase):
             study_model = StudyModel(**study_json)
             db.session.add(study_model)
             StudyService._add_all_workflow_specs_to_study(study_model)
+            db.session.execute(Sequence(StudyModel.__tablename__ + '_id_seq'))
         db.session.commit()
         db.session.flush()
 
@@ -225,12 +236,11 @@ class BaseTest(unittest.TestCase):
 
     def create_workflow(self, workflow_name, study=None, category_id=None):
         db.session.flush()
-        workflow = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
-        if workflow:
-            return workflow
+        spec = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
+        if spec is None:
+            spec = self.load_test_spec(workflow_name, category_id=category_id)
         if study is None:
             study = self.create_study()
-        spec = self.load_test_spec(workflow_name, category_id=category_id)
         workflow_model = StudyService._create_workflow_model(study, spec)
         return workflow_model
 

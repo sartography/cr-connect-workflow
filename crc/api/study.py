@@ -1,21 +1,32 @@
+from datetime import datetime
+
 from flask import g
 from sqlalchemy.exc import IntegrityError
 
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
+from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudySchema, StudyFilesSchema, StudyModel, Study
-from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
 
 
 def add_study(body):
-    """Or any study like object. """
-    study: Study = StudySchema().load(body)
-    study_model = StudyModel(**study.model_args())
+    """Or any study like object. Body should include a title, and primary_investigator_id """
+    if 'primary_investigator_id' not in body:
+        raise ApiError("missing_pi", "Can't create a new study without a Primary Investigator.")
+    if 'title' not in body:
+        raise ApiError("missing_title", "Can't create a new study without a title.")
+
+    study_model = StudyModel(user_uid=g.user.uid,
+                             title=body['title'],
+                             primary_investigator_id=body['primary_investigator_id'],
+                             last_updated=datetime.now(),
+                             protocol_builder_status=ProtocolBuilderStatus.ACTIVE)
+
     session.add(study_model)
-    errors = StudyService._add_all_workflow_specs_to_study(study)
+    errors = StudyService._add_all_workflow_specs_to_study(study_model)
     session.commit()
+    study = StudyService().get_study(study_model.id)
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
@@ -39,7 +50,7 @@ def update_study(study_id, body):
 def get_study(study_id):
     study_service = StudyService()
     study = study_service.get_study(study_id)
-    if(study is None):
+    if (study is None):
         raise ApiError("Study not found", status_code=404)
     schema = StudySchema()
     return schema.dump(study)
@@ -67,5 +78,3 @@ def all_studies_and_files():
     studies = StudyService.get_studies_with_files()
     results = StudyFilesSchema(many=True).dump(studies)
     return results
-
-
