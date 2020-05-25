@@ -37,6 +37,7 @@ pandas = "*"
 xlrd = "*"
 ldap3 = "*"
 gunicorn = "*"
+werkzeug = "*"
 
 [requires]
 python_version = "3.7"
