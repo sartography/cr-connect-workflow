@@ -214,7 +214,8 @@ class ExampleDataLoader:
                          display_name="Top Level Workflow",
                          description="Does nothing, we don't use the master workflow here.",
                          category_id=None,
-                         master_spec=True)
+                         master_spec=True,
+                         from_tests=True)
 
         self.create_spec(id="rrt",
                          name="rrt",

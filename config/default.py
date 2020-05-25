@@ -28,7 +28,7 @@ FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://l
 SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 
 # %s/%i placeholders expected for uva_id and study_id in various calls.
-PB_ENABLED = environ.get('PB_ENABLED', default=True)
+PB_ENABLED = environ.get('PB_ENABLED', default=False)
 PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/pb/")
 PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "user_studies?uva_id=%s")
 PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "investigators?studyid=%i")
