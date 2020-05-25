@@ -5,6 +5,34 @@ from crc import app, db, session
 from crc.models.approval import ApprovalModel
 
 
+APPROVAL_PAYLOAD = {
+    'id': None,
+    'approver': {
+      'uid': 'bgb22',
+      'display_name': 'Billy Bob (bgb22)',
+      'title': 'E42:He\'s a hoopy frood',
+      'department': 'E0:EN-Eng Study of Parallel Universes'
+    },
+    'title': 'El Study',
+    'status': 'DECLINED',
+    'version': 1,
+    'associated_files': [
+      {
+        'id': 42,
+        'name': 'File 1',
+        'content_type': 'document'
+      },
+      {
+        'id': 43,
+        'name': 'File 2',
+        'content_type': 'document'
+      }
+    ],
+    'workflow_id': 1,
+    'study_id': 1
+}
+
+
 class TestApprovals(BaseTest):
     def setUp(self):
         """Initial setup shared by all TestApprovals tests"""
@@ -34,13 +62,12 @@ class TestApprovals(BaseTest):
 
     def test_update_approval(self):
         """Approval status will be updated"""
-        body = {
-            'approver_uid': 'rvr98',
-            'status': 'DECLINED'
-        }
         approval_id = self.approval.id
+        data = dict(APPROVAL_PAYLOAD)
+        data['id'] = approval_id
+        data = json.dumps(data)
         rv = self.app.put(f'/v1.0/approval/{approval_id}',
                           content_type="application/json",
                           headers=self.logged_in_headers(),
-                          data=json.dumps(body))
+                          data=data)
         self.assert_success(rv)
