@@ -5,9 +5,11 @@ from marshmallow import INCLUDE
 from sqlalchemy import func
 
 from crc import db, ma
+from crc.api.common import ApiError
 from crc.models.file import FileModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
+from crc.services.ldap_service import LdapService
 
 
 class ApprovalStatus(enum.Enum):
@@ -68,11 +70,18 @@ class Approval(object):
             instance.title = model.study.title
 
         # TODO: Use ldap lookup
-        instance.approver = {}
-        instance.approver['uid'] = 'bgb22'
-        instance.approver['display_name'] = 'Billy Bob (bgb22)'
-        instance.approver['title'] = 'E42:He\'s a hoopy frood'
-        instance.approver['department'] = 'E0:EN-Eng Study of Parallel Universes'
+        ldap_service = LdapService()
+        try:
+            user_info = ldap_service.user_info(model.approver_uid)
+        except ApiError:
+            user_info = None
+
+        if user_info:
+            instance.approver = {}
+            instance.approver['uid'] = model.approver_uid
+            instance.approver['display_name'] = user_info.display_name
+            instance.approver['title'] = user_info.title
+            instance.approver['department'] = user_info.department
 
         instance.associated_files = []
         for approval_file in model.approval_files:
