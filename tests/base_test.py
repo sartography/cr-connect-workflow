@@ -102,12 +102,10 @@ class BaseTest(unittest.TestCase):
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
         if user is None:
             uid = self.test_uid
-            user_info = {'uid': self.test_uid, 'first_name': 'Daniel', 'last_name': 'Funk',
-                         'email_address': 'dhf8r@virginia.edu'}
+            user_info = {'uid': self.test_uid}
         else:
             uid = user.uid
-            user_info = {'uid': user.uid, 'first_name': user.first_name, 'last_name': user.last_name,
-                         'email_address': user.email_address}
+            user_info = {'uid': user.uid}
 
         query_string = self.user_info_to_query_string(user_info, redirect_url)
         rv = self.app.get("/v1.0/sso_backdoor%s" % query_string, follow_redirects=False)
@@ -200,7 +198,7 @@ class BaseTest(unittest.TestCase):
         for key, value in items:
             query_string_list.append('%s=%s' % (key, urllib.parse.quote(value)))
 
-        query_string_list.append('redirect_url=%s' % redirect_url)
+        query_string_list.append('redirect=%s' % redirect_url)
 
         return '?%s' % '&'.join(query_string_list)
 
