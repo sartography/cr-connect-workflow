@@ -1,12 +1,17 @@
 import enum
+import marshmallow
 
 from marshmallow import INCLUDE
 from sqlalchemy import func
 
+from ldap3.core.exceptions import LDAPSocketOpenError
+
 from crc import db, ma
+from crc.api.common import ApiError
 from crc.models.file import FileModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
+from crc.services.ldap_service import LdapService
 
 
 class ApprovalStatus(enum.Enum):
@@ -45,8 +50,12 @@ class ApprovalModel(db.Model):
 
 class Approval(object):
 
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
     @classmethod
     def from_model(cls, model: ApprovalModel):
+        # TODO: Reduce the code by iterating over model's dict keys
         instance = cls()
         instance.id = model.id
         instance.study_id = model.study_id
@@ -62,12 +71,18 @@ class Approval(object):
         if model.study:
             instance.title = model.study.title
 
-        # TODO: Use ldap lookup
-        instance.approver = {}
-        instance.approver['uid'] = 'bgb22'
-        instance.approver['display_name'] = 'Billy Bob (bgb22)'
-        instance.approver['title'] = 'E42:He\'s a hoopy frood'
-        instance.approver['department'] = 'E0:EN-Eng Study of Parallel Universes'
+        try:
+            ldap_service = LdapService()
+            user_info = ldap_service.user_info(model.approver_uid)
+        except (ApiError, LDAPSocketOpenError) as exception:
+            user_info = None
+
+        if user_info:
+            instance.approver = {}
+            instance.approver['uid'] = model.approver_uid
+            instance.approver['display_name'] = user_info.display_name
+            instance.approver['title'] = user_info.title
+            instance.approver['department'] = user_info.department
 
         instance.associated_files = []
         for approval_file in model.approval_files:
@@ -79,6 +94,11 @@ class Approval(object):
 
         return instance
 
+    def update_model(self, study_model: StudyModel):
+        for k,v in  self.__dict__.items():
+            if not k.startswith('_'):
+                study_model.__dict__[k] = v
+
 
 class ApprovalSchema(ma.Schema):
     class Meta:
@@ -87,6 +107,10 @@ class ApprovalSchema(ma.Schema):
             "version", "status", "approver", "associated_files"]
         unknown = INCLUDE
 
+    @marshmallow.post_load
+    def make_approval(self, data, **kwargs):
+        """Loads the basic approval data for updates to the database"""
+        return Approval(**data)
 
 # Carlos:  Here is the data structure I was trying to imagine.
 # If I were to continue down my current traing of thought, I'd create
