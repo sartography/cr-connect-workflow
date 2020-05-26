@@ -56,7 +56,7 @@ paths:
           required: false
           schema:
             type: string
-        - name: redirect_url
+        - name: redirect
           in: query
           required: false
           schema:

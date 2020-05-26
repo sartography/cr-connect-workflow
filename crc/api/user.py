@@ -126,7 +126,7 @@ def backdoor(
     first_name=None,
     last_name=None,
     title=None,
-    redirect_url=None,
+    redirect=None,
 ):
     """A backdoor for end-to-end system testing that allows the system to simulate logging in as a specific user.
        Only works if the application is running in a non-production environment.
@@ -151,6 +151,6 @@ def backdoor(
     if not 'PRODUCTION' in app.config or not app.config['PRODUCTION']:
 
         ldap_info = LdapService().user_info(uid)
-        return _handle_login(ldap_info, redirect_url)
+        return _handle_login(ldap_info, redirect)
     else:
         raise ApiError('404', 'unknown')
