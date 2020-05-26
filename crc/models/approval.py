@@ -4,6 +4,8 @@ import marshmallow
 from marshmallow import INCLUDE
 from sqlalchemy import func
 
+from ldap3.core.exceptions import LDAPSocketOpenError
+
 from crc import db, ma
 from crc.api.common import ApiError
 from crc.models.file import FileModel
@@ -69,10 +71,10 @@ class Approval(object):
         if model.study:
             instance.title = model.study.title
 
-        ldap_service = LdapService()
         try:
+            ldap_service = LdapService()
             user_info = ldap_service.user_info(model.approver_uid)
-        except ApiError:
+        except (ApiError, LDAPSocketOpenError) as exception:
             user_info = None
 
         if user_info:
