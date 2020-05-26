@@ -20,7 +20,7 @@ class TestFilesApi(BaseTest):
         return (minimal_dbpm % content).encode()
 
     def test_list_files_for_workflow_spec(self):
-        self.load_example_data()
+        self.load_example_data(use_crc_data=True)
         spec_id = 'core_info'
         spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
         rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec_id,
@@ -177,7 +177,6 @@ class TestFilesApi(BaseTest):
         file_model = session.query(FileModel).filter(FileModel.id == file.id).first()
         self.assertEqual(2, file_model.latest_version)
 
-
         rv = self.app.get('/v1.0/file/%i/data' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         data = rv.get_data()
@@ -202,7 +201,6 @@ class TestFilesApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
         self.assertEqual(1, file.latest_version)
-
 
     def test_get_file(self):
         self.load_example_data()

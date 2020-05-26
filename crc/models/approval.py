@@ -1,8 +1,10 @@
 import enum
 
 from marshmallow import INCLUDE
+from sqlalchemy import func
 
 from crc import db, ma
+from crc.models.file import FileModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 
@@ -14,16 +16,31 @@ class ApprovalStatus(enum.Enum):
     CANCELED = "CANCELED" # The document was replaced with a new version and this review is no longer needed.
 
 
+class ApprovalFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    file_id = db.Column(db.Integer, db.ForeignKey(FileModel.id), nullable=False)
+    approval_id = db.Column(db.Integer, db.ForeignKey("approval.id"), nullable=False)
+    file_version = db.Column(db.Integer, nullable=False)
+
+    approval = db.relationship("ApprovalModel")
+    file = db.relationship(FileModel)
+
+
 class ApprovalModel(db.Model):
     __tablename__ = 'approval'
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
     study = db.relationship(StudyModel, backref='approval', cascade='all,delete')
     workflow_id = db.Column(db.Integer, db.ForeignKey(WorkflowModel.id), nullable=False)
-    workflow_version = db.Column(db.String)
+    workflow = db.relationship(WorkflowModel)
     approver_uid = db.Column(db.String)  # Not linked to user model, as they may not have logged in yet.
     status = db.Column(db.String)
     message = db.Column(db.String)
+    date_created = db.Column(db.DateTime(timezone=True), default=func.now())
+    version = db.Column(db.Integer) # Incremented integer, so 1,2,3 as requests are made.
+    workflow_hash = db.Column(db.String) # A hash of the workflow at the moment the approval was created.
+
+    approval_files = db.relationship(ApprovalFile, back_populates="approval")
 
 
 class Approval(object):
@@ -31,22 +48,45 @@ class Approval(object):
     @classmethod
     def from_model(cls, model: ApprovalModel):
         instance = cls()
-
         instance.id = model.id
-        instance.workflow_version = model.workflow_version
+        instance.study_id = model.study_id
+        instance.workflow_id = model.workflow_id
+        instance.version = model.version
         instance.approver_uid = model.approver_uid
         instance.status = model.status
-        instance.study_id = model.study_id
+        instance.message = model.message
+        instance.date_created = model.date_created
+        instance.version = model.version
+        instance.workflow_hash = model.workflow_hash
+        instance.title = ''
         if model.study:
             instance.title = model.study.title
+
+        # TODO: Use ldap lookup
+        instance.approver = {}
+        instance.approver['uid'] = 'bgb22'
+        instance.approver['display_name'] = 'Billy Bob (bgb22)'
+        instance.approver['title'] = 'E42:He\'s a hoopy frood'
+        instance.approver['department'] = 'E0:EN-Eng Study of Parallel Universes'
+
+        instance.associated_files = []
+        for approval_file in model.approval_files:
+            associated_file = {}
+            associated_file['id'] = approval_file.file.id
+            associated_file['name'] = approval_file.file.name
+            associated_file['content_type'] = approval_file.file.content_type
+            instance.associated_files.append(associated_file)
+
+        return instance
 
 
 class ApprovalSchema(ma.Schema):
     class Meta:
         model = Approval
-        fields = ["id", "workflow_version", "approver_uid", "status",
-                  "study_id", "title"]
+        fields = ["id", "study_id", "workflow_id", "version", "title",
+            "version", "status", "approver", "associated_files"]
         unknown = INCLUDE
+
 
 # Carlos:  Here is the data structure I was trying to imagine.
 # If I were to continue down my current traing of thought, I'd create

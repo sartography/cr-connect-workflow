@@ -1,10 +1,9 @@
+from tests.base_test import BaseTest
 from crc import session
 from crc.models.file import FileDataModel, FileModel, LookupFileModel, LookupDataModel
-from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
-from tests.base_test import BaseTest
 
 
 class TestWorkflowService(BaseTest):
@@ -31,7 +30,7 @@ class TestWorkflowService(BaseTest):
   * bullet one
   * bullet two has {{replace_me}}
 
-# other stuff.       
+# other stuff.
         """
         expected = """
 # Bigger Test
@@ -39,7 +38,7 @@ class TestWorkflowService(BaseTest):
   * bullet one
   * bullet two has new_thing
 
-# other stuff.       
+# other stuff.
         """
         task.task_spec.documentation = documentation
         result = WorkflowService._process_documentation(task)
@@ -103,4 +102,12 @@ class TestWorkflowService(BaseTest):
         self.assertEquals(2, len(search_results))
 
 
-
+    def test_random_data_populate_form_on_auto_complete(self):
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_with_search')
+        processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        task_api = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
+        WorkflowService.populate_form_with_random_data(task, task_api)
+        self.assertTrue(isinstance(task.data["sponsor"], dict))

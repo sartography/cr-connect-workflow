@@ -80,5 +80,3 @@ class WorkflowModel(db.Model):
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
     last_updated = db.Column(db.DateTime)
-    # todo: Add a version that represents the files associated with this workflow
-    # version = "32"

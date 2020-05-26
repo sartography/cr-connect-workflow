@@ -5,8 +5,7 @@ import requests
 
 from crc import app
 from crc.api.common import ApiError
-from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStudySchema, ProtocolBuilderInvestigator, \
-    ProtocolBuilderRequiredDocument, ProtocolBuilderRequiredDocumentSchema
+from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuilderRequiredDocument
 
 
 class ProtocolBuilderService(object):

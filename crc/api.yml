@@ -466,6 +466,12 @@ paths:
         description: The id of the File requested
         schema:
           type: integer
+      - name: version
+        in: query
+        required: false
+        description: The version of the file, or none for latest version
+        schema:
+          type: integer
     get:
       operationId: crc.api.file.get_file_data
       summary: Returns only the file contents

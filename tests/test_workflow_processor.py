@@ -1,34 +1,31 @@
+import json
 import logging
 import os
-import json
-import string
-import random
 from unittest.mock import patch
 
-from SpiffWorkflow import Task as SpiffTask
+from tests.base_test import BaseTest
+
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
-from SpiffWorkflow.camunda.specs.UserTask import Form, FormField
-from SpiffWorkflow.specs import TaskSpec
+from SpiffWorkflow.camunda.specs.UserTask import FormField
 
 from crc import session, db, app
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
+from crc.models.file import FileModel, FileDataModel
+from crc.models.protocol_builder import ProtocolBuilderStudySchema
+from crc.services.protocol_builder import ProtocolBuilderService
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowStatus, WorkflowModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
-from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuilderInvestigatorSchema, \
-    ProtocolBuilderRequiredDocumentSchema
-from crc.services.workflow_service import WorkflowService
-from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_service import WorkflowService
 
 
 class TestWorkflowProcessor(BaseTest):
 
     def _populate_form_with_random_data(self, task):
         api_task = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
-        WorkflowProcessor.populate_form_with_random_data(task, api_task)
+        WorkflowService.populate_form_with_random_data(task, api_task)
 
     def get_processor(self, study_model, spec_model):
         workflow_model = StudyService._create_workflow_model(study_model, spec_model)
@@ -361,7 +358,7 @@ class TestWorkflowProcessor(BaseTest):
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')
-    def test_master_bpmn(self, mock_details, mock_required_docs, mock_investigators, mock_studies):
+    def test_master_bpmn_for_crc(self, mock_details, mock_required_docs, mock_investigators, mock_studies):
 
         # Mock Protocol Builder response
         studies_response = self.protocol_builder_response('user_studies.json')
@@ -376,7 +373,8 @@ class TestWorkflowProcessor(BaseTest):
         details_response = self.protocol_builder_response('study_details.json')
         mock_details.return_value = json.loads(details_response)
 
-        self.load_example_data()
+        self.load_example_data(use_crc_data=True)
+        ProtocolBuilderService.ENABLED = True
 
         study = session.query(StudyModel).first()
         workflow_spec_model = db.session.query(WorkflowSpecModel).\

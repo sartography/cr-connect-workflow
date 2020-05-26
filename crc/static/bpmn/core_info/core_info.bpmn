@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0be39yr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0be39yr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
   <bpmn:process id="Process_1cme33c" isExecutable="false">
     <bpmn:parallelGateway id="ParallelGateway_0ecwf3g">
       <bpmn:incoming>Flow_1wqp7vf</bpmn:incoming>
@@ -36,10 +36,9 @@
           </camunda:formField>
           <camunda:formField id="ProtocolOwnerName" label="Protocol Owner Name" type="autocomplete">
             <camunda:properties>
-              <camunda:property id="enum.options.file" value="SponsorList.xls" />
-              <camunda:property id="enum.options.value.column" value="CUSTOMER_NUMBER" />
-              <camunda:property id="enum.options.label.column" value="CUSTOMER_NAME" />
-              <camunda:property id="enum.options.lookup" value="True" />
+              <camunda:property id="spreadsheet.name" value="SponsorList.xls" />
+              <camunda:property id="spreadsheet.value.column" value="CUSTOMER_NUMBER" />
+              <camunda:property id="spreadsheet.label.column" value="CUSTOMER_NAME" />
               <camunda:property id="help" value="#### How To:\nYou can find the name by typing any part (at least 3 characters) of the name.\n\nNote: This source of this list is in the Integration System (Oracle) and the information is owned by and managed by the OSP team.\n\nIf you are not finding the name or need to make any changes.\n1. Email &#39;Information Team listserve&#39; osp-infoteam@virginia.edu with the Subject Line &#34;Requesting New Sponsor Setup&#34; and provide the following information:\n   - Sponsor Legal Name, Address, Sponsor Classification (Federal Government, Foreign Entity, Foundation, Industry, Local Government, Other Colleges &#38; Universities or State Government) as stated in the agreement/notification.\n   - Copies of the agreement from the sponsor (contract, award letter, email, etc.).\n2. Once all the required information is received, OSP will add the name to the list.\n3. The updated list should be available for your selection in the workflow within 2 business days." />
               <camunda:property id="description" value="The protocol owner name is always an entity. For example, if this is a UVA Primary Investigator - Investigator initiated study, the Protocol Owner Name will be &#34;University of Virginia&#34;" />
             </camunda:properties>
@@ -235,104 +234,104 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1cme33c">
       <bpmndi:BPMNEdge id="Flow_1wqp7vf_di" bpmnElement="Flow_1wqp7vf">
-        <di:waypoint x="450" y="325" />
-        <di:waypoint x="495" y="325" />
+        <di:waypoint x="820" y="325" />
+        <di:waypoint x="865" y="325" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1tfyk5m_di" bpmnElement="Flow_1tfyk5m">
-        <di:waypoint x="300" y="325" />
-        <di:waypoint x="350" y="325" />
+        <di:waypoint x="670" y="325" />
+        <di:waypoint x="720" y="325" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1d4dncx_di" bpmnElement="Flow_1d4dncx">
-        <di:waypoint x="520" y="300" />
-        <di:waypoint x="520" y="250" />
-        <di:waypoint x="620" y="250" />
+        <di:waypoint x="890" y="300" />
+        <di:waypoint x="890" y="250" />
+        <di:waypoint x="990" y="250" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_16v64sg_di" bpmnElement="Flow_16v64sg">
-        <di:waypoint x="140" y="325" />
-        <di:waypoint x="200" y="325" />
+        <di:waypoint x="510" y="325" />
+        <di:waypoint x="570" y="325" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_09h1imz_di" bpmnElement="Flow_09h1imz">
-        <di:waypoint x="-20" y="325" />
-        <di:waypoint x="40" y="325" />
+        <di:waypoint x="350" y="325" />
+        <di:waypoint x="410" y="325" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1v7oplk_di" bpmnElement="SequenceFlow_1v7oplk">
-        <di:waypoint x="845" y="325" />
-        <di:waypoint x="898" y="325" />
+        <di:waypoint x="1215" y="325" />
+        <di:waypoint x="1268" y="325" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0rw17h2_di" bpmnElement="SequenceFlow_0rw17h2">
-        <di:waypoint x="720" y="500" />
-        <di:waypoint x="820" y="500" />
-        <di:waypoint x="820" y="350" />
+        <di:waypoint x="1090" y="500" />
+        <di:waypoint x="1190" y="500" />
+        <di:waypoint x="1190" y="350" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0gsy7mo_di" bpmnElement="SequenceFlow_0gsy7mo">
-        <di:waypoint x="720" y="380" />
-        <di:waypoint x="820" y="380" />
-        <di:waypoint x="820" y="350" />
+        <di:waypoint x="1090" y="380" />
+        <di:waypoint x="1190" y="380" />
+        <di:waypoint x="1190" y="350" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1o39rt4_di" bpmnElement="SequenceFlow_1o39rt4">
-        <di:waypoint x="720" y="250" />
-        <di:waypoint x="820" y="250" />
-        <di:waypoint x="820" y="300" />
+        <di:waypoint x="1090" y="250" />
+        <di:waypoint x="1190" y="250" />
+        <di:waypoint x="1190" y="300" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_02nbqkn_di" bpmnElement="SequenceFlow_02nbqkn">
-        <di:waypoint x="720" y="130" />
-        <di:waypoint x="820" y="130" />
-        <di:waypoint x="820" y="300" />
+        <di:waypoint x="1090" y="130" />
+        <di:waypoint x="1190" y="130" />
+        <di:waypoint x="1190" y="300" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0xj8i4c_di" bpmnElement="SequenceFlow_0xj8i4c">
-        <di:waypoint x="520" y="350" />
-        <di:waypoint x="520" y="500" />
-        <di:waypoint x="620" y="500" />
+        <di:waypoint x="890" y="350" />
+        <di:waypoint x="890" y="500" />
+        <di:waypoint x="990" y="500" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1idbomg_di" bpmnElement="SequenceFlow_1idbomg">
-        <di:waypoint x="520" y="350" />
-        <di:waypoint x="520" y="380" />
-        <di:waypoint x="620" y="380" />
+        <di:waypoint x="890" y="350" />
+        <di:waypoint x="890" y="380" />
+        <di:waypoint x="990" y="380" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0f61fxp_di" bpmnElement="SequenceFlow_0f61fxp">
-        <di:waypoint x="520" y="300" />
-        <di:waypoint x="520" y="130" />
-        <di:waypoint x="620" y="130" />
+        <di:waypoint x="890" y="300" />
+        <di:waypoint x="890" y="130" />
+        <di:waypoint x="990" y="130" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1r3yrhy_di" bpmnElement="SequenceFlow_1r3yrhy">
-        <di:waypoint x="-182" y="325" />
-        <di:waypoint x="-120" y="325" />
+        <di:waypoint x="188" y="325" />
+        <di:waypoint x="250" y="325" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="ParallelGateway_0ecwf3g_di" bpmnElement="ParallelGateway_0ecwf3g">
-        <dc:Bounds x="495" y="300" width="50" height="50" />
+        <dc:Bounds x="865" y="300" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ParallelGateway_01234ff_di" bpmnElement="ParallelGateway_01234ff">
-        <dc:Bounds x="795" y="300" width="50" height="50" />
+        <dc:Bounds x="1165" y="300" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_16uwhzg_di" bpmnElement="EndEvent_16uwhzg">
-        <dc:Bounds x="898" y="307" width="36" height="36" />
+        <dc:Bounds x="1268" y="307" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="StartEvent_1mhzkcr_di" bpmnElement="StartEvent_1mhzkcr">
-        <dc:Bounds x="-218" y="307" width="36" height="36" />
+        <dc:Bounds x="152" y="307" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_1y1qon7_di" bpmnElement="UserTask_1y1qon7">
-        <dc:Bounds x="620" y="340" width="100" height="80" />
+        <dc:Bounds x="990" y="340" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_01zzzg9_di" bpmnElement="UserTask_01zzzg9">
-        <dc:Bounds x="620" y="460" width="100" height="80" />
+        <dc:Bounds x="990" y="460" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_0gtuk1e_di" bpmnElement="UserTask_EnterMultiSiteInfo">
-        <dc:Bounds x="620" y="210" width="100" height="80" />
+        <dc:Bounds x="990" y="210" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_0ebxkp7_di" bpmnElement="UserTask_0ebxkp7">
-        <dc:Bounds x="620" y="90" width="100" height="80" />
+        <dc:Bounds x="990" y="90" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0vthni9_di" bpmnElement="Activity_10nxpt2">
-        <dc:Bounds x="-120" y="285" width="100" height="80" />
+        <dc:Bounds x="250" y="285" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0spxv8q_di" bpmnElement="Activity_PBMultiSiteCheckQ12">
-        <dc:Bounds x="40" y="285" width="100" height="80" />
+        <dc:Bounds x="410" y="285" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0ah6heg_di" bpmnElement="Activity_PBMultiSiteCheckQ14">
-        <dc:Bounds x="200" y="285" width="100" height="80" />
+        <dc:Bounds x="570" y="285" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0x7b58m_di" bpmnElement="Activity_PBMultiSiteCheckQ28">
-        <dc:Bounds x="350" y="285" width="100" height="80" />
+        <dc:Bounds x="720" y="285" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

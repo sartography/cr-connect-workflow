@@ -35,9 +35,10 @@ class LdapUserInfo(object):
 
 class LdapService(object):
     search_base = "ou=People,o=University of Virginia,c=US"
-    attributes = ['uid', 'cn', 'displayName', 'givenName', 'mail', 'objectClass', 'UvaDisplayDepartment',
+    attributes = ['uid', 'cn', 'sn', 'displayName', 'givenName', 'mail', 'objectClass', 'UvaDisplayDepartment',
                   'telephoneNumber', 'title', 'uvaPersonIAMAffiliation', 'uvaPersonSponsoredType']
     uid_search_string = "(&(objectclass=person)(uid=%s))"
+    user_or_last_name_search_string = "(&(objectclass=person)(|(uid=%s*)(sn=%s*)))"
 
     def __init__(self):
         if app.config['TESTING']:
@@ -66,7 +67,8 @@ class LdapService(object):
         return LdapUserInfo.from_entry(entry)
 
     def search_users(self, query, limit):
-        search_string = LdapService.uid_search_string % query
+        if len(query) < 3: return []
+        search_string = LdapService.user_or_last_name_search_string % (query, query)
         self.conn.search(LdapService.search_base, search_string, attributes=LdapService.attributes)
 
         # Entries are returned as a generator, accessing entries

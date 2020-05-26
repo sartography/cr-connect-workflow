@@ -1,4 +1,6 @@
+import string
 from datetime import datetime
+import random
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
@@ -53,11 +55,58 @@ class WorkflowService(object):
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
-                    WorkflowProcessor.populate_form_with_random_data(task, task_api)
+                    WorkflowService.populate_form_with_random_data(task, task_api)
                     task.complete()
             except WorkflowException as we:
                 raise ApiError.from_task_spec("workflow_execution_exception", str(we),
                                               we.sender)
+
+
+    @staticmethod
+    def populate_form_with_random_data(task, task_api):
+        """populates a task with random data - useful for testing a spec."""
+
+        if not hasattr(task.task_spec, 'form'): return
+
+        form_data = {}
+        for field in task_api.form.fields:
+            if field.type == "enum":
+                if len(field.options) > 0:
+                    form_data[field.id] = random.choice(field.options)
+                else:
+                    raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
+                                                             " with no options" % field.id,
+                                             task)
+            if field.type == "autocomplete":
+                lookup_model = LookupService.get_lookup_table(task, field)
+                if not lookup_model:
+                    raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
+                                                                     "(%s) are incorrect: " % field.id)
+                data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
+                options = []
+                for d in data:
+                    options.append({"id": d.value, "name": d.label})
+                form_data[field.id] = random.choice(options)
+
+            elif field.type == "long":
+                form_data[field.id] = random.randint(1, 1000)
+            elif field.type == 'boolean':
+                form_data[field.id] = random.choice([True, False])
+            elif field.type == 'file':
+                form_data[field.id] = random.randint(1, 100)
+            elif field.type == 'files':
+                form_data[field.id] = random.randrange(1, 100)
+            else:
+                form_data[field.id] = WorkflowService._random_string()
+        if task.data is None:
+            task.data = {}
+        task.data.update(form_data)
+
+    @staticmethod
+    def _random_string(string_length=10):
+        """Generate a random string of fixed length """
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
     def spiff_task_to_api_task(spiff_task, add_docs_and_forms=False):

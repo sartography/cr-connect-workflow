@@ -64,16 +64,16 @@ class StudyService(object):
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
-            StudyService.delete_workflow(workflow.id)
+            StudyService.delete_workflow(workflow)
         session.query(StudyModel).filter_by(id=study_id).delete()
         session.commit()
 
     @staticmethod
-    def delete_workflow(workflow_id):
-        for file in session.query(FileModel).filter_by(workflow_id=workflow_id).all():
+    def delete_workflow(workflow):
+        for file in session.query(FileModel).filter_by(workflow_id=workflow.id).all():
             FileService.delete_file(file.id)
-        session.query(TaskEventModel).filter_by(workflow_id=workflow_id).delete()
-        session.query(WorkflowModel).filter_by(id=workflow_id).delete()
+        session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
+        session.query(WorkflowModel).filter_by(id=workflow.id).delete()
 
     @staticmethod
     def get_categories():
@@ -290,8 +290,8 @@ class StudyService(object):
         return WorkflowProcessor.run_master_spec(master_specs[0], study_model)
 
     @staticmethod
-    def _add_all_workflow_specs_to_study(study):
-        existing_models = session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).all()
+    def _add_all_workflow_specs_to_study(study_model:StudyModel):
+        existing_models = session.query(WorkflowModel).filter(WorkflowModel.study == study_model).all()
         existing_specs = list(m.workflow_spec_id for m in existing_models)
         new_specs = session.query(WorkflowSpecModel). \
             filter(WorkflowSpecModel.is_master_spec == False). \
@@ -300,15 +300,15 @@ class StudyService(object):
         errors = []
         for workflow_spec in new_specs:
             try:
-                StudyService._create_workflow_model(study, workflow_spec)
+                StudyService._create_workflow_model(study_model, workflow_spec)
             except WorkflowException as we:
                 errors.append(ApiError.from_task_spec("workflow_execution_exception", str(we), we.sender))
         return errors
 
     @staticmethod
-    def _create_workflow_model(study, spec):
+    def _create_workflow_model(study: StudyModel, spec):
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
-                                       study_id=study.id,
+                                       study=study,
                                        workflow_spec_id=spec.id,
                                        last_updated=datetime.now())
         session.add(workflow_model)
