@@ -69,7 +69,6 @@ class Approval(object):
         if model.study:
             instance.title = model.study.title
 
-        # TODO: Use ldap lookup
         ldap_service = LdapService()
         try:
             user_info = ldap_service.user_info(model.approver_uid)
