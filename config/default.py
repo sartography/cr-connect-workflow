@@ -25,7 +25,7 @@ SQLALCHEMY_DATABASE_URI = environ.get(
     'SQLALCHEMY_DATABASE_URI',
     default="postgresql://%s:%s@%s:%s/%s" % (DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
 )
-TOKEN_AUTH_TTL_HOURS = environ.get('TOKEN_AUTH_TTL_HOURS', default=4)
+TOKEN_AUTH_TTL_HOURS = int(environ.get('TOKEN_AUTH_TTL_HOURS', default=4))
 TOKEN_AUTH_SECRET_KEY = environ.get('TOKEN_AUTH_SECRET_KEY', default="Shhhh!!! This is secret!  And better darn well not show up in prod.")
 FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://localhost:4200/session")
 SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
@@ -39,7 +39,7 @@ PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL +
 PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
 
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
-LDAP_TIMEOUT_SEC = environ.get('LDAP_TIMEOUT_SEC', default=3)
+LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=3))
 print('=== USING DEFAULT CONFIG: ===')
 print('DB_HOST = ', DB_HOST)
 print('CORS_ALLOW_ORIGINS = ', CORS_ALLOW_ORIGINS)
