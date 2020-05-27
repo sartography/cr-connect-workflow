@@ -61,7 +61,6 @@ class WorkflowService(object):
                 raise ApiError.from_task_spec("workflow_execution_exception", str(we),
                                               we.sender)
 
-
     @staticmethod
     def populate_form_with_random_data(task, task_api):
         """populates a task with random data - useful for testing a spec."""
@@ -72,22 +71,42 @@ class WorkflowService(object):
         for field in task_api.form.fields:
             if field.type == "enum":
                 if len(field.options) > 0:
-                    form_data[field.id] = random.choice(field.options)
+                    random_choice = random.choice(field.options)
+                    if isinstance(random_choice, dict):
+                        form_data[field.id] = random.choice(field.options)['id']
+                    else:
+                        # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
+                        form_data[field.id] = random_choice.id ## Assume it is an EnumFormFieldOption
                 else:
                     raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
                                                              " with no options" % field.id,
                                              task)
-            if field.type == "autocomplete":
+            elif field.type == "autocomplete":
                 lookup_model = LookupService.get_lookup_table(task, field)
-                if not lookup_model:
+                if field.has_property(Task.PROP_LDAP_LOOKUP):
+                    form_data[field.id] = {
+                        "label": "dhf8r",
+                        "value": "Dan Funk",
+                        "data": {
+                            "uid": "dhf8r",
+                            "display_name": "Dan Funk",
+                            "given_name": "Dan",
+                            "email_address": "dhf8r@virginia.edu",
+                            "department": "Depertment of Psychocosmographictology",
+                            "affiliation": "Rousabout",
+                            "sponsor_type": "Staff"
+                        }
+                    }
+                elif lookup_model:
+                    data = db.session.query(LookupDataModel).filter(
+                        LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
+                    options = []
+                    for d in data:
+                        options.append({"id": d.value, "name": d.label})
+                    form_data[field.id] = random.choice(options)
+                else:
                     raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
-                                                                     "(%s) are incorrect: " % field.id)
-                data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
-                options = []
-                for d in data:
-                    options.append({"id": d.value, "name": d.label})
-                form_data[field.id] = random.choice(options)
-
+                                                                     "are incorrect: %s " % field.id, task)
             elif field.type == "long":
                 form_data[field.id] = random.randint(1, 1000)
             elif field.type == 'boolean':
@@ -101,6 +120,10 @@ class WorkflowService(object):
         if task.data is None:
             task.data = {}
         task.data.update(form_data)
+
+    def __get_options(self):
+        pass
+
 
     @staticmethod
     def _random_string(string_length=10):
