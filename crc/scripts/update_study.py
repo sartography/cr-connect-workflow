@@ -6,6 +6,12 @@ from crc.models.study import StudyModel
 from crc.scripts.script import Script
 
 
+class mock_study:
+    def __init__(self):
+        self.title = ""
+        self.principle_investigator_id = ""
+
+
 class UpdateStudy(Script):
 
     argument_error_message = "You must supply at least one argument to the " \
@@ -21,11 +27,15 @@ Example:
 UpdateStudy title:PIComputingID.label pi:PIComputingID.value
 """
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.do_task(task, study_id, workflow_id, *args, **kwargs)
+        study = mock_study
+        self.__update_study(task, study, *args)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         study = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        self.__update_study(task, study, *args)
+        db.session.add(study)
 
+    def __update_study(self, task, study, *args):
         if len(args) < 1:
             raise ApiError.from_task("missing_argument", self.argument_error_message,
                                      task=task)
@@ -46,4 +56,3 @@ UpdateStudy title:PIComputingID.label pi:PIComputingID.value
             else:
                 raise ApiError.from_task("invalid_argument", self.argument_error_message,
                                          task=task)
-            db.session.add(study)
