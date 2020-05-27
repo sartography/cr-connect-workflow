@@ -16,6 +16,7 @@ APPROVAL_PAYLOAD = {
     'title': 'El Study',
     'status': 'DECLINED',
     'version': 1,
+    'message': 'Incorrect documents',
     'associated_files': [
       {
         'id': 42,
@@ -96,9 +97,17 @@ class TestApprovals(BaseTest):
         approval_id = self.approval.id
         data = dict(APPROVAL_PAYLOAD)
         data['id'] = approval_id
-        data = json.dumps(data)
+
+        self.assertEqual(self.approval.status, ApprovalStatus.WAITING.value)
+
         rv = self.app.put(f'/v1.0/approval/{approval_id}',
                           content_type="application/json",
                           headers=self.logged_in_headers(),
-                          data=data)
+                          data=json.dumps(data))
         self.assert_success(rv)
+
+        session.refresh(self.approval)
+
+        # Updated record should now have the data sent to the endpoint
+        self.assertEqual(self.approval.message, data['message'])
+        self.assertEqual(self.approval.status, ApprovalStatus.DECLINED.value)

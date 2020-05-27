@@ -40,7 +40,7 @@ class ApprovalModel(db.Model):
     workflow = db.relationship(WorkflowModel)
     approver_uid = db.Column(db.String)  # Not linked to user model, as they may not have logged in yet.
     status = db.Column(db.String)
-    message = db.Column(db.String)
+    message = db.Column(db.String, default='')
     date_created = db.Column(db.DateTime(timezone=True), default=func.now())
     version = db.Column(db.Integer) # Incremented integer, so 1,2,3 as requests are made.
     workflow_hash = db.Column(db.String) # A hash of the workflow at the moment the approval was created.
@@ -71,14 +71,18 @@ class Approval(object):
         if model.study:
             instance.title = model.study.title
 
+        instance.approver = {}
         try:
             ldap_service = LdapService()
-            user_info = ldap_service.user_info(model.approver_uid)
+            principal_investigator_id = model.study.primary_investigator_id
+            user_info = ldap_service.user_info(principal_investigator_id)
         except (ApiError, LDAPSocketOpenError) as exception:
             user_info = None
+            instance.approver['display_name'] = 'Primary Investigator details'
+            instance.approver['department'] = 'currently not available'
 
         if user_info:
-            instance.approver = {}
+            # TODO: Rename approver to primary investigator
             instance.approver['uid'] = model.approver_uid
             instance.approver['display_name'] = user_info.display_name
             instance.approver['title'] = user_info.title
@@ -94,17 +98,16 @@ class Approval(object):
 
         return instance
 
-    def update_model(self, study_model: StudyModel):
-        for k,v in  self.__dict__.items():
-            if not k.startswith('_'):
-                study_model.__dict__[k] = v
+    def update_model(self, approval_model: ApprovalModel):
+        approval_model.status = self.status
+        approval_model.message = self.message
 
 
 class ApprovalSchema(ma.Schema):
     class Meta:
         model = Approval
         fields = ["id", "study_id", "workflow_id", "version", "title",
-            "version", "status", "approver", "associated_files"]
+            "version", "status", "message", "approver", "associated_files"]
         unknown = INCLUDE
 
     @marshmallow.post_load

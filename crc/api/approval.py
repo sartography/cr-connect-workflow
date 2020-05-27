@@ -24,7 +24,6 @@ def update_approval(approval_id, body):
 
     approval: Approval = ApprovalSchema().load(body)
     approval.update_model(approval_model)
-    session.add(approval_model)
     session.commit()
 
     result = ApprovalSchema().dump(approval)
