@@ -4,6 +4,7 @@ from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
 from crc.models.file import FileModel, LookupDataSchema
+from crc.models.stats import TaskEventModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.file_service import FileService
@@ -76,6 +77,8 @@ def delete_workflow_specification(spec_id):
     files = session.query(FileModel).filter_by(workflow_spec_id=spec_id).all()
     for file in files:
         FileService.delete_file(file.id)
+
+    session.query(TaskEventModel).filter(TaskEventModel.workflow_spec_id == spec_id).delete()
 
     # Delete all stats and workflow models related to this specification
     for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
