@@ -19,7 +19,7 @@ class ProtocolBuilderService(object):
         if isinstance(app.config['PB_ENABLED'], str):
             return app.config['PB_ENABLED'].lower() == "true"
         else:
-            return app.config['PB_ENABLED'] == True
+            return app.config['PB_ENABLED'] is True
 
     @staticmethod
     def get_studies(user_id) -> {}:
@@ -65,4 +65,3 @@ class ProtocolBuilderService(object):
                            "Received an invalid response from the protocol builder (status %s): %s when calling "
                            "url '%s'." %
                            (response.status_code, response.text, url))
-

@@ -1,4 +1,6 @@
 from pandas import ExcelFile
+from sqlalchemy import func, desc
+from sqlalchemy.sql.functions import GenericFunction
 
 from crc import db
 from crc.api.common import ApiError
@@ -7,6 +9,9 @@ from crc.models.file import FileDataModel, LookupFileModel, LookupDataModel
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 
+class TSRank(GenericFunction):
+    package = 'full_text'
+    name = 'ts_rank'
 
 class LookupService(object):
 
@@ -122,9 +127,9 @@ class LookupService(object):
             else:
                 query = "%s:*" % query
             db_query = db_query.filter(LookupDataModel.label.match(query))
-
-        #            db_query = db_query.filter(text("lookup_data.label @@ to_tsquery('simple', '%s')" % query))
-
+            db_query = db_query.order_by(desc(func.full_text.ts_rank(
+                func.to_tsvector('simple', LookupDataModel.label),
+                func.to_tsquery('simple', query))))
         return db_query.limit(limit).all()
 
     @staticmethod
