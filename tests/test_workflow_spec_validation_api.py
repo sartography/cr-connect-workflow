@@ -4,7 +4,7 @@ from unittest.mock import patch
 from tests.base_test import BaseTest
 
 from crc.services.protocol_builder import ProtocolBuilderService
-from crc import session
+from crc import session, app
 from crc.api.common import ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStudySchema
 from crc.models.workflow import WorkflowSpecModel
@@ -21,7 +21,7 @@ class TestWorkflowSpecValidation(BaseTest):
         return ApiErrorSchema(many=True).load(json_data)
 
     def test_successful_validation_of_test_workflows(self):
-        ProtocolBuilderService.ENABLED = False  # Assure this is disabled.
+        app.config['PB_ENABLED'] = False  # Assure this is disabled.
         self.assertEqual(0, len(self.validate_workflow("parallel_tasks")))
         self.assertEqual(0, len(self.validate_workflow("decision_table")))
         self.assertEqual(0, len(self.validate_workflow("docx")))
@@ -48,7 +48,7 @@ class TestWorkflowSpecValidation(BaseTest):
         mock_investigators.return_value = json.loads(investigators_response)
 
         self.load_example_data(use_crc_data=True)
-        ProtocolBuilderService.ENABLED=True
+        app.config['PB_ENABLED'] = True
         workflows = session.query(WorkflowSpecModel).all()
         errors = []
         for w in workflows:

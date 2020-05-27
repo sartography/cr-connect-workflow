@@ -40,13 +40,5 @@ PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL +
 
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=3))
-print('=== USING DEFAULT CONFIG: ===')
-print('DB_HOST = ', DB_HOST)
-print('CORS_ALLOW_ORIGINS = ', CORS_ALLOW_ORIGINS)
-print('DEVELOPMENT = ', DEVELOPMENT)
-print('TESTING = ', TESTING)
-print('PRODUCTION = ', PRODUCTION)
-print('PB_BASE_URL = ', PB_BASE_URL)
-print('LDAP_URL = ', LDAP_URL)
-print('APPLICATION_ROOT = ', APPLICATION_ROOT)
+
 

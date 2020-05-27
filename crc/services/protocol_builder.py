@@ -9,11 +9,14 @@ from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuil
 
 
 class ProtocolBuilderService(object):
-    ENABLED = app.config['PB_ENABLED']
     STUDY_URL = app.config['PB_USER_STUDIES_URL']
     INVESTIGATOR_URL = app.config['PB_INVESTIGATORS_URL']
     REQUIRED_DOCS_URL = app.config['PB_REQUIRED_DOCS_URL']
     STUDY_DETAILS_URL = app.config['PB_STUDY_DETAILS_URL']
+
+    @staticmethod
+    def is_enabled():
+        return app.config['PB_ENABLED']
 
     @staticmethod
     def get_studies(user_id) -> {}:
@@ -43,7 +46,7 @@ class ProtocolBuilderService(object):
 
     @staticmethod
     def __enabled_or_raise():
-        if not ProtocolBuilderService.ENABLED:
+        if not ProtocolBuilderService.is_enabled():
             raise ApiError("protocol_builder_disabled", "The Protocol Builder Service is currently disabled.")
 
     @staticmethod

@@ -308,7 +308,7 @@ class TestTasksApi(BaseTest):
         self.load_example_data()
 
         # Enable the protocol builder.
-        ProtocolBuilderService.ENABLED = True
+        app.config['PB_ENABLED'] = True
 
         # This depends on getting a list of investigators back from the protocol builder.
         mock_get.return_value.ok = True
@@ -426,7 +426,7 @@ class TestTasksApi(BaseTest):
     def test_parallel_multi_instance(self, mock_get):
 
         # Assure we get nine investigators back from the API Call, as set in the investigators.json file.
-        ProtocolBuilderService.ENABLED = True
+        app.config['PB_ENABLED'] = True
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('investigators.json')
 

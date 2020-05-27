@@ -117,7 +117,7 @@ class StudyService(object):
         that is available.."""
 
         # Get PB required docs, if Protocol Builder Service is enabled.
-        if ProtocolBuilderService.ENABLED:
+        if ProtocolBuilderService.is_enabled():
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:
@@ -133,7 +133,7 @@ class StudyService(object):
         documents = {}
         for code, doc in doc_dictionary.items():
 
-            if ProtocolBuilderService.ENABLED:
+            if ProtocolBuilderService.is_enabled():
                 pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
                 doc['required'] = False
                 if pb_data:
@@ -216,7 +216,7 @@ class StudyService(object):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
 
-        if not ProtocolBuilderService.ENABLED:
+        if not ProtocolBuilderService.is_enabled():
             return
 
         # Get studies matching this user from Protocol Builder
