@@ -14,8 +14,13 @@ if [ "$UPGRADE_DB" = "true" ]; then
 fi
 
 if [ "$RESET_DB" = "true" ]; then
-  echo 'Resetting database...'
+  echo 'Resetting database and seeding it with example CR Connect data...'
   pipenv run flask load-example-data
+fi
+
+if [ "$RESET_DB_RRT" = "true" ]; then
+  echo 'Resetting database and seeding it with example RRT data...'
+  pipenv run flask load-example-rrt-data
 fi
 
 if [ "$APPLICATION_ROOT" = "/" ]; then
