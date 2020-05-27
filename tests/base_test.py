@@ -22,10 +22,9 @@ from crc.models.user import UserModel
 from crc import app, db, session
 from example_data import ExampleDataLoader
 
-# UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
-# import logging
-# logging.basicConfig()
-# logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+#UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
+import logging
+logging.basicConfig()
 
 
 class BaseTest(unittest.TestCase):

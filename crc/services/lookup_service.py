@@ -1,3 +1,5 @@
+import logging
+
 from pandas import ExcelFile
 from sqlalchemy import func, desc
 from sqlalchemy.sql.functions import GenericFunction
@@ -117,20 +119,31 @@ class LookupService(object):
         db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model == lookup_file_model)
 
         query = query.strip()
-        if len(query) > 1:
+        if len(query) > 0:
             if ' ' in query:
                 terms = query.split(' ')
-                new_terms = []
+                new_terms = ["'%s'" % query]
                 for t in terms:
-                    new_terms.append(t + ":*")
-                query = '|'.join(new_terms)
+                    new_terms.append("%s:*" % t)
+                new_query = ' | '.join(new_terms)
             else:
-                query = "%s:*" % query
-            db_query = db_query.filter(LookupDataModel.label.match(query))
-            db_query = db_query.order_by(desc(func.full_text.ts_rank(
-                func.to_tsvector('simple', LookupDataModel.label),
-                func.to_tsquery('simple', query))))
-        return db_query.limit(limit).all()
+                new_query = "%s:*" % query
+
+            # Run the full text query
+            db_query = db_query.filter(LookupDataModel.label.match(new_query))
+            # But hackishly order by like, which does a good job of
+            # pulling more relevant matches to the top.
+            db_query = db_query.order_by(desc(LookupDataModel.label.like("%" + query + "%")))
+            #ORDER BY name LIKE concat('%', ticker, '%') desc, rank DESC
+
+#            db_query = db_query.order_by(desc(func.full_text.ts_rank(
+#                func.to_tsvector(LookupDataModel.label),
+#                func.to_tsquery(query))))
+        from sqlalchemy.dialects import postgresql
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+        result = db_query.limit(limit).all()
+        logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
+        return result
 
     @staticmethod
     def _run_ldap_query(query, limit):
