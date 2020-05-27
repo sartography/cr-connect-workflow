@@ -16,7 +16,10 @@ class ProtocolBuilderService(object):
 
     @staticmethod
     def is_enabled():
-        return app.config['PB_ENABLED']
+        if isinstance(app.config['PB_ENABLED'], str):
+            return app.config['PB_ENABLED'].lower() == "true"
+        else:
+            return app.config['PB_ENABLED'] == True
 
     @staticmethod
     def get_studies(user_id) -> {}:
