@@ -117,7 +117,7 @@ class StudyService(object):
         that is available.."""
 
         # Get PB required docs, if Protocol Builder Service is enabled.
-        if ProtocolBuilderService.ENABLED:
+        if ProtocolBuilderService.is_enabled():
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:
@@ -133,7 +133,7 @@ class StudyService(object):
         documents = {}
         for code, doc in doc_dictionary.items():
 
-            if ProtocolBuilderService.ENABLED:
+            if ProtocolBuilderService.is_enabled():
                 pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
                 doc['required'] = False
                 if pb_data:
@@ -216,34 +216,36 @@ class StudyService(object):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
 
-        if not ProtocolBuilderService.ENABLED:
-            return
+        if ProtocolBuilderService.is_enabled():
 
-        # Get studies matching this user from Protocol Builder
-        pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(user.uid)
+            app.logger.info("The Protocol Builder is enabled. app.config['PB_ENABLED'] = " +
+                            str(app.config['PB_ENABLED']))
 
-        # Get studies from the database
-        db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
+            # Get studies matching this user from Protocol Builder
+            pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(user.uid)
 
-        # Update all studies from the protocol builder, create new studies as needed.
-        # Futher assures that every active study (that does exist in the protocol builder)
-        # has a reference to every available workflow (though some may not have started yet)
-        for pb_study in pb_studies:
-            db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
-            if not db_study:
-                db_study = StudyModel(id=pb_study.STUDYID)
-                session.add(db_study)
-                db_studies.append(db_study)
-            db_study.update_from_protocol_builder(pb_study)
-            StudyService._add_all_workflow_specs_to_study(db_study)
+            # Get studies from the database
+            db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
 
-        # Mark studies as inactive that are no longer in Protocol Builder
-        for study in db_studies:
-            pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
-            if not pb_study:
-                study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
+            # Update all studies from the protocol builder, create new studies as needed.
+            # Futher assures that every active study (that does exist in the protocol builder)
+            # has a reference to every available workflow (though some may not have started yet)
+            for pb_study in pb_studies:
+                db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
+                if not db_study:
+                    db_study = StudyModel(id=pb_study.STUDYID)
+                    session.add(db_study)
+                    db_studies.append(db_study)
+                db_study.update_from_protocol_builder(pb_study)
+                StudyService._add_all_workflow_specs_to_study(db_study)
 
-        db.session.commit()
+            # Mark studies as inactive that are no longer in Protocol Builder
+            for study in db_studies:
+                pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
+                if not pb_study:
+                    study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
+
+            db.session.commit()
 
     @staticmethod
     def __update_status_of_workflow_meta(workflow_metas, status):

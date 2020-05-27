@@ -374,7 +374,7 @@ class TestWorkflowProcessor(BaseTest):
         mock_details.return_value = json.loads(details_response)
 
         self.load_example_data(use_crc_data=True)
-        ProtocolBuilderService.ENABLED = True
+        app.config['PB_ENABLED'] = True
 
         study = session.query(StudyModel).first()
         workflow_spec_model = db.session.query(WorkflowSpecModel).\

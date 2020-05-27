@@ -40,6 +40,16 @@ connexion_app.add_api('api.yml', base_path='/v1.0')
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
 cors = CORS(connexion_app.app, origins=origins_re)
 
+print('=== USING THESE CONFIG SETTINGS: ===')
+print('DB_HOST = ', )
+print('CORS_ALLOW_ORIGINS = ', app.config['CORS_ALLOW_ORIGINS'])
+print('DEVELOPMENT = ', app.config['DEVELOPMENT'])
+print('TESTING = ', app.config['TESTING'])
+print('PRODUCTION = ', app.config['PRODUCTION'])
+print('PB_BASE_URL = ', app.config['PB_BASE_URL'])
+print('LDAP_URL = ', app.config['LDAP_URL'])
+print('APPLICATION_ROOT = ', app.config['APPLICATION_ROOT'])
+print('PB_ENABLED = ', app.config['PB_ENABLED'])
 
 @app.cli.command()
 def load_example_data():

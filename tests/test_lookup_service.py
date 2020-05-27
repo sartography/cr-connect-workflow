@@ -1,10 +1,10 @@
+
+from tests.base_test import BaseTest
+
 from crc import session
 from crc.models.file import FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
-from crc.services.workflow_processor import WorkflowProcessor
-from crc.services.workflow_service import WorkflowService
-from tests.base_test import BaseTest
 
 
 class TestLookupService(BaseTest):
@@ -21,7 +21,7 @@ class TestLookupService(BaseTest):
         self.assertEqual(1, len(lookup_records))
         lookup_record = lookup_records[0]
         lookup_data = session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_record).all()
-        self.assertEquals(19, len(lookup_data))
+        self.assertEquals(23, len(lookup_data))
         # Using the same table with different lookup lable or value, does create additional records.
         LookupService.get_lookup_table_from_data_model(file_data_model, "CUSTOMER_NAME", "CUSTOMER_NUMBER")
         lookup_records = session.query(LookupFileModel).all()
@@ -51,8 +51,6 @@ class TestLookupService(BaseTest):
         self.assertEquals(1, len(results), "case does not matter.")
         self.assertEquals("UVA - INTERNAL - GM USE ONLY", results[0].label)
 
-
-
         results = LookupService._run_lookup_query(lookup_table, "medici", limit=10)
         self.assertEquals(1, len(results), "partial words are picked up.")
         self.assertEquals("The Medicines Company", results[0].label)
@@ -73,7 +71,16 @@ class TestLookupService(BaseTest):
         self.assertEquals(7, len(results), "short terms get multiple correct results.")
         self.assertEquals("Genetics Savings & Clone, Inc.", results[0].label)
 
+        results = LookupService._run_lookup_query(lookup_table, "reaction design", limit=10)
+        self.assertEquals(5, len(results), "all results come back for two terms.")
+        self.assertEquals("Reaction Design", results[0].label, "The first result is the most relevant")
+        self.assertEquals("Reaction Then Design ", results[1].label, "The first result is the most relevant")
+        self.assertEquals("Design Then Reaction", results[2].label, "The first result is the most relevant")
+        self.assertEquals("Just Reaction", results[3].label, "The first result is the most relevant")
+        self.assertEquals("Just Design", results[4].label, "The first result is the most relevant")
+
         # Fixme:  Stop words are taken into account on the query side, and haven't found a fix yet.
         #results = WorkflowService.run_lookup_query(lookup_table.id, "in", limit=10)
         #self.assertEquals(7, len(results), "stop words are not removed.")
         #self.assertEquals("Genetics Savings & Clone, Inc.", results[0].label)
+

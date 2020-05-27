@@ -3,7 +3,7 @@ from tests.base_test import BaseTest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from crc import session
+from crc import session, app
 from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.stats import TaskEventModel
@@ -105,7 +105,7 @@ class TestStudyApi(BaseTest):
     def test_get_all_studies(self, mock_studies, mock_details, mock_docs, mock_investigators):
         # Enable the protocol builder for these tests, as the master_workflow and other workflows
         # depend on using the PB for data.
-        ProtocolBuilderService.ENABLED = True
+        app.config['PB_ENABLED'] = True
         self.load_example_data()
         s = StudyModel(
             id=54321,  # This matches one of the ids from the study_details_json data.

@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 from unittest.mock import patch
 
-from crc import db
+from crc import db, app
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
@@ -57,7 +57,7 @@ class TestStudyService(BaseTest):
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_total_tasks_updated(self, mock_docs):
         """Assure that as a users progress is available when getting a list of studies for that user."""
-
+        app.config['PB_ENABLED'] = True
         docs_response = self.protocol_builder_response('required_docs.json')
         mock_docs.return_value = json.loads(docs_response)
 
@@ -106,7 +106,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_get_required_docs(self, mock_docs):
-
+        app.config['PB_ENABLED'] = True
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('required_docs.json')
         mock_docs.return_value = json.loads(docs_response)

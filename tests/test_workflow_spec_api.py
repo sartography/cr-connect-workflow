@@ -1,9 +1,9 @@
 import json
 
+from tests.base_test import BaseTest
 from crc import session
 from crc.models.file import FileModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
-from tests.base_test import BaseTest
 
 
 class TestWorkflowSpec(BaseTest):

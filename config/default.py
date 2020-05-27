@@ -31,7 +31,7 @@ FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://l
 SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 
 # %s/%i placeholders expected for uva_id and study_id in various calls.
-PB_ENABLED = environ.get('PB_ENABLED', default=False)
+PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
 PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/pb/").strip('/') + '/'  # Trailing slash required
 PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "user_studies?uva_id=%s")
 PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "investigators?studyid=%i")
@@ -40,13 +40,5 @@ PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL +
 
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=3))
-print('=== USING DEFAULT CONFIG: ===')
-print('DB_HOST = ', DB_HOST)
-print('CORS_ALLOW_ORIGINS = ', CORS_ALLOW_ORIGINS)
-print('DEVELOPMENT = ', DEVELOPMENT)
-print('TESTING = ', TESTING)
-print('PRODUCTION = ', PRODUCTION)
-print('PB_BASE_URL = ', PB_BASE_URL)
-print('LDAP_URL = ', LDAP_URL)
-print('APPLICATION_ROOT = ', APPLICATION_ROOT)
+
 
