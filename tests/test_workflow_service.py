@@ -68,7 +68,7 @@ class TestWorkflowService(BaseTest):
         task = processor.next_task()
         WorkflowService.process_options(task, task.task_spec.form.fields[0])
         options = task.task_spec.form.fields[0].options
-        self.assertEquals(23, len(options))
+        self.assertEquals(28, len(options))
         self.assertEquals('1000', options[0]['id'])
         self.assertEquals("UVA - INTERNAL - GM USE ONLY", options[0]['name'])
 
@@ -86,7 +86,7 @@ class TestWorkflowService(BaseTest):
         self.assertEquals("CUSTOMER_NAME", lookup_record.label_column)
         self.assertEquals("CUSTOMER_NAME", lookup_record.label_column)
         lookup_data = session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_record).all()
-        self.assertEquals(23, len(lookup_data))
+        self.assertEquals(28, len(lookup_data))
 
         self.assertEquals("1000", lookup_data[0].value)
         self.assertEquals("UVA - INTERNAL - GM USE ONLY", lookup_data[0].label)
