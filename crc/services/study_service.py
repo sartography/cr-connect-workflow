@@ -64,16 +64,16 @@ class StudyService(object):
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
-            StudyService.delete_workflow(workflow.id)
+            StudyService.delete_workflow(workflow)
         session.query(StudyModel).filter_by(id=study_id).delete()
         session.commit()
 
     @staticmethod
-    def delete_workflow(workflow_id):
-        for file in session.query(FileModel).filter_by(workflow_id=workflow_id).all():
+    def delete_workflow(workflow):
+        for file in session.query(FileModel).filter_by(workflow_id=workflow.id).all():
             FileService.delete_file(file.id)
-        session.query(TaskEventModel).filter_by(workflow_id=workflow_id).delete()
-        session.query(WorkflowModel).filter_by(id=workflow_id).delete()
+        session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
+        session.query(WorkflowModel).filter_by(id=workflow.id).delete()
 
     @staticmethod
     def get_categories():
@@ -117,7 +117,7 @@ class StudyService(object):
         that is available.."""
 
         # Get PB required docs, if Protocol Builder Service is enabled.
-        if ProtocolBuilderService.ENABLED:
+        if ProtocolBuilderService.is_enabled():
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:
@@ -133,7 +133,7 @@ class StudyService(object):
         documents = {}
         for code, doc in doc_dictionary.items():
 
-            if ProtocolBuilderService.ENABLED:
+            if ProtocolBuilderService.is_enabled():
                 pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
                 doc['required'] = False
                 if pb_data:
@@ -216,34 +216,36 @@ class StudyService(object):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
 
-        if not ProtocolBuilderService.ENABLED:
-            return
+        if ProtocolBuilderService.is_enabled():
 
-        # Get studies matching this user from Protocol Builder
-        pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(user.uid)
+            app.logger.info("The Protocol Builder is enabled. app.config['PB_ENABLED'] = " +
+                            str(app.config['PB_ENABLED']))
 
-        # Get studies from the database
-        db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
+            # Get studies matching this user from Protocol Builder
+            pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(user.uid)
 
-        # Update all studies from the protocol builder, create new studies as needed.
-        # Futher assures that every active study (that does exist in the protocol builder)
-        # has a reference to every available workflow (though some may not have started yet)
-        for pb_study in pb_studies:
-            db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
-            if not db_study:
-                db_study = StudyModel(id=pb_study.STUDYID)
-                session.add(db_study)
-                db_studies.append(db_study)
-            db_study.update_from_protocol_builder(pb_study)
-            StudyService._add_all_workflow_specs_to_study(db_study)
+            # Get studies from the database
+            db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
 
-        # Mark studies as inactive that are no longer in Protocol Builder
-        for study in db_studies:
-            pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
-            if not pb_study:
-                study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
+            # Update all studies from the protocol builder, create new studies as needed.
+            # Futher assures that every active study (that does exist in the protocol builder)
+            # has a reference to every available workflow (though some may not have started yet)
+            for pb_study in pb_studies:
+                db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
+                if not db_study:
+                    db_study = StudyModel(id=pb_study.STUDYID)
+                    session.add(db_study)
+                    db_studies.append(db_study)
+                db_study.update_from_protocol_builder(pb_study)
+                StudyService._add_all_workflow_specs_to_study(db_study)
 
-        db.session.commit()
+            # Mark studies as inactive that are no longer in Protocol Builder
+            for study in db_studies:
+                pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
+                if not pb_study:
+                    study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
+
+            db.session.commit()
 
     @staticmethod
     def __update_status_of_workflow_meta(workflow_metas, status):
@@ -290,8 +292,8 @@ class StudyService(object):
         return WorkflowProcessor.run_master_spec(master_specs[0], study_model)
 
     @staticmethod
-    def _add_all_workflow_specs_to_study(study):
-        existing_models = session.query(WorkflowModel).filter(WorkflowModel.study_id == study.id).all()
+    def _add_all_workflow_specs_to_study(study_model:StudyModel):
+        existing_models = session.query(WorkflowModel).filter(WorkflowModel.study == study_model).all()
         existing_specs = list(m.workflow_spec_id for m in existing_models)
         new_specs = session.query(WorkflowSpecModel). \
             filter(WorkflowSpecModel.is_master_spec == False). \
@@ -300,15 +302,15 @@ class StudyService(object):
         errors = []
         for workflow_spec in new_specs:
             try:
-                StudyService._create_workflow_model(study, workflow_spec)
+                StudyService._create_workflow_model(study_model, workflow_spec)
             except WorkflowException as we:
                 errors.append(ApiError.from_task_spec("workflow_execution_exception", str(we), we.sender))
         return errors
 
     @staticmethod
-    def _create_workflow_model(study, spec):
+    def _create_workflow_model(study: StudyModel, spec):
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
-                                       study_id=study.id,
+                                       study=study,
                                        workflow_spec_id=spec.id,
                                        last_updated=datetime.now())
         session.add(workflow_model)

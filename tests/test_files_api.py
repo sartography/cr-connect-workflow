@@ -20,7 +20,7 @@ class TestFilesApi(BaseTest):
         return (minimal_dbpm % content).encode()
 
     def test_list_files_for_workflow_spec(self):
-        self.load_example_data()
+        self.load_example_data(use_crc_data=True)
         spec_id = 'core_info'
         spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
         rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec_id,

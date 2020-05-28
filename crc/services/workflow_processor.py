@@ -70,6 +70,14 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                                      "Unable to locate Script: '%s:%s'" % (module_name, class_name),
                                      task=task)
 
+    def evaluate_expression(self, task, expression):
+        """
+        Evaluate the given expression, within the context of the given task and
+        return the result.
+        """
+        exp,valid = self.validateExpression(expression)
+        return self._eval(exp, **task.data)
+
     @staticmethod
     def camel_to_snake(camel):
         camel = camel.strip()
@@ -275,43 +283,6 @@ class WorkflowProcessor(object):
                            task_id=ve.id,
                            tag=ve.tag)
         return spec
-
-
-
-    @staticmethod
-    def populate_form_with_random_data(task, task_api):
-        """populates a task with random data - useful for testing a spec."""
-
-        if not hasattr(task.task_spec, 'form'): return
-
-        form_data = {}
-        for field in task_api.form.fields:
-            if field.type == "enum":
-                if len(field.options) > 0:
-                    form_data[field.id] = random.choice(field.options)
-                else:
-                    raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
-                                                             " with no options" % field.id,
-                                             task)
-            elif field.type == "long":
-                form_data[field.id] = random.randint(1, 1000)
-            elif field.type == 'boolean':
-                form_data[field.id] = random.choice([True, False])
-            elif field.type == 'file':
-                form_data[field.id] = random.randint(1, 100)
-            elif field.type == 'files':
-                form_data[field.id] = random.randrange(1, 100)
-            else:
-                form_data[field.id] = WorkflowProcessor._random_string()
-        if task.data is None:
-            task.data = {}
-        task.data.update(form_data)
-
-    @staticmethod
-    def _random_string(string_length=10):
-        """Generate a random string of fixed length """
-        letters = string.ascii_lowercase
-        return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
     def status_of(bpmn_workflow):

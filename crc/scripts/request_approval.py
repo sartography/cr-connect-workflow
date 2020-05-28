@@ -10,11 +10,11 @@ class RequestApproval(Script):
     def get_description(self):
         return """
 Creates an approval request on this workflow, by the given approver_uid(s),"
-Takes one argument, which should point to data located in current task.
+Takes multiple arguments, which should point to data located in current task
+or be quoted strings.
 
 Example:
-
-RequestApproval required_approvals.uids
+RequestApproval approver1 "dhf8r"
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
@@ -29,17 +29,18 @@ RequestApproval required_approvals.uids
                 ApprovalService.add_approval(study_id, workflow_id, id)
 
     def get_uids(self, task, args):
-        if len(args) != 1:
+        if len(args) < 1:
             raise ApiError(code="missing_argument",
-                           message="The RequestApproval script requires 1 argument.  The "
+                           message="The RequestApproval script requires at least one argument.  The "
                                    "the name of the variable in the task data that contains user"
-                                   "ids to process.")
-
-        uids = task.workflow.script_engine.evaluate(task, args[0])
-
-        if not isinstance(uids, str) and not isinstance(uids, list):
-            raise ApiError(code="invalid_argument",
-                           message="The RequestApproval script requires 1 argument.  The "
+                                   "id to process.  Multiple arguments are accepted.")
+        uids = []
+        for arg in args:
+            id = task.workflow.script_engine.evaluate_expression(task, arg)
+            uids.append(id)
+            if not isinstance(id, str):
+                raise ApiError(code="invalid_argument",
+                               message="The RequestApproval script requires 1 argument.  The "
                                    "the name of the variable in the task data that contains user"
                                    "ids to process.  This must point to an array or a string, but "
                                    "it currently points to a %s " % uids.__class__.__name__)
