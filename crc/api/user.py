@@ -32,7 +32,7 @@ def verify_token(token):
 def get_current_user():
     return UserModelSchema().dump(g.user)
 
-@app.route('/login')
+@app.route('/v1.0/login')
 def sso_login():
     # This what I see coming back:
     # X-Remote-Cn: Daniel Harold Funk (dhf8r)
@@ -126,7 +126,7 @@ def backdoor(
     first_name=None,
     last_name=None,
     title=None,
-    redirect_url=None,
+    redirect=None,
 ):
     """A backdoor for end-to-end system testing that allows the system to simulate logging in as a specific user.
        Only works if the application is running in a non-production environment.
@@ -149,9 +149,8 @@ def backdoor(
            ApiError.  If on production, returns a 404 error.
    """
     if not 'PRODUCTION' in app.config or not app.config['PRODUCTION']:
-        ldap_info = LdapUserInfo()
-        ldap_info.uid = connexion.request.args["uid"]
-        ldap_info.email_address = connexion.request.args["email_address"]
-        return _handle_login(ldap_info, redirect_url)
+
+        ldap_info = LdapService().user_info(uid)
+        return _handle_login(ldap_info, redirect)
     else:
         raise ApiError('404', 'unknown')

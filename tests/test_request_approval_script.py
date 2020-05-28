@@ -16,10 +16,10 @@ class TestRequestApprovalScript(BaseTest):
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
-        task.data = {"approvals": ['dhf8r', 'lb3dp']}
+        task.data = {"study": {"approval1": "dhf8r", 'approval2':'lb3dp'}}
 
         script = RequestApproval()
-        script.do_task(task, workflow.study_id, workflow.id, "approvals")
+        script.do_task(task, workflow.study_id, workflow.id, "study.approval1", "study.approval2")
         self.assertEquals(2, db.session.query(ApprovalModel).count())
 
     def test_do_task_with_incorrect_argument(self):
@@ -29,7 +29,7 @@ class TestRequestApprovalScript(BaseTest):
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
-        task.data = {"approvals": {'dhf8r':"invalid", 'lb3dp':"invalid"}}
+        task.data = {"approvals": {'dhf8r':["invalid"], 'lb3dp':"invalid"}}
         script = RequestApproval()
         with self.assertRaises(ApiError):
             script.do_task(task, workflow.study_id, workflow.id, "approvals")
@@ -40,9 +40,9 @@ class TestRequestApprovalScript(BaseTest):
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
-        task.data = {"approvals": ['dhf8r', 'lb3dp']}
+        task.data = {"study": {"approval1": "dhf8r", 'approval2':'lb3dp'}}
 
         script = RequestApproval()
-        script.do_task_validate_only(task, workflow.study_id, workflow.id, "approvals")
+        script.do_task_validate_only(task, workflow.study_id, workflow.id, "study.approval1")
         self.assertEquals(0, db.session.query(ApprovalModel).count())
 

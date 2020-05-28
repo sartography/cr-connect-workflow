@@ -5,6 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 pytest = "*"
+pbr = "*"
 
 [packages]
 connexion = {extras = ["swagger-ui"],version = "*"}
@@ -35,6 +36,8 @@ python-dateutil = "*"
 pandas = "*"
 xlrd = "*"
 ldap3 = "*"
+gunicorn = "*"
+werkzeug = "*"
 
 [requires]
-python_version = "3.6.9"
+python_version = "3.7"

@@ -1,6 +1,7 @@
+from tests.base_test import BaseTest
+
 from crc import db
 from crc.models.user import UserModel
-from tests.base_test import BaseTest
 
 
 class TestAuthentication(BaseTest):
@@ -13,7 +14,7 @@ class TestAuthentication(BaseTest):
         self.assertEqual("dhf8r", user.decode_auth_token(auth_token).get("sub"))
 
     def test_backdoor_auth_creates_user(self):
-        new_uid = 'czn1z';
+        new_uid = 'lb3dp' ## Assure this user id is in the fake responses from ldap.
         self.load_example_data()
         user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNone(user)
@@ -44,7 +45,7 @@ class TestAuthentication(BaseTest):
         self.assertIsNone(user)
         redirect_url = 'http://worlds.best.website/admin'
         headers = dict(Uid=new_uid)
-        rv = self.app.get('login', follow_redirects=False, headers=headers)
+        rv = self.app.get('v1.0/login', follow_redirects=False, headers=headers)
         self.assert_success(rv)
         user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNotNone(user)
@@ -62,6 +63,7 @@ class TestAuthentication(BaseTest):
         rv = self.app.get('/v1.0/user', headers=self.logged_in_headers())
         self.assert_success(rv)
 
-        user = UserModel(uid="ajl2j", first_name='Aaron', last_name='Louie', email_address='ajl2j@virginia.edu')
+        # User must exist in the mock ldap responses.
+        user = UserModel(uid="dhf8r", first_name='Dan', last_name='Funk', email_address='dhf8r@virginia.edu')
         rv = self.app.get('/v1.0/user', headers=self.logged_in_headers(user, redirect_url='http://omg.edu/lolwut'))
         self.assert_success(rv)

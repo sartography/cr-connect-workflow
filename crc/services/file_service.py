@@ -133,7 +133,6 @@ class FileService(object):
         return file_extension.lower().strip()[1:]
 
     @staticmethod
-
     def update_file(file_model, binary_data, content_type):
         session.flush()  # Assure the database is up-to-date before running this.
 
