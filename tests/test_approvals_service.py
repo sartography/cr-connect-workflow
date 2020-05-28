@@ -37,11 +37,9 @@ class TestApprovalsService(BaseTest):
         ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
 
         irb_code_1 = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_task_file(study_id=workflow.study_id, workflow_id=workflow.id,
-                                  workflow_spec_id=workflow.workflow_spec_id,
-                                  task_id=task.id,
-                                  name="anything.png", content_type="text",
-                                  binary_data=b'5678', irb_doc_code=irb_code_1)
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code=irb_code_1)
 
         ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
         self.assertEquals(2, db.session.query(ApprovalModel).count())
@@ -59,22 +57,16 @@ class TestApprovalsService(BaseTest):
         irb_code_1 = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         irb_code_2 = "NonUVAIRB_AssuranceForm"  # The second file in above.
         # Add a task file to the workflow.
-        FileService.add_task_file(study_id=workflow.study_id, workflow_id=workflow.id,
-                                  workflow_spec_id=workflow.workflow_spec_id,
-                                  task_id=task.id,
-                                  name="anything.png", content_type="text",
-                                  binary_data=b'5678', irb_doc_code=irb_code_1)
-        # Add a two form field files with the same irb_code, but
-        FileService.add_form_field_file(study_id=workflow.study_id, workflow_id=workflow.id,
-                                  task_id=task.id,
-                                  form_field_key=irb_code_2,
-                                  name="anything.png", content_type="text",
-                                  binary_data=b'1234')
-        FileService.add_form_field_file(study_id=workflow.study_id, workflow_id=workflow.id,
-                                  form_field_key=irb_code_2,
-                                  task_id=task.id,
-                                  name="another_anything.png", content_type="text",
-                                  binary_data=b'5678')
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code=irb_code_1)
+        # Add a two form field files with the same irb_code, but different names
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'1234', irb_doc_code=irb_code_2)
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="another_anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code=irb_code_2)
 
 
         # Workflow hash should look be id[1]-id[1]-id[1]
@@ -85,10 +77,9 @@ class TestApprovalsService(BaseTest):
 
         # Replace last file
         # should now be id[1]-id[1]-id[2]
-        FileService.add_form_field_file(study_id=workflow.study_id, workflow_id=workflow.id,
-                                  form_field_key=irb_code_2,
-                                  task_id=task.id,
-                                  name="another_anything.png", content_type="text",
-                                  binary_data=b'9999')
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      irb_doc_code=irb_code_2,
+                                      name="another_anything.png", content_type="text",
+                                      binary_data=b'9999')
         self.assertRegexpMatches(ApprovalService._generate_workflow_hash(latest_files), "\d+\[1\]-\d+\[1\]-\d+\[2\]")
 

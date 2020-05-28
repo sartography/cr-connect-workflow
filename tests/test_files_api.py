@@ -1,7 +1,7 @@
 import io
 import json
-from datetime import datetime
-from unittest.mock import patch
+
+from tests.base_test import BaseTest
 
 from crc import session
 from crc.models.file import FileModel, FileType, FileModelSchema, FileDataModel
@@ -9,7 +9,6 @@ from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 from example_data import ExampleDataLoader
-from tests.base_test import BaseTest
 
 
 class TestFilesApi(BaseTest):

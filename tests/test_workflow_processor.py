@@ -223,10 +223,10 @@ class TestWorkflowProcessor(BaseTest):
         self._populate_form_with_random_data(task)
         processor.complete_task(task)
 
-        files = session.query(FileModel).filter_by(study_id=study.id, workflow_id=processor.get_workflow_id()).all()
+        files = session.query(FileModel).filter_by(workflow_id=processor.get_workflow_id()).all()
         self.assertEqual(0, len(files))
         processor.do_engine_steps()
-        files = session.query(FileModel).filter_by(study_id=study.id, workflow_id=processor.get_workflow_id()).all()
+        files = session.query(FileModel).filter_by(workflow_id=processor.get_workflow_id()).all()
         self.assertEqual(1, len(files), "The task should create a new file.")
         file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == files[0].id).first()
         self.assertIsNotNone(file_data.data)

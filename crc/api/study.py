@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.study import StudySchema, StudyFilesSchema, StudyModel, Study
+from crc.models.study import StudySchema, StudyModel, Study
 from crc.services.study_service import StudyService
 
 
@@ -65,7 +65,7 @@ def delete_study(study_id):
         raise ApiError(code="study_integrity_error", message=message)
 
 
-def all_studies():
+def user_studies():
     """Returns all the studies associated with the current user. """
     StudyService.synch_with_protocol_builder_if_enabled(g.user)
     studies = StudyService.get_studies_for_user(g.user)
@@ -73,8 +73,8 @@ def all_studies():
     return results
 
 
-def all_studies_and_files():
-    """Returns all studies with submitted files"""
-    studies = StudyService.get_studies_with_files()
-    results = StudyFilesSchema(many=True).dump(studies)
+def all_studies():
+    """Returns all studies (regardless of user) with submitted files"""
+    studies = StudyService.get_all_studies_with_files()
+    results = StudySchema(many=True).dump(studies)
     return results

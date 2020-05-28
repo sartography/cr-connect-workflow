@@ -10,7 +10,7 @@ from pandas import ExcelFile
 from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
-from crc.models.workflow import WorkflowSpecModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -40,31 +40,27 @@ class FileService(object):
         return code in df['code'].values
 
     @staticmethod
-    def add_form_field_file(study_id, workflow_id, task_id, form_field_key, name, content_type, binary_data):
-        """Create a new file and associate it with a user task form field within a workflow.
-        Please note that the form_field_key MUST be a known file in the irb_documents.xslx reference document."""
-        if not FileService.is_allowed_document(form_field_key):
+    def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
+        """Create a new file and associate it with the workflow
+        Please note that the irb_doc_code MUST be a known file in the irb_documents.xslx reference document."""
+        if not FileService.is_allowed_document(irb_doc_code):
             raise ApiError("invalid_form_field_key",
                            "When uploading files, the form field id must match a known document in the "
-                           "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % form_field_key)
+                           "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % irb_doc_code)
 
         """Assure this is unique to the workflow, task, and document code AND the Name
            Because we will allow users to upload multiple files for the same form field 
             in some cases """
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_id == workflow_id)\
-            .filter(FileModel.task_id == str(task_id))\
             .filter(FileModel.name == name)\
-            .filter(FileModel.irb_doc_code == form_field_key).first()
+            .filter(FileModel.irb_doc_code == irb_doc_code).first()
 
         if not file_model:
             file_model = FileModel(
-                study_id=study_id,
                 workflow_id=workflow_id,
-                task_id=task_id,
                 name=name,
-                form_field_key=form_field_key,
-                irb_doc_code=form_field_key
+                irb_doc_code=irb_doc_code
             )
         return FileService.update_file(file_model, binary_data, content_type)
 
@@ -84,28 +80,6 @@ class FileService(object):
         df = df.applymap(str)
         df = df.set_index(index_column)
         return json.loads(df.to_json(orient='index'))
-
-    @staticmethod
-    def add_task_file(study_id, workflow_id, workflow_spec_id, task_id, name, content_type, binary_data,
-                      irb_doc_code=None):
-
-        """Assure this is unique to the workflow, task, and document code.  Disregard name."""
-        file_model = session.query(FileModel)\
-            .filter(FileModel.workflow_id == workflow_id)\
-            .filter(FileModel.task_id == str(task_id))\
-            .filter(FileModel.irb_doc_code == irb_doc_code).first()
-
-        if not file_model:
-            """Create a new file and associate it with an executing task within a workflow."""
-            file_model = FileModel(
-                study_id=study_id,
-                workflow_id=workflow_id,
-                workflow_spec_id=workflow_spec_id,
-                task_id=task_id,
-                name=name,
-                irb_doc_code=irb_doc_code
-            )
-        return FileService.update_file(file_model, binary_data, content_type)
 
     @staticmethod
     def get_workflow_files(workflow_id):
@@ -179,32 +153,29 @@ class FileService(object):
         return file_model
 
     @staticmethod
-    def get_files(workflow_spec_id=None,
-                  study_id=None, workflow_id=None, task_id=None, form_field_key=None,
+    def get_files_for_study(study_id, irb_doc_code=None):
+        query = session.query(FileModel).\
+                join(WorkflowModel).\
+                filter(WorkflowModel.study_id == study_id)
+        if irb_doc_code:
+            query = query.filter(FileModel.irb_doc_code == irb_doc_code)
+        return query.all()
+
+    @staticmethod
+    def get_files(workflow_spec_id=None, workflow_id=None,
                   name=None, is_reference=False, irb_doc_code=None):
         query = session.query(FileModel).filter_by(is_reference=is_reference)
         if workflow_spec_id:
             query = query.filter_by(workflow_spec_id=workflow_spec_id)
-        if all(v is None for v in [study_id, workflow_id, task_id, form_field_key]):
-            query = query.filter_by(
-                study_id=None,
-                workflow_id=None,
-                task_id=None,
-                form_field_key=None,
-            )
-        else:
-            if study_id:
-                query = query.filter_by(study_id=study_id)
-            if workflow_id:
-                query = query.filter_by(workflow_id=workflow_id)
-            if task_id:
-                query = query.filter_by(task_id=str(task_id))
-            if form_field_key:
-                query = query.filter_by(form_field_key=form_field_key)
-            if name:
-                query = query.filter_by(name=name)
+        elif workflow_id:
+            query = query.filter_by(workflow_id=workflow_id)
             if irb_doc_code:
                 query = query.filter_by(irb_doc_code=irb_doc_code)
+        elif is_reference:
+            query = query.filter_by(is_reference=True)
+
+        if name:
+            query = query.filter_by(name=name)
 
         results = query.all()
         return results

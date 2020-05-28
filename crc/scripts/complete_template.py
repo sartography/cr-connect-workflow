@@ -36,14 +36,11 @@ Takes two arguments:
         final_document_stream = self.process_template(task, study_id, workflow, *args, **kwargs)
         file_name = args[0]
         irb_doc_code = args[1]
-        FileService.add_task_file(study_id=study_id,
-                                  workflow_id=workflow_id,
-                                  workflow_spec_id=workflow.workflow_spec_id,
-                                  task_id=task.id,
-                                  name=file_name,
-                                  content_type=CONTENT_TYPES['docx'],
-                                  binary_data=final_document_stream.read(),
-                                  irb_doc_code=irb_doc_code)
+        FileService.add_workflow_file(workflow_id=workflow_id,
+                                      name=file_name,
+                                      content_type=CONTENT_TYPES['docx'],
+                                      binary_data=final_document_stream.read(),
+                                      irb_doc_code=irb_doc_code)
 
     def process_template(self, task, study_id, workflow=None, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""

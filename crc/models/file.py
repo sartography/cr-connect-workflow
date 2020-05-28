@@ -78,10 +78,7 @@ class FileModel(db.Model):
     primary_process_id = db.Column(db.String, nullable=True) # An id in the xml of BPMN documents, critical for primary BPMN.
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
-    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=True)
-    task_id = db.Column(db.String, nullable=True)
     irb_doc_code = db.Column(db.String, nullable=True) # Code reference to the irb_documents.xlsx reference file.
-    form_field_key = db.Column(db.String, nullable=True)
     latest_version = db.Column(db.Integer, default=0)
 
 

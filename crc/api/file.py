@@ -5,18 +5,20 @@ from flask import send_file
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileModelSchema, FileModel, FileDataModel
+from crc.models.file import FileModelSchema, FileModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 
 
-def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
-    if all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key]):
+def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None):
+    if all(v is None for v in [workflow_spec_id, workflow_id, form_field_key]):
         raise ApiError('missing_parameter',
-                       'Please specify at least one of workflow_spec_id, study_id, '
-                       'workflow_id, and task_id for this file in the HTTP parameters')
+                       'Please specify either a workflow_spec_id or a '
+                       'workflow_id with an optional form_field_key')
 
-    results = FileService.get_files(workflow_spec_id, study_id, workflow_id, task_id, form_field_key)
+    results = FileService.get_files(workflow_spec_id=workflow_spec_id,
+                                    workflow_id=workflow_id,
+                                    irb_doc_code=form_field_key)
     return FileModelSchema(many=True).dump(results)
 
 
@@ -25,25 +27,21 @@ def get_reference_files():
     return FileModelSchema(many=True).dump(results)
 
 
-def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
-    all_none = all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key])
-    missing_some = (workflow_spec_id is None) and (None in [study_id, workflow_id, form_field_key])
-    if all_none or missing_some:
-        raise ApiError('missing_parameter',
-                       'Please specify either a workflow_spec_id or all 3 of study_id, '
-                       'workflow_id, and field_id for this file in the HTTP parameters')
-    if 'file' not in connexion.request.files:
-        raise ApiError('invalid_file',
-                       'Expected a file named "file" in the multipart form request')
-
+def add_file(workflow_spec_id=None, workflow_id=None, form_field_key=None):
     file = connexion.request.files['file']
-    if workflow_spec_id:
+    if workflow_id:
+        if form_field_key is None:
+            raise ApiError('invalid_workflow_file',
+                           'When adding a workflow related file, you must specify a form_field_key')
+        file_model = FileService.add_workflow_file(workflow_id=workflow_id, irb_doc_code=form_field_key,
+                                                   name=file.filename, content_type=file.content_type,
+                                                   binary_data=file.stream.read())
+    elif workflow_spec_id:
         workflow_spec = session.query(WorkflowSpecModel).filter_by(id=workflow_spec_id).first()
         file_model = FileService.add_workflow_spec_file(workflow_spec, file.filename, file.content_type,
                                                         file.stream.read())
     else:
-        file_model = FileService.add_form_field_file(study_id, workflow_id, task_id, form_field_key, file.filename,
-                                                     file.content_type, file.stream.read())
+        raise ApiError("invalid_file", "You must supply either a workflow spec id or a workflow_id and form_field_key.")
 
     return FileModelSchema().dump(file_model)
 
