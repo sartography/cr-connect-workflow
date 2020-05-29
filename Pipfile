@@ -25,7 +25,7 @@ pyjwt = "*"
 requests = "*"
 xlsxwriter = "*"
 webtest = "*"
-spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "master"}
+spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "deploy"}
 alembic = "*"
 coverage = "*"
 sphinx = "*"
