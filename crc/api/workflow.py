@@ -118,8 +118,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
         next_task=None,
         navigation=navigation,
         workflow_spec_id=processor.workflow_spec_id,
-        spec_version=processor.get_spec_version(),
-        is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
+        spec_version=processor.get_version_string(),
+        is_latest_spec=processor.is_latest_spec,
         total_tasks=processor.workflow_model.total_tasks,
         completed_tasks=processor.workflow_model.completed_tasks,
         last_updated=processor.workflow_model.last_updated

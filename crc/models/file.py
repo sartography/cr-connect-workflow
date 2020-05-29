@@ -1,6 +1,7 @@
 import enum
 from typing import cast
 
+from marshmallow import INCLUDE, EXCLUDE
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
@@ -10,7 +11,7 @@ from crc import db, ma
 
 
 class FileType(enum.Enum):
-    bpmn = "bpmm"
+    bpmn = "bpmn"
     csv = 'csv'
     dmn = "dmn"
     doc = "doc"
@@ -55,15 +56,16 @@ CONTENT_TYPES = {
     "zip": "application/zip"
 }
 
+
 class FileDataModel(db.Model):
     __tablename__ = 'file_data'
     id = db.Column(db.Integer, primary_key=True)
     md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
     data = db.Column(db.LargeBinary)
     version = db.Column(db.Integer, default=0)
-    last_updated = db.Column(db.DateTime(timezone=True), default=func.now())
+    date_created = db.Column(db.DateTime(timezone=True), default=func.now())
     file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
-    file_model = db.relationship("FileModel")
+    file_model = db.relationship("FileModel", foreign_keys=[file_model_id])
 
 
 class FileModel(db.Model):
@@ -79,9 +81,30 @@ class FileModel(db.Model):
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     irb_doc_code = db.Column(db.String, nullable=True) # Code reference to the irb_documents.xlsx reference file.
-    latest_version = db.Column(db.Integer, default=0)
 
 
+class File(object):
+    @classmethod
+    def from_models(cls, model: FileModel, data_model: FileDataModel):
+        instance = cls()
+        instance.id = model.id
+        instance.name = model.name
+        instance.is_status = model.is_status
+        instance.is_reference = model.is_reference
+        instance.content_type = model.content_type
+        instance.primary = model.primary
+        instance.primary_process_id = model.primary_process_id
+        instance.workflow_spec_id = model.workflow_spec_id
+        instance.workflow_id = model.workflow_id
+        instance.irb_doc_code = model.irb_doc_code
+        instance.type = model.type
+        if data_model:
+            instance.last_modified = data_model.date_created
+            instance.latest_version = data_model.version
+        else:
+            instance.last_modified = None
+            instance.latest_version = None
+        return instance
 
 class FileModelSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -89,6 +112,17 @@ class FileModelSchema(SQLAlchemyAutoSchema):
         load_instance = True
         include_relationships = True
         include_fk = True  # Includes foreign keys
+        unknown = EXCLUDE
+    type = EnumField(FileType)
+
+
+class FileSchema(ma.Schema):
+    class Meta:
+        model = File
+        fields = ["id", "name", "is_status", "is_reference", "content_type",
+                  "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
+                  "irb_doc_code", "last_modified", "latest_version", "type"]
+        unknown = INCLUDE
     type = EnumField(FileType)
 
 

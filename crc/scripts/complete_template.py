@@ -59,13 +59,13 @@ Takes two arguments:
 
         file_data_model = None
         if workflow is not None:
-            # Get the workflow's latest files
-            joined_file_data_models = WorkflowProcessor\
-                .get_file_models_for_version(workflow.workflow_spec_id, workflow.spec_version)
-
-            for joined_file_data in joined_file_data_models:
-                if joined_file_data.file_model.name == file_name:
-                    file_data_model = session.query(FileDataModel).filter_by(id=joined_file_data.id).first()
+            # Get the workflow specification file with the given name.
+            file_data_models = FileService.get_spec_data_files(
+                workflow_spec_id=workflow.workflow_spec_id,
+                workflow_id=workflow.id)
+            for file_data in file_data_models:
+                if file_data.file_model.name == file_name:
+                    file_data_model = file_data
 
         if workflow is None or file_data_model is None:
             file_data_model = FileService.get_workflow_file_data(task.workflow, file_name)

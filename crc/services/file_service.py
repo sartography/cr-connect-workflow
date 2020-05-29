@@ -5,13 +5,14 @@ from datetime import datetime
 from uuid import UUID
 from xml.etree import ElementTree
 
+from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from pandas import ExcelFile
+from sqlalchemy import desc
 
 from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel
-from crc.services.workflow_processor import WorkflowProcessor
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
 
 
 class FileService(object):
@@ -111,12 +112,12 @@ class FileService(object):
     def update_file(file_model, binary_data, content_type):
         session.flush()  # Assure the database is up-to-date before running this.
 
-        file_data_model = session.query(FileDataModel). \
-            filter_by(file_model_id=file_model.id,
-                      version=file_model.latest_version
-                      ).with_for_update().first()
+        latest_data_model = session.query(FileDataModel). \
+            filter(FileDataModel.file_model_id == file_model.id).\
+            order_by(desc(FileDataModel.date_created)).first()
+
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
-        if (file_data_model is not None) and (md5_checksum == file_data_model.md5_hash):
+        if (latest_data_model is not None) and (md5_checksum == latest_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.
             return file_model
 
@@ -130,27 +131,49 @@ class FileService(object):
             file_model.type = FileType[file_extension]
             file_model.content_type = content_type
 
-        if file_data_model is None:
+        if latest_data_model is None:
             version = 1
         else:
-            version = file_data_model.version + 1
+            version = latest_data_model.version + 1
 
         # If this is a BPMN, extract the process id.
         if file_model.type == FileType.bpmn:
             bpmn: ElementTree.Element = ElementTree.fromstring(binary_data)
-            file_model.primary_process_id = WorkflowProcessor.get_process_id(bpmn)
+            file_model.primary_process_id = FileService.get_process_id(bpmn)
 
-        file_model.latest_version = version
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
-            version=version, md5_hash=md5_checksum, last_updated=datetime.now()
+            version=version, md5_hash=md5_checksum, date_created=datetime.now()
         )
-
         session.add_all([file_model, new_file_data_model])
         session.commit()
         session.flush()  # Assure the id is set on the model before returning it.
 
         return file_model
+
+    @staticmethod
+    def get_process_id(et_root: ElementTree.Element):
+        process_elements = []
+        for child in et_root:
+            if child.tag.endswith('process') and child.attrib.get('isExecutable', False):
+                process_elements.append(child)
+
+        if len(process_elements) == 0:
+            raise ValidationException('No executable process tag found')
+
+        # There are multiple root elements
+        if len(process_elements) > 1:
+
+            # Look for the element that has the startEvent in it
+            for e in process_elements:
+                this_element: ElementTree.Element = e
+                for child_element in list(this_element):
+                    if child_element.tag.endswith('startEvent'):
+                        return this_element.attrib['id']
+
+            raise ValidationException('No start event found in %s' % et_root.attrib['id'])
+
+        return process_elements[0].attrib['id']
 
     @staticmethod
     def get_files_for_study(study_id, irb_doc_code=None):
@@ -176,23 +199,51 @@ class FileService(object):
 
         if name:
             query = query.filter_by(name=name)
+        query = query.order_by(FileModel.id)
 
         results = query.all()
         return results
 
     @staticmethod
-    def get_file_data(file_id, file_model=None, version=None):
+    def get_spec_data_files(workflow_spec_id, workflow_id=None):
+        """Returns all the FileDataModels related to a workflow specification.
+        If a workflow is specified, returns the version of the spec relatted
+        to that workflow, otherwise, returns the lastes files."""
+        if workflow_id:
+            files = session.query(FileDataModel) \
+                .join(WorkflowSpecDependencyFile) \
+                .filter(WorkflowSpecDependencyFile.workflow_id == workflow_id) \
+                .order_by(FileDataModel.id).all()
+            return files
+        else:
+            """Returns all the latest files related to a workflow specification"""
+            file_models = FileService.get_files(workflow_spec_id=workflow_spec_id)
+            latest_data_files = []
+            for file_model in file_models:
+                latest_data_files.append(FileService.get_file_data(file_model.id))
+            return latest_data_files
 
-        """Returns the file_data that is associated with the file model id, if an actual file_model
-        is provided, uses that rather than looking it up again."""
-        if file_model is None:
-            file_model = session.query(FileModel).filter(FileModel.id == file_id).first()
-        if version is None:
-            version = file_model.latest_version
-        return session.query(FileDataModel) \
-            .filter(FileDataModel.file_model_id == file_id) \
-            .filter(FileDataModel.version == version) \
-            .first()
+    @staticmethod
+    def get_workflow_data_files(workflow_id=None):
+        """Returns all the FileDataModels related to a running workflow -
+        So these are the latest data files that were uploaded or generated
+        that go along with this workflow.  Not related to the spec in any way"""
+        file_models = FileService.get_files(workflow_id=workflow_id)
+        latest_data_files = []
+        for file_model in file_models:
+            latest_data_files.append(FileService.get_file_data(file_model.id))
+        return latest_data_files
+
+    @staticmethod
+    def get_file_data(file_id: int, version: int = None):
+        """Returns the file data with the given version, or the lastest file, if version isn't provided."""
+        query = session.query(FileDataModel) \
+            .filter(FileDataModel.file_model_id == file_id)
+        if version:
+            query = query.filter(FileDataModel.version == version)
+        else:
+            query = query.order_by(desc(FileDataModel.date_created))
+        return query.first()
 
     @staticmethod
     def get_reference_file_data(file_name):
@@ -201,7 +252,7 @@ class FileService(object):
             filter(FileModel.name == file_name).first()
         if not file_model:
             raise ApiError("file_not_found", "There is no reference file with the name '%s'" % file_name)
-        return FileService.get_file_data(file_model.id, file_model)
+        return FileService.get_file_data(file_model.id)
 
     @staticmethod
     def get_workflow_file_data(workflow, file_name):

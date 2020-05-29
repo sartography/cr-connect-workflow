@@ -3,8 +3,10 @@ from datetime import datetime
 from sqlalchemy import desc
 
 from crc import db, session
+from crc.api.common import ApiError
 
 from crc.models.approval import ApprovalModel, ApprovalStatus, ApprovalFile
+from crc.models.workflow import WorkflowModel
 from crc.services.file_service import FileService
 
 
@@ -51,15 +53,22 @@ class ApprovalService(object):
 
         # Construct as hash of the latest files to see if things have changed since
         # the last approval.
-        latest_files = FileService.get_workflow_files(workflow_id)
-        current_workflow_hash = ApprovalService._generate_workflow_hash(latest_files)
+        workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+        workflow_data_files = FileService.get_workflow_data_files(workflow_id)
+        current_data_file_ids = list(data_file.id for data_file in workflow_data_files)
+
+        if len(current_data_file_ids) == 0:
+            raise ApiError("invalid_workflow_approval", "You can't create an approval for a workflow that has"
+                                                        "no files to approve in it.")
 
         # If an existing approval request exists and no changes were made, do nothing.
         # If there is an existing approval request for a previous version of the workflow
         # then add a new request, and cancel any waiting/pending requests.
         if latest_approval_request:
-            # We could just compare the ApprovalFile lists here and do away with this hash.
-            if latest_approval_request.workflow_hash == current_workflow_hash:
+            request_file_ids = list(file.file_data_id for file in latest_approval_request.approval_files)
+            current_data_file_ids.sort()
+            request_file_ids.sort()
+            if current_data_file_ids == request_file_ids:
                 return  # This approval already exists.
             else:
                 latest_approval_request.status = ApprovalStatus.CANCELED.value
@@ -71,27 +80,18 @@ class ApprovalService(object):
         model = ApprovalModel(study_id=study_id, workflow_id=workflow_id,
                               approver_uid=approver_uid, status=ApprovalStatus.WAITING.value,
                               message="", date_created=datetime.now(),
-                              version=version, workflow_hash=current_workflow_hash)
-        approval_files = ApprovalService._create_approval_files(latest_files, model)
+                              version=version)
+        approval_files = ApprovalService._create_approval_files(workflow_data_files, model)
         db.session.add(model)
         db.session.add_all(approval_files)
         db.session.commit()
 
     @staticmethod
-    def _create_approval_files(files, approval):
+    def _create_approval_files(workflow_data_files, approval):
         """Currently based exclusively on the status of files associated with a workflow."""
         file_approval_models = []
-        for file in files:
-            file_approval_models.append(ApprovalFile(file_id=file.id,
-                                                     approval=approval,
-                                                     file_version=file.latest_version))
+        for file_data in workflow_data_files:
+            file_approval_models.append(ApprovalFile(file_data_id=file_data.id,
+                                                     approval=approval))
         return file_approval_models
 
-    @staticmethod
-    def _generate_workflow_hash(files):
-        """Currently based exclusively on the status of files associated with a workflow."""
-        version_array = []
-        for file in files:
-            version_array.append(str(file.id) + "[" + str(file.latest_version) + "]")
-        full_version = "-".join(version_array)
-        return full_version

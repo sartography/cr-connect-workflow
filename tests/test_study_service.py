@@ -74,7 +74,6 @@ class TestStudyService(BaseTest):
 
         # workflow should not be started, and it should have 0 completed tasks, and 0 total tasks.
         self.assertEqual(WorkflowStatus.not_started, workflow.status)
-        self.assertEqual(None, workflow.spec_version)
         self.assertEqual(0, workflow.total_tasks)
         self.assertEqual(0, workflow.completed_tasks)
 

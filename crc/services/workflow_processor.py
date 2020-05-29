@@ -1,8 +1,7 @@
-import random
 import re
-import string
 import xml.etree.ElementTree as ElementTree
 from datetime import datetime
+from typing import List
 
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
@@ -13,14 +12,15 @@ from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
-from SpiffWorkflow.operators import Operator
 from SpiffWorkflow.specs import WorkflowSpec
+from sqlalchemy import desc
 
 from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
-from crc.models.workflow import WorkflowStatus, WorkflowModel
+from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecDependencyFile
 from crc.scripts.script import Script
+from crc.services.file_service import FileService
 
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
@@ -48,7 +48,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             mod = __import__(module_name, fromlist=[class_name])
             klass = getattr(mod, class_name)
             study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-            if(WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data):
+            if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
                 workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
             else:
                 workflow_id = None
@@ -75,7 +75,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         Evaluate the given expression, within the context of the given task and
         return the result.
         """
-        exp,valid = self.validateExpression(expression)
+        exp, valid = self.validateExpression(expression)
         return self._eval(exp, **task.data)
 
     @staticmethod
@@ -108,18 +108,22 @@ class WorkflowProcessor(object):
         If neither flag is set, it will use the same version of the specification that was used to originally
         create the workflow model. """
         self.workflow_model = workflow_model
-        orig_version = workflow_model.spec_version
-        if soft_reset or workflow_model.spec_version is None:
-            self.workflow_model.spec_version = WorkflowProcessor.get_latest_version_string(
-                workflow_model.workflow_spec_id)
 
-        spec = self.get_spec(workflow_model.workflow_spec_id, workflow_model.spec_version)
+        if soft_reset or len(workflow_model.dependencies) == 0:
+            self.spec_data_files = FileService.get_spec_data_files(
+                workflow_spec_id=workflow_model.workflow_spec_id)
+        else:
+            self.spec_data_files = FileService.get_spec_data_files(
+                workflow_spec_id=workflow_model.workflow_spec_id,
+                workflow_id=workflow_model.id)
+
+        spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         self.workflow_spec_id = workflow_model.workflow_spec_id
         try:
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec)
             self.bpmn_workflow.script_engine = self._script_engine
 
-            if not self.WORKFLOW_ID_KEY in self.bpmn_workflow.data:
+            if self.WORKFLOW_ID_KEY not in self.bpmn_workflow.data:
                 if not workflow_model.id:
                     session.add(workflow_model)
                     session.commit()
@@ -132,22 +136,26 @@ class WorkflowProcessor(object):
                 self.save()
 
         except KeyError as ke:
-            if soft_reset:
-                # Undo the soft-reset.
-                workflow_model.spec_version = orig_version
             raise ApiError(code="unexpected_workflow_structure",
                            message="Failed to deserialize workflow"
                                    " '%s' version %s, due to a mis-placed or missing task '%s'" %
-                                   (self.workflow_spec_id, workflow_model.spec_version, str(ke)) +
-                           " This is very likely due to a soft reset where there was a structural change.")
+                                   (self.workflow_spec_id, self.get_version_string(), str(ke)) +
+                                   " This is very likely due to a soft reset where there was a structural change.")
         if hard_reset:
             # Now that the spec is loaded, get the data and rebuild the bpmn with the new details
-            workflow_model.spec_version = self.hard_reset()
+            self.hard_reset()
             workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
             self.save()
+        if soft_reset:
+            self.save()
+
+        # set whether this is the latest spec file.
+        if self.spec_data_files == FileService.get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id):
+            self.is_latest_spec = True
+        else:
+            self.is_latest_spec = False
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec):
-
         if workflow_model.bpmn_workflow_json:
             bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
         else:
@@ -159,44 +167,32 @@ class WorkflowProcessor(object):
 
     def save(self):
         """Saves the current state of this processor to the database """
-        workflow_model = self.workflow_model
-        workflow_model.bpmn_workflow_json = self.serialize()
+        self.workflow_model.bpmn_workflow_json = self.serialize()
         complete_states = [SpiffTask.CANCELLED, SpiffTask.COMPLETED]
         tasks = list(self.get_all_user_tasks())
-        workflow_model.status = self.get_status()
-        workflow_model.total_tasks = len(tasks)
-        workflow_model.completed_tasks = sum(1 for t in tasks if t.state in complete_states)
-        workflow_model.last_updated = datetime.now()
-        session.add(workflow_model)
+        self.workflow_model.status = self.get_status()
+        self.workflow_model.total_tasks = len(tasks)
+        self.workflow_model.completed_tasks = sum(1 for t in tasks if t.state in complete_states)
+        self.workflow_model.last_updated = datetime.now()
+        self.update_dependencies(self.spec_data_files)
+        session.add(self.workflow_model)
         session.commit()
 
-    @staticmethod
-    def run_master_spec(spec_model, study):
-        """Executes a BPMN specification for the given study, without recording any information to the database
-        Useful for running the master specification, which should not persist. """
-        version = WorkflowProcessor.get_latest_version_string(spec_model.id)
-        spec = WorkflowProcessor.get_spec(spec_model.id, version)
-        try:
-            bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
-            bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
-            bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
-            bpmn_workflow.do_engine_steps()
-        except WorkflowException as we:
-            raise ApiError.from_task_spec("error_running_master_spec",  str(we), we.sender)
-
-        if not bpmn_workflow.is_completed():
-            raise ApiError("master_spec_not_automatic",
-                           "The master spec should only contain fully automated tasks, it failed to complete.")
-
-        return bpmn_workflow.last_task.data
+    def get_version_string(self):
+        # this could potentially become expensive to load all the data in the data models.
+        # in which case we might consider using a deferred loader for the actual data, but
+        # trying not to pre-optimize.
+        file_data_models = FileService.get_spec_data_files(self.workflow_model.workflow_spec_id,
+                                                           self.workflow_model.id)
+        return WorkflowProcessor.__get_version_string_for_data_models(file_data_models)
 
     @staticmethod
-    def get_parser():
-        parser = MyCustomParser()
-        return parser
+    def get_latest_version_string_for_spec(spec_id):
+        file_data_models = FileService.get_spec_data_files(spec_id)
+        return WorkflowProcessor.__get_version_string_for_data_models(file_data_models)
 
     @staticmethod
-    def get_latest_version_string(workflow_spec_id):
+    def __get_version_string_for_data_models(file_data_models):
         """Version is in the format v[VERSION] (FILE_ID_LIST)
          For example, a single bpmn file with only one version would be
          v1 (12)  Where 12 is the id of the file data model that is used to create the
@@ -205,10 +201,6 @@ class WorkflowProcessor(object):
          a Spec that includes a BPMN, DMN, an a Word file all on the first
          version would be v1.1.1 (12.45.21)"""
 
-        # this could potentially become expensive to load all the data in the data models.
-        # in which case we might consider using a deferred loader for the actual data, but
-        # trying not to pre-optimize.
-        file_data_models = WorkflowProcessor.__get_latest_file_models(workflow_spec_id)
         major_version = 0  # The version of the primary file.
         minor_version = []  # The versions of the minor files if any.
         file_ids = []
@@ -224,60 +216,72 @@ class WorkflowProcessor(object):
         full_version = "v%s (%s)" % (version, files)
         return full_version
 
-    @staticmethod
-    def get_file_models_for_version(workflow_spec_id, version):
-        file_id_strings = re.findall('\((.*)\)', version)[0].split(".")
-        file_ids = [int(i) for i in file_id_strings]
-        files = session.query(FileDataModel)\
-            .join(FileModel) \
-            .filter(FileModel.workflow_spec_id == workflow_spec_id)\
-            .filter(FileDataModel.id.in_(file_ids)).all()
-        if len(files) != len(file_ids):
-            raise ApiError("invalid_version",
-                           "The version '%s' of workflow specification '%s' is invalid. " %
-                           (version, workflow_spec_id) +
-                           " Unable to locate the correct files to recreate it.")
-        return files
+
+
+    def update_dependencies(self, spec_data_files):
+        existing_dependencies = FileService.get_spec_data_files(
+            workflow_spec_id=self.workflow_model.workflow_spec_id,
+            workflow_id=self.workflow_model.id)
+
+        # Don't save the dependencies if they haven't changed.
+        if existing_dependencies == spec_data_files:
+            return
+
+        # Remove all existing dependencies, and replace them.
+        self.workflow_model.dependencies = []
+        for file_data in spec_data_files:
+            self.workflow_model.dependencies.append(WorkflowSpecDependencyFile(file_data_id=file_data.id))
 
     @staticmethod
-    def __get_latest_file_models(workflow_spec_id):
-        """Returns all the latest files related to a workflow specification"""
-        return session.query(FileDataModel) \
-            .join(FileModel) \
-            .filter(FileModel.workflow_spec_id == workflow_spec_id)\
-            .filter(FileDataModel.version == FileModel.latest_version)\
-            .order_by(FileModel.id)\
-            .all()
+    def run_master_spec(spec_model, study):
+        """Executes a BPMN specification for the given study, without recording any information to the database
+        Useful for running the master specification, which should not persist. """
+        spec_data_files = FileService.get_spec_data_files(spec_model.id)
+        spec = WorkflowProcessor.get_spec(spec_data_files, spec_model.id)
+        try:
+            bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
+            bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
+            bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+            bpmn_workflow.do_engine_steps()
+        except WorkflowException as we:
+            raise ApiError.from_task_spec("error_running_master_spec", str(we), we.sender)
+
+        if not bpmn_workflow.is_completed():
+            raise ApiError("master_spec_not_automatic",
+                           "The master spec should only contain fully automated tasks, it failed to complete.")
+
+        return bpmn_workflow.last_task.data
 
     @staticmethod
-    def get_spec(workflow_spec_id, version=None):
-        """Returns the requested version of the specification,
-        or the latest version if none is specified."""
+    def get_parser():
+        parser = MyCustomParser()
+        return parser
+
+    @staticmethod
+    def get_spec(file_data_models: List[FileDataModel], workflow_spec_id):
+        """Returns a SpiffWorkflow specification for the given workflow spec,
+        using the files provided.  The Workflow_spec_id is only used to generate
+        better error messages."""
         parser = WorkflowProcessor.get_parser()
         process_id = None
-
-        if version is None:
-            file_data_models = WorkflowProcessor.__get_latest_file_models(workflow_spec_id)
-        else:
-            file_data_models = WorkflowProcessor.get_file_models_for_version(workflow_spec_id, version)
 
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 if file_data.file_model.primary:
-                    process_id = WorkflowProcessor.get_process_id(bpmn)
+                    process_id = FileService.get_process_id(bpmn)
                 parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
             elif file_data.file_model.type == FileType.dmn:
                 dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
         if process_id is None:
-            raise(ApiError(code="no_primary_bpmn_error",
-                           message="There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
+            raise (ApiError(code="no_primary_bpmn_error",
+                            message="There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
         try:
             spec = parser.get_spec(process_id)
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
-                           message="Failed to parse Workflow Specification '%s' %s." % (workflow_spec_id, version) +
+                           message="Failed to parse Workflow Specification '%s'" % workflow_spec_id +
                                    "Error is %s" % str(ve),
                            file_name=ve.filename,
                            task_id=ve.id,
@@ -301,8 +305,8 @@ class WorkflowProcessor(object):
 
          Returns the new version.
          """
-        version = WorkflowProcessor.get_latest_version_string(self.workflow_spec_id)
-        spec = WorkflowProcessor.get_spec(self.workflow_spec_id)  # Force latest version by NOT specifying version
+        self.spec_data_files = FileService.get_spec_data_files(workflow_spec_id=self.workflow_spec_id)
+        spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
         # spec = WorkflowProcessor.get_spec(self.workflow_spec_id, version)
         bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
         bpmn_workflow.data = self.bpmn_workflow.data
@@ -310,13 +314,9 @@ class WorkflowProcessor(object):
             task.data = self.bpmn_workflow.last_task.data
         bpmn_workflow.do_engine_steps()
         self.bpmn_workflow = bpmn_workflow
-        return version
 
     def get_status(self):
         return self.status_of(self.bpmn_workflow)
-
-    def get_spec_version(self):
-        return self.workflow_model.spec_version
 
     def do_engine_steps(self):
         try:
@@ -398,32 +398,7 @@ class WorkflowProcessor(object):
         return [t for t in all_tasks
                 if not self.bpmn_workflow._is_engine_task(t.task_spec) and t.state in [t.COMPLETED, t.CANCELLED]]
 
-    @staticmethod
-    def get_process_id(et_root: ElementTree.Element):
-        process_elements = []
-        for child in et_root:
-            if child.tag.endswith('process') and child.attrib.get('isExecutable', False):
-                process_elements.append(child)
-
-        if len(process_elements) == 0:
-            raise ValidationException('No executable process tag found')
-
-        # There are multiple root elements
-        if len(process_elements) > 1:
-
-            # Look for the element that has the startEvent in it
-            for e in process_elements:
-                this_element: ElementTree.Element = e
-                for child_element in list(this_element):
-                    if child_element.tag.endswith('startEvent'):
-                        return this_element.attrib['id']
-
-            raise ValidationException('No start event found in %s' % et_root.attrib['id'])
-
-        return process_elements[0].attrib['id']
-
     def get_nav_item(self, task):
         for nav_item in self.bpmn_workflow.get_nav_list():
             if nav_item['task_id'] == task.id:
                 return nav_item
-

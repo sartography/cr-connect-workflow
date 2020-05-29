@@ -182,7 +182,6 @@ class TestTasksApi(BaseTest):
         self.assertEquals("Task 2b", nav[5]['title'])
         self.assertEquals("Task 3", nav[6]['title'])
 
-
     def test_document_added_to_workflow_shows_up_in_file_list(self):
         self.load_example_data()
         self.create_reference_document()

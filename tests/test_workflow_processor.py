@@ -254,12 +254,12 @@ class TestWorkflowProcessor(BaseTest):
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("decision_table")
         processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_spec_version().startswith('v1.1'))
+        self.assertTrue(processor.get_version_string().startswith('v1.1'))
         file_service = FileService()
 
         file_service.add_workflow_spec_file(workflow_spec_model, "new_file.txt", "txt", b'blahblah')
         processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_spec_version().startswith('v1.1.1'))
+        self.assertTrue(processor.get_version_string().startswith('v1.1.1'))
 
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'docx', 'docx.bpmn')
         file = open(file_path, "rb")
@@ -268,7 +268,7 @@ class TestWorkflowProcessor(BaseTest):
         file_model = db.session.query(FileModel).filter(FileModel.name == "decision_table.bpmn").first()
         file_service.update_file(file_model, data, "txt")
         processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_spec_version().startswith('v2.1.1'))
+        self.assertTrue(processor.get_version_string().startswith('v2.1.1'))
 
     def test_restart_workflow(self):
         self.load_example_data()
@@ -339,7 +339,7 @@ class TestWorkflowProcessor(BaseTest):
         # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
         processor.workflow_model.bpmn_workflow_json = processor.serialize()
         processor2 = WorkflowProcessor(processor.workflow_model)
-        self.assertTrue(processor2.get_spec_version().startswith("v1 ")) # Still at version 1.
+        self.assertFalse(processor2.is_latest_spec) # Still at version 1.
 
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
         processor3 = WorkflowProcessor(processor.workflow_model, hard_reset=True)
@@ -349,10 +349,6 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("New Step", processor3.next_task().task_spec.description)
         self.assertEqual("blue", processor3.next_task().data["color"])
 
-    def test_get_latest_spec_version(self):
-        workflow_spec_model = self.load_test_spec("two_forms")
-        version = WorkflowProcessor.get_latest_version_string("two_forms")
-        self.assertTrue(version.startswith("v1 "))
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')

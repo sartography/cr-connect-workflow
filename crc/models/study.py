@@ -64,7 +64,7 @@ class WorkflowMetadata(object):
             name=workflow.workflow_spec.name,
             display_name=workflow.workflow_spec.display_name,
             description=workflow.workflow_spec.description,
-            spec_version=workflow.spec_version,
+            spec_version=workflow.spec_version(),
             category_id=workflow.workflow_spec.category_id,
             state=WorkflowState.optional,
             status=workflow.status,

@@ -40,8 +40,10 @@ class WorkflowService(object):
     def test_spec(cls, spec_id):
         """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
         sanity check."""
-        version = WorkflowProcessor.get_latest_version_string(spec_id)
-        spec = WorkflowProcessor.get_spec(spec_id, version)
+
+        spec = WorkflowProcessor.get_spec(
+            file_data_models=FileService.get_spec_data_files(workflow_spec_id=spec_id),
+            workflow_spec_id=spec_id)
         bpmn_workflow = BpmnWorkflow(spec, script_engine=CustomBpmnScriptEngine())
         bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = 1
         bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = spec_id
@@ -269,7 +271,7 @@ class WorkflowService(object):
             user_uid=g.user.uid,
             workflow_id=workflow_model.id,
             workflow_spec_id=workflow_model.workflow_spec_id,
-            spec_version=workflow_model.spec_version,
+            spec_version=processor.get_version_string(),
             action=action,
             task_id=task.id,
             task_name=task.name,

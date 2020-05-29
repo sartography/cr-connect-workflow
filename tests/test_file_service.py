@@ -23,7 +23,11 @@ class TestFileService(BaseTest):
 
         file_models = FileService.get_workflow_files(workflow_id=workflow.id)
         self.assertEquals(1, len(file_models))
-        self.assertEquals(2, file_models[0].latest_version)
+
+        file_data = FileService.get_workflow_data_files(workflow_id=workflow.id)
+        self.assertEquals(1, len(file_data))
+        self.assertEquals(2, file_data[0].version)
+
 
     def test_add_file_from_form_increments_version_and_replaces_on_subsequent_add_with_same_name(self):
         self.load_example_data()
@@ -44,7 +48,10 @@ class TestFileService(BaseTest):
 
         file_models = FileService.get_workflow_files(workflow_id=workflow.id)
         self.assertEquals(1, len(file_models))
-        self.assertEquals(2, file_models[0].latest_version)
+
+        file_data = FileService.get_workflow_data_files(workflow_id=workflow.id)
+        self.assertEquals(1, len(file_data))
+        self.assertEquals(2, file_data[0].version)
 
     def test_add_file_from_form_allows_multiple_files_with_different_names(self):
         self.load_example_data()
@@ -64,5 +71,3 @@ class TestFileService(BaseTest):
                                       binary_data=b'5678')
         file_models = FileService.get_workflow_files(workflow_id=workflow.id)
         self.assertEquals(2, len(file_models))
-        self.assertEquals(1, file_models[0].latest_version)
-        self.assertEquals(1, file_models[1].latest_version)
