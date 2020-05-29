@@ -114,6 +114,9 @@ class TestLookupService(BaseTest):
         results = LookupService.lookup(workflow, "AllTheNames", "1 (!-Something", limit=10)
         self.assertEquals("1 Something", results[0].label, "special characters don't flake out")
 
+        results = LookupService.lookup(workflow, "AllTheNames", "Dan Funk (dhf", limit=10)
+        self.assertEquals(results)
+
 
 # 1018	10000 Something	Industry
 # 1019	1000 Something	Industry
