@@ -209,19 +209,17 @@ class ExampleDataLoader:
         db.session.add(category)
         db.session.commit()
 
-
-        self.create_spec(id="empty_workflow",
-                         name="empty_workflow",
+        self.create_spec(id="rrt_top_level_workflow",
+                         name="rrt_top_level_workflow",
                          display_name="Top Level Workflow",
                          description="Does nothing, we don't use the master workflow here.",
                          category_id=None,
-                         master_spec=True,
-                         from_tests=True)
+                         master_spec=True)
 
-        self.create_spec(id="rrt",
-                         name="rrt",
+        self.create_spec(id="research_rampup",
+                         name="research_rampup",
                          display_name="Research Ramp-up Toolkit",
-                         description="The workflow for the Research Ramp-up.",
+                         description="Process for creating a new research ramp-up request.",
                          category_id=0,
                          master_spec=False)
 

@@ -33,10 +33,15 @@ class StudyService(object):
         return studies
 
     @staticmethod
-    def get_studies_with_files():
+    def get_all_studies_with_files():
         """Returns a list of all studies"""
         db_studies = session.query(StudyModel).all()
-        return db_studies
+        studies = []
+        for s in db_studies:
+            study = Study.from_model(s)
+            study.files = FileService.get_files_for_study(study.id)
+            studies.append(study)
+        return studies
 
     @staticmethod
     def get_study(study_id, study_model: StudyModel = None):
@@ -48,6 +53,7 @@ class StudyService(object):
         study = Study.from_model(study_model)
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
+        study.files = FileService.get_files_for_study(study.id)
 
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.
@@ -72,6 +78,8 @@ class StudyService(object):
     def delete_workflow(workflow):
         for file in session.query(FileModel).filter_by(workflow_id=workflow.id).all():
             FileService.delete_file(file.id)
+        for deb in workflow.dependencies:
+            session.delete(deb)
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
         session.query(WorkflowModel).filter_by(id=workflow.id).delete()
 
@@ -150,17 +158,15 @@ class StudyService(object):
             doc['display_name'] = ' / '.join(name_list)
 
             # For each file, get associated workflow status
-            doc_files = FileService.get_files(study_id=study_id, irb_doc_code=code)
+            doc_files = FileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
             doc['count'] = len(doc_files)
             doc['files'] = []
             for file in doc_files:
                 doc['files'].append({'file_id': file.id,
-                                     'task_id': file.task_id,
-                                     'workflow_id': file.workflow_id,
-                                     'workflow_spec_id': file.workflow_spec_id})
+                                     'workflow_id': file.workflow_id})
 
                 # update the document status to match the status of the workflow it is in.
-                if not 'status' in doc or doc['status'] is None:
+                if 'status' not in doc or doc['status'] is None:
                     workflow: WorkflowModel = session.query(WorkflowModel).filter_by(id=file.workflow_id).first()
                     doc['status'] = workflow.status.value
 

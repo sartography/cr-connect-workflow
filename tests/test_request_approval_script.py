@@ -1,3 +1,4 @@
+from crc.services.file_service import FileService
 from tests.base_test import BaseTest
 
 from crc.scripts.request_approval import RequestApproval
@@ -17,7 +18,10 @@ class TestRequestApprovalScript(BaseTest):
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
         task.data = {"study": {"approval1": "dhf8r", 'approval2':'lb3dp'}}
-
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      irb_doc_code="UVACompl_PRCAppr",
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'1234')
         script = RequestApproval()
         script.do_task(task, workflow.study_id, workflow.id, "study.approval1", "study.approval2")
         self.assertEquals(2, db.session.query(ApprovalModel).count())

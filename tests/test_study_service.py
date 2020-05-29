@@ -2,6 +2,8 @@ import json
 from datetime import datetime
 from unittest.mock import patch
 
+from tests.base_test import BaseTest
+
 from crc import db, app
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudyModel
@@ -12,7 +14,6 @@ from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from example_data import ExampleDataLoader
-from tests.base_test import BaseTest
 
 
 class TestStudyService(BaseTest):
@@ -73,7 +74,6 @@ class TestStudyService(BaseTest):
 
         # workflow should not be started, and it should have 0 completed tasks, and 0 total tasks.
         self.assertEqual(WorkflowStatus.not_started, workflow.status)
-        self.assertEqual(None, workflow.spec_version)
         self.assertEqual(0, workflow.total_tasks)
         self.assertEqual(0, workflow.completed_tasks)
 
@@ -143,11 +143,9 @@ class TestStudyService(BaseTest):
         # Add a document to the study with the correct code.
         workflow = self.create_workflow('docx')
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_task_file(study_id=workflow.study_id, workflow_id=workflow.id,
-                                  workflow_spec_id=workflow.workflow_spec_id,
-                                  task_id="fakingthisout",
-                                  name="anything.png", content_type="text",
-                                  binary_data=b'1234', irb_doc_code=irb_code)
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'1234', irb_doc_code=irb_code)
 
         docs = StudyService().get_documents_status(workflow.study_id)
         self.assertIsNotNone(docs)
@@ -156,13 +154,31 @@ class TestStudyService(BaseTest):
         self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0])
         self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0]['file_id'])
         self.assertEquals(workflow.id, docs["UVACompl_PRCAppr"]['files'][0]['workflow_id'])
-        self.assertEquals(workflow.workflow_spec_id, docs["UVACompl_PRCAppr"]['files'][0]['workflow_spec_id'])
 
-    # 'file_id': 123,
-    # 'task_id': 'abcdef14236890',
-    # 'workflow_id': 456,
-    # 'workflow_spec_id': 'irb_api_details',
-    # 'status': 'complete',
+    def test_get_all_studies(self):
+        user = self.create_user_with_study_and_workflow()
+
+        # Add a document to the study with the correct code.
+        workflow1 = self.create_workflow('docx')
+        workflow2 = self.create_workflow('empty_workflow')
+
+        # Add files to both workflows.
+        FileService.add_workflow_file(workflow_id=workflow1.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
+        FileService.add_workflow_file(workflow_id=workflow1.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'1234', irb_doc_code="AD_Consent_Model")
+        FileService.add_workflow_file(workflow_id=workflow2.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
+
+        studies = StudyService().get_all_studies_with_files()
+        self.assertEquals(1, len(studies))
+        self.assertEquals(3, len(studies[0].files))
+
+
+
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_docs
     def test_get_personnel(self, mock_docs):
