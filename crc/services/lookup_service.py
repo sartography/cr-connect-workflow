@@ -1,4 +1,5 @@
 import logging
+import re
 
 from pandas import ExcelFile
 from sqlalchemy import func, desc
@@ -8,8 +9,11 @@ from crc import db
 from crc.api.common import ApiError
 from crc.models.api_models import Task
 from crc.models.file import FileDataModel, LookupFileModel, LookupDataModel
+from crc.models.workflow import WorkflowModel, WorkflowSpecDependencyFile
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
+from crc.services.workflow_processor import WorkflowProcessor
+
 
 class TSRank(GenericFunction):
     package = 'full_text'
@@ -31,33 +35,56 @@ class LookupService(object):
     """
 
     @staticmethod
-    def lookup(spiff_task, field, query, limit):
-        """Executes the lookup for the given field."""
-        if field.type != Task.FIELD_TYPE_AUTO_COMPLETE:
-            raise ApiError.from_task("invalid_field_type",
-                                          "Field '%s' must be an autocomplete field to use lookups." % field.label,
-                                          task=spiff_task)
-
-        # If this field has an associated options file, then do the lookup against that field.
-        if field.has_property(Task.PROP_OPTIONS_FILE):
-            lookup_table = LookupService.get_lookup_table(spiff_task, field)
-            return LookupService._run_lookup_query(lookup_table, query, limit)
-        # If this is a ldap lookup, use the ldap service to provide the fields to return.
-        elif field.has_property(Task.PROP_LDAP_LOOKUP):
-            return LookupService._run_ldap_query(query, limit)
-        else:
-            raise ApiError.from_task("unknown_lookup_option",
-                                     "Lookup supports using spreadsheet options or ldap options, and neither was"
-                                     "provided.")
+    def get_lookup_model(spiff_task, field):
+        workflow_id = spiff_task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+        workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+        return LookupService.__get_lookup_model(workflow, field.id)
 
     @staticmethod
-    def get_lookup_table(spiff_task, field):
-        """ Checks to see if the options are provided in a separate lookup table associated with the
+    def __get_lookup_model(workflow, field_id):
+        lookup_model = db.session.query(LookupFileModel) \
+            .filter(LookupFileModel.workflow_spec_id == workflow.workflow_spec_id) \
+            .filter(LookupFileModel.field_id == field_id).first()
+
+        # one more quick query, to see if the lookup file is still related to this workflow.
+        # if not, we need to rebuild the lookup table.
+        is_current = False
+        if lookup_model:
+            is_current = db.session.query(WorkflowSpecDependencyFile).\
+                filter(WorkflowSpecDependencyFile.file_data_id == lookup_model.file_data_model_id).count()
+
+        if not is_current:
+            if lookup_model:
+                db.session.delete(lookup_model)
+            # Very very very expensive, but we don't know need this till we do.
+            lookup_model = LookupService.create_lookup_model(workflow, field_id)
+
+        return lookup_model
+
+    @staticmethod
+    def lookup(workflow, field_id, query, limit):
+
+        lookup_model = LookupService.__get_lookup_model(workflow, field_id)
+
+        if lookup_model.is_ldap:
+            return LookupService._run_ldap_query(query, limit)
+        else:
+            return LookupService._run_lookup_query(lookup_model, query, limit)
+
+
+
+    @staticmethod
+    def create_lookup_model(workflow_model, field_id):
+        """
+         This is all really expensive, but should happen just once (per file change).
+         Checks to see if the options are provided in a separate lookup table associated with the
         workflow, and if so, assures that data exists in the database, and return a model than can be used
         to locate that data.
-
         Returns:  an array of LookupData, suitable for returning to the api.
         """
+        processor = WorkflowProcessor(workflow_model)  # VERY expensive, Ludicrous for lookup / type ahead
+        spiff_task, field = processor.find_task_and_field_by_field_id(field_id)
+
         if field.has_property(Task.PROP_OPTIONS_FILE):
             if not field.has_property(Task.PROP_OPTIONS_VALUE_COLUMN) or \
                     not field.has_property(Task.PROP_OPTIONS_LABEL_COL):
@@ -72,52 +99,67 @@ class LookupService(object):
             file_name = field.get_property(Task.PROP_OPTIONS_FILE)
             value_column = field.get_property(Task.PROP_OPTIONS_VALUE_COLUMN)
             label_column = field.get_property(Task.PROP_OPTIONS_LABEL_COL)
-            data_model = FileService.get_workflow_file_data(spiff_task.workflow, file_name)
-            lookup_model = LookupService.get_lookup_table_from_data_model(data_model, value_column, label_column)
-            return lookup_model
+            latest_files = FileService.get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id,
+                                                           workflow_id=workflow_model.id,
+                                                           name=file_name)
+            if len(latest_files) < 1:
+                raise ApiError("missing_file", "Unable to locate the lookup data file '%s'" % file_name)
+            else:
+                data_model = latest_files[0]
+
+            lookup_model = LookupService.build_lookup_table(data_model, value_column, label_column,
+                                                            workflow_model.workflow_spec_id, field_id)
+
+        elif field.has_property(Task.PROP_LDAP_LOOKUP):
+            lookup_model = LookupFileModel(workflow_spec_id=workflow_model.workflow_spec_id,
+                                           field_id=field_id,
+                                           is_ldap=True)
+        else:
+            raise ApiError("unknown_lookup_option",
+                            "Lookup supports using spreadsheet options or ldap options, and neither "
+                            "was provided.")
+        db.session.add(lookup_model)
+        db.session.commit()
+        return lookup_model
 
     @staticmethod
-    def get_lookup_table_from_data_model(data_model: FileDataModel, value_column, label_column):
+    def build_lookup_table(data_model: FileDataModel, value_column, label_column, workflow_spec_id, field_id):
         """ In some cases the lookup table can be very large.  This method will add all values to the database
          in a way that can be searched and returned via an api call - rather than sending the full set of
           options along with the form.  It will only open the file and process the options if something has
           changed.  """
+        xls = ExcelFile(data_model.data)
+        df = xls.parse(xls.sheet_names[0])  # Currently we only look at the fist sheet.
+        if value_column not in df:
+            raise ApiError("invalid_emum",
+                           "The file %s does not contain a column named % s" % (data_model.file_model.name,
+                                                                                value_column))
+        if label_column not in df:
+            raise ApiError("invalid_emum",
+                           "The file %s does not contain a column named % s" % (data_model.file_model.name,
+                                                                                label_column))
 
-        lookup_model = db.session.query(LookupFileModel) \
-            .filter(LookupFileModel.file_data_model_id == data_model.id) \
-            .filter(LookupFileModel.value_column == value_column) \
-            .filter(LookupFileModel.label_column == label_column).first()
+        lookup_model = LookupFileModel(workflow_spec_id=workflow_spec_id,
+                                       field_id=field_id,
+                                       file_data_model_id=data_model.id,
+                                       is_ldap=False)
 
-        if not lookup_model:
-            xls = ExcelFile(data_model.data)
-            df = xls.parse(xls.sheet_names[0])  # Currently we only look at the fist sheet.
-            if value_column not in df:
-                raise ApiError("invalid_emum",
-                               "The file %s does not contain a column named % s" % (data_model.file_model.name,
-                                                                                    value_column))
-            if label_column not in df:
-                raise ApiError("invalid_emum",
-                               "The file %s does not contain a column named % s" % (data_model.file_model.name,
-                                                                                    label_column))
-
-            lookup_model = LookupFileModel(label_column=label_column, value_column=value_column,
-                                           file_data_model_id=data_model.id)
-
-            db.session.add(lookup_model)
-            for index, row in df.iterrows():
-                lookup_data = LookupDataModel(lookup_file_model=lookup_model,
-                                              value=row[value_column],
-                                              label=row[label_column],
-                                              data=row.to_json())
-                db.session.add(lookup_data)
-            db.session.commit()
-
+        db.session.add(lookup_model)
+        for index, row in df.iterrows():
+            lookup_data = LookupDataModel(lookup_file_model=lookup_model,
+                                          value=row[value_column],
+                                          label=row[label_column],
+                                          data=row.to_json())
+            db.session.add(lookup_data)
+        db.session.commit()
         return lookup_model
 
     @staticmethod
     def _run_lookup_query(lookup_file_model, query, limit):
         db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model == lookup_file_model)
 
+        query = re.sub('[^A-Za-z0-9 ]+', '', query)
+        print("Query: " + query)
         query = query.strip()
         if len(query) > 0:
             if ' ' in query:

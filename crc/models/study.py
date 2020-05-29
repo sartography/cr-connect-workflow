@@ -40,10 +40,6 @@ class StudyModel(db.Model):
         if self.on_hold:
             self.protocol_builder_status = ProtocolBuilderStatus.HOLD
 
-    def files(self):
-        _files = FileModel.query.filter_by(workflow_id=self.workflow[0].id)
-        return _files
-
 
 class WorkflowMetadata(object):
     def __init__(self, id, name, display_name, description, spec_version, category_id, state: WorkflowState, status: WorkflowStatus,
@@ -68,7 +64,7 @@ class WorkflowMetadata(object):
             name=workflow.workflow_spec.name,
             display_name=workflow.workflow_spec.display_name,
             description=workflow.workflow_spec.description,
-            spec_version=workflow.spec_version,
+            spec_version=workflow.spec_version(),
             category_id=workflow.workflow_spec.category_id,
             state=WorkflowState.optional,
             status=workflow.status,
@@ -122,7 +118,7 @@ class Study(object):
         self.ind_number = ind_number
         self.categories = categories
         self.warnings = []
-
+        self.files = []
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
@@ -153,6 +149,7 @@ class StudySchema(ma.Schema):
     hsr_number = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
+    files = fields.List(fields.Nested(SimpleFileSchema), dump_only=True)
 
     class Meta:
         model = Study
@@ -165,14 +162,3 @@ class StudySchema(ma.Schema):
         """Can load the basic study data for updates to the database, but categories are write only"""
         return Study(**data)
 
-
-class StudyFilesSchema(ma.Schema):
-
-    files = fields.Method('_files')
-
-    class Meta:
-        model = Study
-        additional = ["id", "title", "last_updated", "primary_investigator_id"]
-
-    def _files(self, obj):
-        return [file.name for file in obj.files()]

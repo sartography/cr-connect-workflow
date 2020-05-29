@@ -4,7 +4,7 @@ from marshmallow import INCLUDE
 from sqlalchemy import func
 
 from crc import db, ma
-from crc.models.file import FileModel
+from crc.models.file import FileModel, FileDataModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 
@@ -17,13 +17,11 @@ class ApprovalStatus(enum.Enum):
 
 
 class ApprovalFile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    file_id = db.Column(db.Integer, db.ForeignKey(FileModel.id), nullable=False)
-    approval_id = db.Column(db.Integer, db.ForeignKey("approval.id"), nullable=False)
-    file_version = db.Column(db.Integer, nullable=False)
+    file_data_id = db.Column(db.Integer, db.ForeignKey(FileDataModel.id), primary_key=True)
+    approval_id = db.Column(db.Integer, db.ForeignKey("approval.id"), primary_key=True)
 
     approval = db.relationship("ApprovalModel")
-    file = db.relationship(FileModel)
+    file_data = db.relationship(FileDataModel)
 
 
 class ApprovalModel(db.Model):
@@ -38,9 +36,9 @@ class ApprovalModel(db.Model):
     message = db.Column(db.String)
     date_created = db.Column(db.DateTime(timezone=True), default=func.now())
     version = db.Column(db.Integer) # Incremented integer, so 1,2,3 as requests are made.
-    workflow_hash = db.Column(db.String) # A hash of the workflow at the moment the approval was created.
-
-    approval_files = db.relationship(ApprovalFile, back_populates="approval")
+    approval_files = db.relationship(ApprovalFile, back_populates="approval",
+                                     cascade="all, delete, delete-orphan",
+                                     order_by=ApprovalFile.file_data_id)
 
 
 class Approval(object):
@@ -57,7 +55,6 @@ class Approval(object):
         instance.message = model.message
         instance.date_created = model.date_created
         instance.version = model.version
-        instance.workflow_hash = model.workflow_hash
         instance.title = ''
         if model.study:
             instance.title = model.study.title
