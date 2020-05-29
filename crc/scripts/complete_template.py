@@ -27,24 +27,20 @@ Takes two arguments:
 2. The 'code' of the IRB Document as set in the irb_documents.xlsx file."
 """
 
-    def do_task_validate_only(self, task, study_id, *args, **kwargs):
+    def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         """For validation only, process the template, but do not store it in the database."""
         self.process_template(task, study_id, None, *args, **kwargs)
 
-    def do_task(self, task, study_id, *args, **kwargs):
-        workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+    def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
         final_document_stream = self.process_template(task, study_id, workflow, *args, **kwargs)
         file_name = args[0]
         irb_doc_code = args[1]
-        FileService.add_task_file(study_id=study_id,
-                                  workflow_id=workflow_id,
-                                  workflow_spec_id=workflow.workflow_spec_id,
-                                  task_id=task.id,
-                                  name=file_name,
-                                  content_type=CONTENT_TYPES['docx'],
-                                  binary_data=final_document_stream.read(),
-                                  irb_doc_code=irb_doc_code)
+        FileService.add_workflow_file(workflow_id=workflow_id,
+                                      name=file_name,
+                                      content_type=CONTENT_TYPES['docx'],
+                                      binary_data=final_document_stream.read(),
+                                      irb_doc_code=irb_doc_code)
 
     def process_template(self, task, study_id, workflow=None, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""
@@ -63,13 +59,13 @@ Takes two arguments:
 
         file_data_model = None
         if workflow is not None:
-            # Get the workflow's latest files
-            joined_file_data_models = WorkflowProcessor\
-                .get_file_models_for_version(workflow.workflow_spec_id, workflow.spec_version)
-
-            for joined_file_data in joined_file_data_models:
-                if joined_file_data.file_model.name == file_name:
-                    file_data_model = session.query(FileDataModel).filter_by(id=joined_file_data.id).first()
+            # Get the workflow specification file with the given name.
+            file_data_models = FileService.get_spec_data_files(
+                workflow_spec_id=workflow.workflow_spec_id,
+                workflow_id=workflow.id)
+            for file_data in file_data_models:
+                if file_data.file_model.name == file_name:
+                    file_data_model = file_data
 
         if workflow is None or file_data_model is None:
             file_data_model = FileService.get_workflow_file_data(task.workflow, file_name)

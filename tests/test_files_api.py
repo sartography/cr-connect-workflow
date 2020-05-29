@@ -1,15 +1,14 @@
 import io
 import json
-from datetime import datetime
-from unittest.mock import patch
+
+from tests.base_test import BaseTest
 
 from crc import session
-from crc.models.file import FileModel, FileType, FileModelSchema, FileDataModel
+from crc.models.file import FileModel, FileType, FileSchema, FileModelSchema
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 from example_data import ExampleDataLoader
-from tests.base_test import BaseTest
 
 
 class TestFilesApi(BaseTest):
@@ -20,7 +19,7 @@ class TestFilesApi(BaseTest):
         return (minimal_dbpm % content).encode()
 
     def test_list_files_for_workflow_spec(self):
-        self.load_example_data()
+        self.load_example_data(use_crc_data=True)
         spec_id = 'core_info'
         spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
         rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec_id,
@@ -166,17 +165,16 @@ class TestFilesApi(BaseTest):
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
-        json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(2, file.latest_version)
-        self.assertEqual(FileType.bpmn, file.type)
-        self.assertEqual("application/octet-stream", file.content_type)
+        file_json = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(2, file_json['latest_version'])
+        self.assertEqual(FileType.bpmn.value, file_json['type'])
+        self.assertEqual("application/octet-stream", file_json['content_type'])
         self.assertEqual(spec.id, file.workflow_spec_id)
 
         # Assure it is updated in the database and properly persisted.
         file_model = session.query(FileModel).filter(FileModel.id == file.id).first()
-        self.assertEqual(2, file_model.latest_version)
-
+        file_data = FileService.get_file_data(file_model.id)
+        self.assertEqual(2, file_data.version)
 
         rv = self.app.get('/v1.0/file/%i/data' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -193,16 +191,13 @@ class TestFilesApi(BaseTest):
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(1, file.latest_version)
+        self.assertEqual(1, json_data['latest_version'])
         data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
-        rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
+        rv = self.app.put('/v1.0/file/%i/data' % json_data['id'], data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(1, file.latest_version)
-
+        self.assertEqual(1, json_data['latest_version'])
 
     def test_get_file(self):
         self.load_example_data()

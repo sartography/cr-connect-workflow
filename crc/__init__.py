@@ -6,7 +6,6 @@ from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask_sso import SSO
 
 logging.basicConfig(level=logging.INFO)
 
@@ -31,17 +30,26 @@ session = db.session
 
 migrate = Migrate(app, db)
 ma = Marshmallow(app)
-sso = SSO(app=app)
 
 from crc import models
 from crc import api
 
-connexion_app.add_api('api.yml')
+connexion_app.add_api('api.yml', base_path='/v1.0')
 
 # Convert list of allowed origins to list of regexes
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
 cors = CORS(connexion_app.app, origins=origins_re)
 
+print('=== USING THESE CONFIG SETTINGS: ===')
+print('DB_HOST = ', )
+print('CORS_ALLOW_ORIGINS = ', app.config['CORS_ALLOW_ORIGINS'])
+print('DEVELOPMENT = ', app.config['DEVELOPMENT'])
+print('TESTING = ', app.config['TESTING'])
+print('PRODUCTION = ', app.config['PRODUCTION'])
+print('PB_BASE_URL = ', app.config['PB_BASE_URL'])
+print('LDAP_URL = ', app.config['LDAP_URL'])
+print('APPLICATION_ROOT = ', app.config['APPLICATION_ROOT'])
+print('PB_ENABLED = ', app.config['PB_ENABLED'])
 
 @app.cli.command()
 def load_example_data():
@@ -49,3 +57,11 @@ def load_example_data():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
     ExampleDataLoader().load_all()
+
+
+@app.cli.command()
+def load_example_rrt_data():
+    """Load example data into the database."""
+    from example_data import ExampleDataLoader
+    ExampleDataLoader.clean_db()
+    ExampleDataLoader().load_rrt()

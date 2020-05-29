@@ -21,7 +21,7 @@ class TestLdapService(BaseTest):
         self.assertEqual("lb3dp", user_info.uid)
         self.assertEqual("Laura Barnes", user_info.display_name)
         self.assertEqual("Laura", user_info.given_name)
-        self.assertEqual("lb3dp@virginia.edu", user_info.email)
+        self.assertEqual("lb3dp@virginia.edu", user_info.email_address)
         self.assertEqual("+1 (434) 924-1723", user_info.telephone_number)
         self.assertEqual("E0:Associate Professor of Systems and Information Engineering", user_info.title)
         self.assertEqual("E0:EN-Eng Sys and Environment", user_info.department)
