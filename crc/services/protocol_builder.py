@@ -5,8 +5,7 @@ import requests
 
 from crc import app
 from crc.api.common import ApiError
-from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStudySchema, ProtocolBuilderInvestigator, \
-    ProtocolBuilderRequiredDocument, ProtocolBuilderRequiredDocumentSchema
+from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuilderRequiredDocument
 
 
 class ProtocolBuilderService(object):
@@ -16,7 +15,15 @@ class ProtocolBuilderService(object):
     STUDY_DETAILS_URL = app.config['PB_STUDY_DETAILS_URL']
 
     @staticmethod
+    def is_enabled():
+        if isinstance(app.config['PB_ENABLED'], str):
+            return app.config['PB_ENABLED'].lower() == "true"
+        else:
+            return app.config['PB_ENABLED'] is True
+
+    @staticmethod
     def get_studies(user_id) -> {}:
+        ProtocolBuilderService.__enabled_or_raise()
         if not isinstance(user_id, str):
             raise ApiError("invalid_user_id", "This user id is invalid: " + str(user_id))
         response = requests.get(ProtocolBuilderService.STUDY_URL % user_id)
@@ -30,40 +37,31 @@ class ProtocolBuilderService(object):
 
     @staticmethod
     def get_investigators(study_id) -> {}:
-        ProtocolBuilderService.check_args(study_id)
-        response = requests.get(ProtocolBuilderService.INVESTIGATOR_URL % study_id)
-        if response.ok and response.text:
-            pb_studies = json.loads(response.text)
-            return pb_studies
-        else:
-            raise ApiError("protocol_builder_error",
-                           "Received an invalid response from the protocol builder (status %s): %s" %
-                           (response.status_code, response.text))
+        return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.INVESTIGATOR_URL)
 
     @staticmethod
     def get_required_docs(study_id) -> Optional[List[ProtocolBuilderRequiredDocument]]:
-        ProtocolBuilderService.check_args(study_id)
-        response = requests.get(ProtocolBuilderService.REQUIRED_DOCS_URL % study_id)
+        return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.REQUIRED_DOCS_URL)
+
+    @staticmethod
+    def get_study_details(study_id) -> {}:
+        return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.STUDY_DETAILS_URL)
+
+    @staticmethod
+    def __enabled_or_raise():
+        if not ProtocolBuilderService.is_enabled():
+            raise ApiError("protocol_builder_disabled", "The Protocol Builder Service is currently disabled.")
+
+    @staticmethod
+    def __make_request(study_id, url):
+        ProtocolBuilderService.__enabled_or_raise()
+        if not isinstance(study_id, int):
+            raise ApiError("invalid_study_id", "This study id is invalid: " + str(study_id))
+        response = requests.get(url % study_id)
         if response.ok and response.text:
             return json.loads(response.text)
         else:
             raise ApiError("protocol_builder_error",
-                           "Received an invalid response from the protocol builder (status %s): %s" %
-                           (response.status_code, response.text))
-
-    @staticmethod
-    def get_study_details(study_id) -> {}:
-        ProtocolBuilderService.check_args(study_id)
-        response = requests.get(ProtocolBuilderService.STUDY_DETAILS_URL % study_id)
-        if response.ok and response.text:
-            pb_study_details = json.loads(response.text)
-            return pb_study_details
-        else:
-            raise ApiError("protocol_builder_error",
-                           "Received an invalid response from the protocol builder (status %s): %s" %
-                           (response.status_code, response.text))
-
-    @staticmethod
-    def check_args(study_id):
-        if not isinstance(study_id, int):
-            raise ApiError("invalid_study_id", "This study id is invalid: " + str(study_id))
+                           "Received an invalid response from the protocol builder (status %s): %s when calling "
+                           "url '%s'." %
+                           (response.status_code, response.text, url))

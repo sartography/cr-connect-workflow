@@ -138,7 +138,7 @@ Returns information specific to the protocol.
                    documents_example=self.example_to_string("documents"),
                    )
 
-    def do_task_validate_only(self, task, study_id, *args, **kwargs):
+    def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
         self.check_args(args)
         # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
@@ -184,7 +184,7 @@ Returns information specific to the protocol.
         self.add_data_to_task(task=task, data=data["study"])
         self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
-    def do_task(self, task, study_id, *args, **kwargs):
+    def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         self.check_args(args)
 
         cmd = args[0]

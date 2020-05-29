@@ -56,7 +56,7 @@ paths:
           required: false
           schema:
             type: string
-        - name: redirect_url
+        - name: redirect
           in: query
           required: false
           schema:
@@ -82,7 +82,7 @@ paths:
   # /v1.0/study
   /study:
     get:
-      operationId: crc.api.study.all_studies
+      operationId: crc.api.study.user_studies
       summary: Provides a list of studies related to the current user.
       tags:
         - Studies
@@ -109,7 +109,24 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Study"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Study"
+  /study/all:
+    get:
+      operationId: crc.api.study.all_studies
+      summary: Provides a list of studies
+      tags:
+        - Studies
+      responses:
+        '200':
+          description: An array of studies, with submitted files, ordered by the last modified date.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Study"
   /study/{study_id}:
     parameters:
       - name: study_id
@@ -156,26 +173,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
-  /study-update/{study_id}:
-    post:
-      operationId: crc.api.study.post_update_study_from_protocol_builder
-      summary: If the study is up-to-date with Protocol Builder, returns a 304 Not Modified. If out of date, return a 202 Accepted and study state changes to updating.
-      tags:
-        - Study Status
-      parameters:
-        - name: study_id
-          in: path
-          required: true
-          description: The id of the study that should be checked for updates.
-          schema:
-            type: integer
-            format: int32
-      responses:
-        '304':
-          description: Study is currently up to date and does not need to be reloaded from Protocol Builder
-        '202':
-          description: Request accepted, will preform an update. Study state set to "updating"
-
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -360,24 +357,12 @@ paths:
         description: The unique id of a workflow specification
         schema:
           type: string
-      - name: study_id
-        in: query
-        required: false
-        description: The unique id of a study
-        schema:
-          type: integer
       - name: workflow_id
         in: query
         required: false
         description: The unique id of a workflow instance
         schema:
           type: integer
-      - name: task_id
-        in: query
-        required: false
-        description: The unique id of a workflow task
-        schema:
-          type: string
       - name: form_field_key
         in: query
         required: false
@@ -471,6 +456,12 @@ paths:
         in: path
         required: true
         description: The id of the File requested
+        schema:
+          type: integer
+      - name: version
+        in: query
+        required: false
+        description: The version of the file, or none for latest version
         schema:
           type: integer
     get:
@@ -681,7 +672,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
-  /workflow/{workflow_id}/task/{task_id}/lookup/{field_id}:
+  /workflow/{workflow_id}/lookup/{field_id}:
     parameters:
       - name: workflow_id
         in: path
@@ -690,13 +681,6 @@ paths:
         schema:
           type: integer
           format: int32
-      - name: task_id
-        in: path
-        required: true
-        description: The id of the task
-        schema:
-          type: string
-          format: uuid
       - name: field_id
         in: path
         required: true
@@ -755,13 +739,6 @@ paths:
               schema:
                 type: string
   /render_docx:
-    parameters:
-      - name: data
-        in: query
-        required: true
-        description: The json data to use in populating the template
-        schema:
-          type: string
     put:
       operationId: crc.api.tools.render_docx
       security: []  # Disable security for this endpoint only.
@@ -777,6 +754,9 @@ paths:
                 file:
                   type: string
                   format: binary
+                data:
+                  type: string
+                  format: json
       responses:
         '200':
           description: Returns the generated document.
@@ -802,6 +782,54 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Script"
+  /approval:
+    parameters:
+      - name: approver_uid
+        in: query
+        required: false
+        description: Restrict results to a given approver uid, maybe we restrict the use of this at somepoint.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.approval.get_approvals
+      summary: Provides a list of workflows approvals
+      tags:
+      - Approvals
+      responses:
+        '200':
+          description: An array of approvals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
+  /approval/{approval_id}:
+    parameters:
+      - name: approval_id
+        in: path
+        required: true
+        description: The id of the approval in question.
+        schema:
+          type: integer
+          format: int32
+    put:
+      operationId: crc.api.approval.update_approval
+      summary: Updates an approval with the given parameters
+      tags:
+        - Approvals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Approval'
+      responses:
+        '200':
+          description: Study updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Approval"
 components:
   securitySchemes:
     jwt:
@@ -1209,7 +1237,10 @@ components:
           readOnly: true
         task:
           $ref: "#/components/schemas/Task"
-
-
-
+    Approval:
+      properties:
+        id:
+          type: number
+          format: integer
+          example: 5
 

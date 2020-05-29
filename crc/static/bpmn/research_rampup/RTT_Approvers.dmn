@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_0crc2o7" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_ApprovalInfo" name="Approval Info">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="School">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text>PISchool</text>
+        </inputExpression>
+      </input>
+      <output id="OutputClause_1138fqx" label="School" name="ApprvlSchool" typeRef="string" />
+      <output id="output_1" label="Approver 1" name="ApprvlApprvr1" typeRef="string" />
+      <output id="OutputClause_0d10p7n" label="Approver 1 Name" name="ApprvlApprvrName1" typeRef="string" />
+      <output id="OutputClause_0dcb1cr" label="Approver 1 Role" name="ApprvlApprovrRole1" typeRef="string" />
+      <output id="OutputClause_0mftsw9" label="Approver 2" name="ApprvlApprvr2" typeRef="string" />
+      <output id="OutputClause_0orlpz9" label="Approver 2 Name" name="ApprvlApprvrName2" typeRef="string" />
+      <output id="OutputClause_0iuw224" label="Approver 2 Role" name="ApprvlApprvrRole2" typeRef="string" />
+      <rule id="DecisionRule_1wge2nn">
+        <inputEntry id="UnaryTests_0mfg1fu">
+          <text>"Architecture"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_074qb28">
+          <text>"Architecture"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0vb9mia">
+          <text>PISupervisor.data.uid</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_00k4by2">
+          <text>PISupervisor.data.display_name</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1pqm0u2">
+          <text>"Supervisor"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_17oc2op">
+          <text>"agc9a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1b0mjy0">
+          <text>"Anselmo Canfora"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_08dc6cz">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1u9orsf">
+        <inputEntry id="UnaryTests_08ormp3">
+          <text>"Arts &amp; Sciences"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0ua8d03">
+          <text>"Arts &amp; Sciences"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ejs3h2">
+          <text>PISupervisor.data.uid</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1v7dfzn">
+          <text>PISupervisor.data.display_name</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0h7eq4l">
+          <text>"Supervisor"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_06pynb2">
+          <text>"dh2t"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1b047rf">
+          <text>"David Hill"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0x965p2">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0k7lbs6">
+        <inputEntry id="UnaryTests_1tws5wb">
+          <text>"Commerce"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0y7bv69">
+          <text>"Commerce"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0sz476a">
+          <text>"dcs8f"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_11bvybc">
+          <text>"David Smith"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0wbcswk">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0htwmws">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0do7f3z">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ntf026">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0pcsd6s">
+        <inputEntry id="UnaryTests_07uijrb">
+          <text>"Darden"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1he7hp6">
+          <text>"Darden"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0hdskgi">
+          <text>"mw4m"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1urv25e">
+          <text>"Maureen Wellen"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1uxxdv0">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0q81xjf">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0qypltu">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1rp7s1w">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0qlavkb">
+        <inputEntry id="UnaryTests_1775ht5">
+          <text>"Data Science"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1fxauop">
+          <text>"Data Science"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0w0ksry">
+          <text>"cws3v"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1mnndve">
+          <text>"Claudia Scholz"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0847zci">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1xjonk2">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0g81mjb">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1rb6200">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0vw6027">
+        <inputEntry id="UnaryTests_1hsal1b">
+          <text>"Education"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1uwd4hj">
+          <text>"Education"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1t3c4oj">
+          <text>PISupervisor.data.uid</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_045f3hz">
+          <text>PISupervisor.data.display_name</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0vkosy7">
+          <text>"Supervisor"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1sj3i3e">
+          <text>"cpb8g"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1f1zg5p">
+          <text>"Catherine Bradshaw"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_11ml53c">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1rgdbw3">
+        <inputEntry id="UnaryTests_022jcbh">
+          <text>"Engineering"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0lzmt29">
+          <text>"Engineering"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0v4df1x">
+          <text>"sb5mc"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1biq8m6">
+          <text>"Susan Barker"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_16kmec1">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1bjsn8g">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ycmwd4">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1rm1jw7">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1hy1sby">
+        <inputEntry id="UnaryTests_1u52cey">
+          <text>"Law"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1w3vu2k">
+          <text>"Law"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1nrqe2j">
+          <text>"kendrick"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_02ckxvj">
+          <text>"Leslie Kendrick"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_19n45lv">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0nppbew">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_08qy2v8">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0n1f5l1">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1nmyhfi">
+        <inputEntry id="UnaryTests_0uqd08s">
+          <text>"Leadership &amp; Public Policy"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0dy02ei">
+          <text>"Leadership &amp; Public Policy"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0rxrqkb">
+          <text>"jps3va"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_05wkbco">
+          <text>"Jay Shimshack"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ejmi7q">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ph2wlx">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1q9esl3">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0i6fih4">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_17uxicj">
+        <inputEntry id="UnaryTests_0kttpy1">
+          <text>"Medicine"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1ops4nm">
+          <text>"Medicine"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1cwa3r0">
+          <text>PISupervisor.data.uid</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1y0r1vs">
+          <text>PISupervisor.data.display_name</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ouvo17">
+          <text>"Supervisor"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_18rte97">
+          <text>"mas3x"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0j7fp1z">
+          <text>"Margaret Shupnik"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1rxh2p0">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1t4241f">
+        <inputEntry id="UnaryTests_0xwnrta">
+          <text>"Nursing"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1va63rh">
+          <text>"Nursing"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_125fuie">
+          <text>"jla7e"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1p94oot">
+          <text>"Jeanne Alhusen"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0h1e3bv">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0e8b9ui">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0xky8fm">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1mq49yg">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0jnp1wp">
+        <inputEntry id="UnaryTests_164zt99">
+          <text>"Continuing Education"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1h81xwr">
+          <text>"Continuing Education"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_12sudp0">
+          <text>"ado4v"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0j7x2td">
+          <text>"Angela  Orebaugh"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1jkrv7z">
+          <text>"Associate Research Dean"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0qelytu">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1tffqsf">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_19tc8kf">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1ynkili">
+        <inputEntry id="UnaryTests_1dupb6e">
+          <text>"Provost Office"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1w13wuw">
+          <text>"Provost Office"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_13xizrn">
+          <text>"rammk"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ixvqzn">
+          <text>"Melur Ramasubramanian"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_166hajt">
+          <text>"VP of Research"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1xazzzn">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_14uq3iz">
+          <text>"n/a"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0zr3ar6">
+          <text></text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

@@ -1,6 +1,7 @@
+from tests.base_test import BaseTest
+
 from crc import db
 from crc.models.user import UserModel
-from tests.base_test import BaseTest
 
 
 class TestAuthentication(BaseTest):
@@ -12,8 +13,8 @@ class TestAuthentication(BaseTest):
         self.assertTrue(isinstance(auth_token, bytes))
         self.assertEqual("dhf8r", user.decode_auth_token(auth_token).get("sub"))
 
-    def test_auth_creates_user(self):
-        new_uid = 'czn1z';
+    def test_backdoor_auth_creates_user(self):
+        new_uid = 'lb3dp' ## Assure this user id is in the fake responses from ldap.
         self.load_example_data()
         user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNone(user)
@@ -37,6 +38,23 @@ class TestAuthentication(BaseTest):
         self.assertTrue(rv_2.status_code == 302)
         self.assertTrue(str.startswith(rv_2.location, redirect_url))
 
+    def test_normal_auth_creates_user(self):
+        new_uid = 'lb3dp' # This user is in the test ldap system.
+        self.load_example_data()
+        user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
+        self.assertIsNone(user)
+        redirect_url = 'http://worlds.best.website/admin'
+        headers = dict(Uid=new_uid)
+        rv = self.app.get('v1.0/login', follow_redirects=False, headers=headers)
+        self.assert_success(rv)
+        user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
+        self.assertIsNotNone(user)
+        self.assertEquals(new_uid, user.uid)
+        self.assertEquals("Laura Barnes", user.display_name)
+        self.assertEquals("lb3dp@virginia.edu", user.email_address)
+        self.assertEquals("E0:Associate Professor of Systems and Information Engineering", user.title)
+
+
     def test_current_user_status(self):
         self.load_example_data()
         rv = self.app.get('/v1.0/user')
@@ -45,6 +63,7 @@ class TestAuthentication(BaseTest):
         rv = self.app.get('/v1.0/user', headers=self.logged_in_headers())
         self.assert_success(rv)
 
-        user = UserModel(uid="ajl2j", first_name='Aaron', last_name='Louie', email_address='ajl2j@virginia.edu')
+        # User must exist in the mock ldap responses.
+        user = UserModel(uid="dhf8r", first_name='Dan', last_name='Funk', email_address='dhf8r@virginia.edu')
         rv = self.app.get('/v1.0/user', headers=self.logged_in_headers(user, redirect_url='http://omg.edu/lolwut'))
         self.assert_success(rv)
