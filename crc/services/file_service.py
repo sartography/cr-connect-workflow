@@ -204,22 +204,27 @@ class FileService(object):
         return results
 
     @staticmethod
-    def get_spec_data_files(workflow_spec_id, workflow_id=None):
+    def get_spec_data_files(workflow_spec_id, workflow_id=None, name=None):
         """Returns all the FileDataModels related to a workflow specification.
         If a workflow is specified, returns the version of the spec relatted
         to that workflow, otherwise, returns the lastes files."""
         if workflow_id:
-            files = session.query(FileDataModel) \
-                .join(WorkflowSpecDependencyFile) \
-                .filter(WorkflowSpecDependencyFile.workflow_id == workflow_id) \
-                .order_by(FileDataModel.id).all()
-            return files
+            query = session.query(FileDataModel) \
+                    .join(WorkflowSpecDependencyFile) \
+                    .filter(WorkflowSpecDependencyFile.workflow_id == workflow_id) \
+                    .order_by(FileDataModel.id)
+            if name:
+                query = query.join(FileModel).filter(FileModel.name == name)
+            return query.all()
         else:
             """Returns all the latest files related to a workflow specification"""
             file_models = FileService.get_files(workflow_spec_id=workflow_spec_id)
             latest_data_files = []
             for file_model in file_models:
-                latest_data_files.append(FileService.get_file_data(file_model.id))
+                if name and file_model.name == name:
+                    latest_data_files.append(FileService.get_file_data(file_model.id))
+                elif not name:
+                    latest_data_files.append(FileService.get_file_data(file_model.id))
             return latest_data_files
 
     @staticmethod

@@ -672,7 +672,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
-  /workflow/{workflow_id}/task/{task_id}/lookup/{field_id}:
+  /workflow/{workflow_id}/lookup/{field_id}:
     parameters:
       - name: workflow_id
         in: path
@@ -681,13 +681,6 @@ paths:
         schema:
           type: integer
           format: int32
-      - name: task_id
-        in: path
-        required: true
-        description: The id of the task
-        schema:
-          type: string
-          format: uuid
       - name: field_id
         in: path
         required: true

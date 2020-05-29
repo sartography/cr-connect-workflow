@@ -18,6 +18,7 @@ from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
 from crc.models.file import LookupDataModel
 from crc.models.stats import TaskEventModel
+from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
@@ -41,18 +42,20 @@ class WorkflowService(object):
         """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
         sanity check."""
 
-        spec = WorkflowProcessor.get_spec(
-            file_data_models=FileService.get_spec_data_files(workflow_spec_id=spec_id),
-            workflow_spec_id=spec_id)
-        bpmn_workflow = BpmnWorkflow(spec, script_engine=CustomBpmnScriptEngine())
-        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = 1
-        bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = spec_id
-        bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = True
+        workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
+                                       workflow_spec_id=spec_id,
+                                       last_updated=datetime.now(),
+                                       study_id=1)
+        try:
+            processor = WorkflowProcessor(workflow_model, validate_only=True)
+        except WorkflowException as we:
+            raise ApiError.from_task_spec("workflow_execution_exception", str(we),
+                                          we.sender)
 
-        while not bpmn_workflow.is_completed():
+        while not processor.bpmn_workflow.is_completed():
             try:
-                bpmn_workflow.do_engine_steps()
-                tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
+                processor.bpmn_workflow.do_engine_steps()
+                tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
@@ -60,8 +63,10 @@ class WorkflowService(object):
                     WorkflowService.populate_form_with_random_data(task, task_api)
                     task.complete()
             except WorkflowException as we:
+                db.session.delete(workflow_model)
                 raise ApiError.from_task_spec("workflow_execution_exception", str(we),
                                               we.sender)
+        db.session.delete(workflow_model)
 
     @staticmethod
     def populate_form_with_random_data(task, task_api):
@@ -84,7 +89,7 @@ class WorkflowService(object):
                                                              " with no options" % field.id,
                                              task)
             elif field.type == "autocomplete":
-                lookup_model = LookupService.get_lookup_table(task, field)
+                lookup_model = LookupService.get_lookup_model(task, field)
                 if field.has_property(Task.PROP_LDAP_LOOKUP):
                     form_data[field.id] = {
                         "label": "dhf8r",
@@ -250,12 +255,12 @@ class WorkflowService(object):
 
     @staticmethod
     def process_options(spiff_task, field):
-        lookup_model = LookupService.get_lookup_table(spiff_task, field)
 
         # If this is an auto-complete field, do not populate options, a lookup will happen later.
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             pass
-        else:
+        elif field.has_property(Task.PROP_OPTIONS_FILE):
+            lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
             if not hasattr(field, 'options'):
                 field.options = []
@@ -286,3 +291,4 @@ class WorkflowService(object):
         )
         db.session.add(task_event)
         db.session.commit()
+

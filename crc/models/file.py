@@ -6,6 +6,7 @@ from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import deferred
 
 from crc import db, ma
 
@@ -61,7 +62,7 @@ class FileDataModel(db.Model):
     __tablename__ = 'file_data'
     id = db.Column(db.Integer, primary_key=True)
     md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
-    data = db.Column(db.LargeBinary)
+    data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
     version = db.Column(db.Integer, default=0)
     date_created = db.Column(db.DateTime(timezone=True), default=func.now())
     file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
@@ -127,25 +128,22 @@ class FileSchema(ma.Schema):
 
 
 class LookupFileModel(db.Model):
-    """Takes the content of a file (like a xlsx, or csv file) and creates a key/value
-    store that can be used for lookups and searches. This table contains the metadata,
-    so we know the version of the file that was used, and what key column, and value column
-    were used to generate this lookup table.  ie, the same xls file might have multiple
-    lookup file models, if different keys and labels are used - or someone decides to
-    make a change.  We need to handle full text search over the label and value columns,
-    and not every column, because we don't know how much information will be in there. """
+    """Gives us a quick way to tell what kind of lookup is set on a form field.
+    Connected to the file data model, so that if a new version of the same file is
+    created, we can update the listing."""
+    #fixme: What happens if they change the file associated with a lookup field?
     __tablename__ = 'lookup_file'
     id = db.Column(db.Integer, primary_key=True)
-    label_column = db.Column(db.String)
-    value_column = db.Column(db.String)
+    workflow_spec_id = db.Column(db.String)
+    field_id = db.Column(db.String)
+    is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
     file_data_model_id = db.Column(db.Integer, db.ForeignKey('file_data.id'))
-
+    dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model", cascade="all, delete, delete-orphan")
 
 class LookupDataModel(db.Model):
     __tablename__ = 'lookup_data'
     id = db.Column(db.Integer, primary_key=True)
     lookup_file_model_id = db.Column(db.Integer, db.ForeignKey('lookup_file.id'))
-    lookup_file_model = db.relationship(LookupFileModel)
     value = db.Column(db.String)
     label = db.Column(db.String)
     # In the future, we might allow adding an additional "search" column if we want to search things not in label.

@@ -100,7 +100,7 @@ class WorkflowProcessor(object):
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
 
-    def __init__(self, workflow_model: WorkflowModel, soft_reset=False, hard_reset=False):
+    def __init__(self, workflow_model: WorkflowModel, soft_reset=False, hard_reset=False, validate_only=False):
         """Create a Workflow Processor based on the serialized information available in the workflow model.
         If soft_reset is set to true, it will try to use the latest version of the workflow specification.
         If hard_reset is set to true, it will create a new Workflow, but embed the data from the last
@@ -121,6 +121,7 @@ class WorkflowProcessor(object):
         self.workflow_spec_id = workflow_model.workflow_spec_id
         try:
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec)
+            self.bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
             self.bpmn_workflow.script_engine = self._script_engine
 
             if self.WORKFLOW_ID_KEY not in self.bpmn_workflow.data:
@@ -402,3 +403,13 @@ class WorkflowProcessor(object):
         for nav_item in self.bpmn_workflow.get_nav_list():
             if nav_item['task_id'] == task.id:
                 return nav_item
+
+    def find_task_and_field_by_field_id(self, field_id):
+        """Tracks down a form field by name in the workflow spec,
+         only looks at ready tasks. Returns a tuple of the task, and form"""
+        for spiff_task in self.bpmn_workflow.get_tasks(SpiffTask.READY):
+            if hasattr(spiff_task.task_spec, "form"):
+                for field in spiff_task.task_spec.form.fields:
+                    if field.id == field_id:
+                        return spiff_task, field
+        raise ApiError("invalid_field", "Unable to find a ready task with field: %s" % field_id)
