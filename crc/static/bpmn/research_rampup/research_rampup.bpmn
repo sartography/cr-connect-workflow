@@ -5,7 +5,7 @@
       <bpmn:outgoing>SequenceFlow_05ja25w</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:manualTask id="ManualTask_Instructions" name="Read RRP Instructions">
-      <bpmn:documentation>## Beta Stage: All data entered will be destroyed before public launch
+      <bpmn:documentation>## **Beta Stage: All data entered will be destroyed before public launch**
 
 
 ### UNIVERSITY OF VIRGINIA RESEARCH
@@ -32,13 +32,15 @@ Schools are developing a process for the approval of ramp up requests and enforc
 
 
 1.	The Research Ramp-up Plan allows for one request to be entered for a single Principle Investigator.  In the form that follows enter the Primary Investigator this request is for and other identifying information.  The PI's School and Supervisor will be used as needed for approval routing.  
-2.	Provide all available information in the forms that follow to provide an overview of where the research will resume, who will be involved, what supporting resources will be needed and what steps you have taken to assure compliance with [Research Ramp-up Guidance](https://research.virginia.edu/research-ramp-guidance).
+2.	Provide all available information in the forms that follow to provide an overview of where the research will resume, who will be involved, what supporting resources will be needed and what steps have been taken to assure compliance with [Research Ramp-up Guidance](https://research.virginia.edu/research-ramp-guidance).
 3.	After all forms have been completed, you will be presented with the option to create your Research Recovery Plan in Word format.  Download the document and review it.  If you see any corrections that need to be made, return to the corresponding form and make the correction. 
 4.	Once the generated Research Recovery Plan is finalize, proceed to the Plan Submission step to submit your plan for approval.</bpmn:documentation>
       <bpmn:incoming>SequenceFlow_05ja25w</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0h50bp3</bpmn:outgoing>
     </bpmn:manualTask>
     <bpmn:userTask id="Activity-PI_Info" name="Enter PI Info" camunda:formKey="PI Information">
+      <bpmn:documentation>#### Primary Investigator Information
+Enter the following information for the PI submitting this request</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="PIComputingID" label="Primary Investigator" type="autocomplete">
@@ -133,11 +135,24 @@ Schools are developing a process for the approval of ramp up requests and enforc
     <bpmn:sequenceFlow id="SequenceFlow_05ja25w" sourceRef="StartEvent_1" targetRef="ManualTask_Instructions" />
     <bpmn:userTask id="Personnel" name="Enter Personnel" camunda:formKey="Personnel">
       <bpmn:documentation>#### People for whom you are requesting access
-Information on all researchers you are requesting approval for reentry into the lab/research space for conducting research on-Grounds. (If there are personnel already working in the space, include them). 
+Provide information on all researchers you are requesting approval for reentry into the previously entered lab/research and/or office space(s) for conducting research on-Grounds. (If there are personnel already working in the space, include them). 
+
+**Note: no undergraduates will be allowed to work on-Grounds during Phase I.**
+
+#### Exclusive Space previously entered
+{% for es in exclusive %}
+{{ es.ExclusiveSpaceRoomID + " " + es.ExclusiveSpaceBuilding.label }}
+{% else %}
+No exclusive space entered
+{% endfor %}
 
 
-
-**Note: no undergraduates will be allowed to work on-Grounds during Phase II.**</bpmn:documentation>
+#### Shared Space previously entered
+{% for ss in shared %}
+{{ ss.SharedSpaceRoomID + " " + ss.SharedSpaceBuilding.label }}
+{% else %}
+No shared space entered
+{% endfor %}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="PersonnelComputingID" label="Computer ID" type="autocomplete">
@@ -223,7 +238,7 @@ Place instruction here,</bpmn:documentation>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_1e2qi9s" sourceRef="Activity_AcknowledgePlanReview" targetRef="Activity_ApprovalInfo" />
     <bpmn:manualTask id="Activity_AcknowledgePlanReview" name="Acknowledge Plan Review">
-      <bpmn:documentation>Your Research Ramp-up Plan has been generated and is available in the Files pop-out found in the upper left hand corner of this application   Click on the file name link to download the MS Word file to download, open and review.  If changes are needed, choose the appropriate menu choice to make your edits, clicking Save when done.  Note that you will need to revisit subsequent steps so the application can check to see if your edits impacted future workflow decisions.  All your data will be persevered and you will need to click the Save button on each step to proceed.
+      <bpmn:documentation>Your Research Ramp-up Plan has been generated and is available in the Files pop-out found in the upper right hand corner of this application   Click on the file name link to download the MS Word file, open and review.  If changes are needed, choose the appropriate menu choice to make your edits, clicking Save when done.  Note that you will need to revisit subsequent steps so the application can check to see if your edits impacted future workflow decisions.  All your data will be persevered and you will need to click the Save button on each step to proceed.
 
 When your Research Ramp-up Plan is complete and ready to submit for review and approval, click the Continue button below.</bpmn:documentation>
       <bpmn:incoming>Flow_0aqgwvu</bpmn:incoming>
@@ -248,7 +263,7 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
           <camunda:formField id="SharedSpaceRoomID" label="Shared Space Room ID" type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="Shared" />
-              <camunda:property id="description" value="Enter the shared room number or other unique identifier" />
+              <camunda:property id="description" value="Enter the room number or other unique identifier" />
               <camunda:property id="hide_expression" value="model.SharedSpaceBuilding === &#34;Other&#34;" />
             </camunda:properties>
           </camunda:formField>
@@ -266,14 +281,16 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
               <camunda:property id="repeat" value="Shared" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="SharedSpaceSqFt" label="Enter the number of square feet usable by personnel in this space." type="long">
+          <camunda:formField id="SharedSpaceSqFt" label="Space square Feet" type="long">
             <camunda:properties>
               <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="description" value="Enter the number of square feet in this space." />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="SharedSpacePercentUsable" label="Percent of Space Usable By Personnel" type="long">
             <camunda:properties>
               <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="description" value="If known, enter a number between 1 &#38; 100 which indicates the approximate percent of the total space personnel will work in and move around in during the workday." />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="min" config="1" />
@@ -343,6 +360,8 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
           <camunda:formField id="ExclusiveSpaceRoomID" label="Exclusive Space Room ID" type="string">
             <camunda:properties>
               <camunda:property id="hide_expression" value="model.ExclusiveSpaceBuilding === &#34;Other&#34;" />
+              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="description" value="Enter the room number or other unique identifier" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceRoomIDBuilding" label="Room No, and Building Name" type="string">
@@ -370,9 +389,10 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
               <camunda:property id="placeholder" value="wxy0z or Smith" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="ExclusiveSpaceSqFt" label="Enter the number of square feet usable by personnel in this space." type="long">
+          <camunda:formField id="ExclusiveSpaceSqFt" label="Space Square Feet" type="long">
             <camunda:properties>
               <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="description" value="Enter the number of square feet in this space." />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -381,7 +401,7 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
           <camunda:formField id="ExclusiveSpacePercentUsable" label="Percent of Space Usable By Personnel" type="long">
             <camunda:properties>
               <camunda:property id="repeat" value="Exclusive" />
-              <camunda:property id="description" value="Enter number between 1 &#38; 100 which indicates the percent of space this space personnel will work and move around in during the workday." />
+              <camunda:property id="description" value="If known, enter a number between 1 &#38; 100 which indicates the approximate percent of the total space personnel will work in and move around in during the workday." />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="min" config="1" />
@@ -490,17 +510,16 @@ Maintain social distancing by designing space between people to be at least 9 fe
     <bpmn:sequenceFlow id="Flow_1yqkpgu" sourceRef="Gateway_18jn18b" targetRef="Activity_HSR" />
     <bpmn:userTask id="Activity_HSR" name="Enter Health Safety Requirements" camunda:formKey="Lab Plan">
       <bpmn:documentation>#### Health Safety Requirements:
-Use EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/url?q=http://ehs.virginia.edu/files/Lab-Safety-Plan-During-COVID-19.docx&amp;source=gmail&amp;ust=1590687968958000&amp;usg=AFQjCNE83uGDFtxGkKaxjuXGhTocu-FDmw) to create and upload a copy of your laboratory policy statement to all members which includes at a minimum the following details: 
+Use the EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/url?q=http://ehs.virginia.edu/files/Lab-Safety-Plan-During-COVID-19.docx&amp;source=gmail&amp;ust=1590687968958000&amp;usg=AFQjCNE83uGDFtxGkKaxjuXGhTocu-FDmw) to create and upload a copy of your laboratory policy statement to all members which includes at a minimum the following details: 
 - Laboratory face covering rules, use of other PPE use as required
 - Adherence to individual schedules, check-in, check out requirements
 - Completion of online EHS safety training requirement
 - Health self-attestation requirement
 - Sanitizing procedures including frequency and type of disinfectants to use
-- 
 - Where and how to obtain PPE including face covering</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="LabPlan" label="Upload Lab Plan" type="file" />
+          <camunda:formField id="LabPlan" label="Upload Lab Plan" type="files" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1yqkpgu</bpmn:incoming>
@@ -580,46 +599,74 @@ Use EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/url?q=
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0aqgwvu" sourceRef="Activity_1tub2mc" targetRef="Activity_AcknowledgePlanReview" />
     <bpmn:sequenceFlow id="Flow_0j4rs82" sourceRef="Activity_SubmitPlan" targetRef="Activity_0absozl" />
-    <bpmn:sequenceFlow id="Flow_07ge8uf" sourceRef="Activity_0absozl" targetRef="Activity_ReviewStatus" />
-    <bpmn:sequenceFlow id="Flow_1ufh44h" sourceRef="Activity_ReviewStatus" targetRef="Activity_0u9ic8o" />
-    <bpmn:userTask id="Activity_ReviewStatus" name="Update Review Status" camunda:formKey="Review Status">
+    <bpmn:sequenceFlow id="Flow_07ge8uf" sourceRef="Activity_0absozl" targetRef="Activity_RequestStatus" />
+    <bpmn:sequenceFlow id="Flow_1ufh44h" sourceRef="Activity_RequestStatus" targetRef="Activity_AreaMonitorNotification" />
+    <bpmn:userTask id="Activity_RequestStatus" name="Check-on Request Status" camunda:formKey="Rquest Status">
+      <bpmn:documentation>#### Approval Process
+The Research Ramp-up Plan and associated documents will be reviewed by{{ " " + ApprvlApprvrName1 }}{{ '.' if ApprvlApprvrName2 == 'n/a' else ' and ' + ApprvlApprvrName2 + '.' }}  While waiting for approval, be sure that all required training has been completed and supplies secured.  When the approval email notification is received, confirming the three questions below will allow you to proceed.
+
+
+If a rejection notification is received, go back to the first step that needs to be addressed and step through each subsequent form from that point.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="ApprovalReceived" label="Please Confirm:" type="enum">
             <camunda:properties>
               <camunda:property id="enum_type" value="checkbox" />
             </camunda:properties>
-            <camunda:value id="ApprovalNotificationReceived" name="Approval Notification Received" />
+            <camunda:value id="ApprovalNotificationReceived" name="Approval Notification Received?" />
           </camunda:formField>
           <camunda:formField id="RequiredTraining" label="Please Confirm:" type="enum">
             <camunda:properties>
               <camunda:property id="enum_type" value="checkbox" />
             </camunda:properties>
-            <camunda:value id="AllRequiredTraining" name="All Required Training Completed" />
+            <camunda:value id="AllRequiredTraining" name="All Required Training Completed?" />
           </camunda:formField>
           <camunda:formField id="NeededSupplies" label="Please Confirm&#34;" type="enum">
             <camunda:properties>
               <camunda:property id="enum_type" value="checkbox" />
             </camunda:properties>
-            <camunda:value id="NeededSupplies" name="All Supplies Needed Have Been Secured" />
+            <camunda:value id="NeededSupplies" name="All Needed Supplies Secured?" />
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_07ge8uf</bpmn:incoming>
       <bpmn:outgoing>Flow_1ufh44h</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_05w8yd6" sourceRef="Activity_1pklpot" targetRef="EndEvent_09wp7av" />
+    <bpmn:sequenceFlow id="Flow_05w8yd6" sourceRef="Activity_WhatNext" targetRef="EndEvent_09wp7av" />
     <bpmn:sequenceFlow id="Flow_08njvvi" sourceRef="Activity_ApprovalInfo" targetRef="Activity_SubmitPlan" />
-    <bpmn:businessRuleTask id="Activity_ApprovalInfo" name="Approval Info" camunda:decisionRef="Decision_ApprovalInfo">
+    <bpmn:businessRuleTask id="Activity_ApprovalInfo" name="Assign Approval Info" camunda:decisionRef="Decision_ApprovalInfo">
       <bpmn:incoming>Flow_1e2qi9s</bpmn:incoming>
       <bpmn:outgoing>Flow_08njvvi</bpmn:outgoing>
     </bpmn:businessRuleTask>
-    <bpmn:manualTask id="Activity_1pklpot" name="Review What&#39;s Next?">
+    <bpmn:manualTask id="Activity_WhatNext" name="Review What&#39;s Next?">
+      <bpmn:documentation>### Stay Here, In Case Something Changes
+If anything changes in the Research Ramp-up Plan submitted, click **Start over** at the top of the menu and step through each form, updating as needed.  Data will be preserved, so if no changes are needed on a specific form, click Save and proceed.
+
+
+If notification is received that the Research Ramp-up Plan approval process is no longer required, click Continue to close out the workflow process.</bpmn:documentation>
       <bpmn:incoming>Flow_0cpmvcw</bpmn:incoming>
       <bpmn:outgoing>Flow_05w8yd6</bpmn:outgoing>
     </bpmn:manualTask>
-    <bpmn:sequenceFlow id="Flow_0cpmvcw" sourceRef="Activity_0u9ic8o" targetRef="Activity_1pklpot" />
-    <bpmn:manualTask id="Activity_0u9ic8o" name="Send Area Monitor Notification">
+    <bpmn:sequenceFlow id="Flow_0cpmvcw" sourceRef="Activity_AreaMonitorNotification" targetRef="Activity_WhatNext" />
+    <bpmn:manualTask id="Activity_AreaMonitorNotification" name="Send Area Monitor Notification">
+      <bpmn:documentation>#### Ready to Ramp-up Research
+Notify the Area Monitor for
+
+
+#### Exclusive Space Area Monitors
+{% for es in exclusive %}
+{{ es.ExclusiveSpaceAMComputingID.data.display_name }}
+{% else %}
+No exclusive space entered
+{% endfor %}
+
+
+#### Shared Space Area Monitors
+{% for ss in shared %}
+{{ ss.SharedSpaceAMComputingID.data.display_name }}
+{% else %}
+No shared space entered
+{% endfor %}</bpmn:documentation>
       <bpmn:incoming>Flow_1ufh44h</bpmn:incoming>
       <bpmn:outgoing>Flow_0cpmvcw</bpmn:outgoing>
     </bpmn:manualTask>
@@ -837,16 +884,16 @@ Use EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/url?q=
       <bpmndi:BPMNShape id="Activity_117owwi_di" bpmnElement="Activity_1tub2mc">
         <dc:Bounds x="1540" y="267" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0fxf44t_di" bpmnElement="Activity_ReviewStatus">
+      <bpmndi:BPMNShape id="Activity_0fxf44t_di" bpmnElement="Activity_RequestStatus">
         <dc:Bounds x="2230" y="267" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_080o38p_di" bpmnElement="Activity_ApprovalInfo">
         <dc:Bounds x="1800" y="267" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0wuukfn_di" bpmnElement="Activity_1pklpot">
+      <bpmndi:BPMNShape id="Activity_0wuukfn_di" bpmnElement="Activity_WhatNext">
         <dc:Bounds x="2520" y="267" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0js9ww9_di" bpmnElement="Activity_0u9ic8o">
+      <bpmndi:BPMNShape id="Activity_0js9ww9_di" bpmnElement="Activity_AreaMonitorNotification">
         <dc:Bounds x="2370" y="267" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0wnn9de_di" bpmnElement="Activity_0absozl">
