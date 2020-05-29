@@ -5,6 +5,7 @@ verify_ssl = true
 
 [dev-packages]
 pytest = "*"
+pbr = "*"
 
 [packages]
 connexion = {extras = ["swagger-ui"],version = "*"}
@@ -24,7 +25,7 @@ pyjwt = "*"
 requests = "*"
 xlsxwriter = "*"
 webtest = "*"
-spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "master"}
+spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "deploy"}
 alembic = "*"
 coverage = "*"
 sphinx = "*"
@@ -35,6 +36,8 @@ python-dateutil = "*"
 pandas = "*"
 xlrd = "*"
 ldap3 = "*"
+gunicorn = "*"
+werkzeug = "*"
 
 [requires]
-python_version = "3.6.9"
+python_version = "3.7"

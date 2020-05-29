@@ -3,6 +3,8 @@ import os
 import random
 from unittest.mock import patch
 
+from tests.base_test import BaseTest
+
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
 from crc.models.file import FileModelSchema
@@ -10,7 +12,6 @@ from crc.models.stats import TaskEventModel
 from crc.models.workflow import WorkflowStatus
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_service import WorkflowService
-from tests.base_test import BaseTest
 
 
 class TestTasksApi(BaseTest):
@@ -181,7 +182,6 @@ class TestTasksApi(BaseTest):
         self.assertEquals("Task 2b", nav[5]['title'])
         self.assertEquals("Task 3", nav[6]['title'])
 
-
     def test_document_added_to_workflow_shows_up_in_file_list(self):
         self.load_example_data()
         self.create_reference_document()
@@ -303,14 +303,16 @@ class TestTasksApi(BaseTest):
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_multi_instance_task(self, mock_get):
+
+        self.load_example_data()
+
         # Enable the protocol builder.
-        ProtocolBuilderService.ENABLED = True
+        app.config['PB_ENABLED'] = True
 
         # This depends on getting a list of investigators back from the protocol builder.
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('investigators.json')
 
-        self.load_example_data()
         workflow = self.create_workflow('multi_instance')
 
         # get the first form in the two form workflow.
@@ -332,8 +334,8 @@ class TestTasksApi(BaseTest):
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
         field_id = task.form['fields'][0]['id']
-        rv = self.app.get('/v1.0/workflow/%i/task/%s/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, task.id, field_id, 'c'), # All records with a word that starts with 'c'
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, field_id, 'c'), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
@@ -348,8 +350,8 @@ class TestTasksApi(BaseTest):
         task = workflow.next_task
         field_id = task.form['fields'][0]['id']
         # lb3dp is a user record in the mock ldap responses for tests.
-        rv = self.app.get('/v1.0/workflow/%i/task/%s/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, task.id, field_id, 'lb3dp'),
+        rv = self.app.get('/v1.0/workflow/%s/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, field_id, 'lb3dp'),
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
@@ -423,11 +425,12 @@ class TestTasksApi(BaseTest):
     def test_parallel_multi_instance(self, mock_get):
 
         # Assure we get nine investigators back from the API Call, as set in the investigators.json file.
+        app.config['PB_ENABLED'] = True
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('investigators.json')
 
-
         self.load_example_data()
+
         workflow = self.create_workflow('multi_instance_parallel')
 
         workflow_api = self.get_workflow_api(workflow)

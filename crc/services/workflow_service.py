@@ -1,4 +1,6 @@
+import string
 from datetime import datetime
+import random
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
@@ -15,9 +17,14 @@ from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
 from crc.models.file import LookupDataModel
+from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.stats import TaskEventModel
+from crc.models.study import StudyModel
+from crc.models.user import UserModel
+from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
+from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
 
 
@@ -34,30 +41,127 @@ class WorkflowService(object):
      But for now, this contains tools for converting spiff-workflow models into our
      own API models with additional information and capabilities."""
 
-    @classmethod
-    def test_spec(cls, spec_id):
+    @staticmethod
+    def make_test_workflow(spec_id):
+        user = db.session.query(UserModel).filter_by(uid="test").first()
+        if not user:
+            db.session.add(UserModel(uid="test"))
+        study = db.session.query(StudyModel).filter_by(user_uid="test").first()
+        if not study:
+            db.session.add(StudyModel(user_uid="test", title="test"))
+            db.session.commit()
+        workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
+                                       workflow_spec_id=spec_id,
+                                       last_updated=datetime.now(),
+                                       study=study)
+        return workflow_model
+
+    @staticmethod
+    def delete_test_data():
+        for study in db.session.query(StudyModel).filter(StudyModel.user_uid=="test"):
+            StudyService.delete_study(study.id)
+            db.session.commit()
+        db.session.query(UserModel).filter_by(uid="test").delete()
+
+    @staticmethod
+    def test_spec(spec_id):
         """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
         sanity check."""
-        version = WorkflowProcessor.get_latest_version_string(spec_id)
-        spec = WorkflowProcessor.get_spec(spec_id, version)
-        bpmn_workflow = BpmnWorkflow(spec, script_engine=CustomBpmnScriptEngine())
-        bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = 1
-        bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = spec_id
-        bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = True
 
-        while not bpmn_workflow.is_completed():
+        workflow_model = WorkflowService.make_test_workflow(spec_id)
+
+        try:
+            processor = WorkflowProcessor(workflow_model, validate_only=True)
+        except WorkflowException as we:
+            WorkflowService.delete_test_data()
+            raise ApiError.from_task_spec("workflow_execution_exception", str(we),
+                                          we.sender)
+
+        while not processor.bpmn_workflow.is_completed():
             try:
-                bpmn_workflow.do_engine_steps()
-                tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
+                processor.bpmn_workflow.do_engine_steps()
+                tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
-                    WorkflowProcessor.populate_form_with_random_data(task, task_api)
+                    WorkflowService.populate_form_with_random_data(task, task_api)
                     task.complete()
             except WorkflowException as we:
+                WorkflowService.delete_test_data()
                 raise ApiError.from_task_spec("workflow_execution_exception", str(we),
                                               we.sender)
+        WorkflowService.delete_test_data()
+
+    @staticmethod
+    def populate_form_with_random_data(task, task_api):
+        """populates a task with random data - useful for testing a spec."""
+
+        if not hasattr(task.task_spec, 'form'): return
+
+        form_data = {}
+        for field in task_api.form.fields:
+            if field.type == "enum":
+                if len(field.options) > 0:
+                    random_choice = random.choice(field.options)
+                    if isinstance(random_choice, dict):
+                        form_data[field.id] = random.choice(field.options)['id']
+                    else:
+                        # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
+                        form_data[field.id] = random_choice.id ## Assume it is an EnumFormFieldOption
+                else:
+                    raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
+                                                             " with no options" % field.id,
+                                             task)
+            elif field.type == "autocomplete":
+                lookup_model = LookupService.get_lookup_model(task, field)
+                if field.has_property(Task.PROP_LDAP_LOOKUP):
+                    form_data[field.id] = {
+                        "label": "dhf8r",
+                        "value": "Dan Funk",
+                        "data": {
+                            "uid": "dhf8r",
+                            "display_name": "Dan Funk",
+                            "given_name": "Dan",
+                            "email_address": "dhf8r@virginia.edu",
+                            "department": "Depertment of Psychocosmographictology",
+                            "affiliation": "Rousabout",
+                            "sponsor_type": "Staff"
+                        }
+                    }
+                elif lookup_model:
+                    data = db.session.query(LookupDataModel).filter(
+                        LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
+                    options = []
+                    for d in data:
+                        options.append({"id": d.value, "name": d.label})
+                    form_data[field.id] = random.choice(options)
+                else:
+                    raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
+                                                                     "are incorrect: %s " % field.id, task)
+            elif field.type == "long":
+                form_data[field.id] = random.randint(1, 1000)
+            elif field.type == 'boolean':
+                form_data[field.id] = random.choice([True, False])
+            elif field.type == 'file':
+                form_data[field.id] = random.randint(1, 100)
+            elif field.type == 'files':
+                form_data[field.id] = random.randrange(1, 100)
+            else:
+                form_data[field.id] = WorkflowService._random_string()
+        if task.data is None:
+            task.data = {}
+        task.data.update(form_data)
+
+    def __get_options(self):
+        pass
+
+
+    @staticmethod
+    def _random_string(string_length=10):
+        """Generate a random string of fixed length """
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
     def spiff_task_to_api_task(spiff_task, add_docs_and_forms=False):
@@ -176,12 +280,12 @@ class WorkflowService(object):
 
     @staticmethod
     def process_options(spiff_task, field):
-        lookup_model = LookupService.get_lookup_table(spiff_task, field)
 
         # If this is an auto-complete field, do not populate options, a lookup will happen later.
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             pass
-        else:
+        elif field.has_property(Task.PROP_OPTIONS_FILE):
+            lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
             if not hasattr(field, 'options'):
                 field.options = []
@@ -197,7 +301,7 @@ class WorkflowService(object):
             user_uid=g.user.uid,
             workflow_id=workflow_model.id,
             workflow_spec_id=workflow_model.workflow_spec_id,
-            spec_version=workflow_model.spec_version,
+            spec_version=processor.get_version_string(),
             action=action,
             task_id=task.id,
             task_name=task.name,
@@ -212,3 +316,4 @@ class WorkflowService(object):
         )
         db.session.add(task_event)
         db.session.commit()
+

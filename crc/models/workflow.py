@@ -5,6 +5,7 @@ from marshmallow import EXCLUDE
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db
+from crc.models.file import FileModel, FileDataModel
 
 
 class WorkflowSpecCategoryModel(db.Model):
@@ -67,6 +68,14 @@ class WorkflowStatus(enum.Enum):
     complete = "complete"
 
 
+class WorkflowSpecDependencyFile(db.Model):
+    """Connects a workflow to the version of the specification files it depends on to execute"""
+    file_data_id = db.Column(db.Integer, db.ForeignKey(FileDataModel.id), primary_key=True)
+    workflow_id = db.Column(db.Integer, db.ForeignKey("workflow.id"), primary_key=True)
+
+    file_data = db.relationship(FileDataModel)
+
+
 class WorkflowModel(db.Model):
     __tablename__ = 'workflow'
     id = db.Column(db.Integer, primary_key=True)
@@ -76,9 +85,13 @@ class WorkflowModel(db.Model):
     study = db.relationship("StudyModel", backref='workflow')
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
     workflow_spec = db.relationship("WorkflowSpecModel")
-    spec_version = db.Column(db.String)
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
     last_updated = db.Column(db.DateTime)
-    # todo: Add a version that represents the files associated with this workflow
-    # version = "32"
+    # Order By is important or generating hashes on reviews.
+    dependencies = db.relationship(WorkflowSpecDependencyFile, cascade="all, delete, delete-orphan",
+                                   order_by="WorkflowSpecDependencyFile.file_data_id")
+
+    def spec_version(self):
+        dep_ids = list(dep.file_data_id for dep in self.dependencies)
+        return "-".join(str(dep_ids))

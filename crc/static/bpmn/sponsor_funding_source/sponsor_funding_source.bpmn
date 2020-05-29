@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1x1akiz" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1x1akiz" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
   <bpmn:process id="Process_0quormc" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_17znkku</bpmn:outgoing>
@@ -16,10 +16,9 @@
           </camunda:formField>
           <camunda:formField id="FormField_FromOSP" label="From OSP" type="autocomplete">
             <camunda:properties>
-              <camunda:property id="enum.options.file" value="sponsors.xls" />
-              <camunda:property id="enum.options.value.column" value="CUSTOMER_NUMBER" />
-              <camunda:property id="enum.options.label.column" value="CUSTOMER_NAME" />
-              <camunda:property id="enum.options.lookup" value="True" />
+              <camunda:property id="spreadsheet.name" value="sponsors.xls" />
+              <camunda:property id="spreadsheet.value.column" value="CUSTOMER_NUMBER" />
+              <camunda:property id="spreadsheet.label.column" value="CUSTOMER_NAME" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="FormField_Type" label="Select all that apply:" type="enum">
@@ -70,51 +69,51 @@
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0quormc">
-      <bpmndi:BPMNEdge id="SequenceFlow_1n3utyf_di" bpmnElement="SequenceFlow_1n3utyf">
-        <di:waypoint x="430" y="40" />
-        <di:waypoint x="490" y="40" />
-        <di:waypoint x="490" y="92" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_17znkku_di" bpmnElement="SequenceFlow_17znkku">
-        <di:waypoint x="188" y="117" />
-        <di:waypoint x="235" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_13604n2_di" bpmnElement="Flow_13604n2">
-        <di:waypoint x="260" y="92" />
-        <di:waypoint x="260" y="40" />
-        <di:waypoint x="330" y="40" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_030v94s_di" bpmnElement="Flow_030v94s">
-        <di:waypoint x="515" y="117" />
-        <di:waypoint x="552" y="117" />
+      <bpmndi:BPMNEdge id="Flow_1l3gw28_di" bpmnElement="Flow_1l3gw28">
+        <di:waypoint x="430" y="280" />
+        <di:waypoint x="490" y="280" />
+        <di:waypoint x="490" y="222" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0hdjgx6_di" bpmnElement="Flow_0hdjgx6">
-        <di:waypoint x="260" y="142" />
-        <di:waypoint x="260" y="200" />
-        <di:waypoint x="330" y="200" />
+        <di:waypoint x="260" y="222" />
+        <di:waypoint x="260" y="280" />
+        <di:waypoint x="330" y="280" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1l3gw28_di" bpmnElement="Flow_1l3gw28">
-        <di:waypoint x="430" y="200" />
-        <di:waypoint x="490" y="200" />
-        <di:waypoint x="490" y="142" />
+      <bpmndi:BPMNEdge id="Flow_030v94s_di" bpmnElement="Flow_030v94s">
+        <di:waypoint x="515" y="197" />
+        <di:waypoint x="552" y="197" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="EndEvent_19upzzo_di" bpmnElement="EndEvent_19upzzo">
-        <dc:Bounds x="552" y="99" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_1s4ro2h_di" bpmnElement="Gateway_0bgimhg">
-        <dc:Bounds x="235" y="92" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_1kowkjp_di" bpmnElement="Gateway_1924s77">
-        <dc:Bounds x="465" y="92" width="50" height="50" />
+      <bpmndi:BPMNEdge id="Flow_13604n2_di" bpmnElement="Flow_13604n2">
+        <di:waypoint x="260" y="172" />
+        <di:waypoint x="260" y="120" />
+        <di:waypoint x="330" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1n3utyf_di" bpmnElement="SequenceFlow_1n3utyf">
+        <di:waypoint x="430" y="120" />
+        <di:waypoint x="490" y="120" />
+        <di:waypoint x="490" y="172" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_17znkku_di" bpmnElement="SequenceFlow_17znkku">
+        <di:waypoint x="188" y="197" />
+        <di:waypoint x="235" y="197" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="179" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_15oiwqt_di" bpmnElement="Task_14cuhvm">
-        <dc:Bounds x="330" y="0" width="100" height="80" />
+        <dc:Bounds x="330" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_19upzzo_di" bpmnElement="EndEvent_19upzzo">
+        <dc:Bounds x="552" y="179" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1oeywwl_di" bpmnElement="Activity_0xxhfyh">
-        <dc:Bounds x="330" y="160" width="100" height="80" />
+        <dc:Bounds x="330" y="240" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="152" y="99" width="36" height="36" />
+      <bpmndi:BPMNShape id="Gateway_1s4ro2h_di" bpmnElement="Gateway_0bgimhg">
+        <dc:Bounds x="235" y="172" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1kowkjp_di" bpmnElement="Gateway_1924s77">
+        <dc:Bounds x="465" y="172" width="50" height="50" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
