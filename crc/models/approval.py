@@ -87,9 +87,9 @@ class Approval(object):
         instance.associated_files = []
         for approval_file in model.approval_files:
             associated_file = {}
-            associated_file['id'] = approval_file.file.id
-            associated_file['name'] = approval_file.file.name
-            associated_file['content_type'] = approval_file.file.content_type
+            associated_file['id'] = approval_file.file_data.file_model.id
+            associated_file['name'] = approval_file.file_data.file_model.name
+            associated_file['content_type'] = approval_file.file_data.file_model.content_type
             instance.associated_files.append(associated_file)
 
         return instance
