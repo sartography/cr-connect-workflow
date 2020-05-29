@@ -1,4 +1,5 @@
 import json
+from tests.base_test import BaseTest
 from unittest.mock import patch
 
 from crc import db, session
@@ -10,7 +11,6 @@ from crc.scripts.study_info import StudyInfo
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
-from tests.base_test import BaseTest
 
 
 class TestStudyDetailsDocumentsScript(BaseTest):
@@ -63,7 +63,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
-        StudyInfo().do_task_validate_only(task, study.id, "documents")
+        StudyInfo().do_task_validate_only(task, study.id, workflow_model.id, "documents")
 
     def test_load_lookup_data(self):
         self.create_reference_document()

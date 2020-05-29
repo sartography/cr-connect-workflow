@@ -1,34 +1,31 @@
+import json
 import logging
 import os
-import json
-import string
-import random
 from unittest.mock import patch
 
-from SpiffWorkflow import Task as SpiffTask
+from tests.base_test import BaseTest
+
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
-from SpiffWorkflow.camunda.specs.UserTask import Form, FormField
-from SpiffWorkflow.specs import TaskSpec
+from SpiffWorkflow.camunda.specs.UserTask import FormField
 
 from crc import session, db, app
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
+from crc.models.file import FileModel, FileDataModel
+from crc.models.protocol_builder import ProtocolBuilderStudySchema
+from crc.services.protocol_builder import ProtocolBuilderService
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowStatus, WorkflowModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
-from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuilderInvestigatorSchema, \
-    ProtocolBuilderRequiredDocumentSchema
-from crc.services.workflow_service import WorkflowService
-from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_service import WorkflowService
 
 
 class TestWorkflowProcessor(BaseTest):
 
     def _populate_form_with_random_data(self, task):
         api_task = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
-        WorkflowProcessor.populate_form_with_random_data(task, api_task)
+        WorkflowService.populate_form_with_random_data(task, api_task)
 
     def get_processor(self, study_model, spec_model):
         workflow_model = StudyService._create_workflow_model(study_model, spec_model)
@@ -226,10 +223,10 @@ class TestWorkflowProcessor(BaseTest):
         self._populate_form_with_random_data(task)
         processor.complete_task(task)
 
-        files = session.query(FileModel).filter_by(study_id=study.id, workflow_id=processor.get_workflow_id()).all()
+        files = session.query(FileModel).filter_by(workflow_id=processor.get_workflow_id()).all()
         self.assertEqual(0, len(files))
         processor.do_engine_steps()
-        files = session.query(FileModel).filter_by(study_id=study.id, workflow_id=processor.get_workflow_id()).all()
+        files = session.query(FileModel).filter_by(workflow_id=processor.get_workflow_id()).all()
         self.assertEqual(1, len(files), "The task should create a new file.")
         file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == files[0].id).first()
         self.assertIsNotNone(file_data.data)
@@ -257,12 +254,12 @@ class TestWorkflowProcessor(BaseTest):
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("decision_table")
         processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_spec_version().startswith('v1.1'))
+        self.assertTrue(processor.get_version_string().startswith('v1.1'))
         file_service = FileService()
 
         file_service.add_workflow_spec_file(workflow_spec_model, "new_file.txt", "txt", b'blahblah')
         processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_spec_version().startswith('v1.1.1'))
+        self.assertTrue(processor.get_version_string().startswith('v1.1.1'))
 
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'docx', 'docx.bpmn')
         file = open(file_path, "rb")
@@ -271,7 +268,7 @@ class TestWorkflowProcessor(BaseTest):
         file_model = db.session.query(FileModel).filter(FileModel.name == "decision_table.bpmn").first()
         file_service.update_file(file_model, data, "txt")
         processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_spec_version().startswith('v2.1.1'))
+        self.assertTrue(processor.get_version_string().startswith('v2.1.1'))
 
     def test_restart_workflow(self):
         self.load_example_data()
@@ -342,7 +339,7 @@ class TestWorkflowProcessor(BaseTest):
         # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
         processor.workflow_model.bpmn_workflow_json = processor.serialize()
         processor2 = WorkflowProcessor(processor.workflow_model)
-        self.assertTrue(processor2.get_spec_version().startswith("v1 ")) # Still at version 1.
+        self.assertFalse(processor2.is_latest_spec) # Still at version 1.
 
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
         processor3 = WorkflowProcessor(processor.workflow_model, hard_reset=True)
@@ -352,16 +349,12 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("New Step", processor3.next_task().task_spec.description)
         self.assertEqual("blue", processor3.next_task().data["color"])
 
-    def test_get_latest_spec_version(self):
-        workflow_spec_model = self.load_test_spec("two_forms")
-        version = WorkflowProcessor.get_latest_version_string("two_forms")
-        self.assertTrue(version.startswith("v1 "))
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')
-    def test_master_bpmn(self, mock_details, mock_required_docs, mock_investigators, mock_studies):
+    def test_master_bpmn_for_crc(self, mock_details, mock_required_docs, mock_investigators, mock_studies):
 
         # Mock Protocol Builder response
         studies_response = self.protocol_builder_response('user_studies.json')
@@ -376,7 +369,8 @@ class TestWorkflowProcessor(BaseTest):
         details_response = self.protocol_builder_response('study_details.json')
         mock_details.return_value = json.loads(details_response)
 
-        self.load_example_data()
+        self.load_example_data(use_crc_data=True)
+        app.config['PB_ENABLED'] = True
 
         study = session.query(StudyModel).first()
         workflow_spec_model = db.session.query(WorkflowSpecModel).\

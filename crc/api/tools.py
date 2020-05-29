@@ -25,13 +25,14 @@ def render_markdown(data, template):
         raise ApiError(code="invalid", message=str(e))
 
 
-def render_docx(data):
+def render_docx():
     """
     Provides a quick way to verify that a Jinja docx template will work properly on a given json
     data structure.  Useful for folks that are building these templates.
     """
     try:
         file = connexion.request.files['file']
+        data = connexion.request.form['data']
         target_stream = CompleteTemplate().make_template(file, json.loads(data))
         return send_file(
             io.BytesIO(target_stream.read()),

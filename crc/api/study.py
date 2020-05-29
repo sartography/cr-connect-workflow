@@ -1,25 +1,32 @@
-from typing import List
+from datetime import datetime
 
-from connexion import NoContent
 from flask import g
 from sqlalchemy.exc import IntegrityError
 
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
+from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudySchema, StudyModel, Study
-from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
 
 
 def add_study(body):
-    """This should never get called, and is subject to deprication.  Studies
-    should be added through the protocol builder only."""
-    study: Study = StudySchema().load(body)
-    study_model = StudyModel(**study.model_args())
+    """Or any study like object. Body should include a title, and primary_investigator_id """
+    if 'primary_investigator_id' not in body:
+        raise ApiError("missing_pi", "Can't create a new study without a Primary Investigator.")
+    if 'title' not in body:
+        raise ApiError("missing_title", "Can't create a new study without a title.")
+
+    study_model = StudyModel(user_uid=g.user.uid,
+                             title=body['title'],
+                             primary_investigator_id=body['primary_investigator_id'],
+                             last_updated=datetime.now(),
+                             protocol_builder_status=ProtocolBuilderStatus.ACTIVE)
+
     session.add(study_model)
-    errors = StudyService._add_all_workflow_specs_to_study(study)
+    errors = StudyService._add_all_workflow_specs_to_study(study_model)
     session.commit()
+    study = StudyService().get_study(study_model.id)
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
@@ -43,7 +50,7 @@ def update_study(study_id, body):
 def get_study(study_id):
     study_service = StudyService()
     study = study_service.get_study(study_id)
-    if(study is None):
+    if (study is None):
         raise ApiError("Study not found", status_code=404)
     schema = StudySchema()
     return schema.dump(study)
@@ -58,31 +65,16 @@ def delete_study(study_id):
         raise ApiError(code="study_integrity_error", message=message)
 
 
-def all_studies():
-    """Returns all the studies associated with the current user.  Assures we are
-    in sync with values read in from the protocol builder. """
-    StudyService.synch_all_studies_with_protocol_builder(g.user)
+def user_studies():
+    """Returns all the studies associated with the current user. """
+    StudyService.synch_with_protocol_builder_if_enabled(g.user)
     studies = StudyService.get_studies_for_user(g.user)
     results = StudySchema(many=True).dump(studies)
     return results
 
 
-def post_update_study_from_protocol_builder(study_id):
-    """Update a single study based on data received from
-    the protocol builder."""
-
-    db_study = session.query(StudyModel).filter_by(study_id=study_id).all()
-    pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(g.user.uid)
-    pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study_id), None)
-    if pb_study:
-        db_study.update_from_protocol_builder(pb_study)
-    else:
-        db_study.inactive = True
-        db_study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
-
-    return NoContent, 304
-
-
-
-
-
+def all_studies():
+    """Returns all studies (regardless of user) with submitted files"""
+    studies = StudyService.get_all_studies_with_files()
+    results = StudySchema(many=True).dump(studies)
+    return results
