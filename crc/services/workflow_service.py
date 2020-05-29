@@ -17,10 +17,14 @@ from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
 from crc.models.file import LookupDataModel
+from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.stats import TaskEventModel
+from crc.models.study import StudyModel
+from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
+from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
 
 
@@ -37,18 +41,39 @@ class WorkflowService(object):
      But for now, this contains tools for converting spiff-workflow models into our
      own API models with additional information and capabilities."""
 
-    @classmethod
-    def test_spec(cls, spec_id):
-        """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
-        sanity check."""
-
+    @staticmethod
+    def make_test_workflow(spec_id):
+        user = db.session.query(UserModel).filter_by(uid="test").first()
+        if not user:
+            db.session.add(UserModel(uid="test"))
+        study = db.session.query(StudyModel).filter_by(user_uid="test").first()
+        if not study:
+            db.session.add(StudyModel(user_uid="test", title="test"))
+            db.session.commit()
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        workflow_spec_id=spec_id,
                                        last_updated=datetime.now(),
-                                       study_id=1)
+                                       study=study)
+        return workflow_model
+
+    @staticmethod
+    def delete_test_data():
+        for study in db.session.query(StudyModel).filter(StudyModel.user_uid=="test"):
+            StudyService.delete_study(study.id)
+            db.session.commit()
+        db.session.query(UserModel).filter_by(uid="test").delete()
+
+    @staticmethod
+    def test_spec(spec_id):
+        """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
+        sanity check."""
+
+        workflow_model = WorkflowService.make_test_workflow(spec_id)
+
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
         except WorkflowException as we:
+            WorkflowService.delete_test_data()
             raise ApiError.from_task_spec("workflow_execution_exception", str(we),
                                           we.sender)
 
@@ -63,10 +88,10 @@ class WorkflowService(object):
                     WorkflowService.populate_form_with_random_data(task, task_api)
                     task.complete()
             except WorkflowException as we:
-                db.session.delete(workflow_model)
+                WorkflowService.delete_test_data()
                 raise ApiError.from_task_spec("workflow_execution_exception", str(we),
                                               we.sender)
-        db.session.delete(workflow_model)
+        WorkflowService.delete_test_data()
 
     @staticmethod
     def populate_form_with_random_data(task, task_api):

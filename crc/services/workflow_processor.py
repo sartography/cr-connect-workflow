@@ -120,8 +120,7 @@ class WorkflowProcessor(object):
         spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         self.workflow_spec_id = workflow_model.workflow_spec_id
         try:
-            self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec)
-            self.bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
+            self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec, validate_only)
             self.bpmn_workflow.script_engine = self._script_engine
 
             if self.WORKFLOW_ID_KEY not in self.bpmn_workflow.data:
@@ -156,13 +155,13 @@ class WorkflowProcessor(object):
         else:
             self.is_latest_spec = False
 
-    def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec):
+    def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
         if workflow_model.bpmn_workflow_json:
             bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
         else:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
-            bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+            bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
             bpmn_workflow.do_engine_steps()
         return bpmn_workflow
 
@@ -407,9 +406,10 @@ class WorkflowProcessor(object):
     def find_task_and_field_by_field_id(self, field_id):
         """Tracks down a form field by name in the workflow spec,
          only looks at ready tasks. Returns a tuple of the task, and form"""
-        for spiff_task in self.bpmn_workflow.get_tasks(SpiffTask.READY):
+        for spiff_task in self.bpmn_workflow.get_tasks():
             if hasattr(spiff_task.task_spec, "form"):
                 for field in spiff_task.task_spec.form.fields:
                     if field.id == field_id:
                         return spiff_task, field
-        raise ApiError("invalid_field", "Unable to find a ready task with field: %s" % field_id)
+        raise ApiError("invalid_field",
+                       "Unable to find a task in the workflow with a lookup field called: %s" % field_id)
