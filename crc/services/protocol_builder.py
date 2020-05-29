@@ -5,16 +5,21 @@ import requests
 
 from crc import app
 from crc.api.common import ApiError
-from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStudySchema, ProtocolBuilderInvestigator, \
-    ProtocolBuilderRequiredDocument, ProtocolBuilderRequiredDocumentSchema
+from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuilderRequiredDocument
 
 
 class ProtocolBuilderService(object):
-    ENABLED = app.config['PB_ENABLED']
     STUDY_URL = app.config['PB_USER_STUDIES_URL']
     INVESTIGATOR_URL = app.config['PB_INVESTIGATORS_URL']
     REQUIRED_DOCS_URL = app.config['PB_REQUIRED_DOCS_URL']
     STUDY_DETAILS_URL = app.config['PB_STUDY_DETAILS_URL']
+
+    @staticmethod
+    def is_enabled():
+        if isinstance(app.config['PB_ENABLED'], str):
+            return app.config['PB_ENABLED'].lower() == "true"
+        else:
+            return app.config['PB_ENABLED'] is True
 
     @staticmethod
     def get_studies(user_id) -> {}:
@@ -44,7 +49,7 @@ class ProtocolBuilderService(object):
 
     @staticmethod
     def __enabled_or_raise():
-        if not ProtocolBuilderService.ENABLED:
+        if not ProtocolBuilderService.is_enabled():
             raise ApiError("protocol_builder_disabled", "The Protocol Builder Service is currently disabled.")
 
     @staticmethod
@@ -60,4 +65,3 @@ class ProtocolBuilderService(object):
                            "Received an invalid response from the protocol builder (status %s): %s when calling "
                            "url '%s'." %
                            (response.status_code, response.text, url))
-

@@ -40,10 +40,6 @@ class StudyModel(db.Model):
         if self.on_hold:
             self.protocol_builder_status = ProtocolBuilderStatus.HOLD
 
-    def files(self):
-        _files = FileModel.query.filter_by(workflow_id=self.workflow[0].id)
-        return _files
-
 
 class WorkflowMetadata(object):
     def __init__(self, id, name, display_name, description, spec_version, category_id, state: WorkflowState, status: WorkflowStatus,
@@ -68,7 +64,7 @@ class WorkflowMetadata(object):
             name=workflow.workflow_spec.name,
             display_name=workflow.workflow_spec.display_name,
             description=workflow.workflow_spec.description,
-            spec_version=workflow.spec_version,
+            spec_version=workflow.spec_version(),
             category_id=workflow.workflow_spec.category_id,
             state=WorkflowState.optional,
             status=workflow.status,
@@ -107,7 +103,8 @@ class CategorySchema(ma.Schema):
 
 class Study(object):
 
-    def __init__(self, id, title, last_updated, primary_investigator_id, user_uid,
+    def __init__(self, title, last_updated, primary_investigator_id, user_uid,
+                 id=None,
                  protocol_builder_status=None,
                  sponsor="", hsr_number="", ind_number="", categories=[], **argsv):
         self.id = id
@@ -121,11 +118,12 @@ class Study(object):
         self.ind_number = ind_number
         self.categories = categories
         self.warnings = []
-
+        self.files = []
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
-        args = {k: v for k, v in study_model.__dict__.items() if not k.startswith('_')}
+        id = study_model.id # Just read some value, in case the dict expired, otherwise dict may be empty.
+        args = dict((k, v) for k, v in study_model.__dict__.items() if not k.startswith('_'))
         instance = cls(**args)
         return instance
 
@@ -144,10 +142,14 @@ class Study(object):
 
 class StudySchema(ma.Schema):
 
+    id = fields.Integer(required=False, allow_none=True)
     categories = fields.List(fields.Nested(CategorySchema), dump_only=True)
     warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
     protocol_builder_status = EnumField(ProtocolBuilderStatus)
     hsr_number = fields.String(allow_none=True)
+    sponsor = fields.String(allow_none=True)
+    ind_number = fields.String(allow_none=True)
+    files = fields.List(fields.Nested(SimpleFileSchema), dump_only=True)
 
     class Meta:
         model = Study
@@ -160,15 +162,3 @@ class StudySchema(ma.Schema):
         """Can load the basic study data for updates to the database, but categories are write only"""
         return Study(**data)
 
-
-class StudyFilesSchema(ma.Schema):
-
-    # files = fields.List(fields.Nested(SimpleFileSchema), dump_only=True)
-    files = fields.Method('_files')
-
-    class Meta:
-        model = Study
-        additional = ["id", "title", "last_updated", "primary_investigator_id"]
-
-    def _files(self, obj):
-        return [file.name for file in obj.files()]

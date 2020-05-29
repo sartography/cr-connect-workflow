@@ -1,6 +1,7 @@
 import json
 
 import connexion
+import flask
 from flask import redirect, g, request
 
 from crc import app, db
@@ -109,8 +110,11 @@ def _handle_login(user_info: LdapUserInfo, redirect_url=app.config['FRONTEND_AUT
     # Return the frontend auth callback URL, with auth token appended.
     auth_token = user.encode_auth_token().decode()
     if redirect_url is not None:
-        app.logger.info("SSO_LOGIN: REDIRECTING TO: " + redirect_url)
-        return redirect('%s/%s' % (redirect_url, auth_token))
+        if redirect_url.find("http://") != 0 and redirect_url.find("https://") != 0:
+            redirect_url = "http://" + redirect_url
+        url = '%s?token=%s' % (redirect_url, auth_token)
+        app.logger.info("SSO_LOGIN: REDIRECTING TO: " + url)
+        return flask.redirect(url, code=302)
     else:
         app.logger.info("SSO_LOGIN:  NO REDIRECT, JUST RETURNING AUTH TOKEN.")
         return auth_token
@@ -126,7 +130,7 @@ def backdoor(
     first_name=None,
     last_name=None,
     title=None,
-    redirect_url=None,
+    redirect=None,
 ):
     """A backdoor for end-to-end system testing that allows the system to simulate logging in as a specific user.
        Only works if the application is running in a non-production environment.
@@ -149,9 +153,8 @@ def backdoor(
            ApiError.  If on production, returns a 404 error.
    """
     if not 'PRODUCTION' in app.config or not app.config['PRODUCTION']:
-        ldap_info = LdapUserInfo()
-        ldap_info.uid = connexion.request.args["uid"]
-        ldap_info.email_address = connexion.request.args["email_address"]
-        return _handle_login(ldap_info, redirect_url)
+
+        ldap_info = LdapService().user_info(uid)
+        return _handle_login(ldap_info, redirect)
     else:
         raise ApiError('404', 'unknown')

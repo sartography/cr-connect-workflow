@@ -1,23 +1,22 @@
-FROM python:3.6.9-slim
+FROM python:3.7-slim
 
 WORKDIR /app
-
 COPY Pipfile Pipfile.lock /app/
 
-RUN pip install pipenv && \
-  apt-get update && \
-  apt-get install -y --no-install-recommends \
-    gcc python3-dev libssl-dev \
-    curl postgresql-client git-core && \
-  pipenv install --dev && \
-  apt-get remove -y gcc python3-dev libssl-dev && \
-  apt-get purge -y --auto-remove && \
-  rm -rf /var/lib/apt/lists/ *
+RUN set -xe \
+  && pip install pipenv \
+  && apt-get update -q \
+  && apt-get install -y -q \
+        gcc python3-dev libssl-dev \
+        curl postgresql-client git-core \
+        gunicorn3 postgresql-client \
+  && pipenv install --dev \
+  && apt-get remove -y gcc python3-dev libssl-dev \
+  && apt-get autoremove -y \
+  && apt-get clean -y \
+  && rm -rf /var/lib/apt/lists/* \
+  && mkdir -p /app \
+  && useradd _gunicorn --no-create-home --user-group
 
 COPY . /app/
-
-ENV FLASK_APP=/app/crc/__init__.py
-CMD ["pipenv", "run", "python", "/app/run.py"]
-
-# expose ports
-EXPOSE 5000
+WORKDIR /app
