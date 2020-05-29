@@ -82,7 +82,7 @@ paths:
   # /v1.0/study
   /study:
     get:
-      operationId: crc.api.study.all_studies
+      operationId: crc.api.study.user_studies
       summary: Provides a list of studies related to the current user.
       tags:
         - Studies
@@ -109,11 +109,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Study"
-  /study-files:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Study"
+  /study/all:
     get:
-      operationId: crc.api.study.all_studies_and_files
-      summary: Provides a list of studies with submitted files
+      operationId: crc.api.study.all_studies
+      summary: Provides a list of studies
       tags:
         - Studies
       responses:
@@ -122,7 +124,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Study"
+                type: array
+                items:
+                  $ref: "#/components/schemas/Study"
   /study/{study_id}:
     parameters:
       - name: study_id
@@ -353,24 +357,12 @@ paths:
         description: The unique id of a workflow specification
         schema:
           type: string
-      - name: study_id
-        in: query
-        required: false
-        description: The unique id of a study
-        schema:
-          type: integer
       - name: workflow_id
         in: query
         required: false
         description: The unique id of a workflow instance
         schema:
           type: integer
-      - name: task_id
-        in: query
-        required: false
-        description: The unique id of a workflow task
-        schema:
-          type: string
       - name: form_field_key
         in: query
         required: false
@@ -680,7 +672,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
-  /workflow/{workflow_id}/task/{task_id}/lookup/{field_id}:
+  /workflow/{workflow_id}/lookup/{field_id}:
     parameters:
       - name: workflow_id
         in: path
@@ -689,13 +681,6 @@ paths:
         schema:
           type: integer
           format: int32
-      - name: task_id
-        in: path
-        required: true
-        description: The id of the task
-        schema:
-          type: string
-          format: uuid
       - name: field_id
         in: path
         required: true

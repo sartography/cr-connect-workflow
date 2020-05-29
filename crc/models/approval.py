@@ -1,12 +1,16 @@
 import enum
 
+import marshmallow
+from ldap3.core.exceptions import LDAPSocketOpenError
 from marshmallow import INCLUDE
 from sqlalchemy import func
 
 from crc import db, ma
-from crc.models.file import FileModel
+from crc.api.common import ApiError
+from crc.models.file import FileDataModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
+from crc.services.ldap_service import LdapService
 
 
 class ApprovalStatus(enum.Enum):
@@ -17,13 +21,11 @@ class ApprovalStatus(enum.Enum):
 
 
 class ApprovalFile(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    file_id = db.Column(db.Integer, db.ForeignKey(FileModel.id), nullable=False)
-    approval_id = db.Column(db.Integer, db.ForeignKey("approval.id"), nullable=False)
-    file_version = db.Column(db.Integer, nullable=False)
+    file_data_id = db.Column(db.Integer, db.ForeignKey(FileDataModel.id), primary_key=True)
+    approval_id = db.Column(db.Integer, db.ForeignKey("approval.id"), primary_key=True)
 
     approval = db.relationship("ApprovalModel")
-    file = db.relationship(FileModel)
+    file_data = db.relationship(FileDataModel)
 
 
 class ApprovalModel(db.Model):
@@ -35,18 +37,22 @@ class ApprovalModel(db.Model):
     workflow = db.relationship(WorkflowModel)
     approver_uid = db.Column(db.String)  # Not linked to user model, as they may not have logged in yet.
     status = db.Column(db.String)
-    message = db.Column(db.String)
+    message = db.Column(db.String, default='')
     date_created = db.Column(db.DateTime(timezone=True), default=func.now())
     version = db.Column(db.Integer) # Incremented integer, so 1,2,3 as requests are made.
-    workflow_hash = db.Column(db.String) # A hash of the workflow at the moment the approval was created.
-
-    approval_files = db.relationship(ApprovalFile, back_populates="approval")
+    approval_files = db.relationship(ApprovalFile, back_populates="approval",
+                                     cascade="all, delete, delete-orphan",
+                                     order_by=ApprovalFile.file_data_id)
 
 
 class Approval(object):
 
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
     @classmethod
     def from_model(cls, model: ApprovalModel):
+        # TODO: Reduce the code by iterating over model's dict keys
         instance = cls()
         instance.id = model.id
         instance.study_id = model.study_id
@@ -57,36 +63,53 @@ class Approval(object):
         instance.message = model.message
         instance.date_created = model.date_created
         instance.version = model.version
-        instance.workflow_hash = model.workflow_hash
         instance.title = ''
         if model.study:
             instance.title = model.study.title
 
-        # TODO: Use ldap lookup
         instance.approver = {}
-        instance.approver['uid'] = 'bgb22'
-        instance.approver['display_name'] = 'Billy Bob (bgb22)'
-        instance.approver['title'] = 'E42:He\'s a hoopy frood'
-        instance.approver['department'] = 'E0:EN-Eng Study of Parallel Universes'
+        try:
+            ldap_service = LdapService()
+            principal_investigator_id = model.study.primary_investigator_id
+            user_info = ldap_service.user_info(principal_investigator_id)
+        except (ApiError, LDAPSocketOpenError) as exception:
+            user_info = None
+            instance.approver['display_name'] = 'Primary Investigator details'
+            instance.approver['department'] = 'currently not available'
+
+        if user_info:
+            # TODO: Rename approver to primary investigator
+            instance.approver['uid'] = model.approver_uid
+            instance.approver['display_name'] = user_info.display_name
+            instance.approver['title'] = user_info.title
+            instance.approver['department'] = user_info.department
 
         instance.associated_files = []
         for approval_file in model.approval_files:
             associated_file = {}
-            associated_file['id'] = approval_file.file.id
-            associated_file['name'] = approval_file.file.name
-            associated_file['content_type'] = approval_file.file.content_type
+            associated_file['id'] = approval_file.file_data.file_model.id
+            associated_file['name'] = approval_file.file_data.file_model.name
+            associated_file['content_type'] = approval_file.file_data.file_model.content_type
             instance.associated_files.append(associated_file)
 
         return instance
+
+    def update_model(self, approval_model: ApprovalModel):
+        approval_model.status = self.status
+        approval_model.message = self.message
 
 
 class ApprovalSchema(ma.Schema):
     class Meta:
         model = Approval
         fields = ["id", "study_id", "workflow_id", "version", "title",
-            "version", "status", "approver", "associated_files"]
+            "version", "status", "message", "approver", "associated_files"]
         unknown = INCLUDE
 
+    @marshmallow.post_load
+    def make_approval(self, data, **kwargs):
+        """Loads the basic approval data for updates to the database"""
+        return Approval(**data)
 
 # Carlos:  Here is the data structure I was trying to imagine.
 # If I were to continue down my current traing of thought, I'd create

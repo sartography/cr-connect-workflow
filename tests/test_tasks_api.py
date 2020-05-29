@@ -182,7 +182,6 @@ class TestTasksApi(BaseTest):
         self.assertEquals("Task 2b", nav[5]['title'])
         self.assertEquals("Task 3", nav[6]['title'])
 
-
     def test_document_added_to_workflow_shows_up_in_file_list(self):
         self.load_example_data()
         self.create_reference_document()
@@ -335,8 +334,8 @@ class TestTasksApi(BaseTest):
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
         field_id = task.form['fields'][0]['id']
-        rv = self.app.get('/v1.0/workflow/%i/task/%s/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, task.id, field_id, 'c'), # All records with a word that starts with 'c'
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, field_id, 'c'), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
@@ -351,8 +350,8 @@ class TestTasksApi(BaseTest):
         task = workflow.next_task
         field_id = task.form['fields'][0]['id']
         # lb3dp is a user record in the mock ldap responses for tests.
-        rv = self.app.get('/v1.0/workflow/%i/task/%s/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, task.id, field_id, 'lb3dp'),
+        rv = self.app.get('/v1.0/workflow/%s/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, field_id, 'lb3dp'),
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)

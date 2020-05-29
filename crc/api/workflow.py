@@ -118,8 +118,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
         next_task=None,
         navigation=navigation,
         workflow_spec_id=processor.workflow_spec_id,
-        spec_version=processor.get_spec_version(),
-        is_latest_spec=processor.get_spec_version() == processor.get_latest_version_string(processor.workflow_spec_id),
+        spec_version=processor.get_version_string(),
+        is_latest_spec=processor.is_latest_spec,
         total_tasks=processor.workflow_model.total_tasks,
         completed_tasks=processor.workflow_model.completed_tasks,
         last_updated=processor.workflow_model.last_updated
@@ -219,26 +219,13 @@ def delete_workflow_spec_category(cat_id):
     session.commit()
 
 
-def lookup(workflow_id, task_id, field_id, query, limit):
+def lookup(workflow_id, field_id, query, limit):
     """
     given a field in a task, attempts to find the lookup table or function associated
     with that field and runs a full-text query against it to locate the values and
     labels that would be returned to a type-ahead box.
+    Tries to be fast, but first runs will be very slow.
     """
-    workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    if not workflow_model:
-        raise ApiError("unknown_workflow", "No workflow found with id: %i" % workflow_id)
-    processor = WorkflowProcessor(workflow_model)
-    task_id = uuid.UUID(task_id)
-    spiff_task = processor.bpmn_workflow.get_task(task_id)
-    if not spiff_task:
-        raise ApiError("unknown_task", "No task with %s found in workflow: %i" % (task_id, workflow_id))
-    field = None
-    for f in spiff_task.task_spec.form.fields:
-        if f.id == field_id:
-            field = f
-    if not field:
-        raise ApiError("unknown_field", "No field named %s in task %s" % (task_id, spiff_task.task_spec.name))
-
-    lookup_data = LookupService.lookup(spiff_task, field, query, limit)
+    workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+    lookup_data = LookupService.lookup(workflow, field_id, query, limit)
     return LookupDataSchema(many=True).dump(lookup_data)
