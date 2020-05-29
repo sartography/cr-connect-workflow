@@ -1,6 +1,7 @@
 import json
 
 import connexion
+import flask
 from flask import redirect, g, request
 
 from crc import app, db
@@ -109,8 +110,11 @@ def _handle_login(user_info: LdapUserInfo, redirect_url=app.config['FRONTEND_AUT
     # Return the frontend auth callback URL, with auth token appended.
     auth_token = user.encode_auth_token().decode()
     if redirect_url is not None:
-        app.logger.info("SSO_LOGIN: REDIRECTING TO: " + redirect_url)
-        return redirect('%s/%s' % (redirect_url, auth_token))
+        if redirect_url.find("http://") != 0 and redirect_url.find("https://") != 0:
+            redirect_url = "http://" + redirect_url
+        url = '%s?token=%s' % (redirect_url, auth_token)
+        app.logger.info("SSO_LOGIN: REDIRECTING TO: " + url)
+        return flask.redirect(url, code=302)
     else:
         app.logger.info("SSO_LOGIN:  NO REDIRECT, JUST RETURNING AUTH TOKEN.")
         return auth_token

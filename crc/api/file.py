@@ -1,51 +1,58 @@
 import io
+from typing import List
 
 import connexion
 from flask import send_file
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileModelSchema, FileModel, FileDataModel
+from crc.models.file import FileSchema, FileModel, File, FileModelSchema
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 
 
-def get_files(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
-    if all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key]):
-        raise ApiError('missing_parameter',
-                       'Please specify at least one of workflow_spec_id, study_id, '
-                       'workflow_id, and task_id for this file in the HTTP parameters')
+def to_file_api(file_model):
+    """Converts a FileModel object to something we can return via the aip"""
+    return File.from_models(file_model, FileService.get_file_data(file_model.id))
 
-    results = FileService.get_files(workflow_spec_id, study_id, workflow_id, task_id, form_field_key)
-    return FileModelSchema(many=True).dump(results)
+
+def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None):
+    if all(v is None for v in [workflow_spec_id, workflow_id, form_field_key]):
+        raise ApiError('missing_parameter',
+                       'Please specify either a workflow_spec_id or a '
+                       'workflow_id with an optional form_field_key')
+
+    file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,
+                                        workflow_id=workflow_id,
+                                        irb_doc_code=form_field_key)
+
+    files = (to_file_api(model) for model in file_models)
+    return FileSchema(many=True).dump(files)
 
 
 def get_reference_files():
     results = FileService.get_files(is_reference=True)
-    return FileModelSchema(many=True).dump(results)
+    files = (to_file_api(model) for model in results)
+    return FileSchema(many=True).dump(files)
 
 
-def add_file(workflow_spec_id=None, study_id=None, workflow_id=None, task_id=None, form_field_key=None):
-    all_none = all(v is None for v in [workflow_spec_id, study_id, workflow_id, task_id, form_field_key])
-    missing_some = (workflow_spec_id is None) and (None in [study_id, workflow_id, form_field_key])
-    if all_none or missing_some:
-        raise ApiError('missing_parameter',
-                       'Please specify either a workflow_spec_id or all 3 of study_id, '
-                       'workflow_id, and field_id for this file in the HTTP parameters')
-    if 'file' not in connexion.request.files:
-        raise ApiError('invalid_file',
-                       'Expected a file named "file" in the multipart form request')
-
+def add_file(workflow_spec_id=None, workflow_id=None, form_field_key=None):
     file = connexion.request.files['file']
-    if workflow_spec_id:
+    if workflow_id:
+        if form_field_key is None:
+            raise ApiError('invalid_workflow_file',
+                           'When adding a workflow related file, you must specify a form_field_key')
+        file_model = FileService.add_workflow_file(workflow_id=workflow_id, irb_doc_code=form_field_key,
+                                                   name=file.filename, content_type=file.content_type,
+                                                   binary_data=file.stream.read())
+    elif workflow_spec_id:
         workflow_spec = session.query(WorkflowSpecModel).filter_by(id=workflow_spec_id).first()
         file_model = FileService.add_workflow_spec_file(workflow_spec, file.filename, file.content_type,
                                                         file.stream.read())
     else:
-        file_model = FileService.add_form_field_file(study_id, workflow_id, task_id, form_field_key, file.filename,
-                                                     file.content_type, file.stream.read())
+        raise ApiError("invalid_file", "You must supply either a workflow spec id or a workflow_id and form_field_key.")
 
-    return FileModelSchema().dump(file_model)
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def get_reference_file(name):
@@ -80,7 +87,7 @@ def set_reference_file(name):
         file_model = file_models[0]
         FileService.update_file(file_models[0], file.stream.read(), file.content_type)
 
-    return FileModelSchema().dump(file_model)
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def update_file_data(file_id):
@@ -89,7 +96,7 @@ def update_file_data(file_id):
     if file_model is None:
         raise ApiError('no_such_file', 'The file id you provided does not exist')
     file_model = FileService.update_file(file_model, file.stream.read(), file.content_type)
-    return FileModelSchema().dump(file_model)
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def get_file_data(file_id, version=None):
@@ -101,7 +108,7 @@ def get_file_data(file_id, version=None):
         attachment_filename=file_data.file_model.name,
         mimetype=file_data.file_model.content_type,
         cache_timeout=-1,  # Don't cache these files on the browser.
-        last_modified=file_data.last_updated
+        last_modified=file_data.date_created
     )
 
 
@@ -109,7 +116,7 @@ def get_file_info(file_id):
     file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         raise ApiError('no_such_file', 'The file id you provided does not exist', status_code=404)
-    return FileModelSchema().dump(file_model)
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def update_file_info(file_id, body):
@@ -124,7 +131,7 @@ def update_file_info(file_id, body):
     file_model = FileModelSchema().load(body, session=session)
     session.add(file_model)
     session.commit()
-    return FileModelSchema().dump(file_model)
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def delete_file(file_id):
