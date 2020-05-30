@@ -115,6 +115,7 @@ class TestLookupService(BaseTest):
         self.assertEquals("1 Something", results[0].label, "special characters don't flake out")
 
 
+
 # 1018	10000 Something	Industry
 # 1019	1000 Something	Industry
 # 1020	1 Something	Industry
