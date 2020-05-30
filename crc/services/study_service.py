@@ -175,6 +175,7 @@ class StudyService(object):
         return documents
 
 
+
     @staticmethod
     def get_investigators(study_id):
 
