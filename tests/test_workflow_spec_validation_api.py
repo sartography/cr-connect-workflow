@@ -96,3 +96,16 @@ class TestWorkflowSpecValidation(BaseTest):
         final_data = WorkflowService.test_spec(spec_model.id)
         self.assertIsNotNone(final_data)
         self.assertIn('cats', final_data)
+
+    def test_required_fields(self):
+        self.load_example_data()
+        spec_model = self.load_test_spec('required_fields')
+        final_data = WorkflowService.test_spec(spec_model.id)
+        self.assertIsNotNone(final_data)
+        self.assertIn('string_required', final_data)
+        self.assertIn('string_not_required', final_data)
+
+        final_data = WorkflowService.test_spec(spec_model.id, required_only=True)
+        self.assertIsNotNone(final_data)
+        self.assertIn('string_required', final_data)
+        self.assertNotIn('string_not_required', final_data)

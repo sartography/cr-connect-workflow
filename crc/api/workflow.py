@@ -42,7 +42,9 @@ def validate_workflow_specification(spec_id):
 
     errors = []
     try:
+        # Run the validation twice, the second time, just populate the required fields.
         WorkflowService.test_spec(spec_id)
+        WorkflowService.test_spec(spec_id, required_only=True)
     except ApiError as ae:
         errors.append(ae)
     return ApiErrorSchema(many=True).dump(errors)

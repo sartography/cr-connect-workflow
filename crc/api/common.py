@@ -1,3 +1,6 @@
+from SpiffWorkflow import WorkflowException
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
+
 from crc import ma, app
 
 
@@ -33,6 +36,16 @@ class ApiError(Exception):
         if task_spec._wf_spec:
             instance.file_name = task_spec._wf_spec.file
         return instance
+
+    @classmethod
+    def from_workflow_exception(cls, code, message, exp: WorkflowException):
+        """We catch a lot of workflow exception errors,
+            so consolidating the code, and doing the best things
+            we can with the data we have."""
+        if isinstance(exp, WorkflowTaskExecException):
+            return ApiError.from_task(code, message, exp.task)
+        else:
+            return ApiError.from_task_spec(code, message, exp.sender)
 
 
 class ApiErrorSchema(ma.Schema):
