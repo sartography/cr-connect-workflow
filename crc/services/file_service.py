@@ -5,11 +5,13 @@ from datetime import datetime
 from uuid import UUID
 from xml.etree import ElementTree
 
+import flask
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from pandas import ExcelFile
 from sqlalchemy import desc
+from sqlalchemy.exc import IntegrityError
 
-from crc import session
+from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
@@ -295,12 +297,17 @@ class FileService(object):
 
     @staticmethod
     def delete_file(file_id):
-        data_models = session.query(FileDataModel).filter_by(file_model_id=file_id).all()
-        for dm in data_models:
-            lookup_files = session.query(LookupFileModel).filter_by(file_data_model_id=dm.id).all()
-            for lf in lookup_files:
-                session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
-                session.query(LookupFileModel).filter_by(id=lf.id).delete()
-        session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
-        session.query(FileModel).filter_by(id=file_id).delete()
-        session.commit()
+        try:
+            data_models = session.query(FileDataModel).filter_by(file_model_id=file_id).all()
+            for dm in data_models:
+                lookup_files = session.query(LookupFileModel).filter_by(file_data_model_id=dm.id).all()
+                for lf in lookup_files:
+                    session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
+                    session.query(LookupFileModel).filter_by(id=lf.id).delete()
+            session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
+            session.query(FileModel).filter_by(id=file_id).delete()
+            session.commit()
+        except IntegrityError as ie:
+            app.logger.error("Failed to delete file: %i, due to %s" % (file_id, str(ie)))
+            raise ApiError('file_integrity_error', "You are attempting to delete a file that is "
+                                                   "required by other records in the system.")
