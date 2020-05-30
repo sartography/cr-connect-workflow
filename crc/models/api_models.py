@@ -31,6 +31,7 @@ class NavigationItem(object):
 
 class Task(object):
 
+    PROP_OPTIONS_REPEAT = "repeat"
     PROP_OPTIONS_FILE = "spreadsheet.name"
     PROP_OPTIONS_VALUE_COLUMN = "spreadsheet.value.column"
     PROP_OPTIONS_LABEL_COL = "spreadsheet.label.column"
