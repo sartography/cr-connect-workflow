@@ -3,7 +3,7 @@ from crc import ma, app
 
 class ApiError(Exception):
     def __init__(self, code, message, status_code=400,
-                 file_name="", task_id="", task_name="", tag=""):
+                 file_name="", task_id="", task_name="", tag="", task_data = {}):
         self.status_code = status_code
         self.code = code  # a short consistent string describing the error.
         self.message = message  # A detailed message that provides more information.
@@ -11,6 +11,7 @@ class ApiError(Exception):
         self.task_name = task_name or ""  # OPTIONAL: The name of the task in the BPMN Diagram.
         self.file_name = file_name or ""  # OPTIONAL: The file that caused the error.
         self.tag = tag or ""  # OPTIONAL: The XML Tag that caused the issue.
+        self.task_data = task_data or ""  # OPTIONAL: A snapshot of data connected to the task when error ocurred.
         Exception.__init__(self, self.message)
 
     @classmethod
@@ -20,6 +21,7 @@ class ApiError(Exception):
         instance.task_id = task.task_spec.name or ""
         instance.task_name = task.task_spec.description or ""
         instance.file_name = task.workflow.spec.file or ""
+        instance.task_data = task.data
         return instance
 
     @classmethod
@@ -35,7 +37,8 @@ class ApiError(Exception):
 
 class ApiErrorSchema(ma.Schema):
     class Meta:
-        fields = ("code", "message", "workflow_name", "file_name", "task_name", "task_id")
+        fields = ("code", "message", "workflow_name", "file_name", "task_name", "task_id",
+                  "task_data")
 
 
 @app.errorhandler(ApiError)

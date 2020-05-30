@@ -3,17 +3,16 @@ from unittest.mock import patch
 
 from tests.base_test import BaseTest
 
-from crc.services.protocol_builder import ProtocolBuilderService
 from crc import session, app
 from crc.api.common import ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStudySchema
 from crc.models.workflow import WorkflowSpecModel
+from crc.services.workflow_service import WorkflowService
 
 
 class TestWorkflowSpecValidation(BaseTest):
 
     def validate_workflow(self, workflow_name):
-        self.load_example_data()
         spec_model = self.load_test_spec(workflow_name)
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -22,6 +21,7 @@ class TestWorkflowSpecValidation(BaseTest):
 
     def test_successful_validation_of_test_workflows(self):
         app.config['PB_ENABLED'] = False  # Assure this is disabled.
+        self.load_example_data()
         self.assertEqual(0, len(self.validate_workflow("parallel_tasks")))
         self.assertEqual(0, len(self.validate_workflow("decision_table")))
         self.assertEqual(0, len(self.validate_workflow("docx")))
@@ -60,6 +60,7 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(0, len(errors), json.dumps(errors))
 
     def test_invalid_expression(self):
+        self.load_example_data()
         errors = self.validate_workflow("invalid_expression")
         self.assertEqual(1, len(errors))
         self.assertEqual("workflow_execution_exception", errors[0]['code'])
@@ -68,8 +69,11 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("invalid_expression.bpmn", errors[0]['file_name'])
         self.assertEqual('ExclusiveGateway_003amsm: Error evaluating expression \'this_value_does_not_exist==true\', '
                          'name \'this_value_does_not_exist\' is not defined', errors[0]["message"])
+        self.assertIsNotNone(errors[0]['task_data'])
+        self.assertIn("has_bananas", errors[0]['task_data'])
 
     def test_validation_error(self):
+        self.load_example_data()
         errors = self.validate_workflow("invalid_spec")
         self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_error", errors[0]['code'])
@@ -77,6 +81,7 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("invalid_spec.bpmn", errors[0]['file_name'])
 
     def test_invalid_script(self):
+        self.load_example_data()
         errors = self.validate_workflow("invalid_script")
         self.assertEqual(1, len(errors))
         self.assertEqual("workflow_execution_exception", errors[0]['code'])
@@ -84,3 +89,10 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
         self.assertEqual("An Invalid Script Reference", errors[0]['task_name'])
         self.assertEqual("invalid_script.bpmn", errors[0]['file_name'])
+
+    def test_repeating_sections_correctly_populated(self):
+        self.load_example_data()
+        spec_model = self.load_test_spec('repeat_form')
+        final_data = WorkflowService.test_spec(spec_model.id)
+        self.assertIsNotNone(final_data)
+        self.assertIn('cats', final_data)

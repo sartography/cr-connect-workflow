@@ -4,6 +4,7 @@ from typing import List
 
 import requests
 from SpiffWorkflow import WorkflowException
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
@@ -309,6 +310,8 @@ class StudyService(object):
         for workflow_spec in new_specs:
             try:
                 StudyService._create_workflow_model(study_model, workflow_spec)
+            except WorkflowTaskExecException as wtee:
+                errors.append(ApiError.from_task("workflow_execution_exception", str(wtee), wtee.task))
             except WorkflowException as we:
                 errors.append(ApiError.from_task_spec("workflow_execution_exception", str(we), we.sender))
         return errors

@@ -7,8 +7,9 @@ from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
-from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
+from SpiffWorkflow.camunda.specs.UserTask import EnumFormField
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import CancelTask, StartTask
 from flask import g
 from jinja2 import Template
@@ -17,7 +18,6 @@ from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
 from crc.models.file import LookupDataModel
-from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
@@ -39,7 +39,9 @@ class WorkflowService(object):
      the workflow Processor should be hidden behind this service.
      This will help maintain a structure that avoids circular dependencies.
      But for now, this contains tools for converting spiff-workflow models into our
-     own API models with additional information and capabilities."""
+     own API models with additional information and capabilities and 
+     handles the testing of a workflow specification by completing it with
+     random selections, attempting to mimic a front end as much as possible. """
 
     @staticmethod
     def make_test_workflow(spec_id):
@@ -61,17 +63,25 @@ class WorkflowService(object):
         for study in db.session.query(StudyModel).filter(StudyModel.user_uid=="test"):
             StudyService.delete_study(study.id)
             db.session.commit()
-        db.session.query(UserModel).filter_by(uid="test").delete()
+
+        user = db.session.query(UserModel).filter_by(uid="test").first()
+        if user:
+            db.session.delete(user)
 
     @staticmethod
     def test_spec(spec_id):
-        """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
-        sanity check."""
+        """Runs a spec through it's paces to see if it results in any errors.
+          Not fool-proof, but a good sanity check.  Returns the final data
+          output form the last task if successful. """
 
         workflow_model = WorkflowService.make_test_workflow(spec_id)
 
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
+        except WorkflowTaskExecException as wtee:
+            WorkflowService.delete_test_data()
+            raise ApiError.from_task("workflow_execution_exception", str(wtee),
+                                          wtee.task)
         except WorkflowException as we:
             WorkflowService.delete_test_data()
             raise ApiError.from_task_spec("workflow_execution_exception", str(we),
@@ -87,11 +97,17 @@ class WorkflowService(object):
                         add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
                     WorkflowService.populate_form_with_random_data(task, task_api)
                     task.complete()
+            except WorkflowTaskExecException as wtee:
+                WorkflowService.delete_test_data()
+                raise ApiError.from_task("workflow_execution_exception", str(wtee),
+                                         wtee.task)
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
                 raise ApiError.from_task_spec("workflow_execution_exception", str(we),
                                               we.sender)
+
         WorkflowService.delete_test_data()
+        return processor.bpmn_workflow.last_task.data
 
     @staticmethod
     def populate_form_with_random_data(task, task_api):
@@ -101,22 +117,35 @@ class WorkflowService(object):
 
         form_data = {}
         for field in task_api.form.fields:
-            if field.type == "enum":
-                if len(field.options) > 0:
-                    random_choice = random.choice(field.options)
-                    if isinstance(random_choice, dict):
-                        form_data[field.id] = random.choice(field.options)['id']
-                    else:
-                        # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
-                        form_data[field.id] = random_choice.id ## Assume it is an EnumFormFieldOption
+            if field.has_property(Task.PROP_OPTIONS_REPEAT):
+                group = field.get_property(Task.PROP_OPTIONS_REPEAT)
+                if group not in form_data:
+                    form_data[group] = [{},{},{}]
+                for i in range(3):
+                    form_data[group][i][field.id] = WorkflowService.get_random_data_for_field(field, task)
+            else:
+                form_data[field.id] = WorkflowService.get_random_data_for_field(field, task)
+        if task.data is None:
+            task.data = {}
+        task.data.update(form_data)
+
+    @staticmethod
+    def get_random_data_for_field(field, task):
+        if field.type == "enum":
+            if len(field.options) > 0:
+                random_choice = random.choice(field.options)
+                if isinstance(random_choice, dict):
+                    return random.choice(field.options)['id']
                 else:
-                    raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
-                                                             " with no options" % field.id,
-                                             task)
-            elif field.type == "autocomplete":
-                lookup_model = LookupService.get_lookup_model(task, field)
-                if field.has_property(Task.PROP_LDAP_LOOKUP):
-                    form_data[field.id] = {
+                    # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
+                    return random_choice.id  ## Assume it is an EnumFormFieldOption
+            else:
+                raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
+                                                         " with no options" % field.id, task)
+        elif field.type == "autocomplete":
+            lookup_model = LookupService.get_lookup_model(task, field)
+            if field.has_property(Task.PROP_LDAP_LOOKUP):  # All ldap records get the same person.
+                return {
                         "label": "dhf8r",
                         "value": "Dan Funk",
                         "data": {
@@ -126,32 +155,30 @@ class WorkflowService(object):
                             "email_address": "dhf8r@virginia.edu",
                             "department": "Depertment of Psychocosmographictology",
                             "affiliation": "Rousabout",
-                            "sponsor_type": "Staff"
+                            "sponsor_type": "Staff"}
                         }
-                    }
-                elif lookup_model:
-                    data = db.session.query(LookupDataModel).filter(
-                        LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
-                    options = []
-                    for d in data:
-                        options.append({"id": d.value, "name": d.label})
-                    form_data[field.id] = random.choice(options)
-                else:
-                    raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
-                                                                     "are incorrect: %s " % field.id, task)
-            elif field.type == "long":
-                form_data[field.id] = random.randint(1, 1000)
-            elif field.type == 'boolean':
-                form_data[field.id] = random.choice([True, False])
-            elif field.type == 'file':
-                form_data[field.id] = random.randint(1, 100)
-            elif field.type == 'files':
-                form_data[field.id] = random.randrange(1, 100)
+            elif lookup_model:
+                data = db.session.query(LookupDataModel).filter(
+                    LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
+                options = []
+                for d in data:
+                    options.append({"id": d.value, "name": d.label})
+                return random.choice(options)
             else:
-                form_data[field.id] = WorkflowService._random_string()
-        if task.data is None:
-            task.data = {}
-        task.data.update(form_data)
+                raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
+                                                                 "are incorrect: %s " % field.id, task)
+        elif field.type == "long":
+            return random.randint(1, 1000)
+        elif field.type == 'boolean':
+            return random.choice([True, False])
+        elif field.type == 'file':
+            # fixme: produce some something sensible for files.
+            return random.randint(1, 100)
+            # fixme: produce some something sensible for files.
+        elif field.type == 'files':
+            return random.randrange(1, 100)
+        else:
+            return WorkflowService._random_string()
 
     def __get_options(self):
         pass
