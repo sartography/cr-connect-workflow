@@ -11,6 +11,7 @@ from crc.models.file import FileDataModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 from crc.services.ldap_service import LdapService
+from crc.services.file_service import FileService
 
 
 class ApprovalStatus(enum.Enum):
@@ -84,11 +85,29 @@ class Approval(object):
             instance.approver['title'] = user_info.title
             instance.approver['department'] = user_info.department
 
+        # TODO: Organize it properly, move it to services
+        doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
+
         instance.associated_files = []
         for approval_file in model.approval_files:
+            try:
+                extra_info = doc_dictionary[approval_file.file_data.file_model.irb_doc_code]
+            except:
+                extra_info = None
             associated_file = {}
             associated_file['id'] = approval_file.file_data.file_model.id
-            associated_file['name'] = approval_file.file_data.file_model.name
+            if extra_info:
+                categories = [extra_info['category1'], extra_info['category2'], extra_info['category3']]
+                # Clear empty values
+                categories = list(filter(lambda x: x != '' and x != 'NULL', categories))
+                # Replace spaces with underscores and lowercase
+                categories = ['_'.join(category.split()) for category in categories]
+                categories = '_'.join(categories).lower()
+                associated_file['name'] = '_'.join((categories, approval_file.file_data.file_model.name))
+                associated_file['description'] = extra_info
+            else:
+                associated_file['name'] = approval_file.file_data.file_model.name
+                associated_file['description'] = 'No description available'
             associated_file['content_type'] = approval_file.file_data.file_model.content_type
             instance.associated_files.append(associated_file)
 

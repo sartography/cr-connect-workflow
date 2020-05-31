@@ -11,6 +11,7 @@ def get_approvals(approver_uid = None):
     else:
         db_approvals = ApprovalService.get_approvals_per_user(approver_uid)
     approvals = [Approval.from_model(approval_model) for approval_model in db_approvals]
+
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 
