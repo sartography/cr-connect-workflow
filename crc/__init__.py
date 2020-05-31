@@ -41,15 +41,16 @@ origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['
 cors = CORS(connexion_app.app, origins=origins_re)
 
 print('=== USING THESE CONFIG SETTINGS: ===')
-print('DB_HOST = ', )
-print('CORS_ALLOW_ORIGINS = ', app.config['CORS_ALLOW_ORIGINS'])
-print('DEVELOPMENT = ', app.config['DEVELOPMENT'])
-print('TESTING = ', app.config['TESTING'])
-print('PRODUCTION = ', app.config['PRODUCTION'])
-print('PB_BASE_URL = ', app.config['PB_BASE_URL'])
-print('LDAP_URL = ', app.config['LDAP_URL'])
 print('APPLICATION_ROOT = ', app.config['APPLICATION_ROOT'])
+print('CORS_ALLOW_ORIGINS = ', app.config['CORS_ALLOW_ORIGINS'])
+print('DB_HOST = ', app.config['DB_HOST'])
+print('LDAP_URL = ', app.config['LDAP_URL'])
+print('PB_BASE_URL = ', app.config['PB_BASE_URL'])
 print('PB_ENABLED = ', app.config['PB_ENABLED'])
+print('PRODUCTION = ', app.config['PRODUCTION'])
+print('TESTING = ', app.config['TESTING'])
+print('TEST_UID = ', app.config['TEST_UID'])
+print('ADMIN_UIDS = ', app.config['ADMIN_UIDS'])
 
 @app.cli.command()
 def load_example_data():

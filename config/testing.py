@@ -4,7 +4,6 @@ from os import environ
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 NAME = "CR Connect Workflow"
-DEVELOPMENT = True
 TESTING = True
 TOKEN_AUTH_SECRET_KEY = "Shhhh!!! This is secret!  And better darn well not show up in prod."
 PB_ENABLED = False
@@ -23,8 +22,8 @@ SQLALCHEMY_DATABASE_URI = environ.get(
     'SQLALCHEMY_DATABASE_URI',
     default="postgresql://%s:%s@%s:%s/%s" % (DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
 )
+ADMIN_UIDS = ['dhf8r']
 
 print('### USING TESTING CONFIG: ###')
 print('SQLALCHEMY_DATABASE_URI = ', SQLALCHEMY_DATABASE_URI)
-print('DEVELOPMENT = ', DEVELOPMENT)
 print('TESTING = ', TESTING)

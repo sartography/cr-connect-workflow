@@ -9,9 +9,10 @@ JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values 
 NAME = "CR Connect Workflow"
 FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default="5000")
 CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default="localhost:4200, localhost:5002"))
-DEVELOPMENT = environ.get('DEVELOPMENT', default="true") == "true"
 TESTING = environ.get('TESTING', default="false") == "true"
-PRODUCTION = (environ.get('PRODUCTION', default="false") == "true") or (not DEVELOPMENT and not TESTING)
+PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")
+TEST_UID = environ.get('TEST_UID', default="dhf8r")
+ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,ajl2j,cah13us,cl3wf"))
 
 # Add trailing slash to base path
 APPLICATION_ROOT = re.sub(r'//', '/', '/%s/' % environ.get('APPLICATION_ROOT', default="/").strip('/'))
