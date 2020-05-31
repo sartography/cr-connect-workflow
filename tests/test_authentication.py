@@ -1,14 +1,19 @@
 import json
 from datetime import timezone, datetime
+from tests.base_test import BaseTest
 
 from crc import db, app
 from crc.models.study import StudySchema
 from crc.models.user import UserModel
-from models.protocol_builder import ProtocolBuilderStatus
-from tests.base_test import BaseTest
+from crc.models.protocol_builder import ProtocolBuilderStatus
 
 
 class TestAuthentication(BaseTest):
+
+    def tearDown(self):
+        # Assure we set the production flag back to false.
+        app.config['PRODUCTION'] = False
+        super().tearDown()
 
     def test_auth_token(self):
         self.load_example_data()
