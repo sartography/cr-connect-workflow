@@ -53,7 +53,7 @@ def verify_token(token=None):
 
     # If there's no token and we're in production, get the user from the SSO headers and return their token
     if not token and _is_production():
-        uid = _get_request_uid()
+        uid = _get_request_uid(request)
 
         if uid is not None:
             db_user = UserModel.query.filter_by(uid=uid).first()
@@ -87,7 +87,7 @@ def verify_token_admin(token=None):
 
     # If this is production, check that the user is in the list of admins
     if _is_production():
-        uid = _get_request_uid()
+        uid = _get_request_uid(request)
 
         print('verify_token_admin uid', uid)
 
@@ -148,7 +148,9 @@ def login(
 
     # If we're in production, override any uid with the uid from the SSO request headers
     if _is_production():
-        uid = _get_request_uid()
+        uid = _get_request_uid(request)
+
+    print('login > uid', uid)
 
     if uid:
         app.logger.info("SSO_LOGIN: Full URL: " + request.url)
@@ -218,15 +220,19 @@ def _handle_login(user_info: LdapUserInfo, redirect_url=None):
         return auth_token
 
 
-def _get_request_uid(uid=None):
+def _get_request_uid(req):
+    uid = None
+
     if _is_production():
-        uid = request.headers.get("Uid")
+
+        print('req.headers', req.headers)
+        uid = req.headers.get("Uid")
         if not uid:
-            uid = request.headers.get("X-Remote-Uid")
+            uid = req.headers.get("X-Remote-Uid")
 
         if not uid:
             raise ApiError("invalid_sso_credentials", "'Uid' nor 'X-Remote-Uid' were present in the headers: %s"
-                           % str(request.headers))
+                           % str(req.headers))
 
     return uid
 

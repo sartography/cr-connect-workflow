@@ -107,7 +107,11 @@ class BaseTest(unittest.TestCase):
             user_info = {'uid': user.uid}
 
         query_string = self.user_info_to_query_string(user_info, redirect_url)
+        print('query_string', query_string)
         rv = self.app.get("/v1.0/login%s" % query_string, follow_redirects=False)
+
+        print('rv.status_code', rv.status_code)
+
         self.assertTrue(rv.status_code == 302)
         self.assertTrue(str.startswith(rv.location, redirect_url))
 

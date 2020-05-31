@@ -87,6 +87,7 @@ class TestAuthentication(BaseTest):
     def test_admin_only_endpoints(self):
         # Switch production mode on
         app.config['PRODUCTION'] = True
+        self.load_example_data()
 
         admin_uids = app.config['ADMIN_UIDS']
         self.assertGreater(len(admin_uids), 0)
@@ -105,12 +106,11 @@ class TestAuthentication(BaseTest):
             self.assertIsNotNone(admin_user)
 
             admin_study = self._make_fake_study(uid)
-            print('admin_study', admin_study)
 
             rv_add_study = self.app.post(
                 '/v1.0/study',
                 content_type="application/json",
-                headers=self.logged_in_headers(user=admin_user),
+                headers=admin_headers,
                 data=json.dumps(StudySchema().dump(admin_study))
             )
             self.assert_success(rv_add_study, 'Admin user should be able to add a study')
@@ -120,7 +120,7 @@ class TestAuthentication(BaseTest):
             rv_del_study = self.app.delete(
                 '/v1.0/study/%i' % new_study.id,
                 follow_redirects=False,
-                headers=self.logged_in_headers(user=admin_user)
+                headers=admin_headers
             )
             self.assert_success(rv_del_study, 'Admin user should be able to delete a study')
 
@@ -143,7 +143,7 @@ class TestAuthentication(BaseTest):
         rv_add_study = self.app.post(
             '/v1.0/study',
             content_type="application/json",
-            headers=self.logged_in_headers(user=non_admin_user),
+            headers=non_admin_headers,
             data=json.dumps(StudySchema().dump(non_admin_study))
         )
         self.assert_success(rv_add_study, 'Non-admin user should be able to add a study')
@@ -153,7 +153,7 @@ class TestAuthentication(BaseTest):
         rv_del_study = self.app.delete(
             '/v1.0/study/%i' % new_study.id,
             follow_redirects=False,
-            headers=self.logged_in_headers(user=non_admin_user)
+            headers=non_admin_headers
         )
         self.assert_failure(rv_del_study, 'Non-admin user should not be able to delete a study')
 
