@@ -78,7 +78,7 @@ class ApprovalService(object):
             version = 1
 
         model = ApprovalModel(study_id=study_id, workflow_id=workflow_id,
-                              approver_uid=approver_uid, status=ApprovalStatus.WAITING.value,
+                              approver_uid=approver_uid, status=ApprovalStatus.PENDING.value,
                               message="", date_created=datetime.now(),
                               version=version)
         approval_files = ApprovalService._create_approval_files(workflow_data_files, model)

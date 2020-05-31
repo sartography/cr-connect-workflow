@@ -14,7 +14,7 @@ from crc.services.ldap_service import LdapService
 
 
 class ApprovalStatus(enum.Enum):
-    WAITING = "WAITING"   # no one has done jack.
+    PENDING = "PENDING"   # no one has done jack.
     APPROVED = "APPROVED" # approved by the reviewer
     DECLINED = "DECLINED" # rejected by the reviewer
     CANCELED = "CANCELED" # The document was replaced with a new version and this review is no longer needed.
