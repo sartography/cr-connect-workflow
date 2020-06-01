@@ -34,7 +34,7 @@ Schools are developing a process for the approval of ramp up requests and enforc
 1.	The Research Ramp-up Plan allows for one request to be entered for a single Principle Investigator.  In the form that follows enter the Primary Investigator this request is for and other identifying information.  The PI's School and Supervisor will be used as needed for approval routing.  
 2.	Provide all available information in the forms that follow to provide an overview of where the research will resume, who will be involved, what supporting resources will be needed and what steps have been taken to assure compliance with [Research Ramp-up Guidance](https://research.virginia.edu/research-ramp-guidance).
 3.	After all forms have been completed, you will be presented with the option to create your Research Recovery Plan in Word format.  Download the document and review it.  If you see any corrections that need to be made, return to the corresponding form and make the correction. 
-4.	Once the generated Research Recovery Plan is finalize, proceed to the Plan Submission step to submit your plan for approval.</bpmn:documentation>
+4.	Once the generated Research Recovery Plan is finalized, proceed to the Plan Submission step to submit your plan for approval.</bpmn:documentation>
       <bpmn:incoming>SequenceFlow_05ja25w</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0h50bp3</bpmn:outgoing>
     </bpmn:manualTask>
@@ -47,6 +47,7 @@ Enter the following information for the PI submitting this request</bpmn:documen
             <camunda:properties>
               <camunda:property id="placeholder" value="wxy0z or Smith" />
               <camunda:property id="ldap.lookup" value="true" />
+              <camunda:property id="autocomplete_num" value="10" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -60,6 +61,9 @@ Enter the following information for the PI submitting this request</bpmn:documen
               <camunda:property id="spreadsheet.value.column" value="Value" />
               <camunda:property id="spreadsheet.label.column" value="School Name" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="PIPrimaryDeptArchitecture" label="PI&#39;s Primary Architecture Department" type="enum">
             <camunda:properties>
@@ -68,6 +72,9 @@ Enter the following information for the PI submitting this request</bpmn:documen
               <camunda:property id="spreadsheet.label.column" value="Label" />
               <camunda:property id="hide_expression" value="(model.PISchool &#38;&#38; model.PISchool !== &#34;Architecture&#34;) || model.PISchool === null" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="PIPrimaryDeptArtsSciences" label="PI&#39;s Primary Arts &#38; Sciences Department" type="enum">
             <camunda:properties>
@@ -77,6 +84,9 @@ Enter the following information for the PI submitting this request</bpmn:documen
               <camunda:property id="hide_expression" value="(model.PISchool &#38;&#38; model.PISchool !== &#34;Arts &#38; Sciences&#34;) || model.PISchool === null" />
               <camunda:property id="description" value="Type key words to find department" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="PIPrimaryDeptEducation" label="PI&#39;s Primary Education Department" type="enum">
             <camunda:properties>
@@ -85,6 +95,9 @@ Enter the following information for the PI submitting this request</bpmn:documen
               <camunda:property id="spreadsheet.label.column" value="Label" />
               <camunda:property id="hide_expression" value="(model.PISchool &#38;&#38; model.PISchool !== &#34;Education&#34;) || model.PISchool === null" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="PIPrimaryDeptEngineering" label="PI&#39;s Primary Engineering Department" type="enum">
             <camunda:properties>
@@ -93,6 +106,9 @@ Enter the following information for the PI submitting this request</bpmn:documen
               <camunda:property id="spreadsheet.label.column" value="Label" />
               <camunda:property id="hide_expression" value="(model.PISchool &#38;&#38; model.PISchool !== &#34;Engineering&#34;) || model.PISchool === null" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="PIPrimaryDeptMedicine" label="PI&#39;s Primary Medicine Department/Center" type="enum">
             <camunda:properties>
@@ -101,6 +117,9 @@ Enter the following information for the PI submitting this request</bpmn:documen
               <camunda:property id="spreadsheet.label.column" value="Label" />
               <camunda:property id="hide_expression" value="(model.PISchool &#38;&#38; model.PISchool !== &#34;Medicine&#34;) || model.PISchool === null" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="tr" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="PIPrimaryDeptProvostOffice" label="PI&#39;s Primary Provost Office Department/Center" type="enum">
             <camunda:properties>
@@ -109,21 +128,28 @@ Enter the following information for the PI submitting this request</bpmn:documen
               <camunda:property id="spreadsheet.label.column" value="Label" />
               <camunda:property id="hide_expression" value="(model.PISchool &#38;&#38; model.PISchool !== &#34;Provost Office&#34;) || model.PISchool === null" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="PIPrimaryDeptOther" label="Primary Department " type="string">
             <camunda:properties>
               <camunda:property id="hide_expression" value="(model.PIPrimaryDeptArchitecture === null &#38;&#38; model.PIPrimaryDeptArtsSciences === null &#38;&#38; model.PIPrimaryDeptEducation === null &#38;&#38; model.PIPrimaryDeptEngineering === null &#38;&#38; model.PIPrimaryDeptMedicine === null &#38;&#38;  model.PIPrimaryDeptProvostOffice === null) || (model.PIPrimaryDeptArchitecture !== &#34;Other&#34; &#38;&#38; model.PIPrimaryDeptArtsSciences !== &#34;Other&#34; &#38;&#38; model.PIPrimaryDeptEducation !== &#34;Other&#34; &#38;&#38; model.PIPrimaryDeptEngineering !== &#34;Other&#34; &#38;&#38; model.PIPrimaryDeptMedicine !== &#34;Other&#34; &#38;&#38; model.PIPrimaryDeptProvostOffice !== &#34;Other&#34;)" />
               <camunda:property id="description" value="Enter the PI&#39;s Primary Department " />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="PISupervisor" label="Pi&#39;s Supervisor" type="autocomplete">
             <camunda:properties>
               <camunda:property id="description" value="Find the PI&#39;s Supervisor by entering Computing I D or Last Name." />
               <camunda:property id="ldap.lookup" value="true" />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
+              <camunda:property id="autocomplete_num" value="10" />
             </camunda:properties>
             <camunda:validation>
-              <camunda:constraint name="Required" config="true" />
+              <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
         </camunda:formData>
@@ -133,34 +159,35 @@ Enter the following information for the PI submitting this request</bpmn:documen
     </bpmn:userTask>
     <bpmn:sequenceFlow id="SequenceFlow_0h50bp3" sourceRef="ManualTask_Instructions" targetRef="Activity-PI_Info" />
     <bpmn:sequenceFlow id="SequenceFlow_05ja25w" sourceRef="StartEvent_1" targetRef="ManualTask_Instructions" />
-    <bpmn:userTask id="EnterPersonnel" name="Enter Personnel" camunda:formKey="Personnel">
-      <bpmn:documentation>#### People for whom you are requesting access
-Provide information on all researchers you are requesting approval for reentry into the previously entered lab/research and/or office space(s) for conducting research on-Grounds. (If there are personnel already working in the space, include them). 
+    <bpmn:userTask id="Activity_Personnel" name="Enter Personnel" camunda:formKey="Research Personnel">
+      <bpmn:documentation>#### Personnel for whom you are requesting access
+Provide information on all personnel you are requesting approval for reentry into the previously entered lab, workspace and/or office space(s) for conducting research on-Grounds. (If there are personnel already working in the space, include them). 
 
 **Note: no undergraduates will be allowed to work on-Grounds during Phase I.**
 
 #### Exclusive Space previously entered
-{% for es in exclusive %}
-{{ es.ExclusiveSpaceRoomID + " " + es.ExclusiveSpaceBuilding.label }}
-{% else %}
-No exclusive space entered
-{% endfor %}
-
+{%+ for es in exclusive %}{{ es.ExclusiveSpaceRoomID + " " + es.ExclusiveSpaceBuilding.label }}{% if loop.last %}{% else %}, {% endif %}{% else %}No exclusive space entered{% endfor %}
 
 #### Shared Space previously entered
-{% for ss in shared %}
-{{ ss.SharedSpaceRoomID + " " + ss.SharedSpaceBuilding.label }}
-{% else %}
-No shared space entered
-{% endfor %}</bpmn:documentation>
+{%+ for ss in shared %}{{ ss.SharedSpaceRoomID + " " + ss.SharedSpaceBuilding.label }}{% if loop.last %}{% else %}, {% endif %}{% else %}No shared space entered.{% endfor %}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
+          <camunda:formField id="HavePersonnel" label="Select one:" type="enum">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="yes" name="I am requesting approval for personnel, in addition to myself, to return to one or more of the labs, workspaces and/or offices previously entered." />
+            <camunda:value id="no" name="No additional personnel, just myself, will be returning to the labs, workspaces and/or offices previously entered" />
+          </camunda:formField>
           <camunda:formField id="PersonnelComputingID" label="Computer ID" type="autocomplete">
             <camunda:properties>
               <camunda:property id="repeat" value="Personnel" />
               <camunda:property id="ldap.lookup" value="true" />
               <camunda:property id="description" value="Find by entering Computing ID or Last Name." />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
+              <camunda:property id="autocomplete_num" value="10" />
+              <camunda:property id="repeat_hide_expression" value="model.HavePersonnel === &#39;no&#39; | model.HavePersonnel == null" />
+              <camunda:property id="repeat_title" value="Enter all Personnel who will be working in the previously entered spaces" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -179,9 +206,7 @@ No shared space entered
           </camunda:formField>
           <camunda:formField id="PersonnelSpace" label="Space they will work in" type="textarea">
             <camunda:properties>
-              <camunda:property id="rows" value="2" />
-              <camunda:property id="autosize" value="true" />
-              <camunda:property id="description" value="Provide building and room number for each lab space this person will work in" />
+              <camunda:property id="description" value="Provide room number/identifier and building for each lab, workspace and/or office space this person will be working.  If they will be in more than one space, separate spaces by commas." />
               <camunda:property id="repeat" value="Personnel" />
             </camunda:properties>
             <camunda:validation>
@@ -199,18 +224,13 @@ No shared space entered
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="PersonnelWeeklySchedule" label="Personnel Weekly Schedule" type="files">
-            <camunda:properties>
-              <camunda:property id="description" value="Upload a file or files of proposed weekly schedules for all personnel which are representative of compliance with ramp-up guidance." />
-            </camunda:properties>
-          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0r9cfe1</bpmn:incoming>
-      <bpmn:outgoing>Flow_0821rbm</bpmn:outgoing>
+      <bpmn:incoming>Flow_0hc1r8a</bpmn:incoming>
+      <bpmn:outgoing>Flow_1yxaewj</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="UserTask_CoreResource" name="Enter Core Resources" camunda:formKey="Core Resources">
-      <bpmn:documentation>#### If applicable, provide a list of any [Core Resources](https://research.virginia.edu/research-core-resources) you will utilize space or instruments in and name/email of contact person in the core you have coordinated your plan with. (Core facility managers are responsible for developing a plan for their space)</bpmn:documentation>
+      <bpmn:documentation>If applicable, provide a list of any [Core Resources](https://research.virginia.edu/research-core-resources) utilization of space and/or instruments along with the name(s) and email(s) of contact person(s) in the core with whom you have coordinated your plan. (Core facility managers are responsible for developing a plan for their space)</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="isCoreResourcesUse" label="Core Resources Use" type="boolean">
@@ -224,16 +244,17 @@ No shared space entered
               <camunda:property id="rows" value="10" />
               <camunda:property id="autosize" value="true" />
               <camunda:property id="hide_expression" value="!model.isCoreResourcesUse | model.isCoreResourcesUse == null" />
+              <camunda:property id="description" value="Provide a list of any core resources utilization of space and/or instruments along with the name(s) and email(s) of contact person(s) in the core with whom you have coordinated your plan." />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1myg94h</bpmn:incoming>
-      <bpmn:outgoing>Flow_0zyal9y</bpmn:outgoing>
+      <bpmn:incoming>Flow_1n69wsr</bpmn:incoming>
+      <bpmn:outgoing>Flow_13pusfu</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:endEvent id="EndEvent_09wp7av">
-      <bpmn:documentation>#### End of Workflow
-Place instruction here,</bpmn:documentation>
+      <bpmn:documentation>#### End of Research Ramp-up Plan Workflow
+Thank you for participating,</bpmn:documentation>
       <bpmn:incoming>Flow_05w8yd6</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_1e2qi9s" sourceRef="Activity_AcknowledgePlanReview" targetRef="Activity_ApprovalInfo" />
@@ -250,11 +271,12 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
         <camunda:formData>
           <camunda:formField id="SharedSpaceBuilding" label="Building Name" type="autocomplete">
             <camunda:properties>
-              <camunda:property id="description" value="Select the building where this shared lab space is housed." />
+              <camunda:property id="description" value="Select the building where this shared lab, office or workspace space is housed." />
               <camunda:property id="spreadsheet.name" value="BuildingList.xls" />
               <camunda:property id="spreadsheet.value.column" value="Value" />
               <camunda:property id="spreadsheet.label.column" value="Building Name" />
               <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat_title" value="Add one entry for each Shared Space" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -280,8 +302,9 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
             <camunda:properties>
               <camunda:property id="ldap.lookup" value="true" />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
-              <camunda:property id="description" value="Enter Area Monitor&#39;s Computing ID or last name and select Area Monitor.  Leave blank if not known." />
+              <camunda:property id="description" value="Enter Area Monitor&#39;s Computing ID or last name and select.  Leave blank if not known." />
               <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="autocomplete_num" value="10" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="SharedSpaceSqFt" label="Space square Feet" type="long">
@@ -307,6 +330,7 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
+              <camunda:constraint name="min" config="1" />
             </camunda:validation>
           </camunda:formField>
           <camunda:formField id="SharedSpacePI" label="Shared Space PI(s)" type="textarea">
@@ -321,22 +345,24 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0ss3j2p</bpmn:incoming>
-      <bpmn:outgoing>Flow_1myg94h</bpmn:outgoing>
+      <bpmn:incoming>Flow_0o4tg9g</bpmn:incoming>
+      <bpmn:outgoing>Flow_1n69wsr</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_16y8glw" sourceRef="Activity-PI_Info" targetRef="Activity_1u58hox" />
     <bpmn:userTask id="Activity_ExclusiveSpace" name="Enter Exclusive Space" camunda:formKey="ExclusiveSpace">
       <bpmn:documentation>#### Space managed exclusively by {{ PIComputingID.label }}
-Submit one entry for each space the PI is the exclusive investigator.  If all space is shared with one or more other investigators, Click Save to skip this section and proceed to the Shared Space section.</bpmn:documentation>
+
+Submit one entry for each space the PI is the exclusive investigator.  If all space is shared with one or more other investigators, click Save to skip this section and proceed to the Shared Space section.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="ExclusiveSpaceBuilding" label="Room No. &#38; Building Name" type="autocomplete">
+          <camunda:formField id="ExclusiveSpaceBuilding" label="Building Name" type="autocomplete">
             <camunda:properties>
-              <camunda:property id="description" value="Type key word to find the building in which the lab is located." />
+              <camunda:property id="description" value="Type key word to find the building in which the lab, office or workspace is located." />
               <camunda:property id="spreadsheet.name" value="BuildingList.xls" />
               <camunda:property id="spreadsheet.value.column" value="Value" />
               <camunda:property id="spreadsheet.label.column" value="Building Name" />
               <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat_title" value="Add one entry for each Exclusive Space" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -354,7 +380,7 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceRoomIDBuilding" label="Room No, and Building Name" type="string">
             <camunda:properties>
-              <camunda:property id="description" value="Enter the Room No and Building of your exclusive space." />
+              <camunda:property id="description" value="Enter the Room No and Building of your exclusive lab or workspace." />
               <camunda:property id="hide_expression" value="model.ExclusiveSpaceBuilding !== &#34;Other&#34; | model.ExclusiveSpaceBuilding === null" />
             </camunda:properties>
           </camunda:formField>
@@ -362,19 +388,21 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
             <camunda:properties>
               <camunda:property id="repeat" value="Exclusive" />
               <camunda:property id="enum_type" value="radio" />
+              <camunda:property id="markdown_description" value="### Note that return to any lab, office or workspace must be for critical reasons only during Phase I" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
             <camunda:value id="Lab" name="Lab" />
-            <camunda:value id="Office" name="Office" />
+            <camunda:value id="Office" name="Office/Workspace" />
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceAMComputingID" label="Area Monitor" type="autocomplete">
             <camunda:properties>
               <camunda:property id="ldap.lookup" value="true" />
-              <camunda:property id="description" value="Enter Area Monitor&#39;s Computing ID or last name and select Area Monitor.  Leave blank if not known." />
+              <camunda:property id="description" value="Enter Area Monitor&#39;s Computing ID or last name and select.  Leave blank if not known." />
               <camunda:property id="repeat" value="Exclusive" />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
+              <camunda:property id="autocomplete_num" value="10" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceSqFt" label="Space Square Feet" type="long">
@@ -398,17 +426,18 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceMaxPersonnel" label="Maximum Number of Personnel Occupying Space" type="long">
             <camunda:properties>
-              <camunda:property id="description" value="Enter the maximum number of personnel, including  yourself, who will occupy this space." />
+              <camunda:property id="description" value="Enter the maximum number of personnel, including yourself, who will occupy this space." />
               <camunda:property id="repeat" value="Exclusive" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
+              <camunda:constraint name="min" config="1" />
             </camunda:validation>
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1grd970</bpmn:incoming>
-      <bpmn:outgoing>Flow_0ss3j2p</bpmn:outgoing>
+      <bpmn:incoming>Flow_0uc4o6c</bpmn:incoming>
+      <bpmn:outgoing>Flow_0o4tg9g</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Activity_nonUVASpaces" name="Enter non-UVA Spaces" camunda:formKey="nonUVA Spaces">
       <bpmn:extensionElements>
@@ -432,8 +461,8 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0zyal9y</bpmn:incoming>
-      <bpmn:outgoing>Flow_0r9cfe1</bpmn:outgoing>
+      <bpmn:incoming>Flow_13pusfu</bpmn:incoming>
+      <bpmn:outgoing>Flow_0hc1r8a</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Activity_DistanceReq" name="Enter Distancing Requirements" camunda:formKey="Distancing Requirements">
       <bpmn:documentation>#### Distancing requirements:
@@ -452,23 +481,23 @@ Maintain social distancing by designing space between people to be at least 9 fe
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0821rbm</bpmn:incoming>
-      <bpmn:outgoing>Flow_18f81dp</bpmn:outgoing>
+      <bpmn:incoming>Flow_1itd8db</bpmn:incoming>
+      <bpmn:outgoing>Flow_1lo964l</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Activity_PWA" name="Enter Physical Work Arrangements" camunda:formKey="Physical Work Arrangements">
-      <bpmn:documentation>Describe physical work arrangements for each lab. Show schematic of the lab and space organization to meet the distancing guidelines (see key safety expectations for ramp-up).
+      <bpmn:documentation>Describe physical work arrangements for each lab, workspace and/or office space previously entered. Show schematic of the space organization to meet the distancing guidelines (see key safety expectations for ramp-up).
 - Show gross dimensions, location of desks, and equipment in blocks (not details) that show available space for work and foot traffic.
 - Indicate total square footage for every lab/space that you are requesting adding personnel to in this application. If you would like help obtaining a floor plan for your lab, your department or deans office can help. You can also create a hand drawing/block diagram of your space and the location of objects on a graph paper. 
 - Upload your physical layout and workspace organization in the form of a jpg image or a pdf file. This can be hand-drawn or actual floor plans.
 - Show and/or describe designated work location for each member (during their shift) in the lab when multiple members are present at a time to meet the distancing guidelines.
-- Provide a foot traffic plan (on the schematic) to indicate how people can move around while maintaining distancing requirements.  This can be a freeform sketch on your floor plan showing where foot traffic can occur in your lab, and conditions, if any, to ensure distancing at all times. (e.g., direction to walk around a lab bench, rules for using shared equipment located in the lab, certain areas of lab prohibited from access, etc.).
-- Provide your initial weekly laboratory schedule (see excel template) for all members that you are requesting access for, indicating all shifts as necessary. If schedule changes, please submit your revised schedule through the web portal.</bpmn:documentation>
+- Provide a foot traffic plan (on the schematic) to indicate how people can move around while maintaining distancing requirements.  This can be a freeform sketch on your floor plan showing where foot traffic can occur in your lab, and conditions, if any, to ensure distancing at all times. (e.g., direction to walk around a lab bench, rules for using shared equipment located in the lab, certain areas of lab prohibited from access, etc.).</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="PWADescribe" label="Describe" type="textarea">
             <camunda:properties>
               <camunda:property id="rows" value="10" />
               <camunda:property id="autosize" value="true" />
+              <camunda:property id="help" value=" [From Research Ramp-up Guidance](https://research.virginia.edu/research-ramp-guidance)\n#### KEY SAFETY EXPECTATIONS WHEN WE RAMP UP ACTIVITIES (APPLIES TO ALL ON-GROUNDS RESEARCH):\n\n- Avoid more than one person on an elevator. No congregation in front of elevators and will need to maintain social distancing while waiting.\n- Maintain social distancing by designing space between people to be at least 9 feet during prolonged work which will be accomplished by restricting the number of people in the lab to a density of ~250 sq. ft. /person in lab areas.\n- When moving around, a minimum of 6 feet social distancing is required. Ideally only one person per lab bench and no one can work at the same time in the same bay." />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -477,10 +506,10 @@ Maintain social distancing by designing space between people to be at least 9 fe
           <camunda:formField id="PWAFiles" label="Upload supporting files" type="files" />
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_18f81dp</bpmn:incoming>
-      <bpmn:outgoing>Flow_0cp1fez</bpmn:outgoing>
+      <bpmn:incoming>Flow_1lo964l</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wgdxa6</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="Activity_HSR" name="Enter Health Safety Requirements" camunda:formKey="Lab Plan">
+    <bpmn:userTask id="Activity_HSR" name="Enter Health Safety Requirements" camunda:formKey="Lab Safety Plan">
       <bpmn:documentation>#### Health Safety Requirements:
 Use the EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/url?q=http://ehs.virginia.edu/files/Lab-Safety-Plan-During-COVID-19.docx&amp;source=gmail&amp;ust=1590687968958000&amp;usg=AFQjCNE83uGDFtxGkKaxjuXGhTocu-FDmw) to create and upload a copy of your laboratory policy statement to all members which includes at a minimum the following details: 
 - Laboratory face covering rules, use of other PPE use as required
@@ -491,11 +520,11 @@ Use the EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/ur
 - Where and how to obtain PPE including face covering</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="LabPlan" label="Upload Lab Plan" type="files" />
+          <camunda:formField id="LabSafetyPlan" label="Upload Lab Safety Plan" type="files" />
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0cp1fez</bpmn:incoming>
-      <bpmn:outgoing>Flow_0vpwylg</bpmn:outgoing>
+      <bpmn:incoming>Flow_0wgdxa6</bpmn:incoming>
+      <bpmn:outgoing>Flow_0judgmp</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Activity_OtherReq" name="Enter Other Requirements" camunda:formKey="Other Requirements">
       <bpmn:extensionElements>
@@ -540,26 +569,29 @@ Use the EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/ur
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_0vpwylg</bpmn:incoming>
-      <bpmn:outgoing>Flow_1r2p20h</bpmn:outgoing>
+      <bpmn:incoming>Flow_0judgmp</bpmn:incoming>
+      <bpmn:outgoing>Flow_11uqavk</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:manualTask id="Activity_SubmitPlan" name="Acknowledge Plan Submission">
       <bpmn:documentation>#### By submitting this request, you understand that every member listed in this form for on Grounds laboratory access will:
-- Complete online COVID awareness &amp; precaution training module (link forthcoming-May 25)
+- Complete [online COVID awareness &amp; precaution training module](https://researchcompliance.web.virginia.edu/training_html5/module_content/154/index.cfm)
 - Complete daily health acknowledgement form signed (electronically) –email generated daily to those listed on your plan for access to on Grounds lab/research space
 - Fill out daily work attendance log for all lab members following your school process to check-in and out of work each day.</bpmn:documentation>
       <bpmn:incoming>Flow_08njvvi</bpmn:incoming>
       <bpmn:outgoing>Flow_0j4rs82</bpmn:outgoing>
     </bpmn:manualTask>
-    <bpmn:scriptTask id="Activity_1tub2mc" name="Generate RRP">
-      <bpmn:incoming>Flow_1r2p20h</bpmn:incoming>
+    <bpmn:scriptTask id="Activity_GenerateRRP" name="Generate RRP">
+      <bpmn:documentation>#### Script Task
+
+
+This step is internal to the system and do not require and user interaction</bpmn:documentation>
+      <bpmn:incoming>Flow_11uqavk</bpmn:incoming>
       <bpmn:outgoing>Flow_0aqgwvu</bpmn:outgoing>
       <bpmn:script>CompleteTemplate ResearchRampUpPlan.docx RESEARCH_RAMPUP</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:sequenceFlow id="Flow_0aqgwvu" sourceRef="Activity_1tub2mc" targetRef="Activity_AcknowledgePlanReview" />
+    <bpmn:sequenceFlow id="Flow_0aqgwvu" sourceRef="Activity_GenerateRRP" targetRef="Activity_AcknowledgePlanReview" />
     <bpmn:sequenceFlow id="Flow_0j4rs82" sourceRef="Activity_SubmitPlan" targetRef="Activity_0absozl" />
-    <bpmn:sequenceFlow id="Flow_07ge8uf" sourceRef="Activity_0absozl" targetRef="BusinessRuleTask_CheckExclusiveAreaMonitors" />
-    <bpmn:sequenceFlow id="Flow_1ufh44h" sourceRef="Activity_RequestStatus" targetRef="Activity_AreaMonitorNotification" />
+    <bpmn:sequenceFlow id="Flow_07ge8uf" sourceRef="Activity_0absozl" targetRef="Activity_1sq56an" />
     <bpmn:userTask id="Activity_RequestStatus" name="Check-on Request Status" camunda:formKey="Rquest Status">
       <bpmn:documentation>#### Approval Process
 The Research Ramp-up Plan and associated documents will be reviewed by{{ " " + ApprvlApprvrName1 }}{{ '.' if ApprvlApprvrName2 == 'n/a' else ' and ' + ApprvlApprvrName2 + '.' }}  While waiting for approval, be sure that all required training has been completed and supplies secured.  When the approval email notification is received, confirming the three questions below will allow you to proceed.
@@ -665,12 +697,15 @@ If a rejection notification is received, go back to the first step that needs to
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1r9hwx3</bpmn:incoming>
-      <bpmn:outgoing>Flow_1ufh44h</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0qc39tw</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_05w8yd6" sourceRef="Activity_WhatNext" targetRef="EndEvent_09wp7av" />
     <bpmn:sequenceFlow id="Flow_08njvvi" sourceRef="Activity_ApprovalInfo" targetRef="Activity_SubmitPlan" />
     <bpmn:businessRuleTask id="Activity_ApprovalInfo" name="Assign Approval Info" camunda:decisionRef="Decision_ApprovalInfo">
+      <bpmn:documentation>#### Business Rule Task
+
+
+This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_1e2qi9s</bpmn:incoming>
       <bpmn:outgoing>Flow_08njvvi</bpmn:outgoing>
     </bpmn:businessRuleTask>
@@ -688,211 +723,266 @@ If notification is received that the Research Ramp-up Plan approval process is n
       <bpmn:documentation>#### Ready to Ramp-up Research
 Notify the Area Monitor for
 
+
 #### Exclusive Space previously entered
 {%+ for es in exclusive %}{{ es.ExclusiveSpaceRoomID + " " + es.ExclusiveSpaceBuilding.label + " - " }}{% if es.ExclusiveSpaceAMComputingID is none %}No Area Monitor entered{% else %}{{ es.ExclusiveSpaceAMComputingID.label }}{% endif %}{% if loop.last %}{% else %}, {% endif %}{% else %}No exclusive space entered{% endfor %}
 
 
+
+
 #### Shared Space previously entered
 {%+ for ss in shared %}{{ ss.SharedSpaceRoomID + " " + ss.SharedSpaceBuilding.label }}{% if ss.SharedSpaceAMComputingID is none  %}No Area Monitor entered{% else %}{{ ss.SharedSpaceAMComputingID.label }}{% endif %}{% if loop.last %}{% else %}, {% endif %}{% else %}No shared space entered.{% endfor %}</bpmn:documentation>
-      <bpmn:incoming>Flow_1ufh44h</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0qc39tw</bpmn:incoming>
       <bpmn:outgoing>Flow_0cpmvcw</bpmn:outgoing>
     </bpmn:manualTask>
     <bpmn:scriptTask id="Activity_0absozl" name="Execute Plan Submission">
+      <bpmn:documentation>#### Script Task
+
+
+This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_0j4rs82</bpmn:incoming>
       <bpmn:outgoing>Flow_07ge8uf</bpmn:outgoing>
       <bpmn:script>RequestApproval ApprvlApprvr1 ApprvlApprvr2</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_1u58hox" name="Update Request">
+      <bpmn:documentation>#### Script Task
+
+
+This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_16y8glw</bpmn:incoming>
-      <bpmn:outgoing>Flow_1grd970</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0uc4o6c</bpmn:outgoing>
       <bpmn:script>UpdateStudy title:PIComputingID.label pi:PIComputingID.value</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:sequenceFlow id="Flow_09m77pd" sourceRef="BusinessRuleTask_CheckExclusiveAreaMonitors" targetRef="Activity_0yqqwtd" />
-    <bpmn:businessRuleTask id="BusinessRuleTask_CheckExclusiveAreaMonitors" name="Check Exclusive Area Monitors" camunda:decisionRef="Decision_ExclusiveAMCheck">
+    <bpmn:userTask id="PersonnelSchedule" name="Upload Weekly Personnel Schedule(s)" camunda:formKey="Personnel Weekly  Schedule">
+      <bpmn:documentation>#### Weekly Personnel Schedule(s)
+Provide initial weekly schedule(s) for the PI and all personnel for whom access has been requested, indicating each space they will be working in and all shifts, if applicable. 
+
+##### Personnel and spaces they will work in previously entered
+{%+ for p in personnel %}{{ p.PersonnelComputingID.label + " - " + p.PersonnelSpace }}{% if loop.last %}{% else %}; {% endif %}{% endfor %}
+
+**Note:** If any schedule changes after approval, please re-submit revised schedule(s) here for re-approval.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="PersonnelWeeklySchedule" label="Upload Personnel Weekly Schedule(s)" type="files">
+            <camunda:properties>
+              <camunda:property id="description" value="Upload a file or files of proposed weekly schedules for the PI and all personnel which were entered and representative of compliance with ramp-up guidance." />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1yxaewj</bpmn:incoming>
+      <bpmn:outgoing>Flow_1itd8db</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0uc4o6c" sourceRef="Activity_1u58hox" targetRef="Activity_ExclusiveSpace" />
+    <bpmn:sequenceFlow id="Flow_0o4tg9g" sourceRef="Activity_ExclusiveSpace" targetRef="Activity_SharedSpaceInfo" />
+    <bpmn:sequenceFlow id="Flow_1n69wsr" sourceRef="Activity_SharedSpaceInfo" targetRef="UserTask_CoreResource" />
+    <bpmn:sequenceFlow id="Flow_13pusfu" sourceRef="UserTask_CoreResource" targetRef="Activity_nonUVASpaces" />
+    <bpmn:sequenceFlow id="Flow_1yxaewj" sourceRef="Activity_Personnel" targetRef="PersonnelSchedule" />
+    <bpmn:sequenceFlow id="Flow_1itd8db" sourceRef="PersonnelSchedule" targetRef="Activity_DistanceReq" />
+    <bpmn:sequenceFlow id="Flow_1lo964l" sourceRef="Activity_DistanceReq" targetRef="Activity_PWA" />
+    <bpmn:sequenceFlow id="Flow_0wgdxa6" sourceRef="Activity_PWA" targetRef="Activity_HSR" />
+    <bpmn:sequenceFlow id="Flow_0judgmp" sourceRef="Activity_HSR" targetRef="Activity_OtherReq" />
+    <bpmn:sequenceFlow id="Flow_11uqavk" sourceRef="Activity_OtherReq" targetRef="Activity_GenerateRRP" />
+    <bpmn:sequenceFlow id="Flow_0peeyne" sourceRef="Activity_1sq56an" targetRef="Activity_14xt8is" />
+    <bpmn:businessRuleTask id="Activity_1sq56an" name="Check Exclusive Area Monitors" camunda:decisionRef="Decision_ExclusiveAMCheck">
+      <bpmn:documentation>#### Business Rule Task
+
+
+
+
+This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_07ge8uf</bpmn:incoming>
-      <bpmn:outgoing>Flow_09m77pd</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0peeyne</bpmn:outgoing>
     </bpmn:businessRuleTask>
-    <bpmn:sequenceFlow id="Flow_1grd970" sourceRef="Activity_1u58hox" targetRef="Activity_ExclusiveSpace" />
-    <bpmn:sequenceFlow id="Flow_0ss3j2p" sourceRef="Activity_ExclusiveSpace" targetRef="Activity_SharedSpaceInfo" />
-    <bpmn:sequenceFlow id="Flow_1myg94h" sourceRef="Activity_SharedSpaceInfo" targetRef="UserTask_CoreResource" />
-    <bpmn:sequenceFlow id="Flow_0zyal9y" sourceRef="UserTask_CoreResource" targetRef="Activity_nonUVASpaces" />
-    <bpmn:sequenceFlow id="Flow_0r9cfe1" sourceRef="Activity_nonUVASpaces" targetRef="EnterPersonnel" />
-    <bpmn:sequenceFlow id="Flow_0821rbm" sourceRef="EnterPersonnel" targetRef="Activity_DistanceReq" />
-    <bpmn:sequenceFlow id="Flow_18f81dp" sourceRef="Activity_DistanceReq" targetRef="Activity_PWA" />
-    <bpmn:sequenceFlow id="Flow_0cp1fez" sourceRef="Activity_PWA" targetRef="Activity_HSR" />
-    <bpmn:sequenceFlow id="Flow_0vpwylg" sourceRef="Activity_HSR" targetRef="Activity_OtherReq" />
-    <bpmn:sequenceFlow id="Flow_1r2p20h" sourceRef="Activity_OtherReq" targetRef="Activity_1tub2mc" />
-    <bpmn:sequenceFlow id="Flow_1r9hwx3" sourceRef="Activity_0yqqwtd" targetRef="Activity_RequestStatus" />
-    <bpmn:businessRuleTask id="Activity_0yqqwtd" name="Check Shared Area Monitors" camunda:decisionRef="Decision_SharedAMCheck">
-      <bpmn:incoming>Flow_09m77pd</bpmn:incoming>
-      <bpmn:outgoing>Flow_1r9hwx3</bpmn:outgoing>
+    <bpmn:sequenceFlow id="Flow_0tqna2m" sourceRef="Activity_14xt8is" targetRef="Activity_RequestStatus" />
+    <bpmn:businessRuleTask id="Activity_14xt8is" name="Check Shared Area Monitors" camunda:decisionRef="Decision_SharedAMCheck">
+      <bpmn:documentation>#### Business Rule Task
+
+
+
+
+This step is internal to the system and do not require and user interaction</bpmn:documentation>
+      <bpmn:incoming>Flow_0peeyne</bpmn:incoming>
+      <bpmn:outgoing>Flow_0tqna2m</bpmn:outgoing>
     </bpmn:businessRuleTask>
+    <bpmn:sequenceFlow id="Flow_0hc1r8a" sourceRef="Activity_nonUVASpaces" targetRef="Activity_Personnel" />
+    <bpmn:sequenceFlow id="SequenceFlow_0qc39tw" sourceRef="Activity_RequestStatus" targetRef="Activity_AreaMonitorNotification" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0ssahs9">
-      <bpmndi:BPMNEdge id="Flow_1r9hwx3_di" bpmnElement="Flow_1r9hwx3">
-        <di:waypoint x="3120" y="307" />
-        <di:waypoint x="3160" y="307" />
+      <bpmndi:BPMNEdge id="SequenceFlow_0qc39tw_di" bpmnElement="SequenceFlow_0qc39tw">
+        <di:waypoint x="3290" y="117" />
+        <di:waypoint x="3330" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1r2p20h_di" bpmnElement="Flow_1r2p20h">
-        <di:waypoint x="2150" y="307" />
-        <di:waypoint x="2200" y="307" />
+      <bpmndi:BPMNEdge id="Flow_0hc1r8a_di" bpmnElement="Flow_0hc1r8a">
+        <di:waypoint x="1260" y="117" />
+        <di:waypoint x="1310" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0vpwylg_di" bpmnElement="Flow_0vpwylg">
-        <di:waypoint x="1990" y="307" />
-        <di:waypoint x="2050" y="307" />
+      <bpmndi:BPMNEdge id="Flow_0tqna2m_di" bpmnElement="Flow_0tqna2m">
+        <di:waypoint x="3140" y="117" />
+        <di:waypoint x="3190" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0cp1fez_di" bpmnElement="Flow_0cp1fez">
-        <di:waypoint x="1820" y="307" />
-        <di:waypoint x="1890" y="307" />
+      <bpmndi:BPMNEdge id="Flow_0peeyne_di" bpmnElement="Flow_0peeyne">
+        <di:waypoint x="2990" y="117" />
+        <di:waypoint x="3040" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_18f81dp_di" bpmnElement="Flow_18f81dp">
-        <di:waypoint x="1650" y="307" />
-        <di:waypoint x="1720" y="307" />
+      <bpmndi:BPMNEdge id="Flow_11uqavk_di" bpmnElement="Flow_11uqavk">
+        <di:waypoint x="2120" y="117" />
+        <di:waypoint x="2170" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0821rbm_di" bpmnElement="Flow_0821rbm">
-        <di:waypoint x="1470" y="307" />
-        <di:waypoint x="1550" y="307" />
+      <bpmndi:BPMNEdge id="Flow_0judgmp_di" bpmnElement="Flow_0judgmp">
+        <di:waypoint x="1980" y="117" />
+        <di:waypoint x="2020" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0r9cfe1_di" bpmnElement="Flow_0r9cfe1">
-        <di:waypoint x="1300" y="307" />
-        <di:waypoint x="1370" y="307" />
+      <bpmndi:BPMNEdge id="Flow_0wgdxa6_di" bpmnElement="Flow_0wgdxa6">
+        <di:waypoint x="1840" y="117" />
+        <di:waypoint x="1880" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0zyal9y_di" bpmnElement="Flow_0zyal9y">
-        <di:waypoint x="1130" y="307" />
-        <di:waypoint x="1200" y="307" />
+      <bpmndi:BPMNEdge id="Flow_1lo964l_di" bpmnElement="Flow_1lo964l">
+        <di:waypoint x="1700" y="117" />
+        <di:waypoint x="1740" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1myg94h_di" bpmnElement="Flow_1myg94h">
-        <di:waypoint x="970" y="307" />
-        <di:waypoint x="1030" y="307" />
+      <bpmndi:BPMNEdge id="Flow_1itd8db_di" bpmnElement="Flow_1itd8db">
+        <di:waypoint x="1550" y="117" />
+        <di:waypoint x="1600" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0ss3j2p_di" bpmnElement="Flow_0ss3j2p">
-        <di:waypoint x="800" y="307" />
-        <di:waypoint x="870" y="307" />
+      <bpmndi:BPMNEdge id="Flow_1yxaewj_di" bpmnElement="Flow_1yxaewj">
+        <di:waypoint x="1410" y="117" />
+        <di:waypoint x="1450" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1grd970_di" bpmnElement="Flow_1grd970">
-        <di:waypoint x="630" y="307" />
-        <di:waypoint x="700" y="307" />
+      <bpmndi:BPMNEdge id="Flow_13pusfu_di" bpmnElement="Flow_13pusfu">
+        <di:waypoint x="1100" y="117" />
+        <di:waypoint x="1160" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_09m77pd_di" bpmnElement="Flow_09m77pd">
-        <di:waypoint x="2990" y="307" />
-        <di:waypoint x="3020" y="307" />
+      <bpmndi:BPMNEdge id="Flow_1n69wsr_di" bpmnElement="Flow_1n69wsr">
+        <di:waypoint x="950" y="117" />
+        <di:waypoint x="1000" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0o4tg9g_di" bpmnElement="Flow_0o4tg9g">
+        <di:waypoint x="790" y="117" />
+        <di:waypoint x="850" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0uc4o6c_di" bpmnElement="Flow_0uc4o6c">
+        <di:waypoint x="630" y="117" />
+        <di:waypoint x="690" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0cpmvcw_di" bpmnElement="Flow_0cpmvcw">
-        <di:waypoint x="3400" y="307" />
-        <di:waypoint x="3450" y="307" />
+        <di:waypoint x="3430" y="117" />
+        <di:waypoint x="3480" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_08njvvi_di" bpmnElement="Flow_08njvvi">
-        <di:waypoint x="2560" y="307" />
-        <di:waypoint x="2590" y="307" />
+        <di:waypoint x="2560" y="117" />
+        <di:waypoint x="2610" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_05w8yd6_di" bpmnElement="Flow_05w8yd6">
-        <di:waypoint x="3550" y="307" />
-        <di:waypoint x="3622" y="307" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1ufh44h_di" bpmnElement="Flow_1ufh44h">
-        <di:waypoint x="3260" y="307" />
-        <di:waypoint x="3300" y="307" />
+        <di:waypoint x="3580" y="117" />
+        <di:waypoint x="3652" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_07ge8uf_di" bpmnElement="Flow_07ge8uf">
-        <di:waypoint x="2840" y="307" />
-        <di:waypoint x="2890" y="307" />
+        <di:waypoint x="2850" y="117" />
+        <di:waypoint x="2890" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0j4rs82_di" bpmnElement="Flow_0j4rs82">
-        <di:waypoint x="2690" y="307" />
-        <di:waypoint x="2740" y="307" />
+        <di:waypoint x="2710" y="117" />
+        <di:waypoint x="2750" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0aqgwvu_di" bpmnElement="Flow_0aqgwvu">
-        <di:waypoint x="2300" y="307" />
-        <di:waypoint x="2330" y="307" />
+        <di:waypoint x="2270" y="117" />
+        <di:waypoint x="2310" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_16y8glw_di" bpmnElement="Flow_16y8glw">
-        <di:waypoint x="480" y="307" />
-        <di:waypoint x="530" y="307" />
+        <di:waypoint x="480" y="117" />
+        <di:waypoint x="530" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1e2qi9s_di" bpmnElement="Flow_1e2qi9s">
-        <di:waypoint x="2430" y="307" />
-        <di:waypoint x="2460" y="307" />
+        <di:waypoint x="2410" y="117" />
+        <di:waypoint x="2460" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_05ja25w_di" bpmnElement="SequenceFlow_05ja25w">
-        <di:waypoint x="168" y="307" />
-        <di:waypoint x="230" y="307" />
+        <di:waypoint x="168" y="117" />
+        <di:waypoint x="230" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0h50bp3_di" bpmnElement="SequenceFlow_0h50bp3">
-        <di:waypoint x="330" y="307" />
-        <di:waypoint x="380" y="307" />
+        <di:waypoint x="330" y="117" />
+        <di:waypoint x="380" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="132" y="289" width="36" height="36" />
+        <dc:Bounds x="132" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ManualTask_1ofy9yz_di" bpmnElement="ManualTask_Instructions">
-        <dc:Bounds x="230" y="267" width="100" height="80" />
+        <dc:Bounds x="230" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_0xdpoxl_di" bpmnElement="Activity-PI_Info">
-        <dc:Bounds x="380" y="267" width="100" height="80" />
+        <dc:Bounds x="380" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_0ecab9j_di" bpmnElement="EnterPersonnel">
-        <dc:Bounds x="1370" y="267" width="100" height="80" />
+      <bpmndi:BPMNShape id="UserTask_0ecab9j_di" bpmnElement="Activity_Personnel">
+        <dc:Bounds x="1310" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="UserTask_0l8vxty_di" bpmnElement="UserTask_CoreResource">
-        <dc:Bounds x="1030" y="267" width="100" height="80" />
+        <dc:Bounds x="1000" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_09wp7av_di" bpmnElement="EndEvent_09wp7av">
-        <dc:Bounds x="3622" y="289" width="36" height="36" />
+        <dc:Bounds x="3652" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1mg5lp9_di" bpmnElement="Activity_AcknowledgePlanReview">
-        <dc:Bounds x="2330" y="267" width="100" height="80" />
+        <dc:Bounds x="2310" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1xgrlzr_di" bpmnElement="Activity_SharedSpaceInfo">
-        <dc:Bounds x="870" y="267" width="100" height="80" />
+        <dc:Bounds x="850" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1jefdme_di" bpmnElement="Activity_ExclusiveSpace">
-        <dc:Bounds x="700" y="267" width="100" height="80" />
+        <dc:Bounds x="690" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0ysw6zo_di" bpmnElement="Activity_nonUVASpaces">
-        <dc:Bounds x="1200" y="267" width="100" height="80" />
+        <dc:Bounds x="1160" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1xag6qb_di" bpmnElement="Activity_DistanceReq">
-        <dc:Bounds x="1550" y="267" width="100" height="80" />
+        <dc:Bounds x="1600" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_166b0qq_di" bpmnElement="Activity_PWA">
-        <dc:Bounds x="1720" y="267" width="100" height="80" />
+        <dc:Bounds x="1740" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0byj9mp_di" bpmnElement="Activity_HSR">
-        <dc:Bounds x="1890" y="267" width="100" height="80" />
+        <dc:Bounds x="1880" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0j0p13i_di" bpmnElement="Activity_OtherReq">
-        <dc:Bounds x="2050" y="267" width="100" height="80" />
+        <dc:Bounds x="2020" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1h30fo8_di" bpmnElement="Activity_SubmitPlan">
-        <dc:Bounds x="2590" y="267" width="100" height="80" />
+        <dc:Bounds x="2610" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_117owwi_di" bpmnElement="Activity_1tub2mc">
-        <dc:Bounds x="2200" y="267" width="100" height="80" />
+      <bpmndi:BPMNShape id="Activity_117owwi_di" bpmnElement="Activity_GenerateRRP">
+        <dc:Bounds x="2170" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0fxf44t_di" bpmnElement="Activity_RequestStatus">
-        <dc:Bounds x="3160" y="267" width="100" height="80" />
+        <dc:Bounds x="3190" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_080o38p_di" bpmnElement="Activity_ApprovalInfo">
-        <dc:Bounds x="2460" y="267" width="100" height="80" />
+        <dc:Bounds x="2460" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0wuukfn_di" bpmnElement="Activity_WhatNext">
-        <dc:Bounds x="3450" y="267" width="100" height="80" />
+        <dc:Bounds x="3480" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0js9ww9_di" bpmnElement="Activity_AreaMonitorNotification">
-        <dc:Bounds x="3300" y="267" width="100" height="80" />
+        <dc:Bounds x="3330" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0wnn9de_di" bpmnElement="Activity_0absozl">
-        <dc:Bounds x="2740" y="267" width="100" height="80" />
+        <dc:Bounds x="2750" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0f0ak6p_di" bpmnElement="Activity_1u58hox">
-        <dc:Bounds x="530" y="267" width="100" height="80" />
+        <dc:Bounds x="530" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0myotjc_di" bpmnElement="BusinessRuleTask_CheckExclusiveAreaMonitors">
-        <dc:Bounds x="2890" y="267" width="100" height="80" />
+      <bpmndi:BPMNShape id="Activity_11iexzh_di" bpmnElement="PersonnelSchedule">
+        <dc:Bounds x="1450" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0xi9j42_di" bpmnElement="Activity_0yqqwtd">
-        <dc:Bounds x="3020" y="267" width="100" height="80" />
+      <bpmndi:BPMNShape id="Activity_0r358ps_di" bpmnElement="Activity_1sq56an">
+        <dc:Bounds x="2890" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1i34vt6_di" bpmnElement="Activity_14xt8is">
+        <dc:Bounds x="3040" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
