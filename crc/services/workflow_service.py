@@ -294,10 +294,11 @@ class WorkflowService(object):
             template = Template(raw_doc)
             return template.render(**spiff_task.data)
         except jinja2.exceptions.TemplateError as ue:
-
-            #            return "Error processing template. %s" % ue.message
             raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
                                                           (spiff_task.task_spec.name, str(ue)), status_code=500)
+        except TypeError as te:
+            raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
+                                                          (spiff_task.task_spec.name, str(te)), status_code=500)
         # TODO:  Catch additional errors and report back.
 
     @staticmethod

@@ -299,21 +299,27 @@ class WorkflowProcessor(object):
             return WorkflowStatus.waiting
 
     def hard_reset(self):
-        """Recreate this workflow, but keep the data from the last completed task and add it back into the first task.
-         This may be useful when a workflow specification changes, and users need to review all the
-         prior steps, but don't need to reenter all the previous data.
+        """Recreate this workflow, but keep the data from the last completed task and add
+         it back into the first task. This may be useful when a workflow specification changes,
+          and users need to review all the prior steps, but they don't need to reenter all the previous data.
 
          Returns the new version.
          """
+
+        # Create a new workflow based on the latest specs.
         self.spec_data_files = FileService.get_spec_data_files(workflow_spec_id=self.workflow_spec_id)
-        spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
-        # spec = WorkflowProcessor.get_spec(self.workflow_spec_id, version)
-        bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
-        bpmn_workflow.data = self.bpmn_workflow.data
-        for task in bpmn_workflow.get_tasks(SpiffTask.READY):
-            task.data = self.bpmn_workflow.last_task.data
-        bpmn_workflow.do_engine_steps()
-        self.bpmn_workflow = bpmn_workflow
+        new_spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
+        new_bpmn_workflow = BpmnWorkflow(new_spec, script_engine=self._script_engine)
+        new_bpmn_workflow.data = self.bpmn_workflow.data
+
+        # Reset the current workflow to the beginning - which we will consider to be the first task after the root
+        # element.  This feels a little sketchy, but I think it is safe to assume root will have one child.
+        first_task = self.bpmn_workflow.task_tree.children[0]
+        first_task.reset_token(reset_data=False)
+        for task in new_bpmn_workflow.get_tasks(SpiffTask.READY):
+            task.data = first_task.data
+        new_bpmn_workflow.do_engine_steps()
+        self.bpmn_workflow = new_bpmn_workflow
 
     def get_status(self):
         return self.status_of(self.bpmn_workflow)
