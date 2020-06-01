@@ -115,15 +115,17 @@ class BaseTest(unittest.TestCase):
         self.assertIsNotNone(user_model.display_name)
         return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
 
-    def load_example_data(self, use_crc_data=False):
+    def load_example_data(self, use_crc_data=False, use_rrt_data=False):
         """use_crc_data will cause this to load the mammoth collection of documents
-        we built up developing crc, otherwise it depends on a small setup for
-        running tests."""
+        we built up developing crc, use_rrt_data will do the same for hte rrt project,
+         otherwise it depends on a small setup for running tests."""
 
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
-        if(use_crc_data):
+        if use_crc_data:
             ExampleDataLoader().load_all()
+        elif use_rrt_data:
+            ExampleDataLoader().load_rrt()
         else:
             ExampleDataLoader().load_test_data()
 

@@ -49,6 +49,13 @@ class TestWorkflowSpecValidation(BaseTest):
 
         self.load_example_data(use_crc_data=True)
         app.config['PB_ENABLED'] = True
+        self.validate_all_loaded_workflows()
+
+    def test_successful_validation_of_rrt_workflows(self):
+        self.load_example_data(use_rrt_data=True)
+        self.validate_all_loaded_workflows()
+
+    def validate_all_loaded_workflows(self):
         workflows = session.query(WorkflowSpecModel).all()
         errors = []
         for w in workflows:
@@ -59,15 +66,16 @@ class TestWorkflowSpecValidation(BaseTest):
             errors.extend(ApiErrorSchema(many=True).load(json_data))
         self.assertEqual(0, len(errors), json.dumps(errors))
 
+
     def test_invalid_expression(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_expression")
-        self.assertEqual(1, len(errors))
+        self.assertEqual(2, len(errors))
         self.assertEqual("workflow_execution_exception", errors[0]['code'])
         self.assertEqual("ExclusiveGateway_003amsm", errors[0]['task_id'])
         self.assertEqual("Has Bananas Gateway", errors[0]['task_name'])
         self.assertEqual("invalid_expression.bpmn", errors[0]['file_name'])
-        self.assertEqual('ExclusiveGateway_003amsm: Error evaluating expression \'this_value_does_not_exist==true\', '
+        self.assertEqual('When populating all fields ... ExclusiveGateway_003amsm: Error evaluating expression \'this_value_does_not_exist==true\', '
                          'name \'this_value_does_not_exist\' is not defined', errors[0]["message"])
         self.assertIsNotNone(errors[0]['task_data'])
         self.assertIn("has_bananas", errors[0]['task_data'])
@@ -75,7 +83,7 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_validation_error(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_spec")
-        self.assertEqual(1, len(errors))
+        self.assertEqual(2, len(errors))
         self.assertEqual("workflow_validation_error", errors[0]['code'])
         self.assertEqual("StartEvent_1", errors[0]['task_id'])
         self.assertEqual("invalid_spec.bpmn", errors[0]['file_name'])
@@ -83,7 +91,7 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_invalid_script(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_script")
-        self.assertEqual(1, len(errors))
+        self.assertEqual(2, len(errors))
         self.assertEqual("workflow_execution_exception", errors[0]['code'])
         self.assertTrue("NoSuchScript" in errors[0]['message'])
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
@@ -96,3 +104,16 @@ class TestWorkflowSpecValidation(BaseTest):
         final_data = WorkflowService.test_spec(spec_model.id)
         self.assertIsNotNone(final_data)
         self.assertIn('cats', final_data)
+
+    def test_required_fields(self):
+        self.load_example_data()
+        spec_model = self.load_test_spec('required_fields')
+        final_data = WorkflowService.test_spec(spec_model.id)
+        self.assertIsNotNone(final_data)
+        self.assertIn('string_required', final_data)
+        self.assertIn('string_not_required', final_data)
+
+        final_data = WorkflowService.test_spec(spec_model.id, required_only=True)
+        self.assertIsNotNone(final_data)
+        self.assertIn('string_required', final_data)
+        self.assertNotIn('string_not_required', final_data)

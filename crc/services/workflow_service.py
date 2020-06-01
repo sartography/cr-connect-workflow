@@ -7,9 +7,7 @@ from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
-from SpiffWorkflow.camunda.specs.UserTask import EnumFormField
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
-from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import CancelTask, StartTask
 from flask import g
 from jinja2 import Template
@@ -69,23 +67,22 @@ class WorkflowService(object):
             db.session.delete(user)
 
     @staticmethod
-    def test_spec(spec_id):
+    def test_spec(spec_id, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
-          output form the last task if successful. """
+          output form the last task if successful.
+
+          required_only can be set to true, in which case this will run the
+          spec, only completing the required fields, rather than everything.
+          """
 
         workflow_model = WorkflowService.make_test_workflow(spec_id)
 
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
-        except WorkflowTaskExecException as wtee:
-            WorkflowService.delete_test_data()
-            raise ApiError.from_task("workflow_execution_exception", str(wtee),
-                                          wtee.task)
         except WorkflowException as we:
             WorkflowService.delete_test_data()
-            raise ApiError.from_task_spec("workflow_execution_exception", str(we),
-                                          we.sender)
+            raise ApiError.from_workflow_exception("workflow_execution_exception", str(we), we)
 
         while not processor.bpmn_workflow.is_completed():
             try:
@@ -95,28 +92,26 @@ class WorkflowService(object):
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
-                    WorkflowService.populate_form_with_random_data(task, task_api)
+                    WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                     task.complete()
-            except WorkflowTaskExecException as wtee:
-                WorkflowService.delete_test_data()
-                raise ApiError.from_task("workflow_execution_exception", str(wtee),
-                                         wtee.task)
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
-                raise ApiError.from_task_spec("workflow_execution_exception", str(we),
-                                              we.sender)
+                raise ApiError.from_workflow_exception("workflow_execution_exception", str(we), we)
 
         WorkflowService.delete_test_data()
         return processor.bpmn_workflow.last_task.data
 
     @staticmethod
-    def populate_form_with_random_data(task, task_api):
+    def populate_form_with_random_data(task, task_api, required_only):
         """populates a task with random data - useful for testing a spec."""
 
         if not hasattr(task.task_spec, 'form'): return
 
         form_data = {}
         for field in task_api.form.fields:
+            if required_only and (not field.has_validation(Task.VALIDATION_REQUIRED) or
+                                  field.get_validation(Task.VALIDATION_REQUIRED).lower().strip() != "true"):
+                continue # Don't include any fields that aren't specifically marked as required.
             if field.has_property(Task.PROP_OPTIONS_REPEAT):
                 group = field.get_property(Task.PROP_OPTIONS_REPEAT)
                 if group not in form_data:
@@ -299,10 +294,11 @@ class WorkflowService(object):
             template = Template(raw_doc)
             return template.render(**spiff_task.data)
         except jinja2.exceptions.TemplateError as ue:
-
-            #            return "Error processing template. %s" % ue.message
             raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
                                                           (spiff_task.task_spec.name, str(ue)), status_code=500)
+        except TypeError as te:
+            raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
+                                                          (spiff_task.task_spec.name, str(te)), status_code=500)
         # TODO:  Catch additional errors and report back.
 
     @staticmethod

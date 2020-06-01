@@ -77,5 +77,5 @@ class TestWorkflowService(BaseTest):
         processor.do_engine_steps()
         task = processor.next_task()
         task_api = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
-        WorkflowService.populate_form_with_random_data(task, task_api)
+        WorkflowService.populate_form_with_random_data(task, task_api, required_only=False)
         self.assertTrue(isinstance(task.data["sponsor"], dict))

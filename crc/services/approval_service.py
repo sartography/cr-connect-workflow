@@ -20,6 +20,12 @@ class ApprovalService(object):
         return db_approvals
 
     @staticmethod
+    def get_approvals_for_study(study_id):
+        """Returns a list of all approvals for the given study"""
+        db_approvals = session.query(ApprovalModel).filter_by(study_id=study_id).all()
+        return db_approvals
+
+    @staticmethod
     def get_all_approvals():
         """Returns a list of all approvlas"""
         db_approvals = session.query(ApprovalModel).all()
@@ -78,7 +84,7 @@ class ApprovalService(object):
             version = 1
 
         model = ApprovalModel(study_id=study_id, workflow_id=workflow_id,
-                              approver_uid=approver_uid, status=ApprovalStatus.WAITING.value,
+                              approver_uid=approver_uid, status=ApprovalStatus.PENDING.value,
                               message="", date_created=datetime.now(),
                               version=version)
         approval_files = ApprovalService._create_approval_files(workflow_data_files, model)

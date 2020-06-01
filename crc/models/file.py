@@ -86,7 +86,7 @@ class FileModel(db.Model):
 
 class File(object):
     @classmethod
-    def from_models(cls, model: FileModel, data_model: FileDataModel):
+    def from_models(cls, model: FileModel, data_model: FileDataModel, doc_dictionary):
         instance = cls()
         instance.id = model.id
         instance.name = model.name
@@ -99,6 +99,15 @@ class File(object):
         instance.workflow_id = model.workflow_id
         instance.irb_doc_code = model.irb_doc_code
         instance.type = model.type
+        if model.irb_doc_code  and model.irb_doc_code in doc_dictionary:
+            instance.category = "/".join(filter(None, [doc_dictionary[model.irb_doc_code]['category1'],
+                                                       doc_dictionary[model.irb_doc_code]['category2'],
+                                                       doc_dictionary[model.irb_doc_code]['category3']]))
+            instance.description = doc_dictionary[model.irb_doc_code]['description']
+            instance.download_name = ".".join([instance.category, model.type.value])
+        else:
+            instance.category = ""
+            instance.description = ""
         if data_model:
             instance.last_modified = data_model.date_created
             instance.latest_version = data_model.version
@@ -122,7 +131,8 @@ class FileSchema(ma.Schema):
         model = File
         fields = ["id", "name", "is_status", "is_reference", "content_type",
                   "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
-                  "irb_doc_code", "last_modified", "latest_version", "type"]
+                  "irb_doc_code", "last_modified", "latest_version", "type", "categories",
+                  "description", "category", "description", "download_name"]
         unknown = INCLUDE
     type = EnumField(FileType)
 

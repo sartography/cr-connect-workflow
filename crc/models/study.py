@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from crc import db, ma
 from crc.api.common import ApiErrorSchema
-from crc.models.file import FileModel, SimpleFileSchema
+from crc.models.file import FileModel, SimpleFileSchema, FileSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
     WorkflowModel
@@ -106,7 +106,8 @@ class Study(object):
     def __init__(self, title, last_updated, primary_investigator_id, user_uid,
                  id=None,
                  protocol_builder_status=None,
-                 sponsor="", hsr_number="", ind_number="", categories=[], **argsv):
+                 sponsor="", hsr_number="", ind_number="", categories=[],
+                 files=[], approvals=[], **argsv):
         self.id = id
         self.user_uid = user_uid
         self.title = title
@@ -117,8 +118,9 @@ class Study(object):
         self.hsr_number = hsr_number
         self.ind_number = ind_number
         self.categories = categories
+        self.approvals = approvals
         self.warnings = []
-        self.files = []
+        self.files = files
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
@@ -149,12 +151,13 @@ class StudySchema(ma.Schema):
     hsr_number = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
-    files = fields.List(fields.Nested(SimpleFileSchema), dump_only=True)
+    files = fields.List(fields.Nested(FileSchema), dump_only=True)
+    approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
-                      "sponsor", "ind_number"]
+                      "sponsor", "ind_number", "approvals", "files"]
         unknown = INCLUDE
 
     @marshmallow.post_load
