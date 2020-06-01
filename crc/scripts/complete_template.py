@@ -29,7 +29,8 @@ Takes two arguments:
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         """For validation only, process the template, but do not store it in the database."""
-        self.process_template(task, study_id, None, *args, **kwargs)
+        workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+        self.process_template(task, study_id, workflow, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
@@ -62,13 +63,13 @@ Takes two arguments:
             # Get the workflow specification file with the given name.
             file_data_models = FileService.get_spec_data_files(
                 workflow_spec_id=workflow.workflow_spec_id,
-                workflow_id=workflow.id)
-            for file_data in file_data_models:
-                if file_data.file_model.name == file_name:
-                    file_data_model = file_data
-
-        if workflow is None or file_data_model is None:
-            file_data_model = FileService.get_workflow_file_data(task.workflow, file_name)
+                workflow_id=workflow.id,
+                name=file_name)
+            if len(file_data_models) > 0:
+                file_data_model = file_data_models[0]
+            else:
+                raise ApiError(code="invalid_argument",
+                               message="Uable to locate a file with the given name.")
 
         # Get images from file/files fields
         if len(args) == 3:
