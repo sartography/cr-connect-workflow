@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_06veek1" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_SharedAMCheck" name="Shared AM Check">
+    <decisionTable id="decisionTable_1">
+      <input id="InputClause_1koybx6" label="How Many Shared Spaces">
+        <inputExpression id="LiteralExpression_1mjo0y4" typeRef="integer" expressionLanguage="python">
+          <text>len(shared)</text>
+        </inputExpression>
+      </input>
+      <input id="input_1" label="Number Without Area Monitor">
+        <inputExpression id="inputExpression_1" typeRef="integer" expressionLanguage="python">
+          <text>sum([1 for x in exclusive if x.get('SharedSpaceAMComputingID',None) == None])</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="All Possible Shared Area Monitors Entered" name="isAllSharedAreaMonitors" typeRef="boolean" />
+      <rule id="DecisionRule_07162mr">
+        <description>No shared spaces without Area Monitor</description>
+        <inputEntry id="UnaryTests_1p4ab2l">
+          <text>&gt;0</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1jqxc3u">
+          <text>0</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_16l50ps">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0ifa4wu">
+        <description>One or more shared space without an Area Monitor</description>
+        <inputEntry id="UnaryTests_06bujee">
+          <text>&gt;0</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0szbwxc">
+          <text>&gt; 0</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0td8sa6">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1uh85sk">
+        <description>No shared spaces entered</description>
+        <inputEntry id="UnaryTests_15grk62">
+          <text>0</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1gaiomm">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1iep8ai">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
