@@ -19,6 +19,8 @@ from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.approval_service import ApprovalService
+from crc.models.approval import ApprovalSchema
 
 
 class StudyService(object):
@@ -54,6 +56,8 @@ class StudyService(object):
         study = Study.from_model(study_model)
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
+        study.files = FileService.get_files_for_study(study.id)
+        study.approvals = ApprovalService.get_approvals_for_study(study.id)
 
         files = FileService.get_files_for_study(study.id)
         files = (File.from_models(model, FileService.get_file_data(model.id),

@@ -107,7 +107,7 @@ class Study(object):
                  id=None,
                  protocol_builder_status=None,
                  sponsor="", hsr_number="", ind_number="", categories=[],
-                 files=[], **argsv):
+                 files=[], approvals=[], **argsv):
         self.id = id
         self.user_uid = user_uid
         self.title = title
@@ -118,6 +118,7 @@ class Study(object):
         self.hsr_number = hsr_number
         self.ind_number = ind_number
         self.categories = categories
+        self.approvals = approvals
         self.warnings = []
         self.files = files
 
@@ -150,12 +151,13 @@ class StudySchema(ma.Schema):
     hsr_number = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
-    files = fields.List(fields.Nested(FileSchema), dump_only=True)
+    files = fields.List(fields.Nested(SimpleFileSchema), dump_only=True)
+    approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
-                      "sponsor", "ind_number", "files"]
+                      "sponsor", "ind_number", "approvals", "files"]
         unknown = INCLUDE
 
     @marshmallow.post_load

@@ -20,6 +20,12 @@ class ApprovalService(object):
         return db_approvals
 
     @staticmethod
+    def get_approvals_for_study(study_id):
+        """Returns a list of all approvals for the given study"""
+        db_approvals = session.query(ApprovalModel).filter_by(study_id=study_id).all()
+        return db_approvals
+
+    @staticmethod
     def get_all_approvals():
         """Returns a list of all approvlas"""
         db_approvals = session.query(ApprovalModel).all()
