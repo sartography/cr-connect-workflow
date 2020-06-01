@@ -119,6 +119,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
 
         navigation.append(NavigationItem(**nav_item))
         NavigationItemSchema().dump(nav_item)
+
+    spec = session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),
@@ -129,7 +131,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
         is_latest_spec=processor.is_latest_spec,
         total_tasks=processor.workflow_model.total_tasks,
         completed_tasks=processor.workflow_model.completed_tasks,
-        last_updated=processor.workflow_model.last_updated
+        last_updated=processor.workflow_model.last_updated,
+        title=spec.display_name
     )
     if not next_task: # The Next Task can be requested to be a certain task, useful for parallel tasks.
         # This may or may not work, sometimes there is no next task to complete.
