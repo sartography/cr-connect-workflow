@@ -56,7 +56,6 @@ class StudyService(object):
         study = Study.from_model(study_model)
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
-        study.files = FileService.get_files_for_study(study.id)
         approvals = ApprovalService.get_approvals_for_study(study.id)
         study.approvals = [Approval.from_model(approval_model) for approval_model in approvals]
 

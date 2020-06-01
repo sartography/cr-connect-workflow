@@ -151,7 +151,7 @@ class StudySchema(ma.Schema):
     hsr_number = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
-    files = fields.List(fields.Nested(SimpleFileSchema), dump_only=True)
+    files = fields.List(fields.Nested(FileSchema), dump_only=True)
     approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
 
     class Meta:
