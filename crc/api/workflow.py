@@ -1,5 +1,7 @@
 import uuid
 
+from SpiffWorkflow.util.deep_merge import DeepMerge
+
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
@@ -132,12 +134,19 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
         total_tasks=processor.workflow_model.total_tasks,
         completed_tasks=processor.workflow_model.completed_tasks,
         last_updated=processor.workflow_model.last_updated,
-        title=spec.display_name
     )
     if not next_task: # The Next Task can be requested to be a certain task, useful for parallel tasks.
         # This may or may not work, sometimes there is no next task to complete.
         next_task = processor.next_task()
     if next_task:
+        latest_event = session.query(TaskEventModel) \
+            .filter_by(workflow_id=processor.workflow_model.id) \
+            .filter_by(task_name=next_task.task_spec.name) \
+            .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE) \
+            .order_by(TaskEventModel.date.desc()).first()
+        if latest_event:
+            next_task.data = DeepMerge.merge(next_task.data, latest_event.task_data)
+
         workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
 
     return workflow_api
@@ -158,17 +167,22 @@ def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
-    task = processor.bpmn_workflow.get_task(task_id)
-    if task.state != task.COMPLETED and task.state != task.READY:
+    spiff_task = processor.bpmn_workflow.get_task(task_id)
+    if spiff_task.state != spiff_task.COMPLETED and spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
                                         "currently set to COMPLETE or READY.")
 
     # Only reset the token if the task doesn't already have it.
-    if task.state == task.COMPLETED:
-        task.reset_token(reset_data=False)  # we could optionally clear the previous data.
+    if spiff_task.state == spiff_task.COMPLETED:
+        spiff_task.reset_token(reset_data=True)  # Don't try to copy the existing data back into this task.
+
     processor.save()
-    WorkflowService.log_task_action(processor, task, WorkflowService.TASK_ACTION_TOKEN_RESET)
-    workflow_api_model = __get_workflow_api_model(processor, task)
+    task_api = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=True)
+    WorkflowService.log_task_action(workflow_model, task_api,
+                                    WorkflowService.TASK_ACTION_TOKEN_RESET,
+                                    version = processor.get_version_string())
+
+    workflow_api_model = __get_workflow_api_model(processor, spiff_task)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
@@ -176,15 +190,21 @@ def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
-    task = processor.bpmn_workflow.get_task(task_id)
-    if task.state != task.READY:
+    spiff_task = processor.bpmn_workflow.get_task(task_id)
+    if spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
-    task.update_data(body)
-    processor.complete_task(task)
+    spiff_task.update_data(body)
+    processor.complete_task(spiff_task)
     processor.do_engine_steps()
     processor.save()
-    WorkflowService.log_task_action(processor, task, WorkflowService.TASK_ACTION_COMPLETE)
+
+    task_api = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=True)
+    WorkflowService.log_task_action(workflow_model,
+                                    task_api,
+                                    WorkflowService.TASK_ACTION_COMPLETE,
+                                    version = processor.get_version_string(),
+                                    updated_data = spiff_task.data)
 
     workflow_api_model = __get_workflow_api_model(processor)
     return WorkflowApiSchema().dump(workflow_api_model)

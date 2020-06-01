@@ -9,6 +9,7 @@ from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
+from SpiffWorkflow.util.deep_merge import DeepMerge
 from flask import g
 from jinja2 import Template
 
@@ -316,21 +317,21 @@ class WorkflowService(object):
                 field.options.append({"id": d.value, "name": d.label})
 
     @staticmethod
-    def log_task_action(processor, spiff_task, action):
-        task = WorkflowService.spiff_task_to_api_task(spiff_task)
-        workflow_model = processor.workflow_model
+    def log_task_action(workflow_model: WorkflowModel, task: Task,
+                        action: string, version, updated_data=None):
         task_event = TaskEventModel(
             study_id=workflow_model.study_id,
             user_uid=g.user.uid,
             workflow_id=workflow_model.id,
             workflow_spec_id=workflow_model.workflow_spec_id,
-            spec_version=processor.get_version_string(),
+            spec_version=version,
             action=action,
             task_id=task.id,
             task_name=task.name,
             task_title=task.title,
             task_type=str(task.type),
             task_state=task.state,
+            task_data=updated_data,
             mi_type=task.multi_instance_type.value,  # Some tasks have a repeat behavior.
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
             mi_index=task.multi_instance_index,  # And the index of the currently repeating task.

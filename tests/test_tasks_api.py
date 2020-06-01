@@ -10,7 +10,6 @@ from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSche
 from crc.models.file import FileModelSchema
 from crc.models.stats import TaskEventModel
 from crc.models.workflow import WorkflowStatus
-from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_service import WorkflowService
 
 
@@ -79,6 +78,9 @@ class TestTasksApi(BaseTest):
         self.assertEquals(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 
+        # Assure that the data provided occurs in the task data log.
+        for key in dict_data.keys():
+            self.assertIn(key, event.task_data)
 
         workflow = WorkflowApiSchema().load(json_data)
         return workflow

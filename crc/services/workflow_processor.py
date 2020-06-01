@@ -315,7 +315,7 @@ class WorkflowProcessor(object):
         # Reset the current workflow to the beginning - which we will consider to be the first task after the root
         # element.  This feels a little sketchy, but I think it is safe to assume root will have one child.
         first_task = self.bpmn_workflow.task_tree.children[0]
-        first_task.reset_token(reset_data=False)
+        first_task.reset_token(reset_data=True) # Clear out the data.
         for task in new_bpmn_workflow.get_tasks(SpiffTask.READY):
             task.data = first_task.data
         new_bpmn_workflow.do_engine_steps()
