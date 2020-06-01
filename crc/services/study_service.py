@@ -9,7 +9,7 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileModelSchema
+from crc.models.file import FileModel, FileModelSchema, File
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
@@ -54,7 +54,11 @@ class StudyService(object):
         study = Study.from_model(study_model)
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
-        study.files = FileService.get_files_for_study(study.id)
+
+        files = FileService.get_files_for_study(study.id)
+        files = (File.from_models(model, FileService.get_file_data(model.id),
+                         FileService.get_doc_dictionary()) for model in files)
+        study.files = list(files)
 
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.

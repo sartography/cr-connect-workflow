@@ -1,5 +1,6 @@
 import json
 from tests.base_test import BaseTest
+
 from datetime import datetime, timezone
 from unittest.mock import patch
 
@@ -8,8 +9,9 @@ from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel, StudySchema
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecCategoryModel
-from crc.services.protocol_builder import ProtocolBuilderService
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel
+from crc.services.file_service import FileService
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class TestStudyApi(BaseTest):
@@ -67,6 +69,29 @@ class TestStudyApi(BaseTest):
         self.assertEqual("not_started", workflow["status"])
         self.assertEqual(0, workflow["total_tasks"])
         self.assertEqual(0, workflow["completed_tasks"])
+
+    def test_get_study_has_details_about_files(self):
+
+        # Set up the study and attach a file to it.
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form')
+        processor = WorkflowProcessor(workflow)
+        task = processor.next_task()
+        irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="png",
+                                      binary_data=b'1234', irb_doc_code=irb_code)
+
+        api_response = self.app.get('/v1.0/study/%i' % workflow.study_id,
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response)
+        study = StudySchema().loads(api_response.get_data(as_text=True))
+        self.assertEquals(1, len(study.files))
+        self.assertEquals("UVA Compliance/PRC Approval", study.files[0]["category"])
+        self.assertEquals("Cancer Center's PRC Approval Form", study.files[0]["description"])
+        self.assertEquals("UVA Compliance/PRC Approval.png", study.files[0]["download_name"])
+
 
     def test_add_study(self):
         self.load_example_data()
