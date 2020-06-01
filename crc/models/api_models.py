@@ -31,10 +31,12 @@ class NavigationItem(object):
 
 class Task(object):
 
+    PROP_OPTIONS_REPEAT = "repeat"
     PROP_OPTIONS_FILE = "spreadsheet.name"
     PROP_OPTIONS_VALUE_COLUMN = "spreadsheet.value.column"
     PROP_OPTIONS_LABEL_COL = "spreadsheet.label.column"
     PROP_LDAP_LOOKUP = "ldap.lookup"
+    VALIDATION_REQUIRED = "required"
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
 
 
@@ -117,7 +119,7 @@ class NavigationItemSchema(ma.Schema):
 
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,
-                 spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks, last_updated):
+                 spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks, last_updated, title):
         self.id = id
         self.status = status
         self.next_task = next_task  # The next task that requires user input.
@@ -128,13 +130,14 @@ class WorkflowApi(object):
         self.total_tasks = total_tasks
         self.completed_tasks = completed_tasks
         self.last_updated = last_updated
+        self.title = title
 
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
         fields = ["id", "status", "next_task", "navigation",
                   "workflow_spec_id", "spec_version", "is_latest_spec", "total_tasks", "completed_tasks",
-                  "last_updated"]
+                  "last_updated", "title"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
@@ -145,7 +148,7 @@ class WorkflowApiSchema(ma.Schema):
     def make_workflow(self, data, **kwargs):
         keys = ['id', 'status', 'next_task', 'navigation',
                 'workflow_spec_id', 'spec_version', 'is_latest_spec', "total_tasks", "completed_tasks",
-                "last_updated"]
+                "last_updated", "title"]
         filtered_fields = {key: data[key] for key in keys}
         filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])
         return WorkflowApi(**filtered_fields)

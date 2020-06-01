@@ -48,12 +48,10 @@ def update_study(study_id, body):
 
 
 def get_study(study_id):
-    study_service = StudyService()
-    study = study_service.get_study(study_id)
+    study = StudyService.get_study(study_id)
     if (study is None):
         raise ApiError("Study not found", status_code=404)
-    schema = StudySchema()
-    return schema.dump(study)
+    return StudySchema().dump(study)
 
 
 def delete_study(study_id):
