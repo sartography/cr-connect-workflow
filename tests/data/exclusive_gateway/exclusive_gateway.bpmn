@@ -8,7 +8,11 @@
     <bpmn:userTask id="Task_Has_Bananas" name="Enter Do You Have Bananas" camunda:formKey="bananas_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="has_bananas" label="Do you have bananas?" type="boolean" />
+          <camunda:formField id="has_bananas" label="Do you have bananas?" type="boolean">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1pnq3kg</bpmn:incoming>

@@ -428,10 +428,10 @@
         },
         "mako": {
             "hashes": [
-                "sha256:3139c5d64aa5d175dbafb95027057128b5fbd05a40c53999f3905ceb53366d9d",
-                "sha256:8e8b53c71c7e59f3de716b6832c4e401d903af574f6962edbbbf6ecc2a5fe6c9"
+                "sha256:8195c8c1400ceb53496064314c6736719c6f25e7479cd24c77be3d9361cddc27",
+                "sha256:93729a258e4ff0747c876bd9e20df1b9758028946e976324ccd2d68245c7b6a9"
             ],
-            "version": "==1.1.2"
+            "version": "==1.1.3"
         },
         "markupsafe": {
             "hashes": [
@@ -489,11 +489,11 @@
         },
         "marshmallow-sqlalchemy": {
             "hashes": [
-                "sha256:3247e41e424146340b03a369f2b7c6f0364477ccedc4e2481e84d5f3a8d3c67f",
-                "sha256:dbbe51d28bb28e7ee2782e51310477f7a2c5a111a301f6dd8e264e11ab820427"
+                "sha256:03a555b610bb307689b821b64e2416593ec21a85925c8c436c2cd08ebc6bb85e",
+                "sha256:0ef59c8da8da2e18e808e3880158049e9d72f3031c84cc804b6c533a0eb668a9"
             ],
             "index": "pypi",
-            "version": "==0.23.0"
+            "version": "==0.23.1"
         },
         "numpy": {
             "hashes": [
@@ -778,7 +778,7 @@
         "spiffworkflow": {
             "editable": true,
             "git": "https://github.com/sartography/SpiffWorkflow.git",
-            "ref": "c8d87826d496af825a184bdc3f0a751e603cfe44"
+            "ref": "b8a064a0bb76c705a1be04ee9bb8ac7beee56eb0"
         },
         "sqlalchemy": {
             "hashes": [
@@ -876,11 +876,11 @@
         },
         "xlsxwriter": {
             "hashes": [
-                "sha256:488e1988ab16ff3a9cd58c7656d0a58f8abe46ee58b98eecea78c022db28656b",
-                "sha256:97ab487b81534415c5313154203f3e8a637d792b1e6a8201e8f7f71da0203c2a"
+                "sha256:828b3285fc95105f5b1946a6a015b31cf388bd5378fdc6604e4d1b7839df2e77",
+                "sha256:82a3b0e73e3913483da23791d1a25e4d2dbb3837d1be4129473526b9a270a5cc"
             ],
             "index": "pypi",
-            "version": "==1.2.8"
+            "version": "==1.2.9"
         },
         "zipp": {
             "hashes": [
