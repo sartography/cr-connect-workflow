@@ -45,7 +45,7 @@ class TestApprovals(BaseTest):
             study=self.study,
             workflow=self.workflow,
             approver_uid='arc93',
-            status=ApprovalStatus.WAITING.value,
+            status=ApprovalStatus.PENDING.value,
             version=1
         )
         session.add(self.approval)
@@ -54,7 +54,7 @@ class TestApprovals(BaseTest):
             study=self.study,
             workflow=self.workflow,
             approver_uid='dhf8r',
-            status=ApprovalStatus.WAITING.value,
+            status=ApprovalStatus.PENDING.value,
             version=1
         )
         session.add(self.approval_2)
@@ -98,7 +98,7 @@ class TestApprovals(BaseTest):
         data = dict(APPROVAL_PAYLOAD)
         data['id'] = approval_id
 
-        self.assertEqual(self.approval.status, ApprovalStatus.WAITING.value)
+        self.assertEqual(self.approval.status, ApprovalStatus.PENDING.value)
 
         rv = self.app.put(f'/v1.0/approval/{approval_id}',
                           content_type="application/json",

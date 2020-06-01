@@ -22,6 +22,14 @@ class FileService(object):
     DOCUMENT_LIST = "irb_documents.xlsx"
     INVESTIGATOR_LIST = "investigators.xlsx"
 
+    __doc_dictionary = None
+
+    @staticmethod
+    def get_doc_dictionary():
+        if not FileService.__doc_dictionary:
+            FileService.__doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
+        return FileService.__doc_dictionary
+
     @staticmethod
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
                                name, content_type, binary_data, primary=False, is_status=False):

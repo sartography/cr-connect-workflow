@@ -11,10 +11,11 @@ from crc.models.file import FileDataModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 from crc.services.ldap_service import LdapService
+from crc.services.file_service import FileService
 
 
 class ApprovalStatus(enum.Enum):
-    WAITING = "WAITING"   # no one has done jack.
+    PENDING = "PENDING"   # no one has done jack.
     APPROVED = "APPROVED" # approved by the reviewer
     DECLINED = "DECLINED" # rejected by the reviewer
     CANCELED = "CANCELED" # The document was replaced with a new version and this review is no longer needed.
@@ -67,10 +68,10 @@ class Approval(object):
         if model.study:
             instance.title = model.study.title
 
+        principal_investigator_id = model.study.primary_investigator_id
         instance.approver = {}
         try:
             ldap_service = LdapService()
-            principal_investigator_id = model.study.primary_investigator_id
             user_info = ldap_service.user_info(principal_investigator_id)
         except (ApiError, LDAPSocketOpenError) as exception:
             user_info = None
@@ -84,11 +85,25 @@ class Approval(object):
             instance.approver['title'] = user_info.title
             instance.approver['department'] = user_info.department
 
+        # TODO: Organize it properly, move it to services
+        doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
+
         instance.associated_files = []
         for approval_file in model.approval_files:
+            try:
+                extra_info = doc_dictionary[approval_file.file_data.file_model.irb_doc_code]
+            except:
+                extra_info = None
             associated_file = {}
             associated_file['id'] = approval_file.file_data.file_model.id
-            associated_file['name'] = approval_file.file_data.file_model.name
+            if extra_info:
+                irb_doc_code = approval_file.file_data.file_model.irb_doc_code
+                associated_file['name'] = '_'.join((irb_doc_code, approval_file.file_data.file_model.name))
+                associated_file['description'] = extra_info['description']
+            else:
+                associated_file['name'] = approval_file.file_data.file_model.name
+                associated_file['description'] = 'No description available'
+            associated_file['name'] = '(' + principal_investigator_id + ')' + associated_file['name']
             associated_file['content_type'] = approval_file.file_data.file_model.content_type
             instance.associated_files.append(associated_file)
 

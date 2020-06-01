@@ -12,8 +12,9 @@ from crc.services.file_service import FileService
 
 
 def to_file_api(file_model):
-    """Converts a FileModel object to something we can return via the aip"""
-    return File.from_models(file_model, FileService.get_file_data(file_model.id))
+    """Converts a FileModel object to something we can return via the api"""
+    return File.from_models(file_model, FileService.get_file_data(file_model.id),
+                            FileService.get_doc_dictionary())
 
 
 def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None):

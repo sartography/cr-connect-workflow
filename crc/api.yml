@@ -173,6 +173,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
+  /study/{study_id}/approvals:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which workflows should be returned.
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.approval.get_approvals_for_study
+      summary: Returns approvals for a single study
+      tags:
+        - Studies
+        - Approvals
+      responses:
+        '200':
+          description: An array of approvals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
