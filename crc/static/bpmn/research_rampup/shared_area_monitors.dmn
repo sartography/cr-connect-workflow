@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_06veek1" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_06veek1" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <decision id="Decision_SharedAMCheck" name="Shared AM Check">
     <decisionTable id="decisionTable_1">
       <input id="InputClause_1koybx6" label="How Many Shared Spaces">
         <inputExpression id="LiteralExpression_1mjo0y4" typeRef="integer" expressionLanguage="python">
-          <text>len(shared)</text>
+          <text>'shared' in locals() and len(shared)</text>
         </inputExpression>
       </input>
       <input id="input_1" label="Number Without Area Monitor">
