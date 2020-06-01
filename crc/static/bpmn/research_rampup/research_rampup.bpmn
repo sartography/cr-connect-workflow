@@ -163,13 +163,14 @@ Enter the following information for the PI submitting this request</bpmn:documen
       <bpmn:documentation>#### Personnel for whom you are requesting access
 Provide information on all personnel you are requesting approval for reentry into the previously entered lab, workspace and/or office space(s) for conducting research on-Grounds. (If there are personnel already working in the space, include them). 
 
-**Note: no undergraduates will be allowed to work on-Grounds during Phase I.**
-
 #### Exclusive Space previously entered
 {%+ for es in exclusive %}{{ es.ExclusiveSpaceRoomID + " " + es.ExclusiveSpaceBuilding.label }}{% if loop.last %}{% else %}, {% endif %}{% else %}No exclusive space entered{% endfor %}
 
+
 #### Shared Space previously entered
-{%+ for ss in shared %}{{ ss.SharedSpaceRoomID + " " + ss.SharedSpaceBuilding.label }}{% if loop.last %}{% else %}, {% endif %}{% else %}No shared space entered.{% endfor %}</bpmn:documentation>
+{%+ for ss in shared %}{{ ss.SharedSpaceRoomID + " " + ss.SharedSpaceBuilding.label }}{% if loop.last %}{% else %}, {% endif %}{% else %}No shared space entered.{% endfor %}
+
+**Note: no undergraduates will be allowed to work on-Grounds during Phase I.**</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="HavePersonnel" label="Select one:" type="enum">
@@ -181,13 +182,14 @@ Provide information on all personnel you are requesting approval for reentry int
           </camunda:formField>
           <camunda:formField id="PersonnelComputingID" label="Computer ID" type="autocomplete">
             <camunda:properties>
-              <camunda:property id="repeat" value="Personnel" />
+              <camunda:property id="repeat" value="personnel" />
               <camunda:property id="ldap.lookup" value="true" />
               <camunda:property id="description" value="Find by entering Computing ID or Last Name." />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
               <camunda:property id="autocomplete_num" value="10" />
               <camunda:property id="repeat_hide_expression" value="model.HavePersonnel === &#39;no&#39; | model.HavePersonnel == null" />
               <camunda:property id="repeat_title" value="Enter all Personnel who will be working in the previously entered spaces" />
+              <camunda:property id="repeat_button_label" value="Add Personnel" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -195,8 +197,11 @@ Provide information on all personnel you are requesting approval for reentry int
           </camunda:formField>
           <camunda:formField id="PersonnelType" label="Personnel Type" type="enum">
             <camunda:properties>
-              <camunda:property id="repeat" value="Personnel" />
+              <camunda:property id="repeat" value="personnel" />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
             <camunda:value id="Faculty" name="Faculty" />
             <camunda:value id="AcademicResearcher" name="Academic Researcher" />
             <camunda:value id="Staff" name="Staff" />
@@ -204,10 +209,10 @@ Provide information on all personnel you are requesting approval for reentry int
             <camunda:value id="DoctoralStudent" name="Doctoral Student" />
             <camunda:value id="UndeGraduate" name="Undergraduate" />
           </camunda:formField>
-          <camunda:formField id="PersonnelSpace" label="Space they will work in" type="textarea">
+          <camunda:formField id="PersonnelSpace" label="Space they will work in" type="string">
             <camunda:properties>
-              <camunda:property id="description" value="Provide room number/identifier and building for each lab, workspace and/or office space this person will be working.  If they will be in more than one space, separate spaces by commas." />
-              <camunda:property id="repeat" value="Personnel" />
+              <camunda:property id="description" value="Provide room number/identifier and building for each lab, workspace and/or office space this person will be working.  If they will be in more than one space, separate with commas." />
+              <camunda:property id="repeat" value="personnel" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -218,7 +223,7 @@ Provide information on all personnel you are requesting approval for reentry int
               <camunda:property id="description" value="Provide a brief description of this person’s research and justification why this is critical research." />
               <camunda:property id="rows" value="3" />
               <camunda:property id="autosize" value="true" />
-              <camunda:property id="repeat" value="Personnel" />
+              <camunda:property id="repeat" value="personnel" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -275,8 +280,9 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
               <camunda:property id="spreadsheet.name" value="BuildingList.xls" />
               <camunda:property id="spreadsheet.value.column" value="Value" />
               <camunda:property id="spreadsheet.label.column" value="Building Name" />
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
               <camunda:property id="repeat_title" value="Add one entry for each Shared Space" />
+              <camunda:property id="repeat_button_label" value="Add Shared Spaces" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -284,7 +290,7 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
           </camunda:formField>
           <camunda:formField id="SharedSpaceRoomID" label="Shared Space Room ID" type="string">
             <camunda:properties>
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
               <camunda:property id="description" value="Enter the room number or other unique identifier" />
               <camunda:property id="hide_expression" value="model.SharedSpaceBuilding === &#34;Other&#34;" />
             </camunda:properties>
@@ -296,6 +302,7 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
             <camunda:properties>
               <camunda:property id="description" value="Enter the Room No and Building of your shared space." />
               <camunda:property id="hide_expression" value="model.SharedSpaceBuilding !== &#34;Other&#34; | model.SharedSpaceBuilding === null" />
+              <camunda:property id="repeat" value="shared" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="SharedSpaceAMComputingID" label="Area Monitor" type="autocomplete">
@@ -303,19 +310,19 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
               <camunda:property id="ldap.lookup" value="true" />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
               <camunda:property id="description" value="Enter Area Monitor&#39;s Computing ID or last name and select.  Leave blank if not known." />
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
               <camunda:property id="autocomplete_num" value="10" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="SharedSpaceSqFt" label="Space square Feet" type="long">
             <camunda:properties>
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
               <camunda:property id="description" value="Enter the number of square feet in this space." />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="SharedSpacePercentUsable" label="Percent of Space Usable By Personnel" type="long">
             <camunda:properties>
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
               <camunda:property id="description" value="If known, enter a number between 1 &#38; 100 which indicates the approximate percent of the total space personnel will work in and move around in during the workday." />
             </camunda:properties>
             <camunda:validation>
@@ -326,7 +333,7 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
           <camunda:formField id="SharedSpaceMaxPersonnel" label="Maximum Number of Personnel Occupying Space" type="long">
             <camunda:properties>
               <camunda:property id="description" value="Enter the maximum number of personnel, including  yourself, who will occupy this space." />
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -337,7 +344,7 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
             <camunda:properties>
               <camunda:property id="description" value="For each PI you share this space with, enter their Name, School, Department and Email Address." />
               <camunda:property id="rows" value="5" />
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -361,8 +368,9 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
               <camunda:property id="spreadsheet.name" value="BuildingList.xls" />
               <camunda:property id="spreadsheet.value.column" value="Value" />
               <camunda:property id="spreadsheet.label.column" value="Building Name" />
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="repeat_title" value="Add one entry for each Exclusive Space" />
+              <camunda:property id="repeat_button_label" value="Add Exclusive Spaces" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -371,7 +379,7 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
           <camunda:formField id="ExclusiveSpaceRoomID" label="Exclusive Space Room ID" type="string">
             <camunda:properties>
               <camunda:property id="hide_expression" value="model.ExclusiveSpaceBuilding === &#34;Other&#34;" />
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="description" value="Enter the room number or other unique identifier" />
             </camunda:properties>
             <camunda:validation>
@@ -382,11 +390,12 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
             <camunda:properties>
               <camunda:property id="description" value="Enter the Room No and Building of your exclusive lab or workspace." />
               <camunda:property id="hide_expression" value="model.ExclusiveSpaceBuilding !== &#34;Other&#34; | model.ExclusiveSpaceBuilding === null" />
+              <camunda:property id="repeat" value="exclusive" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceType" label="Space Room Type" type="enum">
             <camunda:properties>
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="enum_type" value="radio" />
               <camunda:property id="markdown_description" value="### Note that return to any lab, office or workspace must be for critical reasons only during Phase I" />
             </camunda:properties>
@@ -400,14 +409,14 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
             <camunda:properties>
               <camunda:property id="ldap.lookup" value="true" />
               <camunda:property id="description" value="Enter Area Monitor&#39;s Computing ID or last name and select.  Leave blank if not known." />
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
               <camunda:property id="autocomplete_num" value="10" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceSqFt" label="Space Square Feet" type="long">
             <camunda:properties>
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="description" value="Enter the number of square feet in this space." />
             </camunda:properties>
             <camunda:validation>
@@ -416,7 +425,7 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
           </camunda:formField>
           <camunda:formField id="ExclusiveSpacePercentUsable" label="Percent of Space Usable By Personnel" type="long">
             <camunda:properties>
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="description" value="If known, enter a number between 1 &#38; 100 which indicates the approximate percent of the total space personnel will work in and move around in during the workday." />
             </camunda:properties>
             <camunda:validation>
@@ -427,7 +436,7 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
           <camunda:formField id="ExclusiveSpaceMaxPersonnel" label="Maximum Number of Personnel Occupying Space" type="long">
             <camunda:properties>
               <camunda:property id="description" value="Enter the maximum number of personnel, including yourself, who will occupy this space." />
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -520,7 +529,7 @@ Use the EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/ur
 - Where and how to obtain PPE including face covering</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="LabSafetyPlan" label="Upload Lab Safety Plan" type="files" />
+          <camunda:formField id="LabSafetyPlan" label="Upload Lab Safety Plan" type="file" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0wgdxa6</bpmn:incoming>
@@ -594,14 +603,14 @@ This step is internal to the system and do not require and user interaction</bpm
     <bpmn:sequenceFlow id="Flow_07ge8uf" sourceRef="Activity_0absozl" targetRef="Activity_1sq56an" />
     <bpmn:userTask id="Activity_RequestStatus" name="Check-on Request Status" camunda:formKey="Rquest Status">
       <bpmn:documentation>#### Approval Process
-The Research Ramp-up Plan and associated documents will be reviewed by{{ " " + ApprvlApprvrName1 }}{{ '.' if ApprvlApprvrName2 == 'n/a' else ' and ' + ApprvlApprvrName2 + '.' }}  While waiting for approval, be sure that all required training has been completed and supplies secured.  When the approval email notification is received, confirming the three questions below will allow you to proceed.
-
-{%+ set ns = namespace()  %}{% set ns.exclusive = 0  %}{% set ns.shared = 0  %}{% for es in exclusive %}{% if es.ExclusiveSpaceAMComputingID is none %}{% set ns.exclusive = ns.exclusive + 1  %}{% endif %}{% endfor %}{% for ss in shared %}{% if ss.SharedSpaceAMComputingID is none  %}{% set ns.shared = ns.shared + 1  %}{% endif %}{% endfor %}
+The Research Ramp-up Plan and associated documents will be reviewed by{{ " " + ApprvlApprvrName1 }}{{ '.' if ApprvlApprvrName2 == 'n/a' else ' and ' + ApprvlApprvrName2 + '.' }}  
 
 
-#### Test
-Missing Exclusive: {{ ns.exclusive }}
-Missing Shared: {{ ns.shared }}
+While waiting for approval, be sure that all required training has been completed and supplies secured.  Additionally, if any Area Monitors were not known prior to submission, they will need to be discovered before proceeding.  
+
+
+When the approval email notification is received, confirming the three questions below and adding any missing Area Monitors will enable the Save button.
+
 
 If a rejection notification is received, go back to the first step that needs to be addressed and step through each subsequent form from that point.</bpmn:documentation>
       <bpmn:extensionElements>
@@ -642,6 +651,7 @@ If a rejection notification is received, go back to the first step that needs to
               <camunda:property id="spreadsheet.label.column" value="Building Name" />
               <camunda:property id="repeat_title" value="Any missing Area Monitors for Exclusive Spaces must be entered" />
               <camunda:property id="repeat_hide_expression" value="model.isAllExclusiveAreaMonitors" />
+              <camunda:property id="repeat_edit_only" value="true" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceRoomID" label="Exclusive Space Room ID" type="string">
@@ -677,6 +687,7 @@ If a rejection notification is received, go back to the first step that needs to
               <camunda:property id="repeat_title" value="Any missing Area Monitors for Shared Spaces must be entered" />
               <camunda:property id="read_only" value="true" />
               <camunda:property id="repeat_hide_expression" value="model.isAllSharedAreaMonitors" />
+              <camunda:property id="repeat_edit_only" value="true" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="SharedSpaceRoomID" label="Shared Space Room ID" type="string">
@@ -724,14 +735,14 @@ If notification is received that the Research Ramp-up Plan approval process is n
 Notify the Area Monitor for
 
 
-#### Exclusive Space previously entered
-{%+ for es in exclusive %}{{ es.ExclusiveSpaceRoomID + " " + es.ExclusiveSpaceBuilding.label + " - " }}{% if es.ExclusiveSpaceAMComputingID is none %}No Area Monitor entered{% else %}{{ es.ExclusiveSpaceAMComputingID.label }}{% endif %}{% if loop.last %}{% else %}, {% endif %}{% else %}No exclusive space entered{% endfor %}
+#### Exclusive Space
+{%+ for es in exclusive %}{{ es.ExclusiveSpaceRoomID + " " + es.ExclusiveSpaceBuilding.label + " - " }}{% if es.ExclusiveSpaceAMComputingID is not defined %}No Area Monitor entered{% else %}{{ es.ExclusiveSpaceAMComputingID.label }}{% endif %}{% if loop.last %}{% else %}, {% endif %}{% else %}No exclusive space entered{% endfor %}
 
 
 
 
-#### Shared Space previously entered
-{%+ for ss in shared %}{{ ss.SharedSpaceRoomID + " " + ss.SharedSpaceBuilding.label }}{% if ss.SharedSpaceAMComputingID is none  %}No Area Monitor entered{% else %}{{ ss.SharedSpaceAMComputingID.label }}{% endif %}{% if loop.last %}{% else %}, {% endif %}{% else %}No shared space entered.{% endfor %}</bpmn:documentation>
+#### Shared Space
+{%+ for ss in shared %}{{ ss.SharedSpaceRoomID + " " + ss.SharedSpaceBuilding.label + " - " }}{% if ss.SharedSpaceAMComputingID is not defined  %}No Area Monitor entered{% else %}{{ ss.SharedSpaceAMComputingID.label }}{% endif %}{% if loop.last %}{% else %}, {% endif %}{% else %}No shared space entered.{% endfor %}</bpmn:documentation>
       <bpmn:incoming>SequenceFlow_0qc39tw</bpmn:incoming>
       <bpmn:outgoing>Flow_0cpmvcw</bpmn:outgoing>
     </bpmn:manualTask>
@@ -791,8 +802,6 @@ Provide initial weekly schedule(s) for the PI and all personnel for whom access 
       <bpmn:documentation>#### Business Rule Task
 
 
-
-
 This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_07ge8uf</bpmn:incoming>
       <bpmn:outgoing>Flow_0peeyne</bpmn:outgoing>
@@ -800,8 +809,6 @@ This step is internal to the system and do not require and user interaction</bpm
     <bpmn:sequenceFlow id="Flow_0tqna2m" sourceRef="Activity_14xt8is" targetRef="Activity_RequestStatus" />
     <bpmn:businessRuleTask id="Activity_14xt8is" name="Check Shared Area Monitors" camunda:decisionRef="Decision_SharedAMCheck">
       <bpmn:documentation>#### Business Rule Task
-
-
 
 
 This step is internal to the system and do not require and user interaction</bpmn:documentation>
@@ -862,12 +869,12 @@ This step is internal to the system and do not require and user interaction</bpm
         <di:waypoint x="1000" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0o4tg9g_di" bpmnElement="Flow_0o4tg9g">
-        <di:waypoint x="790" y="117" />
+        <di:waypoint x="810" y="117" />
         <di:waypoint x="850" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0uc4o6c_di" bpmnElement="Flow_0uc4o6c">
         <di:waypoint x="630" y="117" />
-        <di:waypoint x="690" y="117" />
+        <di:waypoint x="710" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0cpmvcw_di" bpmnElement="Flow_0cpmvcw">
         <di:waypoint x="3430" y="117" />
@@ -934,7 +941,7 @@ This step is internal to the system and do not require and user interaction</bpm
         <dc:Bounds x="850" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1jefdme_di" bpmnElement="Activity_ExclusiveSpace">
-        <dc:Bounds x="690" y="77" width="100" height="80" />
+        <dc:Bounds x="710" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0ysw6zo_di" bpmnElement="Activity_nonUVASpaces">
         <dc:Bounds x="1160" y="77" width="100" height="80" />
