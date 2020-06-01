@@ -68,10 +68,10 @@ class Approval(object):
         if model.study:
             instance.title = model.study.title
 
+        principal_investigator_id = model.study.primary_investigator_id
         instance.approver = {}
         try:
             ldap_service = LdapService()
-            principal_investigator_id = model.study.primary_investigator_id
             user_info = ldap_service.user_info(principal_investigator_id)
         except (ApiError, LDAPSocketOpenError) as exception:
             user_info = None
@@ -97,17 +97,13 @@ class Approval(object):
             associated_file = {}
             associated_file['id'] = approval_file.file_data.file_model.id
             if extra_info:
-                categories = [extra_info['category1'], extra_info['category2'], extra_info['category3']]
-                # Clear empty values
-                categories = list(filter(lambda x: x != '' and x != 'NULL', categories))
-                # Replace spaces with underscores and lowercase
-                categories = ['_'.join(category.split()) for category in categories]
-                categories = '_'.join(categories).lower()
-                associated_file['name'] = '_'.join((categories, approval_file.file_data.file_model.name))
-                associated_file['description'] = extra_info
+                irb_doc_code = approval_file.file_data.file_model.irb_doc_code
+                associated_file['name'] = '_'.join((irb_doc_code, approval_file.file_data.file_model.name))
+                associated_file['description'] = extra_info['description']
             else:
                 associated_file['name'] = approval_file.file_data.file_model.name
                 associated_file['description'] = 'No description available'
+            associated_file['name'] = '(' + principal_investigator_id + ')' + associated_file['name']
             associated_file['content_type'] = approval_file.file_data.file_model.content_type
             instance.associated_files.append(associated_file)
 
