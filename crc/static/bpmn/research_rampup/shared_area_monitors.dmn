@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_06veek1" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_06veek1" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
   <decision id="Decision_SharedAMCheck" name="Shared AM Check">
     <decisionTable id="decisionTable_1">
       <input id="InputClause_1koybx6" label="How Many Shared Spaces">
         <inputExpression id="LiteralExpression_1mjo0y4" typeRef="integer" expressionLanguage="python">
-          <text>'shared' in locals() and len(shared)</text>
+          <text>len(shared)</text>
         </inputExpression>
       </input>
       <input id="input_1" label="Number Without Area Monitor">
         <inputExpression id="inputExpression_1" typeRef="integer" expressionLanguage="python">
-          <text>sum([1 for x in exclusive if x.get('SharedSpaceAMComputingID',None) == None])</text>
+          <text>sum([1 for x in shared if x.get('SharedSpaceAMComputingID',None) == None])</text>
         </inputExpression>
       </input>
       <output id="output_1" label="All Possible Shared Area Monitors Entered" name="isAllSharedAreaMonitors" typeRef="boolean" />
