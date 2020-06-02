@@ -68,24 +68,33 @@ class Approval(object):
         if model.study:
             instance.title = model.study.title
 
-        principal_investigator_id = model.study.primary_investigator_id
         instance.approver = {}
         try:
             ldap_service = LdapService()
-            user_info = ldap_service.user_info(principal_investigator_id)
-        except (ApiError, LDAPSocketOpenError) as exception:
-            user_info = None
-            instance.approver['display_name'] = 'Primary Investigator details'
-            instance.approver['department'] = 'currently not available'
-
-        if user_info:
-            # TODO: Rename approver to primary investigator
+            user_info = ldap_service.user_info(model.approver_uid)
             instance.approver['uid'] = model.approver_uid
             instance.approver['display_name'] = user_info.display_name
             instance.approver['title'] = user_info.title
             instance.approver['department'] = user_info.department
+        except (ApiError, LDAPSocketOpenError) as exception:
+            user_info = None
+            instance.approver['display_name'] = 'Unknown'
+            instance.approver['department'] = 'currently not available'
 
-        # TODO: Organize it properly, move it to services
+        instance.primary_investigator = {}
+        try:
+            ldap_service = LdapService()
+            user_info = ldap_service.user_info(model.study.primary_investigator_id)
+            instance.primary_investigator['uid'] = model.approver_uid
+            instance.primary_investigator['display_name'] = user_info.display_name
+            instance.primary_investigator['title'] = user_info.title
+            instance.primary_investigator['department'] = user_info.department
+        except (ApiError, LDAPSocketOpenError) as exception:
+            user_info = None
+            instance.primary_investigator['display_name'] = 'Primary Investigator details'
+            instance.primary_investigator['department'] = 'currently not available'
+
+
         doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
 
         instance.associated_files = []
@@ -98,12 +107,13 @@ class Approval(object):
             associated_file['id'] = approval_file.file_data.file_model.id
             if extra_info:
                 irb_doc_code = approval_file.file_data.file_model.irb_doc_code
-                associated_file['name'] = '_'.join((irb_doc_code, approval_file.file_data.file_model.name))
+                associated_file['name'] = '_'.join((extra_info['category1'],
+                                                    approval_file.file_data.file_model.name))
                 associated_file['description'] = extra_info['description']
             else:
                 associated_file['name'] = approval_file.file_data.file_model.name
                 associated_file['description'] = 'No description available'
-            associated_file['name'] = '(' + principal_investigator_id + ')' + associated_file['name']
+            associated_file['name'] = '(' +  model.study.primary_investigator_id + ')' + associated_file['name']
             associated_file['content_type'] = approval_file.file_data.file_model.content_type
             instance.associated_files.append(associated_file)
 
@@ -118,7 +128,8 @@ class ApprovalSchema(ma.Schema):
     class Meta:
         model = Approval
         fields = ["id", "study_id", "workflow_id", "version", "title",
-            "version", "status", "message", "approver", "associated_files"]
+                  "status", "message", "approver", "primary_investigator",
+                  "associated_files", "date_created"]
         unknown = INCLUDE
 
     @marshmallow.post_load

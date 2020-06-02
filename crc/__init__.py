@@ -1,11 +1,13 @@
 import logging
 import os
+import sentry_sdk
 
 import connexion
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from sentry_sdk.integrations.flask import FlaskIntegration
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,6 +41,12 @@ connexion_app.add_api('api.yml', base_path='/v1.0')
 # Convert list of allowed origins to list of regexes
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
 cors = CORS(connexion_app.app, origins=origins_re)
+
+if app.config['ENABLE_SENTRY']:
+    sentry_sdk.init(
+        dsn="https://25342ca4e2d443c6a5c49707d68e9f40@o401361.ingest.sentry.io/5260915",
+        integrations=[FlaskIntegration()]
+    )
 
 print('=== USING THESE CONFIG SETTINGS: ===')
 print('DB_HOST = ', )
