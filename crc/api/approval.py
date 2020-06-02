@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import g
 
 from crc import app, db, session
@@ -9,11 +11,9 @@ from crc.services.approval_service import ApprovalService
 
 def get_approvals(everything=False):
     if everything:
-        db_approvals = ApprovalService.get_all_approvals()
+        approvals = ApprovalService.get_all_approvals()
     else:
-        db_approvals = ApprovalService.get_approvals_per_user(g.user.uid)
-    approvals = [Approval.from_model(approval_model) for approval_model in db_approvals]
-
+        approvals = ApprovalService.get_approvals_per_user(g.user.uid)
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 
@@ -38,6 +38,7 @@ def update_approval(approval_id, body):
         raise ApiError("not_your_approval", "You may not modify this approval. It belongs to another user.")
 
     approval.update_model(approval_model)
+    approval_model.date_approved = datetime.now()
     session.commit()
 
     result = ApprovalSchema().dump(approval)
