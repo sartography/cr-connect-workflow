@@ -10,7 +10,6 @@ from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSche
 from crc.models.file import FileModelSchema
 from crc.models.stats import TaskEventModel
 from crc.models.workflow import WorkflowStatus
-from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_service import WorkflowService
 
 

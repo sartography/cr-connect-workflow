@@ -5,35 +5,6 @@ from crc import app, db, session
 from crc.models.approval import ApprovalModel, ApprovalSchema, ApprovalStatus
 
 
-APPROVAL_PAYLOAD = {
-    'id': None,
-    'approver': {
-      'uid': 'bgb22',
-      'display_name': 'Billy Bob (bgb22)',
-      'title': 'E42:He\'s a hoopy frood',
-      'department': 'E0:EN-Eng Study of Parallel Universes'
-    },
-    'title': 'El Study',
-    'status': 'DECLINED',
-    'version': 1,
-    'message': 'Incorrect documents',
-    'associated_files': [
-      {
-        'id': 42,
-        'name': 'File 1',
-        'content_type': 'document'
-      },
-      {
-        'id': 43,
-        'name': 'File 2',
-        'content_type': 'document'
-      }
-    ],
-    'workflow_id': 1,
-    'study_id': 1
-}
-
-
 class TestApprovals(BaseTest):
     def setUp(self):
         """Initial setup shared by all TestApprovals tests"""
@@ -64,7 +35,7 @@ class TestApprovals(BaseTest):
     def test_list_approvals_per_approver(self):
         """Only approvals associated with approver should be returned"""
         approver_uid = self.approval_2.approver_uid
-        rv = self.app.get(f'/v1.0/approval?approver_uid={approver_uid}', headers=self.logged_in_headers())
+        rv = self.app.get(f'/v1.0/approval', headers=self.logged_in_headers())
         self.assert_success(rv)
 
         response = json.loads(rv.get_data(as_text=True))
@@ -82,7 +53,7 @@ class TestApprovals(BaseTest):
 
     def test_list_approvals_per_admin(self):
         """All approvals will be returned"""
-        rv = self.app.get('/v1.0/approval', headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/approval?everything=true', headers=self.logged_in_headers())
         self.assert_success(rv)
 
         response = json.loads(rv.get_data(as_text=True))
@@ -90,24 +61,67 @@ class TestApprovals(BaseTest):
         # Returned approvals should match what's in the db
         approvals_count = ApprovalModel.query.count()
         response_count = len(response)
-        self.assertEqual(approvals_count, response_count)
+        self.assertEqual(2, response_count)
 
-    def test_update_approval(self):
-        """Approval status will be updated"""
-        approval_id = self.approval.id
-        data = dict(APPROVAL_PAYLOAD)
-        data['id'] = approval_id
+        rv = self.app.get('/v1.0/approval', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        response = json.loads(rv.get_data(as_text=True))
+        response_count = len(response)
+        self.assertEqual(1, response_count)
 
-        self.assertEqual(self.approval.status, ApprovalStatus.PENDING.value)
+    def test_update_approval_fails_if_not_the_approver(self):
+        approval = session.query(ApprovalModel).filter_by(approver_uid='arc93').first()
+        data = {'id': approval.id,
+                "approver_uid": "dhf8r",
+                'message': "Approved.  I like the cut of your jib.",
+                'status': ApprovalStatus.APPROVED.value}
 
-        rv = self.app.put(f'/v1.0/approval/{approval_id}',
+        self.assertEqual(approval.status, ApprovalStatus.PENDING.value)
+
+        rv = self.app.put(f'/v1.0/approval/{approval.id}',
                           content_type="application/json",
-                          headers=self.logged_in_headers(),
+                          headers=self.logged_in_headers(),  # As dhf8r
+                          data=json.dumps(data))
+        self.assert_failure(rv)
+
+    def test_accept_approval(self):
+        approval = session.query(ApprovalModel).filter_by(approver_uid='dhf8r').first()
+        data = {'id': approval.id,
+                "approver_uid": "dhf8r",
+                'message': "Approved.  I like the cut of your jib.",
+                'status': ApprovalStatus.APPROVED.value}
+
+        self.assertEqual(approval.status, ApprovalStatus.PENDING.value)
+
+        rv = self.app.put(f'/v1.0/approval/{approval.id}',
+                          content_type="application/json",
+                          headers=self.logged_in_headers(),  # As dhf8r
                           data=json.dumps(data))
         self.assert_success(rv)
 
-        session.refresh(self.approval)
+        session.refresh(approval)
 
         # Updated record should now have the data sent to the endpoint
-        self.assertEqual(self.approval.message, data['message'])
-        self.assertEqual(self.approval.status, ApprovalStatus.DECLINED.value)
+        self.assertEqual(approval.message, data['message'])
+        self.assertEqual(approval.status, ApprovalStatus.APPROVED.value)
+
+    def test_decline_approval(self):
+        approval = session.query(ApprovalModel).filter_by(approver_uid='dhf8r').first()
+        data = {'id': approval.id,
+                "approver_uid": "dhf8r",
+                'message': "Approved.  I find the cut of your jib lacking.",
+                'status': ApprovalStatus.DECLINED.value}
+
+        self.assertEqual(approval.status, ApprovalStatus.PENDING.value)
+
+        rv = self.app.put(f'/v1.0/approval/{approval.id}',
+                          content_type="application/json",
+                          headers=self.logged_in_headers(),  # As dhf8r
+                          data=json.dumps(data))
+        self.assert_success(rv)
+
+        session.refresh(approval)
+
+        # Updated record should now have the data sent to the endpoint
+        self.assertEqual(approval.message, data['message'])
+        self.assertEqual(approval.status, ApprovalStatus.DECLINED.value)

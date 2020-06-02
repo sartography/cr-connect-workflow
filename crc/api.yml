@@ -808,12 +808,12 @@ paths:
                   $ref: "#/components/schemas/Script"
   /approval:
     parameters:
-      - name: approver_uid
+      - name: everything
         in: query
         required: false
-        description: Restrict results to a given approver uid, maybe we restrict the use of this at somepoint.
+        description: If set to true, returns all the approvals known to the system.
         schema:
-          type: string
+          type: boolean
     get:
       operationId: crc.api.approval.get_approvals
       summary: Provides a list of workflows approvals

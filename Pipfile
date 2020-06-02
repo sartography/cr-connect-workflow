@@ -38,6 +38,7 @@ xlrd = "*"
 ldap3 = "*"
 gunicorn = "*"
 werkzeug = "*"
+sentry-sdk = {extras = ["flask"],version = "==0.14.4"}
 
 [requires]
 python_version = "3.7"

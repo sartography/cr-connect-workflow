@@ -26,7 +26,8 @@ RequestApproval approver1 "dhf8r"
             ApprovalService.add_approval(study_id, workflow_id, args)
         elif isinstance(uids, list):
             for id in uids:
-                ApprovalService.add_approval(study_id, workflow_id, id)
+                if id: ## Assure it's not empty or null
+                    ApprovalService.add_approval(study_id, workflow_id, id)
 
     def get_uids(self, task, args):
         if len(args) < 1:
