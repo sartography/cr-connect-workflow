@@ -1,3 +1,5 @@
+from flask import g
+
 from crc import app, db, session
 
 from crc.api.common import ApiError, ApiErrorSchema
@@ -5,11 +7,11 @@ from crc.models.approval import Approval, ApprovalModel, ApprovalSchema
 from crc.services.approval_service import ApprovalService
 
 
-def get_approvals(approver_uid=None):
-    if not approver_uid:
+def get_approvals(everything=False):
+    if everything:
         db_approvals = ApprovalService.get_all_approvals()
     else:
-        db_approvals = ApprovalService.get_approvals_per_user(approver_uid)
+        db_approvals = ApprovalService.get_approvals_per_user(g.user.uid)
     approvals = [Approval.from_model(approval_model) for approval_model in db_approvals]
 
     results = ApprovalSchema(many=True).dump(approvals)

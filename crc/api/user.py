@@ -1,8 +1,5 @@
-import json
-
-import connexion
 import flask
-from flask import redirect, g, request
+from flask import g, request
 
 from crc import app, db
 from crc.api.common import ApiError

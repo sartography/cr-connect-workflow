@@ -64,7 +64,7 @@ class TestApprovals(BaseTest):
     def test_list_approvals_per_approver(self):
         """Only approvals associated with approver should be returned"""
         approver_uid = self.approval_2.approver_uid
-        rv = self.app.get(f'/v1.0/approval?approver_uid={approver_uid}', headers=self.logged_in_headers())
+        rv = self.app.get(f'/v1.0/approval', headers=self.logged_in_headers())
         self.assert_success(rv)
 
         response = json.loads(rv.get_data(as_text=True))
@@ -82,7 +82,7 @@ class TestApprovals(BaseTest):
 
     def test_list_approvals_per_admin(self):
         """All approvals will be returned"""
-        rv = self.app.get('/v1.0/approval', headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/approval?everything=true', headers=self.logged_in_headers())
         self.assert_success(rv)
 
         response = json.loads(rv.get_data(as_text=True))
@@ -90,7 +90,15 @@ class TestApprovals(BaseTest):
         # Returned approvals should match what's in the db
         approvals_count = ApprovalModel.query.count()
         response_count = len(response)
-        self.assertEqual(approvals_count, response_count)
+        self.assertEqual(2, response_count)
+
+        rv = self.app.get('/v1.0/approval', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        response_count = len(response)
+        self.assertEqual(1, response_count)
+
+
+
 
     def test_update_approval(self):
         """Approval status will be updated"""
