@@ -69,23 +69,30 @@ class Approval(object):
             instance.title = model.study.title
 
         principal_investigator_id = model.study.primary_investigator_id
-        instance.approver = {}
+        instance.approver = {'uid': model.approver_uid}
+        instance.primary_investigator = {'uid': principal_investigator_id}
         try:
             ldap_service = LdapService()
-            user_info = ldap_service.user_info(principal_investigator_id)
+            # Primary investigator details
+            pi_info = ldap_service.user_info(principal_investigator_id)
+            instance.primary_investigator['uid'] = principal_investigator_id
+            instance.primary_investigator['display_name'] = pi_info.display_name
+            instance.primary_investigator['title'] = pi_info.title
+            instance.primary_investigator['department'] = pi_info.department
+            # Approver details
+            approver_info = ldap_service.user_info(model.approver_uid)
+            instance.approver['uid'] = model.approver_uid
+            instance.approver['display_name'] = approver_info.display_name
+            instance.approver['title'] = approver_info.title
+            instance.approver['department'] = approver_info.department
         except (ApiError, LDAPSocketOpenError) as exception:
-            user_info = None
-            instance.approver['display_name'] = 'Primary Investigator details'
+            instance.primary_investigator['display_name'] = 'Primary Investigator details'
+            instance.primary_investigator['department'] = 'currently not available'
+            instance.approver['display_name'] = 'Approver details'
             instance.approver['department'] = 'currently not available'
 
-        if user_info:
-            # TODO: Rename approver to primary investigator
-            instance.approver['uid'] = model.approver_uid
-            instance.approver['display_name'] = user_info.display_name
-            instance.approver['title'] = user_info.title
-            instance.approver['department'] = user_info.department
-
         # TODO: Organize it properly, move it to services
+        # TODO: Rely on Dan's new service for file creation
         doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
 
         instance.associated_files = []
@@ -118,7 +125,8 @@ class ApprovalSchema(ma.Schema):
     class Meta:
         model = Approval
         fields = ["id", "study_id", "workflow_id", "version", "title",
-            "version", "status", "message", "approver", "associated_files"]
+            "version", "status", "message", "approver", "primary_investigator",
+            "associated_files", "date_created"]
         unknown = INCLUDE
 
     @marshmallow.post_load
