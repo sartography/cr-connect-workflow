@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from flask import g
@@ -33,13 +34,14 @@ def update_approval(approval_id, body):
     if approval_model is None:
         raise ApiError('unknown_approval', 'The approval "' + str(approval_id) + '" is not recognized.')
 
-    approval: Approval = ApprovalSchema().load(body)
     if approval_model.approver_uid != g.user.uid:
         raise ApiError("not_your_approval", "You may not modify this approval. It belongs to another user.")
 
-    approval.update_model(approval_model)
+    approval_model.status = body['status']
+    approval_model.message = body['message']
     approval_model.date_approved = datetime.now()
+    session.add(approval_model)
     session.commit()
 
-    result = ApprovalSchema().dump(approval)
+    result = ApprovalSchema().dump(approval_model)
     return result

@@ -64,6 +64,7 @@ class Approval(object):
         instance.status = model.status
         instance.message = model.message
         instance.date_created = model.date_created
+        instance.date_approved = model.date_approved
         instance.version = model.version
         instance.title = ''
         instance.related_approvals = []
@@ -110,7 +111,7 @@ class ApprovalSchema(ma.Schema):
 
     approver = fields.Nested(LdapSchema, dump_only=True)
     primary_investigator = fields.Nested(LdapSchema, dump_only=True)
-    related_approvals = fields.List(fields.Nested('ApprovalSchema', dump_only=True))
+    related_approvals = fields.List(fields.Nested('ApprovalSchema', allow_none=True, dump_only=True))
 
     class Meta:
         model = Approval
