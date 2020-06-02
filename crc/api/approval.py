@@ -34,6 +34,9 @@ def update_approval(approval_id, body):
         raise ApiError('unknown_approval', 'The approval "' + str(approval_id) + '" is not recognized.')
 
     approval: Approval = ApprovalSchema().load(body)
+    if approval_model.approver_uid != g.user.uid:
+        raise ApiError("not_your_approval", "You may not modify this approval. It belongs to another user.")
+
     approval.update_model(approval_model)
     session.commit()
 

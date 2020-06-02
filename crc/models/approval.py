@@ -128,8 +128,8 @@ class ApprovalSchema(ma.Schema):
     class Meta:
         model = Approval
         fields = ["id", "study_id", "workflow_id", "version", "title",
-            "version", "status", "message", "approver", "primary_investigator",
-            "associated_files", "date_created"]
+                  "status", "message", "approver", "primary_investigator",
+                  "associated_files", "date_created"]
         unknown = INCLUDE
 
     @marshmallow.post_load
