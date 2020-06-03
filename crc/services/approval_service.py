@@ -15,13 +15,18 @@ class ApprovalService(object):
     """Provides common tools for working with an Approval"""
 
     @staticmethod
-    def __one_approval_from_study(study, approver_uid = None):
+    def __one_approval_from_study(study, approver_uid = None, ignore_cancelled=False):
         """Returns one approval, with all additional approvals as 'related_approvals',
         the main approval can be pinned to an approver with an optional argument.
         Will return null if no approvals exist on the study."""
         main_approval = None
         related_approvals = []
-        approvals = db.session.query(ApprovalModel).filter(ApprovalModel.study_id == study.id).all()
+        query = db.session.query(ApprovalModel).\
+            filter(ApprovalModel.study_id == study.id)
+        if ignore_cancelled:
+            query=query.filter(ApprovalModel.status != ApprovalStatus.CANCELED.value)
+
+        approvals = query.all()
         for approval_model in approvals:
             if approval_model.approver_uid == approver_uid:
                 main_approval = Approval.from_model(approval_model)
@@ -48,13 +53,13 @@ class ApprovalService(object):
         return approvals
 
     @staticmethod
-    def get_all_approvals():
+    def get_all_approvals(ignore_cancelled=False):
         """Returns a list of all approval objects (not db models), one record
         per study, with any associated approvals grouped under the first approval."""
         studies = db.session.query(StudyModel).all()
         approvals = []
         for study in studies:
-            approval = ApprovalService.__one_approval_from_study(study)
+            approval = ApprovalService.__one_approval_from_study(study, ignore_cancelled=ignore_cancelled)
             if approval:
                 approvals.append(approval)
         return approvals
