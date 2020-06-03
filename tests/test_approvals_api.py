@@ -1,7 +1,7 @@
 import json
 from tests.base_test import BaseTest
 
-from crc import session
+from crc import session, db
 from crc.models.approval import ApprovalModel, ApprovalSchema, ApprovalStatus
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudyModel
@@ -144,3 +144,11 @@ class TestApprovals(BaseTest):
         # Updated record should now have the data sent to the endpoint
         self.assertEqual(approval.message, data['message'])
         self.assertEqual(approval.status, ApprovalStatus.DECLINED.value)
+
+    def test_csv_export(self):
+        approvals = db.session.query(ApprovalModel).all()
+        for app in approvals:
+            app.status = ApprovalStatus.APPROVED.value
+        db.session.commit()
+        rv = self.app.get(f'/v1.0/approval/csv', headers=self.logged_in_headers())
+        self.assert_success(rv)
