@@ -82,7 +82,10 @@ class FileModel(db.Model):
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     irb_doc_code = db.Column(db.String, nullable=True) # Code reference to the irb_documents.xlsx reference file.
-
+    # A request was made to delete the file, but we can't because there are
+    # active approvals or running workflows that depend on it.  So we archive
+    # it instead, hide it in the interface.
+    archived = db.Column(db.Boolean, default=False)
 
 class File(object):
     @classmethod

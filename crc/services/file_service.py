@@ -195,7 +195,7 @@ class FileService(object):
 
     @staticmethod
     def get_files(workflow_spec_id=None, workflow_id=None,
-                  name=None, is_reference=False, irb_doc_code=None):
+                  name=None, is_reference=False, irb_doc_code=None, include_archives=True):
         query = session.query(FileModel).filter_by(is_reference=is_reference)
         if workflow_spec_id:
             query = query.filter_by(workflow_spec_id=workflow_spec_id)
@@ -208,6 +208,10 @@ class FileService(object):
 
         if name:
             query = query.filter_by(name=name)
+
+        if not include_archives:
+            query = query.filter(FileModel.archived == False)
+
         query = query.order_by(FileModel.id)
 
         results = query.all()
@@ -238,11 +242,11 @@ class FileService(object):
             return latest_data_files
 
     @staticmethod
-    def get_workflow_data_files(workflow_id=None):
+    def get_workflow_data_files(workflow_id=None, include_archives=True):
         """Returns all the FileDataModels related to a running workflow -
         So these are the latest data files that were uploaded or generated
         that go along with this workflow.  Not related to the spec in any way"""
-        file_models = FileService.get_files(workflow_id=workflow_id)
+        file_models = FileService.get_files(workflow_id=workflow_id, include_archives=include_archives)
         latest_data_files = []
         for file_model in file_models:
             latest_data_files.append(FileService.get_file_data(file_model.id))
@@ -316,6 +320,10 @@ class FileService(object):
             session.query(FileModel).filter_by(id=file_id).delete()
             session.commit()
         except IntegrityError as ie:
-            app.logger.error("Failed to delete file: %i, due to %s" % (file_id, str(ie)))
-            raise ApiError('file_integrity_error', "You are attempting to delete a file that is "
-                                                   "required by other records in the system.")
+            # We can't delete the file or file data, because it is referenced elsewhere,
+            # but we can at least mark it as deleted on the table.
+            session.rollback()
+            file_model = session.query(FileModel).filter_by(id=file_id).first()
+            file_model.archived = True
+            session.commit()
+            app.logger.error("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))

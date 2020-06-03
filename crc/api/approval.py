@@ -15,9 +15,9 @@ from crc.services.ldap_service import LdapService
 
 def get_approvals(everything=False):
     if everything:
-        approvals = ApprovalService.get_all_approvals(ignore_cancelled=True)
+        approvals = ApprovalService.get_all_approvals(include_cancelled=True)
     else:
-        approvals = ApprovalService.get_approvals_per_user(g.user.uid, ignore_cancelled=True)
+        approvals = ApprovalService.get_approvals_per_user(g.user.uid, include_cancelled=False)
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 
@@ -33,7 +33,7 @@ def get_approvals_for_study(study_id=None):
 def get_csv():
     """A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
     man to do just about anything"""
-    approvals = ApprovalService.get_all_approvals(ignore_cancelled=True)
+    approvals = ApprovalService.get_all_approvals(include_cancelled=False)
     output = []
     errors = []
     ldapService = LdapService()

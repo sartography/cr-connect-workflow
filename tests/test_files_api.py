@@ -9,6 +9,8 @@ from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 from example_data import ExampleDataLoader
+from crc.services.approval_service import ApprovalService
+from crc.models.approval import ApprovalModel, ApprovalStatus
 
 
 class TestFilesApi(BaseTest):
@@ -217,6 +219,41 @@ class TestFilesApi(BaseTest):
         rv = self.app.delete('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         self.assertEqual(404, rv.status_code)
+
+    def test_delete_file_after_approval(self):
+        self.create_reference_document()
+        workflow = self.create_workflow("empty_workflow")
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr")
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anotother_anything.png", content_type="text",
+                                      binary_data=b'1234', irb_doc_code="Study_App_Doc")
+
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
+
+        file = session.query(FileModel).\
+            filter(FileModel.workflow_id == workflow.id).\
+            filter(FileModel.name == "anything.png").first()
+        self.assertFalse(file.archived)
+        rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+
+        rv = self.app.delete('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+
+        session.refresh(file)
+        self.assertTrue(file.archived)
+
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
+
+        approvals = session.query(ApprovalModel)\
+            .filter(ApprovalModel.status == ApprovalStatus.PENDING.value)\
+            .filter(ApprovalModel.study_id == workflow.study_id).all()
+
+        self.assertEquals(1, len(approvals))
+        self.assertEquals(1, len(approvals[0].approval_files))
+
 
     def test_change_primary_bpmn(self):
         self.load_example_data()

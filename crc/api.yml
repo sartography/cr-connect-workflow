@@ -468,7 +468,7 @@ paths:
                 $ref: "#/components/schemas/File"
     delete:
       operationId: crc.api.file.delete_file
-      summary: Removes an existing file
+      summary: Removes an existing file.  In the event the file can not be deleted, it is archived.
       tags:
         - Files
       responses:
