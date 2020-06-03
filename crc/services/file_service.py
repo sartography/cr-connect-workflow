@@ -274,7 +274,7 @@ class FileService(object):
         workflow_spec_model = FileService.find_spec_model_in_db(workflow)
 
         if workflow_spec_model is None:
-            raise ApiError(code="workflow_model_error",
+            raise ApiError(code="unknown_workflow",
                            message="Something is wrong.  I can't find the workflow you are using.")
 
         file_data_model = session.query(FileDataModel) \
