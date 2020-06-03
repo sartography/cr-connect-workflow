@@ -854,6 +854,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Approval"
+  /approval/csv:
+    get:
+      operationId: crc.api.approval.get_csv
+      summary: Provides a list of all users for all approved studies
+      tags:
+        - Approvals
+      responses:
+        '200':
+          description: An array of approvals
+          content:
+            application/json:
+              schema:
+                type: object
 components:
   securitySchemes:
     jwt:

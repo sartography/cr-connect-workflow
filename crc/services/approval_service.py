@@ -5,7 +5,8 @@ from sqlalchemy import desc
 from crc import db, session
 from crc.api.common import ApiError
 
-from crc.models.approval import ApprovalModel, ApprovalStatus, ApprovalFile
+from crc.models.approval import ApprovalModel, ApprovalStatus, ApprovalFile, Approval
+from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 from crc.services.file_service import FileService
 
@@ -14,22 +15,57 @@ class ApprovalService(object):
     """Provides common tools for working with an Approval"""
 
     @staticmethod
-    def get_approvals_per_user(approver_uid):
-        """Returns a list of all approvals for the given user (approver)"""
-        db_approvals = session.query(ApprovalModel).filter_by(approver_uid=approver_uid).all()
-        return db_approvals
+    def __one_approval_from_study(study, approver_uid = None):
+        """Returns one approval, with all additional approvals as 'related_approvals',
+        the main approval can be pinned to an approver with an optional argument.
+        Will return null if no approvals exist on the study."""
+        main_approval = None
+        related_approvals = []
+        approvals = db.session.query(ApprovalModel).filter(ApprovalModel.study_id == study.id).all()
+        for approval_model in approvals:
+            if approval_model.approver_uid == approver_uid:
+                main_approval = Approval.from_model(approval_model)
+            else:
+                related_approvals.append(Approval.from_model(approval_model))
+        if not main_approval and len(related_approvals) > 0:
+            main_approval = related_approvals[0]
+            related_approvals = related_approvals[1:]
+        if len(related_approvals) > 0:
+            main_approval.related_approvals = related_approvals
+        return main_approval
 
     @staticmethod
-    def get_approvals_for_study(study_id):
-        """Returns a list of all approvals for the given study"""
-        db_approvals = session.query(ApprovalModel).filter_by(study_id=study_id).all()
-        return db_approvals
+    def get_approvals_per_user(approver_uid):
+        """Returns a list of approval objects (not db models) for the given
+         approver. """
+        studies = db.session.query(StudyModel).join(ApprovalModel).\
+            filter(ApprovalModel.approver_uid == approver_uid).all()
+        approvals = []
+        for study in studies:
+            approval = ApprovalService.__one_approval_from_study(study, approver_uid)
+            if approval:
+                approvals.append(approval)
+        return approvals
 
     @staticmethod
     def get_all_approvals():
-        """Returns a list of all approvlas"""
-        db_approvals = session.query(ApprovalModel).all()
-        return db_approvals
+        """Returns a list of all approval objects (not db models), one record
+        per study, with any associated approvals grouped under the first approval."""
+        studies = db.session.query(StudyModel).all()
+        approvals = []
+        for study in studies:
+            approval = ApprovalService.__one_approval_from_study(study)
+            if approval:
+                approvals.append(approval)
+        return approvals
+
+    @staticmethod
+    def get_approvals_for_study(study_id):
+        """Returns an array of Approval objects for the study, it does not
+         compute the related approvals."""
+        db_approvals = session.query(ApprovalModel).filter_by(study_id=study_id).all()
+        return [Approval.from_model(approval_model) for approval_model in db_approvals]
+
 
     @staticmethod
     def update_approval(approval_id, approver_uid, status):
