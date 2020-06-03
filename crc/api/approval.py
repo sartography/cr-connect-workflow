@@ -3,28 +3,21 @@ import pickle
 from base64 import b64decode
 from datetime import datetime
 
-from SpiffWorkflow import Workflow
-from SpiffWorkflow.serializer.dict import DictionarySerializer
-from SpiffWorkflow.serializer.json import JSONSerializer
 from flask import g
 
-from crc import app, db, session
-
-from crc.api.common import ApiError, ApiErrorSchema
+from crc import db, session
+from crc.api.common import ApiError
 from crc.models.approval import Approval, ApprovalModel, ApprovalSchema, ApprovalStatus
-from crc.models.ldap import LdapSchema
-from crc.models.study import Study
 from crc.models.workflow import WorkflowModel
 from crc.services.approval_service import ApprovalService
 from crc.services.ldap_service import LdapService
-from crc.services.workflow_processor import WorkflowProcessor
 
 
 def get_approvals(everything=False):
     if everything:
-        approvals = ApprovalService.get_all_approvals()
+        approvals = ApprovalService.get_all_approvals(ignore_cancelled=True)
     else:
-        approvals = ApprovalService.get_approvals_per_user(g.user.uid)
+        approvals = ApprovalService.get_approvals_per_user(g.user.uid, ignore_cancelled=True)
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 

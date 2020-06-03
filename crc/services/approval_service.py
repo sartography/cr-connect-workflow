@@ -40,14 +40,14 @@ class ApprovalService(object):
         return main_approval
 
     @staticmethod
-    def get_approvals_per_user(approver_uid):
+    def get_approvals_per_user(approver_uid, ignore_cancelled=False):
         """Returns a list of approval objects (not db models) for the given
          approver. """
         studies = db.session.query(StudyModel).join(ApprovalModel).\
             filter(ApprovalModel.approver_uid == approver_uid).all()
         approvals = []
         for study in studies:
-            approval = ApprovalService.__one_approval_from_study(study, approver_uid)
+            approval = ApprovalService.__one_approval_from_study(study, approver_uid, ignore_cancelled)
             if approval:
                 approvals.append(approval)
         return approvals
