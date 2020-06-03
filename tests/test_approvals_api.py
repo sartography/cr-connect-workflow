@@ -65,8 +65,8 @@ class TestApprovals(BaseTest):
         self.assertEqual(len(response), 1)
 
         # Confirm approver UID matches returned payload
-        approval = ApprovalSchema().load(response[0])
-        self.assertEqual(approval.approver['uid'], approver_uid)
+        approval = response[0]
+        self.assertEqual(approval['approver']['uid'], approver_uid)
 
     def test_list_approvals_per_admin(self):
         """All approvals will be returned"""
