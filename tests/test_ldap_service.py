@@ -1,10 +1,7 @@
-import os
+from tests.base_test import BaseTest
 
-from crc import app
 from crc.api.common import ApiError
 from crc.services.ldap_service import LdapService
-from tests.base_test import BaseTest
-from ldap3 import Server, Connection, ALL, MOCK_SYNC
 
 
 class TestLdapService(BaseTest):

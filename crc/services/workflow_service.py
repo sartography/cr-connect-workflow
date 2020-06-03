@@ -107,11 +107,13 @@ class WorkflowService(object):
 
         if not hasattr(task.task_spec, 'form'): return
 
-        form_data = {}
+        form_data = task.data # Just like with the front end, we start with what was already there, and modify it.
         for field in task_api.form.fields:
             if required_only and (not field.has_validation(Task.VALIDATION_REQUIRED) or
                                   field.get_validation(Task.VALIDATION_REQUIRED).lower().strip() != "true"):
                 continue # Don't include any fields that aren't specifically marked as required.
+            if field.has_property("read_only") and field.get_property("read_only").lower().strip() == "true":
+                continue # Don't mess about with read only fields.
             if field.has_property(Task.PROP_OPTIONS_REPEAT):
                 group = field.get_property(Task.PROP_OPTIONS_REPEAT)
                 if group not in form_data:
