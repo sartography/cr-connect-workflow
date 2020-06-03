@@ -1,13 +1,10 @@
-import json
-
-import connexion
 import flask
-from flask import redirect, g, request
+from flask import g, request
 
 from crc import app, db
 from crc.api.common import ApiError
 from crc.models.user import UserModel, UserModelSchema
-from crc.services.ldap_service import LdapService, LdapUserInfo
+from crc.services.ldap_service import LdapService, LdapModel
 
 """
 .. module:: crc.api.user
@@ -81,7 +78,7 @@ def sso():
     return response
 
 
-def _handle_login(user_info: LdapUserInfo, redirect_url=app.config['FRONTEND_AUTH_CALLBACK']):
+def _handle_login(user_info: LdapModel, redirect_url=app.config['FRONTEND_AUTH_CALLBACK']):
     """On successful login, adds user to database if the user is not already in the system,
        then returns the frontend auth callback URL, with auth token appended.
 

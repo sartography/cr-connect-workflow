@@ -13,6 +13,9 @@ DEVELOPMENT = environ.get('DEVELOPMENT', default="true") == "true"
 TESTING = environ.get('TESTING', default="false") == "true"
 PRODUCTION = (environ.get('PRODUCTION', default="false") == "true") or (not DEVELOPMENT and not TESTING)
 
+# Sentry flag
+ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"
+
 # Add trailing slash to base path
 APPLICATION_ROOT = re.sub(r'//', '/', '/%s/' % environ.get('APPLICATION_ROOT', default="/").strip('/'))
 
