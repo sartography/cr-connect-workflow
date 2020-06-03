@@ -5,10 +5,7 @@
       <bpmn:outgoing>SequenceFlow_05ja25w</bpmn:outgoing>
     </bpmn:startEvent>
     <bpmn:manualTask id="ManualTask_Instructions" name="Read RRP Instructions">
-      <bpmn:documentation>## **Beta Stage: All data entered will be destroyed before public launch**
-
-
-### UNIVERSITY OF VIRGINIA RESEARCH
+      <bpmn:documentation>### UNIVERSITY OF VIRGINIA RESEARCH
 [From Research Ramp-up Guidance](https://research.virginia.edu/research-ramp-guidance)
 
 
@@ -319,8 +316,11 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
               <camunda:property id="repeat" value="shared" />
               <camunda:property id="description" value="Enter the number of square feet in this space." />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="SharedSpacePercentUsable" label="Percent of Space Usable By Personnel" type="long">
+          <camunda:formField id="SharedSpacePercentUsable" label="Percent of Space Usable By Personnel" type="long" defaultValue="100">
             <camunda:properties>
               <camunda:property id="repeat" value="shared" />
               <camunda:property id="description" value="If known, enter a number between 1 &#38; 100 which indicates the approximate percent of the total space personnel will work in and move around in during the workday." />
@@ -328,6 +328,7 @@ When your Research Ramp-up Plan is complete and ready to submit for review and a
             <camunda:validation>
               <camunda:constraint name="min" config="1" />
               <camunda:constraint name="max" config="100" />
+              <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
           <camunda:formField id="SharedSpaceMaxPersonnel" label="Maximum Number of Personnel Occupying Space" type="long">
@@ -423,7 +424,7 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="ExclusiveSpacePercentUsable" label="Percent of Space Usable By Personnel" type="long">
+          <camunda:formField id="ExclusiveSpacePercentUsable" label="Percent of Space Usable By Personnel" type="long" defaultValue="100">
             <camunda:properties>
               <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="description" value="If known, enter a number between 1 &#38; 100 which indicates the approximate percent of the total space personnel will work in and move around in during the workday." />
@@ -431,6 +432,7 @@ Submit one entry for each space the PI is the exclusive investigator.  If all sp
             <camunda:validation>
               <camunda:constraint name="min" config="1" />
               <camunda:constraint name="max" config="100" />
+              <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceMaxPersonnel" label="Maximum Number of Personnel Occupying Space" type="long">
@@ -644,7 +646,7 @@ If a rejection notification is received, go back to the first step that needs to
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceBuilding" label="Room No. &#38; Building Name" type="autocomplete">
             <camunda:properties>
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="read_only" value="true" />
               <camunda:property id="spreadsheet.name" value="Buildinglist.xls" />
               <camunda:property id="spreadsheet.value.column" value="Value" />
@@ -656,14 +658,14 @@ If a rejection notification is received, go back to the first step that needs to
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceRoomID" label="Exclusive Space Room ID" type="string">
             <camunda:properties>
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
               <camunda:property id="read_only" value="true" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="ExclusiveSpaceType" label="Space Room Type" type="enum">
             <camunda:properties>
               <camunda:property id="read_only" value="true" />
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
             </camunda:properties>
             <camunda:value id="Lab" name="Lab" />
             <camunda:value id="Office" name="Office" />
@@ -672,7 +674,7 @@ If a rejection notification is received, go back to the first step that needs to
             <camunda:properties>
               <camunda:property id="ldap.lookup" value="true" />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
-              <camunda:property id="repeat" value="Exclusive" />
+              <camunda:property id="repeat" value="exclusive" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -683,7 +685,7 @@ If a rejection notification is received, go back to the first step that needs to
               <camunda:property id="spreadsheet.name" value="Buildinglist.xls" />
               <camunda:property id="spreadsheet.value.column" value="Value" />
               <camunda:property id="spreadsheet.label.column" value="Building Name" />
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
               <camunda:property id="repeat_title" value="Any missing Area Monitors for Shared Spaces must be entered" />
               <camunda:property id="read_only" value="true" />
               <camunda:property id="repeat_hide_expression" value="model.isAllSharedAreaMonitors" />
@@ -693,13 +695,13 @@ If a rejection notification is received, go back to the first step that needs to
           <camunda:formField id="SharedSpaceRoomID" label="Shared Space Room ID" type="string">
             <camunda:properties>
               <camunda:property id="read_only" value="true" />
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="SharedSpaceAMComputingID" label="Area Monitor" type="autocomplete">
             <camunda:properties>
               <camunda:property id="ldap.lookup" value="true" />
-              <camunda:property id="repeat" value="Shared" />
+              <camunda:property id="repeat" value="shared" />
               <camunda:property id="placeholder" value="wxy0z or Smith" />
             </camunda:properties>
             <camunda:validation>
@@ -940,6 +942,9 @@ This step is internal to the system and do not require and user interaction</bpm
       <bpmndi:BPMNShape id="Activity_1xgrlzr_di" bpmnElement="Activity_SharedSpaceInfo">
         <dc:Bounds x="850" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1jefdme_di" bpmnElement="Activity_ExclusiveSpace">
+        <dc:Bounds x="690" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0ysw6zo_di" bpmnElement="Activity_nonUVASpaces">
         <dc:Bounds x="1160" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
@@ -987,9 +992,6 @@ This step is internal to the system and do not require and user interaction</bpm
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1i34vt6_di" bpmnElement="Activity_14xt8is">
         <dc:Bounds x="3040" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1jefdme_di" bpmnElement="Activity_ExclusiveSpace">
-        <dc:Bounds x="690" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
