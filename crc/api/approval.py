@@ -40,7 +40,7 @@ def get_approvals_for_study(study_id=None):
 def get_csv():
     """A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
     man to do just about anything"""
-    approvals = ApprovalService.get_all_approvals()
+    approvals = ApprovalService.get_all_approvals(ignore_cancelled=True)
     output = []
     errors = []
     ldapService = LdapService()
@@ -52,7 +52,11 @@ def get_csv():
                 if related_approval.status != ApprovalStatus.APPROVED.value:
                     continue
             workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == approval.workflow_id).first()
-            personnel = extract_personnel(workflow.bpmn_workflow_json)
+            data = json.loads(workflow.bpmn_workflow_json)
+            last_task = find_task(data['last_task']['__uuid__'], data['task_tree'])
+            personnel = extract_value(last_task, 'personnel')
+            training_val = extract_value(last_task, 'RequiredTraining')
+            review_complete = 'AllRequiredTraining' in training_val
             pi_uid = workflow.study.primary_investigator_id
             pi_details = ldapService.user_info(pi_uid)
             details = []
@@ -63,20 +67,22 @@ def get_csv():
 
             for person in details:
                 output.append({
+                    "study_id": approval.study_id,
                     "pi_uid": pi_details.uid,
                     "pi": pi_details.display_name,
                     "name": person.display_name,
-                    "email": person.email_address
+                    "email": person.email_address,
+                    "review_complete": review_complete,
                 })
         except Exception as e:
             errors.append("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
     return {"results": output, "errors": errors }
 
-def extract_personnel(data):
-    data = json.loads(data)
-    last_task = find_task(data['last_task']['__uuid__'], data['task_tree'])
-    last_task_personnel = pickle.loads(b64decode(last_task['data']['personnel']['__bytes__']))
-    return last_task_personnel
+def extract_value(task, key):
+    if key in task['data']:
+        return pickle.loads(b64decode(task['data'][key]['__bytes__']))
+    else:
+        return ""
 
 def find_task(uuid, task):
     if task['id']['__uuid__'] == uuid:
