@@ -15,7 +15,7 @@ class ApprovalService(object):
     """Provides common tools for working with an Approval"""
 
     @staticmethod
-    def __one_approval_from_study(study, approver_uid = None, ignore_cancelled=False):
+    def __one_approval_from_study(study, approver_uid = None, include_cancelled=True):
         """Returns one approval, with all additional approvals as 'related_approvals',
         the main approval can be pinned to an approver with an optional argument.
         Will return null if no approvals exist on the study."""
@@ -23,7 +23,7 @@ class ApprovalService(object):
         related_approvals = []
         query = db.session.query(ApprovalModel).\
             filter(ApprovalModel.study_id == study.id)
-        if ignore_cancelled:
+        if not include_cancelled:
             query=query.filter(ApprovalModel.status != ApprovalStatus.CANCELED.value)
 
         approvals = query.all()
@@ -40,35 +40,38 @@ class ApprovalService(object):
         return main_approval
 
     @staticmethod
-    def get_approvals_per_user(approver_uid):
+    def get_approvals_per_user(approver_uid, include_cancelled=False):
         """Returns a list of approval objects (not db models) for the given
          approver. """
         studies = db.session.query(StudyModel).join(ApprovalModel).\
             filter(ApprovalModel.approver_uid == approver_uid).all()
         approvals = []
         for study in studies:
-            approval = ApprovalService.__one_approval_from_study(study, approver_uid)
+            approval = ApprovalService.__one_approval_from_study(study, approver_uid, include_cancelled)
             if approval:
                 approvals.append(approval)
         return approvals
 
     @staticmethod
-    def get_all_approvals(ignore_cancelled=False):
+    def get_all_approvals(include_cancelled=True):
         """Returns a list of all approval objects (not db models), one record
         per study, with any associated approvals grouped under the first approval."""
         studies = db.session.query(StudyModel).all()
         approvals = []
         for study in studies:
-            approval = ApprovalService.__one_approval_from_study(study, ignore_cancelled=ignore_cancelled)
+            approval = ApprovalService.__one_approval_from_study(study, include_cancelled=include_cancelled)
             if approval:
                 approvals.append(approval)
         return approvals
 
     @staticmethod
-    def get_approvals_for_study(study_id):
+    def get_approvals_for_study(study_id, include_cancelled=True):
         """Returns an array of Approval objects for the study, it does not
          compute the related approvals."""
-        db_approvals = session.query(ApprovalModel).filter_by(study_id=study_id).all()
+        query = session.query(ApprovalModel).filter_by(study_id=study_id)
+        if not include_cancelled:
+            query = query.filter(ApprovalModel.status != ApprovalStatus.CANCELED.value)
+        db_approvals = query.all()
         return [Approval.from_model(approval_model) for approval_model in db_approvals]
 
 
