@@ -3,7 +3,7 @@ import json
 
 from tests.base_test import BaseTest
 
-from crc import session
+from crc import session, db
 from crc.models.file import FileModel, FileType, FileSchema, FileModelSchema
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
@@ -48,6 +48,7 @@ class TestFilesApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(2, len(json_data))
 
+
     def test_create_file(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
@@ -89,6 +90,39 @@ class TestFilesApi(BaseTest):
                            (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
+
+
+    def test_archive_file_no_longer_shows_up(self):
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form')
+        processor = WorkflowProcessor(workflow)
+        task = processor.next_task()
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        correct_name = task.task_spec.form.fields[0].id
+
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
+
+        self.assert_success(rv)
+        rv = self.app.get('/v1.0/file?workflow_id=%s' % workflow.id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+        self.assertEquals(1, len(json.loads(rv.get_data(as_text=True))))
+
+        file_model = db.session.query(FileModel).filter(FileModel.workflow_id == workflow.id).all()
+        self.assertEquals(1, len(file_model))
+        file_model[0].archived = True
+        db.session.commit()
+
+        rv = self.app.get('/v1.0/file?workflow_id=%s' % workflow.id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+        self.assertEquals(0, len(json.loads(rv.get_data(as_text=True))))
+
+
+
+
 
 
     def test_set_reference_file(self):

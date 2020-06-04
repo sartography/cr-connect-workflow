@@ -104,7 +104,7 @@ class ApprovalService(object):
         # Construct as hash of the latest files to see if things have changed since
         # the last approval.
         workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
-        workflow_data_files = FileService.get_workflow_data_files(workflow_id, include_archives=False)
+        workflow_data_files = FileService.get_workflow_data_files(workflow_id)
         current_data_file_ids = list(data_file.id for data_file in workflow_data_files)
 
         if len(current_data_file_ids) == 0:

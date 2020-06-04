@@ -31,7 +31,7 @@ def get_approvals_for_study(study_id=None):
 
 # ----- Being decent into madness ---- #
 def get_csv():
-    """A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
+    """A damn lie, it's a json file. A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
     man to do just about anything"""
     approvals = ApprovalService.get_all_approvals(include_cancelled=False)
     output = []

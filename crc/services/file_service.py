@@ -96,6 +96,7 @@ class FileService(object):
     def get_workflow_files(workflow_id):
         """Returns all the file models associated with a running workflow."""
         return session.query(FileModel).filter(FileModel.workflow_id == workflow_id).\
+            filter(FileModel.archived == False).\
             order_by(FileModel.id).all()
 
     @staticmethod
@@ -139,6 +140,7 @@ class FileService(object):
         else:
             file_model.type = FileType[file_extension]
             file_model.content_type = content_type
+            file_model.archived = False  # Unarchive the file if it is archived.
 
         if latest_data_model is None:
             version = 1
@@ -188,14 +190,15 @@ class FileService(object):
     def get_files_for_study(study_id, irb_doc_code=None):
         query = session.query(FileModel).\
                 join(WorkflowModel).\
-                filter(WorkflowModel.study_id == study_id)
+                filter(WorkflowModel.study_id == study_id).\
+                filter(FileModel.archived == False)
         if irb_doc_code:
             query = query.filter(FileModel.irb_doc_code == irb_doc_code)
         return query.all()
 
     @staticmethod
     def get_files(workflow_spec_id=None, workflow_id=None,
-                  name=None, is_reference=False, irb_doc_code=None, include_archives=True):
+                  name=None, is_reference=False, irb_doc_code=None):
         query = session.query(FileModel).filter_by(is_reference=is_reference)
         if workflow_spec_id:
             query = query.filter_by(workflow_spec_id=workflow_spec_id)
@@ -209,8 +212,7 @@ class FileService(object):
         if name:
             query = query.filter_by(name=name)
 
-        if not include_archives:
-            query = query.filter(FileModel.archived == False)
+        query = query.filter(FileModel.archived == False)
 
         query = query.order_by(FileModel.id)
 
@@ -242,11 +244,11 @@ class FileService(object):
             return latest_data_files
 
     @staticmethod
-    def get_workflow_data_files(workflow_id=None, include_archives=True):
+    def get_workflow_data_files(workflow_id=None):
         """Returns all the FileDataModels related to a running workflow -
         So these are the latest data files that were uploaded or generated
         that go along with this workflow.  Not related to the spec in any way"""
-        file_models = FileService.get_files(workflow_id=workflow_id, include_archives=include_archives)
+        file_models = FileService.get_files(workflow_id=workflow_id)
         latest_data_files = []
         for file_model in file_models:
             latest_data_files.append(FileService.get_file_data(file_model.id))
@@ -274,7 +276,8 @@ class FileService(object):
 
     @staticmethod
     def get_workflow_file_data(workflow, file_name):
-        """Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns its data"""
+        """This method should be deleted, find where it is used, and remove this method.
+        Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns its data"""
         workflow_spec_model = FileService.find_spec_model_in_db(workflow)
 
         if workflow_spec_model is None:
