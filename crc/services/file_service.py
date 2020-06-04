@@ -128,7 +128,11 @@ class FileService(object):
 
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
         if (latest_data_model is not None) and (md5_checksum == latest_data_model.md5_hash):
-            # This file does not need to be updated, it's the same file.
+            # This file does not need to be updated, it's the same file.  If it is arhived,
+            # then de-arvhive it.
+            file_model.archived = False
+            session.add(file_model)
+            session.commit()
             return file_model
 
         # Verify the extension
