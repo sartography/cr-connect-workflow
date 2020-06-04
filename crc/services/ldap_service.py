@@ -4,7 +4,7 @@ from attr import asdict
 from ldap3.core.exceptions import LDAPExceptionError
 
 from crc import app, db
-from ldap3 import Connection, Server, MOCK_SYNC
+from ldap3 import Connection, Server, MOCK_SYNC, RESTARTABLE
 
 from crc.api.common import ApiError
 from crc.models.ldap import LdapModel, LdapSchema
@@ -34,7 +34,7 @@ class LdapService(object):
                 server = Server(app.config['LDAP_URL'], connect_timeout=app.config['LDAP_TIMEOUT_SEC'])
                 conn = Connection(server, auto_bind=True,
                                        receive_timeout=app.config['LDAP_TIMEOUT_SEC'],
-                                       )
+                                       client_strategy=RESTARTABLE)
             LdapService.conn = conn
         return LdapService.conn
 
