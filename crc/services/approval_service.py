@@ -80,6 +80,25 @@ class ApprovalService(object):
             db_approval.status = status
             session.add(db_approval)
             session.commit()
+            if status == ApprovalStatus.APPROVED.value:
+                second_approval = ApprovalModel().query.filter_by(
+                    study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
+                    status=ApprovalStatus.PENDING.value, version=db_approval.version).first()
+                if second_approval:
+                    # send rrp approval request for second approver
+                    pass
+                else:
+                    # send rrp approved email
+                    pass
+            elif status == ApprovalStatus.DECLINED.value:
+                first_approval = ApprovalModel().query.filter_by(
+                    study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
+                    status=ApprovalStatus.APPROVED.value, version=db_approval.version).first()
+                if first_approval:
+                    # Second approver denies
+                    # send rrp denied by second approver email to first approver
+                # send rrp denied email
+                pass
         # TODO: Log update action by approver_uid - maybe ?
         return db_approval
 
@@ -129,6 +148,17 @@ class ApprovalService(object):
                               message="", date_created=datetime.now(),
                               version=version)
         approval_files = ApprovalService._create_approval_files(workflow_data_files, model)
+
+        # Check approvals count
+        approvals_count = ApprovalModel().query.filter_by(study_id=study_id, workflow_id=workflow_id,
+                                        status=ApprovalStatus.PENDING.value,
+                                        version=version).count()
+        # Send first email
+        if approvals_count == 0:
+            # send rrp submission
+            # send rrp approval request for first approver
+            pass
+
         db.session.add(model)
         db.session.add_all(approval_files)
         db.session.commit()
