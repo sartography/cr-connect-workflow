@@ -49,6 +49,7 @@ def get_csv():
             last_task = find_task(data['last_task']['__uuid__'], data['task_tree'])
             personnel = extract_value(last_task, 'personnel')
             training_val = extract_value(last_task, 'RequiredTraining')
+            pi_supervisor = extract_value(last_task, 'PISupervisor')['value']
             review_complete = 'AllRequiredTraining' in training_val
             pi_uid = workflow.study.primary_investigator_id
             pi_details = ldapService.user_info(pi_uid)
@@ -59,14 +60,22 @@ def get_csv():
                 details.append(ldapService.user_info(uid))
 
             for person in details:
-                output.append({
+                record = {
                     "study_id": approval.study_id,
                     "pi_uid": pi_details.uid,
                     "pi": pi_details.display_name,
                     "name": person.display_name,
+                    "uid": person.uid,
                     "email": person.email_address,
+                    "supervisor": "",
                     "review_complete": review_complete,
-                })
+                }
+                # We only know the PI's supervisor.
+                if person.uid == pi_details.uid:
+                    record["supervisor"] = pi_supervisor
+
+                output.append(record)
+
         except Exception as e:
             errors.append("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
     return {"results": output, "errors": errors }

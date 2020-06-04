@@ -26,6 +26,7 @@ from crc.models.approval import Approval
 
 class StudyService(object):
     """Provides common tools for working with a Study"""
+    ldap_service = LdapService()
 
     @staticmethod
     def get_studies_for_user(user):
@@ -206,8 +207,7 @@ class StudyService(object):
     @staticmethod
     def get_ldap_dict_if_available(user_id):
         try:
-            ldap_service = LdapService()
-            return LdapSchema().dump(ldap_service.user_info(user_id))
+            return LdapSchema().dump(StudyService.ldap_service.user_info(user_id))
         except ApiError as ae:
             app.logger.info(str(ae))
             return {"error": str(ae)}
