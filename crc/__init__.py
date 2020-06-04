@@ -3,6 +3,7 @@ import os
 import sentry_sdk
 
 import connexion
+from jinja2 import Environment, FileSystemLoader
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
@@ -47,6 +48,10 @@ if app.config['ENABLE_SENTRY']:
         dsn="https://25342ca4e2d443c6a5c49707d68e9f40@o401361.ingest.sentry.io/5260915",
         integrations=[FlaskIntegration()]
     )
+
+# Jinja environment definition, used to render mail templates
+template_dir = os.getcwd() + '/crc/static/templates/mails'
+env = Environment(loader=FileSystemLoader(template_dir))
 
 print('=== USING THESE CONFIG SETTINGS: ===')
 print('DB_HOST = ', )
