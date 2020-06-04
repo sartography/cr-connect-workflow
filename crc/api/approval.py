@@ -24,7 +24,8 @@ def get_approvals(everything=False):
 
 def get_approvals_for_study(study_id=None):
     db_approvals = ApprovalService.get_approvals_for_study(study_id)
-    approvals = [Approval.from_model(approval_model) for approval_model in db_approvals]
+    ldap_service = LdapService()
+    approvals = [Approval.from_model(approval_model, ldap_service) for approval_model in db_approvals]
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 

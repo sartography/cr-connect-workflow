@@ -48,13 +48,12 @@ class ApprovalModel(db.Model):
 
 
 class Approval(object):
-    ldap_service = LdapService()
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
     @classmethod
-    def from_model(cls, model: ApprovalModel):
+    def from_model(cls, model: ApprovalModel, ldap_service: LdapSchema):
         # TODO: Reduce the code by iterating over model's dict keys
         instance = cls()
         instance.id = model.id
@@ -73,8 +72,8 @@ class Approval(object):
         if model.study:
             instance.title = model.study.title
         try:
-            instance.approver = Approval.ldap_service.user_info(model.approver_uid)
-            instance.primary_investigator = Approval.ldap_service.user_info(model.study.primary_investigator_id)
+            instance.approver = ldap_service.user_info(model.approver_uid)
+            instance.primary_investigator = ldap_service.user_info(model.study.primary_investigator_id)
         except ApiError as ae:
             app.logger.error("Ldap lookup failed for approval record %i" % model.id)
 
