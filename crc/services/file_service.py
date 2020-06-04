@@ -45,10 +45,8 @@ class FileService(object):
 
     @staticmethod
     def is_allowed_document(code):
-        data_model = FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
-        xls = ExcelFile(data_model.data)
-        df = xls.parse(xls.sheet_names[0])
-        return code in df['code'].values
+        doc_dict = FileService.get_doc_dictionary()
+        return code in doc_dict
 
     @staticmethod
     def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
@@ -333,4 +331,4 @@ class FileService(object):
             file_model = session.query(FileModel).filter_by(id=file_id).first()
             file_model.archived = True
             session.commit()
-            app.logger.error("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
+            app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))

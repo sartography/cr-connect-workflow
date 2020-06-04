@@ -24,8 +24,7 @@ def get_approvals(everything=False):
 
 def get_approvals_for_study(study_id=None):
     db_approvals = ApprovalService.get_approvals_for_study(study_id)
-    ldap_service = LdapService()
-    approvals = [Approval.from_model(approval_model, ldap_service) for approval_model in db_approvals]
+    approvals = [Approval.from_model(approval_model) for approval_model in db_approvals]
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 
@@ -37,7 +36,6 @@ def get_csv():
     approvals = ApprovalService.get_all_approvals(include_cancelled=False)
     output = []
     errors = []
-    ldapService = LdapService()
     for approval in approvals:
         try:
             if approval.status != ApprovalStatus.APPROVED.value:
@@ -53,12 +51,12 @@ def get_csv():
             pi_supervisor = extract_value(last_task, 'PISupervisor')['value']
             review_complete = 'AllRequiredTraining' in training_val
             pi_uid = workflow.study.primary_investigator_id
-            pi_details = ldapService.user_info(pi_uid)
+            pi_details = LdapService.user_info(pi_uid)
             details = []
             details.append(pi_details)
             for person in personnel:
                 uid = person['PersonnelComputingID']['value']
-                details.append(ldapService.user_info(uid))
+                details.append(LdapService.user_info(uid))
 
             for person in details:
                 record = {

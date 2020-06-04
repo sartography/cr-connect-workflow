@@ -189,7 +189,7 @@ class LookupService(object):
 
     @staticmethod
     def _run_ldap_query(query, limit):
-        users = LdapService().search_users(query, limit)
+        users = LdapService.search_users(query, limit)
 
         """Converts the user models into something akin to the
         LookupModel in models/file.py, so this can be returned in the same way 

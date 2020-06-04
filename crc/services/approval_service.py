@@ -28,12 +28,11 @@ class ApprovalService(object):
             query=query.filter(ApprovalModel.status != ApprovalStatus.CANCELED.value)
 
         approvals = query.all()
-        ldap_service = LdapService()
         for approval_model in approvals:
             if approval_model.approver_uid == approver_uid:
-                main_approval = Approval.from_model(approval_model, ldap_service)
+                main_approval = Approval.from_model(approval_model)
             else:
-                related_approvals.append(Approval.from_model(approval_model, ldap_service))
+                related_approvals.append(Approval.from_model(approval_model))
         if not main_approval and len(related_approvals) > 0:
             main_approval = related_approvals[0]
             related_approvals = related_approvals[1:]
@@ -70,12 +69,11 @@ class ApprovalService(object):
     def get_approvals_for_study(study_id, include_cancelled=True):
         """Returns an array of Approval objects for the study, it does not
          compute the related approvals."""
-        ldap_service = LdapService()
         query = session.query(ApprovalModel).filter_by(study_id=study_id)
         if not include_cancelled:
             query = query.filter(ApprovalModel.status != ApprovalStatus.CANCELED.value)
         db_approvals = query.all()
-        return [Approval.from_model(approval_model, ldap_service) for approval_model in db_approvals]
+        return [Approval.from_model(approval_model) for approval_model in db_approvals]
 
 
     @staticmethod
