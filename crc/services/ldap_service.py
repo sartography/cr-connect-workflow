@@ -29,9 +29,10 @@ class LdapService(object):
                 conn = Connection(server, client_strategy=MOCK_SYNC)
                 file_path = os.path.abspath(os.path.join(app.root_path, '..', 'tests', 'data', 'ldap_response.json'))
                 conn.strategy.entries_from_json(file_path)
+                conn.bind()
             else:
                 server = Server(app.config['LDAP_URL'], connect_timeout=app.config['LDAP_TIMEOUT_SEC'])
-                conn = Connection(server,
+                conn = Connection(server, auto_bind=True,
                                        receive_timeout=app.config['LDAP_TIMEOUT_SEC'],
                                        )
             LdapService.conn = conn
@@ -44,7 +45,6 @@ class LdapService(object):
         if not user_info:
             search_string = LdapService.uid_search_string % uva_uid
             conn = LdapService.__get_conn()
-            conn.bind()
             conn.search(LdapService.search_base, search_string, attributes=LdapService.attributes)
             if len(conn.entries) < 1:
                 raise ApiError("missing_ldap_record", "Unable to locate a user with id %s in LDAP" % uva_uid)
@@ -72,7 +72,6 @@ class LdapService(object):
         print(search_string)
         try:
             conn = LdapService.__get_conn()
-            conn.bind()
             conn.search(LdapService.search_base, search_string, attributes=LdapService.attributes)
             # Entries are returned as a generator, accessing entries
             # can make subsequent calls to the ldap service, so limit
