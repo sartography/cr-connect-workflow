@@ -13,11 +13,13 @@ from crc.services.approval_service import ApprovalService
 from crc.services.ldap_service import LdapService
 
 
-def get_approvals(everything=False):
-    if everything:
-        approvals = ApprovalService.get_all_approvals(include_cancelled=True)
-    else:
-        approvals = ApprovalService.get_approvals_per_user(g.user.uid, include_cancelled=False)
+def get_approvals(status=None, as_user=None):
+    #status = ApprovalStatus.PENDING.value
+    user = g.user.uid
+    if as_user:
+        user = as_user
+    approvals = ApprovalService.get_approvals_per_user(user, status,
+                                                       include_cancelled=False)
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 

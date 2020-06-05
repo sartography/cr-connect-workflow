@@ -808,12 +808,18 @@ paths:
                   $ref: "#/components/schemas/Script"
   /approval:
     parameters:
-      - name: everything
+      - name: status
         in: query
         required: false
-        description: If set to true, returns all the approvals known to the system.
+        description: If set to true, returns all the approvals with any status.
         schema:
-          type: boolean
+          type: string
+      - name: as_user
+        in: query
+        required: false
+        description: If provided, returns the approval results as they would appear for that user.
+        schema:
+          type: string
     get:
       operationId: crc.api.approval.get_approvals
       summary: Provides a list of workflows approvals

@@ -19,44 +19,70 @@ from crc.services.mails import (
     send_ramp_up_denied_email_to_approver
 )
 
-
 class ApprovalService(object):
     """Provides common tools for working with an Approval"""
 
     @staticmethod
-    def __one_approval_from_study(study, approver_uid = None, include_cancelled=True):
+    def __one_approval_from_study(study, approver_uid = None, status=None,
+                                  include_cancelled=True):
         """Returns one approval, with all additional approvals as 'related_approvals',
         the main approval can be pinned to an approver with an optional argument.
         Will return null if no approvals exist on the study."""
         main_approval = None
         related_approvals = []
-        query = db.session.query(ApprovalModel).\
-            filter(ApprovalModel.study_id == study.id)
+        query = db.session.query(ApprovalModel).filter(ApprovalModel.study_id == study.id)
         if not include_cancelled:
             query=query.filter(ApprovalModel.status != ApprovalStatus.CANCELED.value)
+        approvals = query.all()  # All non-cancelled approvals.
 
-        approvals = query.all()
         for approval_model in approvals:
             if approval_model.approver_uid == approver_uid:
-                main_approval = Approval.from_model(approval_model)
+                main_approval = approval_model
             else:
-                related_approvals.append(Approval.from_model(approval_model))
+                related_approvals.append(approval_model)
+
+        # IF WE ARE JUST RETURNING ALL OF THE APPROVALS PER STUDY
         if not main_approval and len(related_approvals) > 0:
             main_approval = related_approvals[0]
             related_approvals = related_approvals[1:]
-        if len(related_approvals) > 0:
-            main_approval.related_approvals = related_approvals
+
+        if main_approval is not None:  # May be null if the study has no approvals.
+            final_status = ApprovalService.__calculate_overall_approval_status(main_approval, related_approvals)
+            if status and final_status != status: return  # Now that we are certain of the status, filter on it.
+
+            main_approval = Approval.from_model(main_approval)
+            main_approval.status = final_status
+            for ra in related_approvals:
+                main_approval.related_approvals.append(Approval.from_model(ra))
+
         return main_approval
 
     @staticmethod
-    def get_approvals_per_user(approver_uid, include_cancelled=False):
+    def __calculate_overall_approval_status(approval, related):
+        # In the case of pending approvals, check to see if there is a related approval
+        # that proceeds this approval - and if it is declined, or still pending, then change
+        # the state of the approval to be Declined, or Waiting respectively.
+        if approval.status == ApprovalStatus.PENDING.value:
+            for ra in related:
+                if ra.id < approval.id:
+                    if ra.status == ApprovalStatus.DECLINED.value or ra.status == ApprovalStatus.CANCELED.value:
+                        return ra.status  # If any prior approval id declined or cancelled so is this approval.
+                    elif ra.status == ApprovalStatus.PENDING.value:
+                        return ApprovalStatus.AWAITING.value  # if any prior approval is pending, then this is waiting.
+            return approval.status
+        else:
+            return approval.status
+
+    @staticmethod
+    def get_approvals_per_user(approver_uid, status=None, include_cancelled=False):
         """Returns a list of approval objects (not db models) for the given
          approver. """
         studies = db.session.query(StudyModel).join(ApprovalModel).\
             filter(ApprovalModel.approver_uid == approver_uid).all()
         approvals = []
         for study in studies:
-            approval = ApprovalService.__one_approval_from_study(study, approver_uid, include_cancelled)
+            approval = ApprovalService.__one_approval_from_study(study, approver_uid,
+                                                                 status, include_cancelled)
             if approval:
                 approvals.append(approval)
         return approvals
