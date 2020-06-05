@@ -208,7 +208,6 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
 
 
-
     def test_get_documentation_populated_in_end(self):
         self.load_example_data()
         workflow = self.create_workflow('random_fact')

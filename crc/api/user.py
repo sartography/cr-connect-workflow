@@ -59,10 +59,7 @@ def sso_login():
     app.logger.info("SSO_LOGIN: Full URL: " + request.url)
     app.logger.info("SSO_LOGIN: User Id: " + uid)
     app.logger.info("SSO_LOGIN: Will try to redirect to : " + str(redirect))
-
-    ldap_service = LdapService()
-    info = ldap_service.user_info(uid)
-
+    info = LdapService.user_info(uid)
     return _handle_login(info, redirect)
 
 @app.route('/sso')
@@ -151,7 +148,7 @@ def backdoor(
    """
     if not 'PRODUCTION' in app.config or not app.config['PRODUCTION']:
 
-        ldap_info = LdapService().user_info(uid)
+        ldap_info = LdapService.user_info(uid)
         return _handle_login(ldap_info, redirect)
     else:
         raise ApiError('404', 'unknown')

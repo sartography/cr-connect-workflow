@@ -122,7 +122,7 @@ def get_file_info(file_id):
 
 def update_file_info(file_id, body):
     if file_id is None:
-        raise ApiError('unknown_file', 'Please provide a valid File ID.')
+        raise ApiError('no_such_file', 'Please provide a valid File ID.')
 
     file_model = session.query(FileModel).filter_by(id=file_id).first()
 
