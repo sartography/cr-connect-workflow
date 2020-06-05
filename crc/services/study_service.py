@@ -206,8 +206,7 @@ class StudyService(object):
     @staticmethod
     def get_ldap_dict_if_available(user_id):
         try:
-            ldap_service = LdapService()
-            return LdapSchema().dump(ldap_service.user_info(user_id))
+            return LdapSchema().dump(LdapService().user_info(user_id))
         except ApiError as ae:
             app.logger.info(str(ae))
             return {"error": str(ae)}
@@ -319,9 +318,9 @@ class StudyService(object):
             try:
                 StudyService._create_workflow_model(study_model, workflow_spec)
             except WorkflowTaskExecException as wtee:
-                errors.append(ApiError.from_task("workflow_execution_exception", str(wtee), wtee.task))
+                errors.append(ApiError.from_task("workflow_startup_exception", str(wtee), wtee.task))
             except WorkflowException as we:
-                errors.append(ApiError.from_task_spec("workflow_execution_exception", str(we), we.sender))
+                errors.append(ApiError.from_task_spec("workflow_startup_exception", str(we), we.sender))
         return errors
 
     @staticmethod

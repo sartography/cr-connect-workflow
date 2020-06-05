@@ -3,28 +3,21 @@ import pickle
 from base64 import b64decode
 from datetime import datetime
 
-from SpiffWorkflow import Workflow
-from SpiffWorkflow.serializer.dict import DictionarySerializer
-from SpiffWorkflow.serializer.json import JSONSerializer
 from flask import g
 
-from crc import app, db, session
-
-from crc.api.common import ApiError, ApiErrorSchema
+from crc import db, session
+from crc.api.common import ApiError
 from crc.models.approval import Approval, ApprovalModel, ApprovalSchema, ApprovalStatus
-from crc.models.ldap import LdapSchema
-from crc.models.study import Study
 from crc.models.workflow import WorkflowModel
 from crc.services.approval_service import ApprovalService
 from crc.services.ldap_service import LdapService
-from crc.services.workflow_processor import WorkflowProcessor
 
 
 def get_approvals(everything=False):
     if everything:
-        approvals = ApprovalService.get_all_approvals()
+        approvals = ApprovalService.get_all_approvals(include_cancelled=True)
     else:
-        approvals = ApprovalService.get_approvals_per_user(g.user.uid)
+        approvals = ApprovalService.get_approvals_per_user(g.user.uid, include_cancelled=False)
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 
@@ -38,12 +31,11 @@ def get_approvals_for_study(study_id=None):
 
 # ----- Being decent into madness ---- #
 def get_csv():
-    """A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
+    """A damn lie, it's a json file. A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
     man to do just about anything"""
-    approvals = ApprovalService.get_all_approvals(ignore_cancelled=True)
+    approvals = ApprovalService.get_all_approvals(include_cancelled=False)
     output = []
     errors = []
-    ldapService = LdapService()
     for approval in approvals:
         try:
             if approval.status != ApprovalStatus.APPROVED.value:
@@ -56,24 +48,33 @@ def get_csv():
             last_task = find_task(data['last_task']['__uuid__'], data['task_tree'])
             personnel = extract_value(last_task, 'personnel')
             training_val = extract_value(last_task, 'RequiredTraining')
+            pi_supervisor = extract_value(last_task, 'PISupervisor')['value']
             review_complete = 'AllRequiredTraining' in training_val
             pi_uid = workflow.study.primary_investigator_id
-            pi_details = ldapService.user_info(pi_uid)
+            pi_details = LdapService.user_info(pi_uid)
             details = []
             details.append(pi_details)
             for person in personnel:
                 uid = person['PersonnelComputingID']['value']
-                details.append(ldapService.user_info(uid))
+                details.append(LdapService.user_info(uid))
 
             for person in details:
-                output.append({
+                record = {
                     "study_id": approval.study_id,
                     "pi_uid": pi_details.uid,
                     "pi": pi_details.display_name,
                     "name": person.display_name,
+                    "uid": person.uid,
                     "email": person.email_address,
+                    "supervisor": "",
                     "review_complete": review_complete,
-                })
+                }
+                # We only know the PI's supervisor.
+                if person.uid == pi_details.uid:
+                    record["supervisor"] = pi_supervisor
+
+                output.append(record)
+
         except Exception as e:
             errors.append("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
     return {"results": output, "errors": errors }

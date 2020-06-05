@@ -103,7 +103,7 @@ class LookupService(object):
                                                            workflow_id=workflow_model.id,
                                                            name=file_name)
             if len(latest_files) < 1:
-                raise ApiError("missing_file", "Unable to locate the lookup data file '%s'" % file_name)
+                raise ApiError("invalid_enum", "Unable to locate the lookup data file '%s'" % file_name)
             else:
                 data_model = latest_files[0]
 
@@ -189,7 +189,7 @@ class LookupService(object):
 
     @staticmethod
     def _run_ldap_query(query, limit):
-        users = LdapService().search_users(query, limit)
+        users = LdapService.search_users(query, limit)
 
         """Converts the user models into something akin to the
         LookupModel in models/file.py, so this can be returned in the same way 
