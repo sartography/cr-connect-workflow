@@ -27,18 +27,42 @@ class ApprovalService(object):
         if not include_cancelled:
             query=query.filter(ApprovalModel.status != ApprovalStatus.CANCELED.value)
 
-        approvals = query.all()
+        approvals = query.all()  ## all non-cancelled approvals.
+        study_approval_status = ""
+
+        # IF THIS IS RELATED TO THE CURRENT USER
         for approval_model in approvals:
             if approval_model.approver_uid == approver_uid:
                 main_approval = Approval.from_model(approval_model)
             else:
                 related_approvals.append(Approval.from_model(approval_model))
+
+        # IF WE ARE JUST RETURNING ALL OF THE APPROVALS PER STUDY
         if not main_approval and len(related_approvals) > 0:
             main_approval = related_approvals[0]
             related_approvals = related_approvals[1:]
+
+        if(main_approval): # May be null if the study has no approvals.
+            main_approval.status = ApprovalService.__calculate_overall_approval_status(main_approval)
+
         if len(related_approvals) > 0:
             main_approval.related_approvals = related_approvals
         return main_approval
+
+    @staticmethod
+    def __calculate_overall_approval_status(approval):
+        # In the case of pending approvals, check to see if there is a related approval
+        # that proceeds this approval - and if it is declined, or still pending, then change
+        # the state of the approval to be Delcined, or Waiting respectively.
+        if approval.status == ApprovalStatus.PENDING.value:
+            for ra in approval.related_approvals:
+                if ra.id < approval.id:
+                    if ra.status == ApprovalStatus.DECLINED.value or ra.status == ApprovalStatus.CANCELED.value:
+                        return ra.status  # If any prior approval id declined or cancelled so is this approval.
+                    elif ra.status == ApprovalStatus.PENDING.value:
+                        return ApprovalStatus.AWAITING.value  # if any prior approval is pending, then this is waiting.
+        else:
+            return approval.status
 
     @staticmethod
     def get_approvals_per_user(approver_uid, include_cancelled=False):

@@ -20,6 +20,9 @@ class ApprovalStatus(enum.Enum):
     DECLINED = "DECLINED" # rejected by the reviewer
     CANCELED = "CANCELED" # The document was replaced with a new version and this review is no longer needed.
 
+    # Used for overall status only, never set on a task.
+    AWAITING = "AWAITING"   # awaiting another approval
+
 
 class ApprovalFile(db.Model):
     file_data_id = db.Column(db.Integer, db.ForeignKey(FileDataModel.id), primary_key=True)

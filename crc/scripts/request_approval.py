@@ -11,7 +11,8 @@ class RequestApproval(Script):
         return """
 Creates an approval request on this workflow, by the given approver_uid(s),"
 Takes multiple arguments, which should point to data located in current task
-or be quoted strings.
+or be quoted strings. The order is important.  Approvals will be processed 
+in this order.
 
 Example:
 RequestApproval approver1 "dhf8r"
