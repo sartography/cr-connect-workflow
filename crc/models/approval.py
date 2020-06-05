@@ -84,13 +84,13 @@ class Approval(object):
         instance.associated_files = []
         for approval_file in model.approval_files:
             try:
+                # fixme: This is slow because we are doing a ton of queries to find the irb code.
                 extra_info = doc_dictionary[approval_file.file_data.file_model.irb_doc_code]
             except:
                 extra_info = None
             associated_file = {}
             associated_file['id'] = approval_file.file_data.file_model.id
             if extra_info:
-                irb_doc_code = approval_file.file_data.file_model.irb_doc_code
                 associated_file['name'] = '_'.join((extra_info['category1'],
                                                     approval_file.file_data.file_model.name))
                 associated_file['description'] = extra_info['description']
