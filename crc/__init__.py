@@ -54,12 +54,6 @@ if app.config['ENABLE_SENTRY']:
 template_dir = os.getcwd() + '/crc/static/templates/mails'
 env = Environment(loader=FileSystemLoader(template_dir))
 # Mail settings
-app.config['MAIL_SERVER']='smtp.mailtrap.io'
-app.config['MAIL_PORT'] = 2525
-app.config['MAIL_USERNAME'] = '5f012d0108d374'
-app.config['MAIL_PASSWORD'] = '08442c04e98d50'
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
 mail = Mail(app)
 
 print('=== USING THESE CONFIG SETTINGS: ===')

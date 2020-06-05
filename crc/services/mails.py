@@ -59,6 +59,7 @@ def send_ramp_up_approved_email(sender, recipients, approver_1, approver_2=None)
         msg = Message('Research Ramp-up Plan Approved',
               sender=sender,
               recipients=recipients)
+
         from crc import env, mail
         template = env.get_template('ramp_up_approved.txt')
         template_vars = {'approver_1': approver_1, 'approver_2': approver_2}
