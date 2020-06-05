@@ -23,7 +23,7 @@ class TestMails(BaseTest):
         send_ramp_up_submission_email(self.sender, self.recipients, self.approver_1)
         self.assertTrue(True)
 
-        send_ramp_up_submission_email(self.sender, self.recipients, self.approver_1)
+        send_ramp_up_submission_email(self.sender, self.recipients, self.approver_1, self.approver_2)
         self.assertTrue(True)
 
     def test_send_ramp_up_approval_request_email(self):
@@ -32,7 +32,7 @@ class TestMails(BaseTest):
 
     def test_send_ramp_up_approval_request_first_review_email(self):
         send_ramp_up_approval_request_first_review_email(
-            self.sender, self.recipients, self.primary_investigator, self.approver_1
+            self.sender, self.recipients, self.primary_investigator
         )
         self.assertTrue(True)
 

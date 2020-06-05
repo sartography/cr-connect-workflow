@@ -44,4 +44,5 @@ PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL +
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=3))
 
-
+# Fallback emails
+FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']

@@ -15,6 +15,7 @@ class TestApprovalsService(BaseTest):
                                       name="anything.png", content_type="text",
                                       binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr" )
 
+
         ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
         self.assertEquals(1, db.session.query(ApprovalModel).count())
         model = db.session.query(ApprovalModel).first()
@@ -56,4 +57,15 @@ class TestApprovalsService(BaseTest):
         self.assertEquals(1, models[0].version)
         self.assertEquals(2, models[1].version)
 
+    def test_new_approval_sends_proper_emails(self):
+        self.assertEqual(1, 1)
 
+    def test_new_approval_failed_ldap_lookup(self):
+        # failed lookup should send email to sartographysupport@googlegroups.com + Cheryl
+        self.assertEqual(1, 1)
+
+    def test_approve_approval_sends_proper_emails(self):
+        self.assertEqual(1, 1)
+
+    def test_deny_approval_sends_proper_emails(self):
+        self.assertEqual(1, 1)

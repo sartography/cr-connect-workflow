@@ -64,7 +64,7 @@ class LdapService(object):
             # Search by user_id or last name
             search_string = LdapService.user_or_last_name_search % (query, query)
         results = []
-        print(search_string)
+        app.logger.info(search_string)
         try:
             self.conn.search(LdapService.search_base, search_string, attributes=LdapService.attributes)
             # Entries are returned as a generator, accessing entries

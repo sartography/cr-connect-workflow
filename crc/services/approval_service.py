@@ -2,13 +2,21 @@ from datetime import datetime
 
 from sqlalchemy import desc
 
-from crc import db, session
+from crc import app, db, session
 from crc.api.common import ApiError
 
 from crc.models.approval import ApprovalModel, ApprovalStatus, ApprovalFile, Approval
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 from crc.services.file_service import FileService
+from crc.services.ldap_service import LdapService
+from crc.services.mails import (
+    send_ramp_up_submission_email,
+    # send_ramp_up_approval_request_email,
+    send_ramp_up_approval_request_first_review_email,
+    # send_ramp_up_approved_email,
+    # send_ramp_up_denied_email
+)
 
 
 class ApprovalService(object):
@@ -97,8 +105,8 @@ class ApprovalService(object):
                 if first_approval:
                     # Second approver denies
                     # send rrp denied by second approver email to first approver
+                    pass
                 # send rrp denied email
-                pass
         # TODO: Log update action by approver_uid - maybe ?
         return db_approval
 
@@ -151,17 +159,31 @@ class ApprovalService(object):
 
         # Check approvals count
         approvals_count = ApprovalModel().query.filter_by(study_id=study_id, workflow_id=workflow_id,
-                                        status=ApprovalStatus.PENDING.value,
                                         version=version).count()
-        # Send first email
-        if approvals_count == 0:
-            # send rrp submission
-            # send rrp approval request for first approver
-            pass
 
         db.session.add(model)
         db.session.add_all(approval_files)
         db.session.commit()
+
+        # Send first email
+        if approvals_count == 0:
+            ldap_service = LdapService()
+            pi_user_info = ldap_service.user_info(model.study.primary_investigator_id)
+            approver_info = ldap_service.user_info(approver_uid)
+            # send rrp submission
+            send_ramp_up_submission_email(
+                'askresearch@virginia.edu',
+                [pi_user_info.email_address],
+                f'{approver_info.display_name} - ({approver_info.uid})'
+            )
+            # send rrp approval request for first approver
+            # enhance the second part in case it bombs
+            approver_email = [approver_info.email_address] if approver_info.email_address else app.config['FALLBACK_EMAILS']
+            send_ramp_up_approval_request_first_review_email(
+                'askresearch@virginia.edu',
+                approver_email,
+                f'{pi_user_info.display_name} - ({pi_user_info.uid})'
+            )
 
     @staticmethod
     def _create_approval_files(workflow_data_files, approval):
