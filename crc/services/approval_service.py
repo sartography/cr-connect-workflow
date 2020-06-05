@@ -2,7 +2,7 @@ from datetime import datetime
 
 from sqlalchemy import desc
 
-from crc import db, session
+from crc import app, db, session
 from crc.api.common import ApiError
 
 from crc.models.approval import ApprovalModel, ApprovalStatus, ApprovalFile, Approval
@@ -10,6 +10,14 @@ from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
+from crc.services.mails import (
+    send_ramp_up_submission_email,
+    send_ramp_up_approval_request_email,
+    send_ramp_up_approval_request_first_review_email,
+    send_ramp_up_approved_email,
+    send_ramp_up_denied_email,
+    send_ramp_up_denied_email_to_approver
+)
 
 
 class ApprovalService(object):
@@ -84,6 +92,45 @@ class ApprovalService(object):
             db_approval.status = status
             session.add(db_approval)
             session.commit()
+            if status == ApprovalStatus.APPROVED.value:
+                # second_approval = ApprovalModel().query.filter_by(
+                #     study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
+                #     status=ApprovalStatus.PENDING.value, version=db_approval.version).first()
+                # if second_approval:
+                    # send rrp approval request for second approver
+                ldap_service = LdapService()
+                pi_user_info = ldap_service.user_info(model.study.primary_investigator_id)
+                approver_info = ldap_service.user_info(approver_uid)
+                # send rrp submission
+                send_ramp_up_approved_email(
+                    'askresearch@virginia.edu',
+                    [pi_user_info.email_address],
+                    f'{approver_info.display_name} - ({approver_info.uid})'
+                )
+            elif status == ApprovalStatus.DECLINED.value:
+                ldap_service = LdapService()
+                pi_user_info = ldap_service.user_info(model.study.primary_investigator_id)
+                approver_info = ldap_service.user_info(approver_uid)
+                # send rrp submission
+                send_ramp_up_denied_email(
+                    'askresearch@virginia.edu',
+                    [pi_user_info.email_address],
+                    f'{approver_info.display_name} - ({approver_info.uid})'
+                )
+                first_approval = ApprovalModel().query.filter_by(
+                    study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
+                    status=ApprovalStatus.APPROVED.value, version=db_approval.version).first()
+                if first_approval:
+                    # Second approver denies
+                    first_approver_info = ldap_service.user_info(first_approval.approver_uid)
+                    approver_email = [first_approver_info.email_address] if first_approver_info.email_address else app.config['FALLBACK_EMAILS']
+                    # send rrp denied by second approver email to first approver
+                    send_ramp_up_denied_email_to_approver(
+                        'askresearch@virginia.edu',
+                        approver_email,
+                        f'{pi_user_info.display_name} - ({pi_user_info.uid})',
+                        f'{approver_info.display_name} - ({approver_info.uid})'
+                    )
         # TODO: Log update action by approver_uid - maybe ?
         return db_approval
 
@@ -133,9 +180,34 @@ class ApprovalService(object):
                               message="", date_created=datetime.now(),
                               version=version)
         approval_files = ApprovalService._create_approval_files(workflow_data_files, model)
+
+        # Check approvals count
+        approvals_count = ApprovalModel().query.filter_by(study_id=study_id, workflow_id=workflow_id,
+                                        version=version).count()
+
         db.session.add(model)
         db.session.add_all(approval_files)
         db.session.commit()
+
+        # Send first email
+        if approvals_count == 0:
+            ldap_service = LdapService()
+            pi_user_info = ldap_service.user_info(model.study.primary_investigator_id)
+            approver_info = ldap_service.user_info(approver_uid)
+            # send rrp submission
+            send_ramp_up_submission_email(
+                'askresearch@virginia.edu',
+                [pi_user_info.email_address],
+                f'{approver_info.display_name} - ({approver_info.uid})'
+            )
+            # send rrp approval request for first approver
+            # enhance the second part in case it bombs
+            approver_email = [approver_info.email_address] if approver_info.email_address else app.config['FALLBACK_EMAILS']
+            send_ramp_up_approval_request_first_review_email(
+                'askresearch@virginia.edu',
+                approver_email,
+                f'{pi_user_info.display_name} - ({pi_user_info.uid})'
+            )
 
     @staticmethod
     def _create_approval_files(workflow_data_files, approval):

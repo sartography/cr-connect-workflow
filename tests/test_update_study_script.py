@@ -19,5 +19,5 @@ class TestUpdateStudyScript(BaseTest):
 
         script = UpdateStudy()
         script.do_task(task, workflow.study_id, workflow.id, "title:details.label", "pi:details.value")
-        self.assertEquals("My New Title", workflow.study.title)
-        self.assertEquals("dhf8r", workflow.study.primary_investigator_id)
+        self.assertEqual("My New Title", workflow.study.title)
+        self.assertEqual("dhf8r", workflow.study.primary_investigator_id)
