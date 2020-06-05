@@ -111,5 +111,9 @@ def update_approval(approval_id, body):
     session.add(approval_model)
     session.commit()
 
+    # Called only to send emails
+    approver = body['approver']['uid']
+    ApprovalService.update_approval(approval_id, approver)
+
     result = ApprovalSchema().dump(approval_model)
     return result

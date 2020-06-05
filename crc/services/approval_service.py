@@ -85,13 +85,14 @@ class ApprovalService(object):
 
 
     @staticmethod
-    def update_approval(approval_id, approver_uid, status):
+    def update_approval(approval_id, approver_uid):
         """Update a specific approval"""
         db_approval = session.query(ApprovalModel).get(approval_id)
+        status = db_approval.status
         if db_approval:
-            db_approval.status = status
-            session.add(db_approval)
-            session.commit()
+            # db_approval.status = status
+            # session.add(db_approval)
+            # session.commit()
             if status == ApprovalStatus.APPROVED.value:
                 # second_approval = ApprovalModel().query.filter_by(
                 #     study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
@@ -99,7 +100,7 @@ class ApprovalService(object):
                 # if second_approval:
                     # send rrp approval request for second approver
                 ldap_service = LdapService()
-                pi_user_info = ldap_service.user_info(model.study.primary_investigator_id)
+                pi_user_info = ldap_service.user_info(db_approval.study.primary_investigator_id)
                 approver_info = ldap_service.user_info(approver_uid)
                 # send rrp submission
                 send_ramp_up_approved_email(
@@ -109,7 +110,7 @@ class ApprovalService(object):
                 )
             elif status == ApprovalStatus.DECLINED.value:
                 ldap_service = LdapService()
-                pi_user_info = ldap_service.user_info(model.study.primary_investigator_id)
+                pi_user_info = ldap_service.user_info(db_approval.study.primary_investigator_id)
                 approver_info = ldap_service.user_info(approver_uid)
                 # send rrp submission
                 send_ramp_up_denied_email(
