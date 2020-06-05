@@ -17,12 +17,12 @@ class TestApprovalsService(BaseTest):
 
 
         ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
-        self.assertEquals(1, db.session.query(ApprovalModel).count())
+        self.assertEqual(1, db.session.query(ApprovalModel).count())
         model = db.session.query(ApprovalModel).first()
-        self.assertEquals(workflow.study_id, model.study_id)
-        self.assertEquals(workflow.id, model.workflow_id)
-        self.assertEquals("dhf8r", model.approver_uid)
-        self.assertEquals(1, model.version)
+        self.assertEqual(workflow.study_id, model.study_id)
+        self.assertEqual(workflow.id, model.workflow_id)
+        self.assertEqual("dhf8r", model.approver_uid)
+        self.assertEqual(1, model.version)
 
     def test_new_requests_dont_add_if_approval_exists_for_current_workflow(self):
         self.create_reference_document()
@@ -33,9 +33,9 @@ class TestApprovalsService(BaseTest):
 
         ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
         ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
-        self.assertEquals(1, db.session.query(ApprovalModel).count())
+        self.assertEqual(1, db.session.query(ApprovalModel).count())
         model = db.session.query(ApprovalModel).first()
-        self.assertEquals(1, model.version)
+        self.assertEqual(1, model.version)
 
     def test_new_approval_requests_after_file_modification_create_new_requests(self):
         self.load_example_data()
@@ -52,10 +52,10 @@ class TestApprovalsService(BaseTest):
                                       binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr")
 
         ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
-        self.assertEquals(2, db.session.query(ApprovalModel).count())
+        self.assertEqual(2, db.session.query(ApprovalModel).count())
         models = db.session.query(ApprovalModel).order_by(ApprovalModel.version).all()
-        self.assertEquals(1, models[0].version)
-        self.assertEquals(2, models[1].version)
+        self.assertEqual(1, models[0].version)
+        self.assertEqual(2, models[1].version)
 
     def test_new_approval_sends_proper_emails(self):
         self.assertEqual(1, 1)
