@@ -24,7 +24,7 @@ class TestRequestApprovalScript(BaseTest):
                                       binary_data=b'1234')
         script = RequestApproval()
         script.do_task(task, workflow.study_id, workflow.id, "study.approval1", "study.approval2")
-        self.assertEquals(2, db.session.query(ApprovalModel).count())
+        self.assertEqual(2, db.session.query(ApprovalModel).count())
 
     def test_do_task_with_blank_second_approver(self):
         self.load_example_data()
@@ -39,7 +39,7 @@ class TestRequestApprovalScript(BaseTest):
                                       binary_data=b'1234')
         script = RequestApproval()
         script.do_task(task, workflow.study_id, workflow.id, "study.approval1", "study.approval2")
-        self.assertEquals(1, db.session.query(ApprovalModel).count())
+        self.assertEqual(1, db.session.query(ApprovalModel).count())
 
 
     def test_do_task_with_incorrect_argument(self):
@@ -64,5 +64,5 @@ class TestRequestApprovalScript(BaseTest):
 
         script = RequestApproval()
         script.do_task_validate_only(task, workflow.study_id, workflow.id, "study.approval1")
-        self.assertEquals(0, db.session.query(ApprovalModel).count())
+        self.assertEqual(0, db.session.query(ApprovalModel).count())
 

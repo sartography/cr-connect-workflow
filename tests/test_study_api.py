@@ -87,10 +87,10 @@ class TestStudyApi(BaseTest):
                                     headers=self.logged_in_headers(), content_type="application/json")
         self.assert_success(api_response)
         study = StudySchema().loads(api_response.get_data(as_text=True))
-        self.assertEquals(1, len(study.files))
-        self.assertEquals("UVA Compliance/PRC Approval", study.files[0]["category"])
-        self.assertEquals("Cancer Center's PRC Approval Form", study.files[0]["description"])
-        self.assertEquals("UVA Compliance/PRC Approval.png", study.files[0]["download_name"])
+        self.assertEqual(1, len(study.files))
+        self.assertEqual("UVA Compliance/PRC Approval", study.files[0]["category"])
+        self.assertEqual("Cancer Center's PRC Approval Form", study.files[0]["description"])
+        self.assertEqual("UVA Compliance/PRC Approval.png", study.files[0]["download_name"])
 
         # TODO: WRITE A TEST FOR STUDY FILES
 
@@ -180,10 +180,10 @@ class TestStudyApi(BaseTest):
         db_studies_after = session.query(StudyModel).all()
         num_db_studies_after = len(db_studies_after)
         self.assertGreater(num_db_studies_after, num_db_studies_before)
-        self.assertEquals(num_abandoned, 1)
-        self.assertEquals(num_open, 1)
-        self.assertEquals(num_active, 1)
-        self.assertEquals(num_incomplete, 1)
+        self.assertEqual(num_abandoned, 1)
+        self.assertEqual(num_open, 1)
+        self.assertEqual(num_active, 1)
+        self.assertEqual(num_incomplete, 1)
         self.assertEqual(len(json_data), num_db_studies_after)
         self.assertEqual(num_open + num_active + num_incomplete + num_abandoned, num_db_studies_after)
 
