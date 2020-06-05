@@ -82,7 +82,7 @@ class WorkflowService(object):
             processor = WorkflowProcessor(workflow_model, validate_only=True)
         except WorkflowException as we:
             WorkflowService.delete_test_data()
-            raise ApiError.from_workflow_exception("workflow_execution_exception", str(we), we)
+            raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         while not processor.bpmn_workflow.is_completed():
             try:
@@ -96,7 +96,7 @@ class WorkflowService(object):
                     task.complete()
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
-                raise ApiError.from_workflow_exception("workflow_execution_exception", str(we), we)
+                raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         WorkflowService.delete_test_data()
         return processor.bpmn_workflow.last_task.data
@@ -162,7 +162,7 @@ class WorkflowService(object):
                     options.append({"id": d.value, "label": d.label})
                 return random.choice(options)
             else:
-                raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
+                raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
         elif field.type == "long":
             return random.randint(1, 1000)
