@@ -61,6 +61,7 @@ class ApprovalService(object):
                         return ra.status  # If any prior approval id declined or cancelled so is this approval.
                     elif ra.status == ApprovalStatus.PENDING.value:
                         return ApprovalStatus.AWAITING.value  # if any prior approval is pending, then this is waiting.
+            return approval.status
         else:
             return approval.status
 
