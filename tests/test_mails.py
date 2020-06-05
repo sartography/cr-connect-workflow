@@ -6,7 +6,8 @@ from crc.services.mails import (
     send_ramp_up_approval_request_email,
     send_ramp_up_approval_request_first_review_email,
     send_ramp_up_approved_email,
-    send_ramp_up_denied_email
+    send_ramp_up_denied_email,
+    send_ramp_up_denied_email_to_approver
 )
 
 
@@ -45,4 +46,10 @@ class TestMails(BaseTest):
 
     def test_send_ramp_up_denied_email(self):
         send_ramp_up_denied_email(self.sender, self.recipients, self.approver_1)
+        self.assertTrue(True)
+
+    def test_send_send_ramp_up_denied_email_to_approver(self):
+        send_ramp_up_denied_email_to_approver(
+            self.sender, self.recipients, self.primary_investigator, self.approver_2
+        )
         self.assertTrue(True)

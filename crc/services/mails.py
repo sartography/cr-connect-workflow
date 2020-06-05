@@ -90,3 +90,20 @@ def send_ramp_up_denied_email(sender, recipients, approver):
         mail.send(msg)
     except Exception as e:
         return str(e)
+
+def send_ramp_up_denied_email_to_approver(sender, recipients, primary_investigator, approver_2):
+    try:
+        msg = Message('Research Ramp-up Plan Denied',
+              sender=sender,
+              recipients=recipients)
+
+        from crc import env, mail
+        template = env.get_template('ramp_up_denied_first_approver.txt')
+        template_vars = {'primary_investigator': primary_investigator, 'approver_2': approver_2}
+        msg.body = template.render(template_vars)
+        template = env.get_template('ramp_up_denied_first_approver.html')
+        msg.html = template.render(template_vars)
+
+        mail.send(msg)
+    except Exception as e:
+        return str(e)
