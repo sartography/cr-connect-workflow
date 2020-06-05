@@ -27,7 +27,7 @@ class ApprovalService(object):
         if not include_cancelled:
             query=query.filter(ApprovalModel.status != ApprovalStatus.CANCELED.value)
 
-        approvals = query.all()  ## all non-cancelled approvals.
+        approvals = query.all()  # All non-cancelled approvals.
         study_approval_status = ""
 
         # IF THIS IS RELATED TO THE CURRENT USER
@@ -42,18 +42,19 @@ class ApprovalService(object):
             main_approval = related_approvals[0]
             related_approvals = related_approvals[1:]
 
-        if(main_approval): # May be null if the study has no approvals.
-            main_approval.status = ApprovalService.__calculate_overall_approval_status(main_approval)
-
         if len(related_approvals) > 0:
             main_approval.related_approvals = related_approvals
+
+        if main_approval is not None:  # May be null if the study has no approvals.
+            main_approval.status = ApprovalService.__calculate_overall_approval_status(main_approval)
+
         return main_approval
 
     @staticmethod
     def __calculate_overall_approval_status(approval):
         # In the case of pending approvals, check to see if there is a related approval
         # that proceeds this approval - and if it is declined, or still pending, then change
-        # the state of the approval to be Delcined, or Waiting respectively.
+        # the state of the approval to be Declined, or Waiting respectively.
         if approval.status == ApprovalStatus.PENDING.value:
             for ra in approval.related_approvals:
                 if ra.id < approval.id:
