@@ -106,7 +106,7 @@ class TestApprovals(BaseTest):
     def test_accept_approval(self):
         approval = session.query(ApprovalModel).filter_by(approver_uid='dhf8r').first()
         data = {'id': approval.id,
-                "approver_uid": "dhf8r",
+                "approver": {"uid": "dhf8r"},
                 'message': "Approved.  I like the cut of your jib.",
                 'status': ApprovalStatus.APPROVED.value}
 
@@ -127,7 +127,7 @@ class TestApprovals(BaseTest):
     def test_decline_approval(self):
         approval = session.query(ApprovalModel).filter_by(approver_uid='dhf8r').first()
         data = {'id': approval.id,
-                "approver_uid": "dhf8r",
+                "approver": {"uid": "dhf8r"},
                 'message': "Approved.  I find the cut of your jib lacking.",
                 'status': ApprovalStatus.DECLINED.value}
 
