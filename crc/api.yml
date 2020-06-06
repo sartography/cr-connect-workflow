@@ -806,12 +806,34 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Script"
+  /approval-counts:
+    parameters:
+      - name: as_user
+        in: query
+        required: false
+        description: If provided, returns the approval counts for that user.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.approval.get_approval_counts
+      summary: Provides counts for approvals by status for the given user, or all users if no user is provided
+      tags:
+      - Approvals
+      responses:
+        '200':
+          description: An dictionary of Approval Statuses and the counts for each
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApprovalCounts"
   /approval:
     parameters:
       - name: status
         in: query
         required: false
-        description: If set to true, returns all the approvals with any status.
+        description: If provided, returns just approvals for the given status.
         schema:
           type: string
       - name: as_user
@@ -1283,6 +1305,28 @@ components:
     Approval:
       properties:
         id:
+          type: number
+          format: integer
+          example: 5
+    ApprovalCounts:
+      properties:
+        PENDING:
+          type: number
+          format: integer
+          example: 5
+        APPROVED:
+          type: number
+          format: integer
+          example: 5
+        DECLINED:
+          type: number
+          format: integer
+          example: 5
+        CANCELED:
+          type: number
+          format: integer
+          example: 5
+        AWAITING:
           type: number
           format: integer
           example: 5
