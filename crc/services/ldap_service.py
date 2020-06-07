@@ -18,7 +18,7 @@ class LdapService(object):
     user_or_last_name_search = "(&(objectclass=person)(|(uid=%s*)(sn=%s*)))"
     cn_single_search = '(&(objectclass=person)(cn=%s*))'
     cn_double_search = '(&(objectclass=person)(&(cn=%s*)(cn=*%s*)))'
-
+    temp_cache = {}
     conn = None
 
     @staticmethod
@@ -43,6 +43,7 @@ class LdapService(object):
     def user_info(uva_uid):
         user_info = db.session.query(LdapModel).filter(LdapModel.uid == uva_uid).first()
         if not user_info:
+            app.logger.info("No cache for " + uva_uid)
             search_string = LdapService.uid_search_string % uva_uid
             conn = LdapService.__get_conn()
             conn.search(LdapService.search_base, search_string, attributes=LdapService.attributes)
@@ -51,6 +52,7 @@ class LdapService(object):
             entry = conn.entries[0]
             user_info = LdapModel.from_entry(entry)
             db.session.add(user_info)
+            db.session.commit()
         return user_info
 
     @staticmethod
