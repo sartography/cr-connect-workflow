@@ -68,16 +68,15 @@ class TestApprovals(BaseTest):
         approval = response[0]
         self.assertEqual(approval['approver']['uid'], approver_uid)
 
-    def test_list_approvals_per_admin(self):
-        """All approvals will be returned"""
-        rv = self.app.get('/v1.0/approval?everything=true', headers=self.logged_in_headers())
+    def test_list_approvals_as_user(self):
+        """All approvals as different user"""
+        rv = self.app.get('/v1.0/approval?as_user=lb3dp', headers=self.logged_in_headers())
         self.assert_success(rv)
 
         response = json.loads(rv.get_data(as_text=True))
 
-        # Returned approvals should match what's in the db, we should get one approval back
-        # per study (2 studies), and that approval should have one related approval.
-        approvals_count = ApprovalModel.query.count()
+        # Returned approvals should match what's in the db for user ld3dp, we should get one
+        # approval back per study (2 studies), and that approval should have one related approval.
         response_count = len(response)
         self.assertEqual(2, response_count)
 
@@ -106,7 +105,7 @@ class TestApprovals(BaseTest):
     def test_accept_approval(self):
         approval = session.query(ApprovalModel).filter_by(approver_uid='dhf8r').first()
         data = {'id': approval.id,
-                "approver_uid": "dhf8r",
+                "approver": {"uid": "dhf8r"},
                 'message': "Approved.  I like the cut of your jib.",
                 'status': ApprovalStatus.APPROVED.value}
 
@@ -127,7 +126,7 @@ class TestApprovals(BaseTest):
     def test_decline_approval(self):
         approval = session.query(ApprovalModel).filter_by(approver_uid='dhf8r').first()
         data = {'id': approval.id,
-                "approver_uid": "dhf8r",
+                "approver": {"uid": "dhf8r"},
                 'message': "Approved.  I find the cut of your jib lacking.",
                 'status': ApprovalStatus.DECLINED.value}
 

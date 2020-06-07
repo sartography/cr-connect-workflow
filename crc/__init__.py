@@ -3,8 +3,10 @@ import os
 import sentry_sdk
 
 import connexion
+from jinja2 import Environment, FileSystemLoader
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
+from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sentry_sdk.integrations.flask import FlaskIntegration
@@ -48,6 +50,12 @@ if app.config['ENABLE_SENTRY']:
         integrations=[FlaskIntegration()]
     )
 
+# Jinja environment definition, used to render mail templates
+template_dir = os.getcwd() + '/crc/static/templates/mails'
+env = Environment(loader=FileSystemLoader(template_dir))
+# Mail settings
+mail = Mail(app)
+
 print('=== USING THESE CONFIG SETTINGS: ===')
 print('DB_HOST = ', )
 print('CORS_ALLOW_ORIGINS = ', app.config['CORS_ALLOW_ORIGINS'])
@@ -73,3 +81,9 @@ def load_example_rrt_data():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
     ExampleDataLoader().load_rrt()
+
+@app.cli.command()
+def clear_db():
+    """Load example data into the database."""
+    from example_data import ExampleDataLoader
+    ExampleDataLoader.clean_db()
