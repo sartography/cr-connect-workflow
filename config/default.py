@@ -14,6 +14,9 @@ PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")
 TEST_UID = environ.get('TEST_UID', default="dhf8r")
 ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,ajl2j,cah13us,cl3wf"))
 
+# Sentry flag
+ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"
+
 # Add trailing slash to base path
 APPLICATION_ROOT = re.sub(r'//', '/', '/%s/' % environ.get('APPLICATION_ROOT', default="/").strip('/'))
 
@@ -40,6 +43,7 @@ PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL +
 PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
 
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
-LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=3))
+LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
-
+# Fallback emails
+FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']

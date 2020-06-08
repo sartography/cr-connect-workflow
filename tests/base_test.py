@@ -123,7 +123,6 @@ class BaseTest(unittest.TestCase):
         """use_crc_data will cause this to load the mammoth collection of documents
         we built up developing crc, use_rrt_data will do the same for hte rrt project,
          otherwise it depends on a small setup for running tests."""
-
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
         if use_crc_data:
@@ -232,7 +231,7 @@ class BaseTest(unittest.TestCase):
         if study is None:
             user = self.create_user(uid=uid)
             study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.ACTIVE,
-                               user_uid=user.uid)
+                               user_uid=user.uid, primary_investigator_id='lb3dp')
             db.session.add(study)
             db.session.commit()
         return study

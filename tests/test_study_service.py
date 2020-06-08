@@ -153,7 +153,7 @@ class TestStudyService(BaseTest):
         self.assertEqual(1, docs["UVACompl_PRCAppr"]['count'])
         self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0])
         self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0]['file_id'])
-        self.assertEquals(workflow.id, docs["UVACompl_PRCAppr"]['files'][0]['workflow_id'])
+        self.assertEqual(workflow.id, docs["UVACompl_PRCAppr"]['files'][0]['workflow_id'])
 
     def test_get_all_studies(self):
         user = self.create_user_with_study_and_workflow()
@@ -174,8 +174,8 @@ class TestStudyService(BaseTest):
                                       binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
 
         studies = StudyService().get_all_studies_with_files()
-        self.assertEquals(1, len(studies))
-        self.assertEquals(3, len(studies[0].files))
+        self.assertEqual(1, len(studies))
+        self.assertEqual(3, len(studies[0].files))
 
 
 
@@ -191,17 +191,17 @@ class TestStudyService(BaseTest):
         workflow = self.create_workflow('docx') # The workflow really doesnt matter in this case.
         investigators = StudyService().get_investigators(workflow.study_id)
 
-        self.assertEquals(9, len(investigators))
+        self.assertEqual(9, len(investigators))
 
         # dhf8r is in the ldap mock data.
-        self.assertEquals("dhf8r", investigators['PI']['user_id'])
-        self.assertEquals("Dan Funk", investigators['PI']['display_name']) # Data from ldap
-        self.assertEquals("Primary Investigator", investigators['PI']['label']) # Data from xls file.
-        self.assertEquals("Always", investigators['PI']['display']) # Data from xls file.
+        self.assertEqual("dhf8r", investigators['PI']['user_id'])
+        self.assertEqual("Dan Funk", investigators['PI']['display_name']) # Data from ldap
+        self.assertEqual("Primary Investigator", investigators['PI']['label']) # Data from xls file.
+        self.assertEqual("Always", investigators['PI']['display']) # Data from xls file.
 
         # asd3v is not in ldap, so an error should be returned.
-        self.assertEquals("asd3v", investigators['DC']['user_id'])
-        self.assertEquals("Unable to locate a user with id asd3v in LDAP", investigators['DC']['error']) # Data from ldap
+        self.assertEqual("asd3v", investigators['DC']['user_id'])
+        self.assertEqual("Unable to locate a user with id asd3v in LDAP", investigators['DC']['error']) # Data from ldap
 
         # No value is provided for Department Chair
         self.assertIsNone(investigators['DEPT_CH']['user_id'])

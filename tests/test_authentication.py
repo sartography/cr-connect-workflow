@@ -63,10 +63,10 @@ class TestAuthentication(BaseTest):
         self.assert_success(rv)
         user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNotNone(user)
-        self.assertEquals(new_uid, user.uid)
-        self.assertEquals("Laura Barnes", user.display_name)
-        self.assertEquals("lb3dp@virginia.edu", user.email_address)
-        self.assertEquals("E0:Associate Professor of Systems and Information Engineering", user.title)
+        self.assertEqual(new_uid, user.uid)
+        self.assertEqual("Laura Barnes", user.display_name)
+        self.assertEqual("lb3dp@virginia.edu", user.email_address)
+        self.assertEqual("E0:Associate Professor of Systems and Information Engineering", user.title)
 
         # Switch production mode back off
         app.config['PRODUCTION'] = False

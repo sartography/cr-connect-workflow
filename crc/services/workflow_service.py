@@ -82,7 +82,7 @@ class WorkflowService(object):
             processor = WorkflowProcessor(workflow_model, validate_only=True)
         except WorkflowException as we:
             WorkflowService.delete_test_data()
-            raise ApiError.from_workflow_exception("workflow_execution_exception", str(we), we)
+            raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         while not processor.bpmn_workflow.is_completed():
             try:
@@ -96,7 +96,7 @@ class WorkflowService(object):
                     task.complete()
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
-                raise ApiError.from_workflow_exception("workflow_execution_exception", str(we), we)
+                raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         WorkflowService.delete_test_data()
         return processor.bpmn_workflow.last_task.data
@@ -107,11 +107,13 @@ class WorkflowService(object):
 
         if not hasattr(task.task_spec, 'form'): return
 
-        form_data = {}
+        form_data = task.data # Just like with the front end, we start with what was already there, and modify it.
         for field in task_api.form.fields:
             if required_only and (not field.has_validation(Task.VALIDATION_REQUIRED) or
                                   field.get_validation(Task.VALIDATION_REQUIRED).lower().strip() != "true"):
                 continue # Don't include any fields that aren't specifically marked as required.
+            if field.has_property("read_only") and field.get_property("read_only").lower().strip() == "true":
+                continue # Don't mess about with read only fields.
             if field.has_property(Task.PROP_OPTIONS_REPEAT):
                 group = field.get_property(Task.PROP_OPTIONS_REPEAT)
                 if group not in form_data:
@@ -157,10 +159,10 @@ class WorkflowService(object):
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
                 options = []
                 for d in data:
-                    options.append({"id": d.value, "name": d.label})
+                    options.append({"id": d.value, "label": d.label})
                 return random.choice(options)
             else:
-                raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
+                raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
         elif field.type == "long":
             return random.randint(1, 1000)
@@ -294,11 +296,11 @@ class WorkflowService(object):
             template = Template(raw_doc)
             return template.render(**spiff_task.data)
         except jinja2.exceptions.TemplateError as ue:
-            raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
-                                                          (spiff_task.task_spec.name, str(ue)), status_code=500)
+            raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
+                                                          (spiff_task.task_spec.name, str(ue)), task=spiff_task)
         except TypeError as te:
-            raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
-                                                          (spiff_task.task_spec.name, str(te)), status_code=500)
+            raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
+                                                          (spiff_task.task_spec.name, str(te)), task=spiff_task)
         # TODO:  Catch additional errors and report back.
 
     @staticmethod

@@ -139,6 +139,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
+  /study/{study_id}/approvals:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which workflows should be returned.
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.approval.get_approvals_for_study
+      summary: Returns approvals for a single study
+      tags:
+        - Studies
+        - Approvals
+      responses:
+        '200':
+          description: An array of approvals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -420,7 +444,7 @@ paths:
                 $ref: "#/components/schemas/File"
     delete:
       operationId: crc.api.file.delete_file
-      summary: Removes an existing file
+      summary: Removes an existing file.  In the event the file can not be deleted, it is marked as "archived" in the database and is no longer returned unless specifically requested by id.
       tags:
         - Files
       responses:
@@ -762,12 +786,62 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Script"
-  /approval:
+  /approval-counts:
     parameters:
-      - name: approver_uid
+      - name: as_user
         in: query
         required: false
-        description: Restrict results to a given approver uid, maybe we restrict the use of this at somepoint.
+        description: If provided, returns the approval counts for that user.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.approval.get_approval_counts
+      summary: Provides counts for approvals by status for the given user, or all users if no user is provided
+      tags:
+      - Approvals
+      responses:
+        '200':
+          description: An dictionary of Approval Statuses and the counts for each
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ApprovalCounts"
+  /all_approvals:
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: If set to true, returns all the approvals with any status. Defaults to false, leaving out canceled approvals.
+        schema:
+          type: boolean
+    get:
+      operationId: crc.api.approval.get_all_approvals
+      summary: Provides a list of all workflows approvals
+      tags:
+        - Approvals
+      responses:
+        '200':
+          description: An array of approvals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
+  /approval:
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: If provided, returns just approvals for the given status.
+        schema:
+          type: string
+      - name: as_user
+        in: query
+        required: false
+        description: If provided, returns the approval results as they would appear for that user.
         schema:
           type: string
     get:
@@ -810,6 +884,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Approval"
+  /approval/csv:
+    get:
+      operationId: crc.api.approval.get_csv
+      summary: Provides a list of all users for all approved studies
+      tags:
+        - Approvals
+      responses:
+        '200':
+          description: An array of approvals
+          content:
+            application/json:
+              schema:
+                type: object
 components:
   securitySchemes:
     jwt:
@@ -1225,6 +1312,28 @@ components:
     Approval:
       properties:
         id:
+          type: number
+          format: integer
+          example: 5
+    ApprovalCounts:
+      properties:
+        PENDING:
+          type: number
+          format: integer
+          example: 5
+        APPROVED:
+          type: number
+          format: integer
+          example: 5
+        DECLINED:
+          type: number
+          format: integer
+          example: 5
+        CANCELED:
+          type: number
+          format: integer
+          example: 5
+        AWAITING:
           type: number
           format: integer
           example: 5

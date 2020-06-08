@@ -1,13 +1,10 @@
-import json
-
-import connexion
 import flask
-from flask import redirect, g, request
+from flask import g, request
 
 from crc import app, db
 from crc.api.common import ApiError
 from crc.models.user import UserModel, UserModelSchema
-from crc.services.ldap_service import LdapService, LdapUserInfo
+from crc.services.ldap_service import LdapService, LdapModel, LdapUserInfo
 from crc.services.approval_service import ApprovalService
 
 """
