@@ -1,6 +1,7 @@
 
 from tests.base_test import BaseTest
 
+from crc import mail
 from crc.services.mails import (
     send_ramp_up_submission_email,
     send_ramp_up_approval_request_email,
@@ -21,35 +22,71 @@ class TestMails(BaseTest):
         self.approver_2 = 'Close Reviewer'
 
     def test_send_ramp_up_submission_email(self):
-        send_ramp_up_submission_email(self.sender, self.recipients, self.approver_1)
-        self.assertTrue(True)
+        with mail.record_messages() as outbox:
 
-        send_ramp_up_submission_email(self.sender, self.recipients, self.approver_1, self.approver_2)
-        self.assertTrue(True)
+            send_ramp_up_submission_email(self.sender, self.recipients, self.approver_1)
+            self.assertEqual(len(outbox), 1)
+            self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Submitted')
+            self.assertIn(self.approver_1, outbox[0].body)
+            self.assertIn(self.approver_1, outbox[0].html)
+
+            send_ramp_up_submission_email(self.sender, self.recipients, self.approver_1, self.approver_2)
+            self.assertEqual(len(outbox), 2)
+            self.assertIn(self.approver_1, outbox[1].body)
+            self.assertIn(self.approver_1, outbox[1].html)
+            self.assertIn(self.approver_2, outbox[1].body)
+            self.assertIn(self.approver_2, outbox[1].html)
 
     def test_send_ramp_up_approval_request_email(self):
-        send_ramp_up_approval_request_email(self.sender, self.recipients, self.primary_investigator)
-        self.assertTrue(True)
+        with mail.record_messages() as outbox:
+            send_ramp_up_approval_request_email(self.sender, self.recipients, self.primary_investigator)
+
+            self.assertEqual(len(outbox), 1)
+            self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Approval Request')
+            self.assertIn(self.primary_investigator, outbox[0].body)
+            self.assertIn(self.primary_investigator, outbox[0].html)
 
     def test_send_ramp_up_approval_request_first_review_email(self):
-        send_ramp_up_approval_request_first_review_email(
-            self.sender, self.recipients, self.primary_investigator
-        )
-        self.assertTrue(True)
+        with mail.record_messages() as outbox:
+            send_ramp_up_approval_request_first_review_email(
+                self.sender, self.recipients, self.primary_investigator
+            )
+
+            self.assertEqual(len(outbox), 1)
+            self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Approval Request')
+            self.assertIn(self.primary_investigator, outbox[0].body)
+            self.assertIn(self.primary_investigator, outbox[0].html)
 
     def test_send_ramp_up_approved_email(self):
-        send_ramp_up_approved_email(self.sender, self.recipients, self.approver_1)
-        self.assertTrue(True)
+        with mail.record_messages() as outbox:
+            send_ramp_up_approved_email(self.sender, self.recipients, self.approver_1)
+            self.assertEqual(len(outbox), 1)
+            self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Approved')
+            self.assertIn(self.approver_1, outbox[0].body)
+            self.assertIn(self.approver_1, outbox[0].html)
 
-        send_ramp_up_approved_email(self.sender, self.recipients, self.approver_1, self.approver_2)
-        self.assertTrue(True)
+            send_ramp_up_approved_email(self.sender, self.recipients, self.approver_1, self.approver_2)
+            self.assertEqual(len(outbox), 2)
+            self.assertIn(self.approver_1, outbox[1].body)
+            self.assertIn(self.approver_1, outbox[1].html)
+            self.assertIn(self.approver_2, outbox[1].body)
+            self.assertIn(self.approver_2, outbox[1].html)
 
     def test_send_ramp_up_denied_email(self):
-        send_ramp_up_denied_email(self.sender, self.recipients, self.approver_1)
-        self.assertTrue(True)
+        with mail.record_messages() as outbox:
+            send_ramp_up_denied_email(self.sender, self.recipients, self.approver_1)
+            self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Denied')
+            self.assertIn(self.approver_1, outbox[0].body)
+            self.assertIn(self.approver_1, outbox[0].html)
 
     def test_send_send_ramp_up_denied_email_to_approver(self):
-        send_ramp_up_denied_email_to_approver(
-            self.sender, self.recipients, self.primary_investigator, self.approver_2
-        )
-        self.assertTrue(True)
+        with mail.record_messages() as outbox:
+            send_ramp_up_denied_email_to_approver(
+                self.sender, self.recipients, self.primary_investigator, self.approver_2
+            )
+
+            self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Denied')
+            self.assertIn(self.primary_investigator, outbox[0].body)
+            self.assertIn(self.primary_investigator, outbox[0].html)
+            self.assertIn(self.approver_2, outbox[0].body)
+            self.assertIn(self.approver_2, outbox[0].html)
