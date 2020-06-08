@@ -828,6 +828,28 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ApprovalCounts"
+  /all_approvals:
+    parameters:
+      - name: status
+        in: query
+        required: false
+        description: If set to true, returns all the approvals with any status. Defaults to false, leaving out canceled approvals.
+        schema:
+          type: boolean
+    get:
+      operationId: crc.api.approval.get_all_approvals
+      summary: Provides a list of all workflows approvals
+      tags:
+        - Approvals
+      responses:
+        '200':
+          description: An array of approvals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
   /approval:
     parameters:
       - name: status

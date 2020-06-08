@@ -63,6 +63,12 @@ def get_approval_counts(as_user=None):
     return counts
 
 
+def get_all_approvals(status=None):
+    approvals = ApprovalService.get_all_approvals(include_cancelled=status is True)
+    results = ApprovalSchema(many=True).dump(approvals)
+    return results
+
+
 def get_approvals(status=None, as_user=None):
     #status = ApprovalStatus.PENDING.value
     user = g.user.uid
