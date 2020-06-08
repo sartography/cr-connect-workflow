@@ -5,6 +5,22 @@ from flask_mail import Message
 
 
 # TODO: Extract common mailing code into its own function
+def send_test_email(sender, recipients):
+    try:
+        msg = Message('Research Ramp-up Plan test',
+              sender=sender,
+              recipients=recipients)
+        from crc import env, mail
+        template = env.get_template('ramp_up_approval_request_first_review.txt')
+        template_vars = {'primary_investigator': "test"}
+        msg.body = template.render(template_vars)
+        template = env.get_template('ramp_up_approval_request_first_review.html')
+        msg.html = template.render(template_vars)
+        mail.send(msg)
+    except Exception as e:
+        return str(e)
+
+
 
 def send_ramp_up_submission_email(sender, recipients, approver_1, approver_2=None):
     try:

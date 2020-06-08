@@ -46,4 +46,10 @@ LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
 # Fallback emails
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
-MAIL_DEBUG = True
+MAIL_DEBUG = environ.get('MAIL_DEBUG', default=True)
+MAIL_SERVER = environ.get('MAIL_SERVER', default='smtp.mailtrap.io')
+MAIL_PORT = environ.get('MAIL_PORT', default=2525)
+MAIL_USE_SSL = environ.get('MAIL_USE_SSL', default=False)
+MAIL_USE_TLS = environ.get('MAIL_USE_TLS', default=True)
+MAIL_USERNAME = environ.get('MAIL_USERNAME', default='')
+MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='')
