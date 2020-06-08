@@ -28,7 +28,6 @@ def send_ramp_up_submission_email(sender, recipients, approver_1, approver_2=Non
               sender=sender,
               recipients=recipients,
               bcc=['rrt_emails@googlegroups.com'])
-
         from crc import env, mail
         template = env.get_template('ramp_up_submission.txt')
         template_vars = {'approver_1': approver_1, 'approver_2': approver_2}
@@ -46,7 +45,6 @@ def send_ramp_up_approval_request_email(sender, recipients, primary_investigator
               sender=sender,
               recipients=recipients,
               bcc=['rrt_emails@googlegroups.com'])
-
         from crc import env, mail
         template = env.get_template('ramp_up_approval_request.txt')
         template_vars = {'primary_investigator': primary_investigator}
@@ -64,7 +62,6 @@ def send_ramp_up_approval_request_first_review_email(sender, recipients, primary
               sender=sender,
               recipients=recipients,
               bcc=['rrt_emails@googlegroups.com'])
-
         from crc import env, mail
         template = env.get_template('ramp_up_approval_request_first_review.txt')
         template_vars = {'primary_investigator': primary_investigator}
