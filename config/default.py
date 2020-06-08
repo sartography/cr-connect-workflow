@@ -44,5 +44,11 @@ PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL +
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
-# Fallback emails
+# Email configuration
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
+MAIL_SERVER = environ.get('MAIL_SERVER', default='smtp.mailtrap.io')
+MAIL_PORT = environ.get('MAIL_PORT', default=2525)
+MAIL_USE_SSL = environ.get('MAIL_USE_SSL', default=False)
+MAIL_USE_TLS = environ.get('MAIL_USE_TLS', default=True)
+MAIL_USERNAME = environ.get('MAIL_USERNAME', default='5f012d0108d374')
+MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='08442c04e98d50')
