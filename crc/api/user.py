@@ -4,8 +4,7 @@ from flask import g, request
 from crc import app, db
 from crc.api.common import ApiError
 from crc.models.user import UserModel, UserModelSchema
-from crc.services.ldap_service import LdapService, LdapModel, LdapUserInfo
-from crc.services.approval_service import ApprovalService
+from crc.services.ldap_service import LdapService, LdapModel
 
 """
 .. module:: crc.api.user
@@ -31,7 +30,8 @@ def verify_token(token=None):
     print('=== verify_token ===')
     print('_is_production()', _is_production())
 
-    failure_error = ApiError("invalid_token", "Unable to decode the token you provided.  Please re-authenticate", status_code=403)
+    failure_error = ApiError("invalid_token", "Unable to decode the token you provided.  Please re-authenticate",
+                             status_code=403)
 
     if not _is_production():
         g.user = UserModel.query.first()
@@ -62,7 +62,8 @@ def verify_token(token=None):
                 return token_info
 
             else:
-                ApiError("no_user", "User not found. Please login via the frontend app before accessing this feature.", status_code=403)
+                ApiError("no_user", "User not found. Please login via the frontend app before accessing this feature.",
+                         status_code=403)
                 raise failure_error
 
 
@@ -80,7 +81,6 @@ def verify_token_admin(token=None):
 
     print('=== verify_token_admin ===')
     print('_is_production()', _is_production())
-
 
     # If this is production, check that the user is in the list of admins
     if _is_production():
@@ -101,8 +101,8 @@ def get_current_user():
 
 
 def login(
-    uid=None,
-    redirect_url=None,
+        uid=None,
+        redirect_url=None,
 ):
     """
         In non-production environment, provides an endpoint for end-to-end system testing that allows the system
@@ -175,7 +175,7 @@ def sso():
     return response
 
 
-def _handle_login(user_info: LdapUserInfo, redirect_url=None):
+def _handle_login(user_info: LdapModel, redirect_url=None):
     """
         On successful login, adds user to database if the user is not already in the system,
         then returns the frontend auth callback URL, with auth token appended.
@@ -187,22 +187,10 @@ def _handle_login(user_info: LdapUserInfo, redirect_url=None):
         Returns:
             Response.  302 - Redirects to the frontend auth callback URL, with auth token appended.
    """
+
     print('=== _handle_login ===')
     print('user_info', user_info)
-    user = db.session.query(UserModel).filter(UserModel.uid == user_info.uid).first()
-
-    if user is None:
-        # Add new user
-        user = UserModel()
-
-    user.uid = user_info.uid
-    user.display_name = user_info.display_name
-    user.email_address = user_info.email_address
-    user.affiliation = user_info.affiliation
-    user.title = user_info.title
-
-    db.session.add(user)
-    db.session.commit()
+    user = _upsert_user(user_info)
 
     # Return the frontend auth callback URL, with auth token appended.
     auth_token = user.encode_auth_token().decode()
@@ -217,10 +205,34 @@ def _handle_login(user_info: LdapUserInfo, redirect_url=None):
         return auth_token
 
 
+def _upsert_user(user_info):
+    user = db.session.query(UserModel).filter(UserModel.uid == user_info.uid).first()
+
+    if user is None:
+        # Add new user
+        user = UserModel()
+    else:
+        user = db.session.query(UserModel).filter(UserModel.uid == user_info.uid).with_for_update().first()
+
+    user.uid = user_info.uid
+    user.display_name = user_info.display_name
+    user.email_address = user_info.email_address
+    user.affiliation = user_info.affiliation
+    user.title = user_info.title
+
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+
 def _get_request_uid(req):
     uid = None
 
     if _is_production():
+
+        if 'user' in g and g.user is not None:
+            print('g.user.uid', g.user.uid)
+            return g.user.uid
 
         print('req.headers', req.headers)
         uid = req.headers.get("Uid")

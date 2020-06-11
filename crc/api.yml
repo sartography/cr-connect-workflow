@@ -115,7 +115,7 @@ paths:
     delete:
       operationId: crc.api.study.delete_study
       security:
-        - jwt_admin: ['secret']
+        - auth_admin: ['secret']
       summary: Removes the given study completely.
       tags:
         - Studies
@@ -218,7 +218,7 @@ paths:
     put:
       operationId: crc.api.workflow.update_workflow_specification
       security:
-        - jwt_admin: ['secret']
+        - auth_admin: ['secret']
       summary: Modifies an existing workflow specification with the given parameters.
       tags:
         - Workflow Specifications
@@ -237,7 +237,7 @@ paths:
     delete:
       operationId: crc.api.workflow.delete_workflow_specification
       security:
-        - jwt_admin: ['secret']
+        - auth_admin: ['secret']
       summary: Removes an existing workflow specification
       tags:
         - Workflow Specifications
@@ -284,7 +284,7 @@ paths:
     post:
       operationId: crc.api.workflow.add_workflow_spec_category
       security:
-        - jwt_admin: ['secret']
+        - auth_admin: ['secret']
       summary: Creates a new workflow spec category with the given parameters.
       tags:
         - Workflow Specification Category
@@ -323,7 +323,7 @@ paths:
     put:
       operationId: crc.api.workflow.update_workflow_spec_category
       security:
-        - jwt_admin: ['secret']
+        - auth_admin: ['secret']
       summary: Modifies an existing workflow spec category with the given parameters.
       tags:
         - Workflow Specification Category
@@ -342,7 +342,7 @@ paths:
     delete:
       operationId: crc.api.workflow.delete_workflow_spec_category
       security:
-        - jwt_admin: ['secret']
+        - auth_admin: ['secret']
       summary: Removes an existing workflow spec category
       tags:
         - Workflow Specification Category
@@ -543,7 +543,7 @@ paths:
     put:
       operationId: crc.api.file.set_reference_file
       security:
-        - jwt_admin: ['secret']
+        - auth_admin: ['secret']
       summary: Update the contents of a named reference file.
       tags:
         - Files
@@ -603,7 +603,7 @@ paths:
     delete:
       operationId: crc.api.workflow.delete_workflow
       security:
-        - jwt_admin: ['secret']
+        - auth_admin: ['secret']
       summary: Removes an existing workflow
       tags:
         - Workflows and Tasks
@@ -924,7 +924,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
       x-bearerInfoFunc: crc.api.user.verify_token
-    jwt_admin:
+    auth_admin:
       type: http
       scheme: bearer
       bearerFormat: JWT
