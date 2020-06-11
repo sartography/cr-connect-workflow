@@ -130,14 +130,19 @@ class TestApprovals(BaseTest):
         self.assertEqual(approval.status, ApprovalStatus.DECLINED.value)
 
     def test_csv_export(self):
-        approvals = db.session.query(ApprovalModel).all()
-        for app in approvals:
-            app.status = ApprovalStatus.APPROVED.value
-        db.session.commit()
+        self._add_lots_of_random_approvals()
+
+        # approvals = db.session.query(ApprovalModel).all()
+        # for app in approvals:
+        #     app.status = ApprovalStatus.APPROVED.value
+        # db.session.commit()
+
         rv = self.app.get(f'/v1.0/approval/csv', headers=self.logged_in_headers())
         self.assert_success(rv)
 
     def test_all_approvals(self):
+        self._add_lots_of_random_approvals()
+
         not_canceled = session.query(ApprovalModel).filter(ApprovalModel.status != 'CANCELED').all()
         not_canceled_study_ids = []
         for a in not_canceled:
@@ -162,30 +167,19 @@ class TestApprovals(BaseTest):
 
     def test_approvals_counts(self):
         statuses = [name for name, value in ApprovalStatus.__members__.items()]
+        self._add_lots_of_random_approvals()
 
-        # Add a whole bunch of approvals with random statuses
-        for i in range(100):
-            approver_uids = random.choices(["lb3dp", "dhf8r"])
-            self._create_study_workflow_approvals(
-                user_uid=random.choice(["lb3dp", "dhf8r"]),
-                title="".join(random.sample(string.ascii_lowercase, 16)),
-                primary_investigator_id=random.choice(["lb3dp", "dhf8r"]),
-                approver_uids=approver_uids,
-                statuses=random.choices(statuses, k=len(approver_uids))
-            )
-
-        # Counts should still match
+        # Get the counts
         rv_counts = self.app.get(f'/v1.0/approval-counts', headers=self.logged_in_headers())
         self.assert_success(rv_counts)
         counts = json.loads(rv_counts.get_data(as_text=True))
 
+        # Get the actual approvals
         rv_approvals = self.app.get(f'/v1.0/approval', headers=self.logged_in_headers())
         self.assert_success(rv_approvals)
         approvals = json.loads(rv_approvals.get_data(as_text=True))
 
-        total_counts = sum(counts[status] for status in statuses)
-        self.assertEqual(total_counts, len(approvals), 'Total approval counts for user should match number of approvals for user')
-
+        # Tally up the number of approvals in each status category
         manual_counts = {}
         for status in statuses:
             manual_counts[status] = 0
@@ -193,9 +187,13 @@ class TestApprovals(BaseTest):
         for approval in approvals:
             manual_counts[approval['status']] += 1
 
+        # Numbers in each category should match
         for status in statuses:
-            self.assertEqual(counts[status], manual_counts[status], 'Approval counts for status should match')
+            self.assertEqual(counts[status], manual_counts[status], 'Approval counts for status %s should match' % status)
 
+        # Total number of approvals should match
+        total_counts = sum(counts[status] for status in statuses)
+        self.assertEqual(total_counts, len(approvals), 'Total approval counts for user should match number of approvals for user')
 
     def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses):
         study = self.create_study(uid=user_uid, title=title, primary_investigator_id=primary_investigator_id)
@@ -216,3 +214,23 @@ class TestApprovals(BaseTest):
             'workflow': workflow,
             'approvals': approvals,
         }
+
+    def _add_lots_of_random_approvals(self):
+        num_studies_before = db.session.query(StudyModel).count()
+        statuses = [name for name, value in ApprovalStatus.__members__.items()]
+
+        # Add a whole bunch of approvals with random statuses
+        for i in range(100):
+            approver_uids = random.choices(["lb3dp", "dhf8r"])
+            self._create_study_workflow_approvals(
+                user_uid=random.choice(["lb3dp", "dhf8r"]),
+                title="".join(random.choices(string.ascii_lowercase, k=64)),
+                primary_investigator_id=random.choice(["lb3dp", "dhf8r"]),
+                approver_uids=approver_uids,
+                statuses=random.choices(statuses, k=len(approver_uids))
+            )
+
+        session.flush()
+        num_studies_after = db.session.query(StudyModel).count()
+        self.assertEqual(num_studies_after, num_studies_before + 100)
+
