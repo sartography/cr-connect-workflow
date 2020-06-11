@@ -27,8 +27,6 @@ def verify_token(token=None):
             ApiError.  If not on production and token is not valid, returns an 'invalid_token' 403 error.
             If on production and user is not authenticated, returns a 'no_user' 403 error.
    """
-    print('=== verify_token ===')
-    print('_is_production()', _is_production())
 
     failure_error = ApiError("invalid_token", "Unable to decode the token you provided.  Please re-authenticate",
                              status_code=403)
@@ -78,14 +76,9 @@ def verify_token_admin(token=None):
             token: str
    """
 
-    print('=== verify_token_admin ===')
-    print('_is_production()', _is_production())
-
     # If this is production, check that the user is in the list of admins
     if _is_production():
         uid = _get_request_uid(request)
-
-        print('verify_token_admin uid', uid)
 
         if uid is not None and uid in app.config['ADMIN_UIDS']:
             return verify_token()
@@ -139,14 +132,9 @@ def login(
     # X-Forwarded-Server: dev.crconnect.uvadcos.io
     # Connection: Keep-Alive
 
-    print('=== login ===')
-    print('_is_production()', _is_production())
-
     # If we're in production, override any uid with the uid from the SSO request headers
     if _is_production():
         uid = _get_request_uid(request)
-
-    print('login > uid', uid)
 
     if uid:
         app.logger.info("SSO_LOGIN: Full URL: " + request.url)
@@ -186,9 +174,6 @@ def _handle_login(user_info: LdapModel, redirect_url=None):
         Returns:
             Response.  302 - Redirects to the frontend auth callback URL, with auth token appended.
    """
-
-    print('=== _handle_login ===')
-    print('user_info', user_info)
     user = _upsert_user(user_info)
 
     # Return the frontend auth callback URL, with auth token appended.
@@ -230,10 +215,8 @@ def _get_request_uid(req):
     if _is_production():
 
         if 'user' in g and g.user is not None:
-            print('g.user.uid', g.user.uid)
             return g.user.uid
 
-        print('req.headers', req.headers)
         uid = req.headers.get("Uid")
         if not uid:
             uid = req.headers.get("X-Remote-Uid")
