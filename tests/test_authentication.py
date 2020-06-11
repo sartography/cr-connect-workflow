@@ -1,12 +1,15 @@
 import json
 from calendar import timegm
 from datetime import timezone, datetime, timedelta
-from tests.base_test import BaseTest
 
+import jwt
+
+from tests.base_test import BaseTest
 from crc import db, app
+from crc.api.common import ApiError
+from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudySchema, StudyModel
 from crc.models.user import UserModel
-from crc.models.protocol_builder import ProtocolBuilderStatus
 
 
 class TestAuthentication(BaseTest):
@@ -25,21 +28,34 @@ class TestAuthentication(BaseTest):
         # Set the timeout to something else
         new_ttl = 4.0
         app.config['TOKEN_AUTH_TTL_HOURS'] = new_ttl
-        user = UserModel(uid="dhf8r")
+        user_1 = UserModel(uid="dhf8r")
         expected_exp_1 = timegm((datetime.utcnow() + timedelta(hours=new_ttl)).utctimetuple())
-        auth_token_1 = user.encode_auth_token()
+        auth_token_1 = user_1.encode_auth_token()
         self.assertTrue(isinstance(auth_token_1, bytes))
-        self.assertEqual("dhf8r", user.decode_auth_token(auth_token_1).get("sub"))
-        actual_exp_1 = user.decode_auth_token(auth_token_1).get("exp")
+        self.assertEqual("dhf8r", user_1.decode_auth_token(auth_token_1).get("sub"))
+        actual_exp_1 = user_1.decode_auth_token(auth_token_1).get("exp")
         self.assertTrue(expected_exp_1 - 1000 <= actual_exp_1 <= expected_exp_1 + 1000)
+
+        # Set the timeout to something else
+        neg_ttl = -0.01
+        app.config['TOKEN_AUTH_TTL_HOURS'] = neg_ttl
+        user_2 = UserModel(uid="dhf8r")
+        expected_exp_2 = timegm((datetime.utcnow() + timedelta(hours=neg_ttl)).utctimetuple())
+        auth_token_2 = user_2.encode_auth_token()
+        self.assertTrue(isinstance(auth_token_2, bytes))
+        with self.assertRaises(ApiError) as api_error:
+            with self.assertRaises(jwt.exceptions.ExpiredSignatureError):
+                user_2.decode_auth_token(auth_token_2)
+        self.assertEqual(api_error.exception.status_code, 400, 'Should raise an API Error if token is expired')
 
         # Set the timeout back to where it was
         app.config['TOKEN_AUTH_TTL_HOURS'] = orig_ttl
-        expected_exp_2 = timegm((datetime.utcnow() + timedelta(hours=new_ttl)).utctimetuple())
-        auth_token_2 = user.encode_auth_token()
-        self.assertTrue(isinstance(auth_token_2, bytes))
-        actual_exp_2 = user.decode_auth_token(auth_token_1).get("exp")
-        self.assertTrue(expected_exp_2 - 1000 <= actual_exp_2 <= expected_exp_2 + 1000)
+        user_3 = UserModel(uid="dhf8r")
+        expected_exp_3 = timegm((datetime.utcnow() + timedelta(hours=new_ttl)).utctimetuple())
+        auth_token_3 = user_3.encode_auth_token()
+        self.assertTrue(isinstance(auth_token_3, bytes))
+        actual_exp_3 = user_3.decode_auth_token(auth_token_1).get("exp")
+        self.assertTrue(expected_exp_3 - 1000 <= actual_exp_3 <= expected_exp_3 + 1000)
 
     def test_non_production_auth_creates_user(self):
         new_uid = 'lb3dp'  ## Assure this user id is in the fake responses from ldap.
@@ -67,7 +83,6 @@ class TestAuthentication(BaseTest):
         self.assertTrue(str.startswith(rv_2.location, redirect_url))
 
     def test_production_auth_creates_user(self):
-
         # Switch production mode on
         app.config['PRODUCTION'] = True
 
@@ -92,7 +107,6 @@ class TestAuthentication(BaseTest):
         # Switch production mode back off
         app.config['PRODUCTION'] = False
 
-
     def test_current_user_status(self):
         self.load_example_data()
         rv = self.app.get('/v1.0/user')
@@ -107,7 +121,6 @@ class TestAuthentication(BaseTest):
         self.assert_success(rv)
 
     def test_admin_can_access_admin_only_endpoints(self):
-
         # Switch production mode on
         app.config['PRODUCTION'] = True
 
@@ -202,7 +215,6 @@ class TestAuthentication(BaseTest):
 
         # Switch production mode back off
         app.config['PRODUCTION'] = False
-
 
     def _make_fake_study(self, uid):
         return {
