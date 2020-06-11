@@ -62,9 +62,8 @@ def verify_token(token=None):
                 return token_info
 
             else:
-                ApiError("no_user", "User not found. Please login via the frontend app before accessing this feature.",
+                raise ApiError("no_user", "User not found. Please login via the frontend app before accessing this feature.",
                          status_code=403)
-                raise failure_error
 
 
 def verify_token_admin(token=None):
