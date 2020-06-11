@@ -742,6 +742,26 @@ paths:
             text/plain:
               schema:
                 type: string
+  /send_email:
+    parameters:
+      - name: address
+        in: query
+        required: true
+        description: The address to send a test email to.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.tools.send_email
+      summary: Sends an email so we can see if things work or not.
+      tags:
+        - Configurator Tools
+      responses:
+        '201':
+          description: Returns any error messages that might come back from sending the email.
+          content:
+            text/plain:
+              schema:
+                type: string
   /render_docx:
     put:
       operationId: crc.api.tools.render_docx
