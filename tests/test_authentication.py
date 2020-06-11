@@ -78,7 +78,7 @@ class TestAuthentication(BaseTest):
         self.assertIsNone(user)
         redirect_url = 'http://worlds.best.website/admin'
         headers = dict(Uid=new_uid)
-
+        db.session.flush()
         rv = self.app.get('v1.0/login', follow_redirects=False, headers=headers)
 
         self.assert_success(rv)
@@ -91,14 +91,7 @@ class TestAuthentication(BaseTest):
 
         # Switch production mode back off
         app.config['PRODUCTION'] = False
-        db.session.flush()
-        db.session.flush()
-        db.session.flush()
-        db.session.flush()
-        db.session.flush()
-        db.session.flush()
-        db.session.flush()
-        db.session.flush()
+
 
     def test_current_user_status(self):
         self.load_example_data()

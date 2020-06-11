@@ -2,6 +2,7 @@
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import os
 
+from flask import g
 from sqlalchemy import Sequence
 
 os.environ["TESTING"] = "true"
@@ -95,6 +96,7 @@ class BaseTest(unittest.TestCase):
 
     def tearDown(self):
         ExampleDataLoader.clean_db()
+        g.user = None
         self.auths = {}
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
