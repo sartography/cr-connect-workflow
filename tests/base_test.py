@@ -2,6 +2,7 @@
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import os
 
+from flask import g
 from sqlalchemy import Sequence
 
 os.environ["TESTING"] = "true"
@@ -95,7 +96,7 @@ class BaseTest(unittest.TestCase):
 
     def tearDown(self):
         ExampleDataLoader.clean_db()
-        session.flush()
+        g.user = None
         self.auths = {}
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
@@ -107,7 +108,8 @@ class BaseTest(unittest.TestCase):
             user_info = {'uid': user.uid}
 
         query_string = self.user_info_to_query_string(user_info, redirect_url)
-        rv = self.app.get("/v1.0/sso_backdoor%s" % query_string, follow_redirects=False)
+        rv = self.app.get("/v1.0/login%s" % query_string, follow_redirects=False)
+
         self.assertTrue(rv.status_code == 302)
         self.assertTrue(str.startswith(rv.location, redirect_url))
 
@@ -198,7 +200,7 @@ class BaseTest(unittest.TestCase):
         for key, value in items:
             query_string_list.append('%s=%s' % (key, urllib.parse.quote(value)))
 
-        query_string_list.append('redirect=%s' % redirect_url)
+        query_string_list.append('redirect_url=%s' % redirect_url)
 
         return '?%s' % '&'.join(query_string_list)
 

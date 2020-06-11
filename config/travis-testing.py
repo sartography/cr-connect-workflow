@@ -2,7 +2,6 @@ import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 NAME = "CR Connect Workflow"
-DEVELOPMENT = True
 TESTING = True
 SQLALCHEMY_DATABASE_URI = "postgresql://postgres:@localhost:5432/crc_test"
 TOKEN_AUTH_TTL_HOURS = 2
@@ -12,6 +11,5 @@ PB_ENABLED = False
 
 print('+++ USING TRAVIS TESTING CONFIG: +++')
 print('SQLALCHEMY_DATABASE_URI = ', SQLALCHEMY_DATABASE_URI)
-print('DEVELOPMENT = ', DEVELOPMENT)
 print('TESTING = ', TESTING)
 print('FRONTEND_AUTH_CALLBACK = ', FRONTEND_AUTH_CALLBACK)

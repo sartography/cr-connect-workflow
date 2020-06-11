@@ -27,7 +27,7 @@ class UserModel(db.Model):
         Generates the Auth Token
         :return: string
         """
-        hours = int(app.config['TOKEN_AUTH_TTL_HOURS'])
+        hours = float(app.config['TOKEN_AUTH_TTL_HOURS'])
         payload = {
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=hours, minutes=0, seconds=0),
             'iat': datetime.datetime.utcnow(),
@@ -36,7 +36,7 @@ class UserModel(db.Model):
         return jwt.encode(
             payload,
             app.config.get('TOKEN_AUTH_SECRET_KEY'),
-            algorithm='HS256'
+            algorithm='HS256',
         )
 
     @staticmethod
@@ -50,9 +50,9 @@ class UserModel(db.Model):
             payload = jwt.decode(auth_token, app.config.get('TOKEN_AUTH_SECRET_KEY'), algorithms='HS256')
             return payload
         except jwt.ExpiredSignatureError:
-            raise ApiError('token_expired', 'The Authentication token you provided expired, and must be renewed.')
+            raise ApiError('token_expired', 'The Authentication token you provided expired and must be renewed.')
         except jwt.InvalidTokenError:
-            raise ApiError('token_invalid', 'The Authentication token you provided.  You need a new token. ')
+            raise ApiError('token_invalid', 'The Authentication token you provided is invalid. You need a new token. ')
 
 
 class UserModelSchema(SQLAlchemyAutoSchema):
