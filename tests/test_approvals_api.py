@@ -1,4 +1,7 @@
 import json
+import random
+import string
+
 from tests.base_test import BaseTest
 
 from crc import session, db
@@ -11,43 +14,25 @@ class TestApprovals(BaseTest):
     def setUp(self):
         """Initial setup shared by all TestApprovals tests"""
         self.load_example_data()
-        self.study = self.create_study()
-        self.workflow = self.create_workflow('random_fact')
-        self.unrelated_study = StudyModel(title="second study",
-                                 protocol_builder_status=ProtocolBuilderStatus.ACTIVE,
-                                 user_uid="dhf8r", primary_investigator_id="dhf8r")
-        self.unrelated_workflow = self.create_workflow('random_fact', study=self.unrelated_study)
 
-        # TODO: Move to base_test as a helper
-        self.approval = ApprovalModel(
-            study=self.study,
-            workflow=self.workflow,
-            approver_uid='lb3dp',
-            status=ApprovalStatus.PENDING.value,
-            version=1
+        # Add a study with 2 approvers
+        study_workflow_approvals_1 = self._create_study_workflow_approvals(
+            user_uid="dhf8r", title="first study", primary_investigator_id="lb3dp",
+            approver_uids=["lb3dp", "dhf8r"], statuses=[ApprovalStatus.PENDING.value, ApprovalStatus.PENDING.value]
         )
-        session.add(self.approval)
+        self.study = study_workflow_approvals_1['study']
+        self.workflow = study_workflow_approvals_1['workflow']
+        self.approval = study_workflow_approvals_1['approvals'][0]
+        self.approval_2 = study_workflow_approvals_1['approvals'][1]
 
-        self.approval_2 = ApprovalModel(
-            study=self.study,
-            workflow=self.workflow,
-            approver_uid='dhf8r',
-            status=ApprovalStatus.PENDING.value,
-            version=1
+        # Add a study with 1 approver
+        study_workflow_approvals_2 = self._create_study_workflow_approvals(
+            user_uid="dhf8r", title="second study", primary_investigator_id="dhf8r",
+            approver_uids=["lb3dp"], statuses=[ApprovalStatus.PENDING.value]
         )
-        session.add(self.approval_2)
-
-        # A third study, unrelated to the first.
-        self.approval_3 = ApprovalModel(
-            study=self.unrelated_study,
-            workflow=self.unrelated_workflow,
-            approver_uid='lb3dp',
-            status=ApprovalStatus.PENDING.value,
-            version=1
-        )
-        session.add(self.approval_3)
-
-        session.commit()
+        self.unrelated_study = study_workflow_approvals_2['study']
+        self.unrelated_workflow = study_workflow_approvals_2['workflow']
+        self.approval_3 = study_workflow_approvals_2['approvals'][0]
 
     def test_list_approvals_per_approver(self):
         """Only approvals associated with approver should be returned"""
@@ -85,7 +70,7 @@ class TestApprovals(BaseTest):
         response = json.loads(rv.get_data(as_text=True))
         response_count = len(response)
         self.assertEqual(1, response_count)
-        self.assertEqual(1, len(response[0]['related_approvals'])) # this approval has a related approval.
+        self.assertEqual(1, len(response[0]['related_approvals']))  # this approval has a related approval.
 
     def test_update_approval_fails_if_not_the_approver(self):
         approval = session.query(ApprovalModel).filter_by(approver_uid='lb3dp').first()
@@ -151,3 +136,83 @@ class TestApprovals(BaseTest):
         db.session.commit()
         rv = self.app.get(f'/v1.0/approval/csv', headers=self.logged_in_headers())
         self.assert_success(rv)
+
+    def test_all_approvals(self):
+        not_canceled = session.query(ApprovalModel).filter(ApprovalModel.status != 'CANCELED').all()
+        not_canceled_study_ids = []
+        for a in not_canceled:
+            if a.study_id not in not_canceled_study_ids:
+                not_canceled_study_ids.append(a.study_id)
+
+        rv_all = self.app.get(f'/v1.0/all_approvals?status=false', headers=self.logged_in_headers())
+        self.assert_success(rv_all)
+        all_data = json.loads(rv_all.get_data(as_text=True))
+        self.assertEqual(len(all_data), len(not_canceled_study_ids), 'Should return all non-canceled approvals, grouped by study')
+
+        all_approvals = session.query(ApprovalModel).all()
+        all_approvals_study_ids = []
+        for a in all_approvals:
+            if a.study_id not in all_approvals_study_ids:
+                all_approvals_study_ids.append(a.study_id)
+
+        rv_all = self.app.get(f'/v1.0/all_approvals?status=true', headers=self.logged_in_headers())
+        self.assert_success(rv_all)
+        all_data = json.loads(rv_all.get_data(as_text=True))
+        self.assertEqual(len(all_data), len(all_approvals_study_ids), 'Should return all approvals, grouped by study')
+
+    def test_approvals_counts(self):
+        statuses = [name for name, value in ApprovalStatus.__members__.items()]
+
+        # Add a whole bunch of approvals with random statuses
+        for i in range(100):
+            approver_uids = random.choices(["lb3dp", "dhf8r"])
+            self._create_study_workflow_approvals(
+                user_uid=random.choice(["lb3dp", "dhf8r"]),
+                title="".join(random.sample(string.ascii_lowercase, 16)),
+                primary_investigator_id=random.choice(["lb3dp", "dhf8r"]),
+                approver_uids=approver_uids,
+                statuses=random.choices(statuses, k=len(approver_uids))
+            )
+
+        # Counts should still match
+        rv_counts = self.app.get(f'/v1.0/approval-counts', headers=self.logged_in_headers())
+        self.assert_success(rv_counts)
+        counts = json.loads(rv_counts.get_data(as_text=True))
+
+        rv_approvals = self.app.get(f'/v1.0/approval', headers=self.logged_in_headers())
+        self.assert_success(rv_approvals)
+        approvals = json.loads(rv_approvals.get_data(as_text=True))
+
+        total_counts = sum(counts[status] for status in statuses)
+        self.assertEqual(total_counts, len(approvals), 'Total approval counts for user should match number of approvals for user')
+
+        manual_counts = {}
+        for status in statuses:
+            manual_counts[status] = 0
+
+        for approval in approvals:
+            manual_counts[approval['status']] += 1
+
+        for status in statuses:
+            self.assertEqual(counts[status], manual_counts[status], 'Approval counts for status should match')
+
+
+    def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses):
+        study = self.create_study(uid=user_uid, title=title, primary_investigator_id=primary_investigator_id)
+        workflow = self.create_workflow('random_fact', study=study)
+        approvals = []
+
+        for i in range(len(approver_uids)):
+            approvals.append(self.create_approval(
+                study=study,
+                workflow=workflow,
+                approver_uid=approver_uids[i],
+                status=statuses[i],
+                version=1
+            ))
+
+        return {
+            'study': study,
+            'workflow': workflow,
+            'approvals': approvals,
+        }

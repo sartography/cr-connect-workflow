@@ -12,6 +12,7 @@ import unittest
 import urllib.parse
 import datetime
 
+from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudyModel
 from crc.services.file_service import FileService
@@ -224,12 +225,12 @@ class BaseTest(unittest.TestCase):
             db.session.commit()
         return user
 
-    def create_study(self, uid="dhf8r", title="Beer conception in the bipedal software engineer"):
-        study = session.query(StudyModel).first()
+    def create_study(self, uid="dhf8r", title="Beer conception in the bipedal software engineer", primary_investigator_id="lb3dp"):
+        study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
             study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.ACTIVE,
-                               user_uid=user.uid, primary_investigator_id='lb3dp')
+                               user_uid=user.uid, primary_investigator_id=primary_investigator_id)
             db.session.add(study)
             db.session.commit()
         return study
@@ -251,3 +252,22 @@ class BaseTest(unittest.TestCase):
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()
+
+    def create_approval(
+        self,
+        study=None,
+        workflow=None,
+        approver_uid=None,
+        status=None,
+        version=None,
+    ):
+        study = study or self.create_study()
+        workflow = workflow or self.create_workflow()
+        approver_uid = approver_uid or self.test_uid
+        status = status or ApprovalStatus.PENDING.value
+        version = version or 1
+        approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status, version=version)
+        db.session.add(approval)
+        db.session.commit()
+        return approval
+

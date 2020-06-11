@@ -24,7 +24,6 @@ def get_approval_counts(as_user=None):
         .all()
 
     study_ids = [a.study_id for a in db_user_approvals]
-    print('study_ids', study_ids)
 
     db_other_approvals = db.session.query(ApprovalModel)\
         .filter(ApprovalModel.study_id.in_(study_ids))\
