@@ -3,6 +3,7 @@ from tests.base_test import BaseTest
 
 from crc import mail, session
 from crc.models.approval import ApprovalModel, ApprovalStatus
+from crc.models.email import EmailModel
 from crc.services.mails import (
     send_ramp_up_submission_email,
     send_ramp_up_approval_request_email,
@@ -54,6 +55,9 @@ class TestMails(BaseTest):
             self.assertIn(self.approver_2, outbox[1].body)
             self.assertIn(self.approver_2, outbox[1].html)
 
+            db_emails = EmailModel.query.count()
+            self.assertEqual(db_emails, 2)
+
     def test_send_ramp_up_approval_request_email(self):
         with mail.record_messages() as outbox:
             send_ramp_up_approval_request_email(self.sender, self.recipients, self.approval.id,
@@ -63,6 +67,9 @@ class TestMails(BaseTest):
             self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Approval Request')
             self.assertIn(self.primary_investigator, outbox[0].body)
             self.assertIn(self.primary_investigator, outbox[0].html)
+
+            db_emails = EmailModel.query.count()
+            self.assertEqual(db_emails, 1)
 
     def test_send_ramp_up_approval_request_first_review_email(self):
         with mail.record_messages() as outbox:
@@ -74,6 +81,9 @@ class TestMails(BaseTest):
             self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Approval Request')
             self.assertIn(self.primary_investigator, outbox[0].body)
             self.assertIn(self.primary_investigator, outbox[0].html)
+
+            db_emails = EmailModel.query.count()
+            self.assertEqual(db_emails, 1)
 
     def test_send_ramp_up_approved_email(self):
         with mail.record_messages() as outbox:
@@ -91,12 +101,18 @@ class TestMails(BaseTest):
             self.assertIn(self.approver_2, outbox[1].body)
             self.assertIn(self.approver_2, outbox[1].html)
 
+            db_emails = EmailModel.query.count()
+            self.assertEqual(db_emails, 2)
+
     def test_send_ramp_up_denied_email(self):
         with mail.record_messages() as outbox:
             send_ramp_up_denied_email(self.sender, self.recipients, self.approval.id, self.approver_1)
             self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Denied')
             self.assertIn(self.approver_1, outbox[0].body)
             self.assertIn(self.approver_1, outbox[0].html)
+
+            db_emails = EmailModel.query.count()
+            self.assertEqual(db_emails, 1)
 
     def test_send_send_ramp_up_denied_email_to_approver(self):
         with mail.record_messages() as outbox:
@@ -109,3 +125,6 @@ class TestMails(BaseTest):
             self.assertIn(self.primary_investigator, outbox[0].html)
             self.assertIn(self.approver_2, outbox[0].body)
             self.assertIn(self.approver_2, outbox[0].html)
+
+            db_emails = EmailModel.query.count()
+            self.assertEqual(db_emails, 1)
