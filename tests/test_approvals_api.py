@@ -3,11 +3,10 @@ import random
 import string
 
 from tests.base_test import BaseTest
-
 from crc import session, db
-from crc.models.approval import ApprovalModel, ApprovalSchema, ApprovalStatus
-from crc.models.protocol_builder import ProtocolBuilderStatus
+from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.study import StudyModel
+from crc.models.workflow import WorkflowModel
 
 
 class TestApprovals(BaseTest):
@@ -130,12 +129,33 @@ class TestApprovals(BaseTest):
         self.assertEqual(approval.status, ApprovalStatus.DECLINED.value)
 
     def test_csv_export(self):
-        self._add_lots_of_random_approvals()
+        self.load_test_spec('two_forms')
+        self._add_lots_of_random_approvals(n=50, workflow_spec_name='two_forms')
 
-        # approvals = db.session.query(ApprovalModel).all()
-        # for app in approvals:
-        #     app.status = ApprovalStatus.APPROVED.value
-        # db.session.commit()
+        # Get all workflows
+        workflows = db.session.query(WorkflowModel).filter_by(workflow_spec_id='two_forms').all()
+
+        # For each workflow, complete all tasks
+        for workflow in workflows:
+            workflow_api = self.get_workflow_api(workflow, user_uid=workflow.study.user_uid)
+            self.assertEqual('two_forms', workflow_api.workflow_spec_id)
+
+            # Log current user out.
+            self.flask_globals.user = None
+            self.assertIsNone(self.flask_globals.user)
+
+            # Complete the form for Step one and post it.
+            self.complete_form(workflow, workflow_api.next_task, {"color": "blue"}, error_code=None, user_uid=workflow.study.user_uid)
+
+            # Get the next Task
+            workflow_api = self.get_workflow_api(workflow, user_uid=workflow.study.user_uid)
+            self.assertEqual("StepTwo", workflow_api.next_task.name)
+
+            # Get all user Tasks and check that the data have been saved
+            task = workflow_api.next_task
+            self.assertIsNotNone(task.data)
+            for val in task.data.values():
+                self.assertIsNotNone(val)
 
         rv = self.app.get(f'/v1.0/approval/csv', headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -195,9 +215,10 @@ class TestApprovals(BaseTest):
         total_counts = sum(counts[status] for status in statuses)
         self.assertEqual(total_counts, len(approvals), 'Total approval counts for user should match number of approvals for user')
 
-    def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses):
+    def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses,
+                                         workflow_spec_name="random_fact"):
         study = self.create_study(uid=user_uid, title=title, primary_investigator_id=primary_investigator_id)
-        workflow = self.create_workflow('random_fact', study=study)
+        workflow = self.create_workflow(workflow_name=workflow_spec_name, study=study)
         approvals = []
 
         for i in range(len(approver_uids)):
@@ -215,22 +236,23 @@ class TestApprovals(BaseTest):
             'approvals': approvals,
         }
 
-    def _add_lots_of_random_approvals(self):
+    def _add_lots_of_random_approvals(self, n=100, workflow_spec_name="random_fact"):
         num_studies_before = db.session.query(StudyModel).count()
         statuses = [name for name, value in ApprovalStatus.__members__.items()]
 
         # Add a whole bunch of approvals with random statuses
-        for i in range(100):
+        for i in range(n):
             approver_uids = random.choices(["lb3dp", "dhf8r"])
             self._create_study_workflow_approvals(
                 user_uid=random.choice(["lb3dp", "dhf8r"]),
                 title="".join(random.choices(string.ascii_lowercase, k=64)),
                 primary_investigator_id=random.choice(["lb3dp", "dhf8r"]),
                 approver_uids=approver_uids,
-                statuses=random.choices(statuses, k=len(approver_uids))
+                statuses=random.choices(statuses, k=len(approver_uids)),
+                workflow_spec_name=workflow_spec_name
             )
 
         session.flush()
         num_studies_after = db.session.query(StudyModel).count()
-        self.assertEqual(num_studies_after, num_studies_before + 100)
+        self.assertEqual(num_studies_after, num_studies_before + n)
 
