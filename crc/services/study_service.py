@@ -86,8 +86,8 @@ class StudyService(object):
     def delete_workflow(workflow):
         for file in session.query(FileModel).filter_by(workflow_id=workflow.id).all():
             FileService.delete_file(file.id)
-        for deb in workflow.dependencies:
-            session.delete(deb)
+        for dep in workflow.dependencies:
+            session.delete(dep)
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
         session.query(WorkflowModel).filter_by(id=workflow.id).delete()
 
