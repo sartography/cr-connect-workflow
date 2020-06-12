@@ -66,9 +66,9 @@ class TestWorkflowService(BaseTest):
         task = processor.next_task()
         WorkflowService.process_options(task, task.task_spec.form.fields[0])
         options = task.task_spec.form.fields[0].options
-        self.assertEquals(28, len(options))
-        self.assertEquals('1000', options[0]['id'])
-        self.assertEquals("UVA - INTERNAL - GM USE ONLY", options[0]['name'])
+        self.assertEqual(28, len(options))
+        self.assertEqual('1000', options[0]['id'])
+        self.assertEqual("UVA - INTERNAL - GM USE ONLY", options[0]['name'])
 
     def test_random_data_populate_form_on_auto_complete(self):
         self.load_example_data()
@@ -77,5 +77,5 @@ class TestWorkflowService(BaseTest):
         processor.do_engine_steps()
         task = processor.next_task()
         task_api = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
-        WorkflowService.populate_form_with_random_data(task, task_api)
+        WorkflowService.populate_form_with_random_data(task, task_api, required_only=False)
         self.assertTrue(isinstance(task.data["sponsor"], dict))

@@ -12,8 +12,9 @@ from crc.services.file_service import FileService
 
 
 def to_file_api(file_model):
-    """Converts a FileModel object to something we can return via the aip"""
-    return File.from_models(file_model, FileService.get_file_data(file_model.id))
+    """Converts a FileModel object to something we can return via the api"""
+    return File.from_models(file_model, FileService.get_file_data(file_model.id),
+                            FileService.get_doc_dictionary())
 
 
 def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None):
@@ -121,7 +122,7 @@ def get_file_info(file_id):
 
 def update_file_info(file_id, body):
     if file_id is None:
-        raise ApiError('unknown_file', 'Please provide a valid File ID.')
+        raise ApiError('no_such_file', 'Please provide a valid File ID.')
 
     file_model = session.query(FileModel).filter_by(id=file_id).first()
 

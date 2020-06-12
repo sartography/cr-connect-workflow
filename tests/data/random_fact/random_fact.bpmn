@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1gjhqt9" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1gjhqt9" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
   <bpmn:process id="Process_1ds61df" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_0c7wlth</bpmn:outgoing>
@@ -108,6 +108,9 @@ Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="type" label="Type" type="enum" defaultValue="cat">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
             <camunda:value id="norris" name="Chuck Norris" />
             <camunda:value id="cat" name="Cat Fact" />
             <camunda:value id="buzzword" name="Business Buzzword" />
@@ -121,8 +124,7 @@ Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
       <bpmn:outgoing>SequenceFlow_0641sh6</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:scriptTask id="Task_Get_Fact_From_API" name="Display Fact">
-      <bpmn:documentation>
-</bpmn:documentation>
+      <bpmn:documentation />
       <bpmn:extensionElements>
         <camunda:inputOutput>
           <camunda:inputParameter name="Fact.type" />
@@ -155,6 +157,18 @@ Your random fact is:
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1ds61df">
+      <bpmndi:BPMNEdge id="SequenceFlow_0t29gjo_di" bpmnElement="SequenceFlow_0t29gjo">
+        <di:waypoint x="570" y="250" />
+        <di:waypoint x="692" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0641sh6_di" bpmnElement="SequenceFlow_0641sh6">
+        <di:waypoint x="370" y="250" />
+        <di:waypoint x="470" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0c7wlth_di" bpmnElement="SequenceFlow_0c7wlth">
+        <di:waypoint x="188" y="250" />
+        <di:waypoint x="270" y="250" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="152" y="232" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -164,34 +178,22 @@ Your random fact is:
       <bpmndi:BPMNShape id="ScriptTask_10keafb_di" bpmnElement="Task_Get_Fact_From_API">
         <dc:Bounds x="470" y="210" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0u1cgrf_di" bpmnElement="EndEvent_0u1cgrf">
+        <dc:Bounds x="692" y="232" width="36" height="36" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="TextAnnotation_09fq7kh_di" bpmnElement="TextAnnotation_09fq7kh">
         <dc:Bounds x="330" y="116" width="99.99202297383536" height="68.28334396936822" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TextAnnotation_1234e5n_di" bpmnElement="TextAnnotation_1234e5n">
+        <dc:Bounds x="570" y="120" width="100" height="68" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Association_1cfasjp_di" bpmnElement="Association_1cfasjp">
         <di:waypoint x="344" y="210" />
         <di:waypoint x="359" y="184" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="TextAnnotation_1234e5n_di" bpmnElement="TextAnnotation_1234e5n">
-        <dc:Bounds x="570" y="120" width="100" height="68" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Association_1qirnyy_di" bpmnElement="Association_1qirnyy">
         <di:waypoint x="561" y="210" />
         <di:waypoint x="584" y="188" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="EndEvent_0u1cgrf_di" bpmnElement="EndEvent_0u1cgrf">
-        <dc:Bounds x="692" y="232" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_0c7wlth_di" bpmnElement="SequenceFlow_0c7wlth">
-        <di:waypoint x="188" y="250" />
-        <di:waypoint x="270" y="250" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0641sh6_di" bpmnElement="SequenceFlow_0641sh6">
-        <di:waypoint x="370" y="250" />
-        <di:waypoint x="470" y="250" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0t29gjo_di" bpmnElement="SequenceFlow_0t29gjo">
-        <di:waypoint x="570" y="250" />
-        <di:waypoint x="692" y="250" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

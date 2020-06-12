@@ -2,24 +2,27 @@
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import os
 
-from sqlalchemy import Sequence
-
 os.environ["TESTING"] = "true"
 
 import json
 import unittest
 import urllib.parse
 import datetime
-
-from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.study import StudyModel
-from crc.services.file_service import FileService
-from crc.services.study_service import StudyService
-from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel
-from crc.models.user import UserModel
+from flask import g
+from sqlalchemy import Sequence
 
 from crc import app, db, session
+from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
+from crc.models.approval import ApprovalModel, ApprovalStatus
+from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
+from crc.models.protocol_builder import ProtocolBuilderStatus
+from crc.models.stats import TaskEventModel
+from crc.models.study import StudyModel
+from crc.models.user import UserModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel
+from crc.services.file_service import FileService
+from crc.services.study_service import StudyService
+from crc.services.workflow_service import WorkflowService
 from example_data import ExampleDataLoader
 
 #UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
@@ -95,7 +98,7 @@ class BaseTest(unittest.TestCase):
 
     def tearDown(self):
         ExampleDataLoader.clean_db()
-        session.flush()
+        g.user = None
         self.auths = {}
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
@@ -107,23 +110,28 @@ class BaseTest(unittest.TestCase):
             user_info = {'uid': user.uid}
 
         query_string = self.user_info_to_query_string(user_info, redirect_url)
-        rv = self.app.get("/v1.0/sso_backdoor%s" % query_string, follow_redirects=False)
+        rv = self.app.get("/v1.0/login%s" % query_string, follow_redirects=False)
         self.assertTrue(rv.status_code == 302)
         self.assertTrue(str.startswith(rv.location, redirect_url))
 
         user_model = session.query(UserModel).filter_by(uid=uid).first()
         self.assertIsNotNone(user_model.display_name)
+        self.assertEqual(user_model.uid, uid)
+        self.assertTrue('user' in g, 'User should be in Flask globals')
+        self.assertEqual(uid, g.user.uid, 'Logged in user should match given user uid')
+
         return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
 
-    def load_example_data(self, use_crc_data=False):
+    def load_example_data(self, use_crc_data=False, use_rrt_data=False):
         """use_crc_data will cause this to load the mammoth collection of documents
-        we built up developing crc, otherwise it depends on a small setup for
-        running tests."""
-
+        we built up developing crc, use_rrt_data will do the same for hte rrt project,
+         otherwise it depends on a small setup for running tests."""
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
-        if(use_crc_data):
+        if use_crc_data:
             ExampleDataLoader().load_all()
+        elif use_rrt_data:
+            ExampleDataLoader().load_rrt()
         else:
             ExampleDataLoader().load_test_data()
 
@@ -158,6 +166,7 @@ class BaseTest(unittest.TestCase):
     @staticmethod
     def load_test_spec(dir_name, master_spec=False, category_id=None):
         """Loads a spec into the database based on a directory in /tests/data"""
+
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
             return session.query(WorkflowSpecModel).filter_by(id=dir_name).first()
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
@@ -197,7 +206,7 @@ class BaseTest(unittest.TestCase):
         for key, value in items:
             query_string_list.append('%s=%s' % (key, urllib.parse.quote(value)))
 
-        query_string_list.append('redirect=%s' % redirect_url)
+        query_string_list.append('redirect_url=%s' % redirect_url)
 
         return '?%s' % '&'.join(query_string_list)
 
@@ -221,12 +230,12 @@ class BaseTest(unittest.TestCase):
             db.session.commit()
         return user
 
-    def create_study(self, uid="dhf8r", title="Beer conception in the bipedal software engineer"):
-        study = session.query(StudyModel).first()
+    def create_study(self, uid="dhf8r", title="Beer conception in the bipedal software engineer", primary_investigator_id="lb3dp"):
+        study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
             study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.ACTIVE,
-                               user_uid=user.uid)
+                               user_uid=user.uid, primary_investigator_id=primary_investigator_id)
             db.session.add(study)
             db.session.commit()
         return study
@@ -248,3 +257,97 @@ class BaseTest(unittest.TestCase):
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()
+
+    def create_approval(
+        self,
+        study=None,
+        workflow=None,
+        approver_uid=None,
+        status=None,
+        version=None,
+    ):
+        study = study or self.create_study()
+        workflow = workflow or self.create_workflow()
+        approver_uid = approver_uid or self.test_uid
+        status = status or ApprovalStatus.PENDING.value
+        version = version or 1
+        approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status, version=version)
+        db.session.add(approval)
+        db.session.commit()
+        return approval
+
+    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False, user_uid="dhf8r"):
+        user = session.query(UserModel).filter_by(uid=user_uid).first()
+        self.assertIsNotNone(user)
+
+        rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
+                          (workflow.id, str(soft_reset), str(hard_reset)),
+                          headers=self.logged_in_headers(user),
+                          content_type="application/json")
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        workflow_api = WorkflowApiSchema().load(json_data)
+        self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
+        return workflow_api
+
+    def complete_form(self, workflow_in, task_in, dict_data, error_code=None, user_uid="dhf8r"):
+        prev_completed_task_count = workflow_in.completed_tasks
+        if isinstance(task_in, dict):
+            task_id = task_in["id"]
+        else:
+            task_id = task_in.id
+
+        user = session.query(UserModel).filter_by(uid=user_uid).first()
+        self.assertIsNotNone(user)
+
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
+                          headers=self.logged_in_headers(user=user),
+                          content_type="application/json",
+                          data=json.dumps(dict_data))
+        if error_code:
+            self.assert_failure(rv, error_code=error_code)
+            return
+
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+
+        # Assure stats are updated on the model
+        workflow = WorkflowApiSchema().load(json_data)
+        # The total number of tasks may change over time, as users move through gateways
+        # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
+        self.assertIsNotNone(workflow.total_tasks)
+        self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
+
+        # Assure a record exists in the Task Events
+        task_events = session.query(TaskEventModel) \
+            .filter_by(workflow_id=workflow.id) \
+            .filter_by(task_id=task_id) \
+            .order_by(TaskEventModel.date.desc()).all()
+        self.assertGreater(len(task_events), 0)
+        event = task_events[0]
+        self.assertIsNotNone(event.study_id)
+        self.assertEqual(user_uid, event.user_uid)
+        self.assertEqual(workflow.id, event.workflow_id)
+        self.assertEqual(workflow.workflow_spec_id, event.workflow_spec_id)
+        self.assertEqual(workflow.spec_version, event.spec_version)
+        self.assertEqual(WorkflowService.TASK_ACTION_COMPLETE, event.action)
+        self.assertEqual(task_in.id, task_id)
+        self.assertEqual(task_in.name, event.task_name)
+        self.assertEqual(task_in.title, event.task_title)
+        self.assertEqual(task_in.type, event.task_type)
+        self.assertEqual("COMPLETED", event.task_state)
+
+        # Not sure what voodoo is happening inside of marshmallow to get me in this state.
+        if isinstance(task_in.multi_instance_type, MultiInstanceType):
+            self.assertEqual(task_in.multi_instance_type.value, event.mi_type)
+        else:
+            self.assertEqual(task_in.multi_instance_type, event.mi_type)
+
+        self.assertEqual(task_in.multi_instance_count, event.mi_count)
+        self.assertEqual(task_in.multi_instance_index, event.mi_index)
+        self.assertEqual(task_in.process_name, event.process_name)
+        self.assertIsNotNone(event.date)
+
+
+        workflow = WorkflowApiSchema().load(json_data)
+        return workflow

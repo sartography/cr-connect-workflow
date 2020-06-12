@@ -25,7 +25,7 @@ class ProtocolBuilderService(object):
     def get_studies(user_id) -> {}:
         ProtocolBuilderService.__enabled_or_raise()
         if not isinstance(user_id, str):
-            raise ApiError("invalid_user_id", "This user id is invalid: " + str(user_id))
+            raise ApiError("protocol_builder_error", "This user id is invalid: " + str(user_id))
         response = requests.get(ProtocolBuilderService.STUDY_URL % user_id)
         if response.ok and response.text:
             pb_studies = ProtocolBuilderStudySchema(many=True).loads(response.text)
