@@ -1,6 +1,6 @@
 from flask_marshmallow.sqla import SQLAlchemyAutoSchema
 from marshmallow import EXCLUDE
-from sqlalchemy import func, inspect
+from sqlalchemy import func
 
 from crc import db
 

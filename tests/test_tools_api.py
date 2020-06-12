@@ -28,7 +28,7 @@ class TestStudyApi(BaseTest):
                               content_type='multipart/form-data')
             self.assert_success(rv)
             self.assertIsNotNone(rv.data)
-            self.assertEquals('application/octet-stream', rv.content_type)
+            self.assertEqual('application/octet-stream', rv.content_type)
 
     def test_list_scripts(self):
         rv = self.app.get('/v1.0/list_scripts')

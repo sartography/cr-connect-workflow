@@ -30,4 +30,4 @@ class TestLdapService(BaseTest):
             user_info = LdapService.user_info("nosuch")
             self.assertFalse(True, "An API error should be raised.")
         except ApiError as ae:
-            self.assertEquals("missing_ldap_record", ae.code)
+            self.assertEqual("missing_ldap_record", ae.code)

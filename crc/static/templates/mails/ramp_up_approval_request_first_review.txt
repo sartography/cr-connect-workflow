@@ -1,0 +1,2 @@
+A Research Ramp-up approval request from {{ primary_investigator }} is now available for your review in your
+Research Ramp-up Toolkit at https://rrt.uvadcos.io/app/approvals.

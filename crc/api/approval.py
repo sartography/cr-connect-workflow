@@ -13,11 +13,69 @@ from crc.services.approval_service import ApprovalService
 from crc.services.ldap_service import LdapService
 
 
-def get_approvals(everything=False):
-    if everything:
-        approvals = ApprovalService.get_all_approvals(include_cancelled=True)
-    else:
-        approvals = ApprovalService.get_approvals_per_user(g.user.uid, include_cancelled=False)
+# Returns counts of approvals in each status group assigned to the given user.
+# The goal is to return results as quickly as possible.
+def get_approval_counts(as_user=None):
+    uid = as_user or g.user.uid
+
+    db_user_approvals = db.session.query(ApprovalModel)\
+        .filter_by(approver_uid=uid)\
+        .filter(ApprovalModel.status != ApprovalStatus.CANCELED.name)\
+        .all()
+
+    study_ids = [a.study_id for a in db_user_approvals]
+    print('study_ids', study_ids)
+
+    db_other_approvals = db.session.query(ApprovalModel)\
+        .filter(ApprovalModel.study_id.in_(study_ids))\
+        .filter(ApprovalModel.approver_uid != uid)\
+        .filter(ApprovalModel.status != ApprovalStatus.CANCELED.name)\
+        .all()
+
+    # Make a dict of the other approvals where the key is the study id and the value is the approval
+    # TODO: This won't work if there are more than 2 approvals with the same study_id
+    other_approvals = {}
+    for approval in db_other_approvals:
+        other_approvals[approval.study_id] = approval
+
+    counts = {}
+    for status in ApprovalStatus:
+        counts[status.name] = 0
+
+    for approval in db_user_approvals:
+        # Check if another approval has the same study id
+        if approval.study_id in other_approvals:
+            other_approval = other_approvals[approval.study_id]
+
+            # Other approval takes precedence over this one
+            if other_approval.id < approval.id:
+                if other_approval.status == ApprovalStatus.PENDING.name:
+                    counts[ApprovalStatus.AWAITING.name] += 1
+                elif other_approval.status == ApprovalStatus.DECLINED.name:
+                    counts[ApprovalStatus.DECLINED.name] += 1
+                elif other_approval.status == ApprovalStatus.CANCELED.name:
+                    counts[ApprovalStatus.CANCELED.name] += 1
+                elif other_approval.status == ApprovalStatus.APPROVED.name:
+                    counts[approval.status] += 1
+        else:
+            counts[approval.status] += 1
+
+    return counts
+
+
+def get_all_approvals(status=None):
+    approvals = ApprovalService.get_all_approvals(include_cancelled=status is True)
+    results = ApprovalSchema(many=True).dump(approvals)
+    return results
+
+
+def get_approvals(status=None, as_user=None):
+    #status = ApprovalStatus.PENDING.value
+    user = g.user.uid
+    if as_user:
+        user = as_user
+    approvals = ApprovalService.get_approvals_per_user(user, status,
+                                                       include_cancelled=False)
     results = ApprovalSchema(many=True).dump(approvals)
     return results
 
@@ -29,7 +87,7 @@ def get_approvals_for_study(study_id=None):
     return results
 
 
-# ----- Being decent into madness ---- #
+# ----- Begin descent into madness ---- #
 def get_csv():
     """A damn lie, it's a json file. A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
     man to do just about anything"""
@@ -79,11 +137,13 @@ def get_csv():
             errors.append("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
     return {"results": output, "errors": errors }
 
+
 def extract_value(task, key):
     if key in task['data']:
         return pickle.loads(b64decode(task['data'][key]['__bytes__']))
     else:
         return ""
+
 
 def find_task(uuid, task):
     if task['id']['__uuid__'] == uuid:
@@ -93,6 +153,7 @@ def find_task(uuid, task):
         if task:
             return task
 # ----- come back to the world of the living ---- #
+
 
 def update_approval(approval_id, body):
     if approval_id is None:
@@ -110,6 +171,10 @@ def update_approval(approval_id, body):
     approval_model.date_approved = datetime.now()
     session.add(approval_model)
     session.commit()
+
+    # Called only to send emails
+    approver = body['approver']['uid']
+    ApprovalService.update_approval(approval_id, approver)
 
     result = ApprovalSchema().dump(approval_model)
     return result

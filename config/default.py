@@ -9,9 +9,10 @@ JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values 
 NAME = "CR Connect Workflow"
 FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default="5000")
 CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default="localhost:4200, localhost:5002"))
-DEVELOPMENT = environ.get('DEVELOPMENT', default="true") == "true"
 TESTING = environ.get('TESTING', default="false") == "true"
-PRODUCTION = (environ.get('PRODUCTION', default="false") == "true") or (not DEVELOPMENT and not TESTING)
+PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")
+TEST_UID = environ.get('TEST_UID', default="dhf8r")
+ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,ajl2j,cah13us,cl3wf"))
 
 # Sentry flag
 ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"
@@ -28,7 +29,7 @@ SQLALCHEMY_DATABASE_URI = environ.get(
     'SQLALCHEMY_DATABASE_URI',
     default="postgresql://%s:%s@%s:%s/%s" % (DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
 )
-TOKEN_AUTH_TTL_HOURS = int(environ.get('TOKEN_AUTH_TTL_HOURS', default=4))
+TOKEN_AUTH_TTL_HOURS = float(environ.get('TOKEN_AUTH_TTL_HOURS', default=24))
 TOKEN_AUTH_SECRET_KEY = environ.get('TOKEN_AUTH_SECRET_KEY', default="Shhhh!!! This is secret!  And better darn well not show up in prod.")
 FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://localhost:4200/session")
 SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
@@ -42,6 +43,14 @@ PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL +
 PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
 
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
-LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=3))
+LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
-
+# Email configuration
+FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
+MAIL_DEBUG = environ.get('MAIL_DEBUG', default=True)
+MAIL_SERVER = environ.get('MAIL_SERVER', default='smtp.mailtrap.io')
+MAIL_PORT = environ.get('MAIL_PORT', default=2525)
+MAIL_USE_SSL = environ.get('MAIL_USE_SSL', default=False)
+MAIL_USE_TLS = environ.get('MAIL_USE_TLS', default=True)
+MAIL_USERNAME = environ.get('MAIL_USERNAME', default='')
+MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='')
