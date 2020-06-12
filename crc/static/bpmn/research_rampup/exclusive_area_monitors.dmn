@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_06veek1" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_ExclusiveAMCheck" name="Exclusive AM Check">
+    <decisionTable id="decisionTable_1">
+      <input id="InputClause_1z0jy2o" label="How Many Exclusive Spaces?">
+        <inputExpression id="LiteralExpression_0tvij2j" typeRef="integer" expressionLanguage="python">
+          <text>len(exclusive)</text>
+        </inputExpression>
+      </input>
+      <input id="input_1" label="Number Without Area Monitor">
+        <inputExpression id="inputExpression_1" typeRef="integer" expressionLanguage="python">
+          <text>sum([1 for x in exclusive if x.get('ExclusiveSpaceAMComputingID',None) == None])</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="All Possible Area Monitors Entered" name="isAllExclusiveAreaMonitors" typeRef="boolean" />
+      <rule id="DecisionRule_07162mr">
+        <description>No exclusvie spaces without Area Monitor</description>
+        <inputEntry id="UnaryTests_1892rx8">
+          <text>&gt;0</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1jqxc3u">
+          <text>0</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_16l50ps">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0ifa4wu">
+        <description>One or more exclusive space without an Area Monitor</description>
+        <inputEntry id="UnaryTests_1jakyab">
+          <text>&gt;0</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0szbwxc">
+          <text>&gt; 0</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0td8sa6">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_026r0im">
+        <description>No exclusive spaces entered</description>
+        <inputEntry id="UnaryTests_0c670b6">
+          <text>0</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0j06ysc">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1apwzvv">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

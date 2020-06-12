@@ -1,22 +1,19 @@
-import os
+from tests.base_test import BaseTest
 
-from crc import app
 from crc.api.common import ApiError
 from crc.services.ldap_service import LdapService
-from tests.base_test import BaseTest
-from ldap3 import Server, Connection, ALL, MOCK_SYNC
 
 
 class TestLdapService(BaseTest):
 
     def setUp(self):
-        self.ldap_service = LdapService()
+        pass
 
     def tearDown(self):
         pass
 
     def test_get_single_user(self):
-        user_info = self.ldap_service.user_info("lb3dp")
+        user_info = LdapService.user_info("lb3dp")
         self.assertIsNotNone(user_info)
         self.assertEqual("lb3dp", user_info.uid)
         self.assertEqual("Laura Barnes", user_info.display_name)
@@ -30,7 +27,7 @@ class TestLdapService(BaseTest):
 
     def test_find_missing_user(self):
         try:
-            user_info = self.ldap_service.user_info("nosuch")
+            user_info = LdapService.user_info("nosuch")
             self.assertFalse(True, "An API error should be raised.")
         except ApiError as ae:
-            self.assertEquals("missing_ldap_record", ae.code)
+            self.assertEqual("missing_ldap_record", ae.code)

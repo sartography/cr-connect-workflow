@@ -9,6 +9,8 @@ from crc.api.common import ApiError
 from crc.scripts.complete_template import CompleteTemplate
 from crc.scripts.script import Script
 import crc.scripts
+from crc.services.mails import send_test_email
+
 
 def render_markdown(data, template):
     """
@@ -20,9 +22,9 @@ def render_markdown(data, template):
         data = json.loads(data)
         return template.render(**data)
     except UndefinedError as ue:
-        raise ApiError(code="undefined field", message=ue.message)
+        raise ApiError(code="undefined_field", message=ue.message)
     except Exception as e:
-        raise ApiError(code="invalid", message=str(e))
+        raise ApiError(code="invalid_render", message=str(e))
 
 
 def render_docx():
@@ -42,9 +44,9 @@ def render_docx():
             cache_timeout=-1  # Don't cache these files on the browser.
         )
     except ValueError as e:
-        raise ApiError(code="invalid", message=str(e))
+        raise ApiError(code="undefined_field", message=str(e))
     except Exception as e:
-        raise ApiError(code="invalid", message=str(e))
+        raise ApiError(code="invalid_render", message=str(e))
 
 
 def list_scripts():
@@ -59,3 +61,8 @@ def list_scripts():
             })
     return script_meta
 
+def send_email(address):
+    """Just sends a quick test email to assure the system is working."""
+    if not address:
+        address = "dan@sartography.com"
+    return send_test_email(address, [address])

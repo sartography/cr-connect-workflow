@@ -25,7 +25,7 @@ class TestWorkflowProcessor(BaseTest):
 
     def _populate_form_with_random_data(self, task):
         api_task = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
-        WorkflowService.populate_form_with_random_data(task, api_task)
+        WorkflowService.populate_form_with_random_data(task, api_task, required_only=False)
 
     def get_processor(self, study_model, spec_model):
         workflow_model = StudyService._create_workflow_model(study_model, spec_model)

@@ -11,7 +11,8 @@ class RequestApproval(Script):
         return """
 Creates an approval request on this workflow, by the given approver_uid(s),"
 Takes multiple arguments, which should point to data located in current task
-or be quoted strings.
+or be quoted strings. The order is important.  Approvals will be processed 
+in this order.
 
 Example:
 RequestApproval approver1 "dhf8r"
@@ -26,7 +27,8 @@ RequestApproval approver1 "dhf8r"
             ApprovalService.add_approval(study_id, workflow_id, args)
         elif isinstance(uids, list):
             for id in uids:
-                ApprovalService.add_approval(study_id, workflow_id, id)
+                if id: ## Assure it's not empty or null
+                    ApprovalService.add_approval(study_id, workflow_id, id)
 
     def get_uids(self, task, args):
         if len(args) < 1:
