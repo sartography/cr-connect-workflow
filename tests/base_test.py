@@ -41,7 +41,6 @@ class BaseTest(unittest.TestCase):
 
     auths = {}
     test_uid = "dhf8r"
-    flask_globals = g
 
     users = [
         {
@@ -99,7 +98,7 @@ class BaseTest(unittest.TestCase):
 
     def tearDown(self):
         ExampleDataLoader.clean_db()
-        self.flask_globals.user = None
+        g.user = None
         self.auths = {}
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
@@ -118,8 +117,8 @@ class BaseTest(unittest.TestCase):
         user_model = session.query(UserModel).filter_by(uid=uid).first()
         self.assertIsNotNone(user_model.display_name)
         self.assertEqual(user_model.uid, uid)
-        self.assertTrue('user' in self.flask_globals, 'User should be in Flask globals')
-        self.assertEqual(uid, self.flask_globals.user.uid, 'Logged in user should match given user uid')
+        self.assertTrue('user' in g, 'User should be in Flask globals')
+        self.assertEqual(uid, g.user.uid, 'Logged in user should match given user uid')
 
         return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
 

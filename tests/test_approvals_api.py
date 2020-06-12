@@ -2,6 +2,8 @@ import json
 import random
 import string
 
+from flask import g
+
 from tests.base_test import BaseTest
 from crc import session, db
 from crc.models.approval import ApprovalModel, ApprovalStatus
@@ -141,8 +143,8 @@ class TestApprovals(BaseTest):
             self.assertEqual('two_forms', workflow_api.workflow_spec_id)
 
             # Log current user out.
-            self.flask_globals.user = None
-            self.assertIsNone(self.flask_globals.user)
+            g.user = None
+            self.assertIsNone(g.user)
 
             # Complete the form for Step one and post it.
             self.complete_form(workflow, workflow_api.next_task, {"color": "blue"}, error_code=None, user_uid=workflow.study.user_uid)

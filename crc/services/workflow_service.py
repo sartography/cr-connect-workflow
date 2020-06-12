@@ -58,7 +58,7 @@ class WorkflowService(object):
 
     @staticmethod
     def delete_test_data():
-        for study in db.session.query(StudyModel).filter_by(user_uid="test"):
+        for study in db.session.query(StudyModel).filter_by(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
             db.session.commit()
 
