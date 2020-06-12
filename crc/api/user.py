@@ -31,7 +31,7 @@ def verify_token(token=None):
     failure_error = ApiError("invalid_token", "Unable to decode the token you provided.  Please re-authenticate",
                              status_code=403)
 
-    if not _is_production():
+    if not _is_production() and (token is None or 'user' not in g):
         g.user = UserModel.query.first()
         token = g.user.encode_auth_token()
 
@@ -132,6 +132,7 @@ def login(
     # X-Forwarded-Server: dev.crconnect.uvadcos.io
     # Connection: Keep-Alive
 
+
     # If we're in production, override any uid with the uid from the SSO request headers
     if _is_production():
         uid = _get_request_uid(request)
@@ -175,6 +176,7 @@ def _handle_login(user_info: LdapModel, redirect_url=None):
             Response.  302 - Redirects to the frontend auth callback URL, with auth token appended.
    """
     user = _upsert_user(user_info)
+    g.user = user
 
     # Return the frontend auth callback URL, with auth token appended.
     auth_token = user.encode_auth_token().decode()

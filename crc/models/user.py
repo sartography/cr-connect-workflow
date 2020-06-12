@@ -19,7 +19,7 @@ class UserModel(db.Model):
     last_name = db.Column(db.String, nullable=True)
     title = db.Column(db.String, nullable=True)
 
-    # Add Department and School
+    # TODO: Add Department and School
 
 
     def encode_auth_token(self):
