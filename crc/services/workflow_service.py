@@ -7,7 +7,6 @@ from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
-from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from flask import g
@@ -17,7 +16,6 @@ from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType
 from crc.models.file import LookupDataModel
-from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
@@ -39,7 +37,9 @@ class WorkflowService(object):
      the workflow Processor should be hidden behind this service.
      This will help maintain a structure that avoids circular dependencies.
      But for now, this contains tools for converting spiff-workflow models into our
-     own API models with additional information and capabilities."""
+     own API models with additional information and capabilities and 
+     handles the testing of a workflow specification by completing it with
+     random selections, attempting to mimic a front end as much as possible. """
 
     @staticmethod
     def make_test_workflow(spec_id):
@@ -58,15 +58,23 @@ class WorkflowService(object):
 
     @staticmethod
     def delete_test_data():
-        for study in db.session.query(StudyModel).filter(StudyModel.user_uid=="test"):
+        for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
             db.session.commit()
-        db.session.query(UserModel).filter_by(uid="test").delete()
+
+        user = db.session.query(UserModel).filter_by(uid="test").first()
+        if user:
+            db.session.delete(user)
 
     @staticmethod
-    def test_spec(spec_id):
-        """Runs a spec through it's paces to see if it results in any errors.  Not fool-proof, but a good
-        sanity check."""
+    def test_spec(spec_id, required_only=False):
+        """Runs a spec through it's paces to see if it results in any errors.
+          Not fool-proof, but a good sanity check.  Returns the final data
+          output form the last task if successful.
+
+          required_only can be set to true, in which case this will run the
+          spec, only completing the required fields, rather than everything.
+          """
 
         workflow_model = WorkflowService.make_test_workflow(spec_id)
 
@@ -74,8 +82,7 @@ class WorkflowService(object):
             processor = WorkflowProcessor(workflow_model, validate_only=True)
         except WorkflowException as we:
             WorkflowService.delete_test_data()
-            raise ApiError.from_task_spec("workflow_execution_exception", str(we),
-                                          we.sender)
+            raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         while not processor.bpmn_workflow.is_completed():
             try:
@@ -85,38 +92,57 @@ class WorkflowService(object):
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
-                    WorkflowService.populate_form_with_random_data(task, task_api)
+                    WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                     task.complete()
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
-                raise ApiError.from_task_spec("workflow_execution_exception", str(we),
-                                              we.sender)
+                raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
+
         WorkflowService.delete_test_data()
+        return processor.bpmn_workflow.last_task.data
 
     @staticmethod
-    def populate_form_with_random_data(task, task_api):
+    def populate_form_with_random_data(task, task_api, required_only):
         """populates a task with random data - useful for testing a spec."""
 
         if not hasattr(task.task_spec, 'form'): return
 
-        form_data = {}
+        form_data = task.data # Just like with the front end, we start with what was already there, and modify it.
         for field in task_api.form.fields:
-            if field.type == "enum":
-                if len(field.options) > 0:
-                    random_choice = random.choice(field.options)
-                    if isinstance(random_choice, dict):
-                        form_data[field.id] = random.choice(field.options)['id']
-                    else:
-                        # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
-                        form_data[field.id] = random_choice.id ## Assume it is an EnumFormFieldOption
+            if required_only and (not field.has_validation(Task.VALIDATION_REQUIRED) or
+                                  field.get_validation(Task.VALIDATION_REQUIRED).lower().strip() != "true"):
+                continue # Don't include any fields that aren't specifically marked as required.
+            if field.has_property("read_only") and field.get_property("read_only").lower().strip() == "true":
+                continue # Don't mess about with read only fields.
+            if field.has_property(Task.PROP_OPTIONS_REPEAT):
+                group = field.get_property(Task.PROP_OPTIONS_REPEAT)
+                if group not in form_data:
+                    form_data[group] = [{},{},{}]
+                for i in range(3):
+                    form_data[group][i][field.id] = WorkflowService.get_random_data_for_field(field, task)
+            else:
+                form_data[field.id] = WorkflowService.get_random_data_for_field(field, task)
+        if task.data is None:
+            task.data = {}
+        task.data.update(form_data)
+
+    @staticmethod
+    def get_random_data_for_field(field, task):
+        if field.type == "enum":
+            if len(field.options) > 0:
+                random_choice = random.choice(field.options)
+                if isinstance(random_choice, dict):
+                    return random.choice(field.options)['id']
                 else:
-                    raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
-                                                             " with no options" % field.id,
-                                             task)
-            elif field.type == "autocomplete":
-                lookup_model = LookupService.get_lookup_model(task, field)
-                if field.has_property(Task.PROP_LDAP_LOOKUP):
-                    form_data[field.id] = {
+                    # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
+                    return random_choice.id  ## Assume it is an EnumFormFieldOption
+            else:
+                raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
+                                                         " with no options" % field.id, task)
+        elif field.type == "autocomplete":
+            lookup_model = LookupService.get_lookup_model(task, field)
+            if field.has_property(Task.PROP_LDAP_LOOKUP):  # All ldap records get the same person.
+                return {
                         "label": "dhf8r",
                         "value": "Dan Funk",
                         "data": {
@@ -126,32 +152,30 @@ class WorkflowService(object):
                             "email_address": "dhf8r@virginia.edu",
                             "department": "Depertment of Psychocosmographictology",
                             "affiliation": "Rousabout",
-                            "sponsor_type": "Staff"
+                            "sponsor_type": "Staff"}
                         }
-                    }
-                elif lookup_model:
-                    data = db.session.query(LookupDataModel).filter(
-                        LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
-                    options = []
-                    for d in data:
-                        options.append({"id": d.value, "name": d.label})
-                    form_data[field.id] = random.choice(options)
-                else:
-                    raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
-                                                                     "are incorrect: %s " % field.id, task)
-            elif field.type == "long":
-                form_data[field.id] = random.randint(1, 1000)
-            elif field.type == 'boolean':
-                form_data[field.id] = random.choice([True, False])
-            elif field.type == 'file':
-                form_data[field.id] = random.randint(1, 100)
-            elif field.type == 'files':
-                form_data[field.id] = random.randrange(1, 100)
+            elif lookup_model:
+                data = db.session.query(LookupDataModel).filter(
+                    LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
+                options = []
+                for d in data:
+                    options.append({"id": d.value, "label": d.label})
+                return random.choice(options)
             else:
-                form_data[field.id] = WorkflowService._random_string()
-        if task.data is None:
-            task.data = {}
-        task.data.update(form_data)
+                raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
+                                                                 "are incorrect: %s " % field.id, task)
+        elif field.type == "long":
+            return random.randint(1, 1000)
+        elif field.type == 'boolean':
+            return random.choice([True, False])
+        elif field.type == 'file':
+            # fixme: produce some something sensible for files.
+            return random.randint(1, 100)
+            # fixme: produce some something sensible for files.
+        elif field.type == 'files':
+            return random.randrange(1, 100)
+        else:
+            return WorkflowService._random_string()
 
     def __get_options(self):
         pass
@@ -272,10 +296,11 @@ class WorkflowService(object):
             template = Template(raw_doc)
             return template.render(**spiff_task.data)
         except jinja2.exceptions.TemplateError as ue:
-
-            #            return "Error processing template. %s" % ue.message
-            raise ApiError(code="template_error", message="Error processing template for task %s: %s" %
-                                                          (spiff_task.task_spec.name, str(ue)), status_code=500)
+            raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
+                                                          (spiff_task.task_spec.name, str(ue)), task=spiff_task)
+        except TypeError as te:
+            raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
+                                                          (spiff_task.task_spec.name, str(te)), task=spiff_task)
         # TODO:  Catch additional errors and report back.
 
     @staticmethod
@@ -293,12 +318,12 @@ class WorkflowService(object):
                 field.options.append({"id": d.value, "name": d.label})
 
     @staticmethod
-    def log_task_action(processor, spiff_task, action):
+    def log_task_action(user_uid, processor, spiff_task, action):
         task = WorkflowService.spiff_task_to_api_task(spiff_task)
         workflow_model = processor.workflow_model
         task_event = TaskEventModel(
             study_id=workflow_model.study_id,
-            user_uid=g.user.uid,
+            user_uid=user_uid,
             workflow_id=workflow_model.id,
             workflow_spec_id=workflow_model.workflow_spec_id,
             spec_version=processor.get_version_string(),

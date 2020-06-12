@@ -1,6 +1,8 @@
 import uuid
 
-from crc import session
+from flask import g
+
+from crc import session, app
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
 from crc.models.file import FileModel, LookupDataSchema
@@ -44,6 +46,13 @@ def validate_workflow_specification(spec_id):
     try:
         WorkflowService.test_spec(spec_id)
     except ApiError as ae:
+        ae.message = "When populating all fields ... " + ae.message
+        errors.append(ae)
+    try:
+        # Run the validation twice, the second time, just populate the required fields.
+        WorkflowService.test_spec(spec_id, required_only=True)
+    except ApiError as ae:
+        ae.message = "When populating only required fields ... " + ae.message
         errors.append(ae)
     return ApiErrorSchema(many=True).dump(errors)
 
@@ -112,6 +121,8 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
 
         navigation.append(NavigationItem(**nav_item))
         NavigationItemSchema().dump(nav_item)
+
+    spec = session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
     workflow_api = WorkflowApi(
         id=processor.get_workflow_id(),
         status=processor.get_status(),
@@ -120,9 +131,10 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
         workflow_spec_id=processor.workflow_spec_id,
         spec_version=processor.get_version_string(),
         is_latest_spec=processor.is_latest_spec,
-        total_tasks=processor.workflow_model.total_tasks,
+        total_tasks=len(navigation),
         completed_tasks=processor.workflow_model.completed_tasks,
-        last_updated=processor.workflow_model.last_updated
+        last_updated=processor.workflow_model.last_updated,
+        title=spec.display_name
     )
     if not next_task: # The Next Task can be requested to be a certain task, useful for parallel tasks.
         # This may or may not work, sometimes there is no next task to complete.
@@ -146,6 +158,7 @@ def delete_workflow(workflow_id):
 
 def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    user_uid = __get_user_uid(workflow_model.study.user_uid)
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
@@ -157,13 +170,21 @@ def set_current_task(workflow_id, task_id):
     if task.state == task.COMPLETED:
         task.reset_token(reset_data=False)  # we could optionally clear the previous data.
     processor.save()
-    WorkflowService.log_task_action(processor, task, WorkflowService.TASK_ACTION_TOKEN_RESET)
+    WorkflowService.log_task_action(user_uid, processor, task, WorkflowService.TASK_ACTION_TOKEN_RESET)
     workflow_api_model = __get_workflow_api_model(processor, task)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
 def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+
+    if workflow_model is None:
+        raise ApiError("invalid_workflow_id", "The given workflow id is not valid.", status_code=404)
+
+    elif workflow_model.study is None:
+        raise ApiError("invalid_study", "There is no study associated with the given workflow.", status_code=404)
+
+    user_uid = __get_user_uid(workflow_model.study.user_uid)
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
@@ -174,7 +195,7 @@ def update_task(workflow_id, task_id, body):
     processor.complete_task(task)
     processor.do_engine_steps()
     processor.save()
-    WorkflowService.log_task_action(processor, task, WorkflowService.TASK_ACTION_COMPLETE)
+    WorkflowService.log_task_action(user_uid, processor, task, WorkflowService.TASK_ACTION_COMPLETE)
 
     workflow_api_model = __get_workflow_api_model(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
@@ -229,3 +250,14 @@ def lookup(workflow_id, field_id, query, limit):
     workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
     lookup_data = LookupService.lookup(workflow, field_id, query, limit)
     return LookupDataSchema(many=True).dump(lookup_data)
+
+
+def __get_user_uid(user_uid):
+    if 'user' in g:
+        if g.user.uid not in app.config['ADMIN_UIDS'] and user_uid != g.user.uid:
+            raise ApiError("permission_denied", "You are not authorized to edit the task data for this workflow.", status_code=403)
+        else:
+            return g.user.uid
+
+    else:
+        raise ApiError("logged_out", "You are no longer logged in.", status_code=401)

@@ -1,5 +1,6 @@
 import json
 from tests.base_test import BaseTest
+
 from datetime import datetime, timezone
 from unittest.mock import patch
 
@@ -8,8 +9,9 @@ from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel, StudySchema
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecCategoryModel
-from crc.services.protocol_builder import ProtocolBuilderService
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel
+from crc.services.file_service import FileService
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class TestStudyApi(BaseTest):
@@ -67,6 +69,34 @@ class TestStudyApi(BaseTest):
         self.assertEqual("not_started", workflow["status"])
         self.assertEqual(0, workflow["total_tasks"])
         self.assertEqual(0, workflow["completed_tasks"])
+
+    def test_get_study_has_details_about_files(self):
+
+        # Set up the study and attach a file to it.
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form')
+        processor = WorkflowProcessor(workflow)
+        task = processor.next_task()
+        irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="png",
+                                      binary_data=b'1234', irb_doc_code=irb_code)
+
+        api_response = self.app.get('/v1.0/study/%i' % workflow.study_id,
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response)
+        study = StudySchema().loads(api_response.get_data(as_text=True))
+        self.assertEqual(1, len(study.files))
+        self.assertEqual("UVA Compliance/PRC Approval", study.files[0]["category"])
+        self.assertEqual("Cancer Center's PRC Approval Form", study.files[0]["description"])
+        self.assertEqual("UVA Compliance/PRC Approval.png", study.files[0]["download_name"])
+
+        # TODO: WRITE A TEST FOR STUDY FILES
+
+    def test_get_study_has_details_about_approvals(self):
+        # TODO: WRITE A TEST FOR STUDY APPROVALS
+        pass
 
     def test_add_study(self):
         self.load_example_data()
@@ -150,10 +180,10 @@ class TestStudyApi(BaseTest):
         db_studies_after = session.query(StudyModel).all()
         num_db_studies_after = len(db_studies_after)
         self.assertGreater(num_db_studies_after, num_db_studies_before)
-        self.assertEquals(num_abandoned, 1)
-        self.assertEquals(num_open, 1)
-        self.assertEquals(num_active, 1)
-        self.assertEquals(num_incomplete, 1)
+        self.assertEqual(num_abandoned, 1)
+        self.assertEqual(num_open, 1)
+        self.assertEqual(num_active, 1)
+        self.assertEqual(num_incomplete, 1)
         self.assertEqual(len(json_data), num_db_studies_after)
         self.assertEqual(num_open + num_active + num_incomplete + num_abandoned, num_db_studies_after)
 
