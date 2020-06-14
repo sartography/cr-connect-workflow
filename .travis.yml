@@ -24,6 +24,7 @@ env:
   global:
     - TESTING=true
     - PB_ENABLED=false
+    - SQLALCHEMY_DATABASE_URI="postgresql://postgres:@localhost:5432/crc_test"
 
 script:
   - pipenv run coverage run -m pytest
