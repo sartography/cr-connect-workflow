@@ -157,10 +157,12 @@ class TestStudyService(BaseTest):
 
     def test_get_all_studies(self):
         user = self.create_user_with_study_and_workflow()
+        study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
+        self.assertIsNotNone(study)
 
         # Add a document to the study with the correct code.
-        workflow1 = self.create_workflow('docx')
-        workflow2 = self.create_workflow('empty_workflow')
+        workflow1 = self.create_workflow('docx', study=study)
+        workflow2 = self.create_workflow('empty_workflow', study=study)
 
         # Add files to both workflows.
         FileService.add_workflow_file(workflow_id=workflow1.id,
