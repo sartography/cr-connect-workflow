@@ -133,7 +133,7 @@ class StudyService(object):
         that is available.."""
 
         # Get PB required docs, if Protocol Builder Service is enabled.
-        if ProtocolBuilderService.is_enabled():
+        if ProtocolBuilderService.is_enabled() and study_id is not None:
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:
