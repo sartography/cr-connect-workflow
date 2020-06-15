@@ -4,84 +4,13 @@ import random
 from unittest.mock import patch
 
 from tests.base_test import BaseTest
-
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
 from crc.models.file import FileModelSchema
-from crc.models.stats import TaskEventModel
 from crc.models.workflow import WorkflowStatus
-from crc.services.workflow_service import WorkflowService
 
 
 class TestTasksApi(BaseTest):
-
-    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False):
-        rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
-                          (workflow.id, str(soft_reset), str(hard_reset)),
-                          headers=self.logged_in_headers(),
-                          content_type="application/json")
-        self.assert_success(rv)
-        json_data = json.loads(rv.get_data(as_text=True))
-        workflow_api = WorkflowApiSchema().load(json_data)
-        self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
-        return workflow_api
-
-    def complete_form(self, workflow_in, task_in, dict_data, error_code = None):
-        prev_completed_task_count = workflow_in.completed_tasks
-        if isinstance(task_in, dict):
-            task_id = task_in["id"]
-        else:
-            task_id = task_in.id
-        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
-                          headers=self.logged_in_headers(),
-                          content_type="application/json",
-                          data=json.dumps(dict_data))
-        if error_code:
-            self.assert_failure(rv, error_code=error_code)
-            return
-
-        self.assert_success(rv)
-        json_data = json.loads(rv.get_data(as_text=True))
-
-        # Assure stats are updated on the model
-        workflow = WorkflowApiSchema().load(json_data)
-        # The total number of tasks may change over time, as users move through gateways
-        # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
-        self.assertIsNotNone(workflow.total_tasks)
-        self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
-        # Assure a record exists in the Task Events
-        task_events = session.query(TaskEventModel) \
-            .filter_by(workflow_id=workflow.id) \
-            .filter_by(task_id=task_id) \
-            .order_by(TaskEventModel.date.desc()).all()
-        self.assertGreater(len(task_events), 0)
-        event = task_events[0]
-        self.assertIsNotNone(event.study_id)
-        self.assertEqual("dhf8r", event.user_uid)
-        self.assertEqual(workflow.id, event.workflow_id)
-        self.assertEqual(workflow.workflow_spec_id, event.workflow_spec_id)
-        self.assertEqual(workflow.spec_version, event.spec_version)
-        self.assertEqual(WorkflowService.TASK_ACTION_COMPLETE, event.action)
-        self.assertEqual(task_in.id, task_id)
-        self.assertEqual(task_in.name, event.task_name)
-        self.assertEqual(task_in.title, event.task_title)
-        self.assertEqual(task_in.type, event.task_type)
-        self.assertEqual("COMPLETED", event.task_state)
-        # Not sure what vodoo is happening inside of marshmallow to get me in this state.
-        if isinstance(task_in.multi_instance_type, MultiInstanceType):
-            self.assertEqual(task_in.multi_instance_type.value, event.mi_type)
-        else:
-            self.assertEqual(task_in.multi_instance_type, event.mi_type)
-
-        self.assertEqual(task_in.multi_instance_count, event.mi_count)
-        self.assertEqual(task_in.multi_instance_index, event.mi_index)
-        self.assertEqual(task_in.process_name, event.process_name)
-        self.assertIsNotNone(event.date)
-
-
-        workflow = WorkflowApiSchema().load(json_data)
-        return workflow
-
 
     def test_get_current_user_tasks(self):
         self.load_example_data()
@@ -185,6 +114,7 @@ class TestTasksApi(BaseTest):
         self.load_example_data()
         self.create_reference_document()
         workflow = self.create_workflow('docx')
+
         # get the first form in the two form workflow.
         task = self.get_workflow_api(workflow).next_task
         data = {
@@ -203,6 +133,7 @@ class TestTasksApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         files = FileModelSchema(many=True).load(json_data, session=session)
         self.assertTrue(len(files) == 1)
+
         # Assure we can still delete the study even when there is a file attached to a workflow.
         rv = self.app.delete('/v1.0/study/%i' % workflow.study_id, headers=self.logged_in_headers())
         self.assert_success(rv)

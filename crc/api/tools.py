@@ -9,6 +9,8 @@ from crc.api.common import ApiError
 from crc.scripts.complete_template import CompleteTemplate
 from crc.scripts.script import Script
 import crc.scripts
+from crc.services.mails import send_test_email
+
 
 def render_markdown(data, template):
     """
@@ -59,3 +61,8 @@ def list_scripts():
             })
     return script_meta
 
+def send_email(address):
+    """Just sends a quick test email to assure the system is working."""
+    if not address:
+        address = "dan@sartography.com"
+    return send_test_email(address, [address])
