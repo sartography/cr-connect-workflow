@@ -9,9 +9,10 @@ JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values 
 NAME = "CR Connect Workflow"
 FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default="5000")
 CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default="localhost:4200, localhost:5002"))
-DEVELOPMENT = environ.get('DEVELOPMENT', default="true") == "true"
 TESTING = environ.get('TESTING', default="false") == "true"
-PRODUCTION = (environ.get('PRODUCTION', default="false") == "true") or (not DEVELOPMENT and not TESTING)
+PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")
+TEST_UID = environ.get('TEST_UID', default="dhf8r")
+ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,ajl2j,cah13us,cl3wf"))
 
 # Sentry flag
 ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"
@@ -28,14 +29,14 @@ SQLALCHEMY_DATABASE_URI = environ.get(
     'SQLALCHEMY_DATABASE_URI',
     default="postgresql://%s:%s@%s:%s/%s" % (DB_USER, DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)
 )
-TOKEN_AUTH_TTL_HOURS = int(environ.get('TOKEN_AUTH_TTL_HOURS', default=4))
+TOKEN_AUTH_TTL_HOURS = float(environ.get('TOKEN_AUTH_TTL_HOURS', default=24))
 TOKEN_AUTH_SECRET_KEY = environ.get('TOKEN_AUTH_SECRET_KEY', default="Shhhh!!! This is secret!  And better darn well not show up in prod.")
 FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://localhost:4200/session")
 SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 
 # %s/%i placeholders expected for uva_id and study_id in various calls.
 PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
-PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/pb/").strip('/') + '/'  # Trailing slash required
+PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/v2.0/").strip('/') + '/'  # Trailing slash required
 PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "user_studies?uva_id=%s")
 PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "investigators?studyid=%i")
 PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
