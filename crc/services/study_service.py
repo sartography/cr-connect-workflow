@@ -86,8 +86,8 @@ class StudyService(object):
     def delete_workflow(workflow):
         for file in session.query(FileModel).filter_by(workflow_id=workflow.id).all():
             FileService.delete_file(file.id)
-        for deb in workflow.dependencies:
-            session.delete(deb)
+        for dep in workflow.dependencies:
+            session.delete(dep)
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
         session.query(WorkflowModel).filter_by(id=workflow.id).delete()
 
@@ -133,7 +133,7 @@ class StudyService(object):
         that is available.."""
 
         # Get PB required docs, if Protocol Builder Service is enabled.
-        if ProtocolBuilderService.is_enabled():
+        if ProtocolBuilderService.is_enabled() and study_id is not None:
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:

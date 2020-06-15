@@ -13,7 +13,6 @@ addons:
     organization: "sartography"
 
 before_install:
-  - cp config/travis-testing.py config/testing.py
   - psql -c 'create database crc_test;' -U postgres
 
 install:
@@ -22,7 +21,10 @@ install:
   - pipenv install
 
 env:
-  - PB_BASE_URL='http://workflow.sartography.com:5001/pb/'
+  global:
+    - TESTING=true
+    - PB_ENABLED=false
+    - SQLALCHEMY_DATABASE_URI="postgresql://postgres:@localhost:5432/crc_test"
 
 script:
   - pipenv run coverage run -m pytest

@@ -58,7 +58,7 @@ class WorkflowService(object):
 
     @staticmethod
     def delete_test_data():
-        for study in db.session.query(StudyModel).filter(StudyModel.user_uid=="test"):
+        for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
             db.session.commit()
 
@@ -318,12 +318,12 @@ class WorkflowService(object):
                 field.options.append({"id": d.value, "name": d.label})
 
     @staticmethod
-    def log_task_action(processor, spiff_task, action):
+    def log_task_action(user_uid, processor, spiff_task, action):
         task = WorkflowService.spiff_task_to_api_task(spiff_task)
         workflow_model = processor.workflow_model
         task_event = TaskEventModel(
             study_id=workflow_model.study_id,
-            user_uid=g.user.uid,
+            user_uid=user_uid,
             workflow_id=workflow_model.id,
             workflow_spec_id=workflow_model.workflow_spec_id,
             spec_version=processor.get_version_string(),

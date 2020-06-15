@@ -24,7 +24,6 @@ def get_approval_counts(as_user=None):
         .all()
 
     study_ids = [a.study_id for a in db_user_approvals]
-    print('study_ids', study_ids)
 
     db_other_approvals = db.session.query(ApprovalModel)\
         .filter(ApprovalModel.study_id.in_(study_ids))\
@@ -39,8 +38,8 @@ def get_approval_counts(as_user=None):
         other_approvals[approval.study_id] = approval
 
     counts = {}
-    for status in ApprovalStatus:
-        counts[status.name] = 0
+    for name, value in ApprovalStatus.__members__.items():
+        counts[name] = 0
 
     for approval in db_user_approvals:
         # Check if another approval has the same study id
@@ -57,10 +56,18 @@ def get_approval_counts(as_user=None):
                     counts[ApprovalStatus.CANCELED.name] += 1
                 elif other_approval.status == ApprovalStatus.APPROVED.name:
                     counts[approval.status] += 1
+            else:
+                counts[approval.status] += 1
         else:
             counts[approval.status] += 1
 
     return counts
+
+
+def get_all_approvals(status=None):
+    approvals = ApprovalService.get_all_approvals(include_cancelled=status is True)
+    results = ApprovalSchema(many=True).dump(approvals)
+    return results
 
 
 def get_approvals(status=None, as_user=None):
@@ -165,6 +172,10 @@ def update_approval(approval_id, body):
     approval_model.date_approved = datetime.now()
     session.add(approval_model)
     session.commit()
+
+    # Called only to send emails
+    approver = body['approver']['uid']
+    ApprovalService.update_approval(approval_id, approver)
 
     result = ApprovalSchema().dump(approval_model)
     return result
