@@ -36,7 +36,7 @@ SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 
 # %s/%i placeholders expected for uva_id and study_id in various calls.
 PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
-PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/pb/").strip('/') + '/'  # Trailing slash required
+PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/v2.0/").strip('/') + '/'  # Trailing slash required
 PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "user_studies?uva_id=%s")
 PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "investigators?studyid=%i")
 PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
@@ -51,6 +51,6 @@ MAIL_DEBUG = environ.get('MAIL_DEBUG', default=True)
 MAIL_SERVER = environ.get('MAIL_SERVER', default='smtp.mailtrap.io')
 MAIL_PORT = environ.get('MAIL_PORT', default=2525)
 MAIL_USE_SSL = environ.get('MAIL_USE_SSL', default=False)
-MAIL_USE_TLS = environ.get('MAIL_USE_TLS', default=True)
+MAIL_USE_TLS = environ.get('MAIL_USE_TLS', default=False)
 MAIL_USERNAME = environ.get('MAIL_USERNAME', default='')
 MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='')
