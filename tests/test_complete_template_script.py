@@ -17,7 +17,7 @@ class TestCompleteTemplate(unittest.TestCase):
         data = {"name": "Dan"}
         data_copy = copy.deepcopy(data)
         script.rich_text_update(data_copy)
-        self.assertEquals(data, data_copy)
+        self.assertEqual(data, data_copy)
 
     def test_rich_text_update_new_line(self):
         script = CompleteTemplate()

@@ -1,4 +1,5 @@
 import json
+from json import JSONDecodeError
 from typing import List, Optional
 
 import requests
@@ -25,11 +26,18 @@ class ProtocolBuilderService(object):
     def get_studies(user_id) -> {}:
         ProtocolBuilderService.__enabled_or_raise()
         if not isinstance(user_id, str):
-            raise ApiError("invalid_user_id", "This user id is invalid: " + str(user_id))
-        response = requests.get(ProtocolBuilderService.STUDY_URL % user_id)
+            raise ApiError("protocol_builder_error", "This user id is invalid: " + str(user_id))
+        url = ProtocolBuilderService.STUDY_URL % user_id
+        response = requests.get(url)
         if response.ok and response.text:
-            pb_studies = ProtocolBuilderStudySchema(many=True).loads(response.text)
-            return pb_studies
+            try:
+                pb_studies = ProtocolBuilderStudySchema(many=True).loads(response.text)
+                return pb_studies
+            except JSONDecodeError as err:
+                raise ApiError("protocol_builder_error",
+                               "Received an invalid response from the protocol builder.  The response is not "
+                               "valid json. Url: %s, Response: %s, error: %s" %
+                               (url, response.text, err.msg))
         else:
             raise ApiError("protocol_builder_error",
                            "Received an invalid response from the protocol builder (status %s): %s" %

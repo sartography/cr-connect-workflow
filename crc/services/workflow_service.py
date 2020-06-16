@@ -59,7 +59,7 @@ class WorkflowService(object):
 
     @staticmethod
     def delete_test_data():
-        for study in db.session.query(StudyModel).filter(StudyModel.user_uid=="test"):
+        for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
             db.session.commit()
 
@@ -83,7 +83,7 @@ class WorkflowService(object):
             processor = WorkflowProcessor(workflow_model, validate_only=True)
         except WorkflowException as we:
             WorkflowService.delete_test_data()
-            raise ApiError.from_workflow_exception("workflow_execution_exception", str(we), we)
+            raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         while not processor.bpmn_workflow.is_completed():
             try:
@@ -97,7 +97,7 @@ class WorkflowService(object):
                     task.complete()
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
-                raise ApiError.from_workflow_exception("workflow_execution_exception", str(we), we)
+                raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         WorkflowService.delete_test_data()
         return processor.bpmn_workflow.last_task.data
@@ -108,11 +108,13 @@ class WorkflowService(object):
 
         if not hasattr(task.task_spec, 'form'): return
 
-        form_data = {}
+        form_data = task.data # Just like with the front end, we start with what was already there, and modify it.
         for field in task_api.form.fields:
             if required_only and (not field.has_validation(Task.VALIDATION_REQUIRED) or
                                   field.get_validation(Task.VALIDATION_REQUIRED).lower().strip() != "true"):
                 continue # Don't include any fields that aren't specifically marked as required.
+            if field.has_property("read_only") and field.get_property("read_only").lower().strip() == "true":
+                continue # Don't mess about with read only fields.
             if field.has_property(Task.PROP_OPTIONS_REPEAT):
                 group = field.get_property(Task.PROP_OPTIONS_REPEAT)
                 if group not in form_data:
@@ -161,7 +163,7 @@ class WorkflowService(object):
                     options.append({"id": d.value, "label": d.label})
                 return random.choice(options)
             else:
-                raise ApiError.from_task("invalid_autocomplete", "The settings for this auto complete field "
+                raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
         elif field.type == "long":
             return random.randint(1, 1000)
@@ -317,11 +319,12 @@ class WorkflowService(object):
                 field.options.append({"id": d.value, "name": d.label})
 
     @staticmethod
-    def log_task_action(workflow_model: WorkflowModel, task: Task,
-                        action: string, version, updated_data=None):
+    def log_task_action(user_uid, workflow_model, spiff_task, action,
+                        version,  updated_data=None):
+        task = WorkflowService.spiff_task_to_api_task(spiff_task)
         task_event = TaskEventModel(
             study_id=workflow_model.study_id,
-            user_uid=g.user.uid,
+            user_uid=user_uid,
             workflow_id=workflow_model.id,
             workflow_spec_id=workflow_model.workflow_spec_id,
             spec_version=version,

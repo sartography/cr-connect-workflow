@@ -10,6 +10,7 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileModelSchema, File
+from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
@@ -56,9 +57,7 @@ class StudyService(object):
         study = Study.from_model(study_model)
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
-        approvals = ApprovalService.get_approvals_for_study(study.id)
-        study.approvals = [Approval.from_model(approval_model) for approval_model in approvals]
-
+        study.approvals = ApprovalService.get_approvals_for_study(study.id)
         files = FileService.get_files_for_study(study.id)
         files = (File.from_models(model, FileService.get_file_data(model.id),
                          FileService.get_doc_dictionary()) for model in files)
@@ -87,8 +86,8 @@ class StudyService(object):
     def delete_workflow(workflow):
         for file in session.query(FileModel).filter_by(workflow_id=workflow.id).all():
             FileService.delete_file(file.id)
-        for deb in workflow.dependencies:
-            session.delete(deb)
+        for dep in workflow.dependencies:
+            session.delete(dep)
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
         session.query(WorkflowModel).filter_by(id=workflow.id).delete()
 
@@ -134,7 +133,7 @@ class StudyService(object):
         that is available.."""
 
         # Get PB required docs, if Protocol Builder Service is enabled.
-        if ProtocolBuilderService.is_enabled():
+        if ProtocolBuilderService.is_enabled() and study_id is not None:
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:
@@ -207,8 +206,7 @@ class StudyService(object):
     @staticmethod
     def get_ldap_dict_if_available(user_id):
         try:
-            ldap_service = LdapService()
-            return ldap_service.user_info(user_id).__dict__
+            return LdapSchema().dump(LdapService().user_info(user_id))
         except ApiError as ae:
             app.logger.info(str(ae))
             return {"error": str(ae)}
@@ -320,9 +318,9 @@ class StudyService(object):
             try:
                 StudyService._create_workflow_model(study_model, workflow_spec)
             except WorkflowTaskExecException as wtee:
-                errors.append(ApiError.from_task("workflow_execution_exception", str(wtee), wtee.task))
+                errors.append(ApiError.from_task("workflow_startup_exception", str(wtee), wtee.task))
             except WorkflowException as we:
-                errors.append(ApiError.from_task_spec("workflow_execution_exception", str(we), we.sender))
+                errors.append(ApiError.from_task_spec("workflow_startup_exception", str(we), we.sender))
         return errors
 
     @staticmethod

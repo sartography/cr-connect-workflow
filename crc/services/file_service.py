@@ -45,10 +45,8 @@ class FileService(object):
 
     @staticmethod
     def is_allowed_document(code):
-        data_model = FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
-        xls = ExcelFile(data_model.data)
-        df = xls.parse(xls.sheet_names[0])
-        return code in df['code'].values
+        doc_dict = FileService.get_doc_dictionary()
+        return code in doc_dict
 
     @staticmethod
     def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
@@ -96,6 +94,7 @@ class FileService(object):
     def get_workflow_files(workflow_id):
         """Returns all the file models associated with a running workflow."""
         return session.query(FileModel).filter(FileModel.workflow_id == workflow_id).\
+            filter(FileModel.archived == False).\
             order_by(FileModel.id).all()
 
     @staticmethod
@@ -127,7 +126,11 @@ class FileService(object):
 
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
         if (latest_data_model is not None) and (md5_checksum == latest_data_model.md5_hash):
-            # This file does not need to be updated, it's the same file.
+            # This file does not need to be updated, it's the same file.  If it is arhived,
+            # then de-arvhive it.
+            file_model.archived = False
+            session.add(file_model)
+            session.commit()
             return file_model
 
         # Verify the extension
@@ -139,6 +142,7 @@ class FileService(object):
         else:
             file_model.type = FileType[file_extension]
             file_model.content_type = content_type
+            file_model.archived = False  # Unarchive the file if it is archived.
 
         if latest_data_model is None:
             version = 1
@@ -188,7 +192,8 @@ class FileService(object):
     def get_files_for_study(study_id, irb_doc_code=None):
         query = session.query(FileModel).\
                 join(WorkflowModel).\
-                filter(WorkflowModel.study_id == study_id)
+                filter(WorkflowModel.study_id == study_id).\
+                filter(FileModel.archived == False)
         if irb_doc_code:
             query = query.filter(FileModel.irb_doc_code == irb_doc_code)
         return query.all()
@@ -208,6 +213,9 @@ class FileService(object):
 
         if name:
             query = query.filter_by(name=name)
+
+        query = query.filter(FileModel.archived == False)
+
         query = query.order_by(FileModel.id)
 
         results = query.all()
@@ -270,11 +278,12 @@ class FileService(object):
 
     @staticmethod
     def get_workflow_file_data(workflow, file_name):
-        """Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns its data"""
+        """This method should be deleted, find where it is used, and remove this method.
+        Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns its data"""
         workflow_spec_model = FileService.find_spec_model_in_db(workflow)
 
         if workflow_spec_model is None:
-            raise ApiError(code="workflow_model_error",
+            raise ApiError(code="unknown_workflow",
                            message="Something is wrong.  I can't find the workflow you are using.")
 
         file_data_model = session.query(FileDataModel) \
@@ -316,6 +325,10 @@ class FileService(object):
             session.query(FileModel).filter_by(id=file_id).delete()
             session.commit()
         except IntegrityError as ie:
-            app.logger.error("Failed to delete file: %i, due to %s" % (file_id, str(ie)))
-            raise ApiError('file_integrity_error', "You are attempting to delete a file that is "
-                                                   "required by other records in the system.")
+            # We can't delete the file or file data, because it is referenced elsewhere,
+            # but we can at least mark it as deleted on the table.
+            session.rollback()
+            file_model = session.query(FileModel).filter_by(id=file_id).first()
+            file_model.archived = True
+            session.commit()
+            app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))

@@ -297,8 +297,10 @@ class TestWorkflowProcessor(BaseTest):
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
         processor3 = WorkflowProcessor(processor.workflow_model, hard_reset=True)
         self.assertEqual("Step 1", processor3.next_task().task_spec.description)
-        self.assertEqual({"color": "blue"}, processor3.next_task().data)
-        processor3.complete_task(processor3.next_task())
+        self.assertTrue(processor3.is_latest_spec) # Now at version 2.
+        task = processor3.next_task()
+        task.data = {"color": "blue"}
+        processor3.complete_task(task)
         self.assertEqual("New Step", processor3.next_task().task_spec.description)
         self.assertEqual("blue", processor3.next_task().data["color"])
 

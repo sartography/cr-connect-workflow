@@ -16,7 +16,8 @@ class MultiInstanceType(enum.Enum):
 
 
 class NavigationItem(object):
-    def __init__(self, id, task_id, name, title, backtracks, level, indent, child_count, state, is_decision, task=None):
+    def __init__(self, id, task_id, name, title, backtracks, level, indent, child_count, state, is_decision,
+                 task=None, lane=None):
         self.id = id
         self.task_id = task_id
         self.name = name,

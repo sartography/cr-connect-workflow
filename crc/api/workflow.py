@@ -1,8 +1,8 @@
 import uuid
 
 from SpiffWorkflow.util.deep_merge import DeepMerge
-
-from crc import session
+from flask import g
+from crc import session, app
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
 from crc.models.file import FileModel, LookupDataSchema
@@ -131,7 +131,7 @@ def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
         workflow_spec_id=processor.workflow_spec_id,
         spec_version=processor.get_version_string(),
         is_latest_spec=processor.is_latest_spec,
-        total_tasks=processor.workflow_model.total_tasks,
+        total_tasks=len(navigation),
         completed_tasks=processor.workflow_model.completed_tasks,
         last_updated=processor.workflow_model.last_updated,
     )
@@ -165,6 +165,7 @@ def delete_workflow(workflow_id):
 
 def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    user_uid = __get_user_uid(workflow_model.study.user_uid)
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
@@ -177,17 +178,23 @@ def set_current_task(workflow_id, task_id):
         spiff_task.reset_token(reset_data=True)  # Don't try to copy the existing data back into this task.
 
     processor.save()
-    task_api = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=True)
-    WorkflowService.log_task_action(workflow_model, task_api,
+    WorkflowService.log_task_action(user_uid, workflow_model, spiff_task,
                                     WorkflowService.TASK_ACTION_TOKEN_RESET,
-                                    version = processor.get_version_string())
-
+                                    version=processor.get_version_string())
     workflow_api_model = __get_workflow_api_model(processor, spiff_task)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
 def update_task(workflow_id, task_id, body):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+
+    if workflow_model is None:
+        raise ApiError("invalid_workflow_id", "The given workflow id is not valid.", status_code=404)
+
+    elif workflow_model.study is None:
+        raise ApiError("invalid_study", "There is no study associated with the given workflow.", status_code=404)
+
+    user_uid = __get_user_uid(workflow_model.study.user_uid)
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
@@ -199,13 +206,9 @@ def update_task(workflow_id, task_id, body):
     processor.do_engine_steps()
     processor.save()
 
-    task_api = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=True)
-    WorkflowService.log_task_action(workflow_model,
-                                    task_api,
-                                    WorkflowService.TASK_ACTION_COMPLETE,
-                                    version = processor.get_version_string(),
-                                    updated_data = spiff_task.data)
-
+    WorkflowService.log_task_action(user_uid, workflow_model, spiff_task, WorkflowService.TASK_ACTION_COMPLETE,
+                                    version=processor.get_version_string(),
+                                    updated_data=spiff_task.data)
     workflow_api_model = __get_workflow_api_model(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
@@ -259,3 +262,14 @@ def lookup(workflow_id, field_id, query, limit):
     workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
     lookup_data = LookupService.lookup(workflow, field_id, query, limit)
     return LookupDataSchema(many=True).dump(lookup_data)
+
+
+def __get_user_uid(user_uid):
+    if 'user' in g:
+        if g.user.uid not in app.config['ADMIN_UIDS'] and user_uid != g.user.uid:
+            raise ApiError("permission_denied", "You are not authorized to edit the task data for this workflow.", status_code=403)
+        else:
+            return g.user.uid
+
+    else:
+        raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
