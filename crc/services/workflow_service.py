@@ -9,8 +9,6 @@ from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
-from SpiffWorkflow.util.deep_merge import DeepMerge
-from flask import g
 from jinja2 import Template
 
 from crc import db, app
@@ -24,7 +22,7 @@ from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
-from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class WorkflowService(object):
