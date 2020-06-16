@@ -16,8 +16,6 @@ before_install:
   - psql -c 'create database crc_test;' -U postgres
 
 install:
-  - pip install pipenv pytest coverage
-  - export PATH=$PATH:$HOME/.local/bin;
   - pipenv install --dev
 
 env:
