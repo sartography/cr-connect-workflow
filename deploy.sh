@@ -1,44 +1,45 @@
 #!/bin/bash
 
+#########################################################################
+# Builds the Docker image for the current git branch on Travis CI and
+# publishes it to Docker Hub.
+#
+# Parameters:
+# $1: Docker Hub repository to publish to
+#
+# Required environment variables (place in Settings menu on Travis CI):
+# $DOCKER_USERNAME: Docker Hub username
+# $DOCKER_TOKEN: Docker Hub access token
+#########################################################################
+
+echo 'Building Docker image...'
+DOCKER_REPO="$1"
+
 function branch_to_tag () {
-  if [ "$1" == "latest" ]; then echo "production"; else echo "$1" ; fi
+  if [ "$1" == "master" ]; then echo "latest"; else echo "$1" ; fi
 }
 
 function branch_to_deploy_group() {
   if [[ $1 =~ ^(rrt\/.*)$ ]]; then echo "rrt"; else echo "crconnect" ; fi
 }
 
-function branch_to_deploy_stage () {
-  if [ "$1" == "master" ]; then echo "production"; else echo "$1" ; fi
-}
+DOCKER_TAG=$(branch_to_tag "$TRAVIS_BRANCH")
 
-REPO="sartography/cr-connect-workflow"
-TAG=$(branch_to_tag "$TRAVIS_BRANCH")
-
-DEPLOY_APP="backend"
 DEPLOY_GROUP=$(branch_to_deploy_group "$TRAVIS_BRANCH")
-DEPLOY_STAGE=$(branch_to_deploy_stage "$TRAVIS_BRANCH")
 
 if [ "$DEPLOY_GROUP" == "rrt" ]; then
   IFS='/' read -ra ARR <<< "$TRAVIS_BRANCH"  # Split branch on '/' character
-  TAG=$(branch_to_tag "rrt_${ARR[1]}")
-  DEPLOY_STAGE=$(branch_to_deploy_stage "${ARR[1]}")
+  DOCKER_TAG=$(branch_to_tag "rrt_${ARR[1]}")
 fi
 
-DEPLOY_PATH="$DEPLOY_GROUP/$DEPLOY_STAGE/$DEPLOY_APP"
-echo "REPO = $REPO"
-echo "TAG = $TAG"
-echo "DEPLOY_PATH = $DEPLOY_PATH"
+echo "DOCKER_REPO = $DOCKER_REPO"
+echo "DOCKER_TAG = $DOCKER_TAG"
 
-# Build and push Docker image to Docker Hub
 echo "$DOCKER_TOKEN" | docker login -u "$DOCKER_USERNAME" --password-stdin || exit 1
-docker build -f Dockerfile -t "$REPO:$TAG" . || exit 1
-docker push "$REPO" || exit 1
+docker build -f Dockerfile -t "$DOCKER_REPO:$DOCKER_TAG" . || exit 1
 
-# Wait for Docker Hub
+
+# Push Docker image to Docker Hub
 echo "Publishing to Docker Hub..."
-sleep 30
-
-# Notify UVA DCOS that Docker image has been updated
-echo "Refreshing DC/OS..."
-aws sqs send-message --region "$AWS_DEFAULT_REGION" --queue-url "$AWS_SQS_URL" --message-body "$DEPLOY_PATH" || exit 1
+docker push "$DOCKER_REPO" || exit 1
+echo "Done."
