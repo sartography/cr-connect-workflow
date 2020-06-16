@@ -39,15 +39,10 @@ ma = Marshmallow(app)
 
 from crc import models
 from crc import api
+from crc.api import admin
 
 connexion_app.add_api('api.yml', base_path='/v1.0')
 
-# Admin app
-admin = Admin(app)
-admin.add_view(ModelView(models.study.StudyModel, db.session))
-admin.add_view(ModelView(models.approval.ApprovalModel, db.session))
-admin.add_view(ModelView(models.user.UserModel, db.session))
-admin.add_view(ModelView(models.workflow.WorkflowModel, db.session))
 
 # Convert list of allowed origins to list of regexes
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
