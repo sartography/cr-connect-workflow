@@ -188,6 +188,8 @@ def update_task(workflow_id, task_id, body):
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     task = processor.bpmn_workflow.get_task(task_id)
+    if not task:
+        raise ApiError("empty_task", "Processor failed to obtain task.", status_code=404)
     if task.state != task.READY:
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
