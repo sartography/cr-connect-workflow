@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1j7idla" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1j7idla" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <bpmn:process id="Process_18biih5" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_1pnq3kg</bpmn:outgoing>
@@ -21,10 +21,10 @@
     <bpmn:sequenceFlow id="SequenceFlow_1lmkn99" sourceRef="Task_Has_Bananas" targetRef="ExclusiveGateway_003amsm" />
     <bpmn:exclusiveGateway id="ExclusiveGateway_003amsm" name="Has Bananas?">
       <bpmn:incoming>SequenceFlow_1lmkn99</bpmn:incoming>
-      <bpmn:outgoing>SequenceFlow_Yes_Bananas</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_A_Yes_Bananas</bpmn:outgoing>
       <bpmn:outgoing>SequenceFlow_No_Bananas</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="SequenceFlow_Yes_Bananas" name="yes&#10;&#10;" sourceRef="ExclusiveGateway_003amsm" targetRef="Task_Num_Bananas">
+    <bpmn:sequenceFlow id="SequenceFlow_A_Yes_Bananas" name="yes&#10;&#10;" sourceRef="ExclusiveGateway_003amsm" targetRef="Task_Num_Bananas">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">has_bananas == True</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="SequenceFlow_No_Bananas" name="no" sourceRef="ExclusiveGateway_003amsm" targetRef="Task_Why_No_Bananas">
@@ -36,7 +36,7 @@
           <camunda:formField id="num_bananas" label="How Many Bananas do you have?" type="long" defaultValue="1" />
         </camunda:formData>
       </bpmn:extensionElements>
-      <bpmn:incoming>SequenceFlow_Yes_Bananas</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_A_Yes_Bananas</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_02z84p5</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:userTask id="Task_Why_No_Bananas" name="Why no bananas" camunda:formKey="no_bananas">
@@ -75,7 +75,7 @@
           <dc:Bounds x="459" y="183" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0f3vx1l_di" bpmnElement="SequenceFlow_Yes_Bananas">
+      <bpmndi:BPMNEdge id="SequenceFlow_0f3vx1l_di" bpmnElement="SequenceFlow_A_Yes_Bananas">
         <di:waypoint x="475" y="117" />
         <di:waypoint x="560" y="117" />
         <bpmndi:BPMNLabel>
