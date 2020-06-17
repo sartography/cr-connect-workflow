@@ -3,7 +3,7 @@ from marshmallow import EXCLUDE
 from sqlalchemy import func
 
 from crc import db
-from crc.models.approval import ApprovalModel
+from crc.models.study import StudyModel
 
 
 class EmailModel(db.Model):
@@ -14,5 +14,5 @@ class EmailModel(db.Model):
     recipients = db.Column(db.String)
     content = db.Column(db.String)
     content_html = db.Column(db.String)
-    approval_id = db.Column(db.Integer, db.ForeignKey(ApprovalModel.id), nullable=False)
-    approval = db.relationship(ApprovalModel)
+    study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=True)
+    study = db.relationship(StudyModel)

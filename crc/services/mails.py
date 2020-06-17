@@ -23,7 +23,7 @@ def send_test_email(sender, recipients):
     except Exception as e:
         return str(e)
 
-def send_mail(subject, sender, recipients, content, content_html):
+def send_mail(subject, sender, recipients, content, content_html, study_id=None):
     from crc import mail
     try:
         msg = Message(subject,
@@ -33,6 +33,9 @@ def send_mail(subject, sender, recipients, content, content_html):
 
         msg.body = content
         msg.html = content_html
+
+        EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
+                               content=content, content_html=content_html, study_id=study_id)
 
         mail.send(msg)
     except Exception as e:
@@ -48,9 +51,6 @@ def send_ramp_up_submission_email(sender, recipients, approval_id, approver_1, a
     template = env.get_template('ramp_up_submission.html')
     content_html = template.render(template_vars)
 
-    EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
-                           content=content, content_html=content_html, approval_id=approval_id)
-
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
 
@@ -63,9 +63,6 @@ def send_ramp_up_approval_request_email(sender, recipients, approval_id, primary
     content = template.render(template_vars)
     template = env.get_template('ramp_up_approval_request.html')
     content_html = template.render(template_vars)
-
-    EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
-                           content=content, content_html=content_html, approval_id=approval_id)
 
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
@@ -80,9 +77,6 @@ def send_ramp_up_approval_request_first_review_email(sender, recipients, approva
     template = env.get_template('ramp_up_approval_request_first_review.html')
     content_html = template.render(template_vars)
 
-    EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
-                           content=content, content_html=content_html, approval_id=approval_id)
-
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
 
@@ -95,9 +89,6 @@ def send_ramp_up_approved_email(sender, recipients, approval_id, approver_1, app
     content = template.render(template_vars)
     template = env.get_template('ramp_up_approved.html')
     content_html = template.render(template_vars)
-
-    EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
-                           content=content, content_html=content_html, approval_id=approval_id)
 
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
@@ -112,9 +103,6 @@ def send_ramp_up_denied_email(sender, recipients, approval_id, approver):
     template = env.get_template('ramp_up_denied.html')
     content_html = template.render(template_vars)
 
-    EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
-                           content=content, content_html=content_html, approval_id=approval_id)
-
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
 
@@ -127,9 +115,6 @@ def send_ramp_up_denied_email_to_approver(sender, recipients, approval_id, prima
     content = template.render(template_vars)
     template = env.get_template('ramp_up_denied_first_approver.html')
     content_html = template.render(template_vars)
-
-    EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
-                           content=content, content_html=content_html, approval_id=approval_id)
 
     result = send_mail(subject, sender, recipients, content, content_html)
     return result

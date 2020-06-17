@@ -6,7 +6,6 @@ from crc.services.workflow_processor import WorkflowProcessor
 from crc.api.common import ApiError
 
 from crc import db
-# from crc.models.approval import ApprovalModel
 
 
 class TestEmailScript(BaseTest):
@@ -17,6 +16,7 @@ class TestEmailScript(BaseTest):
         workflow = self.create_workflow('email')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
+        # TODO: Replace with proper `complete_form` method from test_tasks
         processor.complete_task(task)
         task = processor.next_task()
         task.data = {
@@ -27,4 +27,6 @@ class TestEmailScript(BaseTest):
 
         script = Email()
         script.do_task(task, 'Subject', 'PIComputingID', 'ApprvlApprvr1')
+
+        # TODO: Add proper assertions
         self.assertTrue(True)

@@ -1,3 +1,4 @@
+import markdown
 from jinja2 import Template
 
 from crc import app
@@ -29,14 +30,15 @@ Email Subject ApprvlApprvr1 PIComputingID
     def do_task(self, task, *args, **kwargs):
         subject = self.get_subject(task, args)
         recipients, display_keys = self.get_users_info(task, args)
-        content = self.get_content(task, display_keys)
+        content, content_html = self.get_content(task, display_keys)
+        import pdb; pdb.set_trace()
         if recipients:
             send_mail(
                 subject=subject,
                 sender=app.config['DEFAULT_SENDER'],
                 recipients=recipients,
                 content=content,
-                content_html=content
+                content_html=content_html
             )
 
     def get_users_info(self, task, args):
@@ -82,5 +84,5 @@ Email Subject ApprvlApprvr1 PIComputingID
         content = task.task_spec.documentation
         template = Template(content)
         rendered = template.render(display_keys)
-
-        return rendered
+        rendered_markdown = markdown.markdown(rendered).replace('\n', '<br>')
+        return rendered, rendered_markdown

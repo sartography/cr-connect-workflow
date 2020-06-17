@@ -13,24 +13,15 @@ class TestEmailService(BaseTest):
         study = self.create_study()
         workflow = self.create_workflow('random_fact')
 
-        approval = ApprovalModel(
-            study=study,
-            workflow=workflow,
-            approver_uid='lb3dp',
-            status=ApprovalStatus.PENDING.value,
-            version=1
-        )
-        session.add(approval)
-        session.commit()
-
         subject = 'Email Subject'
         sender = 'sender@sartography.com'
         recipients = ['recipient@sartography.com', 'back@sartography.com']
         content = 'Content for this email'
         content_html = '<p>Hypertext Markup Language content for this email</p>'
 
+        import pdb; pdb.set_trace()
         EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
-                               content=content, content_html=content_html, approval_id=approval.id)
+                               content=content, content_html=content_html, study_id=study.id)
 
         email_model = EmailModel.query.first()
 
@@ -39,4 +30,6 @@ class TestEmailService(BaseTest):
         self.assertEqual(email_model.recipients, str(recipients))
         self.assertEqual(email_model.content, content)
         self.assertEqual(email_model.content_html, content_html)
-        self.assertEqual(email_model.approval, approval)
+        self.assertEqual(email_model.study, study)
+
+        # TODO: Create email model without study
