@@ -8,7 +8,7 @@
       <bpmn:incoming>Flow_1xlrgne</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:scriptTask id="Activity_0s5v97n" name="Email Recipients">
-      <bpmn:documentation>Email content to be delivered to {{ approver }}</bpmn:documentation>
+      <bpmn:documentation>Email content to be delivered to {{ ApprvlApprvr1 }}</bpmn:documentation>
       <bpmn:incoming>Flow_08n2npe</bpmn:incoming>
       <bpmn:outgoing>Flow_1xlrgne</bpmn:outgoing>
       <bpmn:script>Email Subject ApprvlApprvr1 PIComputingID</bpmn:script>

@@ -22,12 +22,14 @@ Email Subject ApprvlApprvr1 PIComputingID
 """
 
     def do_task_validate_only(self, task, *args, **kwargs):
-        self.get_emails(task, args)
+        self.get_subject(task, args)
+        self.get_users_info(task, args)
+        self.get_content(task, {})
 
     def do_task(self, task, *args, **kwargs):
         subject = self.get_subject(task, args)
-        recipients = self.get_emails(task, args)
-        content = self.get_content(task)
+        recipients, display_keys = self.get_users_info(task, args)
+        content = self.get_content(task, display_keys)
         if recipients:
             send_mail(
                 subject=subject,
@@ -37,18 +39,20 @@ Email Subject ApprvlApprvr1 PIComputingID
                 content_html=content
             )
 
-    def get_emails(self, task, args):
+    def get_users_info(self, task, args):
         if len(args) < 1:
             raise ApiError(code="missing_argument",
                            message="Email script requires at least one argument.  The "
                                    "name of the variable in the task data that contains user"
                                    "id to process.  Multiple arguments are accepted.")
         emails = []
+        display_keys = {}
         for arg in args[1:]:
             uid = task.workflow.script_engine.evaluate_expression(task, arg)
             user_info = LdapService.user_info(uid)
             email = user_info.email_address
             emails.append(user_info.email_address)
+            display_keys[arg] = user_info.proper_name()
             if not isinstance(email, str):
                 raise ApiError(code="invalid_argument",
                                message="The Email script requires at least 1 UID argument.  The "
@@ -56,7 +60,7 @@ Email Subject ApprvlApprvr1 PIComputingID
                                    " user ids to process.  This must point to an array or a string, but "
                                    "it currently points to a %s " % emails.__class__.__name__)
 
-        return emails
+        return emails, display_keys
 
     def get_subject(self, task, args):
         if len(args) < 1:
@@ -74,9 +78,9 @@ Email Subject ApprvlApprvr1 PIComputingID
 
         return subject
 
-    def get_content(self, task):
+    def get_content(self, task, display_keys):
         content = task.task_spec.documentation
         template = Template(content)
-        rendered = template.render({'approver': 'Bossman', 'not_here': 22})
+        rendered = template.render(display_keys)
 
         return rendered
