@@ -1,5 +1,6 @@
 from jinja2 import Template
 
+from crc import app
 from crc.api.common import ApiError
 from crc.scripts.script import Script
 from crc.services.ldap_service import LdapService
@@ -29,8 +30,8 @@ Email Subject ApprvlApprvr1 PIComputingID
         content = self.get_content(task)
         if recipients:
             send_mail(
-                subject='Test Subject',
-                sender='sender@sartography.com',
+                subject=subject,
+                sender=app.config['DEFAULT_SENDER'],
                 recipients=recipients,
                 content=content,
                 content_html=content
