@@ -93,3 +93,10 @@ def clear_db():
     """Load example data into the database."""
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
+
+@app.cli.command()
+def rrt_data_fix():
+    """Finds all the empty task event logs, and populates
+    them with good wholesome data."""
+    from crc.services.workflow_service import WorkflowService
+    WorkflowService.fix_legacy_data_model_for_rrt()

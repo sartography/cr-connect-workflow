@@ -102,14 +102,15 @@ class WorkflowProcessor(object):
 
     def __init__(self, workflow_model: WorkflowModel, soft_reset=False, hard_reset=False, validate_only=False):
         """Create a Workflow Processor based on the serialized information available in the workflow model.
-        If soft_reset is set to true, it will try to use the latest version of the workflow specification.
-        If hard_reset is set to true, it will create a new Workflow, but embed the data from the last
-        completed task in the previous workflow.
+        If soft_reset is set to true, it will try to use the latest version of the workflow specification
+            without resetting to the beginning of the workflow.  This will work for some minor changes to the spec.
+        If hard_reset is set to true, it will use the latest spec, and start the workflow over from the beginning.
+            which should work in casees where a soft reset fails.
         If neither flag is set, it will use the same version of the specification that was used to originally
         create the workflow model. """
         self.workflow_model = workflow_model
 
-        if soft_reset or len(workflow_model.dependencies) == 0:
+        if soft_reset or len(workflow_model.dependencies) == 0:  # Depenencies of 0 means the workflow was never started.
             self.spec_data_files = FileService.get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id)
         else:
@@ -216,8 +217,6 @@ class WorkflowProcessor(object):
         full_version = "v%s (%s)" % (version, files)
         return full_version
 
-
-
     def update_dependencies(self, spec_data_files):
         existing_dependencies = FileService.get_spec_data_files(
             workflow_spec_id=self.workflow_model.workflow_spec_id,
@@ -299,25 +298,12 @@ class WorkflowProcessor(object):
             return WorkflowStatus.waiting
 
     def hard_reset(self):
-        """Recreate this workflow, but keep the data from the last completed task and add
-         it back into the first task. This may be useful when a workflow specification changes,
-          and users need to review all the prior steps, but they don't need to reenter all the previous data.
-
-         Returns the new version.
+        """Recreate this workflow. This will be useful when a workflow specification changes.
          """
-
-        # Create a new workflow based on the latest specs.
         self.spec_data_files = FileService.get_spec_data_files(workflow_spec_id=self.workflow_spec_id)
         new_spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
         new_bpmn_workflow = BpmnWorkflow(new_spec, script_engine=self._script_engine)
         new_bpmn_workflow.data = self.bpmn_workflow.data
-
-        # Reset the current workflow to the beginning - which we will consider to be the first task after the root
-        # element.  This feels a little sketchy, but I think it is safe to assume root will have one child.
-        first_task = self.bpmn_workflow.task_tree.children[0]
-        first_task.reset_token(reset_data=True) # Clear out the data.
-        for task in new_bpmn_workflow.get_tasks(SpiffTask.READY):
-            task.data = first_task.data
         new_bpmn_workflow.do_engine_steps()
         self.bpmn_workflow = new_bpmn_workflow
 

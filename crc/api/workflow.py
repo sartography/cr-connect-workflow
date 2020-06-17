@@ -96,66 +96,10 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
-    """Returns an API model representing the state of the current workflow, if requested, and
-    possible, next_task is set to the current_task."""
-
-    nav_dict = processor.bpmn_workflow.get_nav_list()
-    navigation = []
-    for nav_item in nav_dict:
-        spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
-        if 'description' in nav_item:
-            nav_item['title'] = nav_item.pop('description')
-            # fixme: duplicate code from the workflow_service. Should only do this in one place.
-            if ' ' in nav_item['title']:
-                nav_item['title'] = nav_item['title'].partition(' ')[2]
-        else:
-            nav_item['title'] = ""
-        if spiff_task:
-            nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
-            nav_item['title'] = nav_item['task'].title # Prefer the task title.
-        else:
-            nav_item['task'] = None
-        if not 'is_decision' in nav_item:
-            nav_item['is_decision'] = False
-
-        navigation.append(NavigationItem(**nav_item))
-        NavigationItemSchema().dump(nav_item)
-
-    spec = session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
-    workflow_api = WorkflowApi(
-        id=processor.get_workflow_id(),
-        status=processor.get_status(),
-        next_task=None,
-        navigation=navigation,
-        workflow_spec_id=processor.workflow_spec_id,
-        spec_version=processor.get_version_string(),
-        is_latest_spec=processor.is_latest_spec,
-        total_tasks=len(navigation),
-        completed_tasks=processor.workflow_model.completed_tasks,
-        last_updated=processor.workflow_model.last_updated,
-    )
-    if not next_task: # The Next Task can be requested to be a certain task, useful for parallel tasks.
-        # This may or may not work, sometimes there is no next task to complete.
-        next_task = processor.next_task()
-    if next_task:
-        latest_event = session.query(TaskEventModel) \
-            .filter_by(workflow_id=processor.workflow_model.id) \
-            .filter_by(task_name=next_task.task_spec.name) \
-            .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE) \
-            .order_by(TaskEventModel.date.desc()).first()
-        if latest_event:
-            next_task.data = DeepMerge.merge(next_task.data, latest_event.task_data)
-
-        workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
-
-    return workflow_api
-
-
 def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
-    workflow_api_model = __get_workflow_api_model(processor)
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
@@ -181,7 +125,7 @@ def set_current_task(workflow_id, task_id):
     WorkflowService.log_task_action(user_uid, workflow_model, spiff_task,
                                     WorkflowService.TASK_ACTION_TOKEN_RESET,
                                     version=processor.get_version_string())
-    workflow_api_model = __get_workflow_api_model(processor, spiff_task)
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor, spiff_task)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
@@ -209,7 +153,7 @@ def update_task(workflow_id, task_id, body):
     WorkflowService.log_task_action(user_uid, workflow_model, spiff_task, WorkflowService.TASK_ACTION_COMPLETE,
                                     version=processor.get_version_string(),
                                     updated_data=spiff_task.data)
-    workflow_api_model = __get_workflow_api_model(processor)
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 

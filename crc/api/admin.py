@@ -1,15 +1,18 @@
 # Admin app
+import json
 
 from flask import url_for
 from flask_admin import Admin
 from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import ModelView
 from werkzeug.utils import redirect
+from jinja2 import Markup
 
 from crc import db, app
 from crc.api.user import verify_token, verify_token_admin
 from crc.models.approval import ApprovalModel
 from crc.models.file import FileModel
+from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel
@@ -47,6 +50,18 @@ class WorkflowView(AdminModelView):
 class FileView(AdminModelView):
     column_filters = ['workflow_id']
 
+def json_formatter(view, context, model, name):
+    value = getattr(model, name)
+    json_value = json.dumps(value, ensure_ascii=False, indent=2)
+    return Markup('<pre>{}</pre>'.format(json_value))
+
+class TaskEventView(AdminModelView):
+    column_filters = ['workflow_id', 'action']
+    column_list = ['study_id', 'user_id', 'workflow_id', 'action', 'task_title', 'task_data', 'date']
+    column_formatters = {
+        'task_data': json_formatter,
+    }
+
 admin = Admin(app)
 
 admin.add_view(StudyView(StudyModel, db.session))
@@ -54,3 +69,4 @@ admin.add_view(ApprovalView(ApprovalModel, db.session))
 admin.add_view(UserView(UserModel, db.session))
 admin.add_view(WorkflowView(WorkflowModel, db.session))
 admin.add_view(FileView(FileModel, db.session))
+admin.add_view(TaskEventView(TaskEventModel, db.session))
