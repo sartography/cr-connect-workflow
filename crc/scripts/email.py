@@ -69,7 +69,7 @@ Email Subject ApprvlApprvr1 PIComputingID
                                message="The Email script requires 1 argument.  The "
                                    "the name of the variable in the task data that contains user"
                                    "ids to process.  This must point to an array or a string, but "
-                                   "it currently points to a %s " % emails.__class__.__name__)
+                                   "it currently points to a %s " % subject.__class__.__name__)
 
         return subject
 
