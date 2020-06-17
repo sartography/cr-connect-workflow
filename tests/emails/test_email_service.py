@@ -19,7 +19,6 @@ class TestEmailService(BaseTest):
         content = 'Content for this email'
         content_html = '<p>Hypertext Markup Language content for this email</p>'
 
-        import pdb; pdb.set_trace()
         EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
                                content=content, content_html=content_html, study_id=study.id)
 

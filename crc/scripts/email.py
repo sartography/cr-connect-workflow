@@ -31,7 +31,6 @@ Email Subject ApprvlApprvr1 PIComputingID
         subject = self.get_subject(task, args)
         recipients, display_keys = self.get_users_info(task, args)
         content, content_html = self.get_content(task, display_keys)
-        import pdb; pdb.set_trace()
         if recipients:
             send_mail(
                 subject=subject,
