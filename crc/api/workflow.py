@@ -175,7 +175,7 @@ def set_current_task(workflow_id, task_id):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def update_task(workflow_id, task_id, body):
+def update_task(workflow_id, task_id, body, terminate_loop=None):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
 
     if workflow_model is None:
@@ -191,6 +191,9 @@ def update_task(workflow_id, task_id, body):
     if task.state != task.READY:
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
+    if terminate_loop:
+        task.terminate_loop()
+
     task.update_data(body)
     processor.complete_task(task)
     processor.do_engine_steps()

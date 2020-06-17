@@ -32,7 +32,8 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
                     'error': 'Unable to locate a user with id asd3v in LDAP'}}
 
     def _populate_form_with_random_data(self, task):
-        WorkflowProcessor.populate_form_with_random_data(task)
+
+        WorkflowService.populate_form_with_random_data(task)
 
     def get_processor(self, study_model, spec_model):
         workflow_model = StudyService._create_workflow_model(study_model, spec_model)
