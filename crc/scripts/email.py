@@ -29,8 +29,8 @@ Email Subject ApprvlApprvr1 PIComputingID
 
     def do_task(self, task, *args, **kwargs):
         args = [arg for arg in args if type(arg) == str]
-        subject, subject_index = self.get_subject(task, args)
-        recipients, display_keys = self.get_users_info(task, args, subject_index)
+        subject = self.get_subject(task, args)
+        recipients, display_keys = self.get_users_info(task, args)
         content, content_html = self.get_content(task, display_keys)
         if recipients:
             send_mail(
@@ -41,7 +41,7 @@ Email Subject ApprvlApprvr1 PIComputingID
                 content_html=content_html
             )
 
-    def get_users_info(self, task, args, subject_index):
+    def get_users_info(self, task, args):
         if len(args) < 1:
             raise ApiError(code="missing_argument",
                            message="Email script requires at least one argument.  The "
@@ -49,8 +49,13 @@ Email Subject ApprvlApprvr1 PIComputingID
                                    "id to process.  Multiple arguments are accepted.")
         emails = []
         display_keys = {}
-        for arg in args[subject_index+1:]:
-            uid = task.workflow.script_engine.evaluate_expression(task, arg)
+        for arg in args:
+            try:
+                uid = task.workflow.script_engine.evaluate_expression(task, arg)
+            except Exception as e:
+                app.logger.error(f'Workflow engines could not parse {arg}')
+                app.logger.error(str(e))
+                continue
             user_info = LdapService.user_info(uid)
             email = user_info.email_address
             emails.append(user_info.email_address)
@@ -90,7 +95,7 @@ Email Subject ApprvlApprvr1 PIComputingID
                                "ids to process.  This must point to an array or a string, but "
                                "it currently points to a %s " % subject.__class__.__name__)
 
-        return subject, subject_index
+        return subject
 
     def get_content(self, task, display_keys):
         content = task.task_spec.documentation

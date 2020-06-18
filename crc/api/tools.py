@@ -14,7 +14,7 @@ from crc.services.mails import send_test_email
 
 def render_markdown(data, template):
     """
-    Provides a quick way to very that a Jinja markdown template will work properly on a given json 
+    Provides a quick way to very that a Jinja markdown template will work properly on a given json
     data structure.  Useful for folks that are building these markdown templates.
     """
     try:
