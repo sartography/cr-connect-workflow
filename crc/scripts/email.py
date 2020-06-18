@@ -28,8 +28,9 @@ Email Subject ApprvlApprvr1 PIComputingID
         self.get_content(task, {})
 
     def do_task(self, task, *args, **kwargs):
-        subject = self.get_subject(task, args)
-        recipients, display_keys = self.get_users_info(task, args)
+        args = [arg for arg in args if type(arg) == str]
+        subject, subject_index = self.get_subject(task, args)
+        recipients, display_keys = self.get_users_info(task, args, subject_index)
         content, content_html = self.get_content(task, display_keys)
         if recipients:
             send_mail(
@@ -40,7 +41,7 @@ Email Subject ApprvlApprvr1 PIComputingID
                 content_html=content_html
             )
 
-    def get_users_info(self, task, args):
+    def get_users_info(self, task, args, subject_index):
         if len(args) < 1:
             raise ApiError(code="missing_argument",
                            message="Email script requires at least one argument.  The "
@@ -48,7 +49,7 @@ Email Subject ApprvlApprvr1 PIComputingID
                                    "id to process.  Multiple arguments are accepted.")
         emails = []
         display_keys = {}
-        for arg in args[1:]:
+        for arg in args[subject_index+1:]:
             uid = task.workflow.script_engine.evaluate_expression(task, arg)
             user_info = LdapService.user_info(uid)
             email = user_info.email_address
@@ -69,15 +70,27 @@ Email Subject ApprvlApprvr1 PIComputingID
                            message="Email script requires at least one subject argument.  The "
                                    "name of the variable in the task data that contains subject"
                                    " to process. Multiple arguments are accepted.")
-        subject = task.workflow.script_engine.evaluate_expression(task, args[0])
-        if not isinstance(subject, str):
-                raise ApiError(code="invalid_argument",
-                               message="The Email script requires 1 argument.  The "
-                                   "the name of the variable in the task data that contains user"
-                                   "ids to process.  This must point to an array or a string, but "
-                                   "it currently points to a %s " % subject.__class__.__name__)
 
-        return subject
+        subject_index = 0
+        subject = args[subject_index]
+        if subject.startswith('"') and not subject.endswith('"'):
+            # Multi-word subject
+            subject_index += 1
+            next_word = args[subject_index]
+            while not next_word.endswith('"'):
+                subject = ' '.join((subject, next_word))
+                subject_index += 1
+                next_word = args[subject_index]
+            subject = ' '.join((subject, next_word))
+        subject = subject.replace('"', '')
+        if not isinstance(subject, str):
+            raise ApiError(code="invalid_argument",
+                           message="The Email script requires 1 argument.  The "
+                               "the name of the variable in the task data that contains user"
+                               "ids to process.  This must point to an array or a string, but "
+                               "it currently points to a %s " % subject.__class__.__name__)
+
+        return subject, subject_index
 
     def get_content(self, task, display_keys):
         content = task.task_spec.documentation

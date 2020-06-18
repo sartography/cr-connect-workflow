@@ -60,7 +60,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                                          "does not properly implement the CRC Script class.",
                                          task=task)
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                """If this is running a validation, and not a normal process, then we want to 
+                """If this is running a validation, and not a normal process, then we want to
                 mimic running the script, but not make any external calls or database changes."""
                 klass().do_task_validate_only(task, study_id, workflow_id, *commands[1:])
             else:
