@@ -31,21 +31,21 @@ class TestWorkflowProcessorLoopingTask(BaseTest):
 
         self.assertEqual(task.multi_instance_type, 'looping')
         self.assertEqual(1, task.multi_instance_index)
-        self.complete_form(workflow,task,{'GetNames_MICurrentVar':{'Name': 'Peter Norvig', 'Nickname': 'Pete'}})
+        self.complete_form(workflow,task,{'GetNames_CurrentVar':{'Name': 'Peter Norvig', 'Nickname': 'Pete'}})
         task = self.get_workflow_api(workflow).next_task
 
         self.assertEqual(task.multi_instance_type,'looping')
         self.assertEqual(2, task.multi_instance_index)
         self.complete_form(workflow,
                            task,
-                           {'GetNames_MICurrentVar':{'Name': 'Stuart Russell', 'Nickname': 'Stu'}},
+                           {'GetNames_CurrentVar':{'Name': 'Stuart Russell', 'Nickname': 'Stu'}},
                            terminate_loop=True)
 
         task = self.get_workflow_api(workflow).next_task
         self.assertEqual(task.name,'Event_End')
         self.assertEqual(workflow.completed_tasks,workflow.total_tasks)
-        self.assertEqual(task.data, {'GetNames_MICurrentVar': 2,
-                                     'GetNames_MIData': {'1': {'Name': 'Peter Norvig',
+        self.assertEqual(task.data, {'GetNames_CurrentVar': 2,
+                                     'GetNames': {'1': {'Name': 'Peter Norvig',
                                                                 'Nickname': 'Pete'},
                                                          '2': {'Name': 'Stuart Russell',
                                                                 'Nickname': 'Stu'}}})

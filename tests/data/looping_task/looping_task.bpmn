@@ -7,8 +7,8 @@
     <bpmn:userTask id="GetNames" name="Get Names" camunda:formKey="GetNamesForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="GetNames_MICurrentVar.Name" type="string" />
-          <camunda:formField id="GetNames_MICurrentVar.Nickname" type="string" />
+          <camunda:formField id="GetNames_CurrentVar.Name" type="string" />
+          <camunda:formField id="GetNames_CurrentVar.Nickname" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0vlor2k</bpmn:incoming>
