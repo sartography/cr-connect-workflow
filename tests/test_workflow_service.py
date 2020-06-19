@@ -100,11 +100,10 @@ class TestWorkflowService(BaseTest):
                 task_api = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
                 WorkflowService.populate_form_with_random_data(task, task_api, False)
                 task.complete()
-                # create the task events with no task_data in them.
+                # create the task events
                 WorkflowService.log_task_action('dhf8r', workflow, task,
                                                 WorkflowService.TASK_ACTION_COMPLETE,
-                                                version=processor.get_version_string(),
-                                                updated_data=None)
+                                                version=processor.get_version_string())
         processor.save()
         db.session.commit()
 
@@ -119,19 +118,17 @@ class TestWorkflowService(BaseTest):
         self.assertEqual(17, len(task_logs))
         for log in task_logs:
             task = processor.bpmn_workflow.get_tasks_from_spec_name(log.task_name)[0]
-            self.assertIsNotNone(log.task_data)
+            self.assertIsNotNone(log.form_data)
             # Each task should have the data in the form for that task in the task event.
             if hasattr(task.task_spec, 'form'):
                 for field in task.task_spec.form.fields:
                     if field.has_property(Task.PROP_OPTIONS_REPEAT):
-                        self.assertIn(field.get_property(Task.PROP_OPTIONS_REPEAT), log.task_data)
+                        self.assertIn(field.get_property(Task.PROP_OPTIONS_REPEAT), log.form_data)
                     else:
-                        self.assertIn(field.id, log.task_data)
+                        self.assertIn(field.id, log.form_data)
 
         # Some spot checks:
         # The first task should be empty, with all the data removed.
-        self.assertEqual({}, task_logs[0].task_data)
+        self.assertEqual({}, task_logs[0].form_data)
 
-        # The last task should have all the data.
-        self.assertDictEqual(processor.bpmn_workflow.last_task.data, task_logs[16].task_data)
 

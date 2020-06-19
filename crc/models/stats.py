@@ -17,7 +17,7 @@ class TaskEventModel(db.Model):
     task_title = db.Column(db.String)
     task_type = db.Column(db.String)
     task_state = db.Column(db.String)
-    task_data = db.Column(db.JSON)
+    form_data = db.Column(db.JSON) # And form data submitted when the task was completed.
     mi_type = db.Column(db.String)
     mi_count = db.Column(db.Integer)
     mi_index = db.Column(db.Integer)

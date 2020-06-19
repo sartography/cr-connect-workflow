@@ -145,14 +145,14 @@ def update_task(workflow_id, task_id, body):
     if spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
-    spiff_task.update_data(body)
+    if body: # IF and only if we get the body back, update the task data with the content.
+        spiff_task.data = body # Accept the data from the front end as complete.  Do not merge it in, as then it is impossible to remove items.
     processor.complete_task(spiff_task)
     processor.do_engine_steps()
     processor.save()
 
     WorkflowService.log_task_action(user_uid, workflow_model, spiff_task, WorkflowService.TASK_ACTION_COMPLETE,
-                                    version=processor.get_version_string(),
-                                    updated_data=spiff_task.data)
+                                    version=processor.get_version_string())
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 

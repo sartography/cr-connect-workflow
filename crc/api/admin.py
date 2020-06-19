@@ -57,9 +57,9 @@ def json_formatter(view, context, model, name):
 
 class TaskEventView(AdminModelView):
     column_filters = ['workflow_id', 'action']
-    column_list = ['study_id', 'user_id', 'workflow_id', 'action', 'task_title', 'task_data', 'date']
+    column_list = ['study_id', 'user_id', 'workflow_id', 'action', 'task_title', 'form_data', 'date']
     column_formatters = {
-        'task_data': json_formatter,
+        'form_data': json_formatter,
     }
 
 admin = Admin(app)

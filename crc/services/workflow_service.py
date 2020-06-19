@@ -6,6 +6,7 @@ import random
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
+from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
@@ -232,23 +233,25 @@ class WorkflowService(object):
             # This may or may not work, sometimes there is no next task to complete.
             next_task = processor.next_task()
         if next_task:
+            previous_form_data = WorkflowService.get_previously_submitted_data(processor.workflow_model.id, next_task)
+            DeepMerge.merge(next_task.data, previous_form_data)
             workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
 
         return workflow_api
 
     @staticmethod
     def get_previously_submitted_data(workflow_id, task):
-        """ If the user has completed this task previously, find that data in the task events table, and return it."""
+        """ If the user has completed this task previously, find the form data for the last submission."""
         latest_event = db.session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow_id) \
             .filter_by(task_name=task.task_spec.name) \
             .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE) \
             .order_by(TaskEventModel.date.desc()).first()
         if latest_event:
-            if latest_event.task_data is not None:
-                return latest_event.task_data
+            if latest_event.form_data is not None:
+                return latest_event.form_data
             else:
-                app.logger.error("missing_task_data", "We have lost data for workflow %i, task %s, it is not "
+                app.logger.error("missing_form_dat", "We have lost data for workflow %i, task %s, it is not "
                                                       "in the task event model, "
                                                       "and it should be." % (workflow_id, task.task_spec.name))
                 return {}
@@ -387,9 +390,9 @@ class WorkflowService(object):
                 field.options.append({"id": d.value, "name": d.label})
 
     @staticmethod
-    def log_task_action(user_uid, workflow_model, spiff_task, action,
-                        version,  updated_data=None):
+    def log_task_action(user_uid, workflow_model, spiff_task, action, version):
         task = WorkflowService.spiff_task_to_api_task(spiff_task)
+        form_data = WorkflowService.extract_form_data(spiff_task.data, spiff_task)
         task_event = TaskEventModel(
             study_id=workflow_model.study_id,
             user_uid=user_uid,
@@ -402,7 +405,7 @@ class WorkflowService(object):
             task_title=task.title,
             task_type=str(task.type),
             task_state=task.state,
-            task_data=updated_data,
+            form_data=form_data,
             mi_type=task.multi_instance_type.value,  # Some tasks have a repeat behavior.
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
             mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
@@ -436,43 +439,40 @@ class WorkflowService(object):
             # added in subsequent tasks, just looking at form data, will not track the automated
             # task data additions, hopefully this doesn't hang us.
             for log in task_logs:
-                if log.task_data is not None:  # Only do this if the task event does not have data populated in it.
-                    continue
+#                if log.task_data is not None:  # Only do this if the task event does not have data populated in it.
+#                    continue
                 data = copy.deepcopy(latest_data) # Or you end up with insane crazy issues.
                 # In the simple case of RRT, there is exactly one task for the given task_spec
                 task = processor.bpmn_workflow.get_tasks_from_spec_name(log.task_name)[0]
-                data = WorkflowService.__remove_data_added_by_children(data, task.children[0])
-                log.task_data = data
+                data = WorkflowService.extract_form_data(data, task)
+                log.form_data = data
                 db.session.add(log)
 
         db.session.commit()
 
     @staticmethod
-    def __remove_data_added_by_children(latest_data, child_task):
+    def extract_form_data(latest_data, task):
         """Removes data from latest_data that would be added by the child task or any of it's children."""
-        if hasattr(child_task.task_spec, 'form'):
-            for field in child_task.task_spec.form.fields:
-                latest_data.pop(field.id, None)
+        data = {}
+
+        if hasattr(task.task_spec, 'form'):
+            for field in task.task_spec.form.fields:
                 if field.has_property(Task.PROP_OPTIONS_READ_ONLY) and \
                         field.get_property(Task.PROP_OPTIONS_READ_ONLY).lower().strip() == "true":
-                    continue  # Don't pop off read only fields.
-                if field.has_property(Task.PROP_OPTIONS_REPEAT):
+                    continue  # Don't add read-only data
+                elif field.has_property(Task.PROP_OPTIONS_REPEAT):
                     group = field.get_property(Task.PROP_OPTIONS_REPEAT)
-                    group_data = []
                     if group in latest_data:
-                        for item in latest_data[group]:
-                            item.pop(field.id, None)
-                            if item:
-                                group_data.append(item)
-                        latest_data[group] = group_data
-                        if not latest_data[group]:
-                            latest_data.pop(group, None)
-        if isinstance(child_task.task_spec, BusinessRuleTask):
-            for output in child_task.task_spec.dmnEngine.decisionTable.outputs:
-                latest_data.pop(output.name, None)
-        for child in child_task.children:
-            latest_data = WorkflowService.__remove_data_added_by_children(latest_data, child)
-        return latest_data
+                        data[group] = latest_data[group]
+                elif isinstance(task.task_spec, MultiInstanceTask):
+                    group = task.task_spec.elementVar
+                    if group in latest_data:
+                        data[group] = latest_data[group]
+                else:
+                    if field.id in latest_data:
+                        data[field.id] = latest_data[field.id]
+
+        return data
 
 
 

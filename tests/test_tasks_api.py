@@ -77,9 +77,8 @@ class TestTasksApi(BaseTest):
         self.assertEquals(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 
-        # Assure that the data provided occurs in the task data log.
-        for key in dict_data.keys():
-            self.assertIn(key, event.task_data)
+        # Assure that there is data in the form_data
+        self.assertIsNotNone(event.form_data)
 
         workflow = WorkflowApiSchema().load(json_data)
         return workflow
@@ -372,13 +371,13 @@ class TestTasksApi(BaseTest):
         self.assertEqual("UserTask", task.type)
         self.assertEqual("Activity_A", task.name)
         self.assertEqual("My Sub Process", task.process_name)
-        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
+        workflow_api = self.complete_form(workflow, task, {"FieldA": "Dan"})
         task = workflow_api.next_task
         self.assertIsNotNone(task)
 
         self.assertEqual("Activity_B", task.name)
         self.assertEqual("Sub Workflow Example", task.process_name)
-        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
+        workflow_api = self.complete_form(workflow, task, {"FieldB": "Dan"})
         self.assertEqual(WorkflowStatus.complete, workflow_api.status)
 
     def test_update_task_resets_token(self):
@@ -446,7 +445,9 @@ class TestTasksApi(BaseTest):
 
         for i in random.sample(range(9), 9):
             task = TaskSchema().load(ready_items[i]['task'])
-            self.complete_form(workflow, task, {"investigator":{"email": "dhf8r@virginia.edu"}})
+            data = workflow_api.next_task.data
+            data['investigator']['email'] = "dhf8r@virginia.edu"
+            self.complete_form(workflow, task, data)
             #tasks = self.get_workflow_api(workflow).user_tasks
 
         workflow = self.get_workflow_api(workflow)
