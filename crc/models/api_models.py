@@ -36,6 +36,7 @@ class Task(object):
     PROP_OPTIONS_FILE = "spreadsheet.name"
     PROP_OPTIONS_VALUE_COLUMN = "spreadsheet.value.column"
     PROP_OPTIONS_LABEL_COL = "spreadsheet.label.column"
+    PROP_OPTIONS_READ_ONLY = "read_only"
     PROP_LDAP_LOOKUP = "ldap.lookup"
     VALIDATION_REQUIRED = "required"
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"

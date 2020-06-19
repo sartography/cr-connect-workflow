@@ -4,13 +4,85 @@ import random
 from unittest.mock import patch
 
 from tests.base_test import BaseTest
+
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
 from crc.models.file import FileModelSchema
 from crc.models.workflow import WorkflowStatus
-
+from crc.services.workflow_service import WorkflowService
+from crc.models.stats import TaskEventModel
 
 class TestTasksApi(BaseTest):
+
+    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False):
+        rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
+                          (workflow.id, str(soft_reset), str(hard_reset)),
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        workflow_api = WorkflowApiSchema().load(json_data)
+        self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
+        return workflow_api
+
+    def complete_form(self, workflow_in, task_in, dict_data, error_code = None):
+        prev_completed_task_count = workflow_in.completed_tasks
+        if isinstance(task_in, dict):
+            task_id = task_in["id"]
+        else:
+            task_id = task_in.id
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
+                          headers=self.logged_in_headers(),
+                          content_type="application/json",
+                          data=json.dumps(dict_data))
+        if error_code:
+            self.assert_failure(rv, error_code=error_code)
+            return
+
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+
+        # Assure stats are updated on the model
+        workflow = WorkflowApiSchema().load(json_data)
+        # The total number of tasks may change over time, as users move through gateways
+        # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
+        self.assertIsNotNone(workflow.total_tasks)
+        self.assertEquals(prev_completed_task_count + 1, workflow.completed_tasks)
+        # Assure a record exists in the Task Events
+        task_events = session.query(TaskEventModel) \
+            .filter_by(workflow_id=workflow.id) \
+            .filter_by(task_id=task_id) \
+            .order_by(TaskEventModel.date.desc()).all()
+        self.assertGreater(len(task_events), 0)
+        event = task_events[0]
+        self.assertIsNotNone(event.study_id)
+        self.assertEquals("dhf8r", event.user_uid)
+        self.assertEquals(workflow.id, event.workflow_id)
+        self.assertEquals(workflow.workflow_spec_id, event.workflow_spec_id)
+        self.assertEquals(workflow.spec_version, event.spec_version)
+        self.assertEquals(WorkflowService.TASK_ACTION_COMPLETE, event.action)
+        self.assertEquals(task_in.id, task_id)
+        self.assertEquals(task_in.name, event.task_name)
+        self.assertEquals(task_in.title, event.task_title)
+        self.assertEquals(task_in.type, event.task_type)
+        self.assertEquals("COMPLETED", event.task_state)
+        # Not sure what vodoo is happening inside of marshmallow to get me in this state.
+        if isinstance(task_in.multi_instance_type, MultiInstanceType):
+            self.assertEquals(task_in.multi_instance_type.value, event.mi_type)
+        else:
+            self.assertEquals(task_in.multi_instance_type, event.mi_type)
+
+        self.assertEquals(task_in.multi_instance_count, event.mi_count)
+        self.assertEquals(task_in.multi_instance_index, event.mi_index)
+        self.assertEquals(task_in.process_name, event.process_name)
+        self.assertIsNotNone(event.date)
+
+        # Assure that there is data in the form_data
+        self.assertIsNotNone(event.form_data)
+
+        workflow = WorkflowApiSchema().load(json_data)
+        return workflow
+
 
     def test_get_current_user_tasks(self):
         self.load_example_data()
@@ -299,13 +371,13 @@ class TestTasksApi(BaseTest):
         self.assertEqual("UserTask", task.type)
         self.assertEqual("Activity_A", task.name)
         self.assertEqual("My Sub Process", task.process_name)
-        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
+        workflow_api = self.complete_form(workflow, task, {"FieldA": "Dan"})
         task = workflow_api.next_task
         self.assertIsNotNone(task)
 
         self.assertEqual("Activity_B", task.name)
         self.assertEqual("Sub Workflow Example", task.process_name)
-        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
+        workflow_api = self.complete_form(workflow, task, {"FieldB": "Dan"})
         self.assertEqual(WorkflowStatus.complete, workflow_api.status)
 
     def test_update_task_resets_token(self):
@@ -373,7 +445,9 @@ class TestTasksApi(BaseTest):
 
         for i in random.sample(range(9), 9):
             task = TaskSchema().load(ready_items[i]['task'])
-            self.complete_form(workflow, task, {"investigator":{"email": "dhf8r@virginia.edu"}})
+            data = workflow_api.next_task.data
+            data['investigator']['email'] = "dhf8r@virginia.edu"
+            self.complete_form(workflow, task, data)
             #tasks = self.get_workflow_api(workflow).user_tasks
 
         workflow = self.get_workflow_api(workflow)
