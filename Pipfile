@@ -41,6 +41,7 @@ gunicorn = "*"
 werkzeug = "*"
 sentry-sdk = {extras = ["flask"],version = "==0.14.4"}
 flask-mail = "*"
+flask-admin = "*"
 
 [requires]
 python_version = "3.7"
