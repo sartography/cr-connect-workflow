@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 
 from crc import app, db, session
 from crc.api.common import ApiError
@@ -109,6 +109,41 @@ class ApprovalService(object):
         db_approvals = query.all()
         return [Approval.from_model(approval_model) for approval_model in db_approvals]
 
+    @staticmethod
+    def get_health_attesting_for_today():
+        """Return a CSV with prepared information related to approvals
+        created today"""
+        # import pdb; pdb.set_trace()
+        today = datetime.now() - timedelta(days=3)
+        today = today.date()
+        approvals = session.query(ApprovalModel).filter(
+            # func.date(ApprovalModel.date_created)==today,
+            ApprovalModel.status==ApprovalStatus.APPROVED.value
+        )
+
+        health_attesting_rows = [
+            'university_computing_id',
+            'last_name',
+            'first_name',
+            'department',
+            'job_title',
+            'supervisor_university_computing_id'
+        ]
+        for approval in approvals:
+            pi_info = LdapService.user_info(approval.study.primary_investigator_id)
+            approver_info = LdapService.user_info(approval.approver_uid)
+            first_name = pi_info.given_name
+            last_name = pi_info.display_name.replace(first_name, '').strip()
+            health_attesting_rows.append([
+                pi_info.uid,
+                last_name,
+                first_name,
+                '',
+                'Academic Researcher',
+                approver_info.uid
+            ])
+
+        return health_attesting_rows
 
     @staticmethod
     def update_approval(approval_id, approver_uid):
