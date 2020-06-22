@@ -110,24 +110,27 @@ class ApprovalService(object):
         return [Approval.from_model(approval_model) for approval_model in db_approvals]
 
     @staticmethod
-    def get_health_attesting_for_today():
-        """Return a CSV with prepared information related to approvals
-        created today"""
-        # import pdb; pdb.set_trace()
-        today = datetime.now() - timedelta(days=3)
-        today = today.date()
-        approvals = session.query(ApprovalModel).filter(
-            # func.date(ApprovalModel.date_created)==today,
-            ApprovalModel.status==ApprovalStatus.APPROVED.value
-        )
+    def get_health_attesting_records(all_approvals=True):
+        """Return a list with prepared information related to all approvals
+        approved or filtered by today """
+        if all_approvals:
+            approvals = session.query(ApprovalModel).filter(
+                ApprovalModel.status==ApprovalStatus.APPROVED.value
+            )
+        else:
+            today = datetime.now().date()
+            approvals = session.query(ApprovalModel).filter(
+                func.date(ApprovalModel.date_created)==today,
+                ApprovalModel.status==ApprovalStatus.APPROVED.value
+            )
 
         health_attesting_rows = [
-            'university_computing_id',
-            'last_name',
-            'first_name',
-            'department',
-            'job_title',
-            'supervisor_university_computing_id'
+            ['university_computing_id',
+             'last_name',
+             'first_name',
+             'department',
+             'job_title',
+             'supervisor_university_computing_id']
         ]
         for approval in approvals:
             pi_info = LdapService.user_info(approval.study.primary_investigator_id)
@@ -147,13 +150,14 @@ class ApprovalService(object):
 
     @staticmethod
     def update_approval(approval_id, approver_uid):
-        """Update a specific approval"""
+        """Update a specific approval
+        NOTE: Actual update happens in the API layer, this
+        funtion is currently in charge of only sending
+        corresponding emails
+        """
         db_approval = session.query(ApprovalModel).get(approval_id)
         status = db_approval.status
         if db_approval:
-            # db_approval.status = status
-            # session.add(db_approval)
-            # session.commit()
             if status == ApprovalStatus.APPROVED.value:
                 # second_approval = ApprovalModel().query.filter_by(
                 #     study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,

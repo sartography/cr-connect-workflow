@@ -1,9 +1,11 @@
+import csv
+import io
 import json
 import pickle
 from base64 import b64decode
 from datetime import datetime
 
-from flask import g
+from flask import g, make_response
 
 from crc import db, session
 from crc.api.common import ApiError
@@ -86,6 +88,17 @@ def get_approvals_for_study(study_id=None):
     approvals = [Approval.from_model(approval_model) for approval_model in db_approvals]
     results = ApprovalSchema(many=True).dump(approvals)
     return results
+
+
+def get_health_attesting_csv(all_approvals=True):
+    records = ApprovalService.get_health_attesting_records(all_approvals)
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerows(records)
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=health_attesting.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 
 # ----- Begin descent into madness ---- #
