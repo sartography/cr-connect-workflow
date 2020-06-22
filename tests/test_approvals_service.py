@@ -81,7 +81,7 @@ class TestApprovalsService(BaseTest):
         ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
         records = ApprovalService.get_not_really_csv_content()
 
-        self.assertEqual(len(records), 1)
+        self.assertEqual(len(records), 2)
 
     def test_new_approval_sends_proper_emails(self):
         self.assertEqual(1, 1)
