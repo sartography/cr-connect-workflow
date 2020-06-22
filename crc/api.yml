@@ -918,13 +918,6 @@ paths:
               schema:
                 type: object
   /health_attesting:
-    parameters:
-      - name: all_approvals
-        in: query
-        required: false
-        description: If set to false, returns just approvals for today.
-        schema:
-          type: string
     get:
       operationId: crc.api.approval.get_health_attesting_csv
       summary: Returns a CSV file with health attesting records
