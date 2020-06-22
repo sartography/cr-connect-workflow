@@ -1,3 +1,6 @@
+import json
+import pickle
+from base64 import b64decode
 from datetime import datetime, timedelta
 
 from sqlalchemy import desc, func
@@ -110,19 +113,51 @@ class ApprovalService(object):
         return [Approval.from_model(approval_model) for approval_model in db_approvals]
 
     @staticmethod
-    def get_health_attesting_records(all_approvals=True):
-        """Return a list with prepared information related to all approvals
-        approved or filtered by today """
-        if all_approvals:
-            approvals = session.query(ApprovalModel).filter(
-                ApprovalModel.status==ApprovalStatus.APPROVED.value
-            )
-        else:
-            today = datetime.now().date()
-            approvals = session.query(ApprovalModel).filter(
-                func.date(ApprovalModel.date_created)==today,
-                ApprovalModel.status==ApprovalStatus.APPROVED.value
-            )
+    def get_approval_details(approval):
+        """Returns a list of packed approval details, obtained from
+        the task data sent during the workflow """
+        def extract_value(task, key):
+            if key in task['data']:
+                return pickle.loads(b64decode(task['data'][key]['__bytes__']))
+            else:
+                return ""
+
+        def find_task(uuid, task):
+            if task['id']['__uuid__'] == uuid:
+                return task
+            for child in task['children']:
+                task = find_task(uuid, child)
+                if task:
+                    return task
+
+        if approval.status != ApprovalStatus.APPROVED.value:
+            return {}
+        for related_approval in approval.related_approvals:
+            if related_approval.status != ApprovalStatus.APPROVED.value:
+                continue
+        workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == approval.workflow_id).first()
+        data = json.loads(workflow.bpmn_workflow_json)
+        last_task = find_task(data['last_task']['__uuid__'], data['task_tree'])
+        personnel = extract_value(last_task, 'personnel')
+        training_val = extract_value(last_task, 'RequiredTraining')
+        pi_supervisor = extract_value(last_task, 'PISupervisor')['value']
+        review_complete = 'AllRequiredTraining' in training_val
+        pi_uid = workflow.study.primary_investigator_id
+        pi_details = LdapService.user_info(pi_uid)
+        details = {'Supervisor': pi_supervisor}
+        details['person_details'] = []
+        details['person_details'].append(pi_details)
+        for person in personnel:
+            uid = person['PersonnelComputingID']['value']
+            details['person_details'].append(LdapService.user_info(uid))
+
+        return details
+
+    @staticmethod
+    def get_health_attesting_records():
+        """Return a list with prepared information related to all approvals """
+
+        approvals = ApprovalService.get_all_approvals(include_cancelled=False)
 
         health_attesting_rows = [
             ['university_computing_id',
@@ -132,21 +167,59 @@ class ApprovalService(object):
              'job_title',
              'supervisor_university_computing_id']
         ]
+
         for approval in approvals:
-            pi_info = LdapService.user_info(approval.study.primary_investigator_id)
-            approver_info = LdapService.user_info(approval.approver_uid)
-            first_name = pi_info.given_name
-            last_name = pi_info.display_name.replace(first_name, '').strip()
-            health_attesting_rows.append([
-                pi_info.uid,
-                last_name,
-                first_name,
-                '',
-                'Academic Researcher',
-                approver_info.uid
-            ])
+            try:
+                details = ApprovalService.get_approval_details(approval)
+                if not details:
+                    continue
+
+                for person in details['person_details']:
+                    first_name = person.given_name
+                    last_name = person.display_name.replace(first_name, '').strip()
+                    record = [
+                        person.uid,
+                        last_name,
+                        first_name,
+                        '',
+                        'Academic Researcher',
+                        details['Supervisor'] if person.uid == details['person_details'][0].uid else 'askresearch'
+                    ]
+
+                    if record not in health_attesting_rows:
+                        health_attesting_rows.append(record)
+
+            except Exception as e:
+                app.logger.error("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
 
         return health_attesting_rows
+
+    @staticmethod
+    def get_not_really_csv_content():
+        approvals = ApprovalService.get_all_approvals(include_cancelled=False)
+        output = []
+        errors = []
+        for approval in approvals:
+            try:
+                details = ApprovalService.get_approval_details(approval)
+
+                for person in details['person_details']:
+                    record = {
+                        "study_id": approval.study_id,
+                        "pi_uid": pi_details.uid,
+                        "pi": pi_details.display_name,
+                        "name": person.display_name,
+                        "uid": person.uid,
+                        "email": person.email_address,
+                        "supervisor": details['Supervisor'] if person.uid == details['person_details'][0].uid else "",
+                        "review_complete": review_complete,
+                    }
+
+                    output.append(record)
+
+            except Exception as e:
+                errors.append("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
+        return {"results": output, "errors": errors }
 
     @staticmethod
     def update_approval(approval_id, approver_uid):

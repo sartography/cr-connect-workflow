@@ -57,6 +57,32 @@ class TestApprovalsService(BaseTest):
         self.assertEqual(1, models[0].version)
         self.assertEqual(2, models[1].version)
 
+    def test_get_health_attesting_records(self):
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('empty_workflow')
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code="AD_CoCAppr")
+
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
+        records = ApprovalService.get_health_attesting_records()
+
+        self.assertEqual(len(records), 1)
+
+    def test_get_not_really_csv_content(self):
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('empty_workflow')
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code="AD_CoCAppr")
+
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
+        records = ApprovalService.get_not_really_csv_content()
+
+        self.assertEqual(len(records), 1)
+
     def test_new_approval_sends_proper_emails(self):
         self.assertEqual(1, 1)
 
