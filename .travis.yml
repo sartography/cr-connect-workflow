@@ -16,9 +16,7 @@ before_install:
   - psql -c 'create database crc_test;' -U postgres
 
 install:
-  - pip install pipenv pytest coverage awscli
-  - export PATH=$PATH:$HOME/.local/bin;
-  - pipenv install
+  - pipenv install --dev
 
 env:
   global:
@@ -35,7 +33,7 @@ after_success:
 
 deploy:
   provider: script
-  script: bash deploy.sh
+  script: bash deploy.sh sartography/cr-connect-workflow
   skip_cleanup: true
   on:
     all_branches: true

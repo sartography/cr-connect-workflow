@@ -9,7 +9,6 @@ RUN set -xe \
   && apt-get autoremove -y \
   && apt-get clean -y \
   && rm -rf /var/lib/apt/lists/* \
-  && mkdir -p /app \
   && useradd _gunicorn --no-create-home --user-group
 
 COPY . /app/
