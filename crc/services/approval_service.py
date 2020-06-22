@@ -144,7 +144,11 @@ class ApprovalService(object):
         review_complete = 'AllRequiredTraining' in training_val
         pi_uid = workflow.study.primary_investigator_id
         pi_details = LdapService.user_info(pi_uid)
-        details = {'Supervisor': pi_supervisor}
+        details = {
+            'Supervisor': pi_supervisor,
+            'PI_Details': pi_details,
+            'Review': review_complete
+        }
         details['person_details'] = []
         details['person_details'].append(pi_details)
         for person in personnel:
@@ -206,13 +210,13 @@ class ApprovalService(object):
                 for person in details['person_details']:
                     record = {
                         "study_id": approval.study_id,
-                        "pi_uid": pi_details.uid,
-                        "pi": pi_details.display_name,
+                        "pi_uid": details['PI_Details'].uid,
+                        "pi": details['PI_Details'].display_name,
                         "name": person.display_name,
                         "uid": person.uid,
                         "email": person.email_address,
                         "supervisor": details['Supervisor'] if person.uid == details['person_details'][0].uid else "",
-                        "review_complete": review_complete,
+                        "review_complete": details['Review'],
                     }
 
                     output.append(record)
