@@ -28,3 +28,8 @@ if [ "$APPLICATION_ROOT" = "/" ]; then
 else
   pipenv run gunicorn -e SCRIPT_NAME="$APPLICATION_ROOT" --bind 0.0.0.0:$PORT0 wsgi:app
 fi
+
+if [ "$FIX_RRT_DATA" = "true" ]; then
+  echo 'Fixing RRT data...'
+  pipenv run flask rrt-data-fix
+fi
