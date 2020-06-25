@@ -231,7 +231,6 @@ class ApprovalService(object):
             mail_result = send_ramp_up_submission_email(
                 'askresearch@virginia.edu',
                 [pi_user_info.email_address],
-                model.id,
                 f'{approver_info.display_name} - ({approver_info.uid})'
             )
             if mail_result:
@@ -242,7 +241,6 @@ class ApprovalService(object):
             mail_result = send_ramp_up_approval_request_first_review_email(
                 'askresearch@virginia.edu',
                 approver_email,
-                model.id,
                 f'{pi_user_info.display_name} - ({pi_user_info.uid})'
             )
             if mail_result:
