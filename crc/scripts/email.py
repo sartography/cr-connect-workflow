@@ -73,19 +73,7 @@ Email Subject ApprvlApprvr1 PIComputingID
                            message="Email script requires at least one subject argument.  The "
                                    "name of the variable in the task data that contains subject"
                                    " to process. Multiple arguments are accepted.")
-
-        subject_index = 0
-        subject = args[subject_index]
-        if subject.startswith('"') and not subject.endswith('"'):
-            # Multi-word subject
-            subject_index += 1
-            next_word = args[subject_index]
-            while not next_word.endswith('"'):
-                subject = ' '.join((subject, next_word))
-                subject_index += 1
-                next_word = args[subject_index]
-            subject = ' '.join((subject, next_word))
-        subject = subject.replace('"', '')
+        subject = args[0]
         if not isinstance(subject, str):
             raise ApiError(code="invalid_argument",
                            message="The Email script requires 1 argument.  The "

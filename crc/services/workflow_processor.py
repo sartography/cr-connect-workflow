@@ -1,4 +1,5 @@
 import re
+import shlex
 import xml.etree.ElementTree as ElementTree
 from datetime import datetime
 from typing import List
@@ -36,7 +37,9 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
         This allows us to reference custom code from the BPMN diagram.
         """
-        commands = script.split(" ")
+        # Shlex splits the whole string while respecting double quoted strings within
+        commands = shlex.split(script)
+        printable_comms = commands
         path_and_command = commands[0].rsplit(".", 1)
         if len(path_and_command) == 1:
             module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
