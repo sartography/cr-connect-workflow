@@ -146,10 +146,10 @@ def update_task(workflow_id, task_id, body, terminate_loop=None):
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
     if terminate_loop:
-        task.terminate_loop()
+        spiff_task.terminate_loop()
 
-    task.update_data(body)
-    processor.complete_task(task)
+    spiff_task.update_data(body)
+    processor.complete_task(spiff_task)
     processor.do_engine_steps()
     processor.save()
 
