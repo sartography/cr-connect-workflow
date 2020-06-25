@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8d6d99bcacef0b12f29f3c402f7980799812f645c576767b5477445a1fc03062"
+            "sha256": "d82c06e080dbdd4c9da4e308d29ebefd9ef41be7a15caa72c6d6f9b7007d8910"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -464,7 +464,7 @@
                 "sha256:f95d28193c3863132b1f55c1056036bf580b5a488d908f7d22a04ace8935a3a9",
                 "sha256:fadd2a63a2bfd7fb604508e553d1cf68eca250b2fbdbd81213b5f6f2fbf23529"
             ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
+            "index": "pypi",
             "version": "==4.5.1"
         },
         "mako": {
@@ -918,7 +918,7 @@
         "spiffworkflow": {
             "editable": true,
             "git": "https://github.com/sartography/SpiffWorkflow.git",
-            "ref": "49163a983b7d8b8e564079c79277b21e358a26ac"
+            "ref": "8ab8d98792ac46e0bac5b1b35a59ddfe28aa9760"
         },
         "sqlalchemy": {
             "hashes": [
