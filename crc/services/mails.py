@@ -41,7 +41,7 @@ def send_mail(subject, sender, recipients, content, content_html, study_id=None)
     except Exception as e:
         return str(e)
 
-def send_ramp_up_submission_email(sender, recipients, approval_id, approver_1, approver_2=None):
+def send_ramp_up_submission_email(sender, recipients, approver_1, approver_2=None):
     from crc import env
     subject = 'Research Ramp-up Plan Submitted'
 
@@ -54,7 +54,7 @@ def send_ramp_up_submission_email(sender, recipients, approval_id, approver_1, a
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
 
-def send_ramp_up_approval_request_email(sender, recipients, approval_id, primary_investigator):
+def send_ramp_up_approval_request_email(sender, recipients, primary_investigator):
     from crc import env
     subject = 'Research Ramp-up Plan Approval Request'
 
@@ -67,7 +67,7 @@ def send_ramp_up_approval_request_email(sender, recipients, approval_id, primary
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
 
-def send_ramp_up_approval_request_first_review_email(sender, recipients, approval_id, primary_investigator):
+def send_ramp_up_approval_request_first_review_email(sender, recipients, primary_investigator):
     from crc import env
     subject = 'Research Ramp-up Plan Approval Request'
 
@@ -80,7 +80,7 @@ def send_ramp_up_approval_request_first_review_email(sender, recipients, approva
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
 
-def send_ramp_up_approved_email(sender, recipients, approval_id, approver_1, approver_2=None):
+def send_ramp_up_approved_email(sender, recipients, approver_1, approver_2=None):
     from crc import env
     subject = 'Research Ramp-up Plan Approved'
 
@@ -93,7 +93,7 @@ def send_ramp_up_approved_email(sender, recipients, approval_id, approver_1, app
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
 
-def send_ramp_up_denied_email(sender, recipients, approval_id, approver):
+def send_ramp_up_denied_email(sender, recipients, approver):
     from crc import env
     subject = 'Research Ramp-up Plan Denied'
 
@@ -106,7 +106,7 @@ def send_ramp_up_denied_email(sender, recipients, approval_id, approver):
     result = send_mail(subject, sender, recipients, content, content_html)
     return result
 
-def send_ramp_up_denied_email_to_approver(sender, recipients, approval_id, primary_investigator, approver_2):
+def send_ramp_up_denied_email_to_approver(sender, recipients, primary_investigator, approver_2):
     from crc import env
     subject = 'Research Ramp-up Plan Denied'
 

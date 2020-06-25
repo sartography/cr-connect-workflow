@@ -132,7 +132,6 @@ class ApprovalService(object):
                 mail_result = send_ramp_up_approved_email(
                     'askresearch@virginia.edu',
                     [pi_user_info.email_address],
-                    approval_id,
                     f'{approver_info.display_name} - ({approver_info.uid})'
                 )
                 if mail_result:
@@ -145,7 +144,6 @@ class ApprovalService(object):
                 mail_result = send_ramp_up_denied_email(
                     'askresearch@virginia.edu',
                     [pi_user_info.email_address],
-                    approval_id,
                     f'{approver_info.display_name} - ({approver_info.uid})'
                 )
                 if mail_result:
@@ -161,7 +159,6 @@ class ApprovalService(object):
                     mail_result = send_ramp_up_denied_email_to_approver(
                         'askresearch@virginia.edu',
                         approver_email,
-                        approval_id,
                         f'{pi_user_info.display_name} - ({pi_user_info.uid})',
                         f'{approver_info.display_name} - ({approver_info.uid})'
                     )
