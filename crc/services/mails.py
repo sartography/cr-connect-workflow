@@ -6,7 +6,6 @@ from flask_mail import Message
 from crc.services.email_service import EmailService
 
 
-# TODO: Extract common mailing code into its own function
 def send_test_email(sender, recipients):
     try:
         msg = Message('Research Ramp-up Plan test',
@@ -24,22 +23,8 @@ def send_test_email(sender, recipients):
         return str(e)
 
 def send_mail(subject, sender, recipients, content, content_html, study_id=None):
-    from crc import mail
-    try:
-        msg = Message(subject,
-              sender=sender,
-              recipients=recipients,
-              bcc=['rrt_emails@googlegroups.com'])
-
-        msg.body = content
-        msg.html = content_html
-
-        EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
+    EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
                                content=content, content_html=content_html, study_id=study_id)
-
-        mail.send(msg)
-    except Exception as e:
-        return str(e)
 
 def send_ramp_up_submission_email(sender, recipients, approver_1, approver_2=None):
     from crc import env

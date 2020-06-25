@@ -1,8 +1,8 @@
 from datetime import datetime
-
+from flask_mail import Message
 from sqlalchemy import desc
 
-from crc import app, db, session
+from crc import app, db, mail, session
 from crc.api.common import ApiError
 
 from crc.models.study import StudyModel
@@ -25,7 +25,18 @@ class EmailService(object):
         email_model = EmailModel(subject=subject, sender=sender, recipients=str(recipients),
                                  content=content, content_html=content_html, study=study)
 
-        # TODO: Send email from here, not from caller functions
+        # Send mail
+        try:
+            msg = Message(subject,
+                  sender=sender,
+                  recipients=recipients)
+
+            msg.body = content
+            msg.html = content_html
+
+            mail.send(msg)
+        except Exception as e:
+            app.logger.error(str(e))
 
         db.session.add(email_model)
         db.session.commit()
