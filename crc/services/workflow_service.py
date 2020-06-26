@@ -242,10 +242,12 @@ class WorkflowService(object):
     @staticmethod
     def get_previously_submitted_data(workflow_id, task):
         """ If the user has completed this task previously, find the form data for the last submission."""
+        mi_index = task.multi_instance_index if hasattr(task, 'multi_instance_index') else None;
         latest_event = db.session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow_id) \
             .filter_by(task_name=task.task_spec.name) \
             .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE) \
+            .filter_by(mi_index=mi_index) \
             .order_by(TaskEventModel.date.desc()).first()
         if latest_event:
             if latest_event.form_data is not None:
