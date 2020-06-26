@@ -47,7 +47,7 @@ class TestTasksApi(BaseTest):
         # The total number of tasks may change over time, as users move through gateways
         # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
         self.assertIsNotNone(workflow.total_tasks)
-        self.assertEquals(prev_completed_task_count + 1, workflow.completed_tasks)
+        self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
         # Assure a record exists in the Task Events
         task_events = session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow.id) \
@@ -56,25 +56,25 @@ class TestTasksApi(BaseTest):
         self.assertGreater(len(task_events), 0)
         event = task_events[0]
         self.assertIsNotNone(event.study_id)
-        self.assertEquals("dhf8r", event.user_uid)
-        self.assertEquals(workflow.id, event.workflow_id)
-        self.assertEquals(workflow.workflow_spec_id, event.workflow_spec_id)
-        self.assertEquals(workflow.spec_version, event.spec_version)
-        self.assertEquals(WorkflowService.TASK_ACTION_COMPLETE, event.action)
-        self.assertEquals(task_in.id, task_id)
-        self.assertEquals(task_in.name, event.task_name)
-        self.assertEquals(task_in.title, event.task_title)
-        self.assertEquals(task_in.type, event.task_type)
-        self.assertEquals("COMPLETED", event.task_state)
+        self.assertEqual("dhf8r", event.user_uid)
+        self.assertEqual(workflow.id, event.workflow_id)
+        self.assertEqual(workflow.workflow_spec_id, event.workflow_spec_id)
+        self.assertEqual(workflow.spec_version, event.spec_version)
+        self.assertEqual(WorkflowService.TASK_ACTION_COMPLETE, event.action)
+        self.assertEqual(task_in.id, task_id)
+        self.assertEqual(task_in.name, event.task_name)
+        self.assertEqual(task_in.title, event.task_title)
+        self.assertEqual(task_in.type, event.task_type)
+        self.assertEqual("COMPLETED", event.task_state)
         # Not sure what vodoo is happening inside of marshmallow to get me in this state.
         if isinstance(task_in.multi_instance_type, MultiInstanceType):
-            self.assertEquals(task_in.multi_instance_type.value, event.mi_type)
+            self.assertEqual(task_in.multi_instance_type.value, event.mi_type)
         else:
-            self.assertEquals(task_in.multi_instance_type, event.mi_type)
+            self.assertEqual(task_in.multi_instance_type, event.mi_type)
 
-        self.assertEquals(task_in.multi_instance_count, event.mi_count)
-        self.assertEquals(task_in.multi_instance_index, event.mi_index)
-        self.assertEquals(task_in.process_name, event.process_name)
+        self.assertEqual(task_in.multi_instance_count, event.mi_count)
+        self.assertEqual(task_in.multi_instance_index, event.mi_index)
+        self.assertEqual(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 
         # Assure that there is data in the form_data

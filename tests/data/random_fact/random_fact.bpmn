@@ -175,9 +175,6 @@ Your random fact is:
       <bpmndi:BPMNShape id="UserTask_186s7tw_di" bpmnElement="Task_User_Select_Type">
         <dc:Bounds x="270" y="210" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ScriptTask_10keafb_di" bpmnElement="Task_Get_Fact_From_API">
-        <dc:Bounds x="470" y="210" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_0u1cgrf_di" bpmnElement="EndEvent_0u1cgrf">
         <dc:Bounds x="692" y="232" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -186,6 +183,9 @@ Your random fact is:
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="TextAnnotation_1234e5n_di" bpmnElement="TextAnnotation_1234e5n">
         <dc:Bounds x="570" y="120" width="100" height="68" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_10keafb_di" bpmnElement="Task_Get_Fact_From_API">
+        <dc:Bounds x="470" y="210" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Association_1cfasjp_di" bpmnElement="Association_1cfasjp">
         <di:waypoint x="344" y="210" />
