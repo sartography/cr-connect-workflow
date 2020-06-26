@@ -61,14 +61,14 @@ class TestFileService(BaseTest):
 
         # Archive the file
         file_models = FileService.get_workflow_files(workflow_id=workflow.id)
-        self.assertEquals(1, len(file_models))
+        self.assertEqual(1, len(file_models))
         file_model = file_models[0]
         file_model.archived = True
         db.session.add(file_model)
 
         # Assure that the file no longer comes back.
         file_models = FileService.get_workflow_files(workflow_id=workflow.id)
-        self.assertEquals(0, len(file_models))
+        self.assertEqual(0, len(file_models))
 
         # Add the file again with different data
         FileService.add_workflow_file(workflow_id=workflow.id,

@@ -29,6 +29,9 @@ class LdapModel(db.Model):
                          affiliation=", ".join(entry.uvaPersonIAMAffiliation),
                          sponsor_type=", ".join(entry.uvaPersonSponsoredType))
 
+    def proper_name(self):
+        return f'{self.display_name} - ({self.uid})'
+
 
 class LdapSchema(SQLAlchemyAutoSchema):
     class Meta:

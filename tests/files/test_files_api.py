@@ -91,7 +91,6 @@ class TestFilesApi(BaseTest):
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
 
-
     def test_archive_file_no_longer_shows_up(self):
         self.load_example_data()
         self.create_reference_document()
@@ -109,21 +108,16 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         rv = self.app.get('/v1.0/file?workflow_id=%s' % workflow.id, headers=self.logged_in_headers())
         self.assert_success(rv)
-        self.assertEquals(1, len(json.loads(rv.get_data(as_text=True))))
+        self.assertEqual(1, len(json.loads(rv.get_data(as_text=True))))
 
         file_model = db.session.query(FileModel).filter(FileModel.workflow_id == workflow.id).all()
-        self.assertEquals(1, len(file_model))
+        self.assertEqual(1, len(file_model))
         file_model[0].archived = True
         db.session.commit()
 
         rv = self.app.get('/v1.0/file?workflow_id=%s' % workflow.id, headers=self.logged_in_headers())
         self.assert_success(rv)
-        self.assertEquals(0, len(json.loads(rv.get_data(as_text=True))))
-
-
-
-
-
+        self.assertEqual(0, len(json.loads(rv.get_data(as_text=True))))
 
     def test_set_reference_file(self):
         file_name = "irb_document_types.xls"
@@ -285,8 +279,8 @@ class TestFilesApi(BaseTest):
             .filter(ApprovalModel.status == ApprovalStatus.PENDING.value)\
             .filter(ApprovalModel.study_id == workflow.study_id).all()
 
-        self.assertEquals(1, len(approvals))
-        self.assertEquals(1, len(approvals[0].approval_files))
+        self.assertEqual(1, len(approvals))
+        self.assertEqual(1, len(approvals[0].approval_files))
 
 
     def test_change_primary_bpmn(self):

@@ -34,6 +34,9 @@ db = SQLAlchemy(app)
 session = db.session
 """:type: sqlalchemy.orm.Session"""
 
+# Mail settings
+mail = Mail(app)
+
 migrate = Migrate(app, db)
 ma = Marshmallow(app)
 
@@ -58,8 +61,6 @@ if app.config['ENABLE_SENTRY']:
 # Jinja environment definition, used to render mail templates
 template_dir = os.getcwd() + '/crc/static/templates/mails'
 env = Environment(loader=FileSystemLoader(template_dir))
-# Mail settings
-mail = Mail(app)
 
 print('=== USING THESE CONFIG SETTINGS: ===')
 print('APPLICATION_ROOT = ', app.config['APPLICATION_ROOT'])

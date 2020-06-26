@@ -181,8 +181,6 @@ class StudyService(object):
             documents[code] = doc
         return documents
 
-
-
     @staticmethod
     def get_investigators(study_id):
 
@@ -223,7 +221,6 @@ class StudyService(object):
             .first()
 
         return FileModelSchema().dump(file)
-
 
     @staticmethod
     def synch_with_protocol_builder_if_enabled(user):
