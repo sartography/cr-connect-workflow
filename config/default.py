@@ -46,6 +46,7 @@ LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
 # Email configuration
+DEFAULT_SENDER = 'askresearch@virginia.edu'
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
 MAIL_DEBUG = environ.get('MAIL_DEBUG', default=True)
 MAIL_SERVER = environ.get('MAIL_SERVER', default='smtp.mailtrap.io')
