@@ -1,5 +1,6 @@
 import re
 from lxml import etree
+import shlex
 from datetime import datetime
 from typing import List
 
@@ -13,7 +14,6 @@ from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import WorkflowSpec
-from sqlalchemy import desc
 
 from crc import session
 from crc.api.common import ApiError
@@ -36,7 +36,9 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
         This allows us to reference custom code from the BPMN diagram.
         """
-        commands = script.split(" ")
+        # Shlex splits the whole string while respecting double quoted strings within
+        commands = shlex.split(script)
+        printable_comms = commands
         path_and_command = commands[0].rsplit(".", 1)
         if len(path_and_command) == 1:
             module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
@@ -60,7 +62,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                                          "does not properly implement the CRC Script class.",
                                          task=task)
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                """If this is running a validation, and not a normal process, then we want to 
+                """If this is running a validation, and not a normal process, then we want to
                 mimic running the script, but not make any external calls or database changes."""
                 klass().do_task_validate_only(task, study_id, workflow_id, *commands[1:])
             else:

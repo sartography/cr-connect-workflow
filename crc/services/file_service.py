@@ -58,7 +58,7 @@ class FileService(object):
                            "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % irb_doc_code)
 
         """Assure this is unique to the workflow, task, and document code AND the Name
-           Because we will allow users to upload multiple files for the same form field 
+           Because we will allow users to upload multiple files for the same form field
             in some cases """
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_id == workflow_id)\
