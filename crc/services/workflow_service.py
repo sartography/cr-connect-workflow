@@ -39,7 +39,7 @@ class WorkflowService(object):
      the workflow Processor should be hidden behind this service.
      This will help maintain a structure that avoids circular dependencies.
      But for now, this contains tools for converting spiff-workflow models into our
-     own API models with additional information and capabilities and 
+     own API models with additional information and capabilities and
      handles the testing of a workflow specification by completing it with
      random selections, attempting to mimic a front end as much as possible. """
 
