@@ -1,6 +1,6 @@
 import re
+from lxml import etree
 import shlex
-import xml.etree.ElementTree as ElementTree
 from datetime import datetime
 from typing import List
 
@@ -14,7 +14,6 @@ from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import WorkflowSpec
-from sqlalchemy import desc
 
 from crc import session
 from crc.api.common import ApiError
@@ -269,12 +268,12 @@ class WorkflowProcessor(object):
 
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
-                bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
+                bpmn: etree.Element = etree.fromstring(file_data.data)
                 if file_data.file_model.primary:
                     process_id = FileService.get_process_id(bpmn)
                 parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
             elif file_data.file_model.type == FileType.dmn:
-                dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
+                dmn: etree.Element = etree.fromstring(file_data.data)
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
         if process_id is None:
             raise (ApiError(code="no_primary_bpmn_error",

@@ -129,7 +129,7 @@ def set_current_task(workflow_id, task_id):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def update_task(workflow_id, task_id, body):
+def update_task(workflow_id, task_id, body, terminate_loop=None):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
 
     if workflow_model is None:
@@ -145,8 +145,10 @@ def update_task(workflow_id, task_id, body):
     if spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
-    if body: # IF and only if we get the body back, update the task data with the content.
-        spiff_task.data = body # Accept the data from the front end as complete.  Do not merge it in, as then it is impossible to remove items.
+    if terminate_loop:
+        spiff_task.terminate_loop()
+
+    spiff_task.update_data(body)
     processor.complete_task(spiff_task)
     processor.do_engine_steps()
     processor.save()

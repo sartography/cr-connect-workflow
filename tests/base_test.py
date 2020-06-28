@@ -290,7 +290,7 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
-    def complete_form(self, workflow_in, task_in, dict_data, error_code=None, user_uid="dhf8r"):
+    def complete_form(self, workflow_in, task_in, dict_data, error_code=None, terminate_loop=None, user_uid="dhf8r"):
         prev_completed_task_count = workflow_in.completed_tasks
         if isinstance(task_in, dict):
             task_id = task_in["id"]
@@ -299,11 +299,16 @@ class BaseTest(unittest.TestCase):
 
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
-
-        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
-                          headers=self.logged_in_headers(user=user),
-                          content_type="application/json",
-                          data=json.dumps(dict_data))
+        if terminate_loop:
+            rv = self.app.put('/v1.0/workflow/%i/task/%s/data?terminate_loop=true' % (workflow_in.id, task_id),
+                              headers=self.logged_in_headers(user=user),
+                              content_type="application/json",
+                              data=json.dumps(dict_data))
+        else:
+            rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
+                              headers=self.logged_in_headers(user=user),
+                              content_type="application/json",
+                              data=json.dumps(dict_data))
         if error_code:
             self.assert_failure(rv, error_code=error_code)
             return
@@ -316,7 +321,9 @@ class BaseTest(unittest.TestCase):
         # The total number of tasks may change over time, as users move through gateways
         # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
         self.assertIsNotNone(workflow.total_tasks)
-        self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
+        # presumably, we also need to deal with sequential items here too . .
+        if not task_in.multi_instance_type == 'looping':
+            self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
 
         # Assure a record exists in the Task Events
         task_events = session.query(TaskEventModel) \
@@ -335,7 +342,8 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(task_in.name, event.task_name)
         self.assertEqual(task_in.title, event.task_title)
         self.assertEqual(task_in.type, event.task_type)
-        self.assertEqual("COMPLETED", event.task_state)
+        if not task_in.multi_instance_type == 'looping':
+            self.assertEqual("COMPLETED", event.task_state)
 
         # Not sure what voodoo is happening inside of marshmallow to get me in this state.
         if isinstance(task_in.multi_instance_type, MultiInstanceType):
@@ -344,7 +352,10 @@ class BaseTest(unittest.TestCase):
             self.assertEqual(task_in.multi_instance_type, event.mi_type)
 
         self.assertEqual(task_in.multi_instance_count, event.mi_count)
-        self.assertEqual(task_in.multi_instance_index, event.mi_index)
+        if task_in.multi_instance_type == 'looping' and not terminate_loop:
+            self.assertEqual(task_in.multi_instance_index+1, event.mi_index)
+        else:
+            self.assertEqual(task_in.multi_instance_index, event.mi_index)
         self.assertEqual(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 
