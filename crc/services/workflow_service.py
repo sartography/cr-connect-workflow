@@ -240,24 +240,24 @@ class WorkflowService(object):
         return workflow_api
 
     @staticmethod
-    def get_previously_submitted_data(workflow_id, task):
+    def get_previously_submitted_data(workflow_id, spiff_task):
         """ If the user has completed this task previously, find the form data for the last submission."""
         query = db.session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow_id) \
-            .filter_by(task_name=task.task_spec.name) \
+            .filter_by(task_name=spiff_task.task_spec.name) \
             .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE)
 
-        if hasattr(task, 'multi_instance_index'):
-            query = query.filter_by(mi_index=task.multi_instance_index)
+        if hasattr(spiff_task, 'internal_data') and 'runtimes' in spiff_task.internal_data:
+            query = query.filter_by(mi_index=spiff_task.internal_data['runtimes'])
 
-        latest_event =  query.order_by(TaskEventModel.date.desc()).first()
+        latest_event = query.order_by(TaskEventModel.date.desc()).first()
         if latest_event:
             if latest_event.form_data is not None:
                 return latest_event.form_data
             else:
-                app.logger.error("missing_form_dat", "We have lost data for workflow %i, task %s, it is not "
-                                                      "in the task event model, "
-                                                      "and it should be." % (workflow_id, task.task_spec.name))
+                app.logger.error("missing_form_data", "We have lost data for workflow %i, "
+                                                      "task %s, it is not in the task event model, "
+                                                      "and it should be." % (workflow_id, spiff_task.task_spec.name))
                 return {}
         else:
             return {}
@@ -294,8 +294,8 @@ class WorkflowService(object):
 
         props = {}
         if hasattr(spiff_task.task_spec, 'extensions'):
-            for id, val in spiff_task.task_spec.extensions.items():
-                props[id] = val
+            for key, val in spiff_task.task_spec.extensions.items():
+                props[key] = val
 
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
