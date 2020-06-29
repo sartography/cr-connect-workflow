@@ -1,5 +1,6 @@
 import re
-import xml.etree.ElementTree as ElementTree
+from lxml import etree
+import shlex
 from datetime import datetime
 from typing import List
 
@@ -13,7 +14,6 @@ from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import WorkflowSpec
-from sqlalchemy import desc
 
 from crc import session
 from crc.api.common import ApiError
@@ -36,7 +36,9 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
         This allows us to reference custom code from the BPMN diagram.
         """
-        commands = script.split(" ")
+        # Shlex splits the whole string while respecting double quoted strings within
+        commands = shlex.split(script)
+        printable_comms = commands
         path_and_command = commands[0].rsplit(".", 1)
         if len(path_and_command) == 1:
             module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
@@ -60,7 +62,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                                          "does not properly implement the CRC Script class.",
                                          task=task)
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                """If this is running a validation, and not a normal process, then we want to 
+                """If this is running a validation, and not a normal process, then we want to
                 mimic running the script, but not make any external calls or database changes."""
                 klass().do_task_validate_only(task, study_id, workflow_id, *commands[1:])
             else:
@@ -102,14 +104,15 @@ class WorkflowProcessor(object):
 
     def __init__(self, workflow_model: WorkflowModel, soft_reset=False, hard_reset=False, validate_only=False):
         """Create a Workflow Processor based on the serialized information available in the workflow model.
-        If soft_reset is set to true, it will try to use the latest version of the workflow specification.
-        If hard_reset is set to true, it will create a new Workflow, but embed the data from the last
-        completed task in the previous workflow.
+        If soft_reset is set to true, it will try to use the latest version of the workflow specification
+            without resetting to the beginning of the workflow.  This will work for some minor changes to the spec.
+        If hard_reset is set to true, it will use the latest spec, and start the workflow over from the beginning.
+            which should work in casees where a soft reset fails.
         If neither flag is set, it will use the same version of the specification that was used to originally
         create the workflow model. """
         self.workflow_model = workflow_model
 
-        if soft_reset or len(workflow_model.dependencies) == 0:
+        if soft_reset or len(workflow_model.dependencies) == 0:  # Depenencies of 0 means the workflow was never started.
             self.spec_data_files = FileService.get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id)
         else:
@@ -216,8 +219,6 @@ class WorkflowProcessor(object):
         full_version = "v%s (%s)" % (version, files)
         return full_version
 
-
-
     def update_dependencies(self, spec_data_files):
         existing_dependencies = FileService.get_spec_data_files(
             workflow_spec_id=self.workflow_model.workflow_spec_id,
@@ -267,12 +268,12 @@ class WorkflowProcessor(object):
 
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
-                bpmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
+                bpmn: etree.Element = etree.fromstring(file_data.data)
                 if file_data.file_model.primary:
                     process_id = FileService.get_process_id(bpmn)
                 parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
             elif file_data.file_model.type == FileType.dmn:
-                dmn: ElementTree.Element = ElementTree.fromstring(file_data.data)
+                dmn: etree.Element = etree.fromstring(file_data.data)
                 parser.add_dmn_xml(dmn, filename=file_data.file_model.name)
         if process_id is None:
             raise (ApiError(code="no_primary_bpmn_error",
@@ -299,25 +300,12 @@ class WorkflowProcessor(object):
             return WorkflowStatus.waiting
 
     def hard_reset(self):
-        """Recreate this workflow, but keep the data from the last completed task and add
-         it back into the first task. This may be useful when a workflow specification changes,
-          and users need to review all the prior steps, but they don't need to reenter all the previous data.
-
-         Returns the new version.
+        """Recreate this workflow. This will be useful when a workflow specification changes.
          """
-
-        # Create a new workflow based on the latest specs.
         self.spec_data_files = FileService.get_spec_data_files(workflow_spec_id=self.workflow_spec_id)
         new_spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
         new_bpmn_workflow = BpmnWorkflow(new_spec, script_engine=self._script_engine)
         new_bpmn_workflow.data = self.bpmn_workflow.data
-
-        # Reset the current workflow to the beginning - which we will consider to be the first task after the root
-        # element.  This feels a little sketchy, but I think it is safe to assume root will have one child.
-        first_task = self.bpmn_workflow.task_tree.children[0]
-        first_task.reset_token(reset_data=False)
-        for task in new_bpmn_workflow.get_tasks(SpiffTask.READY):
-            task.data = first_task.data
         new_bpmn_workflow.do_engine_steps()
         self.bpmn_workflow = new_bpmn_workflow
 

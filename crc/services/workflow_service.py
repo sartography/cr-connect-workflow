@@ -1,3 +1,4 @@
+import copy
 import string
 from datetime import datetime
 import random
@@ -5,25 +6,26 @@ import random
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
+from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
-from flask import g
+from SpiffWorkflow.util.deep_merge import DeepMerge
 from jinja2 import Template
 
 from crc import db, app
 from crc.api.common import ApiError
-from crc.models.api_models import Task, MultiInstanceType
+from crc.models.api_models import Task, MultiInstanceType, NavigationItem, NavigationItemSchema, WorkflowApi
 from crc.models.file import LookupDataModel
 from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowModel, WorkflowStatus
+from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
-from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class WorkflowService(object):
@@ -37,7 +39,7 @@ class WorkflowService(object):
      the workflow Processor should be hidden behind this service.
      This will help maintain a structure that avoids circular dependencies.
      But for now, this contains tools for converting spiff-workflow models into our
-     own API models with additional information and capabilities and 
+     own API models with additional information and capabilities and
      handles the testing of a workflow specification by completing it with
      random selections, attempting to mimic a front end as much as possible. """
 
@@ -180,12 +182,86 @@ class WorkflowService(object):
     def __get_options(self):
         pass
 
-
     @staticmethod
     def _random_string(string_length=10):
         """Generate a random string of fixed length """
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for i in range(string_length))
+
+    @staticmethod
+    def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
+        """Returns an API model representing the state of the current workflow, if requested, and
+        possible, next_task is set to the current_task."""
+
+        nav_dict = processor.bpmn_workflow.get_nav_list()
+        navigation = []
+        for nav_item in nav_dict:
+            spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
+            if 'description' in nav_item:
+                nav_item['title'] = nav_item.pop('description')
+                # fixme: duplicate code from the workflow_service. Should only do this in one place.
+                if ' ' in nav_item['title']:
+                    nav_item['title'] = nav_item['title'].partition(' ')[2]
+            else:
+                nav_item['title'] = ""
+            if spiff_task:
+                nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
+                nav_item['title'] = nav_item['task'].title  # Prefer the task title.
+            else:
+                nav_item['task'] = None
+            if not 'is_decision' in nav_item:
+                nav_item['is_decision'] = False
+
+            navigation.append(NavigationItem(**nav_item))
+            NavigationItemSchema().dump(nav_item)
+
+        spec = db.session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
+        workflow_api = WorkflowApi(
+            id=processor.get_workflow_id(),
+            status=processor.get_status(),
+            next_task=None,
+            navigation=navigation,
+            workflow_spec_id=processor.workflow_spec_id,
+            spec_version=processor.get_version_string(),
+            is_latest_spec=processor.is_latest_spec,
+            total_tasks=len(navigation),
+            completed_tasks=processor.workflow_model.completed_tasks,
+            last_updated=processor.workflow_model.last_updated,
+            title=spec.display_name
+        )
+        if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
+            # This may or may not work, sometimes there is no next task to complete.
+            next_task = processor.next_task()
+        if next_task:
+            previous_form_data = WorkflowService.get_previously_submitted_data(processor.workflow_model.id, next_task)
+            DeepMerge.merge(next_task.data, previous_form_data)
+            workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
+
+        return workflow_api
+
+    @staticmethod
+    def get_previously_submitted_data(workflow_id, spiff_task):
+        """ If the user has completed this task previously, find the form data for the last submission."""
+        query = db.session.query(TaskEventModel) \
+            .filter_by(workflow_id=workflow_id) \
+            .filter_by(task_name=spiff_task.task_spec.name) \
+            .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE)
+
+        if hasattr(spiff_task, 'internal_data') and 'runtimes' in spiff_task.internal_data:
+            query = query.filter_by(mi_index=spiff_task.internal_data['runtimes'])
+
+        latest_event = query.order_by(TaskEventModel.date.desc()).first()
+        if latest_event:
+            if latest_event.form_data is not None:
+                return latest_event.form_data
+            else:
+                app.logger.error("missing_form_data", "We have lost data for workflow %i, "
+                                                      "task %s, it is not in the task event model, "
+                                                      "and it should be." % (workflow_id, spiff_task.task_spec.name))
+                return {}
+        else:
+            return {}
+
 
     @staticmethod
     def spiff_task_to_api_task(spiff_task, add_docs_and_forms=False):
@@ -218,8 +294,8 @@ class WorkflowService(object):
 
         props = {}
         if hasattr(spiff_task.task_spec, 'extensions'):
-            for id, val in spiff_task.task_spec.extensions.items():
-                props[id] = val
+            for key, val in spiff_task.task_spec.extensions.items():
+                props[key] = val
 
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
@@ -318,21 +394,22 @@ class WorkflowService(object):
                 field.options.append({"id": d.value, "name": d.label})
 
     @staticmethod
-    def log_task_action(user_uid, processor, spiff_task, action):
+    def log_task_action(user_uid, workflow_model, spiff_task, action, version):
         task = WorkflowService.spiff_task_to_api_task(spiff_task)
-        workflow_model = processor.workflow_model
+        form_data = WorkflowService.extract_form_data(spiff_task.data, spiff_task)
         task_event = TaskEventModel(
             study_id=workflow_model.study_id,
             user_uid=user_uid,
             workflow_id=workflow_model.id,
             workflow_spec_id=workflow_model.workflow_spec_id,
-            spec_version=processor.get_version_string(),
+            spec_version=version,
             action=action,
             task_id=task.id,
             task_name=task.name,
             task_title=task.title,
             task_type=str(task.type),
             task_state=task.state,
+            form_data=form_data,
             mi_type=task.multi_instance_type.value,  # Some tasks have a repeat behavior.
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
             mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
@@ -341,4 +418,65 @@ class WorkflowService(object):
         )
         db.session.add(task_event)
         db.session.commit()
+
+    @staticmethod
+    def fix_legacy_data_model_for_rrt():
+        """  Remove this after use!  This is just to fix RRT so the data is handled correctly.
+
+        Utility that is likely called via the flask command line, it will loop through all the
+        workflows in the system and attempt to add the right data into the task action log so that
+        users do not have to re fill out all of the forms if they start over or go back in the workflow.
+        Viciously inefficient, but should only have to run one time for RRT"""
+        workflows = db.session.query(WorkflowModel).all()
+        for workflow_model in workflows:
+            task_logs = db.session.query(TaskEventModel) \
+                .filter(TaskEventModel.workflow_id == workflow_model.id) \
+                .filter(TaskEventModel.action == WorkflowService.TASK_ACTION_COMPLETE) \
+                .order_by(TaskEventModel.date.desc()).all()
+
+            processor = WorkflowProcessor(workflow_model)
+            # Grab all the data from last task completed, which will be everything in this
+            # rrt situation because of how we were keeping all the data at the time.
+            latest_data = processor.next_task().data
+
+            # Move forward in the task spec tree, dropping any data that would have been
+            # added in subsequent tasks, just looking at form data, will not track the automated
+            # task data additions, hopefully this doesn't hang us.
+            for log in task_logs:
+#                if log.task_data is not None:  # Only do this if the task event does not have data populated in it.
+#                    continue
+                data = copy.deepcopy(latest_data) # Or you end up with insane crazy issues.
+                # In the simple case of RRT, there is exactly one task for the given task_spec
+                task = processor.bpmn_workflow.get_tasks_from_spec_name(log.task_name)[0]
+                data = WorkflowService.extract_form_data(data, task)
+                log.form_data = data
+                db.session.add(log)
+
+        db.session.commit()
+
+    @staticmethod
+    def extract_form_data(latest_data, task):
+        """Removes data from latest_data that would be added by the child task or any of it's children."""
+        data = {}
+
+        if hasattr(task.task_spec, 'form'):
+            for field in task.task_spec.form.fields:
+                if field.has_property(Task.PROP_OPTIONS_READ_ONLY) and \
+                        field.get_property(Task.PROP_OPTIONS_READ_ONLY).lower().strip() == "true":
+                    continue  # Don't add read-only data
+                elif field.has_property(Task.PROP_OPTIONS_REPEAT):
+                    group = field.get_property(Task.PROP_OPTIONS_REPEAT)
+                    if group in latest_data:
+                        data[group] = latest_data[group]
+                elif isinstance(task.task_spec, MultiInstanceTask):
+                    group = task.task_spec.elementVar
+                    if group in latest_data:
+                        data[group] = latest_data[group]
+                else:
+                    if field.id in latest_data:
+                        data[field.id] = latest_data[field.id]
+
+        return data
+
+
 

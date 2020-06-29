@@ -626,6 +626,12 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: terminate_loop
+        in: query
+        required: false
+        description: Terminate the loop on a looping task
+        schema:
+          type: boolean
     put:
       operationId: crc.api.workflow.update_task
       summary: Exclusively for User Tasks, submits form data as a flat set of key/values.
@@ -917,6 +923,21 @@ paths:
             application/json:
               schema:
                 type: object
+  /health_attesting:
+    get:
+      operationId: crc.api.approval.get_health_attesting_csv
+      summary: Returns a CSV file with health attesting records
+      tags:
+      - Approvals
+      responses:
+        '200':
+          description: A CSV file
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
 components:
   securitySchemes:
     jwt:

@@ -3,7 +3,7 @@ import json
 import os
 from datetime import datetime
 from uuid import UUID
-from xml.etree import ElementTree
+from lxml import etree
 
 import flask
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
@@ -58,7 +58,7 @@ class FileService(object):
                            "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % irb_doc_code)
 
         """Assure this is unique to the workflow, task, and document code AND the Name
-           Because we will allow users to upload multiple files for the same form field 
+           Because we will allow users to upload multiple files for the same form field
             in some cases """
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_id == workflow_id)\
@@ -151,7 +151,7 @@ class FileService(object):
 
         # If this is a BPMN, extract the process id.
         if file_model.type == FileType.bpmn:
-            bpmn: ElementTree.Element = ElementTree.fromstring(binary_data)
+            bpmn: etree.Element = etree.fromstring(binary_data)
             file_model.primary_process_id = FileService.get_process_id(bpmn)
 
         new_file_data_model = FileDataModel(
@@ -165,7 +165,7 @@ class FileService(object):
         return file_model
 
     @staticmethod
-    def get_process_id(et_root: ElementTree.Element):
+    def get_process_id(et_root: etree.Element):
         process_elements = []
         for child in et_root:
             if child.tag.endswith('process') and child.attrib.get('isExecutable', False):
@@ -179,7 +179,7 @@ class FileService(object):
 
             # Look for the element that has the startEvent in it
             for e in process_elements:
-                this_element: ElementTree.Element = e
+                this_element: etree.Element = e
                 for child_element in list(this_element):
                     if child_element.tag.endswith('startEvent'):
                         return this_element.attrib['id']
