@@ -58,10 +58,6 @@ if app.config['ENABLE_SENTRY']:
         integrations=[FlaskIntegration()]
     )
 
-# Jinja environment definition, used to render mail templates
-template_dir = os.getcwd() + '/crc/static/templates/mails'
-env = Environment(loader=FileSystemLoader(template_dir))
-
 print('=== USING THESE CONFIG SETTINGS: ===')
 print('APPLICATION_ROOT = ', app.config['APPLICATION_ROOT'])
 print('CORS_ALLOW_ORIGINS = ', app.config['CORS_ALLOW_ORIGINS'])
