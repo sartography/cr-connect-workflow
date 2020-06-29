@@ -626,6 +626,12 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: terminate_loop
+        in: query
+        required: false
+        description: Terminate the loop on a looping task
+        schema:
+          type: boolean
     put:
       operationId: crc.api.workflow.update_task
       summary: Exclusively for User Tasks, submits form data as a flat set of key/values.
