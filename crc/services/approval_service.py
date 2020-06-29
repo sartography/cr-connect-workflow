@@ -1,5 +1,6 @@
 import json
 import pickle
+import sys
 from base64 import b64decode
 from datetime import datetime, timedelta
 
@@ -194,7 +195,7 @@ class ApprovalService(object):
                         health_attesting_rows.append(record)
 
             except Exception as e:
-                app.logger.error("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
+                app.logger.error(f'Error pulling data for workflow {approval.workflow_id}', exc_info=True)
 
         return health_attesting_rows
 
@@ -222,7 +223,13 @@ class ApprovalService(object):
                     output.append(record)
 
             except Exception as e:
-                errors.append("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
+                errors.append(
+                    f'Error pulling data for workflow #{approval.workflow_id} '
+                    f'(Approval status: {approval.status} - '
+                    f'More details in Sentry): {str(e)}'
+                )
+                # Detailed information sent to Sentry
+                app.logger.error(f'Error pulling data for workflow {approval.workflow_id}', exc_info=True)
         return {"results": output, "errors": errors }
 
     @staticmethod
