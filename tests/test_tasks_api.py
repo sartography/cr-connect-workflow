@@ -440,7 +440,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual(9, len(ready_items))
 
         self.assertEqual("UserTask", workflow_api.next_task.type)
-        self.assertEqual("MutiInstanceTask",workflow_api.next_task.name)
+        self.assertEqual("MultiInstanceTask",workflow_api.next_task.name)
         self.assertEqual("more information", workflow_api.next_task.title)
 
         for i in random.sample(range(9), 9):
