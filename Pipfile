@@ -38,7 +38,7 @@ recommonmark = "*"
 requests = "*"
 sentry-sdk = {extras = ["flask"],version = "==0.14.4"}
 sphinx = "*"
-spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "STG-26"}
+spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "deploy"}
 swagger-ui-bundle = "*"
 webtest = "*"
 werkzeug = "*"
