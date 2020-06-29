@@ -12,7 +12,7 @@ CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default
 TESTING = environ.get('TESTING', default="false") == "true"
 PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")
 TEST_UID = environ.get('TEST_UID', default="dhf8r")
-ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,ajl2j,cah13us,cl3wf"))
+ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,ajl2j,cah3us,cl3wf"))
 
 # Sentry flag
 ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"
@@ -46,6 +46,7 @@ LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
 # Email configuration
+DEFAULT_SENDER = 'askresearch@virginia.edu'
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
 MAIL_DEBUG = environ.get('MAIL_DEBUG', default=True)
 MAIL_SERVER = environ.get('MAIL_SERVER', default='smtp.mailtrap.io')

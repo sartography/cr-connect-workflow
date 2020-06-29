@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 pytest = "*"
 pbr = "*"
+coverage = "*"
 
 [packages]
 connexion = {extras = ["swagger-ui"],version = "*"}
@@ -40,6 +41,8 @@ gunicorn = "*"
 werkzeug = "*"
 sentry-sdk = {extras = ["flask"],version = "==0.14.4"}
 flask-mail = "*"
+flask-admin = "*"
+markdown = "*"
 
 [requires]
 python_version = "3.7"

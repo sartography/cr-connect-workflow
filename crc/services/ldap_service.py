@@ -24,7 +24,7 @@ class LdapService(object):
     @staticmethod
     def __get_conn():
         if not LdapService.conn:
-            if app.config['TESTING']:
+            if app.config['TESTING'] or app.config['LDAP_URL'] == 'mock':
                 server = Server('my_fake_server')
                 conn = Connection(server, client_strategy=MOCK_SYNC)
                 file_path = os.path.abspath(os.path.join(app.root_path, '..', 'tests', 'data', 'ldap_response.json'))
