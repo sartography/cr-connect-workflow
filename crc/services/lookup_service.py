@@ -1,5 +1,6 @@
 import logging
 import re
+from collections import OrderedDict
 
 import pandas as pd
 from pandas import ExcelFile, np
@@ -149,7 +150,7 @@ class LookupService(object):
             lookup_data = LookupDataModel(lookup_file_model=lookup_model,
                                           value=row[value_column],
                                           label=row[label_column],
-                                          data=row.to_dict())
+                                          data=row.to_dict(OrderedDict))
             db.session.add(lookup_data)
         db.session.commit()
         return lookup_model
@@ -164,7 +165,7 @@ class LookupService(object):
             # OR's those queries together.  The order of the results is handled as a standard "Like" on the original
             # string which seems to work intuitively for most entries.
             query = re.sub('[^A-Za-z0-9 ]+', '', query)  # Strip out non ascii characters.
-            query = re.sub(' {2,}', ' ', query)  # Convert multiple spaces to just one space, as we split on spaces.
+            query = re.sub(r'\s+', ' ', query)  # Convert multiple space like characters to just one space, as we split on spaces.
             print("Query: " + query)
             query = query.strip()
             if len(query) > 0:
