@@ -1,7 +1,8 @@
 import logging
 import re
 
-from pandas import ExcelFile
+import pandas as pd
+from pandas import ExcelFile, np
 from sqlalchemy import func, desc
 from sqlalchemy.sql.functions import GenericFunction
 
@@ -62,14 +63,14 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def lookup(workflow, field_id, query, limit):
+    def lookup(workflow, field_id, query, limit, id = None):
 
         lookup_model = LookupService.__get_lookup_model(workflow, field_id)
 
         if lookup_model.is_ldap:
             return LookupService._run_ldap_query(query, limit)
         else:
-            return LookupService._run_lookup_query(lookup_model, query, limit)
+            return LookupService._run_lookup_query(lookup_model, query, limit, id)
 
 
 
@@ -130,6 +131,7 @@ class LookupService(object):
           changed.  """
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])  # Currently we only look at the fist sheet.
+        df = pd.DataFrame(df).replace({np.nan: None})
         if value_column not in df:
             raise ApiError("invalid_emum",
                            "The file %s does not contain a column named % s" % (data_model.file_model.name,
@@ -149,39 +151,40 @@ class LookupService(object):
             lookup_data = LookupDataModel(lookup_file_model=lookup_model,
                                           value=row[value_column],
                                           label=row[label_column],
-                                          data=row.to_json())
+                                          data=row.to_dict())
             db.session.add(lookup_data)
         db.session.commit()
         return lookup_model
 
     @staticmethod
-    def _run_lookup_query(lookup_file_model, query, limit):
+    def _run_lookup_query(lookup_file_model, query, limit, lookup_id):
         db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model == lookup_file_model)
+        if lookup_id is not None:  # Then just find the model with that id.
+            db_query = db_query.filter(LookupDataModel.id == lookup_id)
+        else:
+            # Build a full text query that takes all the terms provided and executes each term as a prefix query, and
+            # OR's those queries together.  The order of the results is handled as a standard "Like" on the original
+            # string which seems to work intuitively for most entries.
+            query = re.sub('[^A-Za-z0-9 ]+', '', query)  # Strip out non ascii characters.
+            query = re.sub(' {2,}', ' ', query)  # Convert multiple spaces to just one space, as we split on spaces.
+            print("Query: " + query)
+            query = query.strip()
+            if len(query) > 0:
+                if ' ' in query:
+                    terms = query.split(' ')
+                    new_terms = ["'%s'" % query]
+                    for t in terms:
+                        new_terms.append("%s:*" % t)
+                    new_query = ' | '.join(new_terms)
+                else:
+                    new_query = "%s:*" % query
 
-        query = re.sub('[^A-Za-z0-9 ]+', '', query)
-        print("Query: " + query)
-        query = query.strip()
-        if len(query) > 0:
-            if ' ' in query:
-                terms = query.split(' ')
-                new_terms = ["'%s'" % query]
-                for t in terms:
-                    new_terms.append("%s:*" % t)
-                new_query = ' | '.join(new_terms)
-            else:
-                new_query = "%s:*" % query
+                # Run the full text query
+                db_query = db_query.filter(LookupDataModel.label.match(new_query))
+                # But hackishly order by like, which does a good job of
+                # pulling more relevant matches to the top.
+                db_query = db_query.order_by(desc(LookupDataModel.label.like("%" + query + "%")))
 
-            # Run the full text query
-            db_query = db_query.filter(LookupDataModel.label.match(new_query))
-            # But hackishly order by like, which does a good job of
-            # pulling more relevant matches to the top.
-            db_query = db_query.order_by(desc(LookupDataModel.label.like("%" + query + "%")))
-            #ORDER BY name LIKE concat('%', ticker, '%') desc, rank DESC
-
-#            db_query = db_query.order_by(desc(func.full_text.ts_rank(
-#                func.to_tsvector(LookupDataModel.label),
-#                func.to_tsquery(query))))
-        from sqlalchemy.dialects import postgresql
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
         result = db_query.limit(limit).all()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)

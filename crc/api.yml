@@ -709,6 +709,13 @@ paths:
         description: The total number of records to return, defaults to 10.
         schema:
           type: integer
+      - name: id
+        in: query
+        required: false
+        description: Rather than supplying a query, you can specify a speicific id to get data back on a lookup field.
+        schema:
+          type: string
+
     get:
       operationId: crc.api.workflow.lookup
       summary: Provides type-ahead search against a lookup table associted with a form field.

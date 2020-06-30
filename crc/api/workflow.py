@@ -41,7 +41,6 @@ def get_workflow_specification(spec_id):
 
 
 def validate_workflow_specification(spec_id):
-
     errors = []
     try:
         WorkflowService.test_spec(spec_id)
@@ -55,7 +54,6 @@ def validate_workflow_specification(spec_id):
         ae.message = "When populating only required fields ... " + ae.message
         errors.append(ae)
     return ApiErrorSchema(many=True).dump(errors)
-
 
 
 def update_workflow_specification(spec_id, body):
@@ -200,7 +198,7 @@ def delete_workflow_spec_category(cat_id):
     session.commit()
 
 
-def lookup(workflow_id, field_id, query, limit):
+def lookup(workflow_id, field_id, query=None, limit=10, id=None):
     """
     given a field in a task, attempts to find the lookup table or function associated
     with that field and runs a full-text query against it to locate the values and
@@ -208,14 +206,15 @@ def lookup(workflow_id, field_id, query, limit):
     Tries to be fast, but first runs will be very slow.
     """
     workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
-    lookup_data = LookupService.lookup(workflow, field_id, query, limit)
+    lookup_data = LookupService.lookup(workflow, field_id, query, limit, id)
     return LookupDataSchema(many=True).dump(lookup_data)
 
 
 def __get_user_uid(user_uid):
     if 'user' in g:
         if g.user.uid not in app.config['ADMIN_UIDS'] and user_uid != g.user.uid:
-            raise ApiError("permission_denied", "You are not authorized to edit the task data for this workflow.", status_code=403)
+            raise ApiError("permission_denied", "You are not authorized to edit the task data for this workflow.",
+                           status_code=403)
         else:
             return g.user.uid
 

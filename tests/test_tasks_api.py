@@ -343,6 +343,30 @@ class TestTasksApi(BaseTest):
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(5, len(results))
 
+    def test_lookup_endpoint_for_task_field_using_lookup_entry_id(self):
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_with_search')
+        # get the first form in the two form workflow.
+        workflow = self.get_workflow_api(workflow)
+        task = workflow.next_task
+        field_id = task.form['fields'][0]['id']
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, field_id, 'c'), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(5, len(results))
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?id=%i' %
+                          (workflow.id, field_id, results[0]['id']), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(1, len(results))
+        self.assertIsInstance(results[0]['data'], dict)
+
+
+
     def test_lookup_endpoint_for_task_ldap_field_lookup(self):
         self.load_example_data()
         workflow = self.create_workflow('ldap_lookup')

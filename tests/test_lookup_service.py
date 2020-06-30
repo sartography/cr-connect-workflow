@@ -61,6 +61,15 @@ class TestLookupService(BaseTest):
         lookup_data = session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_record).all()
         self.assertEqual(4, len(lookup_data))
 
+    def test_lookup_based_on_id(self):
+        spec = BaseTest.load_test_spec('enum_options_from_file')
+        workflow = self.create_workflow('enum_options_from_file')
+        processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
+        results = LookupService.lookup(workflow, "AllTheNames", "", id=1, limit=10)
+        self.assertEqual(1, len(results), "It is possible to find an item based on the id, rather than as a search")
+        self.assertIsNotNone(results[0].data)
+        self.assertIsInstance(results[0].data, dict)
 
 
     def test_some_full_text_queries(self):
@@ -113,6 +122,9 @@ class TestLookupService(BaseTest):
 
         results = LookupService.lookup(workflow, "AllTheNames", "1 (!-Something", limit=10)
         self.assertEqual("1 Something", results[0].label, "special characters don't flake out")
+
+        results = LookupService.lookup(workflow, "AllTheNames", "1  Something", limit=10)
+        self.assertEqual("1 Something", results[0].label, "double spaces should not be an issue.")
 
 
 

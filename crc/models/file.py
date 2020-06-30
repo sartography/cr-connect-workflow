@@ -153,6 +153,7 @@ class LookupFileModel(db.Model):
     file_data_model_id = db.Column(db.Integer, db.ForeignKey('file_data.id'))
     dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model", cascade="all, delete, delete-orphan")
 
+
 class LookupDataModel(db.Model):
     __tablename__ = 'lookup_data'
     id = db.Column(db.Integer, primary_key=True)
