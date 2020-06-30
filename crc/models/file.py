@@ -182,6 +182,7 @@ class LookupDataSchema(SQLAlchemyAutoSchema):
         load_instance = True
         include_relationships = False
         include_fk = False  # Includes foreign keys
+        exclude = ['id'] # Do not include the id field, it should never be used via the API.
 
 
 class SimpleFileSchema(ma.Schema):

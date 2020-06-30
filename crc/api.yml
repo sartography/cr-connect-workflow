@@ -703,18 +703,18 @@ paths:
         description: The string to search for in the Value column of the lookup table.
         schema:
           type: string
+      - name: value
+        in: query
+        required: false
+        description: An alternative to query, this accepts the specific value or id selected in a dropdown list or auto-complete, and will return the one matching record. Useful for getting additional details about an item selected in a dropdown.
+        schema:
+          type: string
       - name: limit
         in: query
         required: false
         description: The total number of records to return, defaults to 10.
         schema:
           type: integer
-      - name: id
-        in: query
-        required: false
-        description: Rather than supplying a query, you can specify a speicific id to get data back on a lookup field.
-        schema:
-          type: string
 
     get:
       operationId: crc.api.workflow.lookup

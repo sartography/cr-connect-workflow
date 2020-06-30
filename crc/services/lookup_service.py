@@ -63,14 +63,14 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def lookup(workflow, field_id, query, limit, id = None):
+    def lookup(workflow, field_id, query, value, limit):
 
         lookup_model = LookupService.__get_lookup_model(workflow, field_id)
 
         if lookup_model.is_ldap:
             return LookupService._run_ldap_query(query, limit)
         else:
-            return LookupService._run_lookup_query(lookup_model, query, limit, id)
+            return LookupService._run_lookup_query(lookup_model, query, value, limit)
 
 
 
@@ -157,10 +157,10 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def _run_lookup_query(lookup_file_model, query, limit, lookup_id):
+    def _run_lookup_query(lookup_file_model, query, value, limit):
         db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model == lookup_file_model)
-        if lookup_id is not None:  # Then just find the model with that id.
-            db_query = db_query.filter(LookupDataModel.id == lookup_id)
+        if value is not None:  # Then just find the model with that value
+            db_query = db_query.filter(LookupDataModel.value == value)
         else:
             # Build a full text query that takes all the terms provided and executes each term as a prefix query, and
             # OR's those queries together.  The order of the results is handled as a standard "Like" on the original

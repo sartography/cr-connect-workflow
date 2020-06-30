@@ -198,7 +198,7 @@ def delete_workflow_spec_category(cat_id):
     session.commit()
 
 
-def lookup(workflow_id, field_id, query=None, limit=10, id=None):
+def lookup(workflow_id, field_id, query=None, value=None, limit=10):
     """
     given a field in a task, attempts to find the lookup table or function associated
     with that field and runs a full-text query against it to locate the values and
@@ -206,7 +206,7 @@ def lookup(workflow_id, field_id, query=None, limit=10, id=None):
     Tries to be fast, but first runs will be very slow.
     """
     workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
-    lookup_data = LookupService.lookup(workflow, field_id, query, limit, id)
+    lookup_data = LookupService.lookup(workflow, field_id, query, value, limit)
     return LookupDataSchema(many=True).dump(lookup_data)
 
 
