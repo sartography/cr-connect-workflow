@@ -66,7 +66,7 @@ class TestLookupService(BaseTest):
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
-        results = LookupService.lookup(workflow, "AllTheNames", "", id=1, limit=10)
+        results = LookupService.lookup(workflow, "AllTheNames", "", value="1000", limit=10)
         self.assertEqual(1, len(results), "It is possible to find an item based on the id, rather than as a search")
         self.assertIsNotNone(results[0].data)
         self.assertIsInstance(results[0].data, dict)

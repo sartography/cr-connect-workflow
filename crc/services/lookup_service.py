@@ -20,8 +20,8 @@ class TSRank(GenericFunction):
     package = 'full_text'
     name = 'ts_rank'
 
-class LookupService(object):
 
+class LookupService(object):
     """Provides tools for doing lookups for auto-complete fields.
     This can currently take two forms:
     1) Lookup from spreadsheet data associated with a workflow specification.
@@ -51,7 +51,7 @@ class LookupService(object):
         # if not, we need to rebuild the lookup table.
         is_current = False
         if lookup_model:
-            is_current = db.session.query(WorkflowSpecDependencyFile).\
+            is_current = db.session.query(WorkflowSpecDependencyFile). \
                 filter(WorkflowSpecDependencyFile.file_data_id == lookup_model.file_data_model_id).count()
 
         if not is_current:
@@ -63,7 +63,7 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def lookup(workflow, field_id, query, value, limit):
+    def lookup(workflow, field_id, query, value=None, limit=10):
 
         lookup_model = LookupService.__get_lookup_model(workflow, field_id)
 
@@ -71,8 +71,6 @@ class LookupService(object):
             return LookupService._run_ldap_query(query, limit)
         else:
             return LookupService._run_lookup_query(lookup_model, query, value, limit)
-
-
 
     @staticmethod
     def create_lookup_model(workflow_model, field_id):
@@ -117,8 +115,8 @@ class LookupService(object):
                                            is_ldap=True)
         else:
             raise ApiError("unknown_lookup_option",
-                            "Lookup supports using spreadsheet options or ldap options, and neither "
-                            "was provided.")
+                           "Lookup supports using spreadsheet options or ldap options, and neither "
+                           "was provided.")
         db.session.add(lookup_model)
         db.session.commit()
         return lookup_model
@@ -199,8 +197,8 @@ class LookupService(object):
          we return a lookup data model."""
         user_list = []
         for user in users:
-            user_list.append( {"value": user['uid'],
-                                "label": user['display_name'] + " (" + user['uid'] + ")",
-                                "data": user
-                               })
+            user_list.append({"value": user['uid'],
+                              "label": user['display_name'] + " (" + user['uid'] + ")",
+                              "data": user
+                              })
         return user_list
