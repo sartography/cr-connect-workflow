@@ -255,9 +255,12 @@ class WorkflowService(object):
             if latest_event.form_data is not None:
                 return latest_event.form_data
             else:
-                app.logger.error("missing_form_data", "We have lost data for workflow %i, "
-                                                      "task %s, it is not in the task event model, "
-                                                      "and it should be." % (workflow_id, spiff_task.task_spec.name))
+                missing_form_error = (
+                    f'We have lost data for workflow {workflow_id}, '
+                    f'task {spiff_task.task_spec.name}, it is not in the task event model, '
+                    f'and it should be.'
+                )
+                app.logger.error("missing_form_data", missing_form_error, exc_info=True)
                 return {}
         else:
             return {}
@@ -347,7 +350,7 @@ class WorkflowService(object):
                 template = Template(v)
                 props[k] = template.render(**spiff_task.data)
             except jinja2.exceptions.TemplateError as ue:
-                app.logger.error("Failed to process task property %s " % str(ue))
+                app.logger.error(f'Failed to process task property {str(ue)}', exc_info=True)
         return props
 
     @staticmethod
