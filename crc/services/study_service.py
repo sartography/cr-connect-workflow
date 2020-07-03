@@ -137,7 +137,7 @@ class StudyService(object):
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:
-                app.logger.error("Failed to connect to the Protocol Builder - %s" % str(ce))
+                app.logger.error(f'Failed to connect to the Protocol Builder - {str(ce)}', exc_info=True)
                 pb_docs = []
         else:
             pb_docs = []

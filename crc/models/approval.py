@@ -78,7 +78,7 @@ class Approval(object):
             instance.approver = LdapService.user_info(model.approver_uid)
             instance.primary_investigator = LdapService.user_info(model.study.primary_investigator_id)
         except ApiError as ae:
-            app.logger.error("Ldap lookup failed for approval record %i" % model.id)
+            app.logger.error(f'Ldap lookup failed for approval record {model.id}', exc_info=True)
 
         doc_dictionary = FileService.get_doc_dictionary()
         instance.associated_files = []

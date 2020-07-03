@@ -52,8 +52,7 @@ Email Subject ApprvlApprvr1 PIComputingID
             try:
                 uid = task.workflow.script_engine.evaluate_expression(task, arg)
             except Exception as e:
-                app.logger.error(f'Workflow engines could not parse {arg}')
-                app.logger.error(str(e))
+                app.logger.error(f'Workflow engines could not parse {arg}', exc_info=True)
                 continue
             user_info = LdapService.user_info(uid)
             email = user_info.email_address

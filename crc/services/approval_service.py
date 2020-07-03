@@ -258,7 +258,7 @@ class ApprovalService(object):
                     f'{approver_info.display_name} - ({approver_info.uid})'
                 )
                 if mail_result:
-                    app.logger.error(mail_result)
+                    app.logger.error(mail_result, exc_info=True)
             elif status == ApprovalStatus.DECLINED.value:
                 ldap_service = LdapService()
                 pi_user_info = ldap_service.user_info(db_approval.study.primary_investigator_id)
@@ -270,7 +270,7 @@ class ApprovalService(object):
                     f'{approver_info.display_name} - ({approver_info.uid})'
                 )
                 if mail_result:
-                    app.logger.error(mail_result)
+                    app.logger.error(mail_result, exc_info=True)
                 first_approval = ApprovalModel().query.filter_by(
                     study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
                     status=ApprovalStatus.APPROVED.value, version=db_approval.version).first()
@@ -286,7 +286,7 @@ class ApprovalService(object):
                         f'{approver_info.display_name} - ({approver_info.uid})'
                     )
                     if mail_result:
-                        app.logger.error(mail_result)
+                        app.logger.error(mail_result, exc_info=True)
         # TODO: Log update action by approver_uid - maybe ?
         return db_approval
 
@@ -357,7 +357,7 @@ class ApprovalService(object):
                 f'{approver_info.display_name} - ({approver_info.uid})'
             )
             if mail_result:
-                app.logger.error(mail_result)
+                app.logger.error(mail_result, exc_info=True)
             # send rrp approval request for first approver
             # enhance the second part in case it bombs
             approver_email = [approver_info.email_address] if approver_info.email_address else app.config['FALLBACK_EMAILS']
@@ -367,7 +367,7 @@ class ApprovalService(object):
                 f'{pi_user_info.display_name} - ({pi_user_info.uid})'
             )
             if mail_result:
-                app.logger.error(mail_result)
+                app.logger.error(mail_result, exc_info=True)
 
     @staticmethod
     def _create_approval_files(workflow_data_files, approval):

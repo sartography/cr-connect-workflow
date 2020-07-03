@@ -168,8 +168,6 @@ class TestStudyApi(BaseTest):
         num_open = 0
 
         for study in json_data:
-            if study['protocol_builder_status'] == 'INCOMPLETE':  # One study in user_studies.json is not q_complete
-                num_incomplete += 1
             if study['protocol_builder_status'] == 'ABANDONED': # One study does not exist in user_studies.json
                 num_abandoned += 1
             if study['protocol_builder_status'] == 'ACTIVE': # One study is marked complete without HSR Number
@@ -182,8 +180,7 @@ class TestStudyApi(BaseTest):
         self.assertGreater(num_db_studies_after, num_db_studies_before)
         self.assertEqual(num_abandoned, 1)
         self.assertEqual(num_open, 1)
-        self.assertEqual(num_active, 1)
-        self.assertEqual(num_incomplete, 1)
+        self.assertEqual(num_active, 2)
         self.assertEqual(len(json_data), num_db_studies_after)
         self.assertEqual(num_open + num_active + num_incomplete + num_abandoned, num_db_studies_after)
 
