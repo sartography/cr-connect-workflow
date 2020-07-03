@@ -1,4 +1,5 @@
 import copy
+import json
 import string
 from datetime import datetime
 import random
@@ -319,8 +320,8 @@ class WorkflowService(object):
             task.data = spiff_task.data
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
-                for field in task.form.fields:
-                    WorkflowService.process_options(spiff_task, field)
+                for i, field in enumerate(task.form.fields):
+                    task.form.fields[i] = WorkflowService.process_options(spiff_task, field)
             task.documentation = WorkflowService._process_documentation(spiff_task)
 
         # All ready tasks should have a valid name, and this can be computed for
@@ -391,7 +392,9 @@ class WorkflowService(object):
             if not hasattr(field, 'options'):
                 field.options = []
             for d in data:
-                field.options.append({"id": d.value, "name": d.label})
+                field.options.append({"id": d.value, "name": d.label, "data": d.data})
+
+        return field
 
     @staticmethod
     def log_task_action(user_uid, workflow_model, spiff_task, action, version):

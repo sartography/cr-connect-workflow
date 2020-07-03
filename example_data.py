@@ -69,6 +69,12 @@ class ExampleDataLoader:
         db.session.commit()
 
         # Pass IRB Review
+        self.create_spec(id="group_test",
+                         name="group_test",
+                         display_name="Group Test",
+                         description="TBD",
+                         category_id=0,
+                         display_order=0)
         self.create_spec(id="irb_api_personnel",
                          name="irb_api_personnel",
                          display_name="Personnel",
