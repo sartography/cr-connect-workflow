@@ -17,6 +17,9 @@
         <camunda:formData>
           <camunda:formField id="email" label="Email Address:" type="string" />
         </camunda:formData>
+        <camunda:properties>
+          <camunda:property name="display_name" value="investigator.label" />
+        </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1p568pp</bpmn:incoming>
       <bpmn:outgoing>Flow_0ugjw69</bpmn:outgoing>

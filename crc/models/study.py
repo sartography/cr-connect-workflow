@@ -31,10 +31,8 @@ class StudyModel(db.Model):
         self.title = pbs.TITLE
         self.user_uid = pbs.NETBADGEID
         self.last_updated = pbs.DATE_MODIFIED
-        self.protocol_builder_status = ProtocolBuilderStatus.INCOMPLETE
 
-        if pbs.Q_COMPLETE:
-            self.protocol_builder_status = ProtocolBuilderStatus.ACTIVE
+        self.protocol_builder_status = ProtocolBuilderStatus.ACTIVE
         if pbs.HSRNUMBER:
             self.protocol_builder_status = ProtocolBuilderStatus.OPEN
         if self.on_hold:
