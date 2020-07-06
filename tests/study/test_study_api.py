@@ -168,8 +168,6 @@ class TestStudyApi(BaseTest):
         num_open = 0
 
         for study in json_data:
-            if study['protocol_builder_status'] == 'INCOMPLETE':  # One study in user_studies.json is not q_complete
-                num_incomplete += 1
             if study['protocol_builder_status'] == 'ABANDONED': # One study does not exist in user_studies.json
                 num_abandoned += 1
             if study['protocol_builder_status'] == 'ACTIVE': # One study is marked complete without HSR Number

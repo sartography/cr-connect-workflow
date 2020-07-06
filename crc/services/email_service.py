@@ -36,6 +36,7 @@ class EmailService(object):
 
             mail.send(msg)
         except Exception as e:
+            app.logger.error('An exception happened in EmailService', exc_info=True)
             app.logger.error(str(e))
 
         db.session.add(email_model)
