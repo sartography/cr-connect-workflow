@@ -137,7 +137,7 @@ class StudyService(object):
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:
-                app.logger.error("Failed to connect to the Protocol Builder - %s" % str(ce))
+                app.logger.error(f'Failed to connect to the Protocol Builder - {str(ce)}', exc_info=True)
                 pb_docs = []
         else:
             pb_docs = []
@@ -182,7 +182,7 @@ class StudyService(object):
         return documents
 
     @staticmethod
-    def get_investigators(study_id):
+    def get_investigators(study_id, all=False):
 
         # Loop through all known investigator types as set in the reference file
         inv_dictionary = FileService.get_reference_data(FileService.INVESTIGATOR_LIST, 'code')
@@ -199,6 +199,8 @@ class StudyService(object):
             else:
                 inv_dictionary[i_type]['user_id'] = None
 
+        if not all:
+            inv_dictionary = dict(filter(lambda elem: elem[1]['user_id'] is not None, inv_dictionary.items()))
         return inv_dictionary
 
     @staticmethod
