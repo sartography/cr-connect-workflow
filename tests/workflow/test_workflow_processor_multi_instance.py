@@ -146,6 +146,11 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
 
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual(MultiInstanceType.parallel, api_task.multi_instance_type)
+
+        # Assure navigation picks up the label of the current element variable.
+        nav = WorkflowService.processor_to_workflow_api(processor, task).navigation
+        self.assertEquals("Primary Investigator", nav[2].title)
+
         task.update_data({"investigator": {"email": "dhf8r@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
