@@ -187,7 +187,7 @@ class TestWorkflowProcessor(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
-        # Attemping a soft update on a structural change should raise a sensible error.
+        # Attempting a soft update on a structural change should raise a sensible error.
         with self.assertRaises(ApiError) as context:
             processor3 = WorkflowProcessor(processor.workflow_model, soft_reset=True)
         self.assertEqual("unexpected_workflow_structure", context.exception.code)

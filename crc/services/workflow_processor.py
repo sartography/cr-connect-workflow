@@ -1,4 +1,6 @@
 import re
+
+from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from lxml import etree
 import shlex
 from datetime import datetime
@@ -138,7 +140,7 @@ class WorkflowProcessor(object):
                 workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
                 self.save()
 
-        except KeyError as ke:
+        except MissingSpecError as ke:
             raise ApiError(code="unexpected_workflow_structure",
                            message="Failed to deserialize workflow"
                                    " '%s' version %s, due to a mis-placed or missing task '%s'" %

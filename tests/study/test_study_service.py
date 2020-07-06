@@ -183,7 +183,7 @@ class TestStudyService(BaseTest):
 
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_docs
-    def test_get_personnel(self, mock_docs):
+    def test_get_personnel_roles(self, mock_docs):
         self.load_example_data()
 
         # mock out the protocol builder
@@ -191,7 +191,7 @@ class TestStudyService(BaseTest):
         mock_docs.return_value = json.loads(docs_response)
 
         workflow = self.create_workflow('docx') # The workflow really doesnt matter in this case.
-        investigators = StudyService().get_investigators(workflow.study_id)
+        investigators = StudyService().get_investigators(workflow.study_id, all=True)
 
         self.assertEqual(9, len(investigators))
 
@@ -207,3 +207,22 @@ class TestStudyService(BaseTest):
 
         # No value is provided for Department Chair
         self.assertIsNone(investigators['DEPT_CH']['user_id'])
+
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_docs
+    def test_get_study_personnel(self, mock_docs):
+        self.load_example_data()
+
+        # mock out the protocol builder
+        docs_response = self.protocol_builder_response('investigators.json')
+        mock_docs.return_value = json.loads(docs_response)
+
+        workflow = self.create_workflow('docx') # The workflow really doesnt matter in this case.
+        investigators = StudyService().get_investigators(workflow.study_id, all=False)
+
+        self.assertEqual(3, len(investigators))
+
+        # dhf8r is in the ldap mock data.
+        self.assertEqual("dhf8r", investigators['PI']['user_id'])
+        self.assertEqual("Dan Funk", investigators['PI']['display_name']) # Data from ldap
+        self.assertEqual("Primary Investigator", investigators['PI']['label']) # Data from xls file.
+        self.assertEqual("Always", investigators['PI']['display']) # Data from xls file.

@@ -59,7 +59,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = workflow_api.next_task
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         self.assertEqual("dhf8r", api_task.data["investigator"]["user_id"])
-        self.assertEqual("MultiInstanceTask", api_task.name)
+        self.assertTrue(api_task.name.startswith("MultiInstanceTask"))
         self.assertEqual(3, api_task.multi_instance_count)
         self.assertEqual(1, api_task.multi_instance_index)
 
@@ -74,7 +74,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = workflow_api.next_task
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         self.assertEqual(None, api_task.data["investigator"]["user_id"])
-        self.assertEqual("MultiInstanceTask", api_task.name)
+        self.assertTrue(api_task.name.startswith("MultiInstanceTask"))
         self.assertEqual(3, api_task.multi_instance_count)
         self.assertEqual(2, api_task.multi_instance_index)
 
@@ -89,7 +89,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = workflow_api.next_task
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         self.assertEqual("asd3v", api_task.data["investigator"]["user_id"])
-        self.assertEqual("MultiInstanceTask", api_task.name)
+        self.assertTrue(api_task.name.startswith("MultiInstanceTask"))
         self.assertEqual(3, api_task.multi_instance_count)
         self.assertEqual(3, api_task.multi_instance_index)
 
@@ -146,6 +146,11 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
 
         api_task = WorkflowService.spiff_task_to_api_task(task)
         self.assertEqual(MultiInstanceType.parallel, api_task.multi_instance_type)
+
+        # Assure navigation picks up the label of the current element variable.
+        nav = WorkflowService.processor_to_workflow_api(processor, task).navigation
+        self.assertEquals("Primary Investigator", nav[2].title)
+
         task.update_data({"investigator": {"email": "dhf8r@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
