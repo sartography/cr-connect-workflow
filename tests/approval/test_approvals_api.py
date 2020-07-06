@@ -217,27 +217,6 @@ class TestApprovals(BaseTest):
         total_counts = sum(counts[status] for status in statuses)
         self.assertEqual(total_counts, len(approvals), 'Total approval counts for user should match number of approvals for user')
 
-    def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses,
-                                         workflow_spec_name="random_fact"):
-        study = self.create_study(uid=user_uid, title=title, primary_investigator_id=primary_investigator_id)
-        workflow = self.create_workflow(workflow_name=workflow_spec_name, study=study)
-        approvals = []
-
-        for i in range(len(approver_uids)):
-            approvals.append(self.create_approval(
-                study=study,
-                workflow=workflow,
-                approver_uid=approver_uids[i],
-                status=statuses[i],
-                version=1
-            ))
-
-        return {
-            'study': study,
-            'workflow': workflow,
-            'approvals': approvals,
-        }
-
     def _add_lots_of_random_approvals(self, n=100, workflow_spec_name="random_fact"):
         num_studies_before = db.session.query(StudyModel).count()
         statuses = [name for name, value in ApprovalStatus.__members__.items()]

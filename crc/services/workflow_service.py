@@ -384,7 +384,8 @@ class WorkflowService(object):
         except TypeError as te:
             raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
                                                           (spiff_task.task_spec.name, str(te)), task=spiff_task)
-        # TODO:  Catch additional errors and report back.
+        except Exception as e:
+            app.logger.error(str(e), exc_info=True)
 
     @staticmethod
     def process_options(spiff_task, field):

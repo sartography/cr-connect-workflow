@@ -240,6 +240,29 @@ class BaseTest(unittest.TestCase):
             db.session.commit()
         return study
 
+    def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses,
+                                         workflow_spec_name="random_fact"):
+        study = self.create_study(uid=user_uid, title=title, primary_investigator_id=primary_investigator_id)
+        workflow = self.create_workflow(workflow_name=workflow_spec_name, study=study)
+        approvals = []
+
+        for i in range(len(approver_uids)):
+            approvals.append(self.create_approval(
+                study=study,
+                workflow=workflow,
+                approver_uid=approver_uids[i],
+                status=statuses[i],
+                version=1
+            ))
+
+        full_study = {
+            'study': study,
+            'workflow': workflow,
+            'approvals': approvals,
+        }
+
+        return full_study
+
     def create_workflow(self, workflow_name, study=None, category_id=None):
         db.session.flush()
         spec = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
