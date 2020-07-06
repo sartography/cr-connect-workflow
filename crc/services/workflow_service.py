@@ -207,8 +207,10 @@ class WorkflowService(object):
             if spiff_task:
                 nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
                 nav_item['title'] = nav_item['task'].title  # Prefer the task title.
+
             else:
                 nav_item['task'] = None
+
             if not 'is_decision' in nav_item:
                 nav_item['is_decision'] = False
 
@@ -333,10 +335,12 @@ class WorkflowService(object):
         # otherwise strip off the first word of the task, as that should be following
         # a BPMN standard, and should not be included in the display.
         if task.properties and "display_name" in task.properties:
-            task.title = task.properties['display_name']
+            try:
+                task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties['display_name'])
+            except Exception as e:
+                app.logger.info("Failed to set title on task due to type error." + str(e))
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
-
         return task
 
     @staticmethod

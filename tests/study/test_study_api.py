@@ -182,8 +182,8 @@ class TestStudyApi(BaseTest):
         self.assertGreater(num_db_studies_after, num_db_studies_before)
         self.assertEqual(num_abandoned, 1)
         self.assertEqual(num_open, 1)
-        self.assertEqual(num_active, 1)
-        self.assertEqual(num_incomplete, 1)
+        self.assertEqual(num_active, 2)
+        self.assertEqual(num_incomplete, 0)
         self.assertEqual(len(json_data), num_db_studies_after)
         self.assertEqual(num_open + num_active + num_incomplete + num_abandoned, num_db_studies_after)
 
