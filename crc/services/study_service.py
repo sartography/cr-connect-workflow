@@ -64,13 +64,15 @@ class StudyService(object):
         study.files = list(files)
 
         # Calling this line repeatedly is very very slow.  It creates the
-        # master spec and runs it.
-        status = StudyService.__get_study_status(study_model)
-        study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
+        # master spec and runs it.  Don't execute this for Abandoned studies, as
+        # we don't have the information to process them.
+        if study.protocol_builder_status != ProtocolBuilderStatus.ABANDONED:
+            status = StudyService.__get_study_status(study_model)
+            study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
-        # Group the workflows into their categories.
-        for category in study.categories:
-            category.workflows = {w for w in workflow_metas if w.category_id == category.id}
+            # Group the workflows into their categories.
+            for category in study.categories:
+                category.workflows = {w for w in workflow_metas if w.category_id == category.id}
 
         return study
 
