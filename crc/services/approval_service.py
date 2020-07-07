@@ -299,11 +299,12 @@ class ApprovalService(object):
             pending approvals and create a new approval for the latest version
             of the workflow."""
 
-        # Find any existing approvals for this workflow and approver.
-        latest_approval_request = db.session.query(ApprovalModel). \
+        # Find any existing approvals for this workflow.
+        latest_approval_requests = db.session.query(ApprovalModel). \
             filter(ApprovalModel.workflow_id == workflow_id). \
-            filter(ApprovalModel.approver_uid == approver_uid). \
-            order_by(desc(ApprovalModel.version)).first()
+            order_by(desc(ApprovalModel.version))
+
+        latest_approver_request = latest_approval_requests.filter(ApprovalModel.approver_uid == approver_uid).first()
 
         # Construct as hash of the latest files to see if things have changed since
         # the last approval.
@@ -318,16 +319,20 @@ class ApprovalService(object):
         # If an existing approval request exists and no changes were made, do nothing.
         # If there is an existing approval request for a previous version of the workflow
         # then add a new request, and cancel any waiting/pending requests.
-        if latest_approval_request:
-            request_file_ids = list(file.file_data_id for file in latest_approval_request.approval_files)
+        if latest_approver_request:
+            request_file_ids = list(file.file_data_id for file in latest_approver_request.approval_files)
             current_data_file_ids.sort()
             request_file_ids.sort()
+            other_approver = latest_approval_requests.filter(ApprovalModel.approver_uid != approver_uid).first()
             if current_data_file_ids == request_file_ids:
-                return  # This approval already exists.
+                return  # This approval already exists or we're updating other approver.
             else:
-                latest_approval_request.status = ApprovalStatus.CANCELED.value
-                db.session.add(latest_approval_request)
-                version = latest_approval_request.version + 1
+                for approval_request in latest_approval_requests:
+                    if (approval_request.version == latest_approver_request.version and
+                        approval_request.status != ApprovalStatus.CANCELED.value):
+                        approval_request.status = ApprovalStatus.CANCELED.value
+                        db.session.add(approval_request)
+                version = latest_approver_request.version + 1
         else:
             version = 1
 
