@@ -287,7 +287,7 @@ class ApprovalService(object):
                     )
                     if mail_result:
                         app.logger.error(mail_result, exc_info=True)
-        # TODO: Log update action by approver_uid - maybe ?
+
         return db_approval
 
     @staticmethod
