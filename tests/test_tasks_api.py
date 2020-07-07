@@ -322,7 +322,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual(4, len(navigation)) # Start task, form_task, multi_task, end task
         self.assertEqual("UserTask", workflow.next_task.type)
         self.assertEqual(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
-        self.assertEqual(3, workflow.next_task.multi_instance_count)
+        self.assertEqual(5, workflow.next_task.multi_instance_count)
 
         # Assure that the names for each task are properly updated, so they aren't all the same.
         self.assertEqual("Primary Investigator", workflow.next_task.properties['display_name'])
@@ -480,15 +480,15 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance_parallel')
 
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual(6, len(workflow_api.navigation))
+        self.assertEqual(8, len(workflow_api.navigation))
         ready_items = [nav for nav in workflow_api.navigation if nav['state'] == "READY"]
-        self.assertEqual(3, len(ready_items))
+        self.assertEqual(5, len(ready_items))
 
         self.assertEqual("UserTask", workflow_api.next_task.type)
         self.assertEqual("MultiInstanceTask",workflow_api.next_task.name)
         self.assertEqual("Primary Investigator", workflow_api.next_task.title)
 
-        for i in random.sample(range(3), 3):
+        for i in random.sample(range(5), 5):
             task = TaskSchema().load(ready_items[i]['task'])
             rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, task.id),
                               headers=self.logged_in_headers(),
