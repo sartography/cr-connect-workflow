@@ -76,29 +76,30 @@ class LookupService(object):
     @staticmethod
     def create_lookup_model(workflow_model, field_id):
         """
-         This is all really expensive, but should happen just once (per file change).
-         Checks to see if the options are provided in a separate lookup table associated with the
-        workflow, and if so, assures that data exists in the database, and return a model than can be used
-        to locate that data.
-        Returns:  an array of LookupData, suitable for returning to the api.
+        This is all really expensive, but should happen just once (per file change).
+
+        Checks to see if the options are provided in a separate lookup table associated with the workflow, and if so,
+        assures that data exists in the database, and return a model than can be used to locate that data.
+
+        Returns:  an array of LookupData, suitable for returning to the API.
         """
         processor = WorkflowProcessor(workflow_model)  # VERY expensive, Ludicrous for lookup / type ahead
         spiff_task, field = processor.find_task_and_field_by_field_id(field_id)
 
-        if field.has_property(Task.PROP_OPTIONS_FILE):
-            if not field.has_property(Task.PROP_OPTIONS_VALUE_COLUMN) or \
-                    not field.has_property(Task.PROP_OPTIONS_LABEL_COL):
+        if field.has_property(Task.PROP_OPTIONS_FILE_NAME):
+            if not (field.has_property(Task.PROP_OPTIONS_FILE_VALUE_COLUMN) or
+                    field.has_property(Task.PROP_OPTIONS_FILE_LABEL_COLUMN)):
                 raise ApiError.from_task("invalid_emum",
                                          "For enumerations based on an xls file, you must include 3 properties: %s, "
-                                         "%s, and %s" % (Task.PROP_OPTIONS_FILE,
-                                                         Task.PROP_OPTIONS_VALUE_COLUMN,
-                                                         Task.PROP_OPTIONS_LABEL_COL),
+                                         "%s, and %s" % (Task.PROP_OPTIONS_FILE_NAME,
+                                                         Task.PROP_OPTIONS_FILE_VALUE_COLUMN,
+                                                         Task.PROP_OPTIONS_FILE_LABEL_COLUMN),
                                          task=spiff_task)
 
             # Get the file data from the File Service
-            file_name = field.get_property(Task.PROP_OPTIONS_FILE)
-            value_column = field.get_property(Task.PROP_OPTIONS_VALUE_COLUMN)
-            label_column = field.get_property(Task.PROP_OPTIONS_LABEL_COL)
+            file_name = field.get_property(Task.PROP_OPTIONS_FILE_NAME)
+            value_column = field.get_property(Task.PROP_OPTIONS_FILE_VALUE_COLUMN)
+            label_column = field.get_property(Task.PROP_OPTIONS_FILE_LABEL_COLUMN)
             latest_files = FileService.get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id,
                                                            workflow_id=workflow_model.id,
                                                            name=file_name)
@@ -110,14 +111,30 @@ class LookupService(object):
             lookup_model = LookupService.build_lookup_table(data_model, value_column, label_column,
                                                             workflow_model.workflow_spec_id, field_id)
 
+        elif field.has_property(Task.PROP_OPTIONS_DATA_NAME):
+            if not (field.has_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN) or
+                    field.has_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)):
+                raise ApiError.from_task("invalid_emum",
+                                         "For enumerations based on task data, you must include 3 properties: %s, "
+                                         "%s, and %s" % (Task.PROP_OPTIONS_DATA_NAME,
+                                                         Task.PROP_OPTIONS_DATA_VALUE_COLUMN,
+                                                         Task.PROP_OPTIONS_DATA_LABEL_COLUMN),
+                                         task=spiff_task)
+
+            # Get the enum options from the task data
+            data_model = spiff_task.data.__getattribute__(Task.PROP_OPTIONS_DATA_NAME)
+            value_column = field.get_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN)
+            label_column = field.get_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)
+            lookup_model = LookupService.build_lookup_table(data_model, value_column, label_column,
+                                                            workflow_model.workflow_spec_id, field_id)
+
         elif field.has_property(Task.PROP_LDAP_LOOKUP):
             lookup_model = LookupFileModel(workflow_spec_id=workflow_model.workflow_spec_id,
                                            field_id=field_id,
                                            is_ldap=True)
         else:
             raise ApiError("unknown_lookup_option",
-                           "Lookup supports using spreadsheet options or ldap options, and neither "
-                           "was provided.")
+                           "Lookup supports using spreadsheet options or ldap options, and neither was provided.")
         db.session.add(lookup_model)
         db.session.commit()
         return lookup_model
