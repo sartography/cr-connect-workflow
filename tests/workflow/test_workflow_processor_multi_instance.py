@@ -59,7 +59,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = workflow_api.next_task
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         self.assertEqual("dhf8r", api_task.data["investigator"]["user_id"])
-        self.assertEqual("MultiInstanceTask", api_task.name)
+        self.assertTrue(api_task.name.startswith("MultiInstanceTask"))
         self.assertEqual(3, api_task.multi_instance_count)
         self.assertEqual(1, api_task.multi_instance_index)
 
@@ -74,7 +74,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = workflow_api.next_task
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         self.assertEqual(None, api_task.data["investigator"]["user_id"])
-        self.assertEqual("MultiInstanceTask", api_task.name)
+        self.assertTrue(api_task.name.startswith("MultiInstanceTask"))
         self.assertEqual(3, api_task.multi_instance_count)
         self.assertEqual(2, api_task.multi_instance_index)
 
@@ -89,7 +89,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         api_task = workflow_api.next_task
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         self.assertEqual("asd3v", api_task.data["investigator"]["user_id"])
-        self.assertEqual("MultiInstanceTask", api_task.name)
+        self.assertTrue(api_task.name.startswith("MultiInstanceTask"))
         self.assertEqual(3, api_task.multi_instance_count)
         self.assertEqual(3, api_task.multi_instance_index)
 

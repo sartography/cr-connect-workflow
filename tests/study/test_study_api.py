@@ -7,6 +7,7 @@ from unittest.mock import patch
 from crc import session, app
 from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
+from crc.models.approval import ApprovalStatus
 from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
@@ -95,8 +96,21 @@ class TestStudyApi(BaseTest):
         # TODO: WRITE A TEST FOR STUDY FILES
 
     def test_get_study_has_details_about_approvals(self):
-        # TODO: WRITE A TEST FOR STUDY APPROVALS
-        pass
+        self.load_example_data()
+        full_study = self._create_study_workflow_approvals(
+            user_uid="dhf8r", title="first study", primary_investigator_id="lb3dp",
+            approver_uids=["lb3dp", "dhf8r"], statuses=[ApprovalStatus.PENDING.value, ApprovalStatus.PENDING.value]
+        )
+
+        api_response = self.app.get('/v1.0/study/%i' % full_study['study'].id,
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response)
+        study = StudySchema().loads(api_response.get_data(as_text=True))
+
+        self.assertEqual(len(study.approvals), 2)
+
+        for approval in study.approvals:
+            self.assertEqual(full_study['study'].title, approval['title'])
 
     def test_add_study(self):
         self.load_example_data()
