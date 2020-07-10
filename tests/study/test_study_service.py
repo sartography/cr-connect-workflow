@@ -193,7 +193,7 @@ class TestStudyService(BaseTest):
         workflow = self.create_workflow('docx') # The workflow really doesnt matter in this case.
         investigators = StudyService().get_investigators(workflow.study_id, all=True)
 
-        self.assertEqual(9, len(investigators))
+        self.assertEqual(10, len(investigators))
 
         # dhf8r is in the ldap mock data.
         self.assertEqual("dhf8r", investigators['PI']['user_id'])
@@ -219,10 +219,14 @@ class TestStudyService(BaseTest):
         workflow = self.create_workflow('docx') # The workflow really doesnt matter in this case.
         investigators = StudyService().get_investigators(workflow.study_id, all=False)
 
-        self.assertEqual(3, len(investigators))
+        self.assertEqual(5, len(investigators))
 
         # dhf8r is in the ldap mock data.
         self.assertEqual("dhf8r", investigators['PI']['user_id'])
         self.assertEqual("Dan Funk", investigators['PI']['display_name']) # Data from ldap
         self.assertEqual("Primary Investigator", investigators['PI']['label']) # Data from xls file.
         self.assertEqual("Always", investigators['PI']['display']) # Data from xls file.
+
+        # Both Alex and Aaron are SI, and both should be returned.
+        self.assertEqual("ajl2j", investigators['SI']['user_id'])
+        self.assertEqual("cah3us", investigators['SI_2']['user_id'])
