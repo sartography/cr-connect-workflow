@@ -206,7 +206,7 @@ Protocol Owner: **(need to insert value here)**</bpmn:documentation>
             <camunda:value id="no" name="No" />
             <camunda:value id="unknown" name="Unknown" />
           </camunda:formField>
-          <camunda:formField id="FormField_Details" label="If yes or unknown, provide details:" type="text_area" />
+          <camunda:formField id="FormField_Details" label="If yes or unknown, provide details:" type="textarea" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0lixqzs</bpmn:incoming>
