@@ -322,7 +322,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual(4, len(navigation)) # Start task, form_task, multi_task, end task
         self.assertEqual("UserTask", workflow.next_task.type)
         self.assertEqual(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
-        self.assertEqual(9, workflow.next_task.multi_instance_count)
+        self.assertEqual(5, workflow.next_task.multi_instance_count)
 
         # Assure that the names for each task are properly updated, so they aren't all the same.
         self.assertEqual("Primary Investigator", workflow.next_task.properties['display_name'])
@@ -342,6 +342,51 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(5, len(results))
+
+    def test_lookup_endpoint_for_task_field_using_lookup_entry_id(self):
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_with_search')
+        # get the first form in the two form workflow.
+        workflow = self.get_workflow_api(workflow)
+        task = workflow.next_task
+        field_id = task.form['fields'][0]['id']
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, field_id, 'c'), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(5, len(results))
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
+                          (workflow.id, field_id, results[0]['value']), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(1, len(results))
+        self.assertIsInstance(results[0]['data'], dict)
+        self.assertNotIn('id', results[0], "Don't include the internal id, that can be very confusing, and should not be used.")
+
+    def test_lookup_endpoint_also_works_for_enum(self):
+        # Naming here get's a little confusing.  fields can be marked as enum or autocomplete.
+        # In the event of an auto-complete it's a type-ahead search field, for an enum the
+        # the key/values from the spreadsheet are added directly to the form and it shows up as
+        # a dropdown.  This tests the case of wanting to get additional data when a user selects
+        # something from a drodown.
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_from_file')
+        # get the first form in the two form workflow.
+        workflow = self.get_workflow_api(workflow)
+        task = workflow.next_task
+        field_id = task.form['fields'][0]['id']
+        option_id = task.form['fields'][0]['options'][0]['id']
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
+                          (workflow.id, field_id, option_id), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(1, len(results))
+        self.assertIsInstance(results[0]['data'], dict)
 
     def test_lookup_endpoint_for_task_ldap_field_lookup(self):
         self.load_example_data()
@@ -435,17 +480,23 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance_parallel')
 
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual(12, len(workflow_api.navigation))
+        self.assertEqual(8, len(workflow_api.navigation))
         ready_items = [nav for nav in workflow_api.navigation if nav['state'] == "READY"]
-        self.assertEqual(9, len(ready_items))
+        self.assertEqual(5, len(ready_items))
 
         self.assertEqual("UserTask", workflow_api.next_task.type)
-        self.assertEqual("MutiInstanceTask",workflow_api.next_task.name)
-        self.assertEqual("more information", workflow_api.next_task.title)
+        self.assertEqual("MultiInstanceTask",workflow_api.next_task.name)
+        self.assertEqual("Primary Investigator", workflow_api.next_task.title)
 
-        for i in random.sample(range(9), 9):
+        for i in random.sample(range(5), 5):
             task = TaskSchema().load(ready_items[i]['task'])
-            data = workflow_api.next_task.data
+            rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, task.id),
+                              headers=self.logged_in_headers(),
+                              content_type="application/json")
+            self.assert_success(rv)
+            json_data = json.loads(rv.get_data(as_text=True))
+            workflow = WorkflowApiSchema().load(json_data)
+            data = workflow.next_task.data
             data['investigator']['email'] = "dhf8r@virginia.edu"
             self.complete_form(workflow, task, data)
             #tasks = self.get_workflow_api(workflow).user_tasks

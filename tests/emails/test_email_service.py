@@ -31,4 +31,15 @@ class TestEmailService(BaseTest):
         self.assertEqual(email_model.content_html, content_html)
         self.assertEqual(email_model.study, study)
 
-        # TODO: Create email model without study
+        subject = 'Email Subject - Empty study'
+        EmailService.add_email(subject=subject, sender=sender, recipients=recipients,
+                               content=content, content_html=content_html)
+
+        email_model = EmailModel.query.order_by(EmailModel.id.desc()).first()
+
+        self.assertEqual(email_model.subject, subject)
+        self.assertEqual(email_model.sender, sender)
+        self.assertEqual(email_model.recipients, str(recipients))
+        self.assertEqual(email_model.content, content)
+        self.assertEqual(email_model.content_html, content_html)
+        self.assertEqual(email_model.study, None)

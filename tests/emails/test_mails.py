@@ -1,8 +1,4 @@
-
-from tests.base_test import BaseTest
-
-from crc import mail, session
-from crc.models.approval import ApprovalModel, ApprovalStatus
+from crc import mail
 from crc.models.email import EmailModel
 from crc.services.mails import (
     send_ramp_up_submission_email,
@@ -12,6 +8,7 @@ from crc.services.mails import (
     send_ramp_up_denied_email,
     send_ramp_up_denied_email_to_approver
 )
+from tests.base_test import BaseTest
 
 
 class TestMails(BaseTest):
@@ -30,7 +27,6 @@ class TestMails(BaseTest):
 
     def test_send_ramp_up_submission_email(self):
         with mail.record_messages() as outbox:
-
             send_ramp_up_submission_email(self.sender, self.recipients, self.approver_1)
             self.assertEqual(len(outbox), 1)
             self.assertEqual(outbox[0].subject, 'Research Ramp-up Plan Submitted')

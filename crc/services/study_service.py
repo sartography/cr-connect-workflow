@@ -1,3 +1,4 @@
+from copy import copy
 from datetime import datetime
 import json
 from typing import List
@@ -64,13 +65,15 @@ class StudyService(object):
         study.files = list(files)
 
         # Calling this line repeatedly is very very slow.  It creates the
-        # master spec and runs it.
-        status = StudyService.__get_study_status(study_model)
-        study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
+        # master spec and runs it.  Don't execute this for Abandoned studies, as
+        # we don't have the information to process them.
+        if study.protocol_builder_status != ProtocolBuilderStatus.ABANDONED:
+            status = StudyService.__get_study_status(study_model)
+            study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
-        # Group the workflows into their categories.
-        for category in study.categories:
-            category.workflows = {w for w in workflow_metas if w.category_id == category.id}
+            # Group the workflows into their categories.
+            for category in study.categories:
+                category.workflows = {w for w in workflow_metas if w.category_id == category.id}
 
         return study
 
@@ -137,7 +140,7 @@ class StudyService(object):
             try:
                 pb_docs = ProtocolBuilderService.get_required_docs(study_id=study_id)
             except requests.exceptions.ConnectionError as ce:
-                app.logger.error("Failed to connect to the Protocol Builder - %s" % str(ce))
+                app.logger.error(f'Failed to connect to the Protocol Builder - {str(ce)}', exc_info=True)
                 pb_docs = []
         else:
             pb_docs = []
@@ -182,7 +185,8 @@ class StudyService(object):
         return documents
 
     @staticmethod
-    def get_investigators(study_id):
+    def get_investigators(study_id, all=False):
+        """Convert array of investigators from protocol builder into a dictionary keyed on the type. """
 
         # Loop through all known investigator types as set in the reference file
         inv_dictionary = FileService.get_reference_data(FileService.INVESTIGATOR_LIST, 'code')
@@ -190,16 +194,26 @@ class StudyService(object):
         # Get PB required docs
         pb_investigators = ProtocolBuilderService.get_investigators(study_id=study_id)
 
-        """Convert array of investigators from protocol builder into a dictionary keyed on the type"""
+        # It is possible for the same type to show up more than once in some circumstances, in those events
+        # append a counter to the name.
+        investigators = {}
         for i_type in inv_dictionary:
-            pb_data = next((item for item in pb_investigators if item['INVESTIGATORTYPE'] == i_type), None)
-            if pb_data:
-                inv_dictionary[i_type]['user_id'] = pb_data["NETBADGEID"]
-                inv_dictionary[i_type].update(StudyService.get_ldap_dict_if_available(pb_data["NETBADGEID"]))
-            else:
-                inv_dictionary[i_type]['user_id'] = None
-
-        return inv_dictionary
+            pb_data_entries = list(item for item in pb_investigators if item['INVESTIGATORTYPE'] == i_type)
+            entry_count = 0
+            investigators[i_type] = copy(inv_dictionary[i_type])
+            investigators[i_type]['user_id'] = None
+            for pb_data in pb_data_entries:
+                entry_count += 1
+                if entry_count == 1:
+                    t = i_type
+                else:
+                    t = i_type + "_" + str(entry_count)
+                investigators[t] = copy(inv_dictionary[i_type])
+                investigators[t]['user_id'] = pb_data["NETBADGEID"]
+                investigators[t].update(StudyService.get_ldap_dict_if_available(pb_data["NETBADGEID"]))
+        if not all:
+            investigators = dict(filter(lambda elem: elem[1]['user_id'] is not None, investigators.items()))
+        return investigators
 
     @staticmethod
     def get_ldap_dict_if_available(user_id):

@@ -626,6 +626,12 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: terminate_loop
+        in: query
+        required: false
+        description: Terminate the loop on a looping task
+        schema:
+          type: boolean
     put:
       operationId: crc.api.workflow.update_task
       summary: Exclusively for User Tasks, submits form data as a flat set of key/values.
@@ -697,12 +703,19 @@ paths:
         description: The string to search for in the Value column of the lookup table.
         schema:
           type: string
+      - name: value
+        in: query
+        required: false
+        description: An alternative to query, this accepts the specific value or id selected in a dropdown list or auto-complete, and will return the one matching record. Useful for getting additional details about an item selected in a dropdown.
+        schema:
+          type: string
       - name: limit
         in: query
         required: false
         description: The total number of records to return, defaults to 10.
         schema:
           type: integer
+
     get:
       operationId: crc.api.workflow.lookup
       summary: Provides type-ahead search against a lookup table associted with a form field.
