@@ -1,4 +1,4 @@
-# CrConnectFrontend
+# sartography/cr-connect-workflow
 
 [![Build Status](https://travis-ci.com/sartography/cr-connect-workflow.svg?branch=master)](https://travis-ci.com/sartography/cr-connect-workflow)
 
@@ -27,7 +27,7 @@ Make sure all of the following are properly installed on your system:
     - Select the directory where you cloned this repository and click `Ok`.
     - Expand the `Project Interpreter` section.
     - Select the `New environment using` radio button and choose `Pipenv` in the dropdown.
-    - Under `Base interpreter`, select `Python 3.6`
+    - Under `Base interpreter`, select `Python 3.7`
     - In the `Pipenv executable` field, enter `/home/your_username_goes_here/.local/bin/pipenv` 
     - Click `Create`
         ![Project Interpreter](readme_images/new_project.png)
