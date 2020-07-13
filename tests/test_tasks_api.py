@@ -403,6 +403,42 @@ class TestTasksApi(BaseTest):
         self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
         self.assertIsInstance(results[0]['data'], dict)
 
+    def test_lookup_endpoint_enum_in_task_data(self):
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_from_task_data')
+        # get the first form in the two form workflow.
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        workflow_api = self.complete_form(workflow, task, {'invitees': [
+            {'first_name': 'Alistair', 'last_name': 'Aardvark', 'age': 43, 'likes_pie': True, 'num_lumps': 21, 'secret_id': 'Antimony', 'display_name': 'Professor Alistair A. Aardvark'},
+            {'first_name': 'Berthilda', 'last_name': 'Binturong', 'age': 12, 'likes_pie': False, 'num_lumps': 34, 'secret_id': 'Beryllium', 'display_name': 'Dr. Berthilda B. Binturong'},
+            {'first_name': 'Chesterfield', 'last_name': 'Capybara', 'age': 32, 'likes_pie': True, 'num_lumps': 1, 'secret_id': 'Cadmium', 'display_name': 'The Honorable C. C. Capybara'},
+        ]})
+        task = workflow_api.next_task
+
+        field_id = task.form['fields'][0]['id']
+        options = task.form['fields'][0]['options']
+        self.assertEqual(3, len(options))
+        option_id = options[0]['id']
+        self.assertEqual('Professor Alistair A. Aardvark', options[0]['name'])
+        self.assertEqual('Dr. Berthilda B. Binturong', options[1]['name'])
+        self.assertEqual('The Honorable C. C. Capybara', options[2]['name'])
+        self.assertEqual('Alistair', options[0]['data']['first_name'])
+        self.assertEqual('Berthilda', options[1]['data']['first_name'])
+        self.assertEqual('Chesterfield', options[2]['data']['first_name'])
+
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
+                          (workflow.id, field_id, option_id),
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(1, len(results))
+        self.assert_options_populated(results, ['first_name', 'last_name', 'age', 'likes_pie', 'num_lumps',
+                                                'secret_id', 'display_name'])
+        self.assertIsInstance(results[0]['data'], dict)
+
     def test_lookup_endpoint_for_task_ldap_field_lookup(self):
         self.load_example_data()
         workflow = self.create_workflow('ldap_lookup')

@@ -394,7 +394,7 @@ class WorkflowService(object):
         # If this is an auto-complete field, do not populate options, a lookup will happen later.
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             pass
-        elif field.has_property(Task.PROP_OPTIONS_FILE_NAME):
+        elif field.has_property(Task.PROP_OPTIONS_FILE_NAME) or field.has_property(Task.PROP_OPTIONS_DATA_NAME):
             lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
             if not hasattr(field, 'options'):
