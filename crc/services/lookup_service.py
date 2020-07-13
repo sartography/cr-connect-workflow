@@ -46,18 +46,18 @@ class LookupService(object):
     def __get_lookup_model(workflow, field_id):
         lookup_model = db.session.query(LookupFileModel) \
             .filter(LookupFileModel.workflow_spec_id == workflow.workflow_spec_id) \
-            .filter(LookupFileModel.field_id == field_id).first()
+            .filter(LookupFileModel.field_id == field_id) \
+            .order_by(desc(LookupFileModel.id)).first()
 
         # one more quick query, to see if the lookup file is still related to this workflow.
         # if not, we need to rebuild the lookup table.
         is_current = False
         if lookup_model:
             is_current = db.session.query(WorkflowSpecDependencyFile). \
-                filter(WorkflowSpecDependencyFile.file_data_id == lookup_model.file_data_model_id).count()
+                filter(WorkflowSpecDependencyFile.file_data_id == lookup_model.file_data_model_id).\
+                filter(WorkflowSpecDependencyFile.workflow_id == workflow.id).count()
 
         if not is_current:
-            if lookup_model:
-                db.session.delete(lookup_model)
             # Very very very expensive, but we don't know need this till we do.
             lookup_model = LookupService.create_lookup_model(workflow, field_id)
 
@@ -84,6 +84,14 @@ class LookupService(object):
         """
         processor = WorkflowProcessor(workflow_model)  # VERY expensive, Ludicrous for lookup / type ahead
         spiff_task, field = processor.find_task_and_field_by_field_id(field_id)
+
+        # Clear out all existing lookup models for this workflow and field.
+        existing_models = db.session.query(LookupFileModel) \
+            .filter(LookupFileModel.workflow_spec_id == workflow_model.workflow_spec_id) \
+            .filter(LookupFileModel.field_id == field_id).all()
+        for model in existing_models:  # Do it one at a time to cause the required cascade of deletes.
+            db.session.delete(model)
+
 
         if field.has_property(Task.PROP_OPTIONS_FILE):
             if not field.has_property(Task.PROP_OPTIONS_VALUE_COLUMN) or \
