@@ -6,9 +6,11 @@ import random
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
+from SpiffWorkflow.bpmn.specs.StartEvent import StartEvent
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
@@ -273,20 +275,14 @@ class WorkflowService(object):
     def spiff_task_to_api_task(spiff_task, add_docs_and_forms=False):
         task_type = spiff_task.task_spec.__class__.__name__
 
-        if isinstance(spiff_task.task_spec, UserTask):
-            task_type = "UserTask"
-        elif isinstance(spiff_task.task_spec, ManualTask):
-            task_type = "ManualTask"
-        elif isinstance(spiff_task.task_spec, BusinessRuleTask):
-            task_type = "BusinessRuleTask"
-        elif isinstance(spiff_task.task_spec, CancelTask):
-            task_type = "CancelTask"
-        elif isinstance(spiff_task.task_spec, ScriptTask):
-            task_type = "ScriptTask"
-        elif isinstance(spiff_task.task_spec, StartTask):
-            task_type = "StartTask"
-        else:
-            task_type = "NoneTask"
+        task_types = [UserTask, ManualTask, BusinessRuleTask, CancelTask, ScriptTask, StartTask, EndEvent, StartEvent]
+
+        for t in task_types:
+            if isinstance(spiff_task.task_spec, t):
+                task_type = t.__name__
+                break
+            else:
+                task_type = "NoneTask"
 
         info = spiff_task.task_info()
         if info["is_looping"]:
