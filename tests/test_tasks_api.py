@@ -403,7 +403,7 @@ class TestTasksApi(BaseTest):
         self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
         self.assertIsInstance(results[0]['data'], dict)
 
-    def test_lookup_endpoint_enum_in_task_data(self):
+    def test_enum_from_task_data(self):
         self.load_example_data()
         workflow = self.create_workflow('enum_options_from_task_data')
         # get the first form in the two form workflow.
@@ -427,17 +427,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual('Alistair', options[0]['data']['first_name'])
         self.assertEqual('Berthilda', options[1]['data']['first_name'])
         self.assertEqual('Chesterfield', options[2]['data']['first_name'])
-
-        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
-                          (workflow.id, field_id, option_id),
-                          headers=self.logged_in_headers(),
-                          content_type="application/json")
-        self.assert_success(rv)
-        results = json.loads(rv.get_data(as_text=True))
-        self.assertEqual(1, len(results))
-        self.assert_options_populated(results, ['first_name', 'last_name', 'age', 'likes_pie', 'num_lumps',
-                                                'secret_id', 'display_name'])
-        self.assertIsInstance(results[0]['data'], dict)
 
     def test_lookup_endpoint_for_task_ldap_field_lookup(self):
         self.load_example_data()

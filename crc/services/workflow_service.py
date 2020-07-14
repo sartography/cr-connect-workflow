@@ -394,15 +394,38 @@ class WorkflowService(object):
         # If this is an auto-complete field, do not populate options, a lookup will happen later.
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             pass
-        elif field.has_property(Task.PROP_OPTIONS_FILE_NAME) or field.has_property(Task.PROP_OPTIONS_DATA_NAME):
+        elif field.has_property(Task.PROP_OPTIONS_FILE_NAME):
             lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
             if not hasattr(field, 'options'):
                 field.options = []
             for d in data:
                 field.options.append({"id": d.value, "name": d.label, "data": d.data})
-
+        elif field.has_property(Task.PROP_OPTIONS_DATA_NAME):
+            field.options = WorkflowService.get_options_from_task_data(spiff_task, field)
         return field
+
+    @staticmethod
+    def get_options_from_task_data(spiff_task, field):
+        if not (field.has_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN) or
+                field.has_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)):
+            raise ApiError.from_task("invalid_enum",
+                                     f"For enumerations based on task data, you must include 3 properties: "
+                                     f"{Task.PROP_OPTIONS_DATA_NAME}, {Task.PROP_OPTIONS_DATA_VALUE_COLUMN}, "
+                                     f"{Task.PROP_OPTIONS_DATA_LABEL_COLUMN}", task=spiff_task)
+        prop = field.get_property(Task.PROP_OPTIONS_DATA_NAME)
+        if prop not in spiff_task.data:
+            raise ApiError.from_task("invalid_enum", f"For enumerations based on task data, task data must have "
+                                                     f"a property called {prop}", task=spiff_task)
+        # Get the enum options from the task data
+        data_model = spiff_task.data[prop]
+        value_column = field.get_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN)
+        label_column = field.get_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)
+        items = data_model.items() if isinstance(data_model, dict) else data_model
+        options = []
+        for item in items:
+            options.append({"id": item[value_column], "name": item[label_column], "data": item})
+        return options
 
     @staticmethod
     def log_task_action(user_uid, workflow_model, spiff_task, action, version):

@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 import pandas as pd
 from pandas import ExcelFile, np
-from sqlalchemy import func, desc
+from sqlalchemy import desc
 from sqlalchemy.sql.functions import GenericFunction
 
 from crc import db
@@ -119,40 +119,6 @@ class LookupService(object):
             lookup_model = LookupService.build_lookup_table(data_model, value_column, label_column,
                                                             workflow_model.workflow_spec_id, field_id)
 
-        #  Use the value of some other task data field to populate enum field options
-        elif field.has_property(Task.PROP_OPTIONS_DATA_NAME):
-            if not (field.has_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN) or
-                    field.has_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)):
-                raise ApiError.from_task("invalid_enum",
-                                         "For enumerations based on task data, you must include 3 properties: %s, "
-                                         "%s, and %s" % (Task.PROP_OPTIONS_DATA_NAME,
-                                                         Task.PROP_OPTIONS_DATA_VALUE_COLUMN,
-                                                         Task.PROP_OPTIONS_DATA_LABEL_COLUMN),
-                                         task=spiff_task)
-
-            prop = field.get_property(Task.PROP_OPTIONS_DATA_NAME)
-            if prop not in spiff_task.data:
-                raise ApiError.from_task("invalid_enum", "For enumerations based on task data, task data must have "
-                                                         "a property called '%s'" % prop,
-                                         task=spiff_task)
-
-            # Get the enum options from the task data
-            data_model = spiff_task.data[prop]
-            value_column = field.get_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN)
-            label_column = field.get_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)
-            lookup_model = LookupFileModel(workflow_spec_id=workflow_model.workflow_spec_id,
-                                           field_id=field_id,
-                                           is_ldap=False)
-            db.session.add(lookup_model)
-            items = data_model.items() if isinstance(data_model, dict) else data_model
-            for item in items:
-                lookup_data = LookupDataModel(lookup_file_model=lookup_model,
-                                              value=item[value_column],
-                                              label=item[label_column],
-                                              data=item)
-                db.session.add(lookup_data)
-            db.session.commit()
-
         #  Use the results of an LDAP request to populate enum field options
         elif field.has_property(Task.PROP_LDAP_LOOKUP):
             lookup_model = LookupFileModel(workflow_spec_id=workflow_model.workflow_spec_id,
@@ -160,8 +126,8 @@ class LookupService(object):
                                            is_ldap=True)
         else:
             raise ApiError("unknown_lookup_option",
-                           "Lookup supports using spreadsheet, task data, or LDAP options, "
-                           "and none of those was provided.")
+                           "Lookup supports using spreadsheet or LDAP options, "
+                           "and neither of those was provided.")
         db.session.add(lookup_model)
         db.session.commit()
         return lookup_model
@@ -247,3 +213,4 @@ class LookupService(object):
                               "data": user
                               })
         return user_list
+
