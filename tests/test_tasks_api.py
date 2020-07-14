@@ -83,6 +83,17 @@ class TestTasksApi(BaseTest):
         workflow = WorkflowApiSchema().load(json_data)
         return workflow
 
+    def assert_options_populated(self, results, lookup_data_keys):
+        option_keys = ['value', 'label', 'data']
+        self.assertIsInstance(results, list)
+        for result in results:
+            for option_key in option_keys:
+                self.assertTrue(option_key in result, 'should have value, label, and data properties populated')
+                self.assertIsNotNone(result[option_key], '%s should not be None' % option_key)
+
+            self.assertIsInstance(result['data'], dict)
+            for lookup_data_key in lookup_data_keys:
+                self.assertTrue(lookup_data_key in result['data'], 'should have all lookup data columns populated')
 
     def test_get_current_user_tasks(self):
         self.load_example_data()
@@ -342,6 +353,7 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(5, len(results))
+        self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
 
     def test_lookup_endpoint_for_task_field_using_lookup_entry_id(self):
         self.load_example_data()
@@ -357,13 +369,15 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(5, len(results))
+        self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
+
         rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
                           (workflow.id, field_id, results[0]['value']), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(1, len(results))
-        self.assertIsInstance(results[0]['data'], dict)
+        self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
         self.assertNotIn('id', results[0], "Don't include the internal id, that can be very confusing, and should not be used.")
 
     def test_lookup_endpoint_also_works_for_enum(self):
@@ -371,7 +385,7 @@ class TestTasksApi(BaseTest):
         # In the event of an auto-complete it's a type-ahead search field, for an enum the
         # the key/values from the spreadsheet are added directly to the form and it shows up as
         # a dropdown.  This tests the case of wanting to get additional data when a user selects
-        # something from a drodown.
+        # something from a dropdown.
         self.load_example_data()
         workflow = self.create_workflow('enum_options_from_file')
         # get the first form in the two form workflow.
@@ -386,6 +400,7 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(1, len(results))
+        self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
         self.assertIsInstance(results[0]['data'], dict)
 
     def test_lookup_endpoint_for_task_ldap_field_lookup(self):
@@ -402,6 +417,9 @@ class TestTasksApi(BaseTest):
                           content_type="application/json")
         self.assert_success(rv)
         results = json.loads(rv.get_data(as_text=True))
+        self.assert_options_populated(results, ['telephone_number', 'affiliation', 'uid', 'title',
+                                                'given_name', 'department', 'date_cached', 'sponsor_type',
+                                                'display_name', 'email_address'])
         self.assertEqual(1, len(results))
 
     def test_sub_process(self):

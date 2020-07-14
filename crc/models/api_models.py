@@ -61,7 +61,7 @@ class Task(object):
 
 class OptionSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name"]
+        fields = ["id", "name", "data"]
 
 
 class ValidationSchema(ma.Schema):
@@ -71,15 +71,11 @@ class ValidationSchema(ma.Schema):
 
 class FormFieldPropertySchema(ma.Schema):
     class Meta:
-        fields = [
-            "id", "value"
-        ]
+        fields = ["id", "value"]
 
 class FormFieldSchema(ma.Schema):
     class Meta:
-        fields = [
-            "id", "type", "label", "default_value", "options", "validation", "properties", "value"
-        ]
+        fields = ["id", "type", "label", "default_value", "options", "validation", "properties", "value"]
 
     default_value = marshmallow.fields.String(required=False, allow_none=True)
     options = marshmallow.fields.List(marshmallow.fields.Nested(OptionSchema))
