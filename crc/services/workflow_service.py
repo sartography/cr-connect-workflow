@@ -92,11 +92,16 @@ class WorkflowService(object):
                 processor.bpmn_workflow.do_engine_steps()
                 tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:
+                    if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
+                        raise ApiError.from_task("invalid_role",
+                                       f"This task is in a lane called '{task.task_spec.lane}', The "
+                                       f" current task data must have information mapping this role to "
+                                       f" a unique user id.", task)
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
                     WorkflowService.populate_form_with_random_data(task, task_api, required_only)
-                    task.complete()
+                    processor.complete_task(task)
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
                 raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
@@ -195,25 +200,24 @@ class WorkflowService(object):
         possible, next_task is set to the current_task."""
 
         nav_dict = processor.bpmn_workflow.get_nav_list()
+
+        # Some basic cleanup of the title for the for the navigation.
         navigation = []
         for nav_item in nav_dict:
             spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
             if 'description' in nav_item:
                 nav_item['title'] = nav_item.pop('description')
                 # fixme: duplicate code from the workflow_service. Should only do this in one place.
-                if ' ' in nav_item['title']:
+                if nav_item['title'] is not None and ' ' in nav_item['title']:
                     nav_item['title'] = nav_item['title'].partition(' ')[2]
             else:
                 nav_item['title'] = ""
             if spiff_task:
                 nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
                 nav_item['title'] = nav_item['task'].title  # Prefer the task title.
-
             else:
                 nav_item['task'] = None
 
-            if not 'is_decision' in nav_item:
-                nav_item['is_decision'] = False
 
             navigation.append(NavigationItem(**nav_item))
             NavigationItemSchema().dump(nav_item)

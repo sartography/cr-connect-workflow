@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0ybr9ph" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+  <bpmn:collaboration id="Collaboration_0xjb3la">
+    <bpmn:participant id="Participant_0ozb2sp" processRef="Process_1aebbrh" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_1aebbrh" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_0ilprw6">
+      <bpmn:lane id="Lane_1s1s7a1">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_1hljoeq</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_0lscajc</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_19ccxoj</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_1m47545" name="supervisor">
+        <bpmn:flowNodeRef>Gateway_1fkgc4u</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_14eor1x</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0a7090c</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_1hljoeq" name="Request Approval" camunda:formKey="form">
+      <bpmn:documentation># Answer me these questions 3, ere the other side you see!</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="favorite_color" label="What is your favorite color?" type="string" defaultValue="Yellow" />
+          <camunda:formField id="quest" label="What is your quest?" type="string" defaultValue="To seek the holly Grail!" />
+          <camunda:formField id="swallow_speed" label="What is the air speed velocity of an unladen swallow?" defaultValue="About 24 miles per hour" />
+          <camunda:formField id="supervisor" label="Please enter the UVA Id of your supervisor" type="string" defaultValue="dhf8r" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0a7090c</bpmn:incoming>
+      <bpmn:incoming>Flow_070gq5r</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hcpt7c</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_1fkgc4u">
+      <bpmn:incoming>Flow_1gp4zfd</bpmn:incoming>
+      <bpmn:outgoing>Flow_0vnghsi</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1g38q6b</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_0lscajc">
+      <bpmn:documentation># Your responses were approved!
+
+
+Gosh! you must really know a lot about colors and swallows and stuff!
+Your supervisor provided the following feedback:
+
+
+{{feedback}}
+
+
+You are all done!  WARNING:  If you go back and reanswer the questions it will create a new approval request.</bpmn:documentation>
+      <bpmn:incoming>Flow_1g38q6b</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:manualTask id="Activity_19ccxoj" name="Review Feedback">
+      <bpmn:documentation># Your Request was rejected
+
+
+Perhaps you don't know the right answer to one of the questions.
+Your Supervisor provided the following feedback:
+
+
+{{feedback}}
+
+
+Please press save to re-try the questions, and submit your responses again.</bpmn:documentation>
+      <bpmn:incoming>Flow_0vnghsi</bpmn:incoming>
+      <bpmn:outgoing>Flow_070gq5r</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0a7090c" sourceRef="StartEvent_1" targetRef="Activity_1hljoeq" />
+    <bpmn:sequenceFlow id="Flow_1gp4zfd" sourceRef="Activity_14eor1x" targetRef="Gateway_1fkgc4u" />
+    <bpmn:sequenceFlow id="Flow_0vnghsi" name="rejected" sourceRef="Gateway_1fkgc4u" targetRef="Activity_19ccxoj">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approval==True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1g38q6b" name="approved" sourceRef="Gateway_1fkgc4u" targetRef="Event_0lscajc">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approval==True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1hcpt7c" sourceRef="Activity_1hljoeq" targetRef="Activity_14eor1x" />
+    <bpmn:sequenceFlow id="Flow_070gq5r" sourceRef="Activity_19ccxoj" targetRef="Activity_1hljoeq" />
+    <bpmn:userTask id="Activity_14eor1x" name="Approve Responses">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="approval" label="I approve of this information" type="boolean" />
+          <camunda:formField id="feedback" label="Feedback" type="string" defaultValue="Please provide any feedback you have here." />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1hcpt7c</bpmn:incoming>
+      <bpmn:outgoing>Flow_1gp4zfd</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_0xjb3la">
+      <bpmndi:BPMNShape id="Participant_0ozb2sp_di" bpmnElement="Participant_0ozb2sp" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="550" height="310" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1m47545_di" bpmnElement="Lane_1m47545" isHorizontal="true">
+        <dc:Bounds x="220" y="265" width="520" height="125" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1s1s7a1_di" bpmnElement="Lane_1s1s7a1" isHorizontal="true">
+        <dc:Bounds x="220" y="80" width="520" height="185" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_070gq5r_di" bpmnElement="Flow_070gq5r">
+        <di:waypoint x="510" y="160" />
+        <di:waypoint x="510" y="100" />
+        <di:waypoint x="380" y="100" />
+        <di:waypoint x="380" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hcpt7c_di" bpmnElement="Flow_1hcpt7c">
+        <di:waypoint x="380" y="240" />
+        <di:waypoint x="380" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1g38q6b_di" bpmnElement="Flow_1g38q6b">
+        <di:waypoint x="535" y="330" />
+        <di:waypoint x="680" y="330" />
+        <di:waypoint x="680" y="218" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="585" y="312" width="46" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0vnghsi_di" bpmnElement="Flow_0vnghsi">
+        <di:waypoint x="510" y="305" />
+        <di:waypoint x="510" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="520" y="274" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1gp4zfd_di" bpmnElement="Flow_1gp4zfd">
+        <di:waypoint x="430" y="330" />
+        <di:waypoint x="485" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0a7090c_di" bpmnElement="Flow_0a7090c">
+        <di:waypoint x="276" y="200" />
+        <di:waypoint x="330" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="240" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xcxw40_di" bpmnElement="Activity_1hljoeq">
+        <dc:Bounds x="330" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1fkgc4u_di" bpmnElement="Gateway_1fkgc4u" isMarkerVisible="true">
+        <dc:Bounds x="485" y="305" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0lscajc_di" bpmnElement="Event_0lscajc">
+        <dc:Bounds x="662" y="182" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1jfdeta_di" bpmnElement="Activity_19ccxoj">
+        <dc:Bounds x="460" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0zc7cgy_di" bpmnElement="Activity_14eor1x">
+        <dc:Bounds x="330" y="290" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

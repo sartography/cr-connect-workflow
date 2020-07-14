@@ -263,13 +263,13 @@ class BaseTest(unittest.TestCase):
 
         return full_study
 
-    def create_workflow(self, workflow_name, study=None, category_id=None):
+    def create_workflow(self, workflow_name, study=None, category_id=None, as_user="dhf8r"):
         db.session.flush()
         spec = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
         if spec is None:
             spec = self.load_test_spec(workflow_name, category_id=category_id)
         if study is None:
-            study = self.create_study()
+            study = self.create_study(uid=as_user)
         workflow_model = StudyService._create_workflow_model(study, spec)
         return workflow_model
 
@@ -312,6 +312,7 @@ class BaseTest(unittest.TestCase):
         workflow_api = WorkflowApiSchema().load(json_data)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
+
 
     def complete_form(self, workflow_in, task_in, dict_data, error_code=None, terminate_loop=None, user_uid="dhf8r"):
         prev_completed_task_count = workflow_in.completed_tasks

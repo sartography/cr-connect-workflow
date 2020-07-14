@@ -29,6 +29,7 @@ class NavigationItem(object):
         self.state = state
         self.is_decision = is_decision
         self.task = task
+        self.lane = lane
 
 class Task(object):
 
@@ -107,10 +108,11 @@ class TaskSchema(ma.Schema):
 class NavigationItemSchema(ma.Schema):
     class Meta:
         fields = ["id", "task_id", "name", "title", "backtracks", "level", "indent", "child_count", "state",
-                  "is_decision", "task"]
+                  "is_decision", "task", "lane"]
         unknown = INCLUDE
     task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False, allow_none=True)
     backtracks = marshmallow.fields.String(required=False, allow_none=True)
+    lane = marshmallow.fields.String(required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
     task_id = marshmallow.fields.String(required=False, allow_none=True)
 

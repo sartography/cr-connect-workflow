@@ -107,10 +107,11 @@ def delete_workflow(workflow_id):
 
 def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    user_uid = __get_user_uid(workflow_model.study.user_uid)
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
+    _verify_user_and_role(workflow_model, spiff_task)
+    user_uid = g.user.uid
     if spiff_task.state != spiff_task.COMPLETED and spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
                                         "currently set to COMPLETE or READY.")
@@ -136,15 +137,17 @@ def update_task(workflow_id, task_id, body, terminate_loop=None):
     elif workflow_model.study is None:
         raise ApiError("invalid_study", "There is no study associated with the given workflow.", status_code=404)
 
-    user_uid = __get_user_uid(workflow_model.study.user_uid)
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
+    _verify_user_and_role(workflow_model, spiff_task)
+    user_uid = g.user.uid
     if not spiff_task:
         raise ApiError("empty_task", "Processor failed to obtain task.", status_code=404)
     if spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
+
     if terminate_loop:
         spiff_task.terminate_loop()
 
@@ -156,6 +159,9 @@ def update_task(workflow_id, task_id, body, terminate_loop=None):
     WorkflowService.log_task_action(user_uid, workflow_model, spiff_task, WorkflowService.TASK_ACTION_COMPLETE,
                                     version=processor.get_version_string())
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
+
+    # If the next task
+
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
@@ -210,13 +216,37 @@ def lookup(workflow_id, field_id, query=None, value=None, limit=10):
     return LookupDataSchema(many=True).dump(lookup_data)
 
 
-def __get_user_uid(user_uid):
-    if 'user' in g:
-        if g.user.uid not in app.config['ADMIN_UIDS'] and user_uid != g.user.uid:
-            raise ApiError("permission_denied", "You are not authorized to edit the task data for this workflow.",
-                           status_code=403)
-        else:
-            return g.user.uid
+def _verify_user_and_role(workflow_model, spiff_task):
+    """Assures the currently logged in user can access the given workflow and task, or
+    raises an error.
+     Allow administrators to modify tasks, otherwise assure that the current user
+     is allowed to edit or update the task. Will raise the appropriate error if user
+     is not authorized. """
 
-    else:
+    if 'user' not in g:
         raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
+
+    if g.user.uid in app.config['ADMIN_UIDS']:
+        return g.user.uid
+
+    # If the task is in a lane, determine the user from that value.
+    if spiff_task.task_spec.lane is not None:
+        if spiff_task.task_spec.lane not in spiff_task.data:
+            raise ApiError.from_task("invalid_role",
+                                     f"This task is in a lane called '{spiff_task.task_spec.lane}', The "
+                                     f" current task data must have information mapping this role to "
+                                     f" a unique user id.", spiff_task)
+        user_id = spiff_task.data[spiff_task.task_spec.lane]
+        if g.user.uid != user_id:
+            raise ApiError.from_task("role_permission",
+                                     f"This task is in a lane called '{spiff_task.task_spec.lane}' which"
+                                     f" must be completed by '{user_id}', but you are {g.user.uid}", spiff_task)
+        return
+    elif g.user.uid == workflow_model.study.user_uid:
+        return
+
+    # todo: If other users as associated with the study, and were granted access, allow them to modify tasks as well
+
+    raise ApiError("permission_denied", "You are not authorized to edit the task data for this workflow.",
+                   status_code=403, task_id=spiff_task.id, task_name=spiff_task.name, task_data=spiff_task.data)
+
