@@ -167,7 +167,10 @@ class WorkflowProcessor(object):
             bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
-            bpmn_workflow.do_engine_steps()
+            try:
+                bpmn_workflow.do_engine_steps()
+            except WorkflowException as we:
+                raise ApiError.from_task_spec("error_loading_workflow", str(we), we.sender)
         return bpmn_workflow
 
     def save(self):
@@ -308,7 +311,10 @@ class WorkflowProcessor(object):
         new_spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
         new_bpmn_workflow = BpmnWorkflow(new_spec, script_engine=self._script_engine)
         new_bpmn_workflow.data = self.bpmn_workflow.data
-        new_bpmn_workflow.do_engine_steps()
+        try:
+            new_bpmn_workflow.do_engine_steps()
+        except WorkflowException as we:
+            raise ApiError.from_task_spec("hard_reset_engine_steps_error", str(we), we.sender)
         self.bpmn_workflow = new_bpmn_workflow
 
     def get_status(self):
