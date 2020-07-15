@@ -1,6 +1,7 @@
 import copy
 import json
 import string
+import uuid
 from datetime import datetime
 import random
 
@@ -13,13 +14,14 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
+from flask import g
 from jinja2 import Template
 
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, NavigationItem, NavigationItemSchema, WorkflowApi
 from crc.models.file import LookupDataModel
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
@@ -30,10 +32,13 @@ from crc.services.workflow_processor import WorkflowProcessor
 
 
 class WorkflowService(object):
-    TASK_ACTION_COMPLETE = "Complete"
-    TASK_ACTION_TOKEN_RESET = "Backwards Move"
-    TASK_ACTION_HARD_RESET = "Restart (Hard)"
-    TASK_ACTION_SOFT_RESET = "Restart (Soft)"
+    TASK_ACTION_COMPLETE = "COMPLETE"
+    TASK_ACTION_TOKEN_RESET = "TOKEN_RESET"
+    TASK_ACTION_HARD_RESET = "HARD_RESET"
+    TASK_ACTION_SOFT_RESET = "SOFT_RESET"
+    TASK_ACTION_ASSIGNMENT = "ASSIGNMENT"  # Whenever the lane changes between tasks we assign the task to specifc user.
+
+    TASK_STATE_LOCKED = "LOCKED" # When the task belongs to a different user.
 
     """Provides tools for processing workflows and tasks.  This
      should at some point, be the only way to work with Workflows, and
@@ -215,6 +220,11 @@ class WorkflowService(object):
             if spiff_task:
                 nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
                 nav_item['title'] = nav_item['task'].title  # Prefer the task title.
+
+                user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
+                if g.user.uid not in user_uids:
+                    nav_item['state'] = WorkflowService.TASK_STATE_LOCKED
+
             else:
                 nav_item['task'] = None
 
@@ -243,7 +253,10 @@ class WorkflowService(object):
             previous_form_data = WorkflowService.get_previously_submitted_data(processor.workflow_model.id, next_task)
             DeepMerge.merge(next_task.data, previous_form_data)
             workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
-
+            # Update the state of the task to locked if the current user does not own the task.
+            user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
+            if g.user.uid not in user_uids:
+                workflow_api.next_task.state = WorkflowService.TASK_STATE_LOCKED
         return workflow_api
 
     @staticmethod
@@ -307,11 +320,17 @@ class WorkflowService(object):
             for key, val in spiff_task.task_spec.extensions.items():
                 props[key] = val
 
+        if hasattr(spiff_task.task_spec, 'lane'):
+            lane = spiff_task.task_spec.lane
+        else:
+            lane = None
+
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
                     spiff_task.task_spec.description,
                     task_type,
                     spiff_task.get_state_name(),
+                    lane,
                     None,
                     "",
                     {},
@@ -409,21 +428,50 @@ class WorkflowService(object):
         return field
 
     @staticmethod
-    def log_task_action(user_uid, workflow_model, spiff_task, action, version):
+    def update_task_assignments(processor):
+        """For every upcoming user task, log a task action
+        that connects the assigned user(s) to that task.  All
+        existing assignment actions for this workflow are removed from the database,
+        so that only the current valid actions are available. update_task_assignments
+        should be called whenever progress is made on a workflow."""
+        db.session.query(TaskEventModel). \
+            filter(TaskEventModel.workflow_id == processor.workflow_model.id). \
+            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).delete()
+
+        for task in processor.get_current_user_tasks():
+            user_ids = WorkflowService.get_users_assigned_to_task(processor, task)
+            for user_id in user_ids:
+                WorkflowService.log_task_action(user_id, processor, task, WorkflowService.TASK_ACTION_ASSIGNMENT)
+
+    @staticmethod
+    def get_users_assigned_to_task(processor, spiff_task):
+        if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
+            return [processor.workflow_model.study.user_uid]
+            # todo: return a list of all users that can edit the study by default
+        if spiff_task.task_spec.lane not in spiff_task.data:
+            return []  # No users are assignable to the task at this moment
+        lane_users = spiff_task.data[spiff_task.task_spec.lane]
+        if not isinstance(lane_users, list):
+            lane_users = [lane_users]
+        return lane_users
+
+    @staticmethod
+    def log_task_action(user_uid, processor, spiff_task, action):
         task = WorkflowService.spiff_task_to_api_task(spiff_task)
         form_data = WorkflowService.extract_form_data(spiff_task.data, spiff_task)
         task_event = TaskEventModel(
-            study_id=workflow_model.study_id,
+            study_id=processor.workflow_model.study_id,
             user_uid=user_uid,
-            workflow_id=workflow_model.id,
-            workflow_spec_id=workflow_model.workflow_spec_id,
-            spec_version=version,
+            workflow_id=processor.workflow_model.id,
+            workflow_spec_id=processor.workflow_model.workflow_spec_id,
+            spec_version=processor.get_version_string(),
             action=action,
             task_id=task.id,
             task_name=task.name,
             task_title=task.title,
             task_type=str(task.type),
             task_state=task.state,
+            task_lane=task.lane,
             form_data=form_data,
             mi_type=task.multi_instance_type.value,  # Some tasks have a repeat behavior.
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.

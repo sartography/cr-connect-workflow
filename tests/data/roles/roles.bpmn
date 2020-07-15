@@ -70,7 +70,7 @@ Please press save to re-try the questions, and submit your responses again.</bpm
     <bpmn:sequenceFlow id="Flow_0a7090c" sourceRef="StartEvent_1" targetRef="Activity_1hljoeq" />
     <bpmn:sequenceFlow id="Flow_1gp4zfd" sourceRef="Activity_14eor1x" targetRef="Gateway_1fkgc4u" />
     <bpmn:sequenceFlow id="Flow_0vnghsi" name="rejected" sourceRef="Gateway_1fkgc4u" targetRef="Activity_19ccxoj">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approval==True</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approval==False</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1g38q6b" name="approved" sourceRef="Gateway_1fkgc4u" targetRef="Event_0lscajc">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">approval==True</bpmn:conditionExpression>

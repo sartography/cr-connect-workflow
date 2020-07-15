@@ -43,8 +43,9 @@ class Task(object):
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
 
 
-    def __init__(self, id, name, title, type, state, form, documentation, data,
-                 multi_instance_type, multi_instance_count, multi_instance_index, process_name, properties):
+    def __init__(self, id, name, title, type, state, lane, form, documentation, data,
+                 multi_instance_type, multi_instance_count, multi_instance_index,
+                 process_name, properties):
         self.id = id
         self.name = name
         self.title = title
@@ -53,6 +54,7 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
+        self.lane = lane
         self.multi_instance_type = multi_instance_type  # Some tasks have a repeat behavior.
         self.multi_instance_count = multi_instance_count  # This is the number of times the task could repeat.
         self.multi_instance_index = multi_instance_index  # And the index of the currently repeating task.
@@ -91,7 +93,7 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "multi_instance_type",
+        fields = ["id", "name", "title", "type", "state", "lane", "form", "documentation", "data", "multi_instance_type",
                   "multi_instance_count", "multi_instance_index", "process_name", "properties"]
 
     multi_instance_type = EnumField(MultiInstanceType)
@@ -99,6 +101,7 @@ class TaskSchema(ma.Schema):
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
     process_name = marshmallow.fields.String(required=False, allow_none=True)
+    lane = marshmallow.fields.String(required=False, allow_none=True)
 
     @marshmallow.post_load
     def make_task(self, data, **kwargs):

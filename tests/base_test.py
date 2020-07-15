@@ -16,7 +16,7 @@ from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel
@@ -230,7 +230,7 @@ class BaseTest(unittest.TestCase):
             db.session.commit()
         return user
 
-    def create_study(self, uid="dhf8r", title="Beer conception in the bipedal software engineer", primary_investigator_id="lb3dp"):
+    def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer", primary_investigator_id="lb3dp"):
         study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
@@ -340,7 +340,7 @@ class BaseTest(unittest.TestCase):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
 
-        # Assure stats are updated on the model
+        # Assure task events are updated on the model
         workflow = WorkflowApiSchema().load(json_data)
         # The total number of tasks may change over time, as users move through gateways
         # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
@@ -353,6 +353,7 @@ class BaseTest(unittest.TestCase):
         task_events = session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow.id) \
             .filter_by(task_id=task_id) \
+            .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE) \
             .order_by(TaskEventModel.date.desc()).all()
         self.assertGreater(len(task_events), 0)
         event = task_events[0]
