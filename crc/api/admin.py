@@ -3,16 +3,18 @@ import json
 
 from flask import url_for
 from flask_admin import Admin
+from flask_admin.actions import action
 from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import ModelView
+from github import Github, UnknownObjectException
 from werkzeug.utils import redirect
 from jinja2 import Markup
 
 from crc import db, app
 from crc.api.user import verify_token, verify_token_admin
 from crc.models.approval import ApprovalModel
-from crc.models.file import FileModel
-from crc.models.task_event import TaskEventModel
+from crc.models.file import FileModel, FileDataModel
+from crc.models.stats import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel
@@ -34,26 +36,73 @@ class AdminModelView(sqla.ModelView):
         # redirect to login page if user doesn't have access
         return redirect(url_for('home'))
 
+
 class UserView(AdminModelView):
     column_filters = ['uid']
+
 
 class StudyView(AdminModelView):
     column_filters = ['id', 'primary_investigator_id']
     column_searchable_list = ['title']
 
+
 class ApprovalView(AdminModelView):
     column_filters = ['study_id', 'approver_uid']
+
 
 class WorkflowView(AdminModelView):
     column_filters = ['study_id', 'id']
 
+
 class FileView(AdminModelView):
-    column_filters = ['workflow_id']
+    column_filters = ['workflow_id', 'type']
+
+    @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
+    def action_publish(self, ids):
+        # TODO: Move token to settings and replace docs repo
+        _github = Github('d082288d6192b45b2f8cefcefc1a0a2806554c9e')
+        repo = _github.get_user().get_repo('crispy-fiesta')
+
+        for file_id in ids:
+            file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
+            try:
+                repo_file = repo.get_contents(file_data_model.file_model.name)
+            except UnknownObjectException:
+                repo.create_file(
+                    path=file_data_model.file_model.name,
+                    message=f'Creating {file_data_model.file_model.name}',
+                    content=file_data_model.data
+                )
+            else:
+                updated = repo.update_file(
+                    path=repo_file.path,
+                    message=f'Updating {file_data_model.file_model.name}',
+                    content=file_data_model.data,
+                    sha=repo_file.sha
+                )
+
+    @action('update', 'Update', 'Are you sure you want to update this file(s)?')
+    def action_update(self, ids):
+        _github = Github('d082288d6192b45b2f8cefcefc1a0a2806554c9e')
+        repo = _github.get_user().get_repo('crispy-fiesta')
+
+        for file_id in ids:
+            file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
+            try:
+                repo_file = repo.get_contents(file_data_model.file_model.name)
+            except UnknownObjectException:
+                # Add message indicating file is not in the repo
+                pass
+            else:
+                file_data_model.data = repo_file.content
+                db.session.add(file_data_model)
+                db.session.commit()
+
 
 def json_formatter(view, context, model, name):
     value = getattr(model, name)
     json_value = json.dumps(value, ensure_ascii=False, indent=2)
-    return Markup('<pre>{}</pre>'.format(json_value))
+    return Markup(f'<pre>{json_value}</pre>')
 
 class TaskEventView(AdminModelView):
     column_filters = ['workflow_id', 'action']
@@ -61,6 +110,7 @@ class TaskEventView(AdminModelView):
     column_formatters = {
         'form_data': json_formatter,
     }
+
 
 admin = Admin(app)
 
