@@ -10,27 +10,38 @@
       <bpmn:script>StudyInfo investigators</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="EndEvent_1qor16n">
+      <bpmn:documentation>## The following information was gathered:
+{% for type, investigator in StudyInfo.investigators.items() %}
+### {{investigator.label}}: {{investigator.display_name}}
+  * Edit Acess? {{investigator.edit_access}}
+  * Send Emails? {{investigator.emails}}
+{% if investigator.label == "Primary Investigator" %}
+  * Experience: {{investigator.experience}}
+{% endif %}
+{% endfor %}</bpmn:documentation>
       <bpmn:incoming>Flow_1mplloa</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:userTask id="Activity_EditOtherPersonnel" name="Supplement Personnel" camunda:formKey="Access &#38; Notifications">
+    <bpmn:userTask id="Activity_EditOtherPersonnel" name="Update Personnel" camunda:formKey="Access &#38; Notifications">
       <bpmn:documentation>### Please provide supplemental information for:
-#### Investigator : {{investigator.display_name}} 
-##### Role: {{investigator.type_full}}
+#### {{investigator.display_name}} 
 ##### Title: {{investigator.title}}
 
 ##### Department: {{investigator.department}}
 ##### Affiliation: {{investigator.affiliation}}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="EditAccess" label="Should have Study Team editing access in the system?" type="boolean" defaultValue="false" />
-          <camunda:formField id="AutomatedEmailNotification" label="Should receive automated email notifications?" type="boolean" defaultValue="false" />
-          <camunda:formField id="PI_Experience" label="Investigator&#39;s Experience" type="textarea">
+          <camunda:formField id="investigator.edit_access" label="Should have Study Team editing access in the system?" type="boolean" defaultValue="false" />
+          <camunda:formField id="investigator.emails" label="Should receive automated email notifications?" type="boolean" defaultValue="false" />
+          <camunda:formField id="investigator.experience" label="Investigator&#39;s Experience" type="textarea">
             <camunda:properties>
               <camunda:property id="rows" value="5" />
-              <camunda:property id="hide_expression" value="model.investigator.type_full !== &#34;Primary Investigator&#34;" />
+              <camunda:property id="hide_expression" value="model.investigator.label !== &#34;Primary Investigator&#34;" />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>
+        <camunda:properties>
+          <camunda:property name="display_name" value="investigator.label" />
+        </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1dcsioh</bpmn:incoming>
       <bpmn:outgoing>Flow_1mplloa</bpmn:outgoing>
@@ -43,28 +54,28 @@
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_01143nb">
       <bpmndi:BPMNEdge id="Flow_1dcsioh_di" bpmnElement="Flow_1dcsioh">
-        <di:waypoint x="370" y="120" />
-        <di:waypoint x="450" y="120" />
+        <di:waypoint x="480" y="120" />
+        <di:waypoint x="540" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1mplloa_di" bpmnElement="Flow_1mplloa">
-        <di:waypoint x="550" y="120" />
-        <di:waypoint x="642" y="120" />
+        <di:waypoint x="640" y="120" />
+        <di:waypoint x="722" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0kcrx5l_di" bpmnElement="Flow_0kcrx5l">
-        <di:waypoint x="188" y="120" />
-        <di:waypoint x="270" y="120" />
+        <di:waypoint x="308" y="120" />
+        <di:waypoint x="380" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="152" y="102" width="36" height="36" />
+        <dc:Bounds x="272" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ScriptTask_0h49cmf_di" bpmnElement="ScriptTask_LoadPersonnel">
-        <dc:Bounds x="270" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_1qor16n_di" bpmnElement="EndEvent_1qor16n">
-        <dc:Bounds x="642" y="102" width="36" height="36" />
+        <dc:Bounds x="380" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0d622qi_di" bpmnElement="Activity_EditOtherPersonnel">
-        <dc:Bounds x="450" y="80" width="100" height="80" />
+        <dc:Bounds x="540" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1qor16n_di" bpmnElement="EndEvent_1qor16n">
+        <dc:Bounds x="722" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
