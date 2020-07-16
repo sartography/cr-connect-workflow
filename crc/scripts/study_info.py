@@ -192,7 +192,7 @@ Returns information specific to the protocol.
                     "workflow_spec_id": "irb_api_details",
                 },
                 'protocol': {
-                    id: 0,
+                    'id': 0,
                 }
             }
         }
