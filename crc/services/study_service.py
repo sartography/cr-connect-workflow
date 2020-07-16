@@ -13,7 +13,7 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileModelSchema, File
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus

@@ -371,4 +371,16 @@ class TestWorkflowProcessor(BaseTest):
             self._populate_form_with_random_data(task)
 
 
+    def test_get_role_by_name(self):
+        self.load_example_data()
+        workflow_spec_model = self.load_test_spec("roles")
+        study = session.query(StudyModel).first()
+        processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
+        tasks = processor.next_user_tasks()
+        task = tasks[0]
+        self._populate_form_with_random_data(task)
+        processor.complete_task(task)
+        supervisor_task = processor.next_user_tasks()[0]
+        self.assertEquals("supervisor", supervisor_task.task_spec.lane)
 

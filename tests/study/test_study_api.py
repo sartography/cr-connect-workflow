@@ -8,7 +8,7 @@ from crc import session, app
 from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.approval import ApprovalStatus
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.file_service import FileService

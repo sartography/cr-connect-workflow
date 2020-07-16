@@ -12,7 +12,7 @@ from crc import db, app
 from crc.api.user import verify_token, verify_token_admin
 from crc.models.approval import ApprovalModel
 from crc.models.file import FileModel
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel

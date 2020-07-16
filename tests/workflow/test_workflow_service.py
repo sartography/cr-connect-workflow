@@ -7,7 +7,7 @@ from crc.services.workflow_service import WorkflowService
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from example_data import ExampleDataLoader
 from crc import db
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.api_models import Task
 from crc.api.common import ApiError
 
@@ -102,9 +102,8 @@ class TestWorkflowService(BaseTest):
                 WorkflowService.populate_form_with_random_data(task, task_api, False)
                 task.complete()
                 # create the task events
-                WorkflowService.log_task_action('dhf8r', workflow, task,
-                                                WorkflowService.TASK_ACTION_COMPLETE,
-                                                version=processor.get_version_string())
+                WorkflowService.log_task_action('dhf8r', processor, task,
+                                                WorkflowService.TASK_ACTION_COMPLETE)
         processor.save()
         db.session.commit()
 
