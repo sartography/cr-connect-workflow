@@ -144,7 +144,6 @@ class LookupFileModel(db.Model):
     """Gives us a quick way to tell what kind of lookup is set on a form field.
     Connected to the file data model, so that if a new version of the same file is
     created, we can update the listing."""
-    #fixme: What happens if they change the file associated with a lookup field?
     __tablename__ = 'lookup_file'
     id = db.Column(db.Integer, primary_key=True)
     workflow_spec_id = db.Column(db.String)

@@ -35,7 +35,7 @@ class UserModel(db.Model):
         }
         return jwt.encode(
             payload,
-            app.config.get('TOKEN_AUTH_SECRET_KEY'),
+            app.config.get('SECRET_KEY'),
             algorithm='HS256',
         )
 
@@ -47,7 +47,7 @@ class UserModel(db.Model):
         :return: integer|string
         """
         try:
-            payload = jwt.decode(auth_token, app.config.get('TOKEN_AUTH_SECRET_KEY'), algorithms='HS256')
+            payload = jwt.decode(auth_token, app.config.get('SECRET_KEY'), algorithms='HS256')
             return payload
         except jwt.ExpiredSignatureError:
             raise ApiError('token_expired', 'The Authentication token you provided expired and must be renewed.')

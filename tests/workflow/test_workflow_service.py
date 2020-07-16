@@ -9,6 +9,7 @@ from example_data import ExampleDataLoader
 from crc import db
 from crc.models.stats import TaskEventModel
 from crc.models.api_models import Task
+from crc.api.common import ApiError
 
 
 class TestWorkflowService(BaseTest):
@@ -131,4 +132,7 @@ class TestWorkflowService(BaseTest):
         # The first task should be empty, with all the data removed.
         self.assertEqual({}, task_logs[0].form_data)
 
-
+    def test_dmn_evaluation_errors_in_oncomplete_raise_api_errors_during_validation(self):
+        workflow_spec_model = self.load_test_spec("decision_table_invalid")
+        with self.assertRaises(ApiError):
+            WorkflowService.test_spec(workflow_spec_model.id)
