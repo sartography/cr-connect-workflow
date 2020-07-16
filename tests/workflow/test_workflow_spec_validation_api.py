@@ -92,7 +92,7 @@ class TestWorkflowSpecValidation(BaseTest):
         self.load_example_data()
         errors = self.validate_workflow("invalid_script")
         self.assertEqual(2, len(errors))
-        self.assertEqual("workflow_validation_exception", errors[0]['code'])
+        self.assertEqual("error_loading_workflow", errors[0]['code'])
         self.assertTrue("NoSuchScript" in errors[0]['message'])
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
         self.assertEqual("An Invalid Script Reference", errors[0]['task_name'])
