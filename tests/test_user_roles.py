@@ -198,5 +198,5 @@ class TestTasksApi(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
         self.assertEquals('COMPLETED', workflow_api.next_task.state)
-        self.assertEquals('NoneTask', workflow_api.next_task.type) # Are are at the end.
+        self.assertEquals('EndEvent', workflow_api.next_task.type) # Are are at the end.
         self.assertEquals(WorkflowStatus.complete, workflow_api.status)
