@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0ybr9ph" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0ybr9ph" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
   <bpmn:collaboration id="Collaboration_0xjb3la">
-    <bpmn:participant id="Participant_0ozb2sp" processRef="Process_1aebbrh" />
+    <bpmn:participant id="Participant_0ozb2sp" name="pool_name" processRef="Process_1aebbrh" />
   </bpmn:collaboration>
   <bpmn:process id="Process_1aebbrh" isExecutable="true">
     <bpmn:laneSet id="LaneSet_0ilprw6">
@@ -19,13 +19,13 @@
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0a7090c</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:userTask id="Activity_1hljoeq" name="Request Approval" camunda:formKey="form">
+    <bpmn:userTask id="Activity_1hljoeq" name="Request Approval" camunda:formKey="request_form_key">
       <bpmn:documentation># Answer me these questions 3, ere the other side you see!</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="favorite_color" label="What is your favorite color?" type="string" defaultValue="Yellow" />
           <camunda:formField id="quest" label="What is your quest?" type="string" defaultValue="To seek the holly Grail!" />
-          <camunda:formField id="swallow_speed" label="What is the air speed velocity of an unladen swallow?" defaultValue="About 24 miles per hour" />
+          <camunda:formField id="swallow_speed" label="What is the air speed velocity of an unladen swallow?" type="string" defaultValue="About 24 miles per hour" />
           <camunda:formField id="supervisor" label="Please enter the UVA Id of your supervisor" type="string" defaultValue="dhf8r" />
         </camunda:formData>
       </bpmn:extensionElements>
@@ -77,7 +77,7 @@ Please press save to re-try the questions, and submit your responses again.</bpm
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_1hcpt7c" sourceRef="Activity_1hljoeq" targetRef="Activity_14eor1x" />
     <bpmn:sequenceFlow id="Flow_070gq5r" sourceRef="Activity_19ccxoj" targetRef="Activity_1hljoeq" />
-    <bpmn:userTask id="Activity_14eor1x" name="Approve Responses">
+    <bpmn:userTask id="Activity_14eor1x" name="Approve Responses" camunda:formKey="approval_form_key">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="approval" label="I approve of this information" type="boolean" />
