@@ -7,9 +7,11 @@ import random
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
+from SpiffWorkflow.bpmn.specs.StartEvent import StartEvent
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
@@ -104,7 +106,7 @@ class WorkflowService(object):
                                        f" a unique user id.", task)
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
-                        add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
+                        add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
                     WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                     processor.complete_task(task)
             except WorkflowException as we:
@@ -290,20 +292,14 @@ class WorkflowService(object):
     def spiff_task_to_api_task(spiff_task, add_docs_and_forms=False):
         task_type = spiff_task.task_spec.__class__.__name__
 
-        if isinstance(spiff_task.task_spec, UserTask):
-            task_type = "UserTask"
-        elif isinstance(spiff_task.task_spec, ManualTask):
-            task_type = "ManualTask"
-        elif isinstance(spiff_task.task_spec, BusinessRuleTask):
-            task_type = "BusinessRuleTask"
-        elif isinstance(spiff_task.task_spec, CancelTask):
-            task_type = "CancelTask"
-        elif isinstance(spiff_task.task_spec, ScriptTask):
-            task_type = "ScriptTask"
-        elif isinstance(spiff_task.task_spec, StartTask):
-            task_type = "StartTask"
-        else:
-            task_type = "NoneTask"
+        task_types = [UserTask, ManualTask, BusinessRuleTask, CancelTask, ScriptTask, StartTask, EndEvent, StartEvent]
+
+        for t in task_types:
+            if isinstance(spiff_task.task_spec, t):
+                task_type = t.__name__
+                break
+            else:
+                task_type = "NoneTask"
 
         info = spiff_task.task_info()
         if info["is_looping"]:
@@ -417,15 +413,38 @@ class WorkflowService(object):
         # If this is an auto-complete field, do not populate options, a lookup will happen later.
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             pass
-        elif field.has_property(Task.PROP_OPTIONS_FILE):
+        elif field.has_property(Task.PROP_OPTIONS_FILE_NAME):
             lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
             if not hasattr(field, 'options'):
                 field.options = []
             for d in data:
                 field.options.append({"id": d.value, "name": d.label, "data": d.data})
-
+        elif field.has_property(Task.PROP_OPTIONS_DATA_NAME):
+            field.options = WorkflowService.get_options_from_task_data(spiff_task, field)
         return field
+
+    @staticmethod
+    def get_options_from_task_data(spiff_task, field):
+        if not (field.has_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN) or
+                field.has_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)):
+            raise ApiError.from_task("invalid_enum",
+                                     f"For enumerations based on task data, you must include 3 properties: "
+                                     f"{Task.PROP_OPTIONS_DATA_NAME}, {Task.PROP_OPTIONS_DATA_VALUE_COLUMN}, "
+                                     f"{Task.PROP_OPTIONS_DATA_LABEL_COLUMN}", task=spiff_task)
+        prop = field.get_property(Task.PROP_OPTIONS_DATA_NAME)
+        if prop not in spiff_task.data:
+            raise ApiError.from_task("invalid_enum", f"For enumerations based on task data, task data must have "
+                                                     f"a property called {prop}", task=spiff_task)
+        # Get the enum options from the task data
+        data_model = spiff_task.data[prop]
+        value_column = field.get_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN)
+        label_column = field.get_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)
+        items = data_model.items() if isinstance(data_model, dict) else data_model
+        options = []
+        for item in items:
+            options.append({"id": item[value_column], "name": item[label_column], "data": item})
+        return options
 
     @staticmethod
     def update_task_assignments(processor):
@@ -519,7 +538,7 @@ class WorkflowService(object):
 
     @staticmethod
     def extract_form_data(latest_data, task):
-        """Removes data from latest_data that would be added by the child task or any of it's children."""
+        """Removes data from latest_data that would be added by the child task or any of its children."""
         data = {}
 
         if hasattr(task.task_spec, 'form'):

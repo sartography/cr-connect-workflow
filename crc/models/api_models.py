@@ -33,15 +33,36 @@ class NavigationItem(object):
 
 class Task(object):
 
+    ##########################################################################
+    #    Custom properties and validations defined in Camunda form fields    #
+    ##########################################################################
+
+    # Repeating form section
     PROP_OPTIONS_REPEAT = "repeat"
-    PROP_OPTIONS_FILE = "spreadsheet.name"
-    PROP_OPTIONS_VALUE_COLUMN = "spreadsheet.value.column"
-    PROP_OPTIONS_LABEL_COL = "spreadsheet.label.column"
+
+    # Read-only field
     PROP_OPTIONS_READ_ONLY = "read_only"
+
+    # LDAP lookup
     PROP_LDAP_LOOKUP = "ldap.lookup"
-    VALIDATION_REQUIRED = "required"
+
+    # Autocomplete field
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
 
+    # Required field
+    VALIDATION_REQUIRED = "required"
+
+    # Enum field options values pulled from a spreadsheet
+    PROP_OPTIONS_FILE_NAME = "spreadsheet.name"
+    PROP_OPTIONS_FILE_VALUE_COLUMN = "spreadsheet.value.column"
+    PROP_OPTIONS_FILE_LABEL_COLUMN = "spreadsheet.label.column"
+
+    # Enum field options values pulled from task data
+    PROP_OPTIONS_DATA_NAME = "data.name"
+    PROP_OPTIONS_DATA_VALUE_COLUMN = "data.value.column"
+    PROP_OPTIONS_DATA_LABEL_COLUMN = "data.label.column"
+
+    ##########################################################################
 
     def __init__(self, id, name, title, type, state, lane, form, documentation, data,
                  multi_instance_type, multi_instance_count, multi_instance_index,
