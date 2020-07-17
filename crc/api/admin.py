@@ -7,6 +7,7 @@ from flask_admin.actions import action
 from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import ModelView
 from github import Github, UnknownObjectException
+from sqlalchemy import desc
 from werkzeug.utils import redirect
 from jinja2 import Markup
 
@@ -60,7 +61,8 @@ class FileView(AdminModelView):
     @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
     def action_publish(self, ids):
         # TODO: Move token to settings and replace docs repo
-        _github = Github('d082288d6192b45b2f8cefcefc1a0a2806554c9e')
+        gh_token = app.config['GH_TOKEN']
+        _github = Github(gh_token)
         repo = _github.get_user().get_repo('crispy-fiesta')
 
         for file_id in ids:
@@ -83,20 +85,26 @@ class FileView(AdminModelView):
 
     @action('update', 'Update', 'Are you sure you want to update this file(s)?')
     def action_update(self, ids):
-        _github = Github('d082288d6192b45b2f8cefcefc1a0a2806554c9e')
+        gh_token = app.config['GH_TOKEN']
+        _github = Github(gh_token)
         repo = _github.get_user().get_repo('crispy-fiesta')
 
         for file_id in ids:
-            file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
+            file_data_model = FileDataModel.query.filter_by(
+                file_model_id=file_id
+            ).order_by(
+                desc(FileDataModel.version)
+            ).first()
             try:
                 repo_file = repo.get_contents(file_data_model.file_model.name)
             except UnknownObjectException:
                 # Add message indicating file is not in the repo
                 pass
             else:
-                file_data_model.data = repo_file.content
-                db.session.add(file_data_model)
-                db.session.commit()
+                import pdb; pdb.set_trace()
+                file_data_model.data = repo_file.decoded_content
+                self.session.add(file_data_model)
+                self.session.commit()
 
 
 def json_formatter(view, context, model, name):

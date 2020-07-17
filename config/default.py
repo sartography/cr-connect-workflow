@@ -45,6 +45,9 @@ PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL +
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
+# Github token
+GH_TOKEN = '6cbd5f3a1764a8d15b27d66f64ac80ae13b393a9'
+
 # Email configuration
 DEFAULT_SENDER = 'askresearch@virginia.edu'
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
