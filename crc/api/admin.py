@@ -60,8 +60,8 @@ class FileView(AdminModelView):
 
     @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
     def action_publish(self, ids):
-        # TODO: Move token to settings and replace docs repo
-        gh_token = app.config['GH_TOKEN']
+        # TODO: Replace docs repo
+        gh_token = app.config['GITHUB_TOKEN']
         _github = Github(gh_token)
         repo = _github.get_user().get_repo('crispy-fiesta')
 
@@ -85,7 +85,7 @@ class FileView(AdminModelView):
 
     @action('update', 'Update', 'Are you sure you want to update this file(s)?')
     def action_update(self, ids):
-        gh_token = app.config['GH_TOKEN']
+        gh_token = app.config['GITHUB_TOKEN']
         _github = Github(gh_token)
         repo = _github.get_user().get_repo('crispy-fiesta')
 
@@ -101,7 +101,6 @@ class FileView(AdminModelView):
                 # Add message indicating file is not in the repo
                 pass
             else:
-                import pdb; pdb.set_trace()
                 file_data_model.data = repo_file.decoded_content
                 self.session.add(file_data_model)
                 self.session.commit()

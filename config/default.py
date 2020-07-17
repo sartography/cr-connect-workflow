@@ -46,7 +46,7 @@ LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
 # Github token
-GH_TOKEN = '6cbd5f3a1764a8d15b27d66f64ac80ae13b393a9'
+GITHUB_TOKEN = environ.get('GITHUB_TOKEN', None)
 
 # Email configuration
 DEFAULT_SENDER = 'askresearch@virginia.edu'
