@@ -6,7 +6,6 @@ from flask_admin import Admin
 from flask_admin.actions import action
 from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import ModelView
-from github import Github, UnknownObjectException
 from sqlalchemy import desc
 from werkzeug.utils import redirect
 from jinja2 import Markup
@@ -60,50 +59,11 @@ class FileView(AdminModelView):
 
     @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
     def action_publish(self, ids):
-        # TODO: Replace docs repo
-        gh_token = app.config['GITHUB_TOKEN']
-        _github = Github(gh_token)
-        repo = _github.get_user().get_repo('crispy-fiesta')
-
-        for file_id in ids:
-            file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
-            try:
-                repo_file = repo.get_contents(file_data_model.file_model.name)
-            except UnknownObjectException:
-                repo.create_file(
-                    path=file_data_model.file_model.name,
-                    message=f'Creating {file_data_model.file_model.name}',
-                    content=file_data_model.data
-                )
-            else:
-                updated = repo.update_file(
-                    path=repo_file.path,
-                    message=f'Updating {file_data_model.file_model.name}',
-                    content=file_data_model.data,
-                    sha=repo_file.sha
-                )
+        FileService.publish_to_github(ids)
 
     @action('update', 'Update', 'Are you sure you want to update this file(s)?')
     def action_update(self, ids):
-        gh_token = app.config['GITHUB_TOKEN']
-        _github = Github(gh_token)
-        repo = _github.get_user().get_repo('crispy-fiesta')
-
-        for file_id in ids:
-            file_data_model = FileDataModel.query.filter_by(
-                file_model_id=file_id
-            ).order_by(
-                desc(FileDataModel.version)
-            ).first()
-            try:
-                repo_file = repo.get_contents(file_data_model.file_model.name)
-            except UnknownObjectException:
-                # TODO: Add message indicating file is not in the repo
-                pass
-            else:
-                file_data_model.data = repo_file.decoded_content
-                self.session.add(file_data_model)
-                self.session.commit()
+        FileService.update_from_github(ids)
 
 
 def json_formatter(view, context, model, name):
