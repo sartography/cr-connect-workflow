@@ -98,7 +98,7 @@ class FileView(AdminModelView):
             try:
                 repo_file = repo.get_contents(file_data_model.file_model.name)
             except UnknownObjectException:
-                # Add message indicating file is not in the repo
+                # TODO: Add message indicating file is not in the repo
                 pass
             else:
                 file_data_model.data = repo_file.decoded_content
