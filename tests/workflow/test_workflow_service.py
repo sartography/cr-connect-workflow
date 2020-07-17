@@ -1,4 +1,5 @@
 import json
+import unittest
 
 from tests.base_test import BaseTest
 
@@ -88,6 +89,7 @@ class TestWorkflowService(BaseTest):
         WorkflowService.populate_form_with_random_data(task, task_api, required_only=False)
         self.assertTrue(isinstance(task.data["sponsor"], dict))
 
+    @unittest.skip("RRT no longer needs to be supported")
     def test_fix_legacy_data_model_for_rrt(self):
         ExampleDataLoader().load_rrt() # Make sure the research_rampup is loaded, as it's not a test spec.
         workflow = self.create_workflow('research_rampup')

@@ -143,20 +143,37 @@ class WorkflowService(object):
 
     @staticmethod
     def get_random_data_for_field(field, task):
-        if field.type == "enum":
+        has_ldap_lookup = field.has_property(Task.PROP_LDAP_LOOKUP)
+        has_file_lookup = field.has_property(Task.PROP_OPTIONS_FILE_NAME)
+        has_data_lookup = field.has_property(Task.PROP_OPTIONS_DATA_NAME)
+        has_lookup = has_ldap_lookup or has_file_lookup or has_data_lookup
+
+        if field.type == "enum" and not has_lookup:
+            # If it's a normal enum field with no lookup,
+            # return a random option.
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    return random.choice(field.options)['id']
+                    choice = random.choice(field.options)
+                    return {
+                        'value': choice['id'],
+                        'label': choice['name']
+                    }
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
-                    return random_choice.id  ## Assume it is an EnumFormFieldOption
+                    # Assume it is an EnumFormFieldOption
+                    return {
+                        'value': random_choice.id,
+                        'label': random_choice.name
+                    }
             else:
                 raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
                                                          " with no options" % field.id, task)
-        elif field.type == "autocomplete":
+        elif field.type == "autocomplete" or field.type == "enum":
+            # If it has a lookup, get the lookup model from the spreadsheet or task data, then return a random option
+            # from the lookup model
             lookup_model = LookupService.get_lookup_model(task, field)
-            if field.has_property(Task.PROP_LDAP_LOOKUP):  # All ldap records get the same person.
+            if has_ldap_lookup:  # All ldap records get the same person.
                 return {
                         "label": "dhf8r",
                         "value": "Dan Funk",
@@ -172,9 +189,7 @@ class WorkflowService(object):
             elif lookup_model:
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
-                options = []
-                for d in data:
-                    options.append({"id": d.value, "label": d.label})
+                options = [{"value": d.value, "label": d.label, "data": d.data} for d in data]
                 return random.choice(options)
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
