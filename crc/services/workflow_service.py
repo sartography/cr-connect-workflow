@@ -1,6 +1,7 @@
 import copy
 import json
 import string
+import uuid
 from datetime import datetime
 import random
 
@@ -15,13 +16,14 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
+from flask import g
 from jinja2 import Template
 
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, NavigationItem, NavigationItemSchema, WorkflowApi
 from crc.models.file import LookupDataModel
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
@@ -32,10 +34,13 @@ from crc.services.workflow_processor import WorkflowProcessor
 
 
 class WorkflowService(object):
-    TASK_ACTION_COMPLETE = "Complete"
-    TASK_ACTION_TOKEN_RESET = "Backwards Move"
-    TASK_ACTION_HARD_RESET = "Restart (Hard)"
-    TASK_ACTION_SOFT_RESET = "Restart (Soft)"
+    TASK_ACTION_COMPLETE = "COMPLETE"
+    TASK_ACTION_TOKEN_RESET = "TOKEN_RESET"
+    TASK_ACTION_HARD_RESET = "HARD_RESET"
+    TASK_ACTION_SOFT_RESET = "SOFT_RESET"
+    TASK_ACTION_ASSIGNMENT = "ASSIGNMENT"  # Whenever the lane changes between tasks we assign the task to specifc user.
+
+    TASK_STATE_LOCKED = "LOCKED" # When the task belongs to a different user.
 
     """Provides tools for processing workflows and tasks.  This
      should at some point, be the only way to work with Workflows, and
@@ -94,11 +99,16 @@ class WorkflowService(object):
                 processor.bpmn_workflow.do_engine_steps()
                 tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:
+                    if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
+                        raise ApiError.from_task("invalid_role",
+                                       f"This task is in a lane called '{task.task_spec.lane}', The "
+                                       f" current task data must have information mapping this role to "
+                                       f" a unique user id.", task)
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
                     WorkflowService.populate_form_with_random_data(task, task_api, required_only)
-                    task.complete()
+                    processor.complete_task(task)
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
                 raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
@@ -133,20 +143,37 @@ class WorkflowService(object):
 
     @staticmethod
     def get_random_data_for_field(field, task):
-        if field.type == "enum":
+        has_ldap_lookup = field.has_property(Task.PROP_LDAP_LOOKUP)
+        has_file_lookup = field.has_property(Task.PROP_OPTIONS_FILE_NAME)
+        has_data_lookup = field.has_property(Task.PROP_OPTIONS_DATA_NAME)
+        has_lookup = has_ldap_lookup or has_file_lookup or has_data_lookup
+
+        if field.type == "enum" and not has_lookup:
+            # If it's a normal enum field with no lookup,
+            # return a random option.
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    return random.choice(field.options)['id']
+                    choice = random.choice(field.options)
+                    return {
+                        'value': choice['id'],
+                        'label': choice['name']
+                    }
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
-                    return random_choice.id  ## Assume it is an EnumFormFieldOption
+                    # Assume it is an EnumFormFieldOption
+                    return {
+                        'value': random_choice.id,
+                        'label': random_choice.name
+                    }
             else:
                 raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
                                                          " with no options" % field.id, task)
-        elif field.type == "autocomplete":
+        elif field.type == "autocomplete" or field.type == "enum":
+            # If it has a lookup, get the lookup model from the spreadsheet or task data, then return a random option
+            # from the lookup model
             lookup_model = LookupService.get_lookup_model(task, field)
-            if field.has_property(Task.PROP_LDAP_LOOKUP):  # All ldap records get the same person.
+            if has_ldap_lookup:  # All ldap records get the same person.
                 return {
                         "label": "dhf8r",
                         "value": "Dan Funk",
@@ -162,9 +189,7 @@ class WorkflowService(object):
             elif lookup_model:
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
-                options = []
-                for d in data:
-                    options.append({"id": d.value, "label": d.label})
+                options = [{"value": d.value, "label": d.label, "data": d.data} for d in data]
                 return random.choice(options)
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
@@ -197,13 +222,15 @@ class WorkflowService(object):
         possible, next_task is set to the current_task."""
 
         nav_dict = processor.bpmn_workflow.get_nav_list()
+
+        # Some basic cleanup of the title for the for the navigation.
         navigation = []
         for nav_item in nav_dict:
             spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
             if 'description' in nav_item:
                 nav_item['title'] = nav_item.pop('description')
                 # fixme: duplicate code from the workflow_service. Should only do this in one place.
-                if ' ' in nav_item['title']:
+                if nav_item['title'] is not None and ' ' in nav_item['title']:
                     nav_item['title'] = nav_item['title'].partition(' ')[2]
             else:
                 nav_item['title'] = ""
@@ -211,11 +238,13 @@ class WorkflowService(object):
                 nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
                 nav_item['title'] = nav_item['task'].title  # Prefer the task title.
 
+                user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
+                if 'user' not in g or not g.user or g.user.uid not in user_uids:
+                    nav_item['state'] = WorkflowService.TASK_STATE_LOCKED
+
             else:
                 nav_item['task'] = None
 
-            if not 'is_decision' in nav_item:
-                nav_item['is_decision'] = False
 
             navigation.append(NavigationItem(**nav_item))
             NavigationItemSchema().dump(nav_item)
@@ -241,7 +270,10 @@ class WorkflowService(object):
             previous_form_data = WorkflowService.get_previously_submitted_data(processor.workflow_model.id, next_task)
             DeepMerge.merge(next_task.data, previous_form_data)
             workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
-
+            # Update the state of the task to locked if the current user does not own the task.
+            user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
+            if 'user' not in g or not g.user or g.user.uid not in user_uids:
+                workflow_api.next_task.state = WorkflowService.TASK_STATE_LOCKED
         return workflow_api
 
     @staticmethod
@@ -299,11 +331,17 @@ class WorkflowService(object):
             for key, val in spiff_task.task_spec.extensions.items():
                 props[key] = val
 
+        if hasattr(spiff_task.task_spec, 'lane'):
+            lane = spiff_task.task_spec.lane
+        else:
+            lane = None
+
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
                     spiff_task.task_spec.description,
                     task_type,
                     spiff_task.get_state_name(),
+                    lane,
                     None,
                     "",
                     {},
@@ -424,21 +462,50 @@ class WorkflowService(object):
         return options
 
     @staticmethod
-    def log_task_action(user_uid, workflow_model, spiff_task, action, version):
+    def update_task_assignments(processor):
+        """For every upcoming user task, log a task action
+        that connects the assigned user(s) to that task.  All
+        existing assignment actions for this workflow are removed from the database,
+        so that only the current valid actions are available. update_task_assignments
+        should be called whenever progress is made on a workflow."""
+        db.session.query(TaskEventModel). \
+            filter(TaskEventModel.workflow_id == processor.workflow_model.id). \
+            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).delete()
+
+        for task in processor.get_current_user_tasks():
+            user_ids = WorkflowService.get_users_assigned_to_task(processor, task)
+            for user_id in user_ids:
+                WorkflowService.log_task_action(user_id, processor, task, WorkflowService.TASK_ACTION_ASSIGNMENT)
+
+    @staticmethod
+    def get_users_assigned_to_task(processor, spiff_task):
+        if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
+            return [processor.workflow_model.study.user_uid]
+            # todo: return a list of all users that can edit the study by default
+        if spiff_task.task_spec.lane not in spiff_task.data:
+            return []  # No users are assignable to the task at this moment
+        lane_users = spiff_task.data[spiff_task.task_spec.lane]
+        if not isinstance(lane_users, list):
+            lane_users = [lane_users]
+        return lane_users
+
+    @staticmethod
+    def log_task_action(user_uid, processor, spiff_task, action):
         task = WorkflowService.spiff_task_to_api_task(spiff_task)
         form_data = WorkflowService.extract_form_data(spiff_task.data, spiff_task)
         task_event = TaskEventModel(
-            study_id=workflow_model.study_id,
+            study_id=processor.workflow_model.study_id,
             user_uid=user_uid,
-            workflow_id=workflow_model.id,
-            workflow_spec_id=workflow_model.workflow_spec_id,
-            spec_version=version,
+            workflow_id=processor.workflow_model.id,
+            workflow_spec_id=processor.workflow_model.workflow_spec_id,
+            spec_version=processor.get_version_string(),
             action=action,
             task_id=task.id,
             task_name=task.name,
             task_title=task.title,
             task_type=str(task.type),
             task_state=task.state,
+            task_lane=task.lane,
             form_data=form_data,
             mi_type=task.multi_instance_type.value,  # Some tasks have a repeat behavior.
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
