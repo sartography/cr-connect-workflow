@@ -18,6 +18,7 @@ from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel
+from crc.services.file_service import FileService
 
 
 class AdminModelView(sqla.ModelView):
