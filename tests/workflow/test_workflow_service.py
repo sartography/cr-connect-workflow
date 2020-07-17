@@ -134,5 +134,5 @@ class TestWorkflowService(BaseTest):
 
     def test_dmn_evaluation_errors_in_oncomplete_raise_api_errors_during_validation(self):
         workflow_spec_model = self.load_test_spec("decision_table_invalid")
-        with self.assertRaises(ApiError):
+        with self.assertRaises(NameError):
             WorkflowService.test_spec(workflow_spec_model.id)
