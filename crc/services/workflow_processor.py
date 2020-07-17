@@ -30,7 +30,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
     Rather than execute arbitrary code, this assumes the script references a fully qualified python class
     such as myapp.RandomFact. """
 
-    def execute(self, task: SpiffTask, script, **kwargs):
+    def execute(self, task: SpiffTask, script, data):
         """
         Assume that the script read in from the BPMN file is a fully qualified python class. Instantiate
         that class, pass in any data available to the current task so that it might act on it.
@@ -40,43 +40,55 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         """
         # Shlex splits the whole string while respecting double quoted strings within
         commands = shlex.split(script)
-        print(commands)
-        if commands[0] != '#!':
-            super().execute_data(task,script,task.data)
-        else:
-            printable_comms = commands[1:]
-            path_and_command = commands[1].rsplit(".", 1)
-            if len(path_and_command) == 1:
-                module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
-                class_name = path_and_command[0]
-            else:
-                module_name = "crc.scripts." + path_and_command[0] + "." + self.camel_to_snake(path_and_command[1])
-                class_name = path_and_command[1]
-            try:
-                mod = __import__(module_name, fromlist=[class_name])
-                klass = getattr(mod, class_name)
-                study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-                if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
-                    workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-                else:
-                    workflow_id = None
 
-                if not isinstance(klass(), Script):
-                    raise ApiError.from_task("invalid_script",
-                                             "This is an internal error. The script '%s:%s' you called " %
-                                             (module_name, class_name) +
-                                             "does not properly implement the CRC Script class.",
-                                             task=task)
-                if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                    """If this is running a validation, and not a normal process, then we want to
-                    mimic running the script, but not make any external calls or database changes."""
-                    klass().do_task_validate_only(task, study_id, workflow_id, *commands[2:])
-                else:
-                    klass().do_task(task, study_id, workflow_id, *commands[2:])
-            except ModuleNotFoundError:
+        failedOnce = False
+        prevError = ''
+        if commands[0] != '#!':
+            try:
+                super().execute(task,script,data)
+            except SyntaxError as e:
+                failedOnce = True
+                prevError = script
+        else:
+            commands = commands[1:]
+
+        printable_comms = commands
+        path_and_command = commands[0].rsplit(".", 1)
+        if len(path_and_command) == 1:
+            module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
+            class_name = path_and_command[0]
+        else:
+            module_name = "crc.scripts." + path_and_command[0] + "." + self.camel_to_snake(path_and_command[1])
+            class_name = path_and_command[1]
+        try:
+            mod = __import__(module_name, fromlist=[class_name])
+            klass = getattr(mod, class_name)
+            study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+            if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
+                workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+            else:
+                workflow_id = None
+
+            if not isinstance(klass(), Script):
                 raise ApiError.from_task("invalid_script",
-                                         "Unable to locate Script: '%s:%s'" % (module_name, class_name),
+                    "This is an internal error. The script '%s:%s' you called " %
+                    (module_name, class_name) +
+                    "does not properly implement the CRC Script class.",
+                    task=task)
+            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+                """If this is running a validation, and not a normal process, then we want to
+                mimic running the script, but not make any external calls or database changes."""
+                klass().do_task_validate_only(task, study_id, workflow_id, *commands[1:])
+            else:
+                klass().do_task(task, study_id, workflow_id, *commands[1:])
+        except ModuleNotFoundError:
+            if failedOnce:
+                raise ApiError.from_task("invalid_script",
+                                         "Script had a syntax error: '%s'" % (prevError),
                                          task=task)
+            raise ApiError.from_task("invalid_script",
+                 "Unable to locate Script: '%s:%s'" % (module_name, class_name),
+                 task=task)
 
     def evaluate_expression(self, task, expression):
         """
