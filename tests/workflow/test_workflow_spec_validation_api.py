@@ -1,4 +1,5 @@
 import json
+import unittest
 from unittest.mock import patch
 
 from tests.base_test import BaseTest
@@ -51,9 +52,6 @@ class TestWorkflowSpecValidation(BaseTest):
         app.config['PB_ENABLED'] = True
         self.validate_all_loaded_workflows()
 
-    def test_successful_validation_of_rrt_workflows(self):
-        self.load_example_data(use_rrt_data=True)
-        self.validate_all_loaded_workflows()
 
     def validate_all_loaded_workflows(self):
         workflows = session.query(WorkflowSpecModel).all()

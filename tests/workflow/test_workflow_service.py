@@ -1,4 +1,5 @@
 import json
+import unittest
 
 from tests.base_test import BaseTest
 
@@ -7,7 +8,7 @@ from crc.services.workflow_service import WorkflowService
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
 from example_data import ExampleDataLoader
 from crc import db
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.api_models import Task
 from crc.api.common import ApiError
 

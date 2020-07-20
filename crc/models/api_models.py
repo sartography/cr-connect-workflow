@@ -29,6 +29,7 @@ class NavigationItem(object):
         self.state = state
         self.is_decision = is_decision
         self.task = task
+        self.lane = lane
 
 class Task(object):
 
@@ -63,8 +64,9 @@ class Task(object):
 
     ##########################################################################
 
-    def __init__(self, id, name, title, type, state, form, documentation, data,
-                 multi_instance_type, multi_instance_count, multi_instance_index, process_name, properties):
+    def __init__(self, id, name, title, type, state, lane, form, documentation, data,
+                 multi_instance_type, multi_instance_count, multi_instance_index,
+                 process_name, properties):
         self.id = id
         self.name = name
         self.title = title
@@ -73,6 +75,7 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
+        self.lane = lane
         self.multi_instance_type = multi_instance_type  # Some tasks have a repeat behavior.
         self.multi_instance_count = multi_instance_count  # This is the number of times the task could repeat.
         self.multi_instance_index = multi_instance_index  # And the index of the currently repeating task.
@@ -111,7 +114,7 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "multi_instance_type",
+        fields = ["id", "name", "title", "type", "state", "lane", "form", "documentation", "data", "multi_instance_type",
                   "multi_instance_count", "multi_instance_index", "process_name", "properties"]
 
     multi_instance_type = EnumField(MultiInstanceType)
@@ -119,6 +122,7 @@ class TaskSchema(ma.Schema):
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
     process_name = marshmallow.fields.String(required=False, allow_none=True)
+    lane = marshmallow.fields.String(required=False, allow_none=True)
 
     @marshmallow.post_load
     def make_task(self, data, **kwargs):
@@ -128,10 +132,11 @@ class TaskSchema(ma.Schema):
 class NavigationItemSchema(ma.Schema):
     class Meta:
         fields = ["id", "task_id", "name", "title", "backtracks", "level", "indent", "child_count", "state",
-                  "is_decision", "task"]
+                  "is_decision", "task", "lane"]
         unknown = INCLUDE
     task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False, allow_none=True)
     backtracks = marshmallow.fields.String(required=False, allow_none=True)
+    lane = marshmallow.fields.String(required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
     task_id = marshmallow.fields.String(required=False, allow_none=True)
 

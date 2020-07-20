@@ -25,6 +25,7 @@ class ApiError(Exception):
         instance.task_name = task.task_spec.description or ""
         instance.file_name = task.workflow.spec.file or ""
         instance.task_data = task.data
+        app.logger.error(message, exc_info=True)
         return instance
 
     @classmethod
@@ -35,6 +36,7 @@ class ApiError(Exception):
         instance.task_name = task_spec.description or ""
         if task_spec._wf_spec:
             instance.file_name = task_spec._wf_spec.file
+        app.logger.error(message, exc_info=True)
         return instance
 
     @classmethod
