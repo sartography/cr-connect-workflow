@@ -15,7 +15,8 @@ TEST_UID = environ.get('TEST_UID', default="dhf8r")
 ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,ajl2j,cah3us,cl3wf"))
 
 # Sentry flag
-ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"
+ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"  # To be removed soon
+SENTRY_ENVIRONMENT = environ.get('SENTRY_ENVIRONMENT', None)
 
 # Add trailing slash to base path
 APPLICATION_ROOT = re.sub(r'//', '/', '/%s/' % environ.get('APPLICATION_ROOT', default="/").strip('/'))

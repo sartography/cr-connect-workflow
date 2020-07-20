@@ -376,7 +376,7 @@ class WorkflowService(object):
             try:
                 task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties['display_name'])
             except Exception as e:
-                app.logger.info("Failed to set title on task due to type error." + str(e))
+                app.logger.error("Failed to set title on task due to type error." + str(e), exc_info=True)
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
         return task
