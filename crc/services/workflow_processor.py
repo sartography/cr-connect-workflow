@@ -23,6 +23,7 @@ from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecDependencyFile
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
+from crc import app
 
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
@@ -48,6 +49,8 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             except SyntaxError as e:
                 failedOnce = True
                 prevError = script
+                app.logger.warning('We experienced a syntax error, but we are going to try the old method on '
+                                   '"%s"'%script)
         else:
             commands = commands[1:]
 
