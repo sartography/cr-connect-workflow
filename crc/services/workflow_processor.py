@@ -33,27 +33,27 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
     def execute(self, task: SpiffTask, script, data):
         """
-        Assume that the script read in from the BPMN file is a fully qualified python class. Instantiate
-        that class, pass in any data available to the current task so that it might act on it.
-        Assume that the class implements the "do_task" method.
-
-        This allows us to reference custom code from the BPMN diagram.
+        Functions in two modes.
+        1. If the command is proceeded by #! then this is assumed to be a python script, and will
+           attempt to load that python module and execute the do_task method on that script.  Scripts
+           must be located in the scripts package and they must extend the script.py class.
+        2. If not proceeded by the #! this will attempt to execute the script directly and assumes it is
+           valid Python.
         """
         # Shlex splits the whole string while respecting double quoted strings within
-        commands = shlex.split(script)
-        failedOnce = False
-        prevError = ''
-        if commands[0] != '#!':
+        if not script.startswith('#!'):
             try:
-                super().execute(task,script,data)
+                super().execute(task, script, data)
             except SyntaxError as e:
-                failedOnce = True
-                prevError = script
-                app.logger.warning('We experienced a syntax error, but we are going to try the old method on '
-                                   '"%s"'%script)
+                raise ApiError.from_task('syntax_error',
+                                         f'If you are running a pre-defined script, please'
+                                         f' proceed the script with "#!", otherwise this is assumed to be'
+                                         f' pure python: {script}, {e.msg}', task=task)
         else:
-            commands = commands[1:]
+            self.run_predefined_script(task, script[2:], data)  # strip off the first two characters.
 
+    def run_predefined_script(self, task: SpiffTask, script, data):
+        commands = shlex.split(script)
         path_and_command = commands[0].rsplit(".", 1)
         if len(path_and_command) == 1:
             module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
@@ -83,10 +83,6 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             else:
                 klass().do_task(task, study_id, workflow_id, *commands[1:])
         except ModuleNotFoundError:
-            if failedOnce:
-                raise ApiError.from_task("invalid_script",
-                                         "Script had a syntax error: '%s'" % (prevError),
-                                         task=task)
             raise ApiError.from_task("invalid_script",
                  "Unable to locate Script: '%s:%s'" % (module_name, class_name),
                  task=task)

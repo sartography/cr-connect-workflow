@@ -66,7 +66,6 @@ class TestWorkflowSpecValidation(BaseTest):
             errors.extend(ApiErrorSchema(many=True).load(json_data))
         self.assertEqual(0, len(errors), json.dumps(errors))
 
-
     def test_invalid_expression(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_expression")
@@ -103,11 +102,9 @@ class TestWorkflowSpecValidation(BaseTest):
         errors = self.validate_workflow("invalid_script2")
         self.assertEqual(2, len(errors))
         self.assertEqual("error_loading_workflow", errors[0]['code'])
-        self.assertTrue("syntax error" in errors[0]['message'])
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
         self.assertEqual("An Invalid Script Reference", errors[0]['task_name'])
         self.assertEqual("invalid_script2.bpmn", errors[0]['file_name'])
-
 
     def test_repeating_sections_correctly_populated(self):
         self.load_example_data()

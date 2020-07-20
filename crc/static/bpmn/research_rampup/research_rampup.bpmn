@@ -755,7 +755,7 @@ Notify the Area Monitor for
 This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_0j4rs82</bpmn:incoming>
       <bpmn:outgoing>Flow_07ge8uf</bpmn:outgoing>
-      <bpmn:script>RequestApproval ApprvlApprvr1 ApprvlApprvr2</bpmn:script>
+      <bpmn:script>#!RequestApproval ApprvlApprvr1 ApprvlApprvr2</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_1u58hox" name="Update Request">
       <bpmn:documentation>#### Script Task
