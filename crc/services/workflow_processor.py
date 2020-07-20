@@ -17,12 +17,13 @@ from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import WorkflowSpec
 
-from crc import session
+from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecDependencyFile
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
+from crc import app
 
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
@@ -30,17 +31,29 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
     Rather than execute arbitrary code, this assumes the script references a fully qualified python class
     such as myapp.RandomFact. """
 
-    def execute(self, task: SpiffTask, script, **kwargs):
+    def execute(self, task: SpiffTask, script, data):
         """
-        Assume that the script read in from the BPMN file is a fully qualified python class. Instantiate
-        that class, pass in any data available to the current task so that it might act on it.
-        Assume that the class implements the "do_task" method.
-
-        This allows us to reference custom code from the BPMN diagram.
+        Functions in two modes.
+        1. If the command is proceeded by #! then this is assumed to be a python script, and will
+           attempt to load that python module and execute the do_task method on that script.  Scripts
+           must be located in the scripts package and they must extend the script.py class.
+        2. If not proceeded by the #! this will attempt to execute the script directly and assumes it is
+           valid Python.
         """
         # Shlex splits the whole string while respecting double quoted strings within
+        if not script.startswith('#!'):
+            try:
+                super().execute(task, script, data)
+            except SyntaxError as e:
+                raise ApiError.from_task('syntax_error',
+                                         f'If you are running a pre-defined script, please'
+                                         f' proceed the script with "#!", otherwise this is assumed to be'
+                                         f' pure python: {script}, {e.msg}', task=task)
+        else:
+            self.run_predefined_script(task, script[2:], data)  # strip off the first two characters.
+
+    def run_predefined_script(self, task: SpiffTask, script, data):
         commands = shlex.split(script)
-        printable_comms = commands
         path_and_command = commands[0].rsplit(".", 1)
         if len(path_and_command) == 1:
             module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
@@ -59,10 +72,10 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
             if not isinstance(klass(), Script):
                 raise ApiError.from_task("invalid_script",
-                                         "This is an internal error. The script '%s:%s' you called " %
-                                         (module_name, class_name) +
-                                         "does not properly implement the CRC Script class.",
-                                         task=task)
+                    "This is an internal error. The script '%s:%s' you called " %
+                    (module_name, class_name) +
+                    "does not properly implement the CRC Script class.",
+                    task=task)
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
                 """If this is running a validation, and not a normal process, then we want to
                 mimic running the script, but not make any external calls or database changes."""
@@ -71,8 +84,8 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                 klass().do_task(task, study_id, workflow_id, *commands[1:])
         except ModuleNotFoundError:
             raise ApiError.from_task("invalid_script",
-                                     "Unable to locate Script: '%s:%s'" % (module_name, class_name),
-                                     task=task)
+                 "Unable to locate Script: '%s:%s'" % (module_name, class_name),
+                 task=task)
 
     def evaluate_expression(self, task, expression):
         """
