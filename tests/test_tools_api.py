@@ -37,3 +37,12 @@ class TestStudyApi(BaseTest):
         self.assertTrue(len(scripts) > 1)
         self.assertIsNotNone(scripts[0]['name'])
         self.assertIsNotNone(scripts[0]['description'])
+
+    def test_eval_hide_expression(self):
+        """Assures we can use python to process a hide expression fron the front end"""
+        rv = self.app.get('/v1.0/eval')
+        self.assert_success(rv)
+        scripts = json.loads(rv.get_data(as_text=True))
+        self.assertTrue(len(scripts) > 1)
+        self.assertIsNotNone(scripts[0]['name'])
+        self.assertIsNotNone(scripts[0]['description'])

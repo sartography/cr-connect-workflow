@@ -838,6 +838,32 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Script"
+  /eval:
+    parameters:
+      - name: expression
+        in: query
+        required: true
+        description: The python expression to execute.
+        schema:
+          type: string
+      - name: data
+        in: query
+        required: true
+        description: The json data to use as local variables, typically this the the task.data
+        schema:
+          type: string
+    get:
+      operationId: crc.api.tools.evaluate_python_expression
+      summary: Execute the given python expression, with the given json data structure used as local variables, returns the result of the evaluation.
+      tags:
+        - Configurator Tools
+      responses:
+        '200':
+          description: Returns the result of executing the given python script.
+          content:
+            text/plain:
+              schema:
+                type: string
   /approval-counts:
     parameters:
       - name: as_user

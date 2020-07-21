@@ -61,8 +61,21 @@ def list_scripts():
             })
     return script_meta
 
+
 def send_email(address):
     """Just sends a quick test email to assure the system is working."""
     if not address:
         address = "dan@sartography.com"
     return send_test_email(address, [address])
+
+
+def evaluate_python_expression(expression, data):
+    """Evaluate the given python expression, returning it's result.  This is useful if the
+    front end application needs to do real-time processing on task data. If for instance
+    there is a hide expression that is based on a previous value in the same form."""
+    try:
+        data = json.loads(data)
+        locals().update(data)
+        return eval(expression)
+    except Exception as e:
+        raise ApiError("expression_error", str(e))
