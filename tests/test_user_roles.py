@@ -68,7 +68,7 @@ class TestTasksApi(BaseTest):
     def test_get_outstanding_tasks_awaiting_current_user(self):
         submitter = self.create_user(uid='lje5u')
         supervisor = self.create_user(uid='lb3dp')
-        workflow = self.create_workflow('roles', as_user=submitter.uid)
+        workflow = self.create_workflow('roles', display_name="Roles", as_user=submitter.uid)
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
 
         # User lje5u can complete the first task, and set her supervisor
@@ -94,6 +94,7 @@ class TestTasksApi(BaseTest):
         self.assertEquals(1, len(tasks))
         self.assertEquals(workflow.id, tasks[0]['workflow']['id'])
         self.assertEquals(workflow.study.id, tasks[0]['study']['id'])
+        self.assertEquals("Test Workflows", tasks[0]['workflow']['category_display_name'])
 
         # Assure we can say something sensible like:
         # You have a task called "Approval" to be completed in the "Supervisor Approval" workflow
