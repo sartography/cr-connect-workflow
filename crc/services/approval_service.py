@@ -1,6 +1,10 @@
-from datetime import datetime
+import json
+import pickle
+import sys
+from base64 import b64decode
+from datetime import datetime, timedelta
 
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 
 from crc import app, db, session
 from crc.api.common import ApiError
@@ -109,16 +113,135 @@ class ApprovalService(object):
         db_approvals = query.all()
         return [Approval.from_model(approval_model) for approval_model in db_approvals]
 
+    @staticmethod
+    def get_approval_details(approval):
+        """Returns a list of packed approval details, obtained from
+        the task data sent during the workflow """
+        def extract_value(task, key):
+            if key in task['data']:
+                return pickle.loads(b64decode(task['data'][key]['__bytes__']))
+            else:
+                return ""
+
+        def find_task(uuid, task):
+            if task['id']['__uuid__'] == uuid:
+                return task
+            for child in task['children']:
+                task = find_task(uuid, child)
+                if task:
+                    return task
+
+        if approval.status != ApprovalStatus.APPROVED.value:
+            return {}
+        for related_approval in approval.related_approvals:
+            if related_approval.status != ApprovalStatus.APPROVED.value:
+                continue
+        workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == approval.workflow_id).first()
+        data = json.loads(workflow.bpmn_workflow_json)
+        last_task = find_task(data['last_task']['__uuid__'], data['task_tree'])
+        personnel = extract_value(last_task, 'personnel')
+        training_val = extract_value(last_task, 'RequiredTraining')
+        pi_supervisor = extract_value(last_task, 'PISupervisor')['value']
+        review_complete = 'AllRequiredTraining' in training_val
+        pi_uid = workflow.study.primary_investigator_id
+        pi_details = LdapService.user_info(pi_uid)
+        details = {
+            'Supervisor': pi_supervisor,
+            'PI_Details': pi_details,
+            'Review': review_complete
+        }
+        details['person_details'] = []
+        details['person_details'].append(pi_details)
+        for person in personnel:
+            uid = person['PersonnelComputingID']['value']
+            details['person_details'].append(LdapService.user_info(uid))
+
+        return details
+
+    @staticmethod
+    def get_health_attesting_records():
+        """Return a list with prepared information related to all approvals """
+
+        approvals = ApprovalService.get_all_approvals(include_cancelled=False)
+
+        health_attesting_rows = [
+            ['university_computing_id',
+             'last_name',
+             'first_name',
+             'department',
+             'job_title',
+             'supervisor_university_computing_id']
+        ]
+
+        for approval in approvals:
+            try:
+                details = ApprovalService.get_approval_details(approval)
+                if not details:
+                    continue
+
+                for person in details['person_details']:
+                    first_name = person.given_name
+                    last_name = person.display_name.replace(first_name, '').strip()
+                    record = [
+                        person.uid,
+                        last_name,
+                        first_name,
+                        '',
+                        'Academic Researcher',
+                        details['Supervisor'] if person.uid == details['person_details'][0].uid else 'askresearch'
+                    ]
+
+                    if record not in health_attesting_rows:
+                        health_attesting_rows.append(record)
+
+            except Exception as e:
+                app.logger.error(f'Error pulling data for workflow {approval.workflow_id}', exc_info=True)
+
+        return health_attesting_rows
+
+    @staticmethod
+    def get_not_really_csv_content():
+        approvals = ApprovalService.get_all_approvals(include_cancelled=False)
+        output = []
+        errors = []
+        for approval in approvals:
+            try:
+                details = ApprovalService.get_approval_details(approval)
+
+                for person in details['person_details']:
+                    record = {
+                        "study_id": approval.study_id,
+                        "pi_uid": details['PI_Details'].uid,
+                        "pi": details['PI_Details'].display_name,
+                        "name": person.display_name,
+                        "uid": person.uid,
+                        "email": person.email_address,
+                        "supervisor": details['Supervisor'] if person.uid == details['person_details'][0].uid else "",
+                        "review_complete": details['Review'],
+                    }
+
+                    output.append(record)
+
+            except Exception as e:
+                errors.append(
+                    f'Error pulling data for workflow #{approval.workflow_id} '
+                    f'(Approval status: {approval.status} - '
+                    f'More details in Sentry): {str(e)}'
+                )
+                # Detailed information sent to Sentry
+                app.logger.error(f'Error pulling data for workflow {approval.workflow_id}', exc_info=True)
+        return {"results": output, "errors": errors }
 
     @staticmethod
     def update_approval(approval_id, approver_uid):
-        """Update a specific approval"""
+        """Update a specific approval
+        NOTE: Actual update happens in the API layer, this
+        funtion is currently in charge of only sending
+        corresponding emails
+        """
         db_approval = session.query(ApprovalModel).get(approval_id)
         status = db_approval.status
         if db_approval:
-            # db_approval.status = status
-            # session.add(db_approval)
-            # session.commit()
             if status == ApprovalStatus.APPROVED.value:
                 # second_approval = ApprovalModel().query.filter_by(
                 #     study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
@@ -135,7 +258,7 @@ class ApprovalService(object):
                     f'{approver_info.display_name} - ({approver_info.uid})'
                 )
                 if mail_result:
-                    app.logger.error(mail_result)
+                    app.logger.error(mail_result, exc_info=True)
             elif status == ApprovalStatus.DECLINED.value:
                 ldap_service = LdapService()
                 pi_user_info = ldap_service.user_info(db_approval.study.primary_investigator_id)
@@ -147,7 +270,7 @@ class ApprovalService(object):
                     f'{approver_info.display_name} - ({approver_info.uid})'
                 )
                 if mail_result:
-                    app.logger.error(mail_result)
+                    app.logger.error(mail_result, exc_info=True)
                 first_approval = ApprovalModel().query.filter_by(
                     study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
                     status=ApprovalStatus.APPROVED.value, version=db_approval.version).first()
@@ -163,8 +286,8 @@ class ApprovalService(object):
                         f'{approver_info.display_name} - ({approver_info.uid})'
                     )
                     if mail_result:
-                        app.logger.error(mail_result)
-        # TODO: Log update action by approver_uid - maybe ?
+                        app.logger.error(mail_result, exc_info=True)
+
         return db_approval
 
     @staticmethod
@@ -176,11 +299,12 @@ class ApprovalService(object):
             pending approvals and create a new approval for the latest version
             of the workflow."""
 
-        # Find any existing approvals for this workflow and approver.
-        latest_approval_request = db.session.query(ApprovalModel). \
+        # Find any existing approvals for this workflow.
+        latest_approval_requests = db.session.query(ApprovalModel). \
             filter(ApprovalModel.workflow_id == workflow_id). \
-            filter(ApprovalModel.approver_uid == approver_uid). \
-            order_by(desc(ApprovalModel.version)).first()
+            order_by(desc(ApprovalModel.version))
+
+        latest_approver_request = latest_approval_requests.filter(ApprovalModel.approver_uid == approver_uid).first()
 
         # Construct as hash of the latest files to see if things have changed since
         # the last approval.
@@ -195,16 +319,20 @@ class ApprovalService(object):
         # If an existing approval request exists and no changes were made, do nothing.
         # If there is an existing approval request for a previous version of the workflow
         # then add a new request, and cancel any waiting/pending requests.
-        if latest_approval_request:
-            request_file_ids = list(file.file_data_id for file in latest_approval_request.approval_files)
+        if latest_approver_request:
+            request_file_ids = list(file.file_data_id for file in latest_approver_request.approval_files)
             current_data_file_ids.sort()
             request_file_ids.sort()
+            other_approver = latest_approval_requests.filter(ApprovalModel.approver_uid != approver_uid).first()
             if current_data_file_ids == request_file_ids:
-                return  # This approval already exists.
+                return  # This approval already exists or we're updating other approver.
             else:
-                latest_approval_request.status = ApprovalStatus.CANCELED.value
-                db.session.add(latest_approval_request)
-                version = latest_approval_request.version + 1
+                for approval_request in latest_approval_requests:
+                    if (approval_request.version == latest_approver_request.version and
+                        approval_request.status != ApprovalStatus.CANCELED.value):
+                        approval_request.status = ApprovalStatus.CANCELED.value
+                        db.session.add(approval_request)
+                version = latest_approver_request.version + 1
         else:
             version = 1
 
@@ -234,7 +362,7 @@ class ApprovalService(object):
                 f'{approver_info.display_name} - ({approver_info.uid})'
             )
             if mail_result:
-                app.logger.error(mail_result)
+                app.logger.error(mail_result, exc_info=True)
             # send rrp approval request for first approver
             # enhance the second part in case it bombs
             approver_email = [approver_info.email_address] if approver_info.email_address else app.config['FALLBACK_EMAILS']
@@ -244,7 +372,7 @@ class ApprovalService(object):
                 f'{pi_user_info.display_name} - ({pi_user_info.uid})'
             )
             if mail_result:
-                app.logger.error(mail_result)
+                app.logger.error(mail_result, exc_info=True)
 
     @staticmethod
     def _create_approval_files(workflow_data_files, approval):

@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 from crc import db
 from crc.models.approval import ApprovalModel
-from crc.services.approval_service import ApprovalService
+from crc.services.approval_service import ApprovalService, ApprovalStatus
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -56,6 +56,60 @@ class TestApprovalsService(BaseTest):
         models = db.session.query(ApprovalModel).order_by(ApprovalModel.version).all()
         self.assertEqual(1, models[0].version)
         self.assertEqual(2, models[1].version)
+
+    def test_get_health_attesting_records(self):
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('empty_workflow')
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code="AD_CoCAppr")
+
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
+        records = ApprovalService.get_health_attesting_records()
+
+        self.assertEqual(len(records), 1)
+
+    def test_get_not_really_csv_content(self):
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('empty_workflow')
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code="AD_CoCAppr")
+
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
+        records = ApprovalService.get_not_really_csv_content()
+
+        self.assertEqual(len(records), 2)
+
+    def test_new_approval_cancels_all_previous_approvals(self):
+        self.create_reference_document()
+        workflow = self.create_workflow("empty_workflow")
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr" )
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="lb3dp")
+
+        current_count = ApprovalModel.query.count()
+        self.assertTrue(current_count, 2)
+
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="borderline.png", content_type="text",
+                                      binary_data=b'906090', irb_doc_code="AD_CoCAppr" )
+
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="dhf8r")
+
+        current_count = ApprovalModel.query.count()
+        canceled_count = ApprovalModel.query.filter(ApprovalModel.status == ApprovalStatus.CANCELED.value)
+        self.assertTrue(current_count, 2)
+        self.assertTrue(current_count, 3)
+
+        ApprovalService.add_approval(study_id=workflow.study_id, workflow_id=workflow.id, approver_uid="lb3dp")
+
+        current_count = ApprovalModel.query.count()
+        self.assertTrue(current_count, 4)
 
     def test_new_approval_sends_proper_emails(self):
         self.assertEqual(1, 1)

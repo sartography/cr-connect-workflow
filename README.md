@@ -1,4 +1,4 @@
-# CrConnectFrontend
+# sartography/cr-connect-workflow
 
 [![Build Status](https://travis-ci.com/sartography/cr-connect-workflow.svg?branch=master)](https://travis-ci.com/sartography/cr-connect-workflow)
 
@@ -27,7 +27,7 @@ Make sure all of the following are properly installed on your system:
     - Select the directory where you cloned this repository and click `Ok`.
     - Expand the `Project Interpreter` section.
     - Select the `New environment using` radio button and choose `Pipenv` in the dropdown.
-    - Under `Base interpreter`, select `Python 3.6`
+    - Under `Base interpreter`, select `Python 3.7`
     - In the `Pipenv executable` field, enter `/home/your_username_goes_here/.local/bin/pipenv` 
     - Click `Create`
         ![Project Interpreter](readme_images/new_project.png)
@@ -47,22 +47,15 @@ run configuration so it doesn't go away.) :
 Just click the "Play" button next to RUN in the top right corner of the screen.
 The Swagger based view of the API will be avialable at http://0.0.0.0:5000/v1.0/ui/
 
-### Testing from the Shell
-This app includes a command line interface that will read in BPMN files and let you 
-play with it at the command line.  To run it right click on app/command_line/joke.py and
-click run.  Type "?" to get a list of commands. 
-So far the joke system will work a little, when you file it up try these commands
-in this order:
-```bash
-> engine  (this will run all tasks up to first user task and should print a joke)
-> answer clock (this is the correct answer)
-> next (this completes the user task)
-> engine (this runs the rest of the tasks, and should tell you that  you got the question right)
+### Running Tests
+We use pytest to execute tests.  You can run this from the command line with:
 ```
+pipenv run coverage run -m pytest
+```
+To run the tests within PyCharm set up a run configuration using pytest (Go to Run, configurations, click the
+plus icon, select Python Tests, and under this select pytest, defaults should work good-a-plenty with no
+additional edits required.) 
 
-You can try re-running this and getting the question wrong.
-You might open up the Joke bpmn diagram so you can see what this looks like to 
-draw out.
 
 ## Documentation
 Additional Documentation is available on [ReadTheDocs](https://cr-connect-workflow.readthedocs.io/en/latest/#)

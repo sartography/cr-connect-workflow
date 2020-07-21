@@ -23,8 +23,10 @@ if [ "$RESET_DB_RRT" = "true" ]; then
   pipenv run flask load-example-rrt-data
 fi
 
+# THIS MUST BE THE LAST COMMAND!
 if [ "$APPLICATION_ROOT" = "/" ]; then
   pipenv run gunicorn --bind 0.0.0.0:$PORT0 wsgi:app
 else
   pipenv run gunicorn -e SCRIPT_NAME="$APPLICATION_ROOT" --bind 0.0.0.0:$PORT0 wsgi:app
 fi
+

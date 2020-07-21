@@ -11,7 +11,7 @@
     <bpmn:scriptTask id="Task_Load_Requirements" name="Load Documents From PB">
       <bpmn:incoming>SequenceFlow_1ees8ka</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_17ct47v</bpmn:outgoing>
-      <bpmn:script>StudyInfo documents</bpmn:script>
+      <bpmn:script>#! StudyInfo documents</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:businessRuleTask id="Activity_1yqy50i" name="Enter Core Info&#10;" camunda:decisionRef="enter_core_info">
       <bpmn:incoming>Flow_1m8285h</bpmn:incoming>
@@ -62,7 +62,7 @@
     <bpmn:scriptTask id="Activity_0f295la" name="Load Details from PB">
       <bpmn:incoming>Flow_0pwtiqm</bpmn:incoming>
       <bpmn:outgoing>Flow_0eq6px2</bpmn:outgoing>
-      <bpmn:script>StudyInfo details</bpmn:script>
+      <bpmn:script>#! StudyInfo details</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:businessRuleTask id="Activity_0ahlc3u" name="IDE Supplement" camunda:decisionRef="decision_ide_menu_check">
       <bpmn:incoming>Flow_14ce1d7</bpmn:incoming>
@@ -91,7 +91,7 @@
     <bpmn:scriptTask id="Activity_0g3qa1c" name="Load Personnel from PB">
       <bpmn:incoming>Flow_1qyrmzn</bpmn:incoming>
       <bpmn:outgoing>Flow_0vo6ul1</bpmn:outgoing>
-      <bpmn:script>StudyInfo investigators</bpmn:script>
+      <bpmn:script>#! StudyInfo investigators</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_1ybicki" sourceRef="Activity_13ep6ar" targetRef="Event_135x8jg" />
     <bpmn:businessRuleTask id="Activity_13ep6ar" name="Personnel" camunda:decisionRef="personnel">

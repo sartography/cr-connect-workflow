@@ -144,7 +144,6 @@ class LookupFileModel(db.Model):
     """Gives us a quick way to tell what kind of lookup is set on a form field.
     Connected to the file data model, so that if a new version of the same file is
     created, we can update the listing."""
-    #fixme: What happens if they change the file associated with a lookup field?
     __tablename__ = 'lookup_file'
     id = db.Column(db.Integer, primary_key=True)
     workflow_spec_id = db.Column(db.String)
@@ -152,6 +151,7 @@ class LookupFileModel(db.Model):
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
     file_data_model_id = db.Column(db.Integer, db.ForeignKey('file_data.id'))
     dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model", cascade="all, delete, delete-orphan")
+
 
 class LookupDataModel(db.Model):
     __tablename__ = 'lookup_data'
@@ -181,6 +181,7 @@ class LookupDataSchema(SQLAlchemyAutoSchema):
         load_instance = True
         include_relationships = False
         include_fk = False  # Includes foreign keys
+        exclude = ['id'] # Do not include the id field, it should never be used via the API.
 
 
 class SimpleFileSchema(ma.Schema):

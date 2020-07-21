@@ -1,9 +1,11 @@
+import csv
+import io
 import json
 import pickle
 from base64 import b64decode
 from datetime import datetime
 
-from flask import g
+from flask import g, make_response
 
 from crc import db, session
 from crc.api.common import ApiError
@@ -88,71 +90,25 @@ def get_approvals_for_study(study_id=None):
     return results
 
 
+def get_health_attesting_csv():
+    records = ApprovalService.get_health_attesting_records()
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerows(records)
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=health_attesting.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
+
+
 # ----- Begin descent into madness ---- #
 def get_csv():
     """A damn lie, it's a json file. A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
     man to do just about anything"""
-    approvals = ApprovalService.get_all_approvals(include_cancelled=False)
-    output = []
-    errors = []
-    for approval in approvals:
-        try:
-            if approval.status != ApprovalStatus.APPROVED.value:
-                continue
-            for related_approval in approval.related_approvals:
-                if related_approval.status != ApprovalStatus.APPROVED.value:
-                    continue
-            workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == approval.workflow_id).first()
-            data = json.loads(workflow.bpmn_workflow_json)
-            last_task = find_task(data['last_task']['__uuid__'], data['task_tree'])
-            personnel = extract_value(last_task, 'personnel')
-            training_val = extract_value(last_task, 'RequiredTraining')
-            pi_supervisor = extract_value(last_task, 'PISupervisor')['value']
-            review_complete = 'AllRequiredTraining' in training_val
-            pi_uid = workflow.study.primary_investigator_id
-            pi_details = LdapService.user_info(pi_uid)
-            details = []
-            details.append(pi_details)
-            for person in personnel:
-                uid = person['PersonnelComputingID']['value']
-                details.append(LdapService.user_info(uid))
+    content = ApprovalService.get_not_really_csv_content()
 
-            for person in details:
-                record = {
-                    "study_id": approval.study_id,
-                    "pi_uid": pi_details.uid,
-                    "pi": pi_details.display_name,
-                    "name": person.display_name,
-                    "uid": person.uid,
-                    "email": person.email_address,
-                    "supervisor": "",
-                    "review_complete": review_complete,
-                }
-                # We only know the PI's supervisor.
-                if person.uid == pi_details.uid:
-                    record["supervisor"] = pi_supervisor
+    return content
 
-                output.append(record)
-
-        except Exception as e:
-            errors.append("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
-    return {"results": output, "errors": errors }
-
-
-def extract_value(task, key):
-    if key in task['data']:
-        return pickle.loads(b64decode(task['data'][key]['__bytes__']))
-    else:
-        return ""
-
-
-def find_task(uuid, task):
-    if task['id']['__uuid__'] == uuid:
-        return task
-    for child in task['children']:
-        task = find_task(uuid, child)
-        if task:
-            return task
 # ----- come back to the world of the living ---- #
 
 
