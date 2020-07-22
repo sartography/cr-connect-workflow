@@ -25,6 +25,7 @@ class StudyModel(db.Model):
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
     on_hold = db.Column(db.Boolean, default=False)
+    enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
         self.hsr_number = pbs.HSRNUMBER
@@ -108,7 +109,7 @@ class Study(object):
                  id=None,
                  protocol_builder_status=None,
                  sponsor="", hsr_number="", ind_number="", categories=[],
-                 files=[], approvals=[], **argsv):
+                 files=[], approvals=[], enrollment_date=None, **argsv):
         self.id = id
         self.user_uid = user_uid
         self.title = title
@@ -122,6 +123,7 @@ class Study(object):
         self.approvals = approvals
         self.warnings = []
         self.files = files
+        self.enrollment_date = enrollment_date
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
@@ -154,11 +156,12 @@ class StudySchema(ma.Schema):
     ind_number = fields.String(allow_none=True)
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
     approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
+    enrollment_date = fields.Date(allow_none=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
-                      "sponsor", "ind_number", "approvals", "files"]
+                      "sponsor", "ind_number", "approvals", "files", "enrollment_date"]
         unknown = INCLUDE
 
     @marshmallow.post_load

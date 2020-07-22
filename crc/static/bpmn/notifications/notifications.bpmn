@@ -1,33 +1,98 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_300b2c3" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_300b2c3" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
+  <bpmn:collaboration id="Collaboration_163c7c8">
+    <bpmn:participant id="Participant_1mnua71" name="team" processRef="Process_cd666f3" />
+  </bpmn:collaboration>
   <bpmn:process id="Process_cd666f3" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_0ucxzw3">
+      <bpmn:lane id="Lane_16ml9fk">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_1qpy9ra</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_1m9fnmv</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_1jw70kl" name="supervisor">
+        <bpmn:flowNodeRef>Gateway_0ved0t9</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_107ojvq</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0q51aiq</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="Flow_0q51aiq" sourceRef="StartEvent_1" targetRef="Activity_1qpy9ra" />
-    <bpmn:userTask id="Activity_1qpy9ra" name="Placeholder" camunda:formKey="Formkey_placeholder">
+    <bpmn:userTask id="Activity_1qpy9ra" name="Assign Approver" camunda:formKey="form_assign_approver">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_2t2220o" label="Will this be updated later" type="boolean" />
+          <camunda:formField id="supervisor" label="Approver UID" type="string" defaultValue="dhf8r" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0q51aiq</bpmn:incoming>
-      <bpmn:outgoing>Flow_0ai4j1x</bpmn:outgoing>
+      <bpmn:incoming>Flow_11tnx3n</bpmn:incoming>
+      <bpmn:outgoing>Flow_0d2snmk</bpmn:outgoing>
     </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0q51aiq" sourceRef="StartEvent_1" targetRef="Activity_1qpy9ra" />
+    <bpmn:sequenceFlow id="Flow_0d2snmk" sourceRef="Activity_1qpy9ra" targetRef="Activity_107ojvq" />
+    <bpmn:exclusiveGateway id="Gateway_0ved0t9" name="Approved?">
+      <bpmn:incoming>Flow_0apr3nj</bpmn:incoming>
+      <bpmn:outgoing>Flow_0mhtlkt</bpmn:outgoing>
+      <bpmn:outgoing>Flow_11tnx3n</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0apr3nj" sourceRef="Activity_107ojvq" targetRef="Gateway_0ved0t9" />
+    <bpmn:sequenceFlow id="Flow_0mhtlkt" name="Yes" sourceRef="Gateway_0ved0t9" targetRef="Event_1m9fnmv">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">is_study_approved == True</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
     <bpmn:endEvent id="Event_1m9fnmv">
-      <bpmn:incoming>Flow_0ai4j1x</bpmn:incoming>
+      <bpmn:incoming>Flow_0mhtlkt</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_0ai4j1x" sourceRef="Activity_1qpy9ra" targetRef="Event_1m9fnmv" />
+    <bpmn:sequenceFlow id="Flow_11tnx3n" name="No" sourceRef="Gateway_0ved0t9" targetRef="Activity_1qpy9ra">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">is_study_approved == False</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Activity_107ojvq" name="Approve Study" camunda:formKey="form_approve_study">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="is_study_approved" label="Approve this study?" type="boolean" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0d2snmk</bpmn:incoming>
+      <bpmn:outgoing>Flow_0apr3nj</bpmn:outgoing>
+    </bpmn:userTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_cd666f3">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_163c7c8">
+      <bpmndi:BPMNShape id="Participant_1mnua71_di" bpmnElement="Participant_1mnua71" isHorizontal="true">
+        <dc:Bounds x="129" y="117" width="600" height="250" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1jw70kl_di" bpmnElement="Lane_1jw70kl" isHorizontal="true">
+        <dc:Bounds x="159" y="242" width="570" height="125" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_16ml9fk_di" bpmnElement="Lane_16ml9fk" isHorizontal="true">
+        <dc:Bounds x="159" y="117" width="570" height="125" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_11tnx3n_di" bpmnElement="Flow_11tnx3n">
+        <di:waypoint x="460" y="275" />
+        <di:waypoint x="460" y="177" />
+        <di:waypoint x="370" y="177" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="468" y="223" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mhtlkt_di" bpmnElement="Flow_0mhtlkt">
+        <di:waypoint x="485" y="300" />
+        <di:waypoint x="660" y="300" />
+        <di:waypoint x="660" y="195" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="563" y="282" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0apr3nj_di" bpmnElement="Flow_0apr3nj">
+        <di:waypoint x="370" y="300" />
+        <di:waypoint x="435" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d2snmk_di" bpmnElement="Flow_0d2snmk">
+        <di:waypoint x="320" y="217" />
+        <di:waypoint x="320" y="260" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0q51aiq_di" bpmnElement="Flow_0q51aiq">
         <di:waypoint x="215" y="177" />
         <di:waypoint x="270" y="177" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0ai4j1x_di" bpmnElement="Flow_0ai4j1x">
-        <di:waypoint x="370" y="177" />
-        <di:waypoint x="432" y="177" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="159" width="36" height="36" />
@@ -35,8 +100,17 @@
       <bpmndi:BPMNShape id="Activity_14cpuv6_di" bpmnElement="Activity_1qpy9ra">
         <dc:Bounds x="270" y="137" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0ved0t9_di" bpmnElement="Gateway_0ved0t9" isMarkerVisible="true">
+        <dc:Bounds x="435" y="275" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="435" y="332" width="54" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1m9fnmv_di" bpmnElement="Event_1m9fnmv">
-        <dc:Bounds x="432" y="159" width="36" height="36" />
+        <dc:Bounds x="642" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ps6jft_di" bpmnElement="Activity_107ojvq">
+        <dc:Bounds x="270" y="260" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
