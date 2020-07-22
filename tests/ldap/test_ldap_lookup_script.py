@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc.services.workflow_processor import WorkflowProcessor
-from crc.scripts.ldap_lookup import LdapReplace
+from crc.scripts.ldap_replace import LdapReplace
 from crc import db, mail
 
 
