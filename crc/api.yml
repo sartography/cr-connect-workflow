@@ -846,17 +846,18 @@ paths:
         description: The python expression to execute.
         schema:
           type: string
-      - name: data
-        in: query
-        required: true
-        description: The json data to use as local variables, typically this the the task.data
-        schema:
-          type: string
-    get:
+    put:
       operationId: crc.api.tools.evaluate_python_expression
       summary: Execute the given python expression, with the given json data structure used as local variables, returns the result of the evaluation.
       tags:
         - Configurator Tools
+      requestBody:
+        description: The json data to use as local variables when evaluating the expresson.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
       responses:
         '200':
           description: Returns the result of executing the given python script.

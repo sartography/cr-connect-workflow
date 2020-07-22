@@ -428,3 +428,7 @@ class WorkflowProcessor(object):
                         return spiff_task, field
         raise ApiError("invalid_field",
                        "Unable to find a task in the workflow with a lookup field called: %s" % field_id)
+
+    @staticmethod
+    def get_script_engine():
+        return WorkflowProcessor._script_engine
