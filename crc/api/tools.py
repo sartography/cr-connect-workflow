@@ -76,6 +76,8 @@ def evaluate_python_expression(expression, body):
     front end application needs to do real-time processing on task data. If for instance
     there is a hide expression that is based on a previous value in the same form."""
     try:
+        # fixme: The script engine should be pulled from Workflow Processor,
+        #  but the one it returns overwrites the evaluate expression making it uncallable.
         script_engine = PythonScriptEngine()
         return script_engine.evaluate(expression, **body)
     except Exception as e:
