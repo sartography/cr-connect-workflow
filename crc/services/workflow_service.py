@@ -376,7 +376,7 @@ class WorkflowService(object):
             try:
                 task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties['display_name'])
             except Exception as e:
-                app.logger.info("Failed to set title on task due to type error." + str(e))
+                app.logger.error("Failed to set title on task due to type error." + str(e), exc_info=True)
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
         return task
@@ -514,41 +514,6 @@ class WorkflowService(object):
             date=datetime.now(),
         )
         db.session.add(task_event)
-        db.session.commit()
-
-    @staticmethod
-    def fix_legacy_data_model_for_rrt():
-        """  Remove this after use!  This is just to fix RRT so the data is handled correctly.
-
-        Utility that is likely called via the flask command line, it will loop through all the
-        workflows in the system and attempt to add the right data into the task action log so that
-        users do not have to re fill out all of the forms if they start over or go back in the workflow.
-        Viciously inefficient, but should only have to run one time for RRT"""
-        workflows = db.session.query(WorkflowModel).all()
-        for workflow_model in workflows:
-            task_logs = db.session.query(TaskEventModel) \
-                .filter(TaskEventModel.workflow_id == workflow_model.id) \
-                .filter(TaskEventModel.action == WorkflowService.TASK_ACTION_COMPLETE) \
-                .order_by(TaskEventModel.date.desc()).all()
-
-            processor = WorkflowProcessor(workflow_model)
-            # Grab all the data from last task completed, which will be everything in this
-            # rrt situation because of how we were keeping all the data at the time.
-            latest_data = processor.next_task().data
-
-            # Move forward in the task spec tree, dropping any data that would have been
-            # added in subsequent tasks, just looking at form data, will not track the automated
-            # task data additions, hopefully this doesn't hang us.
-            for log in task_logs:
-#                if log.task_data is not None:  # Only do this if the task event does not have data populated in it.
-#                    continue
-                data = copy.deepcopy(latest_data) # Or you end up with insane crazy issues.
-                # In the simple case of RRT, there is exactly one task for the given task_spec
-                task = processor.bpmn_workflow.get_tasks_from_spec_name(log.task_name)[0]
-                data = WorkflowService.extract_form_data(data, task)
-                log.form_data = data
-                db.session.add(log)
-
         db.session.commit()
 
     @staticmethod
