@@ -154,10 +154,9 @@ class WorkflowService(object):
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    choice = random.choice(field.options)
                     return {
-                        'value': choice['id'],
-                        'label': choice['name']
+                        'value': random_choice['id'],
+                        'label': random_choice['name']
                     }
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
