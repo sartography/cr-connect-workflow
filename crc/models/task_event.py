@@ -50,6 +50,7 @@ class TaskEvent(object):
         self.task_type = model.task_type
         self.task_state = model.task_state
         self.task_lane = model.task_lane
+        self.date = model.date
 
 
 class TaskEventSchema(ma.Schema):
@@ -59,5 +60,5 @@ class TaskEventSchema(ma.Schema):
     class Meta:
         model = TaskEvent
         additional = ["id", "user_uid", "action", "task_id", "task_title",
-                      "task_name", "task_type", "task_state", "task_lane"]
+                      "task_name", "task_type", "task_state", "task_lane", "date"]
         unknown = INCLUDE
