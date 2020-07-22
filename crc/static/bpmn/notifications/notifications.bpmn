@@ -9,6 +9,7 @@
         <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Activity_1qpy9ra</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Event_1m9fnmv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_0c5drp3</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_1jw70kl" name="supervisor">
         <bpmn:flowNodeRef>Gateway_0ved0t9</bpmn:flowNodeRef>
@@ -25,7 +26,7 @@
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0q51aiq</bpmn:incoming>
-      <bpmn:incoming>Flow_11tnx3n</bpmn:incoming>
+      <bpmn:incoming>Flow_1ugh4wn</bpmn:incoming>
       <bpmn:outgoing>Flow_0d2snmk</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_0q51aiq" sourceRef="StartEvent_1" targetRef="Activity_1qpy9ra" />
@@ -42,7 +43,7 @@
     <bpmn:endEvent id="Event_1m9fnmv">
       <bpmn:incoming>Flow_0mhtlkt</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_11tnx3n" name="No" sourceRef="Gateway_0ved0t9" targetRef="Activity_1qpy9ra">
+    <bpmn:sequenceFlow id="Flow_11tnx3n" name="No" sourceRef="Gateway_0ved0t9" targetRef="Activity_0c5drp3">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">is_study_approved == False</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:userTask id="Activity_107ojvq" name="Approve Study" camunda:formKey="form_approve_study">
@@ -54,6 +55,12 @@
       <bpmn:incoming>Flow_0d2snmk</bpmn:incoming>
       <bpmn:outgoing>Flow_0apr3nj</bpmn:outgoing>
     </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1ugh4wn" sourceRef="Activity_0c5drp3" targetRef="Activity_1qpy9ra" />
+    <bpmn:manualTask id="Activity_0c5drp3" name="Review Feedback">
+      <bpmn:documentation>Your request was not approved. Try again.</bpmn:documentation>
+      <bpmn:incoming>Flow_11tnx3n</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ugh4wn</bpmn:outgoing>
+    </bpmn:manualTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_163c7c8">
@@ -68,10 +75,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_11tnx3n_di" bpmnElement="Flow_11tnx3n">
         <di:waypoint x="460" y="275" />
-        <di:waypoint x="460" y="177" />
-        <di:waypoint x="370" y="177" />
+        <di:waypoint x="460" y="217" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="468" y="223" width="15" height="14" />
+          <dc:Bounds x="468" y="241" width="15" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0mhtlkt_di" bpmnElement="Flow_0mhtlkt">
@@ -94,6 +100,10 @@
         <di:waypoint x="215" y="177" />
         <di:waypoint x="270" y="177" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ugh4wn_di" bpmnElement="Flow_1ugh4wn">
+        <di:waypoint x="400" y="177" />
+        <di:waypoint x="370" y="177" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="159" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -111,6 +121,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1ps6jft_di" bpmnElement="Activity_107ojvq">
         <dc:Bounds x="270" y="260" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1al86eb_di" bpmnElement="Activity_0c5drp3">
+        <dc:Bounds x="400" y="137" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
