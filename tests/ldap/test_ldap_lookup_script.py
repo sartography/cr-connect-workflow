@@ -98,4 +98,13 @@ class TestLdapLookupScript(BaseTest):
 
         task = self.get_workflow_api(workflow).next_task
 
+        self.assertEqual(task.data['Supervisor']['display_name'], 'Dan Funk')
+        self.assertEqual(task.data['Supervisor']['given_name'], 'Dan')
+        self.assertEqual(task.data['Supervisor']['email_address'], 'dhf8r@virginia.edu')
+        self.assertEqual(task.data['Supervisor']['telephone_number'], '+1 (434) 924-1723')
+        self.assertEqual(task.data['Supervisor']['title'], 'E42:He\'s a hoopy frood')
+        self.assertEqual(task.data['Supervisor']['department'], 'E0:EN-Eng Study of Parallel Universes')
+        self.assertEqual(task.data['Supervisor']['affiliation'], 'faculty')
+        self.assertEqual(task.data['Supervisor']['sponsor_type'], 'Staff')
+        self.assertEqual(task.data['Supervisor']['uid'], 'dhf8r')
         self.assertEqual(task.data['Supervisor']['proper_name'], 'Dan Funk - (dhf8r)')
