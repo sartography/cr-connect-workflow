@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.study import StudySchema, StudyModel, Study
+from crc.models.study import StudySchema, StudyForUpdateSchema, StudyModel, Study
 from crc.services.study_service import StudyService
 
 
@@ -40,10 +40,12 @@ def update_study(study_id, body):
     if study_model is None:
         raise ApiError('unknown_study', 'The study "' + study_id + '" is not recognized.')
 
-    study: Study = StudySchema().load(body)
+    study: Study = StudyForUpdateSchema().load(body)
     study.update_model(study_model)
     session.add(study_model)
     session.commit()
+    # Need to reload the full study to return it to the frontend
+    study = StudyService.get_study(study_id)
     return StudySchema().dump(study)
 
 

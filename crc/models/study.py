@@ -133,9 +133,7 @@ class Study(object):
         return instance
 
     def update_model(self, study_model: StudyModel):
-        for k,v in  self.__dict__.items():
-            if not k.startswith('_'):
-                study_model.__dict__[k] = v
+        study_model.protocol_builder_status = ProtocolBuilderStatus(self.protocol_builder_status)
 
     def model_args(self):
         """Arguments that can be passed into the Study Model to update it."""
@@ -143,6 +141,27 @@ class Study(object):
         del self_dict["categories"]
         del self_dict["warnings"]
         return self_dict
+
+
+class StudyForUpdateSchema(ma.Schema):
+
+    id = fields.Integer(required=False, allow_none=True)
+    protocol_builder_status = EnumField(ProtocolBuilderStatus, by_value=True)
+    hsr_number = fields.String(allow_none=True)
+    sponsor = fields.String(allow_none=True)
+    ind_number = fields.String(allow_none=True)
+    enrollment_date = fields.Date(allow_none=True)
+
+    class Meta:
+        model = Study
+        # additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
+        #               "sponsor", "ind_number", "approvals", "files", "enrollment_date"]
+        unknown = INCLUDE
+
+    @marshmallow.post_load
+    def make_study(self, data, **kwargs):
+        """Can load the basic study data for updates to the database, but categories are write only"""
+        return Study(**data)
 
 
 class StudySchema(ma.Schema):

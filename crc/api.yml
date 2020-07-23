@@ -1046,22 +1046,24 @@ components:
           example: dhf8r
         protocol_builder_status:
           type: string
-          enum: [INCOMPLETE, ACTIVE, HOLD, OPEN, ABANDONED]
+          enum: [incomplete, active, hold, open, abandoned]
           example: done
         sponsor:
           type: string
+          x-nullable: true
           example: "Sartography Pharmaceuticals"
         ind_number:
           type: string
+          x-nullable: true
           example: "27b-6-42"
         hsr_number:
           type: string
           x-nullable: true
           example: "27b-6-1212"
-        categories:
-          type: array
-          items:
-            $ref: "#/components/schemas/WorkflowSpecCategory"
+        # categories:
+        #   type: array
+        #   items:
+        #     $ref: "#/components/schemas/WorkflowSpecCategory"
     WorkflowSpec:
       properties:
         id:
