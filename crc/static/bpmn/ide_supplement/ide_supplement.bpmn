@@ -36,7 +36,8 @@
     <bpmn:scriptTask id="ScriptTask_1fn00ox" name="Load IRB Details">
       <bpmn:incoming>SequenceFlow_1dhb8f4</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1uzcl1f</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo details</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['details'] = study_info('details')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1uzcl1f" sourceRef="ScriptTask_1fn00ox" targetRef="Task_SupplementIDE" />
     <bpmn:exclusiveGateway id="ExclusiveGateway_1fib89p" name="IS_IDE = True and Number Provided?&#10;&#10;">

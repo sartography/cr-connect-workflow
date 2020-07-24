@@ -8,7 +8,8 @@
     <bpmn:scriptTask id="Task_Script_Load_Study_Details" name="Load Study Info">
       <bpmn:incoming>SequenceFlow_1nfe5m9</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1bqiin0</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo info</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['info'] = study_info('info')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1bqiin0" sourceRef="Task_Script_Load_Study_Details" targetRef="Activity_0w91u9s" />
     <bpmn:endEvent id="EndEvent_171dj09">
@@ -18,7 +19,7 @@
     <bpmn:scriptTask id="Activity_0w91u9s" name="StudyInfo as Script">
       <bpmn:incoming>SequenceFlow_1bqiin0</bpmn:incoming>
       <bpmn:outgoing>Flow_0ochvmi</bpmn:outgoing>
-      <bpmn:script>study = studyInfo('info','p')</bpmn:script>
+      <bpmn:script>study = study_info('info','p')</bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">

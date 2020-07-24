@@ -598,7 +598,7 @@ Use the EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/ur
 This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_11uqavk</bpmn:incoming>
       <bpmn:outgoing>Flow_0aqgwvu</bpmn:outgoing>
-      <bpmn:script>#! CompleteTemplate ResearchRampUpPlan.docx RESEARCH_RAMPUP</bpmn:script>
+      <bpmn:script>complete_template('ResearchRampUpPlan.docx','RESEARCH_RAMPUP')/bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0aqgwvu" sourceRef="Activity_GenerateRRP" targetRef="Activity_AcknowledgePlanReview" />
     <bpmn:sequenceFlow id="Flow_0j4rs82" sourceRef="Activity_SubmitPlan" targetRef="Activity_0absozl" />
@@ -764,7 +764,7 @@ This step is internal to the system and do not require and user interaction</bpm
 This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_16y8glw</bpmn:incoming>
       <bpmn:outgoing>Flow_0uc4o6c</bpmn:outgoing>
-      <bpmn:script>#! UpdateStudy title:PIComputingID.label pi:PIComputingID.value</bpmn:script>
+      <bpmn:script>update_study('title:PIComputingID.label','pi:PIComputingID.value')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:userTask id="PersonnelSchedule" name="Upload Weekly Personnel Schedule(s)" camunda:formKey="Personnel Weekly  Schedule">
       <bpmn:documentation>#### Weekly Personnel Schedule(s)

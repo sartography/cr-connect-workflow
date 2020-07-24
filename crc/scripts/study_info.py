@@ -199,7 +199,7 @@ Returns information specific to the protocol.
         self.add_data_to_task(task=task, data=data["study"])
         self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
-    def return_data(self, task, study_id, workflow_id, *args, **kwargs):
+    def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         self.check_args(args,2)
         prefix = None
         if len(args) > 1:
@@ -232,29 +232,6 @@ Returns information specific to the protocol.
         else:
             return retval
 
-    def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        self.check_args(args)
-        cmd = args[0]
-        study_info = {}
-        if self.__class__.__name__ in task.data:
-            study_info = task.data[self.__class__.__name__]
-
-        if cmd == 'info':
-            study = session.query(StudyModel).filter_by(id=study_id).first()
-            schema = StudySchema()
-            self.add_data_to_task(task, {cmd: schema.dump(study)})
-        if cmd == 'investigators':
-            self.add_data_to_task(task, {cmd: StudyService().get_investigators(study_id)})
-        if cmd == 'roles':
-            self.add_data_to_task(task, {cmd: StudyService().get_investigators(study_id, all=True)})
-        if cmd == 'details':
-            self.add_data_to_task(task, {cmd: self.pb.get_study_details(study_id)})
-        if cmd == 'approvals':
-            self.add_data_to_task(task, {cmd: StudyService().get_approvals(study_id)})
-        if cmd == 'documents':
-            self.add_data_to_task(task, {cmd: StudyService().get_documents_status(study_id)})
-        if cmd == 'protocol':
-            self.add_data_to_task(task, {cmd: StudyService().get_protocol(study_id)})
 
 
     def check_args(self, args, maxlen=1):

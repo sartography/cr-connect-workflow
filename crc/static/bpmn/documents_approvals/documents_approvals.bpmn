@@ -53,12 +53,14 @@
     <bpmn:scriptTask id="Activity_0a14x7j" name="Load Approvals">
       <bpmn:incoming>Flow_0c7ryff</bpmn:incoming>
       <bpmn:outgoing>Flow_142jtxs</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo approvals</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['approvals'] = study_info('approvals')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_1aju60t" name="Load Documents">
       <bpmn:incoming>Flow_1k3su2q</bpmn:incoming>
       <bpmn:outgoing>Flow_0c7ryff</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo documents</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['documents'] = study_info('documents')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_142jtxs" sourceRef="Activity_0a14x7j" targetRef="Activity_DisplayDocsAndApprovals" />
     <bpmn:sequenceFlow id="Flow_0c7ryff" sourceRef="Activity_1aju60t" targetRef="Activity_0a14x7j" />

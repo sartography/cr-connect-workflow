@@ -48,58 +48,52 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         else:
             workflow_id = None
 
-        if not script.startswith('#!'):
-            try:
-                augmentMethods = {'studyInfo':lambda *args: crc.scripts.study_info.StudyInfo.return_data(
-                    crc.scripts.study_info.StudyInfo(),
-                    task,
-                                                                                              study_id,
-                                                                                              workflow_id,
-                                                                                              *args)}
-
-                super().execute(task, script, data,externalMethods=augmentMethods)
-            except SyntaxError as e:
-                raise ApiError.from_task('syntax_error',
-                                         f'If you are running a pre-defined script, please'
-                                         f' proceed the script with "#!", otherwise this is assumed to be'
-                                         f' pure python: {script}, {e.msg}', task=task)
-        else:
-            self.run_predefined_script(task, script[2:], data)  # strip off the first two characters.
-
-    def run_predefined_script(self, task: SpiffTask, script, data):
-        commands = shlex.split(script)
-        path_and_command = commands[0].rsplit(".", 1)
-        if len(path_and_command) == 1:
-            module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
-            class_name = path_and_command[0]
-        else:
-            module_name = "crc.scripts." + path_and_command[0] + "." + self.camel_to_snake(path_and_command[1])
-            class_name = path_and_command[1]
         try:
-            mod = __import__(module_name, fromlist=[class_name])
-            klass = getattr(mod, class_name)
-            study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-            if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
-                workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-            else:
-                workflow_id = None
+            augmentMethods = Script.generate_augmented_list(task,study_id,workflow_id)
 
-            if not isinstance(klass(), Script):
-                raise ApiError.from_task("invalid_script",
-                    "This is an internal error. The script '%s:%s' you called " %
-                    (module_name, class_name) +
-                    "does not properly implement the CRC Script class.",
-                    task=task)
-            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                """If this is running a validation, and not a normal process, then we want to
-                mimic running the script, but not make any external calls or database changes."""
-                klass().do_task_validate_only(task, study_id, workflow_id, *commands[1:])
-            else:
-                klass().do_task(task, study_id, workflow_id, *commands[1:])
-        except ModuleNotFoundError:
-            raise ApiError.from_task("invalid_script",
-                 "Unable to locate Script: '%s:%s'" % (module_name, class_name),
-                 task=task)
+            super().execute(task, script, data, externalMethods=augmentMethods)
+        except SyntaxError as e:
+            raise ApiError.from_task('syntax_error',
+                                     f'If you are running a pre-defined script, please'
+                                     f' proceed the script with "#!", otherwise this is assumed to be'
+                                     f' pure python: {script}, {e.msg}', task=task)
+       # else:
+       #     self.run_predefined_script(task, script[2:], data)  # strip off the first two characters.
+
+    # def run_predefined_script(self, task: SpiffTask, script, data):
+    #     commands = shlex.split(script)
+    #     path_and_command = commands[0].rsplit(".", 1)
+    #     if len(path_and_command) == 1:
+    #         module_name = "crc.scripts." + self.camel_to_snake(path_and_command[0])
+    #         class_name = path_and_command[0]
+    #     else:
+    #         module_name = "crc.scripts." + path_and_command[0] + "." + self.camel_to_snake(path_and_command[1])
+    #         class_name = path_and_command[1]
+    #     try:
+    #         mod = __import__(module_name, fromlist=[class_name])
+    #         klass = getattr(mod, class_name)
+    #         study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+    #         if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
+    #             workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+    #         else:
+    #             workflow_id = None
+    #
+    #         if not isinstance(klass(), Script):
+    #             raise ApiError.from_task("invalid_script",
+    #                 "This is an internal error. The script '%s:%s' you called " %
+    #                 (module_name, class_name) +
+    #                 "does not properly implement the CRC Script class.",
+    #                 task=task)
+    #         if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+    #             """If this is running a validation, and not a normal process, then we want to
+    #             mimic running the script, but not make any external calls or database changes."""
+    #             klass().do_task_validate_only(task, study_id, workflow_id, *commands[1:])
+    #         else:
+    #             klass().do_task(task, study_id, workflow_id, *commands[1:])
+    #     except ModuleNotFoundError:
+    #         raise ApiError.from_task("invalid_script",
+    #              "Unable to locate Script: '%s:%s'" % (module_name, class_name),
+    #              task=task)
 
     def evaluate_expression(self, task, expression):
         """
@@ -194,10 +188,10 @@ class WorkflowProcessor(object):
             bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
-            try:
-                bpmn_workflow.do_engine_steps()
-            except WorkflowException as we:
-                raise ApiError.from_task_spec("error_loading_workflow", str(we), we.sender)
+            #try:
+            bpmn_workflow.do_engine_steps()
+           # except WorkflowException as we:
+           #     raise ApiError.from_task_spec("error_loading_workflow", str(we), we.sender)
         return bpmn_workflow
 
     def save(self):
