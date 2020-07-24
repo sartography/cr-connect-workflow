@@ -16,7 +16,7 @@ from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel
@@ -230,7 +230,7 @@ class BaseTest(unittest.TestCase):
             db.session.commit()
         return user
 
-    def create_study(self, uid="dhf8r", title="Beer conception in the bipedal software engineer", primary_investigator_id="lb3dp"):
+    def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer", primary_investigator_id="lb3dp"):
         study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
@@ -240,13 +240,36 @@ class BaseTest(unittest.TestCase):
             db.session.commit()
         return study
 
-    def create_workflow(self, workflow_name, study=None, category_id=None):
+    def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses,
+                                         workflow_spec_name="random_fact"):
+        study = self.create_study(uid=user_uid, title=title, primary_investigator_id=primary_investigator_id)
+        workflow = self.create_workflow(workflow_name=workflow_spec_name, study=study)
+        approvals = []
+
+        for i in range(len(approver_uids)):
+            approvals.append(self.create_approval(
+                study=study,
+                workflow=workflow,
+                approver_uid=approver_uids[i],
+                status=statuses[i],
+                version=1
+            ))
+
+        full_study = {
+            'study': study,
+            'workflow': workflow,
+            'approvals': approvals,
+        }
+
+        return full_study
+
+    def create_workflow(self, workflow_name, study=None, category_id=None, as_user="dhf8r"):
         db.session.flush()
         spec = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
         if spec is None:
             spec = self.load_test_spec(workflow_name, category_id=category_id)
         if study is None:
-            study = self.create_study()
+            study = self.create_study(uid=as_user)
         workflow_model = StudyService._create_workflow_model(study, spec)
         return workflow_model
 
@@ -290,7 +313,8 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
-    def complete_form(self, workflow_in, task_in, dict_data, error_code=None, user_uid="dhf8r"):
+
+    def complete_form(self, workflow_in, task_in, dict_data, error_code=None, terminate_loop=None, user_uid="dhf8r"):
         prev_completed_task_count = workflow_in.completed_tasks
         if isinstance(task_in, dict):
             task_id = task_in["id"]
@@ -299,11 +323,16 @@ class BaseTest(unittest.TestCase):
 
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
-
-        rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
-                          headers=self.logged_in_headers(user=user),
-                          content_type="application/json",
-                          data=json.dumps(dict_data))
+        if terminate_loop:
+            rv = self.app.put('/v1.0/workflow/%i/task/%s/data?terminate_loop=true' % (workflow_in.id, task_id),
+                              headers=self.logged_in_headers(user=user),
+                              content_type="application/json",
+                              data=json.dumps(dict_data))
+        else:
+            rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
+                              headers=self.logged_in_headers(user=user),
+                              content_type="application/json",
+                              data=json.dumps(dict_data))
         if error_code:
             self.assert_failure(rv, error_code=error_code)
             return
@@ -311,17 +340,20 @@ class BaseTest(unittest.TestCase):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
 
-        # Assure stats are updated on the model
+        # Assure task events are updated on the model
         workflow = WorkflowApiSchema().load(json_data)
         # The total number of tasks may change over time, as users move through gateways
         # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
         self.assertIsNotNone(workflow.total_tasks)
-        self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
+        # presumably, we also need to deal with sequential items here too . .
+        if not task_in.multi_instance_type == 'looping':
+            self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
 
         # Assure a record exists in the Task Events
         task_events = session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow.id) \
             .filter_by(task_id=task_id) \
+            .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE) \
             .order_by(TaskEventModel.date.desc()).all()
         self.assertGreater(len(task_events), 0)
         event = task_events[0]
@@ -335,7 +367,8 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(task_in.name, event.task_name)
         self.assertEqual(task_in.title, event.task_title)
         self.assertEqual(task_in.type, event.task_type)
-        self.assertEqual("COMPLETED", event.task_state)
+        if not task_in.multi_instance_type == 'looping':
+            self.assertEqual("COMPLETED", event.task_state)
 
         # Not sure what voodoo is happening inside of marshmallow to get me in this state.
         if isinstance(task_in.multi_instance_type, MultiInstanceType):
@@ -344,7 +377,10 @@ class BaseTest(unittest.TestCase):
             self.assertEqual(task_in.multi_instance_type, event.mi_type)
 
         self.assertEqual(task_in.multi_instance_count, event.mi_count)
-        self.assertEqual(task_in.multi_instance_index, event.mi_index)
+        if task_in.multi_instance_type == 'looping' and not terminate_loop:
+            self.assertEqual(task_in.multi_instance_index+1, event.mi_index)
+        else:
+            self.assertEqual(task_in.multi_instance_index, event.mi_index)
         self.assertEqual(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 

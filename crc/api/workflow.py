@@ -1,12 +1,13 @@
 import uuid
 
+from SpiffWorkflow.util.deep_merge import DeepMerge
 from flask import g
-
 from crc import session, app
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
 from crc.models.file import FileModel, LookupDataSchema
-from crc.models.stats import TaskEventModel
+from crc.models.study import StudyModel, WorkflowMetadata
+from crc.models.task_event import TaskEventModel, TaskEventModelSchema, TaskEvent, TaskEventSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.file_service import FileService
@@ -41,7 +42,6 @@ def get_workflow_specification(spec_id):
 
 
 def validate_workflow_specification(spec_id):
-
     errors = []
     try:
         WorkflowService.test_spec(spec_id)
@@ -55,7 +55,6 @@ def validate_workflow_specification(spec_id):
         ae.message = "When populating only required fields ... " + ae.message
         errors.append(ae)
     return ApiErrorSchema(many=True).dump(errors)
-
 
 
 def update_workflow_specification(spec_id, body):
@@ -89,67 +88,36 @@ def delete_workflow_specification(spec_id):
 
     session.query(TaskEventModel).filter(TaskEventModel.workflow_spec_id == spec_id).delete()
 
-    # Delete all stats and workflow models related to this specification
+    # Delete all events and workflow models related to this specification
     for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
         StudyService.delete_workflow(workflow)
     session.query(WorkflowSpecModel).filter_by(id=spec_id).delete()
     session.commit()
 
 
-def __get_workflow_api_model(processor: WorkflowProcessor, next_task = None):
-    """Returns an API model representing the state of the current workflow, if requested, and
-    possible, next_task is set to the current_task."""
-
-    nav_dict = processor.bpmn_workflow.get_nav_list()
-    navigation = []
-    for nav_item in nav_dict:
-        spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
-        if 'description' in nav_item:
-            nav_item['title'] = nav_item.pop('description')
-            # fixme: duplicate code from the workflow_service. Should only do this in one place.
-            if ' ' in nav_item['title']:
-                nav_item['title'] = nav_item['title'].partition(' ')[2]
-        else:
-            nav_item['title'] = ""
-        if spiff_task:
-            nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
-            nav_item['title'] = nav_item['task'].title # Prefer the task title.
-        else:
-            nav_item['task'] = None
-        if not 'is_decision' in nav_item:
-            nav_item['is_decision'] = False
-
-        navigation.append(NavigationItem(**nav_item))
-        NavigationItemSchema().dump(nav_item)
-
-    spec = session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
-    workflow_api = WorkflowApi(
-        id=processor.get_workflow_id(),
-        status=processor.get_status(),
-        next_task=None,
-        navigation=navigation,
-        workflow_spec_id=processor.workflow_spec_id,
-        spec_version=processor.get_version_string(),
-        is_latest_spec=processor.is_latest_spec,
-        total_tasks=len(navigation),
-        completed_tasks=processor.workflow_model.completed_tasks,
-        last_updated=processor.workflow_model.last_updated,
-        title=spec.display_name
-    )
-    if not next_task: # The Next Task can be requested to be a certain task, useful for parallel tasks.
-        # This may or may not work, sometimes there is no next task to complete.
-        next_task = processor.next_task()
-    if next_task:
-        workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
-
-    return workflow_api
-
-
 def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
-    workflow_api_model = __get_workflow_api_model(processor)
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
+    WorkflowService.update_task_assignments(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
+
+
+def get_task_events(action):
+    """Provides a way to see a history of what has happened, or get a list of tasks that need your attention."""
+    query = session.query(TaskEventModel).filter(TaskEventModel.user_uid == g.user.uid)
+    if action:
+        query = query.filter(TaskEventModel.action == action)
+    events = query.all()
+
+    # Turn the database records into something a little richer for the UI to use.
+    task_events = []
+    for event in events:
+        study = session.query(StudyModel).filter(StudyModel.id == event.study_id).first()
+        workflow = session.query(WorkflowModel).filter(WorkflowModel.id == event.workflow_id).first()
+        workflow_meta = WorkflowMetadata.from_workflow(workflow)
+        task_events.append(TaskEvent(event, study, workflow_meta))
+    return TaskEventSchema(many=True).dump(task_events)
 
 
 def delete_workflow(workflow_id):
@@ -158,46 +126,57 @@ def delete_workflow(workflow_id):
 
 def set_current_task(workflow_id, task_id):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    user_uid = __get_user_uid(workflow_model.study.user_uid)
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
-    task = processor.bpmn_workflow.get_task(task_id)
-    if task.state != task.COMPLETED and task.state != task.READY:
+    spiff_task = processor.bpmn_workflow.get_task(task_id)
+    _verify_user_and_role(processor, spiff_task)
+    user_uid = g.user.uid
+    if spiff_task.state != spiff_task.COMPLETED and spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
                                         "currently set to COMPLETE or READY.")
 
     # Only reset the token if the task doesn't already have it.
-    if task.state == task.COMPLETED:
-        task.reset_token(reset_data=False)  # we could optionally clear the previous data.
+    if spiff_task.state == spiff_task.COMPLETED:
+        spiff_task.reset_token(reset_data=True)  # Don't try to copy the existing data back into this task.
+
     processor.save()
-    WorkflowService.log_task_action(user_uid, processor, task, WorkflowService.TASK_ACTION_TOKEN_RESET)
-    workflow_api_model = __get_workflow_api_model(processor, task)
+    WorkflowService.log_task_action(user_uid, processor, spiff_task, WorkflowService.TASK_ACTION_TOKEN_RESET)
+    WorkflowService.update_task_assignments(processor)
+
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor, spiff_task)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def update_task(workflow_id, task_id, body):
+def update_task(workflow_id, task_id, body, terminate_loop=None):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-
     if workflow_model is None:
         raise ApiError("invalid_workflow_id", "The given workflow id is not valid.", status_code=404)
 
     elif workflow_model.study is None:
         raise ApiError("invalid_study", "There is no study associated with the given workflow.", status_code=404)
 
-    user_uid = __get_user_uid(workflow_model.study.user_uid)
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
-    task = processor.bpmn_workflow.get_task(task_id)
-    if task.state != task.READY:
+    spiff_task = processor.bpmn_workflow.get_task(task_id)
+    _verify_user_and_role(processor, spiff_task)
+    if not spiff_task:
+        raise ApiError("empty_task", "Processor failed to obtain task.", status_code=404)
+    if spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
-    task.update_data(body)
-    processor.complete_task(task)
+
+    if terminate_loop:
+        spiff_task.terminate_loop()
+    spiff_task.update_data(body)
+    processor.complete_task(spiff_task)
     processor.do_engine_steps()
     processor.save()
-    WorkflowService.log_task_action(user_uid, processor, task, WorkflowService.TASK_ACTION_COMPLETE)
 
-    workflow_api_model = __get_workflow_api_model(processor)
+    # Log the action, and any pending task assignments in the event of lanes in the workflow.
+    WorkflowService.log_task_action(g.user.uid, processor, spiff_task, WorkflowService.TASK_ACTION_COMPLETE)
+    WorkflowService.update_task_assignments(processor)
+
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
@@ -240,7 +219,7 @@ def delete_workflow_spec_category(cat_id):
     session.commit()
 
 
-def lookup(workflow_id, field_id, query, limit):
+def lookup(workflow_id, field_id, query=None, value=None, limit=10):
     """
     given a field in a task, attempts to find the lookup table or function associated
     with that field and runs a full-text query against it to locate the values and
@@ -248,16 +227,25 @@ def lookup(workflow_id, field_id, query, limit):
     Tries to be fast, but first runs will be very slow.
     """
     workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
-    lookup_data = LookupService.lookup(workflow, field_id, query, limit)
+    lookup_data = LookupService.lookup(workflow, field_id, query, value, limit)
     return LookupDataSchema(many=True).dump(lookup_data)
 
 
-def __get_user_uid(user_uid):
-    if 'user' in g:
-        if g.user.uid not in app.config['ADMIN_UIDS'] and user_uid != g.user.uid:
-            raise ApiError("permission_denied", "You are not authorized to edit the task data for this workflow.", status_code=403)
-        else:
-            return g.user.uid
+def _verify_user_and_role(processor, spiff_task):
+    """Assures the currently logged in user can access the given workflow and task, or
+    raises an error.
+     Allow administrators to modify tasks, otherwise assure that the current user
+     is allowed to edit or update the task. Will raise the appropriate error if user
+     is not authorized. """
 
-    else:
+    if 'user' not in g:
         raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
+
+    if g.user.uid in app.config['ADMIN_UIDS']:
+        return g.user.uid
+
+    allowed_users = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
+    if g.user.uid not in allowed_users:
+        raise ApiError.from_task("permission_denied",
+                                 f"This task must be completed by '{allowed_users}', "
+                                 f"but you are {g.user.uid}", spiff_task)

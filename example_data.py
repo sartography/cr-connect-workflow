@@ -93,8 +93,8 @@ class ExampleDataLoader:
                          description="Supplemental information for the IDE number entered in Protocol Builder",
                          category_id=0,
                          display_order=3)
-        self.create_spec(id="ind_supplement",
-                         name="ind_supplement",
+        self.create_spec(id="ind_update",
+                         name="ind_update",
                          display_name="IND Supplement Info",
                          description="Supplement information for the Investigational New Drug(s) specified in Protocol Builder",
                          category_id=0,

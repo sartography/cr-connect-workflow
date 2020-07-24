@@ -1,7 +1,16 @@
+import json
+import unittest
+
 from tests.base_test import BaseTest
 
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
+from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from example_data import ExampleDataLoader
+from crc import db
+from crc.models.task_event import TaskEventModel
+from crc.models.api_models import Task
+from crc.api.common import ApiError
 
 
 class TestWorkflowService(BaseTest):
@@ -79,3 +88,8 @@ class TestWorkflowService(BaseTest):
         task_api = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
         WorkflowService.populate_form_with_random_data(task, task_api, required_only=False)
         self.assertTrue(isinstance(task.data["sponsor"], dict))
+
+    def test_dmn_evaluation_errors_in_oncomplete_raise_api_errors_during_validation(self):
+        workflow_spec_model = self.load_test_spec("decision_table_invalid")
+        with self.assertRaises(ApiError):
+            WorkflowService.test_spec(workflow_spec_model.id)

@@ -187,7 +187,7 @@ class TestWorkflowProcessor(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
-        # Attemping a soft update on a structural change should raise a sensible error.
+        # Attempting a soft update on a structural change should raise a sensible error.
         with self.assertRaises(ApiError) as context:
             processor3 = WorkflowProcessor(processor.workflow_model, soft_reset=True)
         self.assertEqual("unexpected_workflow_structure", context.exception.code)
@@ -270,53 +270,6 @@ class TestWorkflowProcessor(BaseTest):
         processor = self.get_processor(study, workflow_spec_model)
         self.assertTrue(processor.get_version_string().startswith('v2.1.1'))
 
-    def test_restart_workflow(self):
-        self.load_example_data()
-        study = session.query(StudyModel).first()
-        workflow_spec_model = self.load_test_spec("two_forms")
-        processor = self.get_processor(study, workflow_spec_model)
-        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
-        task = processor.next_task()
-        task.data = {"key": "Value"}
-        processor.complete_task(task)
-        task_before_restart = processor.next_task()
-        processor.hard_reset()
-        task_after_restart = processor.next_task()
-
-        self.assertNotEqual(task.get_name(), task_before_restart.get_name())
-        self.assertEqual(task.get_name(), task_after_restart.get_name())
-        self.assertEqual(task.data, task_after_restart.data)
-
-    def test_soft_reset(self):
-        self.load_example_data()
-
-        # Start the two_forms workflow, and enter some data in the first form.
-        study = session.query(StudyModel).first()
-        workflow_spec_model = self.load_test_spec("two_forms")
-        processor = self.get_processor(study, workflow_spec_model)
-        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
-        task = processor.next_task()
-        task.data = {"color": "blue"}
-        processor.complete_task(task)
-
-        # Modify the specification, with a minor text change.
-        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_text_mod.bpmn')
-        self.replace_file("two_forms.bpmn", file_path)
-
-        # Setting up another processor should not error out, but doesn't pick up the update.
-        processor.workflow_model.bpmn_workflow_json = processor.serialize()
-        processor2 = WorkflowProcessor(processor.workflow_model)
-        self.assertEqual("Step 1", processor2.bpmn_workflow.last_task.task_spec.description)
-        self.assertNotEqual("# This is some documentation I wanted to add.",
-                          processor2.bpmn_workflow.last_task.task_spec.documentation)
-
-        # You can do a soft update and get the right response.
-        processor3 = WorkflowProcessor(processor.workflow_model, soft_reset=True)
-        self.assertEqual("Step 1", processor3.bpmn_workflow.last_task.task_spec.description)
-        self.assertEqual("# This is some documentation I wanted to add.",
-                          processor3.bpmn_workflow.last_task.task_spec.documentation)
-
-
 
     def test_hard_reset(self):
         self.load_example_data()
@@ -344,8 +297,10 @@ class TestWorkflowProcessor(BaseTest):
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
         processor3 = WorkflowProcessor(processor.workflow_model, hard_reset=True)
         self.assertEqual("Step 1", processor3.next_task().task_spec.description)
-        self.assertEqual({"color": "blue"}, processor3.next_task().data)
-        processor3.complete_task(processor3.next_task())
+        self.assertTrue(processor3.is_latest_spec) # Now at version 2.
+        task = processor3.next_task()
+        task.data = {"color": "blue"}
+        processor3.complete_task(task)
         self.assertEqual("New Step", processor3.next_task().task_spec.description)
         self.assertEqual("blue", processor3.next_task().data["color"])
 
@@ -414,3 +369,18 @@ class TestWorkflowProcessor(BaseTest):
 
         with self.assertRaises(ApiError):
             self._populate_form_with_random_data(task)
+
+
+    def test_get_role_by_name(self):
+        self.load_example_data()
+        workflow_spec_model = self.load_test_spec("roles")
+        study = session.query(StudyModel).first()
+        processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
+        tasks = processor.next_user_tasks()
+        task = tasks[0]
+        self._populate_form_with_random_data(task)
+        processor.complete_task(task)
+        supervisor_task = processor.next_user_tasks()[0]
+        self.assertEquals("supervisor", supervisor_task.task_spec.lane)
+

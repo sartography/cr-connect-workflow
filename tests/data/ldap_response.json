@@ -1,155 +1,124 @@
 {
-    "entries": [
-        {
-            "attributes": {
-                "cn": [
-                    "Laura Barnes (lb3dp)"
-                ],
-                "displayName": "Laura Barnes",
-                "givenName": [
-                    "Laura"
-                ],
-                "mail": [
-                    "lb3dp@virginia.edu"
-                ],
-                "objectClass": [
-                    "top",
-                    "person",
-                    "organizationalPerson",
-                    "inetOrgPerson",
-                    "uvaPerson",
-                    "uidObject"
-                ],
-                "telephoneNumber": [
-                    "+1 (434) 924-1723"
-                ],
-                "title": [
-                    "E0:Associate Professor of Systems and Information Engineering"
-                ],
-                "uvaDisplayDepartment": [
-                    "E0:EN-Eng Sys and Environment"
-                ],
-                "uvaPersonIAMAffiliation": [
-                    "faculty"
-                ],
-                "uvaPersonSponsoredType": [
-                    "Staff"
-                ]
-            },
-            "dn": "uid=lb3dp,ou=People,o=University of Virginia,c=US",
-            "raw": {
-                "cn": [
-                    "Laura Barnes (lb3dp)"
-                ],
-                "displayName": [
-                    "Laura Barnes"
-                ],
-                "givenName": [
-                    "Laura"
-                ],
-                "mail": [
-                    "lb3dp@virginia.edu"
-                ],
-                "objectClass": [
-                    "top",
-                    "person",
-                    "organizationalPerson",
-                    "inetOrgPerson",
-                    "uvaPerson",
-                    "uidObject"
-                ],
-                "telephoneNumber": [
-                    "+1 (434) 924-1723"
-                ],
-                "title": [
-                    "E0:Associate Professor of Systems and Information Engineering"
-                ],
-                "uvaDisplayDepartment": [
-                    "E0:EN-Eng Sys and Environment"
-                ],
-                "uvaPersonIAMAffiliation": [
-                    "faculty"
-                ],
-                "uvaPersonSponsoredType": [
-                    "Staff"
-                ]
-            }
-        },
-                {
-            "attributes": {
-                "cn": [
-                    "Dan Funk (dhf8r)"
-                ],
-                "displayName": "Dan Funk",
-                "givenName": [
-                    "Dan"
-                ],
-                "mail": [
-                    "dhf8r@virginia.edu"
-                ],
-                "objectClass": [
-                    "top",
-                    "person",
-                    "organizationalPerson",
-                    "inetOrgPerson",
-                    "uvaPerson",
-                    "uidObject"
-                ],
-                "telephoneNumber": [
-                    "+1 (434) 924-1723"
-                ],
-                "title": [
-                    "E42:He's a hoopy frood"
-                ],
-                "uvaDisplayDepartment": [
-                    "E0:EN-Eng Study of Parallel Universes"
-                ],
-                "uvaPersonIAMAffiliation": [
-                    "faculty"
-                ],
-                "uvaPersonSponsoredType": [
-                    "Staff"
-                ]
-            },
-            "dn": "uid=dhf8r,ou=People,o=University of Virginia,c=US",
-            "raw": {
-                "cn": [
-                    "Dan Funk (dhf84)"
-                ],
-                "displayName": [
-                    "Dan Funk"
-                ],
-                "givenName": [
-                    "Dan"
-                ],
-                "mail": [
-                    "dhf8r@virginia.edu"
-                ],
-                "objectClass": [
-                    "top",
-                    "person",
-                    "organizationalPerson",
-                    "inetOrgPerson",
-                    "uvaPerson",
-                    "uidObject"
-                ],
-                "telephoneNumber": [
-                    "+1 (434) 924-1723"
-                ],
-                "title": [
-                    "E42:He's a hoopy frood"
-                ],
-                "uvaDisplayDepartment": [
-                    "E0:EN-Eng Study of Parallel Universes"
-                ],
-                "uvaPersonIAMAffiliation": [
-                    "faculty"
-                ],
-                "uvaPersonSponsoredType": [
-                    "Staff"
-                ]
-            }
-        }
-
-    ]
+  "entries": [
+    {
+      "dn": "uid=lb3dp,ou=People,o=University of Virginia,c=US",
+      "raw": {
+        "cn": [
+          "Laura Barnes (lb3dp)"
+        ],
+        "displayName": [
+          "Laura Barnes"
+        ],
+        "givenName": [
+          "Laura"
+        ],
+        "mail": [
+          "lb3dp@virginia.edu"
+        ],
+        "objectClass": [
+          "top",
+          "person",
+          "organizationalPerson",
+          "inetOrgPerson",
+          "uvaPerson",
+          "uidObject"
+        ],
+        "telephoneNumber": [
+          "+1 (434) 924-1723"
+        ],
+        "title": [
+          "E0:Associate Professor of Systems and Information Engineering"
+        ],
+        "uvaDisplayDepartment": [
+          "E0:EN-Eng Sys and Environment"
+        ],
+        "uvaPersonIAMAffiliation": [
+          "faculty"
+        ],
+        "uvaPersonSponsoredType": [
+          "Staff"
+        ]
+      }
+    },
+    {
+      "dn": "uid=dhf8r,ou=People,o=University of Virginia,c=US",
+      "raw": {
+        "cn": [
+          "Dan Funk (dhf84)"
+        ],
+        "displayName": [
+          "Dan Funk"
+        ],
+        "givenName": [
+          "Dan"
+        ],
+        "mail": [
+          "dhf8r@virginia.edu"
+        ],
+        "objectClass": [
+          "top",
+          "person",
+          "organizationalPerson",
+          "inetOrgPerson",
+          "uvaPerson",
+          "uidObject"
+        ],
+        "telephoneNumber": [
+          "+1 (434) 924-1723"
+        ],
+        "title": [
+          "E42:He's a hoopy frood"
+        ],
+        "uvaDisplayDepartment": [
+          "E0:EN-Eng Study of Parallel Universes"
+        ],
+        "uvaPersonIAMAffiliation": [
+          "faculty"
+        ],
+        "uvaPersonSponsoredType": [
+          "Staff"
+        ]
+      }
+    },
+      {
+      "dn": "uid=lje5u,ou=People,o=University of Virginia,c=US",
+      "raw": {
+        "cn": [
+          "Elder, Lori J (lje5u)"
+        ],
+        "displayName": [
+          "Lori Elder"
+        ],
+        "givenName": [
+          "Lori"
+        ],
+        "mail": [
+          "lje5u@virginia.edu"
+        ],
+        "objectClass": [
+          "top",
+          "person",
+          "organizationalPerson",
+          "inetOrgPerson",
+          "uvaPerson",
+          "uidObject"
+        ],
+        "telephoneNumber": [
+          "+1 (434) 924-1723"
+        ],
+        "title": [
+          "E42:The vision"
+        ],
+        "uvaDisplayDepartment": [
+          "E0:EN-Phy Anything could go here."
+        ],
+        "uvaPersonIAMAffiliation": [
+          "faculty"
+        ],
+        "uvaPersonSponsoredType": [
+          "Staff"
+        ]
+      }
+    }
+  ]
 }

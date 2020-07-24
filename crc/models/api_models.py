@@ -29,20 +29,44 @@ class NavigationItem(object):
         self.state = state
         self.is_decision = is_decision
         self.task = task
+        self.lane = lane
 
 class Task(object):
 
+    ##########################################################################
+    #    Custom properties and validations defined in Camunda form fields    #
+    ##########################################################################
+
+    # Repeating form section
     PROP_OPTIONS_REPEAT = "repeat"
-    PROP_OPTIONS_FILE = "spreadsheet.name"
-    PROP_OPTIONS_VALUE_COLUMN = "spreadsheet.value.column"
-    PROP_OPTIONS_LABEL_COL = "spreadsheet.label.column"
+
+    # Read-only field
+    PROP_OPTIONS_READ_ONLY = "read_only"
+
+    # LDAP lookup
     PROP_LDAP_LOOKUP = "ldap.lookup"
-    VALIDATION_REQUIRED = "required"
+
+    # Autocomplete field
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
 
+    # Required field
+    VALIDATION_REQUIRED = "required"
 
-    def __init__(self, id, name, title, type, state, form, documentation, data,
-                 multi_instance_type, multi_instance_count, multi_instance_index, process_name, properties):
+    # Enum field options values pulled from a spreadsheet
+    PROP_OPTIONS_FILE_NAME = "spreadsheet.name"
+    PROP_OPTIONS_FILE_VALUE_COLUMN = "spreadsheet.value.column"
+    PROP_OPTIONS_FILE_LABEL_COLUMN = "spreadsheet.label.column"
+
+    # Enum field options values pulled from task data
+    PROP_OPTIONS_DATA_NAME = "data.name"
+    PROP_OPTIONS_DATA_VALUE_COLUMN = "data.value.column"
+    PROP_OPTIONS_DATA_LABEL_COLUMN = "data.label.column"
+
+    ##########################################################################
+
+    def __init__(self, id, name, title, type, state, lane, form, documentation, data,
+                 multi_instance_type, multi_instance_count, multi_instance_index,
+                 process_name, properties):
         self.id = id
         self.name = name
         self.title = title
@@ -51,6 +75,7 @@ class Task(object):
         self.form = form
         self.documentation = documentation
         self.data = data
+        self.lane = lane
         self.multi_instance_type = multi_instance_type  # Some tasks have a repeat behavior.
         self.multi_instance_count = multi_instance_count  # This is the number of times the task could repeat.
         self.multi_instance_index = multi_instance_index  # And the index of the currently repeating task.
@@ -60,7 +85,7 @@ class Task(object):
 
 class OptionSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name"]
+        fields = ["id", "name", "data"]
 
 
 class ValidationSchema(ma.Schema):
@@ -70,15 +95,11 @@ class ValidationSchema(ma.Schema):
 
 class FormFieldPropertySchema(ma.Schema):
     class Meta:
-        fields = [
-            "id", "value"
-        ]
+        fields = ["id", "value"]
 
 class FormFieldSchema(ma.Schema):
     class Meta:
-        fields = [
-            "id", "type", "label", "default_value", "options", "validation", "properties", "value"
-        ]
+        fields = ["id", "type", "label", "default_value", "options", "validation", "properties", "value"]
 
     default_value = marshmallow.fields.String(required=False, allow_none=True)
     options = marshmallow.fields.List(marshmallow.fields.Nested(OptionSchema))
@@ -93,7 +114,7 @@ class FormSchema(ma.Schema):
 
 class TaskSchema(ma.Schema):
     class Meta:
-        fields = ["id", "name", "title", "type", "state", "form", "documentation", "data", "multi_instance_type",
+        fields = ["id", "name", "title", "type", "state", "lane", "form", "documentation", "data", "multi_instance_type",
                   "multi_instance_count", "multi_instance_index", "process_name", "properties"]
 
     multi_instance_type = EnumField(MultiInstanceType)
@@ -101,6 +122,7 @@ class TaskSchema(ma.Schema):
     form = marshmallow.fields.Nested(FormSchema, required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
     process_name = marshmallow.fields.String(required=False, allow_none=True)
+    lane = marshmallow.fields.String(required=False, allow_none=True)
 
     @marshmallow.post_load
     def make_task(self, data, **kwargs):
@@ -110,10 +132,11 @@ class TaskSchema(ma.Schema):
 class NavigationItemSchema(ma.Schema):
     class Meta:
         fields = ["id", "task_id", "name", "title", "backtracks", "level", "indent", "child_count", "state",
-                  "is_decision", "task"]
+                  "is_decision", "task", "lane"]
         unknown = INCLUDE
     task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False, allow_none=True)
     backtracks = marshmallow.fields.String(required=False, allow_none=True)
+    lane = marshmallow.fields.String(required=False, allow_none=True)
     title = marshmallow.fields.String(required=False, allow_none=True)
     task_id = marshmallow.fields.String(required=False, allow_none=True)
 
