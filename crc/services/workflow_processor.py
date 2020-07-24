@@ -17,6 +17,7 @@ from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import WorkflowSpec
 
+import crc
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
@@ -41,9 +42,22 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
            valid Python.
         """
         # Shlex splits the whole string while respecting double quoted strings within
+        study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+        if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
+            workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+        else:
+            workflow_id = None
+
         if not script.startswith('#!'):
             try:
-                super().execute(task, script, data)
+                augmentMethods = {'studyInfo':lambda *args: crc.scripts.study_info.StudyInfo.return_data(
+                    crc.scripts.study_info.StudyInfo(),
+                    task,
+                                                                                              study_id,
+                                                                                              workflow_id,
+                                                                                              *args)}
+
+                super().execute(task, script, data,externalMethods=augmentMethods)
             except SyntaxError as e:
                 raise ApiError.from_task('syntax_error',
                                          f'If you are running a pre-defined script, please'
