@@ -196,8 +196,8 @@ Returns information specific to the protocol.
                 }
             }
         }
-        self.add_data_to_task(task=task, data=data["study"])
-        self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
+        #self.add_data_to_task(task=task, data=data["study"])
+        #self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         self.check_args(args,2)
