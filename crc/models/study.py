@@ -41,8 +41,10 @@ class StudyModel(db.Model):
 
 
 class WorkflowMetadata(object):
-    def __init__(self, id, name, display_name, description, spec_version, category_id, category_display_name, state: WorkflowState, status: WorkflowStatus,
-                 total_tasks, completed_tasks, display_order):
+    def __init__(self, id, name = None, display_name = None, description = None, spec_version = None,
+                 category_id  = None, category_display_name  = None, state: WorkflowState  = None,
+                 status: WorkflowStatus  = None, total_tasks  = None, completed_tasks  = None,
+                 display_order = None):
         self.id = id
         self.name = name
         self.display_name = display_name
@@ -176,6 +178,7 @@ class StudySchema(ma.Schema):
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
     approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
     enrollment_date = fields.Date(allow_none=True)
+    events = fields.List(fields.Nested('TaskEventSchema'), dump_only=True)
 
     class Meta:
         model = Study
