@@ -598,7 +598,7 @@ Use the EHS [Lab Safety Plan During COVID 19 template](https://www.google.com/ur
 This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_11uqavk</bpmn:incoming>
       <bpmn:outgoing>Flow_0aqgwvu</bpmn:outgoing>
-      <bpmn:script>complete_template('ResearchRampUpPlan.docx','RESEARCH_RAMPUP')/bpmn:script>
+      <bpmn:script>complete_template('ResearchRampUpPlan.docx','RESEARCH_RAMPUP')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0aqgwvu" sourceRef="Activity_GenerateRRP" targetRef="Activity_AcknowledgePlanReview" />
     <bpmn:sequenceFlow id="Flow_0j4rs82" sourceRef="Activity_SubmitPlan" targetRef="Activity_0absozl" />
@@ -755,7 +755,7 @@ Notify the Area Monitor for
 This step is internal to the system and do not require and user interaction</bpmn:documentation>
       <bpmn:incoming>Flow_0j4rs82</bpmn:incoming>
       <bpmn:outgoing>Flow_07ge8uf</bpmn:outgoing>
-      <bpmn:script>#!RequestApproval ApprvlApprvr1 ApprvlApprvr2</bpmn:script>
+      <bpmn:script>request_approval('ApprvlApprvr1','ApprvlApprvr2')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_1u58hox" name="Update Request">
       <bpmn:documentation>#### Script Task

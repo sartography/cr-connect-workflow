@@ -53,10 +53,17 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
             super().execute(task, script, data, externalMethods=augmentMethods)
         except SyntaxError as e:
-            raise ApiError.from_task('syntax_error',
-                                     f'If you are running a pre-defined script, please'
-                                     f' proceed the script with "#!", otherwise this is assumed to be'
-                                     f' pure python: {script}, {e.msg}', task=task)
+            del(task.data['task'])
+            raise ApiError('syntax_error',
+                           f'Something is wrong with your python script '
+                           f'please correct the following:'
+                           f' {script}, {e.msg}')
+        except NameError as e:
+            del(task.data['task'])
+            raise ApiError('name_error',
+                            f'something you are referencing does not exist:'
+                            f' {script}, {e.name}')
+
        # else:
        #     self.run_predefined_script(task, script[2:], data)  # strip off the first two characters.
 

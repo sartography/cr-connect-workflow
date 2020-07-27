@@ -27,7 +27,7 @@
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1i7hk1a</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_11c35oq</bpmn:outgoing>
-      <bpmn:script>complete_template('Letter.docx AD_CoCApp')/bpmn:script>
+      <bpmn:script>complete_template('Letter.docx','AD_CoCApp')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="EndEvent_0evb22x">
       <bpmn:incoming>SequenceFlow_11c35oq</bpmn:incoming>

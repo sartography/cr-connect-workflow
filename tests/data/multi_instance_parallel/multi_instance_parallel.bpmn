@@ -11,7 +11,7 @@
     <bpmn:sequenceFlow id="Flow_0ugjw69" sourceRef="MultiInstanceTask" targetRef="Event_End" />
     <bpmn:userTask id="MultiInstanceTask" name="Gather more information" camunda:formKey="GetEmail">
       <bpmn:documentation># Please provide addtional information about:
-## Investigator ID: {{investigator.user_id}} 
+## Investigator ID: {{investigator.user_id}}
 ## Role: {{investigator.type_full}}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
