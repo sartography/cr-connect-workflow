@@ -31,10 +31,6 @@ def verify_token(token=None):
     failure_error = ApiError("invalid_token", "Unable to decode the token you provided.  Please re-authenticate",
                              status_code=403)
 
-    if not _is_production() and (token is None or 'user' not in g):
-        g.user = UserModel.query.first()
-        token = g.user.encode_auth_token()
-
     if token:
         try:
             token_info = UserModel.decode_auth_token(token)
@@ -47,7 +43,7 @@ def verify_token(token=None):
             raise failure_error
 
     # If there's no token and we're in production, get the user from the SSO headers and return their token
-    if not token and _is_production():
+    elif _is_production():
         uid = _get_request_uid(request)
 
         if uid is not None:
@@ -62,6 +58,12 @@ def verify_token(token=None):
             else:
                 raise ApiError("no_user", "User not found. Please login via the frontend app before accessing this feature.",
                          status_code=403)
+
+    else:
+        # Fall back to a default user if this is not production.
+        g.user = UserModel.query.first()
+        token = g.user.encode_auth_token()
+
 
 
 def verify_token_admin(token=None):
