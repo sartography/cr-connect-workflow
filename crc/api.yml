@@ -502,7 +502,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
-  # /v1.0/workflow/0
   /reference_file:
     get:
       operationId: crc.api.file.get_reference_files
@@ -565,6 +564,26 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+  /task_events:
+    parameters:
+      - name: action
+        in: query
+        required: false
+        description: The type of action the event documents, options include "ASSIGNMENT" for tasks that are waiting on you, "COMPLETE" for things have completed.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.workflow.get_task_events
+      summary: Returns a list of task events related to the current user.  Can be filtered by type.
+      tags:
+        - Workflows and Tasks
+      responses:
+        '200':
+          description: Returns details about tasks that are waiting on the current user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskEvent"
   # /v1.0/workflow/0
   /workflow/{workflow_id}:
     parameters:
@@ -626,6 +645,12 @@ paths:
         schema:
           type: string
           format: uuid
+      - name: terminate_loop
+        in: query
+        required: false
+        description: Terminate the loop on a looping task
+        schema:
+          type: boolean
     put:
       operationId: crc.api.workflow.update_task
       summary: Exclusively for User Tasks, submits form data as a flat set of key/values.
@@ -697,12 +722,19 @@ paths:
         description: The string to search for in the Value column of the lookup table.
         schema:
           type: string
+      - name: value
+        in: query
+        required: false
+        description: An alternative to query, this accepts the specific value or id selected in a dropdown list or auto-complete, and will return the one matching record. Useful for getting additional details about an item selected in a dropdown.
+        schema:
+          type: string
       - name: limit
         in: query
         required: false
         description: The total number of records to return, defaults to 10.
         schema:
           type: integer
+
     get:
       operationId: crc.api.workflow.lookup
       summary: Provides type-ahead search against a lookup table associted with a form field.
@@ -806,6 +838,33 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Script"
+  /eval:
+    parameters:
+      - name: expression
+        in: query
+        required: true
+        description: The python expression to execute.
+        schema:
+          type: string
+    put:
+      operationId: crc.api.tools.evaluate_python_expression
+      summary: Execute the given python expression, with the given json data structure used as local variables, returns the result of the evaluation.
+      tags:
+        - Configurator Tools
+      requestBody:
+        description: The json data to use as local variables when evaluating the expresson.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Returns the result of executing the given python script.
+          content:
+            text/plain:
+              schema:
+                type: string
   /approval-counts:
     parameters:
       - name: as_user
@@ -917,6 +976,21 @@ paths:
             application/json:
               schema:
                 type: object
+  /health_attesting:
+    get:
+      operationId: crc.api.approval.get_health_attesting_csv
+      summary: Returns a CSV file with health attesting records
+      tags:
+      - Approvals
+      responses:
+        '200':
+          description: A CSV file
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Approval"
 components:
   securitySchemes:
     jwt:
@@ -1164,6 +1238,36 @@ components:
                   value: "model.my_boolean_field_id && model.my_enum_field_value !== 'something'"
                 - id: "hide_expression"
                   value: "model.my_enum_field_value === 'something'"
+    TaskEvent:
+      properties:
+          workflow:
+            $ref: "#/components/schemas/Workflow"
+          study:
+            $ref: "#/components/schemas/Study"
+          workflow_sec:
+            $ref: "#/components/schemas/WorkflowSpec"
+          spec_version:
+            type: string
+          action:
+            type: string
+          task_id:
+            type: string
+          task_type:
+            type: string
+          task_lane:
+            type: string
+          form_data:
+            type: object
+          mi_type:
+            type: string
+          mi_count:
+            type: integer
+          mi_index:
+            type: integer
+          process_name:
+            type: string
+          date:
+            type: string
     Form:
       properties:
         key:

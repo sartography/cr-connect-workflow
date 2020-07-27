@@ -57,28 +57,16 @@ class Approval(object):
 
     @classmethod
     def from_model(cls, model: ApprovalModel):
-        # TODO: Reduce the code by iterating over model's dict keys
-        instance = cls()
-        instance.id = model.id
-        instance.study_id = model.study_id
-        instance.workflow_id = model.workflow_id
-        instance.version = model.version
-        instance.approver_uid = model.approver_uid
-        instance.status = model.status
-        instance.message = model.message
-        instance.date_created = model.date_created
-        instance.date_approved = model.date_approved
-        instance.version = model.version
-        instance.title = ''
+        args = dict((k, v) for k, v in model.__dict__.items() if not k.startswith('_'))
+        instance = cls(**args)
         instance.related_approvals = []
+        instance.title = model.study.title if model.study else ''
 
-        if model.study:
-            instance.title = model.study.title
         try:
             instance.approver = LdapService.user_info(model.approver_uid)
             instance.primary_investigator = LdapService.user_info(model.study.primary_investigator_id)
         except ApiError as ae:
-            app.logger.error("Ldap lookup failed for approval record %i" % model.id)
+            app.logger.error(f'Ldap lookup failed for approval record {model.id}', exc_info=True)
 
         doc_dictionary = FileService.get_doc_dictionary()
         instance.associated_files = []

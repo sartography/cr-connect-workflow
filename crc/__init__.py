@@ -4,6 +4,8 @@ import sentry_sdk
 
 import connexion
 from jinja2 import Environment, FileSystemLoader
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_mail import Mail
@@ -32,29 +34,30 @@ db = SQLAlchemy(app)
 session = db.session
 """:type: sqlalchemy.orm.Session"""
 
+# Mail settings
+mail = Mail(app)
+
 migrate = Migrate(app, db)
 ma = Marshmallow(app)
 
 from crc import models
 from crc import api
+from crc.api import admin
 
 connexion_app.add_api('api.yml', base_path='/v1.0')
+
 
 # Convert list of allowed origins to list of regexes
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
 cors = CORS(connexion_app.app, origins=origins_re)
 
-if app.config['ENABLE_SENTRY']:
+# Sentry error handling
+if app.config['SENTRY_ENVIRONMENT']:
     sentry_sdk.init(
+        environment=app.config['SENTRY_ENVIRONMENT'],
         dsn="https://25342ca4e2d443c6a5c49707d68e9f40@o401361.ingest.sentry.io/5260915",
         integrations=[FlaskIntegration()]
     )
-
-# Jinja environment definition, used to render mail templates
-template_dir = os.getcwd() + '/crc/static/templates/mails'
-env = Environment(loader=FileSystemLoader(template_dir))
-# Mail settings
-mail = Mail(app)
 
 print('=== USING THESE CONFIG SETTINGS: ===')
 print('APPLICATION_ROOT = ', app.config['APPLICATION_ROOT'])
@@ -88,3 +91,4 @@ def clear_db():
     """Load example data into the database."""
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
+

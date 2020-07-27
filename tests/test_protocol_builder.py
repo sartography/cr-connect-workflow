@@ -24,7 +24,7 @@ class TestProtocolBuilder(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('investigators.json')
         response = ProtocolBuilderService.get_investigators(self.test_study_id)
         self.assertIsNotNone(response)
-        self.assertEqual(3, len(response))
+        self.assertEqual(5, len(response))
         self.assertEqual("DC", response[0]["INVESTIGATORTYPE"])
         self.assertEqual("Department Contact", response[0]["INVESTIGATORTYPEFULL"])
         self.assertEqual("asd3v", response[0]["NETBADGEID"])

@@ -1,4 +1,5 @@
 import json
+import unittest
 from unittest.mock import patch
 
 from tests.base_test import BaseTest
@@ -51,9 +52,6 @@ class TestWorkflowSpecValidation(BaseTest):
         app.config['PB_ENABLED'] = True
         self.validate_all_loaded_workflows()
 
-    def test_successful_validation_of_rrt_workflows(self):
-        self.load_example_data(use_rrt_data=True)
-        self.validate_all_loaded_workflows()
 
     def validate_all_loaded_workflows(self):
         workflows = session.query(WorkflowSpecModel).all()
@@ -65,7 +63,6 @@ class TestWorkflowSpecValidation(BaseTest):
             json_data = json.loads(rv.get_data(as_text=True))
             errors.extend(ApiErrorSchema(many=True).load(json_data))
         self.assertEqual(0, len(errors), json.dumps(errors))
-
 
     def test_invalid_expression(self):
         self.load_example_data()
@@ -92,11 +89,20 @@ class TestWorkflowSpecValidation(BaseTest):
         self.load_example_data()
         errors = self.validate_workflow("invalid_script")
         self.assertEqual(2, len(errors))
-        self.assertEqual("workflow_validation_exception", errors[0]['code'])
+        self.assertEqual("error_loading_workflow", errors[0]['code'])
         self.assertTrue("NoSuchScript" in errors[0]['message'])
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
         self.assertEqual("An Invalid Script Reference", errors[0]['task_name'])
         self.assertEqual("invalid_script.bpmn", errors[0]['file_name'])
+
+    def test_invalid_script2(self):
+        self.load_example_data()
+        errors = self.validate_workflow("invalid_script2")
+        self.assertEqual(2, len(errors))
+        self.assertEqual("error_loading_workflow", errors[0]['code'])
+        self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
+        self.assertEqual("An Invalid Script Reference", errors[0]['task_name'])
+        self.assertEqual("invalid_script2.bpmn", errors[0]['file_name'])
 
     def test_repeating_sections_correctly_populated(self):
         self.load_example_data()

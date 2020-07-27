@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1e7871f" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
+  <bpmn:process id="Process_04jm0bm" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1dhb8f4</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1dhb8f4" sourceRef="StartEvent_1" targetRef="ScriptTask_LoadIRBDetails" />
+    <bpmn:endEvent id="EndEvent_1h89sl4">
+      <bpmn:incoming>Flow_0jqdolk</bpmn:incoming>
+      <bpmn:incoming>Flow_OneOnly</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="ScriptTask_LoadIRBDetails" name="Load IRB Details">
+      <bpmn:incoming>SequenceFlow_1dhb8f4</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1uzcl1f</bpmn:outgoing>
+      <bpmn:script>#! StudyInfo details</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1uzcl1f" sourceRef="ScriptTask_LoadIRBDetails" targetRef="Task_SupplementIDE" />
+    <bpmn:businessRuleTask id="Task_SupplementIDE" name="Current IND Status" camunda:decisionRef="decision_ind_check">
+      <bpmn:incoming>SequenceFlow_1uzcl1f</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1cwibmt</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:userTask id="IND_n1_info" name="Edit IND #1 Info" camunda:formKey="IND1_Info">
+      <bpmn:documentation>IND No.: {{ StudyInfo.details.IND_1 }}</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="IND1_Number" label="IND1 number:" type="string">
+            <camunda:properties>
+              <camunda:property id="description" value="Enter IND number, if available." />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND1_HolderType" label="IND Holder Type" type="enum">
+            <camunda:value id="Industry" name="Industry" />
+            <camunda:value id="UVaPI" name="UVa PI" />
+            <camunda:value id="OtherPI" name="Other PI" />
+            <camunda:value id="UVaCenter" name="UVaCenter" />
+            <camunda:value id="OtherCollUniv" name="Other Colleges and Universities" />
+            <camunda:value id="Exempt" name="IND Exempt" />
+            <camunda:value id="NA" name="NA" />
+          </camunda:formField>
+          <camunda:formField id="IND1_HolderName" label="Holder Name" type="autocomplete">
+            <camunda:properties>
+              <camunda:property id="spreadsheet.name" value="SponsorList.xls" />
+              <camunda:property id="spreadsheet.value.column" value="CUSTOMER_NUMBER" />
+              <camunda:property id="spreadsheet.label.column" value="CUSTOMER_NAME" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND1_HolderNameNotInList" label="IND Holder Name if not in above list" type="string">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="model.IND1_HolderName &#38;&#38; model.IND1_HolderName.value !== &#34;0&#34;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND1_DrugBiologicName" label="Drug/Biologic Name" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1bn0jp7</bpmn:incoming>
+      <bpmn:outgoing>Flow_10rb7gb</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="IND_n2_info" name="Edit IND #2 Info" camunda:formKey="IND2_Info">
+      <bpmn:documentation>IND No.:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="IND2_Status" label="Do you have a second Investigational New Drug?" type="enum">
+            <camunda:value id="Yes" name="Yes" />
+            <camunda:value id="YesBut" name="Yes, but number is not available at this time" />
+            <camunda:value id="No" name="No" />
+          </camunda:formField>
+          <camunda:formField id="IND2_Number" label="IND2 Number:" type="string">
+            <camunda:properties>
+              <camunda:property id="value_expression" value="model.StudyInfo.details.IND_2" />
+              <camunda:property id="hide_expression" value="!model.IND2_Status || !model.IND2_Status.value || model.IND2_Status.value === &#39;No&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND2_HolderType" label="IND Holder Type" type="enum">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!model.IND2_Status || !model.IND2_Status.value || model.IND2_Status.value === &#39;No&#39;" />
+            </camunda:properties>
+            <camunda:value id="Industry" name="Industry" />
+            <camunda:value id="UVaPI" name="UVa PI" />
+            <camunda:value id="OtherPI" name="Other PI" />
+            <camunda:value id="UVaCenter" name="UVaCenter" />
+            <camunda:value id="OtherCollUniv" name="Other Colleges and Universities" />
+            <camunda:value id="Exempt" name="IND Exempt" />
+            <camunda:value id="NA" name="NA" />
+          </camunda:formField>
+          <camunda:formField id="IND2_HolderName" label="Holder Name" type="autocomplete">
+            <camunda:properties>
+              <camunda:property id="spreadsheet.name" value="SponsorList.xls" />
+              <camunda:property id="spreadsheet.value.column" value="CUSTOMER_NUMBER" />
+              <camunda:property id="spreadsheet.label.column" value="CUSTOMER_NAME" />
+              <camunda:property id="hide_expression" value="!model.IND2_Status || !model.IND2_Status.value || model.IND2_Status.value === &#39;No&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND2_HolderNameNotInList" label="IND Holder Name if not in above list" type="string">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!model.IND2_Status || !model.IND2_Status.value || model.IND2_Status.value === &#39;No&#39; || model.IND2_HolderName.value !== &#34;0&#34;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND2_DrugBiologicName" label="Drug/Biologic Name" type="string">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!model.IND2_Status || !model.IND2_Status.value || model.IND2_Status.value === &#39;No&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_TwoOrThree</bpmn:incoming>
+      <bpmn:outgoing>Flow_1p563xr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="IND_n3_info" name="Edit IND #3 Info" camunda:formKey="IND3_Info">
+      <bpmn:documentation>IND No.:</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="IND3_Status" label="Do you have a third Investigational New Drug?" type="enum" defaultValue="No">
+            <camunda:value id="Yes" name="Yes" />
+            <camunda:value id="YesBut" name="Yes, but number is not available at this time." />
+            <camunda:value id="No" name="No" />
+          </camunda:formField>
+          <camunda:formField id="IND3_Number" label="IND3 Number:" type="string">
+            <camunda:properties>
+              <camunda:property id="value_expression" value="model.StudyInfo.details.IND_3" />
+              <camunda:property id="hide_expression" value="!model.IND3_Status || !model.IND3_Status.value || model.IND3_Status.value === &#39;No&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND3_HolderType" label="IND Holder Type" type="enum">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!model.IND3_Status || !model.IND3_Status.value || model.IND3_Status.value === &#39;No&#39;" />
+            </camunda:properties>
+            <camunda:value id="Industry" name="Industry" />
+            <camunda:value id="UVaPI" name="UVa PI" />
+            <camunda:value id="OtherPI" name="Other PI" />
+            <camunda:value id="UVaCenter" name="UVaCenter" />
+            <camunda:value id="OtherCollUniv" name="Other Colleges and Universities" />
+            <camunda:value id="Exempt" name="IND Exempt" />
+            <camunda:value id="NA" name="NA" />
+          </camunda:formField>
+          <camunda:formField id="IND3_HolderName" label="Holder Name" type="autocomplete">
+            <camunda:properties>
+              <camunda:property id="spreadsheet.name" value="SponsorList.xls" />
+              <camunda:property id="spreadsheet.value.column" value="CUSTOMER_NUMBER" />
+              <camunda:property id="spreadsheet.label.column" value="CUSTOMER_NAME" />
+              <camunda:property id="hide_expression" value="!model.IND3_Status || !model.IND3_Status.value || model.IND3_Status.value === &#39;No&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND3_HolderNameNotInList" label="IND Holder Name if not in above list" type="string">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!model.IND3_Status || !model.IND3_Status.value || model.IND3_Status.value === &#39;No&#39; || model.IND3_HolderName.value !== &#34;0&#34;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="IND3_DrugBiologicName" label="Drug/Biologic Name" type="string">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="!model.IND3_Status || !model.IND3_Status.value || model.IND3_Status.value === &#39;No&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1p563xr</bpmn:incoming>
+      <bpmn:outgoing>Flow_0jqdolk</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1cwibmt" sourceRef="Task_SupplementIDE" targetRef="Activity_0yf2ypo" />
+    <bpmn:userTask id="Activity_0yf2ypo" name="Provide IND Count" camunda:formKey="IND_Count">
+      <bpmn:documentation>{{ ind_message }}</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="IND_CntEntered" label="How Many?" type="enum" defaultValue="one">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="value_one" name="1 IND number" />
+            <camunda:value id="value_two" name="2 IND number" />
+            <camunda:value id="value_three" name="3 IND number" />
+            <camunda:value id="value_na" name="No IND Numbers in PB" />
+          </camunda:formField>
+          <camunda:formField id="FormField_0h8vmid" label="Test" type="string">
+            <camunda:properties>
+              <camunda:property id="value_expression" value="model.ind_cnt" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1cwibmt</bpmn:incoming>
+      <bpmn:outgoing>Flow_1bn0jp7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1bn0jp7" sourceRef="Activity_0yf2ypo" targetRef="IND_n1_info" />
+    <bpmn:sequenceFlow id="Flow_1p563xr" sourceRef="IND_n2_info" targetRef="IND_n3_info" />
+    <bpmn:sequenceFlow id="Flow_0jqdolk" sourceRef="IND_n3_info" targetRef="EndEvent_1h89sl4" />
+    <bpmn:sequenceFlow id="Flow_10rb7gb" sourceRef="IND_n1_info" targetRef="Gateway_0ckycp9" />
+    <bpmn:exclusiveGateway id="Gateway_0ckycp9">
+      <bpmn:incoming>Flow_10rb7gb</bpmn:incoming>
+      <bpmn:outgoing>Flow_TwoOrThree</bpmn:outgoing>
+      <bpmn:outgoing>Flow_OneOnly</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_TwoOrThree" name="Two or Three INDs" sourceRef="Gateway_0ckycp9" targetRef="IND_n2_info">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">IND_CntEntered != "value_one"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_OneOnly" name="One IND" sourceRef="Gateway_0ckycp9" targetRef="EndEvent_1h89sl4">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">IND_CntEntered == "value_one"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_04jm0bm">
+      <bpmndi:BPMNEdge id="Flow_00n2n7p_di" bpmnElement="Flow_OneOnly">
+        <di:waypoint x="940" y="142" />
+        <di:waypoint x="940" y="260" />
+        <di:waypoint x="1510" y="260" />
+        <di:waypoint x="1510" y="135" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1205" y="242" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1o2u7k3_di" bpmnElement="Flow_TwoOrThree">
+        <di:waypoint x="965" y="117" />
+        <di:waypoint x="1070" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="987" y="86" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10rb7gb_di" bpmnElement="Flow_10rb7gb">
+        <di:waypoint x="860" y="117" />
+        <di:waypoint x="915" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jqdolk_di" bpmnElement="Flow_0jqdolk">
+        <di:waypoint x="1380" y="117" />
+        <di:waypoint x="1492" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1p563xr_di" bpmnElement="Flow_1p563xr">
+        <di:waypoint x="1170" y="117" />
+        <di:waypoint x="1280" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1bn0jp7_di" bpmnElement="Flow_1bn0jp7">
+        <di:waypoint x="670" y="117" />
+        <di:waypoint x="760" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1cwibmt_di" bpmnElement="SequenceFlow_1cwibmt">
+        <di:waypoint x="520" y="117" />
+        <di:waypoint x="570" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1uzcl1f_di" bpmnElement="SequenceFlow_1uzcl1f">
+        <di:waypoint x="340" y="117" />
+        <di:waypoint x="420" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1dhb8f4_di" bpmnElement="SequenceFlow_1dhb8f4">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="240" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1h89sl4_di" bpmnElement="EndEvent_1h89sl4">
+        <dc:Bounds x="1492" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="414" y="202" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1fn00ox_di" bpmnElement="ScriptTask_LoadIRBDetails">
+        <dc:Bounds x="240" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BusinessRuleTask_1cszgkx_di" bpmnElement="Task_SupplementIDE">
+        <dc:Bounds x="420" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0a2dfa8_di" bpmnElement="IND_n1_info">
+        <dc:Bounds x="760" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1smni98_di" bpmnElement="IND_n2_info">
+        <dc:Bounds x="1070" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_1378hd8_di" bpmnElement="IND_n3_info">
+        <dc:Bounds x="1280" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wfey2b_di" bpmnElement="Activity_0yf2ypo">
+        <dc:Bounds x="570" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0ckycp9_di" bpmnElement="Gateway_0ckycp9" isMarkerVisible="true">
+        <dc:Bounds x="915" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

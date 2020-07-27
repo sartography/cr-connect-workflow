@@ -4,6 +4,7 @@ import random
 from unittest.mock import patch
 
 from tests.base_test import BaseTest
+
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
 from crc.models.file import FileModelSchema
@@ -11,6 +12,18 @@ from crc.models.workflow import WorkflowStatus
 
 
 class TestTasksApi(BaseTest):
+
+    def assert_options_populated(self, results, lookup_data_keys):
+        option_keys = ['value', 'label', 'data']
+        self.assertIsInstance(results, list)
+        for result in results:
+            for option_key in option_keys:
+                self.assertTrue(option_key in result, 'should have value, label, and data properties populated')
+                self.assertIsNotNone(result[option_key], '%s should not be None' % option_key)
+
+            self.assertIsInstance(result['data'], dict)
+            for lookup_data_key in lookup_data_keys:
+                self.assertTrue(lookup_data_key in result['data'], 'should have all lookup data columns populated')
 
     def test_get_current_user_tasks(self):
         self.load_example_data()
@@ -250,7 +263,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual(4, len(navigation)) # Start task, form_task, multi_task, end task
         self.assertEqual("UserTask", workflow.next_task.type)
         self.assertEqual(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
-        self.assertEqual(9, workflow.next_task.multi_instance_count)
+        self.assertEqual(5, workflow.next_task.multi_instance_count)
 
         # Assure that the names for each task are properly updated, so they aren't all the same.
         self.assertEqual("Primary Investigator", workflow.next_task.properties['display_name'])
@@ -270,6 +283,80 @@ class TestTasksApi(BaseTest):
         self.assert_success(rv)
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(5, len(results))
+        self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
+
+    def test_lookup_endpoint_for_task_field_using_lookup_entry_id(self):
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_with_search')
+        # get the first form in the two form workflow.
+        workflow = self.get_workflow_api(workflow)
+        task = workflow.next_task
+        field_id = task.form['fields'][0]['id']
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?query=%s&limit=5' %
+                          (workflow.id, field_id, 'c'), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(5, len(results))
+        self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
+
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
+                          (workflow.id, field_id, results[0]['value']), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(1, len(results))
+        self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
+        self.assertNotIn('id', results[0], "Don't include the internal id, that can be very confusing, and should not be used.")
+
+    def test_lookup_endpoint_also_works_for_enum(self):
+        # Naming here get's a little confusing.  fields can be marked as enum or autocomplete.
+        # In the event of an auto-complete it's a type-ahead search field, for an enum the
+        # the key/values from the spreadsheet are added directly to the form and it shows up as
+        # a dropdown.  This tests the case of wanting to get additional data when a user selects
+        # something from a dropdown.
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_from_file')
+        # get the first form in the two form workflow.
+        workflow = self.get_workflow_api(workflow)
+        task = workflow.next_task
+        field_id = task.form['fields'][0]['id']
+        option_id = task.form['fields'][0]['options'][0]['id']
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
+                          (workflow.id, field_id, option_id), # All records with a word that starts with 'c'
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        results = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(1, len(results))
+        self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
+        self.assertIsInstance(results[0]['data'], dict)
+
+    def test_enum_from_task_data(self):
+        self.load_example_data()
+        workflow = self.create_workflow('enum_options_from_task_data')
+        # get the first form in the two form workflow.
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        workflow_api = self.complete_form(workflow, task, {'invitees': [
+            {'first_name': 'Alistair', 'last_name': 'Aardvark', 'age': 43, 'likes_pie': True, 'num_lumps': 21, 'secret_id': 'Antimony', 'display_name': 'Professor Alistair A. Aardvark'},
+            {'first_name': 'Berthilda', 'last_name': 'Binturong', 'age': 12, 'likes_pie': False, 'num_lumps': 34, 'secret_id': 'Beryllium', 'display_name': 'Dr. Berthilda B. Binturong'},
+            {'first_name': 'Chesterfield', 'last_name': 'Capybara', 'age': 32, 'likes_pie': True, 'num_lumps': 1, 'secret_id': 'Cadmium', 'display_name': 'The Honorable C. C. Capybara'},
+        ]})
+        task = workflow_api.next_task
+
+        field_id = task.form['fields'][0]['id']
+        options = task.form['fields'][0]['options']
+        self.assertEqual(3, len(options))
+        option_id = options[0]['id']
+        self.assertEqual('Professor Alistair A. Aardvark', options[0]['name'])
+        self.assertEqual('Dr. Berthilda B. Binturong', options[1]['name'])
+        self.assertEqual('The Honorable C. C. Capybara', options[2]['name'])
+        self.assertEqual('Alistair', options[0]['data']['first_name'])
+        self.assertEqual('Berthilda', options[1]['data']['first_name'])
+        self.assertEqual('Chesterfield', options[2]['data']['first_name'])
 
     def test_lookup_endpoint_for_task_ldap_field_lookup(self):
         self.load_example_data()
@@ -285,6 +372,9 @@ class TestTasksApi(BaseTest):
                           content_type="application/json")
         self.assert_success(rv)
         results = json.loads(rv.get_data(as_text=True))
+        self.assert_options_populated(results, ['telephone_number', 'affiliation', 'uid', 'title',
+                                                'given_name', 'department', 'date_cached', 'sponsor_type',
+                                                'display_name', 'email_address'])
         self.assertEqual(1, len(results))
 
     def test_sub_process(self):
@@ -299,13 +389,13 @@ class TestTasksApi(BaseTest):
         self.assertEqual("UserTask", task.type)
         self.assertEqual("Activity_A", task.name)
         self.assertEqual("My Sub Process", task.process_name)
-        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
+        workflow_api = self.complete_form(workflow, task, {"FieldA": "Dan"})
         task = workflow_api.next_task
         self.assertIsNotNone(task)
 
         self.assertEqual("Activity_B", task.name)
         self.assertEqual("Sub Workflow Example", task.process_name)
-        workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
+        workflow_api = self.complete_form(workflow, task, {"FieldB": "Dan"})
         self.assertEqual(WorkflowStatus.complete, workflow_api.status)
 
     def test_update_task_resets_token(self):
@@ -363,17 +453,25 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance_parallel')
 
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual(12, len(workflow_api.navigation))
+        self.assertEqual(8, len(workflow_api.navigation))
         ready_items = [nav for nav in workflow_api.navigation if nav['state'] == "READY"]
-        self.assertEqual(9, len(ready_items))
+        self.assertEqual(5, len(ready_items))
 
         self.assertEqual("UserTask", workflow_api.next_task.type)
-        self.assertEqual("MutiInstanceTask",workflow_api.next_task.name)
-        self.assertEqual("more information", workflow_api.next_task.title)
+        self.assertEqual("MultiInstanceTask",workflow_api.next_task.name)
+        self.assertEqual("Primary Investigator", workflow_api.next_task.title)
 
-        for i in random.sample(range(9), 9):
+        for i in random.sample(range(5), 5):
             task = TaskSchema().load(ready_items[i]['task'])
-            self.complete_form(workflow, task, {"investigator":{"email": "dhf8r@virginia.edu"}})
+            rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, task.id),
+                              headers=self.logged_in_headers(),
+                              content_type="application/json")
+            self.assert_success(rv)
+            json_data = json.loads(rv.get_data(as_text=True))
+            workflow = WorkflowApiSchema().load(json_data)
+            data = workflow.next_task.data
+            data['investigator']['email'] = "dhf8r@virginia.edu"
+            self.complete_form(workflow, task, data)
             #tasks = self.get_workflow_api(workflow).user_tasks
 
         workflow = self.get_workflow_api(workflow)
