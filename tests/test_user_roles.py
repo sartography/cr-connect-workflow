@@ -259,6 +259,8 @@ class TestTasksApi(BaseTest):
         self.assertEquals(0, len(self.get_assignment_task_events(supervisor.uid)))
 
         # Sending any subsequent complete forms does not result in a new task event
-        workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
+        with self.assertRaises(AssertionError) as _api_error:
+            workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
+
         self.assertEquals(0, len(self.get_assignment_task_events(submitter.uid)))
         self.assertEquals(0, len(self.get_assignment_task_events(supervisor.uid)))
