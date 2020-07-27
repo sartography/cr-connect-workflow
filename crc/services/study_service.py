@@ -1,6 +1,5 @@
 from copy import copy
 from datetime import datetime
-import json
 from typing import List
 
 import requests
@@ -13,16 +12,15 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileModelSchema, File
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
+from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
+from crc.services.approval_service import ApprovalService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
-from crc.services.approval_service import ApprovalService
-from crc.models.approval import Approval
 
 
 class StudyService(object):
@@ -63,7 +61,7 @@ class StudyService(object):
         files = (File.from_models(model, FileService.get_file_data(model.id),
                          FileService.get_doc_dictionary()) for model in files)
         study.files = list(files)
-
+        study.events = StudyService.get_events(study_id)
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.  Don't execute this for Abandoned studies, as
         # we don't have the information to process them.
@@ -76,6 +74,14 @@ class StudyService(object):
                 category.workflows = {w for w in workflow_metas if w.category_id == category.id}
 
         return study
+
+    @staticmethod
+    def get_events(study_id):
+        event_models = db.session.query(TaskEventModel).filter(TaskEventModel.study_id == study_id).all()
+        events = []
+        for event_model in event_models:
+            events.append(TaskEvent(event_model, None, WorkflowMetadata(id=event_model.workflow_id)))
+        return events
 
     @staticmethod
     def delete_study(study_id):
