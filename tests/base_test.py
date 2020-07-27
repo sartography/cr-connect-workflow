@@ -2,6 +2,8 @@
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import os
 
+from crc.services.user_service import UserService
+
 os.environ["TESTING"] = "true"
 
 import json
@@ -118,7 +120,8 @@ class BaseTest(unittest.TestCase):
         self.assertIsNotNone(user_model.display_name)
         self.assertEqual(user_model.uid, uid)
         self.assertTrue('user' in g, 'User should be in Flask globals')
-        self.assertEqual(uid, g.user.uid, 'Logged in user should match given user uid')
+        user = UserService.current_user(allow_admin_impersonate=True)
+        self.assertEqual(uid, user.uid, 'Logged in user should match given user uid')
 
         return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
 

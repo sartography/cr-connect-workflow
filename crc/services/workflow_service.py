@@ -30,6 +30,7 @@ from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
+from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -239,7 +240,7 @@ class WorkflowService(object):
                 nav_item['title'] = nav_item['task'].title  # Prefer the task title.
 
                 user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
-                if 'user' not in g or not g.user or g.user.uid not in user_uids:
+                if not UserService.in_list(user_uids, allow_admin_impersonate=True):
                     nav_item['state'] = WorkflowService.TASK_STATE_LOCKED
 
             else:
@@ -272,7 +273,7 @@ class WorkflowService(object):
             workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
             # Update the state of the task to locked if the current user does not own the task.
             user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
-            if 'user' not in g or not g.user or g.user.uid not in user_uids:
+            if not UserService.in_list(user_uids, allow_admin_impersonate=True):
                 workflow_api.next_task.state = WorkflowService.TASK_STATE_LOCKED
         return workflow_api
 

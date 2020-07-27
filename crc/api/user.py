@@ -63,13 +63,15 @@ def verify_token(token=None):
         # Fall back to a default user if this is not production.
         g.user = UserModel.query.first()
         token = g.user.encode_auth_token()
+        token_info = UserModel.decode_auth_token(token)
+        return token_info
 
 
 
 def verify_token_admin(token=None):
     """
-        Verifies the token for the user (if provided) in non-production environment. If in production environment,
-        checks that the user is in the list of authorized admins
+        Verifies the token for the user (if provided) in non-production environment.
+        If in production environment, checks that the user is in the list of authorized admins
 
         Args:
             token: Optional[str]
@@ -77,18 +79,11 @@ def verify_token_admin(token=None):
         Returns:
             token: str
    """
-
-    # If this is production, check that the user is in the list of admins
-    if _is_production():
-        uid = _get_request_uid(request)
-
-        if uid is not None and uid in app.config['ADMIN_UIDS']:
-            return verify_token()
-
-    # If we're not in production, just use the normal verify_token method
-    else:
-        return verify_token(token)
-
+    verify_token(token)
+    if "user" in g and g.user.is_admin():
+        token = g.user.encode_auth_token()
+        token_info = UserModel.decode_auth_token(token)
+        return token_info
 
 def get_current_user():
     return UserModelSchema().dump(g.user)

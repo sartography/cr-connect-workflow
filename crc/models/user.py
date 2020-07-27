@@ -18,9 +18,12 @@ class UserModel(db.Model):
     first_name = db.Column(db.String, nullable=True)
     last_name = db.Column(db.String, nullable=True)
     title = db.Column(db.String, nullable=True)
-
     # TODO: Add Department and School
 
+    def is_admin(self):
+        # Currently admin abilities are set in the configuration, but this
+        # may change in the future.
+        return self.uid in app.config['ADMIN_UIDS']
 
     def encode_auth_token(self):
         """

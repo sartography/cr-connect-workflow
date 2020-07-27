@@ -1,5 +1,6 @@
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from flask import g
 
 from crc import ma, app
 
@@ -60,3 +61,5 @@ class ApiErrorSchema(ma.Schema):
 def handle_invalid_usage(error):
     response = ApiErrorSchema().dump(error)
     return response, error.status_code
+
+
