@@ -22,7 +22,11 @@
     <bpmn:userTask id="Activity_1qpy9ra" name="Assign Approver" camunda:formKey="form_assign_approver">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="supervisor" label="Approver UID" type="string" defaultValue="dhf8r" />
+          <camunda:formField id="supervisor" label="Approver UID" type="string" defaultValue="dhf8r">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0q51aiq</bpmn:incoming>
@@ -49,7 +53,11 @@
     <bpmn:userTask id="Activity_107ojvq" name="Approve Study" camunda:formKey="form_approve_study">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="is_study_approved" label="Approve this study?" type="boolean" />
+          <camunda:formField id="is_study_approved" label="Approve this study?" type="boolean">
+             <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0d2snmk</bpmn:incoming>
