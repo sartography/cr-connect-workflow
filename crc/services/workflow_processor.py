@@ -49,17 +49,18 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             workflow_id = None
 
         try:
-            augmentMethods = Script.generate_augmented_list(task,study_id,workflow_id)
+            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
+            else:
+                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
 
             super().execute(task, script, data, externalMethods=augmentMethods)
         except SyntaxError as e:
-            del(task.data['task'])
             raise ApiError('syntax_error',
                            f'Something is wrong with your python script '
                            f'please correct the following:'
                            f' {script}, {e.msg}')
         except NameError as e:
-            del(task.data['task'])
             raise ApiError('name_error',
                             f'something you are referencing does not exist:'
                             f' {script}, {e.name}')

@@ -149,11 +149,11 @@ Returns information specific to the protocol.
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
-        self.check_args(args)
+        self.check_args(args,2)
         # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
         FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
         FileService.get_reference_file_data(FileService.INVESTIGATOR_LIST)
-        data = {
+        data = Box({
             "study":{
                 "info": {
                     "id": 12,
@@ -195,7 +195,10 @@ Returns information specific to the protocol.
                     'id': 0,
                 }
             }
-        }
+        })
+        if args[0]=='documents':
+            return StudyService().get_documents_status(study_id)
+        return data['study'][args[0]]
         #self.add_data_to_task(task=task, data=data["study"])
         #self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
@@ -205,9 +208,9 @@ Returns information specific to the protocol.
         if len(args) > 1:
             prefix = args[1]
         cmd = args[0]
-        study_info = {}
-        if self.__class__.__name__ in task.data:
-            study_info = task.data[self.__class__.__name__]
+        # study_info = {}
+        # if self.__class__.__name__ in task.data:
+        #     study_info = task.data[self.__class__.__name__]
         retval = None
         if cmd == 'info':
             study = session.query(StudyModel).filter_by(id=study_id).first()
