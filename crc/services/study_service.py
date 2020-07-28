@@ -61,7 +61,6 @@ class StudyService(object):
         files = (File.from_models(model, FileService.get_file_data(model.id),
                          FileService.get_doc_dictionary()) for model in files)
         study.files = list(files)
-        study.events = StudyService.get_events(study_id)
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.  Don't execute this for Abandoned studies, as
         # we don't have the information to process them.
@@ -74,14 +73,6 @@ class StudyService(object):
                 category.workflows = {w for w in workflow_metas if w.category_id == category.id}
 
         return study
-
-    @staticmethod
-    def get_events(study_id):
-        event_models = db.session.query(TaskEventModel).filter(TaskEventModel.study_id == study_id).all()
-        events = []
-        for event_model in event_models:
-            events.append(TaskEvent(event_model, None, WorkflowMetadata(id=event_model.workflow_id)))
-        return events
 
     @staticmethod
     def delete_study(study_id):

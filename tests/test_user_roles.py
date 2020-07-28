@@ -111,6 +111,7 @@ class TestTasksApi(BaseTest):
         data['approval'] = True
         self.complete_form(workflow, workflow_api.next_task, data, user_uid=supervisor.uid)
 
+
     def test_navigation_and_current_task_updates_through_workflow(self):
 
         submitter = self.create_user(uid='lje5u')

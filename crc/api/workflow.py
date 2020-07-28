@@ -103,11 +103,15 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def get_task_events(action):
+def get_task_events(action = None, workflow = None, study = None):
     """Provides a way to see a history of what has happened, or get a list of tasks that need your attention."""
     query = session.query(TaskEventModel).filter(TaskEventModel.user_uid == g.user.uid)
     if action:
         query = query.filter(TaskEventModel.action == action)
+    if workflow:
+        query = query.filter(TaskEventModel.workflow_id == workflow)
+    if study:
+        query = query.filter(TaskEventModel.study_id == study)
     events = query.all()
 
     # Turn the database records into something a little richer for the UI to use.

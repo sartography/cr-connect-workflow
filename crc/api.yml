@@ -572,6 +572,18 @@ paths:
         description: The type of action the event documents, options include "ASSIGNMENT" for tasks that are waiting on you, "COMPLETE" for things have completed.
         schema:
           type: string
+      - name: workflow
+        in: query
+        required: false
+        description: Restrict results to the given workflow.
+        schema:
+          type: number
+      - name: study
+        in: query
+        required: false
+        description: Restrict results to the given study.
+        schema:
+          type: number
     get:
       operationId: crc.api.workflow.get_task_events
       summary: Returns a list of task events related to the current user.  Can be filtered by type.

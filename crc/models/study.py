@@ -159,7 +159,6 @@ class StudySchema(ma.Schema):
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
     approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
     enrollment_date = fields.Date(allow_none=True)
-    events = fields.List(fields.Nested('TaskEventSchema'), dump_only=True)
 
     class Meta:
         model = Study

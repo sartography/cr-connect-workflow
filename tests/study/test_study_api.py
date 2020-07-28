@@ -1,4 +1,5 @@
 import json
+from profile import Profile
 
 from tests.base_test import BaseTest
 
@@ -113,21 +114,6 @@ class TestStudyApi(BaseTest):
 
         for approval in study.approvals:
             self.assertEqual(full_study['study'].title, approval['title'])
-
-    def test_get_study_has_details_about_events(self):
-        # Set up the study and attach a file to it.
-        self.load_example_data()
-        workflow = self.create_workflow('file_upload_form')
-        processor = WorkflowProcessor(workflow)
-        task = processor.next_task()
-        WorkflowService.log_task_action('dhf8r', processor, task, 'my_action')
-        api_response = self.app.get('/v1.0/study/%i' % workflow.study_id,
-                                    headers=self.logged_in_headers(),
-                                    content_type="application/json")
-        self.assert_success(api_response)
-        study = json.loads(api_response.get_data(as_text=True))
-        self.assertEqual(1, len(study['events']))
-        self.assertEqual('my_action', study['events'][0]['action'])
 
     def test_add_study(self):
         self.load_example_data()

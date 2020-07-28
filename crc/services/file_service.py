@@ -78,7 +78,8 @@ class FileService(object):
         """ Opens a reference file (assumes that it is xls file) and returns the data as a
         dictionary, each row keyed on the given index_column name. If there are columns
           that should be represented as integers, pass these as an array of int_columns, lest
-          you get '1.0' rather than '1' """
+          you get '1.0' rather than '1'
+          fixme: This is stupid stupid slow.  Place it in the database and just check if it is up to date."""
         data_model = FileService.get_reference_file_data(reference_file_name)
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])
