@@ -47,6 +47,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         workflow_spec_model = self.load_test_spec("multi_instance")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
+        processor.bpmn_workflow.do_engine_steps()
         self.assertEqual(study.id, processor.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY])
         self.assertIsNotNone(processor)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())

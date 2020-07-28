@@ -216,7 +216,7 @@ class WorkflowService(object):
         return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
-    def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
+    def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None, read_only=False):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
 
@@ -260,7 +260,8 @@ class WorkflowService(object):
             total_tasks=len(navigation),
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
-            title=spec.display_name
+            title=spec.display_name,
+            read_only=read_only
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.

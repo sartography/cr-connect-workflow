@@ -9,6 +9,7 @@ from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
 from crc.models.file import FileModelSchema
 from crc.models.workflow import WorkflowStatus
+from crc.models.task_event import TaskEventModel
 
 
 class TestTasksApi(BaseTest):
@@ -41,6 +42,24 @@ class TestTasksApi(BaseTest):
 ###### h6 Heading
 """
         self.assertTrue(str.startswith(task.documentation, expected_docs))
+
+    def test_get_read_only_workflow(self):
+        # Set up a new workflow
+        workflow = self.create_workflow('two_forms')
+        # get the first form in the two form workflow.
+        workflow_api = self.get_workflow_api(workflow, read_only=True)
+
+        # There should be no task event logs related to the workflow at this point.
+        task_events = session.query(TaskEventModel).filter(TaskEventModel.workflow_id == workflow.id).all()
+        self.assertEqual(0, len(task_events))
+
+        # Since the workflow was not started, the call to read-only should not execute any engine steps the
+        # current task should be the start event.
+        self.assertEqual("Start", workflow_api.next_task.name)
+
+        # the workflow_api should have a read_only attribute set to true
+        self.assertEquals(True, workflow_api.read_only)
+
 
     def test_two_forms_task(self):
         # Set up a new workflow
@@ -456,4 +475,6 @@ class TestTasksApi(BaseTest):
 
         workflow = self.get_workflow_api(workflow)
         self.assertEqual(WorkflowStatus.complete, workflow.status)
+
+
 

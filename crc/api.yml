@@ -622,6 +622,12 @@ paths:
           description: Set this to true to reset the workflow
           schema:
             type: boolean
+        - name: read_only
+          in: query
+          required: false
+          description: Does not run any automatic or script tasks and should not be used for updates.
+          schema:
+            type: boolean
       tags:
         - Workflows and Tasks
       responses:
