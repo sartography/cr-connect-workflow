@@ -196,7 +196,7 @@ class StudySchema(ma.Schema):
     id = fields.Integer(required=False, allow_none=True)
     categories = fields.List(fields.Nested(CategorySchema), dump_only=True)
     warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
-    protocol_builder_status = EnumField(ProtocolBuilderStatus)
+    protocol_builder_status = EnumField(ProtocolBuilderStatus, by_value=True)
     hsr_number = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)

@@ -145,7 +145,7 @@ class TestStudyApi(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(study.title, json_data['title'])
-        self.assertEqual(study.protocol_builder_status.name, json_data['protocol_builder_status'])
+        self.assertEqual(study.protocol_builder_status.value, json_data['protocol_builder_status'])
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -230,7 +230,7 @@ class TestStudyApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(study.id, json_data['id'])
         self.assertEqual(study.title, json_data['title'])
-        self.assertEqual(study.protocol_builder_status.name, json_data['protocol_builder_status'])
+        self.assertEqual(study.protocol_builder_status.value, json_data['protocol_builder_status'])
         self.assertEqual(study.primary_investigator_id, json_data['primary_investigator_id'])
         self.assertEqual(study.sponsor, json_data['sponsor'])
         self.assertEqual(study.ind_number, json_data['ind_number'])
