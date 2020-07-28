@@ -144,7 +144,7 @@ class NavigationItemSchema(ma.Schema):
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,
                  spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks,
-                 last_updated, title, read_only):
+                 last_updated, title):
         self.id = id
         self.status = status
         self.next_task = next_task  # The next task that requires user input.
@@ -156,14 +156,13 @@ class WorkflowApi(object):
         self.completed_tasks = completed_tasks
         self.last_updated = last_updated
         self.title = title
-        self.read_only = read_only
 
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
         fields = ["id", "status", "next_task", "navigation",
                   "workflow_spec_id", "spec_version", "is_latest_spec", "total_tasks", "completed_tasks",
-                  "last_updated", "title", "read_only"]
+                  "last_updated", "title"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
@@ -174,7 +173,7 @@ class WorkflowApiSchema(ma.Schema):
     def make_workflow(self, data, **kwargs):
         keys = ['id', 'status', 'next_task', 'navigation',
                 'workflow_spec_id', 'spec_version', 'is_latest_spec', "total_tasks", "completed_tasks",
-                "last_updated", "title", "read_only"]
+                "last_updated", "title"]
         filtered_fields = {key: data[key] for key in keys}
         filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])
         return WorkflowApi(**filtered_fields)

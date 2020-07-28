@@ -308,13 +308,13 @@ class BaseTest(unittest.TestCase):
         db.session.commit()
         return approval
 
-    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False, read_only=False, user_uid="dhf8r"):
+    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False, do_engine_steps=True, user_uid="dhf8r"):
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
         rv = self.app.get(f'/v1.0/workflow/{workflow.id}'
                           f'?soft_reset={str(soft_reset)}'
                           f'&hard_reset={str(hard_reset)}'
-                          f'&read_only={str(read_only)}',
+                          f'&do_engine_steps={str(do_engine_steps)}',
                           headers=self.logged_in_headers(user),
                           content_type="application/json")
         self.assert_success(rv)

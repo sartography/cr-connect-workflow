@@ -622,10 +622,10 @@ paths:
           description: Set this to true to reset the workflow
           schema:
             type: boolean
-        - name: read_only
+        - name: do_engine_steps
           in: query
           required: false
-          description: Does not run any automatic or script tasks and should not be used for updates.
+          description: Defaults to true, can be set to false if you are just looking at the workflow not completeing it.
           schema:
             type: boolean
       tags:

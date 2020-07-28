@@ -43,11 +43,11 @@ class TestTasksApi(BaseTest):
 """
         self.assertTrue(str.startswith(task.documentation, expected_docs))
 
-    def test_get_read_only_workflow(self):
+    def test_get_workflow_without_running_engine_steps(self):
         # Set up a new workflow
         workflow = self.create_workflow('two_forms')
         # get the first form in the two form workflow.
-        workflow_api = self.get_workflow_api(workflow, read_only=True)
+        workflow_api = self.get_workflow_api(workflow, do_engine_steps=False)
 
         # There should be no task event logs related to the workflow at this point.
         task_events = session.query(TaskEventModel).filter(TaskEventModel.workflow_id == workflow.id).all()
@@ -57,8 +57,8 @@ class TestTasksApi(BaseTest):
         # current task should be the start event.
         self.assertEqual("Start", workflow_api.next_task.name)
 
-        # the workflow_api should have a read_only attribute set to true
-        self.assertEquals(True, workflow_api.read_only)
+    def test_get_form_for_previously_completed_task(self):
+        """Assure we can look at previously completed steps without moving the token for the workflow."""
 
 
     def test_two_forms_task(self):

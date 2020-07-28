@@ -95,18 +95,18 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def get_workflow(workflow_id, soft_reset=False, hard_reset=False, read_only=False):
+def get_workflow(workflow_id, soft_reset=False, hard_reset=False, do_engine_steps=True):
     """Soft reset will attempt to update to the latest spec without starting over,
     Hard reset will update to the latest spec and start from the beginning.
     Read Only will return the workflow in a read only state, without running any
     engine tasks or logging any events. """
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
-    if not read_only:
+    if do_engine_steps:
         processor.do_engine_steps()
         processor.save()
         WorkflowService.update_task_assignments(processor)
-    workflow_api_model = WorkflowService.processor_to_workflow_api(processor, read_only=read_only)
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
