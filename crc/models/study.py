@@ -1,3 +1,6 @@
+import datetime
+import json
+
 import marshmallow
 from marshmallow import INCLUDE, fields
 from marshmallow_enum import EnumField
@@ -26,6 +29,7 @@ class StudyModel(db.Model):
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
     on_hold = db.Column(db.Boolean, default=False)
     enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    changes_history = db.Column(db.JSON, nullable=True)
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
         self.hsr_number = pbs.HSRNUMBER
@@ -135,9 +139,29 @@ class Study(object):
         return instance
 
     def update_model(self, study_model: StudyModel):
-        for k,v in  self.__dict__.items():
-            if not k.startswith('_'):
-                study_model.__dict__[k] = v
+        """As the case for update was very reduced, it's mostly and specifically
+        updating only the study status and generating a history record
+        """
+        pb_status = ProtocolBuilderStatus(self.protocol_builder_status)
+        study_model.last_updated = datetime.datetime.now()
+        study_model.protocol_builder_status = pb_status
+
+        if pb_status == ProtocolBuilderStatus.OPEN:
+            study_model.enrollment_date = self.enrollment_date
+
+        change = {
+            'status': ProtocolBuilderStatus(self.protocol_builder_status).value,
+            'comment': '' if not hasattr(self, 'comment') else self.comment,
+            'date': str(datetime.datetime.now())
+        }
+
+        if study_model.changes_history:
+            changes_history = json.loads(study_model.changes_history)
+            changes_history.append(change)
+        else:
+            changes_history = [change]
+        study_model.changes_history = json.dumps(changes_history)
+
 
     def model_args(self):
         """Arguments that can be passed into the Study Model to update it."""
@@ -145,6 +169,26 @@ class Study(object):
         del self_dict["categories"]
         del self_dict["warnings"]
         return self_dict
+
+
+class StudyForUpdateSchema(ma.Schema):
+
+    id = fields.Integer(required=False, allow_none=True)
+    protocol_builder_status = EnumField(ProtocolBuilderStatus, by_value=True)
+    hsr_number = fields.String(allow_none=True)
+    sponsor = fields.String(allow_none=True)
+    ind_number = fields.String(allow_none=True)
+    enrollment_date = fields.DateTime(allow_none=True)
+    comment = fields.String(allow_none=True)
+
+    class Meta:
+        model = Study
+        unknown = INCLUDE
+
+    @marshmallow.post_load
+    def make_study(self, data, **kwargs):
+        """Can load the basic study data for updates to the database, but categories are write only"""
+        return Study(**data)
 
 
 class StudySchema(ma.Schema):

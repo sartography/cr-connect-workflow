@@ -24,16 +24,17 @@ class TestStudyApi(BaseTest):
         "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
                  "for Interstellar Spacecraft",
         "last_updated": datetime.now(tz=timezone.utc),
-        "protocol_builder_status": ProtocolBuilderStatus.active,
         "primary_investigator_id": "tmm2x",
         "user_uid": "dhf8r",
     }
 
     def add_test_study(self):
+        study_schema = StudySchema().dump(self.TEST_STUDY)
+        study_schema['protocol_builder_status'] = ProtocolBuilderStatus.ACTIVE.value
         rv = self.app.post('/v1.0/study',
                            content_type="application/json",
                            headers=self.logged_in_headers(),
-                           data=json.dumps(StudySchema().dump(self.TEST_STUDY)))
+                           data=json.dumps(study_schema))
         self.assert_success(rv)
         return json.loads(rv.get_data(as_text=True))
 
@@ -135,11 +136,12 @@ class TestStudyApi(BaseTest):
         self.load_example_data()
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
-        study.protocol_builder_status = ProtocolBuilderStatus.active
+        study_schema = StudySchema().dump(study)
+        study_schema['protocol_builder_status'] = ProtocolBuilderStatus.ACTIVE.value
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
-                          data=json.dumps(StudySchema().dump(study)))
+                          data=json.dumps(study_schema))
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(study.title, json_data['title'])
