@@ -64,7 +64,7 @@ class StudyService(object):
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.  Don't execute this for Abandoned studies, as
         # we don't have the information to process them.
-        if study.protocol_builder_status != ProtocolBuilderStatus.ABANDONED:
+        if study.protocol_builder_status != ProtocolBuilderStatus.abandoned:
             status = StudyService.__get_study_status(study_model)
             study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
@@ -265,7 +265,7 @@ class StudyService(object):
             for study in db_studies:
                 pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
                 if not pb_study:
-                    study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
+                    study.protocol_builder_status = ProtocolBuilderStatus.abandoned
 
             db.session.commit()
 

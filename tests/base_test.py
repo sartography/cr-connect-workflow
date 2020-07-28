@@ -60,7 +60,7 @@ class BaseTest(unittest.TestCase):
             'id':0,
             'title':'The impact of fried pickles on beer consumption in bipedal software developers.',
             'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.ACTIVE,
+            'protocol_builder_status':ProtocolBuilderStatus.active,
             'primary_investigator_id':'dhf8r',
             'sponsor':'Sartography Pharmaceuticals',
             'ind_number':'1234',
@@ -70,7 +70,7 @@ class BaseTest(unittest.TestCase):
             'id':1,
             'title':'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
             'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.ACTIVE,
+            'protocol_builder_status':ProtocolBuilderStatus.active,
             'primary_investigator_id':'dhf8r',
             'sponsor':'Makerspace & Co.',
             'ind_number':'5678',
@@ -241,7 +241,7 @@ class BaseTest(unittest.TestCase):
         study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
-            study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.ACTIVE,
+            study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.active,
                                user_uid=user.uid, primary_investigator_id=primary_investigator_id)
             db.session.add(study)
             db.session.commit()

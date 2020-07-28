@@ -1064,7 +1064,7 @@ components:
           example: dhf8r
         protocol_builder_status:
           type: string
-          enum: [INCOMPLETE, ACTIVE, HOLD, OPEN, ABANDONED]
+          enum: ['incomplete', 'active', 'hold', 'open', 'abandoned']
           example: done
         sponsor:
           type: string

@@ -24,7 +24,7 @@ class TestStudyApi(BaseTest):
         "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
                  "for Interstellar Spacecraft",
         "last_updated": datetime.now(tz=timezone.utc),
-        "protocol_builder_status": ProtocolBuilderStatus.ACTIVE,
+        "protocol_builder_status": ProtocolBuilderStatus.active,
         "primary_investigator_id": "tmm2x",
         "user_uid": "dhf8r",
     }
@@ -135,7 +135,7 @@ class TestStudyApi(BaseTest):
         self.load_example_data()
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
-        study.protocol_builder_status = ProtocolBuilderStatus.ACTIVE
+        study.protocol_builder_status = ProtocolBuilderStatus.active
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
@@ -185,11 +185,11 @@ class TestStudyApi(BaseTest):
         num_open = 0
 
         for study in json_data:
-            if study['protocol_builder_status'] == 'ABANDONED': # One study does not exist in user_studies.json
+            if study['protocol_builder_status'] == 'abandoned': # One study does not exist in user_studies.json
                 num_abandoned += 1
-            if study['protocol_builder_status'] == 'ACTIVE': # One study is marked complete without HSR Number
+            if study['protocol_builder_status'] == 'active': # One study is marked complete without HSR Number
                 num_active += 1
-            if study['protocol_builder_status'] == 'OPEN':  # One study is marked complete and has an HSR Number
+            if study['protocol_builder_status'] == 'open':  # One study is marked complete and has an HSR Number
                 num_open += 1
 
         db_studies_after = session.query(StudyModel).all()

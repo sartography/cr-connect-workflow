@@ -40,7 +40,7 @@ class TestStudyService(BaseTest):
             for study in db.session.query(StudyModel).all():
                 StudyService().delete_study(study.id)
 
-        study = StudyModel(title="My title", protocol_builder_status=ProtocolBuilderStatus.ACTIVE, user_uid=user.uid)
+        study = StudyModel(title="My title", protocol_builder_status=ProtocolBuilderStatus.active, user_uid=user.uid)
         db.session.add(study)
 
         self.load_test_spec("random_fact", category_id=cat.id)

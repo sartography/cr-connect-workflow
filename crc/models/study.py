@@ -33,11 +33,11 @@ class StudyModel(db.Model):
         self.user_uid = pbs.NETBADGEID
         self.last_updated = pbs.DATE_MODIFIED
 
-        self.protocol_builder_status = ProtocolBuilderStatus.ACTIVE
+        self.protocol_builder_status = ProtocolBuilderStatus.active
         if pbs.HSRNUMBER:
-            self.protocol_builder_status = ProtocolBuilderStatus.OPEN
+            self.protocol_builder_status = ProtocolBuilderStatus.open
         if self.on_hold:
-            self.protocol_builder_status = ProtocolBuilderStatus.HOLD
+            self.protocol_builder_status = ProtocolBuilderStatus.hold
 
 
 class WorkflowMetadata(object):

@@ -220,7 +220,7 @@ class TestAuthentication(BaseTest):
         return {
             "title": "blah",
             "last_updated": datetime.now(tz=timezone.utc),
-            "protocol_builder_status": ProtocolBuilderStatus.ACTIVE,
+            "protocol_builder_status": ProtocolBuilderStatus.active,
             "primary_investigator_id": uid,
             "user_uid": uid,
         }
