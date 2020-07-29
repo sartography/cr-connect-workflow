@@ -146,7 +146,7 @@ class Study(object):
         study_model.last_updated = datetime.datetime.now()
         study_model.protocol_builder_status = pb_status
 
-        if pb_status == ProtocolBuilderStatus.OPEN:
+        if pb_status == ProtocolBuilderStatus.open:
             study_model.enrollment_date = self.enrollment_date
 
         change = {

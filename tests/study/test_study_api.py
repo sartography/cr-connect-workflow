@@ -30,7 +30,7 @@ class TestStudyApi(BaseTest):
 
     def add_test_study(self):
         study_schema = StudySchema().dump(self.TEST_STUDY)
-        study_schema['protocol_builder_status'] = ProtocolBuilderStatus.ACTIVE.value
+        study_schema['protocol_builder_status'] = ProtocolBuilderStatus.active.value
         rv = self.app.post('/v1.0/study',
                            content_type="application/json",
                            headers=self.logged_in_headers(),
@@ -137,7 +137,7 @@ class TestStudyApi(BaseTest):
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
         study_schema = StudySchema().dump(study)
-        study_schema['protocol_builder_status'] = ProtocolBuilderStatus.ACTIVE.value
+        study_schema['protocol_builder_status'] = ProtocolBuilderStatus.active.value
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
