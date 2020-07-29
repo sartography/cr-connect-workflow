@@ -21,7 +21,7 @@ from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_service import WorkflowService
@@ -62,7 +62,7 @@ class BaseTest(unittest.TestCase):
             'id':0,
             'title':'The impact of fried pickles on beer consumption in bipedal software developers.',
             'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.ACTIVE,
+            'protocol_builder_status':ProtocolBuilderStatus.active,
             'primary_investigator_id':'dhf8r',
             'sponsor':'Sartography Pharmaceuticals',
             'ind_number':'1234',
@@ -72,7 +72,7 @@ class BaseTest(unittest.TestCase):
             'id':1,
             'title':'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
             'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.ACTIVE,
+            'protocol_builder_status':ProtocolBuilderStatus.active,
             'primary_investigator_id':'dhf8r',
             'sponsor':'Makerspace & Co.',
             'ind_number':'5678',
@@ -167,14 +167,21 @@ class BaseTest(unittest.TestCase):
                 self.assertGreater(len(file_data), 0)
 
     @staticmethod
-    def load_test_spec(dir_name, master_spec=False, category_id=None):
+    def load_test_spec(dir_name, display_name=None, master_spec=False, category_id=None):
         """Loads a spec into the database based on a directory in /tests/data"""
+        if category_id is None:
+            category = WorkflowSpecCategoryModel(name="test", display_name="Test Workflows", display_order=0)
+            db.session.add(category)
+            db.session.commit()
+            category_id = category.id
 
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
             return session.query(WorkflowSpecModel).filter_by(id=dir_name).first()
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
+        if display_name is None:
+            display_name = dir_name
         return ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath, master_spec=master_spec,
-                                               category_id=category_id)
+                                               display_name=display_name, category_id=category_id)
 
     @staticmethod
     def protocol_builder_response(file_name):
@@ -237,7 +244,7 @@ class BaseTest(unittest.TestCase):
         study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
-            study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.ACTIVE,
+            study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.active,
                                user_uid=user.uid, primary_investigator_id=primary_investigator_id)
             db.session.add(study)
             db.session.commit()
@@ -266,11 +273,13 @@ class BaseTest(unittest.TestCase):
 
         return full_study
 
-    def create_workflow(self, workflow_name, study=None, category_id=None, as_user="dhf8r"):
+    def create_workflow(self, workflow_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         db.session.flush()
         spec = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
         if spec is None:
-            spec = self.load_test_spec(workflow_name, category_id=category_id)
+            if display_name is None:
+                display_name = workflow_name
+            spec = self.load_test_spec(workflow_name, display_name, category_id=category_id)
         if study is None:
             study = self.create_study(uid=as_user)
         workflow_model = StudyService._create_workflow_model(study, spec)
@@ -302,12 +311,13 @@ class BaseTest(unittest.TestCase):
         db.session.commit()
         return approval
 
-    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False, user_uid="dhf8r"):
+    def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False, do_engine_steps=True, user_uid="dhf8r"):
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
-
-        rv = self.app.get('/v1.0/workflow/%i?soft_reset=%s&hard_reset=%s' %
-                          (workflow.id, str(soft_reset), str(hard_reset)),
+        rv = self.app.get(f'/v1.0/workflow/{workflow.id}'
+                          f'?soft_reset={str(soft_reset)}'
+                          f'&hard_reset={str(hard_reset)}'
+                          f'&do_engine_steps={str(do_engine_steps)}',
                           headers=self.logged_in_headers(user),
                           content_type="application/json")
         self.assert_success(rv)

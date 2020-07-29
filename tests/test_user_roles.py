@@ -68,7 +68,7 @@ class TestTasksApi(BaseTest):
     def test_get_outstanding_tasks_awaiting_current_user(self):
         submitter = self.create_user(uid='lje5u')
         supervisor = self.create_user(uid='lb3dp')
-        workflow = self.create_workflow('roles', as_user=submitter.uid)
+        workflow = self.create_workflow('roles', display_name="Roles", as_user=submitter.uid)
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
 
         # User lje5u can complete the first task, and set her supervisor
@@ -94,6 +94,7 @@ class TestTasksApi(BaseTest):
         self.assertEquals(1, len(tasks))
         self.assertEquals(workflow.id, tasks[0]['workflow']['id'])
         self.assertEquals(workflow.study.id, tasks[0]['study']['id'])
+        self.assertEquals("Test Workflows", tasks[0]['workflow']['category_display_name'])
 
         # Assure we can say something sensible like:
         # You have a task called "Approval" to be completed in the "Supervisor Approval" workflow
@@ -109,6 +110,7 @@ class TestTasksApi(BaseTest):
         # Completing the next step of the workflow will close the task.
         data['approval'] = True
         self.complete_form(workflow, workflow_api.next_task, data, user_uid=supervisor.uid)
+
 
     def test_navigation_and_current_task_updates_through_workflow(self):
 
@@ -200,3 +202,66 @@ class TestTasksApi(BaseTest):
         self.assertEquals('COMPLETED', workflow_api.next_task.state)
         self.assertEquals('EndEvent', workflow_api.next_task.type) # Are are at the end.
         self.assertEquals(WorkflowStatus.complete, workflow_api.status)
+
+    def get_assignment_task_events(self, uid):
+        return db.session.query(TaskEventModel). \
+            filter(TaskEventModel.user_uid == uid). \
+            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).all()
+
+    def test_workflow_reset_correctly_resets_the_task_events(self):
+
+        submitter = self.create_user(uid='lje5u')
+        supervisor = self.create_user(uid='lb3dp')
+        workflow = self.create_workflow('roles', display_name="Roles", as_user=submitter.uid)
+        workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
+
+        # User lje5u can complete the first task, and set her supervisor
+        data = workflow_api.next_task.data
+        data['supervisor'] = supervisor.uid
+        workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
+
+        # At this point there should be a task_log with an action of ASSIGNMENT on it for
+        # the supervisor.
+        self.assertEquals(1, len(self.get_assignment_task_events(supervisor.uid)))
+
+        # Resetting the workflow at this point should clear the event log.
+        workflow_api = self.get_workflow_api(workflow, hard_reset=True, user_uid=submitter.uid)
+        self.assertEquals(0, len(self.get_assignment_task_events(supervisor.uid)))
+
+        # Re-complete first task, and awaiting tasks should shift to 0 for for submitter, and 1 for supervisor
+        workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
+        self.assertEquals(0, len(self.get_assignment_task_events(submitter.uid)))
+        self.assertEquals(1, len(self.get_assignment_task_events(supervisor.uid)))
+
+        # Complete the supervisor task with rejected approval, and the assignments should switch.
+        workflow_api = self.get_workflow_api(workflow, user_uid=supervisor.uid)
+        data = workflow_api.next_task.data
+        data["approval"] = False
+        workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=supervisor.uid)
+        self.assertEquals(1, len(self.get_assignment_task_events(submitter.uid)))
+        self.assertEquals(0, len(self.get_assignment_task_events(supervisor.uid)))
+
+        # Mark the return form review page as complete, and then recomplete the form, and assignments switch yet again.
+        workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
+        workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
+        workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
+        self.assertEquals(0, len(self.get_assignment_task_events(submitter.uid)))
+        self.assertEquals(1, len(self.get_assignment_task_events(supervisor.uid)))
+
+        # Complete the supervisor task, accepting the approval, and the workflow is completed.
+        # When it is all done, there should be no outstanding assignments.
+        workflow_api = self.get_workflow_api(workflow, user_uid=supervisor.uid)
+        data = workflow_api.next_task.data
+        data["approval"] = True
+        workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=supervisor.uid)
+        self.assertEquals(WorkflowStatus.complete, workflow_api.status)
+        self.assertEquals('EndEvent', workflow_api.next_task.type) # Are are at the end.
+        self.assertEquals(0, len(self.get_assignment_task_events(submitter.uid)))
+        self.assertEquals(0, len(self.get_assignment_task_events(supervisor.uid)))
+
+        # Sending any subsequent complete forms does not result in a new task event
+        with self.assertRaises(AssertionError) as _api_error:
+            workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
+
+        self.assertEquals(0, len(self.get_assignment_task_events(submitter.uid)))
+        self.assertEquals(0, len(self.get_assignment_task_events(supervisor.uid)))

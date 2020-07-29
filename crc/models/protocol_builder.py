@@ -22,11 +22,11 @@ class ProtocolBuilderStatus(enum.Enum):
     # • Hold: store boolean value in CR Connect (add to Study Model)
     # • Open To Enrollment: has start date and HSR number?
     # • Abandoned: deleted in PB
-    INCOMPLETE = 'incomplete' # Found in PB but not ready to start (not q_complete)
-    ACTIVE = 'active', # found in PB, marked as "q_complete" and no HSR number and not hold
-    HOLD = 'hold', # CR Connect side, if the Study ias marked as "hold".
-    OPEN = 'open', # Open To Enrollment: has start date and HSR number?
-    ABANDONED = 'Abandoned'  # Not found in PB
+    incomplete = 'incomplete' # Found in PB but not ready to start (not q_complete)
+    active = 'active'  # found in PB, marked as "q_complete" and no HSR number and not hold
+    hold = 'hold'  # CR Connect side, if the Study ias marked as "hold".
+    open = 'open'  # Open To Enrollment: has start date and HSR number?
+    abandoned = 'abandoned'  # Not found in PB
 
 
     #DRAFT = 'draft',                      # !Q_COMPLETE

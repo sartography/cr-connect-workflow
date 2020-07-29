@@ -22,7 +22,7 @@ def add_study(body):
                              title=body['title'],
                              primary_investigator_id=body['primary_investigator_id'],
                              last_updated=datetime.now(),
-                             protocol_builder_status=ProtocolBuilderStatus.ACTIVE)
+                             protocol_builder_status=ProtocolBuilderStatus.active)
 
     session.add(study_model)
     errors = StudyService._add_all_workflow_specs_to_study(study_model)

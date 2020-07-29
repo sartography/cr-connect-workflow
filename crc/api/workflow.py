@@ -96,21 +96,30 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
+def get_workflow(workflow_id, soft_reset=False, hard_reset=False, do_engine_steps=True):
+    """Soft reset will attempt to update to the latest spec without starting over,
+    Hard reset will update to the latest spec and start from the beginning.
+    Read Only will return the workflow in a read only state, without running any
+    engine tasks or logging any events. """
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
+    if do_engine_steps:
+        processor.do_engine_steps()
+        processor.save()
+        WorkflowService.update_task_assignments(processor)
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
-    WorkflowService.update_task_assignments(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def get_task_events(action):
-    """Provides a way to see a history of what has happened, or get a list of
-    tasks that need your attention."""
-    user = UserService.current_user(allow_admin_impersonate=True)
-    query = session.query(TaskEventModel).filter(TaskEventModel.user_uid == user.uid)
+def get_task_events(action = None, workflow = None, study = None):
+    """Provides a way to see a history of what has happened, or get a list of tasks that need your attention."""
+    query = session.query(TaskEventModel).filter(TaskEventModel.user_uid == g.user.uid)
     if action:
         query = query.filter(TaskEventModel.action == action)
+    if workflow:
+        query = query.filter(TaskEventModel.workflow_id == workflow)
+    if study:
+        query = query.filter(TaskEventModel.study_id == study)
     events = query.all()
 
     # Turn the database records into something a little richer for the UI to use.
