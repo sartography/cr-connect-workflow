@@ -46,6 +46,7 @@ werkzeug = "*"
 xlrd = "*"
 xlsxwriter = "*"
 pygithub = "*"
+python-box = "*"
 
 [requires]
 python_version = "3.7"

@@ -212,7 +212,8 @@
     <bpmn:scriptTask id="Activity_10nxpt2" name="Load Study Details">
       <bpmn:incoming>SequenceFlow_1r3yrhy</bpmn:incoming>
       <bpmn:outgoing>Flow_09h1imz</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo details</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['details'] = study_info('details')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:businessRuleTask id="Activity_PBMultiSiteCheckQ12" name="PB Multi-Site Check Q12" camunda:decisionRef="Decision_core_info_multi_site_q12">
       <bpmn:incoming>Flow_09h1imz</bpmn:incoming>
