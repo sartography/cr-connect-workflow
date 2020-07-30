@@ -3,19 +3,22 @@ import json
 
 from flask import url_for
 from flask_admin import Admin
+from flask_admin.actions import action
 from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import ModelView
+from sqlalchemy import desc
 from werkzeug.utils import redirect
 from jinja2 import Markup
 
 from crc import db, app
 from crc.api.user import verify_token, verify_token_admin
 from crc.models.approval import ApprovalModel
-from crc.models.file import FileModel
+from crc.models.file import FileModel, FileDataModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel
+from crc.services.file_service import FileService
 
 
 class AdminModelView(sqla.ModelView):
@@ -34,26 +37,40 @@ class AdminModelView(sqla.ModelView):
         # redirect to login page if user doesn't have access
         return redirect(url_for('home'))
 
+
 class UserView(AdminModelView):
     column_filters = ['uid']
+
 
 class StudyView(AdminModelView):
     column_filters = ['id', 'primary_investigator_id']
     column_searchable_list = ['title']
 
+
 class ApprovalView(AdminModelView):
     column_filters = ['study_id', 'approver_uid']
+
 
 class WorkflowView(AdminModelView):
     column_filters = ['study_id', 'id']
 
+
 class FileView(AdminModelView):
-    column_filters = ['workflow_id']
+    column_filters = ['workflow_id', 'type']
+
+    @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
+    def action_publish(self, ids):
+        FileService.publish_to_github(ids)
+
+    @action('update', 'Update', 'Are you sure you want to update this file(s)?')
+    def action_update(self, ids):
+        FileService.update_from_github(ids)
+
 
 def json_formatter(view, context, model, name):
     value = getattr(model, name)
     json_value = json.dumps(value, ensure_ascii=False, indent=2)
-    return Markup('<pre>{}</pre>'.format(json_value))
+    return Markup(f'<pre>{json_value}</pre>')
 
 class TaskEventView(AdminModelView):
     column_filters = ['workflow_id', 'action']
@@ -61,6 +78,7 @@ class TaskEventView(AdminModelView):
     column_formatters = {
         'form_data': json_formatter,
     }
+
 
 admin = Admin(app)
 

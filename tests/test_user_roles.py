@@ -68,7 +68,7 @@ class TestTasksApi(BaseTest):
     def test_get_outstanding_tasks_awaiting_current_user(self):
         submitter = self.create_user(uid='lje5u')
         supervisor = self.create_user(uid='lb3dp')
-        workflow = self.create_workflow('roles', as_user=submitter.uid)
+        workflow = self.create_workflow('roles', display_name="Roles", as_user=submitter.uid)
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
 
         # User lje5u can complete the first task, and set her supervisor
@@ -94,6 +94,7 @@ class TestTasksApi(BaseTest):
         self.assertEquals(1, len(tasks))
         self.assertEquals(workflow.id, tasks[0]['workflow']['id'])
         self.assertEquals(workflow.study.id, tasks[0]['study']['id'])
+        self.assertEquals("Test Workflows", tasks[0]['workflow']['category_display_name'])
 
         # Assure we can say something sensible like:
         # You have a task called "Approval" to be completed in the "Supervisor Approval" workflow
@@ -178,7 +179,7 @@ class TestTasksApi(BaseTest):
         workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
         nav = workflow_api.navigation
         self.assertEquals(5, len(nav))
-        self.assertEquals('READY', nav[0]['state'])  # Issue resolved - KPM - was COMPLETED
+        self.assertEquals('READY', nav[0]['state'])  # When you loop back the task is again in the ready state.
         self.assertEquals('LOCKED', nav[1]['state'])  # Second item is locked, it is the review and doesn't belong to this user.
         self.assertEquals('LOCKED', nav[2]['state'])  # third item is a gateway belonging to the supervisor, and is locked.
         self.assertEquals('READY', workflow_api.next_task.state)
