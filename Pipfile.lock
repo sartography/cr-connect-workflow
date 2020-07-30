@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "381d29428eb328ad6167774b510b9d818bd1505b95f50454a19f1564782326cc"
+            "sha256": "afb6a541d1a9f33155f91529ad961492dceded89466aa1e02fed9901ac5eb146"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -804,7 +804,7 @@
         },
         "spiffworkflow": {
             "git": "https://github.com/sartography/SpiffWorkflow.git",
-            "ref": "11ad40bbcb0fbd3c5bc1078e4989dc38b749f7f3"
+            "ref": "7712830665b4419df019413ac095cb0749adb346"
         },
         "sqlalchemy": {
             "hashes": [

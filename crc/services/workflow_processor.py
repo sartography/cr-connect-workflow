@@ -29,19 +29,11 @@ from crc import app
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.
-    Rather than execute arbitrary code, this assumes the script references a fully qualified python class
-    such as myapp.RandomFact. """
+    It will execute python code read in from the bpmn.  It will also make any scripts in the
+     scripts directory available for execution. """
 
     def execute(self, task: SpiffTask, script, data):
-        """
-        Functions in two modes.
-        1. If the command is proceeded by #! then this is assumed to be a python script, and will
-           attempt to load that python module and execute the do_task method on that script.  Scripts
-           must be located in the scripts package and they must extend the script.py class.
-        2. If not proceeded by the #! this will attempt to execute the script directly and assumes it is
-           valid Python.
-        """
-        # Shlex splits the whole string while respecting double quoted strings within
+
         study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
             workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
