@@ -21,6 +21,7 @@ class UserService(object):
     # Returns true if the current admin user is impersonating another user.
     @staticmethod
     def admin_is_impersonating():
+        print("session.get('admin_impersonate_uid')", session.get('admin_impersonate_uid'))
         return UserService.user_is_admin() and \
                "admin_impersonate_uid" in session and \
                session.get('admin_impersonate_uid') is not None
@@ -37,7 +38,7 @@ class UserService(object):
 
         # Admins can pretend to be different users and act on a user's behalf in
         # some circumstances.
-        if allow_admin_impersonate and UserService.admin_is_impersonating():
+        if allow_admin_impersonate and UserService.admin_is_impersonating() and 'impersonate_user' in g:
             return g.impersonate_user
         else:
             return g.user
@@ -47,9 +48,10 @@ class UserService(object):
     # Stops impersonating if the uid is None or invalid.
     @staticmethod
     def impersonate(uid=None):
-        # Clear out the current impersonating user.
-        g.impersonate_user = None
-        session.pop('admin_impersonate_uid', None)
+        # if uid is None:
+        #     # Clear out the current impersonating user.
+        #     g.impersonate_user = None
+        #     session.pop('admin_impersonate_uid', None)
 
         if not UserService.has_user():
             raise ApiError("logged_out", "You are no longer logged in.", status_code=401)

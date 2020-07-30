@@ -415,4 +415,17 @@ class BaseTest(unittest.TestCase):
         return workflow
 
     def logout(self):
-        g.user = None
+        print("logout before 'user' in g", 'user' in g)
+        print('logout before flask_session', flask_session)
+        print("logout before 'impersonate_user' in g", 'impersonate_user' in g)
+
+        if 'user' in g:
+            del g.user
+
+        flask_session.clear()
+        if 'impersonate_user' in g:
+            del g.impersonate_user
+
+        print("logout after 'user' in g", 'user' in g)
+        print('logout after flask_session', flask_session)
+        print("logout after 'impersonate_user' in g", 'impersonate_user' in g)
