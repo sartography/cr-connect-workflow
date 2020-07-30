@@ -453,7 +453,7 @@ Indicate all the possible formats in which you will transmit your data outside o
       <bpmn:incoming>SequenceFlow_0k2r83n</bpmn:incoming>
       <bpmn:incoming>SequenceFlow_0t6xl9i</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_16kyite</bpmn:outgoing>
-      <bpmn:script>#! CompleteTemplate NEW_DSP_template.docx Study_DataSecurityPlan</bpmn:script>
+      <bpmn:script>complete_template('NEW_DSP_template.docx','Study_DataSecurityPlan')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Task_0q6ir2l" name="View Instructions">
       <bpmn:documentation>##### Instructions

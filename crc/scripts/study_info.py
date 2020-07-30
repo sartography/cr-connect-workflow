@@ -8,7 +8,7 @@ from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
-
+from box import Box
 
 class StudyInfo(Script):
     """Please see the detailed description that is provided below. """
@@ -149,11 +149,11 @@ Returns information specific to the protocol.
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
-        self.check_args(args)
+        self.check_args(args,2)
         # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
         FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
         FileService.get_reference_file_data(FileService.INVESTIGATOR_LIST)
-        data = {
+        data = Box({
             "study":{
                 "info": {
                     "id": 12,
@@ -195,38 +195,50 @@ Returns information specific to the protocol.
                     'id': 0,
                 }
             }
-        }
-        self.add_data_to_task(task=task, data=data["study"])
-        self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
+        })
+        if args[0]=='documents':
+            return StudyService().get_documents_status(study_id)
+        return data['study'][args[0]]
+        #self.add_data_to_task(task=task, data=data["study"])
+        #self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        self.check_args(args)
-
+        self.check_args(args,2)
+        prefix = None
+        if len(args) > 1:
+            prefix = args[1]
         cmd = args[0]
-        study_info = {}
-        if self.__class__.__name__ in task.data:
-            study_info = task.data[self.__class__.__name__]
-
+        # study_info = {}
+        # if self.__class__.__name__ in task.data:
+        #     study_info = task.data[self.__class__.__name__]
+        retval = None
         if cmd == 'info':
             study = session.query(StudyModel).filter_by(id=study_id).first()
             schema = StudySchema()
-            self.add_data_to_task(task, {cmd: schema.dump(study)})
+            retval = schema.dump(study)
         if cmd == 'investigators':
-            self.add_data_to_task(task, {cmd: StudyService().get_investigators(study_id)})
+            retval = StudyService().get_investigators(study_id)
         if cmd == 'roles':
-            self.add_data_to_task(task, {cmd: StudyService().get_investigators(study_id, all=True)})
+            retval = StudyService().get_investigators(study_id, all=True)
         if cmd == 'details':
-            self.add_data_to_task(task, {cmd: self.pb.get_study_details(study_id)})
+            retval = self.pb.get_study_details(study_id)
         if cmd == 'approvals':
-            self.add_data_to_task(task, {cmd: StudyService().get_approvals(study_id)})
+            retval = StudyService().get_approvals(study_id)
         if cmd == 'documents':
-            self.add_data_to_task(task, {cmd: StudyService().get_documents_status(study_id)})
+            retval = StudyService().get_documents_status(study_id)
         if cmd == 'protocol':
-            self.add_data_to_task(task, {cmd: StudyService().get_protocol(study_id)})
+            retval = StudyService().get_protocol(study_id)
+        if isinstance(retval,dict) and prefix is not None:
+            return Box({x:retval[x] for x in retval.keys() if x[:len(prefix)] == prefix})
+        elif isinstance(retval,dict):
+            return Box(retval)
+        else:
+            return retval
 
 
-    def check_args(self, args):
-        if len(args) != 1 or (args[0] not in StudyInfo.type_options):
+
+    def check_args(self, args, maxlen=1):
+        if len(args) < 1 or len(args) > maxlen or (args[0] not in StudyInfo.type_options):
             raise ApiError(code="missing_argument",
                            message="The StudyInfo script requires a single argument which must be "
                                    "one of %s" % ",".join(StudyInfo.type_options))

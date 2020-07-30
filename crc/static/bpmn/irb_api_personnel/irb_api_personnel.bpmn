@@ -7,7 +7,8 @@
     <bpmn:scriptTask id="ScriptTask_LoadPersonnel" name="Load IRB Personnel">
       <bpmn:incoming>Flow_0kcrx5l</bpmn:incoming>
       <bpmn:outgoing>Flow_1dcsioh</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo investigators</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['investigators'] = study_info('investigators')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="EndEvent_1qor16n">
       <bpmn:documentation>## The following information was gathered:
