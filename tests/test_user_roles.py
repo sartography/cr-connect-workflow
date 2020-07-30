@@ -178,7 +178,7 @@ class TestTasksApi(BaseTest):
         workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
         nav = workflow_api.navigation
         self.assertEquals(5, len(nav))
-        self.assertEquals('COMPLETED', nav[0]['state'])  # We still have some issues here, the navigation will be off when looping back.
+        self.assertEquals('READY', nav[0]['state'])  # When you loop back the task is again in the ready state.
         self.assertEquals('LOCKED', nav[1]['state'])  # Second item is locked, it is the review and doesn't belong to this user.
         self.assertEquals('LOCKED', nav[2]['state'])  # third item is a gateway belonging to the supervisor, and is locked.
         self.assertEquals('READY', workflow_api.next_task.state)
