@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1elv5t1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+  <bpmn:process id="Process_15vbyda" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1ma1wxb</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1ma1wxb" sourceRef="StartEvent_1" targetRef="Task_0sgafty" />
+    <bpmn:businessRuleTask id="Task_0sgafty" name="A bad DMN" camunda:decisionRef="bad_dmn">
+      <bpmn:incoming>SequenceFlow_1ma1wxb</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0grui6f</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:endEvent id="EndEvent_0tsqkyu">
+      <bpmn:documentation># Great Work!
+
+Based on the information you provided (Ginger left {{num_presents}}, we recommend the following statement be provided to Ginger:
+
+## {{message}}
+
+We hope you both have an excellent day!</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_0grui6f</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0grui6f" sourceRef="Task_0sgafty" targetRef="EndEvent_0tsqkyu" />
+    <bpmn:textAnnotation id="TextAnnotation_0oajoz7">
+      <bpmn:text>This DMN isn't provided enough information to execute</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_1raak4y" sourceRef="Task_0sgafty" targetRef="TextAnnotation_0oajoz7" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_15vbyda">
+      <bpmndi:BPMNShape id="TextAnnotation_0oajoz7_di" bpmnElement="TextAnnotation_0oajoz7">
+        <dc:Bounds x="400" y="80" width="100" height="82" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0grui6f_di" bpmnElement="SequenceFlow_0grui6f">
+        <di:waypoint x="370" y="237" />
+        <di:waypoint x="432" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1ma1wxb_di" bpmnElement="SequenceFlow_1ma1wxb">
+        <di:waypoint x="215" y="237" />
+        <di:waypoint x="270" y="237" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="219" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BusinessRuleTask_10c5wgr_di" bpmnElement="Task_0sgafty">
+        <dc:Bounds x="270" y="197" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0tsqkyu_di" bpmnElement="EndEvent_0tsqkyu">
+        <dc:Bounds x="432" y="219" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_1raak4y_di" bpmnElement="Association_1raak4y">
+        <di:waypoint x="364" y="198" />
+        <di:waypoint x="404" y="162" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

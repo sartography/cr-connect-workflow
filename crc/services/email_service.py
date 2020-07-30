@@ -13,7 +13,7 @@ class EmailService(object):
     """Provides common tools for working with an Email"""
 
     @staticmethod
-    def add_email(subject, sender, recipients, content, content_html, study_id):
+    def add_email(subject, sender, recipients, content, content_html, study_id=None):
         """We will receive all data related to an email and store it"""
 
         # Find corresponding study - if any
@@ -36,6 +36,7 @@ class EmailService(object):
 
             mail.send(msg)
         except Exception as e:
+            app.logger.error('An exception happened in EmailService', exc_info=True)
             app.logger.error(str(e))
 
         db.session.add(email_model)

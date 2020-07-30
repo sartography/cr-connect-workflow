@@ -1,24 +1,29 @@
 import copy
+import json
 import string
+import uuid
 from datetime import datetime
 import random
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
+from SpiffWorkflow.bpmn.specs.StartEvent import StartEvent
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
+from flask import g
 from jinja2 import Template
 
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, NavigationItem, NavigationItemSchema, WorkflowApi
 from crc.models.file import LookupDataModel
-from crc.models.stats import TaskEventModel
+from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
@@ -29,10 +34,13 @@ from crc.services.workflow_processor import WorkflowProcessor
 
 
 class WorkflowService(object):
-    TASK_ACTION_COMPLETE = "Complete"
-    TASK_ACTION_TOKEN_RESET = "Backwards Move"
-    TASK_ACTION_HARD_RESET = "Restart (Hard)"
-    TASK_ACTION_SOFT_RESET = "Restart (Soft)"
+    TASK_ACTION_COMPLETE = "COMPLETE"
+    TASK_ACTION_TOKEN_RESET = "TOKEN_RESET"
+    TASK_ACTION_HARD_RESET = "HARD_RESET"
+    TASK_ACTION_SOFT_RESET = "SOFT_RESET"
+    TASK_ACTION_ASSIGNMENT = "ASSIGNMENT"  # Whenever the lane changes between tasks we assign the task to specifc user.
+
+    TASK_STATE_LOCKED = "LOCKED" # When the task belongs to a different user.
 
     """Provides tools for processing workflows and tasks.  This
      should at some point, be the only way to work with Workflows, and
@@ -91,11 +99,16 @@ class WorkflowService(object):
                 processor.bpmn_workflow.do_engine_steps()
                 tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:
+                    if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
+                        raise ApiError.from_task("invalid_role",
+                                       f"This task is in a lane called '{task.task_spec.lane}', The "
+                                       f" current task data must have information mapping this role to "
+                                       f" a unique user id.", task)
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
-                        add_docs_and_forms=True)  # Assure we try to process the documenation, and raise those errors.
+                        add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
                     WorkflowService.populate_form_with_random_data(task, task_api, required_only)
-                    task.complete()
+                    processor.complete_task(task)
             except WorkflowException as we:
                 WorkflowService.delete_test_data()
                 raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
@@ -130,20 +143,37 @@ class WorkflowService(object):
 
     @staticmethod
     def get_random_data_for_field(field, task):
-        if field.type == "enum":
+        has_ldap_lookup = field.has_property(Task.PROP_LDAP_LOOKUP)
+        has_file_lookup = field.has_property(Task.PROP_OPTIONS_FILE_NAME)
+        has_data_lookup = field.has_property(Task.PROP_OPTIONS_DATA_NAME)
+        has_lookup = has_ldap_lookup or has_file_lookup or has_data_lookup
+
+        if field.type == "enum" and not has_lookup:
+            # If it's a normal enum field with no lookup,
+            # return a random option.
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    return random.choice(field.options)['id']
+                    choice = random.choice(field.options)
+                    return {
+                        'value': choice['id'],
+                        'label': choice['name']
+                    }
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
-                    return random_choice.id  ## Assume it is an EnumFormFieldOption
+                    # Assume it is an EnumFormFieldOption
+                    return {
+                        'value': random_choice.id,
+                        'label': random_choice.name
+                    }
             else:
                 raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
                                                          " with no options" % field.id, task)
-        elif field.type == "autocomplete":
+        elif field.type == "autocomplete" or field.type == "enum":
+            # If it has a lookup, get the lookup model from the spreadsheet or task data, then return a random option
+            # from the lookup model
             lookup_model = LookupService.get_lookup_model(task, field)
-            if field.has_property(Task.PROP_LDAP_LOOKUP):  # All ldap records get the same person.
+            if has_ldap_lookup:  # All ldap records get the same person.
                 return {
                         "label": "dhf8r",
                         "value": "Dan Funk",
@@ -159,9 +189,7 @@ class WorkflowService(object):
             elif lookup_model:
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
-                options = []
-                for d in data:
-                    options.append({"id": d.value, "label": d.label})
+                options = [{"value": d.value, "label": d.label, "data": d.data} for d in data]
                 return random.choice(options)
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
@@ -194,23 +222,29 @@ class WorkflowService(object):
         possible, next_task is set to the current_task."""
 
         nav_dict = processor.bpmn_workflow.get_nav_list()
+
+        # Some basic cleanup of the title for the for the navigation.
         navigation = []
         for nav_item in nav_dict:
             spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
             if 'description' in nav_item:
                 nav_item['title'] = nav_item.pop('description')
                 # fixme: duplicate code from the workflow_service. Should only do this in one place.
-                if ' ' in nav_item['title']:
+                if nav_item['title'] is not None and ' ' in nav_item['title']:
                     nav_item['title'] = nav_item['title'].partition(' ')[2]
             else:
                 nav_item['title'] = ""
             if spiff_task:
                 nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
                 nav_item['title'] = nav_item['task'].title  # Prefer the task title.
+
+                user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
+                if 'user' not in g or not g.user or g.user.uid not in user_uids:
+                    nav_item['state'] = WorkflowService.TASK_STATE_LOCKED
+
             else:
                 nav_item['task'] = None
-            if not 'is_decision' in nav_item:
-                nav_item['is_decision'] = False
+
 
             navigation.append(NavigationItem(**nav_item))
             NavigationItemSchema().dump(nav_item)
@@ -236,24 +270,34 @@ class WorkflowService(object):
             previous_form_data = WorkflowService.get_previously_submitted_data(processor.workflow_model.id, next_task)
             DeepMerge.merge(next_task.data, previous_form_data)
             workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
-
+            # Update the state of the task to locked if the current user does not own the task.
+            user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
+            if 'user' not in g or not g.user or g.user.uid not in user_uids:
+                workflow_api.next_task.state = WorkflowService.TASK_STATE_LOCKED
         return workflow_api
 
     @staticmethod
-    def get_previously_submitted_data(workflow_id, task):
+    def get_previously_submitted_data(workflow_id, spiff_task):
         """ If the user has completed this task previously, find the form data for the last submission."""
-        latest_event = db.session.query(TaskEventModel) \
+        query = db.session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow_id) \
-            .filter_by(task_name=task.task_spec.name) \
-            .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE) \
-            .order_by(TaskEventModel.date.desc()).first()
+            .filter_by(task_name=spiff_task.task_spec.name) \
+            .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE)
+
+        if hasattr(spiff_task, 'internal_data') and 'runtimes' in spiff_task.internal_data:
+            query = query.filter_by(mi_index=spiff_task.internal_data['runtimes'])
+
+        latest_event = query.order_by(TaskEventModel.date.desc()).first()
         if latest_event:
             if latest_event.form_data is not None:
                 return latest_event.form_data
             else:
-                app.logger.error("missing_form_dat", "We have lost data for workflow %i, task %s, it is not "
-                                                      "in the task event model, "
-                                                      "and it should be." % (workflow_id, task.task_spec.name))
+                missing_form_error = (
+                    f'We have lost data for workflow {workflow_id}, '
+                    f'task {spiff_task.task_spec.name}, it is not in the task event model, '
+                    f'and it should be.'
+                )
+                app.logger.error("missing_form_data", missing_form_error, exc_info=True)
                 return {}
         else:
             return {}
@@ -263,20 +307,14 @@ class WorkflowService(object):
     def spiff_task_to_api_task(spiff_task, add_docs_and_forms=False):
         task_type = spiff_task.task_spec.__class__.__name__
 
-        if isinstance(spiff_task.task_spec, UserTask):
-            task_type = "UserTask"
-        elif isinstance(spiff_task.task_spec, ManualTask):
-            task_type = "ManualTask"
-        elif isinstance(spiff_task.task_spec, BusinessRuleTask):
-            task_type = "BusinessRuleTask"
-        elif isinstance(spiff_task.task_spec, CancelTask):
-            task_type = "CancelTask"
-        elif isinstance(spiff_task.task_spec, ScriptTask):
-            task_type = "ScriptTask"
-        elif isinstance(spiff_task.task_spec, StartTask):
-            task_type = "StartTask"
-        else:
-            task_type = "NoneTask"
+        task_types = [UserTask, ManualTask, BusinessRuleTask, CancelTask, ScriptTask, StartTask, EndEvent, StartEvent]
+
+        for t in task_types:
+            if isinstance(spiff_task.task_spec, t):
+                task_type = t.__name__
+                break
+            else:
+                task_type = "NoneTask"
 
         info = spiff_task.task_info()
         if info["is_looping"]:
@@ -290,14 +328,20 @@ class WorkflowService(object):
 
         props = {}
         if hasattr(spiff_task.task_spec, 'extensions'):
-            for id, val in spiff_task.task_spec.extensions.items():
-                props[id] = val
+            for key, val in spiff_task.task_spec.extensions.items():
+                props[key] = val
+
+        if hasattr(spiff_task.task_spec, 'lane'):
+            lane = spiff_task.task_spec.lane
+        else:
+            lane = None
 
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
                     spiff_task.task_spec.description,
                     task_type,
                     spiff_task.get_state_name(),
+                    lane,
                     None,
                     "",
                     {},
@@ -315,8 +359,8 @@ class WorkflowService(object):
             task.data = spiff_task.data
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
-                for field in task.form.fields:
-                    WorkflowService.process_options(spiff_task, field)
+                for i, field in enumerate(task.form.fields):
+                    task.form.fields[i] = WorkflowService.process_options(spiff_task, field)
             task.documentation = WorkflowService._process_documentation(spiff_task)
 
         # All ready tasks should have a valid name, and this can be computed for
@@ -329,10 +373,12 @@ class WorkflowService(object):
         # otherwise strip off the first word of the task, as that should be following
         # a BPMN standard, and should not be included in the display.
         if task.properties and "display_name" in task.properties:
-            task.title = task.properties['display_name']
+            try:
+                task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties['display_name'])
+            except Exception as e:
+                app.logger.error("Failed to set title on task due to type error." + str(e), exc_info=True)
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
-
         return task
 
     @staticmethod
@@ -343,7 +389,7 @@ class WorkflowService(object):
                 template = Template(v)
                 props[k] = template.render(**spiff_task.data)
             except jinja2.exceptions.TemplateError as ue:
-                app.logger.error("Failed to process task property %s " % str(ue))
+                app.logger.error(f'Failed to process task property {str(ue)}', exc_info=True)
         return props
 
     @staticmethod
@@ -373,7 +419,8 @@ class WorkflowService(object):
         except TypeError as te:
             raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
                                                           (spiff_task.task_spec.name, str(te)), task=spiff_task)
-        # TODO:  Catch additional errors and report back.
+        except Exception as e:
+            app.logger.error(str(e), exc_info=True)
 
     @staticmethod
     def process_options(spiff_task, field):
@@ -381,30 +428,84 @@ class WorkflowService(object):
         # If this is an auto-complete field, do not populate options, a lookup will happen later.
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             pass
-        elif field.has_property(Task.PROP_OPTIONS_FILE):
+        elif field.has_property(Task.PROP_OPTIONS_FILE_NAME):
             lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
             if not hasattr(field, 'options'):
                 field.options = []
             for d in data:
-                field.options.append({"id": d.value, "name": d.label})
+                field.options.append({"id": d.value, "name": d.label, "data": d.data})
+        elif field.has_property(Task.PROP_OPTIONS_DATA_NAME):
+            field.options = WorkflowService.get_options_from_task_data(spiff_task, field)
+        return field
 
     @staticmethod
-    def log_task_action(user_uid, workflow_model, spiff_task, action, version):
+    def get_options_from_task_data(spiff_task, field):
+        if not (field.has_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN) or
+                field.has_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)):
+            raise ApiError.from_task("invalid_enum",
+                                     f"For enumerations based on task data, you must include 3 properties: "
+                                     f"{Task.PROP_OPTIONS_DATA_NAME}, {Task.PROP_OPTIONS_DATA_VALUE_COLUMN}, "
+                                     f"{Task.PROP_OPTIONS_DATA_LABEL_COLUMN}", task=spiff_task)
+        prop = field.get_property(Task.PROP_OPTIONS_DATA_NAME)
+        if prop not in spiff_task.data:
+            raise ApiError.from_task("invalid_enum", f"For enumerations based on task data, task data must have "
+                                                     f"a property called {prop}", task=spiff_task)
+        # Get the enum options from the task data
+        data_model = spiff_task.data[prop]
+        value_column = field.get_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN)
+        label_column = field.get_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)
+        items = data_model.items() if isinstance(data_model, dict) else data_model
+        options = []
+        for item in items:
+            options.append({"id": item[value_column], "name": item[label_column], "data": item})
+        return options
+
+    @staticmethod
+    def update_task_assignments(processor):
+        """For every upcoming user task, log a task action
+        that connects the assigned user(s) to that task.  All
+        existing assignment actions for this workflow are removed from the database,
+        so that only the current valid actions are available. update_task_assignments
+        should be called whenever progress is made on a workflow."""
+        db.session.query(TaskEventModel). \
+            filter(TaskEventModel.workflow_id == processor.workflow_model.id). \
+            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).delete()
+
+        for task in processor.get_current_user_tasks():
+            user_ids = WorkflowService.get_users_assigned_to_task(processor, task)
+            for user_id in user_ids:
+                WorkflowService.log_task_action(user_id, processor, task, WorkflowService.TASK_ACTION_ASSIGNMENT)
+
+    @staticmethod
+    def get_users_assigned_to_task(processor, spiff_task):
+        if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
+            return [processor.workflow_model.study.user_uid]
+            # todo: return a list of all users that can edit the study by default
+        if spiff_task.task_spec.lane not in spiff_task.data:
+            return []  # No users are assignable to the task at this moment
+        lane_users = spiff_task.data[spiff_task.task_spec.lane]
+        if not isinstance(lane_users, list):
+            lane_users = [lane_users]
+        return lane_users
+
+    @staticmethod
+    def log_task_action(user_uid, processor, spiff_task, action):
         task = WorkflowService.spiff_task_to_api_task(spiff_task)
         form_data = WorkflowService.extract_form_data(spiff_task.data, spiff_task)
         task_event = TaskEventModel(
-            study_id=workflow_model.study_id,
+            study_id=processor.workflow_model.study_id,
             user_uid=user_uid,
-            workflow_id=workflow_model.id,
-            workflow_spec_id=workflow_model.workflow_spec_id,
-            spec_version=version,
+            workflow_id=processor.workflow_model.id,
+            workflow_spec_id=processor.workflow_model.workflow_spec_id,
+            spec_version=processor.get_version_string(),
             action=action,
             task_id=task.id,
             task_name=task.name,
             task_title=task.title,
             task_type=str(task.type),
             task_state=task.state,
+            task_lane=task.lane,
             form_data=form_data,
             mi_type=task.multi_instance_type.value,  # Some tasks have a repeat behavior.
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
@@ -416,43 +517,8 @@ class WorkflowService(object):
         db.session.commit()
 
     @staticmethod
-    def fix_legacy_data_model_for_rrt():
-        """  Remove this after use!  This is just to fix RRT so the data is handled correctly.
-
-        Utility that is likely called via the flask command line, it will loop through all the
-        workflows in the system and attempt to add the right data into the task action log so that
-        users do not have to re fill out all of the forms if they start over or go back in the workflow.
-        Viciously inefficient, but should only have to run one time for RRT"""
-        workflows = db.session.query(WorkflowModel).all()
-        for workflow_model in workflows:
-            task_logs = db.session.query(TaskEventModel) \
-                .filter(TaskEventModel.workflow_id == workflow_model.id) \
-                .filter(TaskEventModel.action == WorkflowService.TASK_ACTION_COMPLETE) \
-                .order_by(TaskEventModel.date.desc()).all()
-
-            processor = WorkflowProcessor(workflow_model)
-            # Grab all the data from last task completed, which will be everything in this
-            # rrt situation because of how we were keeping all the data at the time.
-            latest_data = processor.next_task().data
-
-            # Move forward in the task spec tree, dropping any data that would have been
-            # added in subsequent tasks, just looking at form data, will not track the automated
-            # task data additions, hopefully this doesn't hang us.
-            for log in task_logs:
-#                if log.task_data is not None:  # Only do this if the task event does not have data populated in it.
-#                    continue
-                data = copy.deepcopy(latest_data) # Or you end up with insane crazy issues.
-                # In the simple case of RRT, there is exactly one task for the given task_spec
-                task = processor.bpmn_workflow.get_tasks_from_spec_name(log.task_name)[0]
-                data = WorkflowService.extract_form_data(data, task)
-                log.form_data = data
-                db.session.add(log)
-
-        db.session.commit()
-
-    @staticmethod
     def extract_form_data(latest_data, task):
-        """Removes data from latest_data that would be added by the child task or any of it's children."""
+        """Removes data from latest_data that would be added by the child task or any of its children."""
         data = {}
 
         if hasattr(task.task_spec, 'form'):

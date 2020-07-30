@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0be39yr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0be39yr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <bpmn:process id="Process_1cme33c" isExecutable="false">
     <bpmn:parallelGateway id="ParallelGateway_0ecwf3g">
       <bpmn:incoming>Flow_1wqp7vf</bpmn:incoming>
@@ -212,7 +212,7 @@
     <bpmn:scriptTask id="Activity_10nxpt2" name="Load Study Details">
       <bpmn:incoming>SequenceFlow_1r3yrhy</bpmn:incoming>
       <bpmn:outgoing>Flow_09h1imz</bpmn:outgoing>
-      <bpmn:script>StudyInfo details</bpmn:script>
+      <bpmn:script>#! StudyInfo details</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:businessRuleTask id="Activity_PBMultiSiteCheckQ12" name="PB Multi-Site Check Q12" camunda:decisionRef="Decision_core_info_multi_site_q12">
       <bpmn:incoming>Flow_09h1imz</bpmn:incoming>

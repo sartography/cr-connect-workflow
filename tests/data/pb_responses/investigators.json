@@ -13,5 +13,15 @@
     "INVESTIGATORTYPE": "PI",
     "INVESTIGATORTYPEFULL": "Primary Investigator",
     "NETBADGEID": "dhf8r"
+  },
+    {
+    "INVESTIGATORTYPE": "SI",
+    "INVESTIGATORTYPEFULL": "Sub Investigator",
+    "NETBADGEID": "ajl2j"
+  },
+  {
+    "INVESTIGATORTYPE": "SI",
+    "INVESTIGATORTYPEFULL": "Sub Investigator",
+    "NETBADGEID": "cah3us"
   }
 ]

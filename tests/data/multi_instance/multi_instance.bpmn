@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_17fwemw" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_17fwemw" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <bpmn:process id="MultiInstance" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="StartEvent_1">
       <bpmn:outgoing>Flow_0t6p1sb</bpmn:outgoing>
@@ -8,8 +8,8 @@
     <bpmn:endEvent id="Event_End" name="Event_End">
       <bpmn:incoming>Flow_0ugjw69</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_0ugjw69" sourceRef="MutiInstanceTask" targetRef="Event_End" />
-    <bpmn:userTask id="MutiInstanceTask" name="Gather more information" camunda:formKey="GetEmail">
+    <bpmn:sequenceFlow id="Flow_0ugjw69" sourceRef="MultiInstanceTask" targetRef="Event_End" />
+    <bpmn:userTask id="MultiInstanceTask" name="Gather more information" camunda:formKey="GetEmail">
       <bpmn:documentation># Please provide addtional information about:
 ## Investigator ID: {{investigator.NETBADGEID}} 
 ## Role: {{investigator.INVESTIGATORTYPEFULL}}</bpmn:documentation>
@@ -25,11 +25,11 @@
       <bpmn:outgoing>Flow_0ugjw69</bpmn:outgoing>
       <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="StudyInfo.investigators" camunda:elementVariable="investigator" />
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="SequenceFlow_1p568pp" sourceRef="Task_1v0e2zu" targetRef="MutiInstanceTask" />
+    <bpmn:sequenceFlow id="SequenceFlow_1p568pp" sourceRef="Task_1v0e2zu" targetRef="MultiInstanceTask" />
     <bpmn:scriptTask id="Task_1v0e2zu" name="Load Personnel">
       <bpmn:incoming>Flow_0t6p1sb</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1p568pp</bpmn:outgoing>
-      <bpmn:script>StudyInfo investigators</bpmn:script>
+      <bpmn:script>#! StudyInfo investigators</bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
@@ -58,7 +58,7 @@
           <dc:Bounds x="585" y="142" width="54" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1iyilui_di" bpmnElement="MutiInstanceTask">
+      <bpmndi:BPMNShape id="Activity_1iyilui_di" bpmnElement="MultiInstanceTask">
         <dc:Bounds x="430" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ScriptTask_0cbbirp_di" bpmnElement="Task_1v0e2zu">

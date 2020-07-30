@@ -14,7 +14,7 @@ class StudyInfo(Script):
     """Please see the detailed description that is provided below. """
 
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'details', 'approvals', 'documents', 'protocol']
+    type_options = ['info', 'investigators', 'roles', 'details', 'approvals', 'documents', 'protocol']
 
     # This is used for test/workflow validation, as well as documentation.
     example_data = {
@@ -106,10 +106,19 @@ Returns the basic information such as the id and title
 ### Investigators ###
 Returns detailed information about related personnel.
 The order returned is guaranteed to match the order provided in the investigators.xslx reference file.
-If possible, detailed information is added in from LDAP about each personnel based on their user_id.
+Detailed information is added in from LDAP about each personnel based on their user_id. 
 ```
 {investigators_example}
 ```
+
+### Investigator Roles ###
+Returns a list of all investigator roles, populating any roles with additional information available from
+the Protocol Builder and LDAP.  Its basically just like Investigators, but it includes all the roles, rather
+that just those that were set in Protocol Builder.
+```
+{investigators_example}
+```
+
 
 ### Details ###
 Returns detailed information about variable keys read in from the Protocol Builder.
@@ -161,6 +170,12 @@ Returns information specific to the protocol.
                         "INVESTIGATORTYPEFULL": "Primary Investigator",
                         "NETBADGEID": "dhf8r"
                     },
+                "roles":
+                    {
+                        "INVESTIGATORTYPE": "PI",
+                        "INVESTIGATORTYPEFULL": "Primary Investigator",
+                        "NETBADGEID": "dhf8r"
+                    },
                 "details":
                     {
                         "IS_IND": 0,
@@ -177,7 +192,7 @@ Returns information specific to the protocol.
                     "workflow_spec_id": "irb_api_details",
                 },
                 'protocol': {
-                    id: 0,
+                    'id': 0,
                 }
             }
         }
@@ -198,6 +213,8 @@ Returns information specific to the protocol.
             self.add_data_to_task(task, {cmd: schema.dump(study)})
         if cmd == 'investigators':
             self.add_data_to_task(task, {cmd: StudyService().get_investigators(study_id)})
+        if cmd == 'roles':
+            self.add_data_to_task(task, {cmd: StudyService().get_investigators(study_id, all=True)})
         if cmd == 'details':
             self.add_data_to_task(task, {cmd: self.pb.get_study_details(study_id)})
         if cmd == 'approvals':

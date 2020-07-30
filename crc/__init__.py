@@ -52,15 +52,12 @@ origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['
 cors = CORS(connexion_app.app, origins=origins_re)
 
 # Sentry error handling
-if app.config['ENABLE_SENTRY']:
+if app.config['SENTRY_ENVIRONMENT']:
     sentry_sdk.init(
+        environment=app.config['SENTRY_ENVIRONMENT'],
         dsn="https://25342ca4e2d443c6a5c49707d68e9f40@o401361.ingest.sentry.io/5260915",
         integrations=[FlaskIntegration()]
     )
-
-# Jinja environment definition, used to render mail templates
-template_dir = os.getcwd() + '/crc/static/templates/mails'
-env = Environment(loader=FileSystemLoader(template_dir))
 
 print('=== USING THESE CONFIG SETTINGS: ===')
 print('APPLICATION_ROOT = ', app.config['APPLICATION_ROOT'])
@@ -95,9 +92,3 @@ def clear_db():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
 
-@app.cli.command()
-def rrt_data_fix():
-    """Finds all the empty task event logs, and populates
-    them with good wholesome data."""
-    from crc.services.workflow_service import WorkflowService
-    WorkflowService.fix_legacy_data_model_for_rrt()

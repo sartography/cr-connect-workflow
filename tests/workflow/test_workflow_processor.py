@@ -187,7 +187,7 @@ class TestWorkflowProcessor(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
-        # Attemping a soft update on a structural change should raise a sensible error.
+        # Attempting a soft update on a structural change should raise a sensible error.
         with self.assertRaises(ApiError) as context:
             processor3 = WorkflowProcessor(processor.workflow_model, soft_reset=True)
         self.assertEqual("unexpected_workflow_structure", context.exception.code)
@@ -369,3 +369,18 @@ class TestWorkflowProcessor(BaseTest):
 
         with self.assertRaises(ApiError):
             self._populate_form_with_random_data(task)
+
+
+    def test_get_role_by_name(self):
+        self.load_example_data()
+        workflow_spec_model = self.load_test_spec("roles")
+        study = session.query(StudyModel).first()
+        processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
+        tasks = processor.next_user_tasks()
+        task = tasks[0]
+        self._populate_form_with_random_data(task)
+        processor.complete_task(task)
+        supervisor_task = processor.next_user_tasks()[0]
+        self.assertEquals("supervisor", supervisor_task.task_spec.lane)
+

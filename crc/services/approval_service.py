@@ -1,5 +1,6 @@
 import json
 import pickle
+import sys
 from base64 import b64decode
 from datetime import datetime, timedelta
 
@@ -194,7 +195,7 @@ class ApprovalService(object):
                         health_attesting_rows.append(record)
 
             except Exception as e:
-                app.logger.error("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
+                app.logger.error(f'Error pulling data for workflow {approval.workflow_id}', exc_info=True)
 
         return health_attesting_rows
 
@@ -222,7 +223,13 @@ class ApprovalService(object):
                     output.append(record)
 
             except Exception as e:
-                errors.append("Error pulling data for workflow #%i: %s" % (approval.workflow_id, str(e)))
+                errors.append(
+                    f'Error pulling data for workflow #{approval.workflow_id} '
+                    f'(Approval status: {approval.status} - '
+                    f'More details in Sentry): {str(e)}'
+                )
+                # Detailed information sent to Sentry
+                app.logger.error(f'Error pulling data for workflow {approval.workflow_id}', exc_info=True)
         return {"results": output, "errors": errors }
 
     @staticmethod
@@ -251,7 +258,7 @@ class ApprovalService(object):
                     f'{approver_info.display_name} - ({approver_info.uid})'
                 )
                 if mail_result:
-                    app.logger.error(mail_result)
+                    app.logger.error(mail_result, exc_info=True)
             elif status == ApprovalStatus.DECLINED.value:
                 ldap_service = LdapService()
                 pi_user_info = ldap_service.user_info(db_approval.study.primary_investigator_id)
@@ -263,7 +270,7 @@ class ApprovalService(object):
                     f'{approver_info.display_name} - ({approver_info.uid})'
                 )
                 if mail_result:
-                    app.logger.error(mail_result)
+                    app.logger.error(mail_result, exc_info=True)
                 first_approval = ApprovalModel().query.filter_by(
                     study_id=db_approval.study_id, workflow_id=db_approval.workflow_id,
                     status=ApprovalStatus.APPROVED.value, version=db_approval.version).first()
@@ -279,8 +286,8 @@ class ApprovalService(object):
                         f'{approver_info.display_name} - ({approver_info.uid})'
                     )
                     if mail_result:
-                        app.logger.error(mail_result)
-        # TODO: Log update action by approver_uid - maybe ?
+                        app.logger.error(mail_result, exc_info=True)
+
         return db_approval
 
     @staticmethod
@@ -292,11 +299,12 @@ class ApprovalService(object):
             pending approvals and create a new approval for the latest version
             of the workflow."""
 
-        # Find any existing approvals for this workflow and approver.
-        latest_approval_request = db.session.query(ApprovalModel). \
+        # Find any existing approvals for this workflow.
+        latest_approval_requests = db.session.query(ApprovalModel). \
             filter(ApprovalModel.workflow_id == workflow_id). \
-            filter(ApprovalModel.approver_uid == approver_uid). \
-            order_by(desc(ApprovalModel.version)).first()
+            order_by(desc(ApprovalModel.version))
+
+        latest_approver_request = latest_approval_requests.filter(ApprovalModel.approver_uid == approver_uid).first()
 
         # Construct as hash of the latest files to see if things have changed since
         # the last approval.
@@ -311,16 +319,20 @@ class ApprovalService(object):
         # If an existing approval request exists and no changes were made, do nothing.
         # If there is an existing approval request for a previous version of the workflow
         # then add a new request, and cancel any waiting/pending requests.
-        if latest_approval_request:
-            request_file_ids = list(file.file_data_id for file in latest_approval_request.approval_files)
+        if latest_approver_request:
+            request_file_ids = list(file.file_data_id for file in latest_approver_request.approval_files)
             current_data_file_ids.sort()
             request_file_ids.sort()
+            other_approver = latest_approval_requests.filter(ApprovalModel.approver_uid != approver_uid).first()
             if current_data_file_ids == request_file_ids:
-                return  # This approval already exists.
+                return  # This approval already exists or we're updating other approver.
             else:
-                latest_approval_request.status = ApprovalStatus.CANCELED.value
-                db.session.add(latest_approval_request)
-                version = latest_approval_request.version + 1
+                for approval_request in latest_approval_requests:
+                    if (approval_request.version == latest_approver_request.version and
+                        approval_request.status != ApprovalStatus.CANCELED.value):
+                        approval_request.status = ApprovalStatus.CANCELED.value
+                        db.session.add(approval_request)
+                version = latest_approver_request.version + 1
         else:
             version = 1
 
@@ -350,7 +362,7 @@ class ApprovalService(object):
                 f'{approver_info.display_name} - ({approver_info.uid})'
             )
             if mail_result:
-                app.logger.error(mail_result)
+                app.logger.error(mail_result, exc_info=True)
             # send rrp approval request for first approver
             # enhance the second part in case it bombs
             approver_email = [approver_info.email_address] if approver_info.email_address else app.config['FALLBACK_EMAILS']
@@ -360,7 +372,7 @@ class ApprovalService(object):
                 f'{pi_user_info.display_name} - ({pi_user_info.uid})'
             )
             if mail_result:
-                app.logger.error(mail_result)
+                app.logger.error(mail_result, exc_info=True)
 
     @staticmethod
     def _create_approval_files(workflow_data_files, approval):
