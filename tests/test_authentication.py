@@ -13,6 +13,8 @@ from crc.models.user import UserModel
 
 
 class TestAuthentication(BaseTest):
+    admin_uid = 'dhf8r'
+    non_admin_uid = 'lb3dp'
 
     def tearDown(self):
         # Assure we set the production flag back to false.
@@ -58,7 +60,7 @@ class TestAuthentication(BaseTest):
         self.assertTrue(expected_exp_3 - 1000 <= actual_exp_3 <= expected_exp_3 + 1000)
 
     def test_non_production_auth_creates_user(self):
-        new_uid = 'lb3dp'  ## Assure this user id is in the fake responses from ldap.
+        new_uid = self.non_admin_uid  ## Assure this user id is in the fake responses from ldap.
         self.load_example_data()
         user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNone(user)
@@ -88,21 +90,20 @@ class TestAuthentication(BaseTest):
 
         self.load_example_data()
 
-        new_uid = 'lb3dp'  # This user is in the test ldap system.
-        user = db.session.query(UserModel).filter_by(uid=new_uid).first()
+        # User should not be in the system yet.
+        user = db.session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
         self.assertIsNone(user)
-        redirect_url = 'http://worlds.best.website/admin'
-        headers = dict(Uid=new_uid)
-        db.session.flush()
-        rv = self.app.get('v1.0/login', follow_redirects=False, headers=headers)
 
-        self.assert_success(rv)
-        user = db.session.query(UserModel).filter_by(uid=new_uid).first()
-        self.assertIsNotNone(user)
-        self.assertEqual(new_uid, user.uid)
-        self.assertEqual("Laura Barnes", user.display_name)
-        self.assertEqual("lb3dp@virginia.edu", user.email_address)
-        self.assertEqual("E0:Associate Professor of Systems and Information Engineering", user.title)
+        # Log in
+        non_admin_user = self._login_as_non_admin()
+
+        # User should be in the system now.
+        redirect_url = 'http://worlds.best.website/admin'
+        rv_user = self.app.get('/v1.0/user', headers=self.logged_in_headers(non_admin_user, redirect_url=redirect_url))
+        self.assert_success(rv_user)
+        user_data = json.loads(rv_user.get_data(as_text=True))
+        self.assertEqual(self.non_admin_uid, user_data['uid'])
+        self.assertFalse(user_data['is_admin'])
 
         # Switch production mode back off
         app.config['PRODUCTION'] = False
@@ -119,6 +120,8 @@ class TestAuthentication(BaseTest):
         user = UserModel(uid="dhf8r", first_name='Dan', last_name='Funk', email_address='dhf8r@virginia.edu')
         rv = self.app.get('/v1.0/user', headers=self.logged_in_headers(user, redirect_url='http://omg.edu/lolwut'))
         self.assert_success(rv)
+        user_data = json.loads(rv.get_data(as_text=True))
+        self.assertTrue(user_data['is_admin'])
 
     def test_admin_can_access_admin_only_endpoints(self):
         # Switch production mode on
@@ -126,21 +129,8 @@ class TestAuthentication(BaseTest):
 
         self.load_example_data()
 
-        admin_uids = app.config['ADMIN_UIDS']
-        self.assertGreater(len(admin_uids), 0)
-        admin_uid = admin_uids[0]
-        self.assertEqual(admin_uid, 'dhf8r')  # This user is in the test ldap system.
-        admin_headers = dict(Uid=admin_uid)
-
-        rv = self.app.get('v1.0/login', follow_redirects=False, headers=admin_headers)
-        self.assert_success(rv)
-
-        admin_user = db.session.query(UserModel).filter(UserModel.uid == admin_uid).first()
-        self.assertIsNotNone(admin_user)
-        self.assertEqual(admin_uid, admin_user.uid)
-
-        admin_study = self._make_fake_study(admin_uid)
-
+        admin_user = self._login_as_admin()
+        admin_study = self._make_fake_study(admin_user.uid)
         admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token().decode())
 
         rv_add_study = self.app.post(
@@ -173,26 +163,9 @@ class TestAuthentication(BaseTest):
         self.load_example_data()
 
         # Non-admin user should not be able to delete a study
-        non_admin_uid = 'lb3dp'
-        admin_uids = app.config['ADMIN_UIDS']
-        self.assertGreater(len(admin_uids), 0)
-        self.assertNotIn(non_admin_uid, admin_uids)
-
-        non_admin_headers = dict(Uid=non_admin_uid)
-
-        rv = self.app.get(
-            'v1.0/login',
-            follow_redirects=False,
-            headers=non_admin_headers
-        )
-        self.assert_success(rv)
-
-        non_admin_user = db.session.query(UserModel).filter_by(uid=non_admin_uid).first()
-        self.assertIsNotNone(non_admin_user)
-
+        non_admin_user = self._login_as_non_admin()
         non_admin_token_headers = dict(Authorization='Bearer ' + non_admin_user.encode_auth_token().decode())
-
-        non_admin_study = self._make_fake_study(non_admin_uid)
+        non_admin_study = self._make_fake_study(non_admin_user.uid)
 
         rv_add_study = self.app.post(
             '/v1.0/study',
@@ -216,6 +189,89 @@ class TestAuthentication(BaseTest):
         # Switch production mode back off
         app.config['PRODUCTION'] = False
 
+    def test_list_all_users(self):
+        self.load_example_data()
+        rv = self.app.get('/v1.0/user')
+        self.assert_failure(rv, 401)
+
+        rv = self.app.get('/v1.0/user', headers=self.logged_in_headers())
+        self.assert_success(rv)
+
+        all_users = db.session.query(UserModel).all()
+
+        rv = self.app.get('/v1.0/list_users', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        user_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(len(user_data), len(all_users))
+
+    def test_admin_can_impersonate_another_user(self):
+        # Switch production mode on
+        app.config['PRODUCTION'] = True
+
+        self.load_example_data()
+
+        admin_user = self._login_as_admin()
+        admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token().decode())
+
+        # User should not be in the system yet.
+        non_admin_user = db.session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
+        self.assertIsNone(non_admin_user)
+
+        # Admin should not be able to impersonate non-existent user
+        rv_1 = self.app.get(
+            '/v1.0/user?admin_impersonate_uid=' + self.non_admin_uid,
+            content_type="application/json",
+            headers=admin_token_headers,
+            follow_redirects=False
+        )
+        self.assert_success(rv_1)
+        user_data_1 = json.loads(rv_1.get_data(as_text=True))
+        self.assertEqual(user_data_1['uid'], self.admin_uid, 'Admin user should be logged in as themselves')
+
+        # Add the non-admin user now
+        self.logout()
+        non_admin_user = self._login_as_non_admin()
+        self.assertEqual(non_admin_user.uid, self.non_admin_uid)
+        non_admin_token_headers = dict(Authorization='Bearer ' + non_admin_user.encode_auth_token().decode())
+
+        # Add a study for the non-admin user
+        non_admin_study = self._make_fake_study(self.non_admin_uid)
+        rv_add_study = self.app.post(
+            '/v1.0/study',
+            content_type="application/json",
+            headers=non_admin_token_headers,
+            data=json.dumps(StudySchema().dump(non_admin_study))
+        )
+        self.assert_success(rv_add_study, 'Non-admin user should be able to add a study')
+        self.logout()
+
+        # Admin should be able to impersonate user now
+        admin_user = self._login_as_admin()
+        rv_2 = self.app.get(
+            '/v1.0/user?admin_impersonate_uid=' + self.non_admin_uid,
+            content_type="application/json",
+            headers=admin_token_headers,
+            follow_redirects=False
+        )
+        self.assert_success(rv_2)
+        user_data_2 = json.loads(rv_2.get_data(as_text=True))
+        self.assertEqual(user_data_2['uid'], self.non_admin_uid, 'Admin user should impersonate non-admin user')
+
+        # Study endpoint should return non-admin user's studies
+        rv_study = self.app.get(
+            '/v1.0/study',
+            content_type="application/json",
+            headers=admin_token_headers,
+            follow_redirects=False
+        )
+        self.assert_success(rv_study, 'Admin user should be able to get impersonated user studies')
+        study_data = json.loads(rv_study.get_data(as_text=True))
+        self.assertGreaterEqual(len(study_data), 1)
+        self.assertEqual(study_data[0]['user_uid'], self.non_admin_uid)
+
+        # Switch production mode back off
+        app.config['PRODUCTION'] = False
+
     def _make_fake_study(self, uid):
         return {
             "title": "blah",
@@ -224,3 +280,42 @@ class TestAuthentication(BaseTest):
             "primary_investigator_id": uid,
             "user_uid": uid,
         }
+
+    def _login_as_admin(self):
+        admin_uids = app.config['ADMIN_UIDS']
+        self.assertGreater(len(admin_uids), 0)
+        self.assertIn(self.admin_uid, admin_uids)
+        admin_headers = dict(Uid=self.admin_uid)
+
+        rv = self.app.get('v1.0/login', follow_redirects=False, headers=admin_headers)
+        self.assert_success(rv)
+
+        admin_user = db.session.query(UserModel).filter(UserModel.uid == self.admin_uid).first()
+        self.assertIsNotNone(admin_user)
+        self.assertEqual(self.admin_uid, admin_user.uid)
+        self.assertTrue(admin_user.is_admin())
+        return admin_user
+
+    def _login_as_non_admin(self):
+        admin_uids = app.config['ADMIN_UIDS']
+        self.assertGreater(len(admin_uids), 0)
+        self.assertNotIn(self.non_admin_uid, admin_uids)
+
+        non_admin_headers = dict(Uid=self.non_admin_uid)
+
+        rv = self.app.get(
+            'v1.0/login?uid=' + self.non_admin_uid,
+            follow_redirects=False,
+            headers=non_admin_headers
+        )
+        self.assert_success(rv)
+
+        user = db.session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
+        self.assertIsNotNone(user)
+        self.assertFalse(user.is_admin())
+        self.assertIsNotNone(user)
+        self.assertEqual(self.non_admin_uid, user.uid)
+        self.assertEqual("Laura Barnes", user.display_name)
+        self.assertEqual("lb3dp@virginia.edu", user.email_address)
+        self.assertEqual("E0:Associate Professor of Systems and Information Engineering", user.title)
+        return user

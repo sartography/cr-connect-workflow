@@ -5,6 +5,7 @@ from crc import app, db
 from crc.api.common import ApiError
 from crc.models.user import UserModel, UserModelSchema
 from crc.services.ldap_service import LdapService, LdapModel
+from crc.services.user_service import UserService
 
 """
 .. module:: crc.api.user
@@ -56,8 +57,9 @@ def verify_token(token=None):
                 return token_info
 
             else:
-                raise ApiError("no_user", "User not found. Please login via the frontend app before accessing this feature.",
-                         status_code=403)
+                raise ApiError("no_user",
+                               "User not found. Please login via the frontend app before accessing this feature.",
+                               status_code=403)
 
     else:
         # Fall back to a default user if this is not production.
@@ -65,7 +67,6 @@ def verify_token(token=None):
         token = g.user.encode_auth_token()
         token_info = UserModel.decode_auth_token(token)
         return token_info
-
 
 
 def verify_token_admin(token=None):
@@ -85,8 +86,20 @@ def verify_token_admin(token=None):
         token_info = UserModel.decode_auth_token(token)
         return token_info
 
-def get_current_user():
-    return UserModelSchema().dump(g.user)
+
+def get_current_user(admin_impersonate_uid=None):
+    if UserService.has_user():
+        if admin_impersonate_uid is not None and UserService.user_is_admin():
+            UserService.impersonate(admin_impersonate_uid)
+
+    user = UserService.current_user(UserService.admin_is_impersonating())
+    return UserModelSchema().dump(user)
+
+
+def get_all_users():
+    if "user" in g and g.user.is_admin():
+        all_users = db.session.query(UserModel).all()
+        return UserModelSchema(many=True).dump(all_users)
 
 
 def login(
@@ -128,7 +141,6 @@ def login(
     # X-Forwarded-Host: dev.crconnect.uvadcos.io
     # X-Forwarded-Server: dev.crconnect.uvadcos.io
     # Connection: Keep-Alive
-
 
     # If we're in production, override any uid with the uid from the SSO request headers
     if _is_production():

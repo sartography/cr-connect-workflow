@@ -2,8 +2,6 @@
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import os
 
-from crc.services.user_service import UserService
-
 os.environ["TESTING"] = "true"
 
 import json
@@ -18,17 +16,19 @@ from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
+from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
+from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
 from example_data import ExampleDataLoader
 
-#UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
+# UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
 import logging
+
 logging.basicConfig()
 
 
@@ -39,47 +39,56 @@ class BaseTest(unittest.TestCase):
 
     if not app.config['TESTING']:
         raise (Exception("INVALID TEST CONFIGURATION. This is almost always in import order issue."
-               "The first class to import in each test should be the base_test.py file."))
+                         "The first class to import in each test should be the base_test.py file."))
 
     auths = {}
     test_uid = "dhf8r"
 
     users = [
         {
-            'uid':'dhf8r',
-            'email_address':'dhf8r@virginia.EDU',
-            'display_name':'Daniel Harold Funk',
-            'affiliation':'staff@virginia.edu;member@virginia.edu',
-            'eppn':'dhf8r@virginia.edu',
-            'first_name':'Daniel',
-            'last_name':'Funk',
-            'title':'SOFTWARE ENGINEER V'
-        }
+            'uid': 'dhf8r',
+            'email_address': 'dhf8r@virginia.EDU',
+            'display_name': 'Daniel Harold Funk',
+            'affiliation': 'staff@virginia.edu;member@virginia.edu',
+            'eppn': 'dhf8r@virginia.edu',
+            'first_name': 'Daniel',
+            'last_name': 'Funk',
+            'title': 'SOFTWARE ENGINEER V'
+        },
+        {
+            'uid': 'lbd3p',
+            'email_address': 'lbd3p@virginia.EDU',
+            'display_name': 'Laura Barnes',
+            'affiliation': 'staff@virginia.edu;member@virginia.edu',
+            'eppn': 'lbd3p@virginia.edu',
+            'first_name': 'Laura',
+            'last_name': 'Barnes',
+            'title': 'Associate Professor of Systems and Information Engineering'
+        },
     ]
 
     studies = [
         {
-            'id':0,
-            'title':'The impact of fried pickles on beer consumption in bipedal software developers.',
-            'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.active,
-            'primary_investigator_id':'dhf8r',
-            'sponsor':'Sartography Pharmaceuticals',
-            'ind_number':'1234',
-            'user_uid':'dhf8r'
+            'id': 0,
+            'title': 'The impact of fried pickles on beer consumption in bipedal software developers.',
+            'last_updated': datetime.datetime.now(),
+            'protocol_builder_status': ProtocolBuilderStatus.active,
+            'primary_investigator_id': 'dhf8r',
+            'sponsor': 'Sartography Pharmaceuticals',
+            'ind_number': '1234',
+            'user_uid': 'dhf8r'
         },
         {
-            'id':1,
-            'title':'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
-            'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.active,
-            'primary_investigator_id':'dhf8r',
-            'sponsor':'Makerspace & Co.',
-            'ind_number':'5678',
-            'user_uid':'dhf8r'
+            'id': 1,
+            'title': 'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
+            'last_updated': datetime.datetime.now(),
+            'protocol_builder_status': ProtocolBuilderStatus.active,
+            'primary_investigator_id': 'dhf8r',
+            'sponsor': 'Makerspace & Co.',
+            'ind_number': '5678',
+            'user_uid': 'dhf8r'
         }
     ]
-
 
     @classmethod
     def setUpClass(cls):
@@ -100,7 +109,11 @@ class BaseTest(unittest.TestCase):
 
     def tearDown(self):
         ExampleDataLoader.clean_db()
-        g.user = None
+        self.logout()
+
+        if 'impersonate_user' in g:
+            g.impersonate_user = None
+
         self.auths = {}
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
@@ -138,8 +151,13 @@ class BaseTest(unittest.TestCase):
         else:
             ExampleDataLoader().load_test_data()
 
-        for user_json in self.users:
-            db.session.add(UserModel(**user_json))
+        # If in production mode, only add the first user.
+        if app.config['PRODUCTION']:
+            db.session.add(UserModel(**self.users[0]))
+        else:
+            for user_json in self.users:
+                db.session.add(UserModel(**user_json))
+
         db.session.commit()
         for study_json in self.studies:
             study_model = StudyModel(**study_json)
@@ -220,7 +238,6 @@ class BaseTest(unittest.TestCase):
 
         return '?%s' % '&'.join(query_string_list)
 
-
     def replace_file(self, name, file_path):
         """Replaces a stored file with the given name with the contents of the file at the given path."""
         file_service = FileService()
@@ -240,7 +257,8 @@ class BaseTest(unittest.TestCase):
             db.session.commit()
         return user
 
-    def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer", primary_investigator_id="lb3dp"):
+    def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer",
+                     primary_investigator_id="lb3dp"):
         study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
@@ -294,19 +312,20 @@ class BaseTest(unittest.TestCase):
         file.close()
 
     def create_approval(
-        self,
-        study=None,
-        workflow=None,
-        approver_uid=None,
-        status=None,
-        version=None,
+            self,
+            study=None,
+            workflow=None,
+            approver_uid=None,
+            status=None,
+            version=None,
     ):
         study = study or self.create_study()
         workflow = workflow or self.create_workflow()
         approver_uid = approver_uid or self.test_uid
         status = status or ApprovalStatus.PENDING.value
         version = version or 1
-        approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status, version=version)
+        approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status,
+                                 version=version)
         db.session.add(approval)
         db.session.commit()
         return approval
@@ -325,7 +344,6 @@ class BaseTest(unittest.TestCase):
         workflow_api = WorkflowApiSchema().load(json_data)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
-
 
     def complete_form(self, workflow_in, task_in, dict_data, error_code=None, terminate_loop=None, user_uid="dhf8r"):
         prev_completed_task_count = workflow_in.completed_tasks
@@ -391,12 +409,14 @@ class BaseTest(unittest.TestCase):
 
         self.assertEqual(task_in.multi_instance_count, event.mi_count)
         if task_in.multi_instance_type == 'looping' and not terminate_loop:
-            self.assertEqual(task_in.multi_instance_index+1, event.mi_index)
+            self.assertEqual(task_in.multi_instance_index + 1, event.mi_index)
         else:
             self.assertEqual(task_in.multi_instance_index, event.mi_index)
         self.assertEqual(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 
-
         workflow = WorkflowApiSchema().load(json_data)
         return workflow
+
+    def logout(self):
+        g.user = None
