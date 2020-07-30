@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0y2dq4f" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+  <bpmn:process id="Process_0tad5ma" name="Set Recipients" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1synsig</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_0izrcj4">
+      <bpmn:incoming>Flow_11e7jgz</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Activity_0s5v97n" name="Ldap Replace">
+      <bpmn:incoming>Flow_08n2npe</bpmn:incoming>
+      <bpmn:outgoing>Flow_1xlrgne</bpmn:outgoing>
+      <bpmn:script>#! LdapReplace Supervisor Investigator</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1synsig" sourceRef="StartEvent_1" targetRef="Activity_1l9vih3" />
+    <bpmn:sequenceFlow id="Flow_1xlrgne" sourceRef="Activity_0s5v97n" targetRef="Activity_0f78ek5" />
+    <bpmn:sequenceFlow id="Flow_08n2npe" sourceRef="Activity_1l9vih3" targetRef="Activity_0s5v97n" />
+    <bpmn:userTask id="Activity_1l9vih3" name="Set UIDs">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Supervisor" label="Approver" type="string" />
+          <camunda:formField id="Investigator" label="Primary Investigator" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1synsig</bpmn:incoming>
+      <bpmn:outgoing>Flow_08n2npe</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_11e7jgz" sourceRef="Activity_0f78ek5" targetRef="Event_0izrcj4" />
+    <bpmn:userTask id="Activity_0f78ek5" name="Read UIDs">
+      <bpmn:incoming>Flow_1xlrgne</bpmn:incoming>
+      <bpmn:outgoing>Flow_11e7jgz</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0tad5ma">
+      <bpmndi:BPMNEdge id="Flow_08n2npe_di" bpmnElement="Flow_08n2npe">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="450" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1xlrgne_di" bpmnElement="Flow_1xlrgne">
+        <di:waypoint x="550" y="117" />
+        <di:waypoint x="620" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1synsig_di" bpmnElement="Flow_1synsig">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11e7jgz_di" bpmnElement="Flow_11e7jgz">
+        <di:waypoint x="720" y="117" />
+        <di:waypoint x="802" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_04imfm6_di" bpmnElement="Activity_0s5v97n">
+        <dc:Bounds x="450" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xugr62_di" bpmnElement="Activity_1l9vih3">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0izrcj4_di" bpmnElement="Event_0izrcj4">
+        <dc:Bounds x="802" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_17h05g6_di" bpmnElement="Activity_0f78ek5">
+        <dc:Bounds x="620" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
