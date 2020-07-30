@@ -40,7 +40,7 @@ class StudyModel(db.Model):
 
 
 class WorkflowMetadata(object):
-    def __init__(self, id, name, display_name, description, spec_version, category_id, state: WorkflowState, status: WorkflowStatus,
+    def __init__(self, id, name, display_name, description, spec_version, category_id, category_display_name, state: WorkflowState, status: WorkflowStatus,
                  total_tasks, completed_tasks, display_order):
         self.id = id
         self.name = name
@@ -48,6 +48,7 @@ class WorkflowMetadata(object):
         self.description = description
         self.spec_version = spec_version
         self.category_id = category_id
+        self.category_display_name = category_display_name
         self.state = state
         self.status = status
         self.total_tasks = total_tasks
@@ -64,6 +65,7 @@ class WorkflowMetadata(object):
             description=workflow.workflow_spec.description,
             spec_version=workflow.spec_version(),
             category_id=workflow.workflow_spec.category_id,
+            category_display_name=workflow.workflow_spec.category.display_name,
             state=WorkflowState.optional,
             status=workflow.status,
             total_tasks=workflow.total_tasks,
@@ -79,7 +81,8 @@ class WorkflowMetadataSchema(ma.Schema):
     class Meta:
         model = WorkflowMetadata
         additional = ["id", "name", "display_name", "description",
-                 "total_tasks", "completed_tasks", "display_order"]
+                 "total_tasks", "completed_tasks", "display_order",
+                      "category_id", "category_display_name"]
         unknown = INCLUDE
 
 

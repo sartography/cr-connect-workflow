@@ -27,7 +27,10 @@ class TestStudyService(BaseTest):
 
         # Assure some basic models are in place, This is a damn mess.  Our database models need an overhaul to make
         # this easier - better relationship modeling is now critical.
-        self.load_test_spec("top_level_workflow", master_spec=True)
+        cat = WorkflowSpecCategoryModel(name="approvals", display_name="Approvals", display_order=0)
+        db.session.add(cat)
+        db.session.commit()
+        self.load_test_spec("top_level_workflow", master_spec=True, category_id=cat.id)
         user = db.session.query(UserModel).filter(UserModel.uid == "dhf8r").first()
         if not user:
             user = UserModel(uid="dhf8r", email_address="whatever@stuff.com", display_name="Stayathome Smellalots")
@@ -39,11 +42,7 @@ class TestStudyService(BaseTest):
 
         study = StudyModel(title="My title", protocol_builder_status=ProtocolBuilderStatus.ACTIVE, user_uid=user.uid)
         db.session.add(study)
-        cat = WorkflowSpecCategoryModel(name="approvals", display_name="Approvals", display_order=0)
-        db.session.add(cat)
-        db.session.commit()
 
-        self.assertIsNotNone(cat.id)
         self.load_test_spec("random_fact", category_id=cat.id)
 
         self.assertIsNotNone(study.id)

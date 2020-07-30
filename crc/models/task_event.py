@@ -56,7 +56,6 @@ class TaskEventSchema(ma.Schema):
 
     study = fields.Nested(StudySchema, dump_only=True)
     workflow = fields.Nested(WorkflowMetadataSchema, dump_only=True)
-
     class Meta:
         model = TaskEvent
         additional = ["id", "user_uid", "action", "task_id", "task_title",
