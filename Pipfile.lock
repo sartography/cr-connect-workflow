@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "afb6a541d1a9f33155f91529ad961492dceded89466aa1e02fed9901ac5eb146"
+            "sha256": "381d29428eb328ad6167774b510b9d818bd1505b95f50454a19f1564782326cc"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -804,7 +804,7 @@
         },
         "spiffworkflow": {
             "git": "https://github.com/sartography/SpiffWorkflow.git",
-            "ref": "7712830665b4419df019413ac095cb0749adb346"
+            "ref": "7c8d59e7b9a978795bc8d1f354002fdc89540672"
         },
         "sqlalchemy": {
             "hashes": [
@@ -892,10 +892,10 @@
         },
         "wtforms": {
             "hashes": [
-                "sha256:43f19879b2a9b8dfd81d2e4e427ce44d3e5c09dbe08f2af8f4be9586b7dfc33d",
-                "sha256:715ebd303f47384bf6468fd9dfff52c6acc400e71204df8acfa6ef7bf40e1c27"
+                "sha256:7b504fc724d0d1d4d5d5c114e778ec88c37ea53144683e084215eed5155ada4c",
+                "sha256:81195de0ac94fbc8368abbaf9197b88c4f3ffd6c2719b5bf5fc9da744f3d829c"
             ],
-            "version": "==2.3.2"
+            "version": "==2.3.3"
         },
         "xlrd": {
             "hashes": [
