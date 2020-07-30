@@ -1,6 +1,7 @@
 import datetime
 
 import jwt
+from marshmallow import fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db, app
@@ -18,6 +19,7 @@ class UserModel(db.Model):
     first_name = db.Column(db.String, nullable=True)
     last_name = db.Column(db.String, nullable=True)
     title = db.Column(db.String, nullable=True)
+
     # TODO: Add Department and School
 
     def is_admin(self):
@@ -64,3 +66,4 @@ class UserModelSchema(SQLAlchemyAutoSchema):
         load_instance = True
         include_relationships = True
 
+    is_admin = fields.Function(lambda obj: obj.is_admin())
