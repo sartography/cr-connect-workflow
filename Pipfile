@@ -38,13 +38,14 @@ recommonmark = "*"
 requests = "*"
 sentry-sdk = {extras = ["flask"],version = "==0.14.4"}
 sphinx = "*"
-spiffworkflow = {editable = true,git = "https://github.com/sartography/SpiffWorkflow.git",ref = "master"}
+spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow.git",ref = "master"}
 #spiffworkflow = {editable = true,path="/home/kelly/sartography/SpiffWorkflow/"}
 swagger-ui-bundle = "*"
 webtest = "*"
 werkzeug = "*"
 xlrd = "*"
 xlsxwriter = "*"
+pygithub = "*"
 
 [requires]
 python_version = "3.7"

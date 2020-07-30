@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 from datetime import datetime
+from github import Github, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
@@ -332,3 +333,51 @@ class FileService(object):
             file_model.archived = True
             session.commit()
             app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
+
+    @staticmethod
+    def update_from_github(file_ids):
+        gh_token = app.config['GITHUB_TOKEN']
+        _github = Github(gh_token)
+        repo = _github.get_user().get_repo('crispy-fiesta')
+
+        for file_id in file_ids:
+            file_data_model = FileDataModel.query.filter_by(
+                file_model_id=file_id
+            ).order_by(
+                desc(FileDataModel.version)
+            ).first()
+            try:
+                repo_file = repo.get_contents(file_data_model.file_model.name)
+            except UnknownObjectException:
+                # TODO: Add message indicating file is not in the repo
+                pass
+            else:
+                file_data_model.data = repo_file.decoded_content
+                session.add(file_data_model)
+                session.commit()
+
+    @staticmethod
+    def publish_to_github(file_ids):
+        gh_token = app.config['GITHUB_TOKEN']
+        _github = Github(gh_token)
+        repo = _github.get_user().get_repo('crispy-fiesta')
+
+        for file_id in file_ids:
+            file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
+            try:
+                repo_file = repo.get_contents(file_data_model.file_model.name)
+            except UnknownObjectException:
+                repo.create_file(
+                    path=file_data_model.file_model.name,
+                    message=f'Creating {file_data_model.file_model.name}',
+                    content=file_data_model.data
+                )
+                return {'created': True}
+            else:
+                updated = repo.update_file(
+                    path=repo_file.path,
+                    message=f'Updating {file_data_model.file_model.name}',
+                    content=file_data_model.data,
+                    sha=repo_file.sha
+                )
+                return {'updated': True}
