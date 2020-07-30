@@ -11,7 +11,7 @@
     <bpmn:scriptTask id="Invalid_Script_Task" name="An Invalid Script Reference">
       <bpmn:incoming>SequenceFlow_1pnq3kg</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_12pf6um</bpmn:outgoing>
-      <bpmn:script>#! NoSuchScript withArg1</bpmn:script>
+      <bpmn:script>no_such_script('withArg1')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_12pf6um" sourceRef="Invalid_Script_Task" targetRef="EndEvent_063bpg6" />
   </bpmn:process>
