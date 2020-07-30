@@ -1,4 +1,4 @@
-from flask import g
+from flask import g, session
 
 from crc import db
 from crc.api.common import ApiError
@@ -22,8 +22,8 @@ class UserService(object):
     @staticmethod
     def admin_is_impersonating():
         return UserService.user_is_admin() and \
-               "impersonate_user" in g and \
-               g.impersonate_user is not None
+               "admin_impersonate_uid" in session and \
+               session.get('admin_impersonate_uid') is not None
 
     # Returns true if the given user uid is different from the current user's uid.
     @staticmethod
@@ -35,20 +35,21 @@ class UserService(object):
         if not UserService.has_user():
             raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
 
-        # Admins can pretend to be different users and act on a users behalf in
+        # Admins can pretend to be different users and act on a user's behalf in
         # some circumstances.
         if allow_admin_impersonate and UserService.admin_is_impersonating():
             return g.impersonate_user
         else:
             return g.user
 
-    # Admins can pretend to be different users and act on a users behalf in some circumstances.
+    # Admins can pretend to be different users and act on a user's behalf in some circumstances.
     # This method allows an admin user to start impersonating another user with the given uid.
     # Stops impersonating if the uid is None or invalid.
     @staticmethod
     def impersonate(uid=None):
         # Clear out the current impersonating user.
         g.impersonate_user = None
+        session.pop('admin_impersonate_uid', None)
 
         if not UserService.has_user():
             raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
@@ -56,6 +57,10 @@ class UserService(object):
         if not UserService.admin_is_impersonating() and UserService.is_different_user(uid):
             # Impersonate the user if the given uid is valid.
             g.impersonate_user = db.session.query(UserModel).filter(UserModel.uid == uid).first()
+
+            # Store the uid in the session.
+            if g.impersonate_user:
+                session['admin_impersonate_uid'] = uid
 
     @staticmethod
     def in_list(uids, allow_admin_impersonate=False):

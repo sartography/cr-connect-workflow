@@ -65,5 +65,7 @@ class UserModelSchema(SQLAlchemyAutoSchema):
         model = UserModel
         load_instance = True
         include_relationships = True
+    is_admin = fields.Method('get_is_admin', dump_only=True)
 
-    is_admin = fields.Function(lambda obj: obj.is_admin())
+    def get_is_admin(self, obj):
+        return obj.is_admin()

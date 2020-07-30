@@ -8,7 +8,7 @@ import json
 import unittest
 import urllib.parse
 import datetime
-from flask import g
+from flask import g, session as flask_session
 from sqlalchemy import Sequence
 
 from crc import app, db, session
@@ -110,10 +110,6 @@ class BaseTest(unittest.TestCase):
     def tearDown(self):
         ExampleDataLoader.clean_db()
         self.logout()
-
-        if 'impersonate_user' in g:
-            g.impersonate_user = None
-
         self.auths = {}
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
