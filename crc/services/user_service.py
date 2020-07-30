@@ -1,8 +1,8 @@
-from flask import g, session
+from flask import g
 
-from crc import db
+from crc import session
 from crc.api.common import ApiError
-from crc.models.user import UserModel
+from crc.models.user import UserModel, AdminSessionModel
 
 
 class UserService(object):
@@ -11,7 +11,10 @@ class UserService(object):
     # Returns true if the current user is logged in.
     @staticmethod
     def has_user():
-        return 'user' in g and bool(g.user)
+        return 'token' in g and \
+               bool(g.token) and \
+               'user' in g and \
+               bool(g.user)
 
     # Returns true if the current user is an admin.
     @staticmethod
@@ -21,10 +24,12 @@ class UserService(object):
     # Returns true if the current admin user is impersonating another user.
     @staticmethod
     def admin_is_impersonating():
-        print("session.get('admin_impersonate_uid')", session.get('admin_impersonate_uid'))
-        return UserService.user_is_admin() and \
-               "admin_impersonate_uid" in session and \
-               session.get('admin_impersonate_uid') is not None
+        if UserService.user_is_admin():
+            adminSession: AdminSessionModel = UserService.get_admin_session()
+            return adminSession is not None
+
+        else:
+            raise ApiError("unauthorized", "You do not have permissions to do this.", status_code=403)
 
     # Returns true if the given user uid is different from the current user's uid.
     @staticmethod
@@ -32,14 +37,14 @@ class UserService(object):
         return UserService.has_user() and uid is not None and uid is not g.user.uid
 
     @staticmethod
-    def current_user(allow_admin_impersonate=False):
+    def current_user(allow_admin_impersonate=False) -> UserModel:
         if not UserService.has_user():
             raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
 
         # Admins can pretend to be different users and act on a user's behalf in
         # some circumstances.
-        if allow_admin_impersonate and UserService.admin_is_impersonating() and 'impersonate_user' in g:
-            return g.impersonate_user
+        if UserService.user_is_admin() and allow_admin_impersonate and UserService.admin_is_impersonating():
+            return UserService.get_admin_session_user()
         else:
             return g.user
 
@@ -47,22 +52,42 @@ class UserService(object):
     # This method allows an admin user to start impersonating another user with the given uid.
     # Stops impersonating if the uid is None or invalid.
     @staticmethod
-    def impersonate(uid=None):
-        # if uid is None:
-        #     # Clear out the current impersonating user.
-        #     g.impersonate_user = None
-        #     session.pop('admin_impersonate_uid', None)
-
+    def start_impersonating(uid=None):
         if not UserService.has_user():
             raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
 
+        if not UserService.user_is_admin():
+            raise ApiError("unauthorized", "You do not have permissions to do this.", status_code=403)
+
+        if uid is None:
+            raise ApiError("invalid_uid", "Please provide a valid user uid.")
+
         if not UserService.admin_is_impersonating() and UserService.is_different_user(uid):
             # Impersonate the user if the given uid is valid.
-            g.impersonate_user = db.session.query(UserModel).filter(UserModel.uid == uid).first()
+            impersonate_user = session.query(UserModel).filter(UserModel.uid == uid).first()
 
-            # Store the uid in the session.
-            if g.impersonate_user:
-                session['admin_impersonate_uid'] = uid
+            if impersonate_user is not None:
+                g.impersonate_user = impersonate_user
+
+                # Store the uid and user session token.
+                session.add(AdminSessionModel(token=g.token, admin_impersonate_uid=uid))
+                session.commit()
+            else:
+                raise ApiError("invalid_uid", "The uid provided is not valid.")
+
+    @staticmethod
+    def stop_impersonating():
+        if not UserService.has_user():
+            raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
+
+        # Clear out the current impersonating user.
+        if 'impersonate_user' in g:
+            del g.impersonate_user
+
+        admin_session: AdminSessionModel = UserService.get_admin_session()
+        if admin_session:
+            session.delete(admin_session)
+            session.commit()
 
     @staticmethod
     def in_list(uids, allow_admin_impersonate=False):
@@ -73,3 +98,20 @@ class UserService(object):
             if user.uid in uids:
                 return True
         return False
+
+    @staticmethod
+    def get_admin_session() -> AdminSessionModel:
+        if UserService.user_is_admin():
+            return session.query(AdminSessionModel).filter(AdminSessionModel.token == g.token).first()
+        else:
+            raise ApiError("unauthorized", "You do not have permissions to do this.", status_code=403)
+
+    @staticmethod
+    def get_admin_session_user() -> UserModel:
+        if UserService.user_is_admin():
+            admin_session = UserService.get_admin_session()
+
+            if admin_session is not None:
+                return session.query(UserModel).filter(UserModel.uid == admin_session.admin_impersonate_uid).first()
+        else:
+            raise ApiError("unauthorized", "You do not have permissions to do this.", status_code=403)

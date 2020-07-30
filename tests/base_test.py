@@ -8,7 +8,7 @@ import json
 import unittest
 import urllib.parse
 import datetime
-from flask import g, session as flask_session
+from flask import g
 from sqlalchemy import Sequence
 
 from crc import app, db, session
@@ -149,19 +149,19 @@ class BaseTest(unittest.TestCase):
 
         # If in production mode, only add the first user.
         if app.config['PRODUCTION']:
-            db.session.add(UserModel(**self.users[0]))
+            session.add(UserModel(**self.users[0]))
         else:
             for user_json in self.users:
-                db.session.add(UserModel(**user_json))
+                session.add(UserModel(**user_json))
 
-        db.session.commit()
+        session.commit()
         for study_json in self.studies:
             study_model = StudyModel(**study_json)
-            db.session.add(study_model)
+            session.add(study_model)
             StudyService._add_all_workflow_specs_to_study(study_model)
-            db.session.execute(Sequence(StudyModel.__tablename__ + '_id_seq'))
-        db.session.commit()
-        db.session.flush()
+            session.execute(Sequence(StudyModel.__tablename__ + '_id_seq'))
+        session.commit()
+        session.flush()
 
         specs = session.query(WorkflowSpecModel).all()
         self.assertIsNotNone(specs)
@@ -185,8 +185,8 @@ class BaseTest(unittest.TestCase):
         """Loads a spec into the database based on a directory in /tests/data"""
         if category_id is None:
             category = WorkflowSpecCategoryModel(name="test", display_name="Test Workflows", display_order=0)
-            db.session.add(category)
-            db.session.commit()
+            session.add(category)
+            session.commit()
             category_id = category.id
 
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
@@ -240,7 +240,7 @@ class BaseTest(unittest.TestCase):
         file = open(file_path, "rb")
         data = file.read()
 
-        file_model = db.session.query(FileModel).filter(FileModel.name == name).first()
+        file_model = session.query(FileModel).filter(FileModel.name == name).first()
         noise, file_extension = os.path.splitext(file_path)
         content_type = CONTENT_TYPES[file_extension[1:]]
         file_service.update_file(file_model, data, content_type)
@@ -249,8 +249,8 @@ class BaseTest(unittest.TestCase):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()
         if user is None:
             user = UserModel(uid=uid, email_address=email, display_name=display_name)
-            db.session.add(user)
-            db.session.commit()
+            session.add(user)
+            session.commit()
         return user
 
     def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer",
@@ -260,8 +260,8 @@ class BaseTest(unittest.TestCase):
             user = self.create_user(uid=uid)
             study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.active,
                                user_uid=user.uid, primary_investigator_id=primary_investigator_id)
-            db.session.add(study)
-            db.session.commit()
+            session.add(study)
+            session.commit()
         return study
 
     def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses,
@@ -288,8 +288,8 @@ class BaseTest(unittest.TestCase):
         return full_study
 
     def create_workflow(self, workflow_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
-        db.session.flush()
-        spec = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
+        session.flush()
+        spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
         if spec is None:
             if display_name is None:
                 display_name = workflow_name
@@ -322,8 +322,8 @@ class BaseTest(unittest.TestCase):
         version = version or 1
         approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status,
                                  version=version)
-        db.session.add(approval)
-        db.session.commit()
+        session.add(approval)
+        session.commit()
         return approval
 
     def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False, do_engine_steps=True, user_uid="dhf8r"):
@@ -415,17 +415,8 @@ class BaseTest(unittest.TestCase):
         return workflow
 
     def logout(self):
-        print("logout before 'user' in g", 'user' in g)
-        print('logout before flask_session', flask_session)
-        print("logout before 'impersonate_user' in g", 'impersonate_user' in g)
-
         if 'user' in g:
             del g.user
 
-        flask_session.clear()
         if 'impersonate_user' in g:
             del g.impersonate_user
-
-        print("logout after 'user' in g", 'user' in g)
-        print('logout after flask_session', flask_session)
-        print("logout after 'impersonate_user' in g", 'impersonate_user' in g)

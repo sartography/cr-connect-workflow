@@ -5,7 +5,7 @@ from datetime import timezone, datetime, timedelta
 import jwt
 
 from tests.base_test import BaseTest
-from crc import db, app
+from crc import app, session
 from crc.api.common import ApiError
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudySchema, StudyModel
@@ -62,7 +62,7 @@ class TestAuthentication(BaseTest):
     def test_non_production_auth_creates_user(self):
         new_uid = self.non_admin_uid  ## Assure this user id is in the fake responses from ldap.
         self.load_example_data()
-        user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
+        user = session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNone(user)
 
         user_info = {'uid': new_uid, 'first_name': 'Cordi', 'last_name': 'Nator',
@@ -74,7 +74,7 @@ class TestAuthentication(BaseTest):
         self.assertTrue(rv_1.status_code == 302)
         self.assertTrue(str.startswith(rv_1.location, redirect_url))
 
-        user = db.session.query(UserModel).filter(UserModel.uid == new_uid).first()
+        user = session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNotNone(user)
         self.assertIsNotNone(user.display_name)
         self.assertIsNotNone(user.email_address)
@@ -91,7 +91,7 @@ class TestAuthentication(BaseTest):
         self.load_example_data()
 
         # User should not be in the system yet.
-        user = db.session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
+        user = session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
         self.assertIsNone(user)
 
         # Log in
@@ -143,7 +143,7 @@ class TestAuthentication(BaseTest):
         self.assert_success(rv_add_study, 'Admin user should be able to add a study')
 
         new_admin_study = json.loads(rv_add_study.get_data(as_text=True))
-        db_admin_study = db.session.query(StudyModel).filter_by(id=new_admin_study['id']).first()
+        db_admin_study = session.query(StudyModel).filter_by(id=new_admin_study['id']).first()
         self.assertIsNotNone(db_admin_study)
 
         rv_del_study = self.app.delete(
@@ -176,7 +176,7 @@ class TestAuthentication(BaseTest):
         self.assert_success(rv_add_study, 'Non-admin user should be able to add a study')
 
         new_non_admin_study = json.loads(rv_add_study.get_data(as_text=True))
-        db_non_admin_study = db.session.query(StudyModel).filter_by(id=new_non_admin_study['id']).first()
+        db_non_admin_study = session.query(StudyModel).filter_by(id=new_non_admin_study['id']).first()
         self.assertIsNotNone(db_non_admin_study)
 
         rv_non_admin_del_study = self.app.delete(
@@ -197,7 +197,7 @@ class TestAuthentication(BaseTest):
         rv = self.app.get('/v1.0/user', headers=self.logged_in_headers())
         self.assert_success(rv)
 
-        all_users = db.session.query(UserModel).all()
+        all_users = session.query(UserModel).all()
 
         rv = self.app.get('/v1.0/list_users', headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -214,7 +214,7 @@ class TestAuthentication(BaseTest):
         admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token().decode())
 
         # User should not be in the system yet.
-        non_admin_user = db.session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
+        non_admin_user = session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
         self.assertIsNone(non_admin_user)
 
         # Admin should not be able to impersonate non-existent user
@@ -224,9 +224,7 @@ class TestAuthentication(BaseTest):
             headers=admin_token_headers,
             follow_redirects=False
         )
-        self.assert_success(rv_1)
-        user_data_1 = json.loads(rv_1.get_data(as_text=True))
-        self.assertEqual(user_data_1['uid'], self.admin_uid, 'Admin user should be logged in as themselves')
+        self.assert_failure(rv_1, 400)
 
         # Add the non-admin user now
         self.logout()
@@ -290,7 +288,7 @@ class TestAuthentication(BaseTest):
         rv = self.app.get('v1.0/login', follow_redirects=False, headers=admin_headers)
         self.assert_success(rv)
 
-        admin_user = db.session.query(UserModel).filter(UserModel.uid == self.admin_uid).first()
+        admin_user = session.query(UserModel).filter(UserModel.uid == self.admin_uid).first()
         self.assertIsNotNone(admin_user)
         self.assertEqual(self.admin_uid, admin_user.uid)
         self.assertTrue(admin_user.is_admin())
@@ -310,7 +308,7 @@ class TestAuthentication(BaseTest):
         )
         self.assert_success(rv)
 
-        user = db.session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
+        user = session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
         self.assertIsNotNone(user)
         self.assertFalse(user.is_admin())
         self.assertIsNotNone(user)

@@ -69,3 +69,10 @@ class UserModelSchema(SQLAlchemyAutoSchema):
 
     def get_is_admin(self, obj):
         return obj.is_admin()
+
+
+class AdminSessionModel(db.Model):
+    __tablename__ = 'admin_session'
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String, unique=True)
+    admin_impersonate_uid = db.Column(db.String)
