@@ -154,10 +154,9 @@ class WorkflowService(object):
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    choice = random.choice(field.options)
                     return {
-                        'value': choice['id'],
-                        'label': choice['name']
+                        'value': random_choice['id'],
+                        'label': random_choice['name']
                     }
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
@@ -471,6 +470,7 @@ class WorkflowService(object):
         db.session.query(TaskEventModel). \
             filter(TaskEventModel.workflow_id == processor.workflow_model.id). \
             filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).delete()
+        db.session.commit()
 
         for task in processor.get_current_user_tasks():
             user_ids = WorkflowService.get_users_assigned_to_task(processor, task)

@@ -125,7 +125,8 @@ class WorkflowProcessor(object):
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
 
-    def __init__(self, workflow_model: WorkflowModel, soft_reset=False, hard_reset=False, validate_only=False):
+    def __init__(self, workflow_model: WorkflowModel,
+                 soft_reset=False, hard_reset=False, validate_only=False):
         """Create a Workflow Processor based on the serialized information available in the workflow model.
         If soft_reset is set to true, it will try to use the latest version of the workflow specification
             without resetting to the beginning of the workflow.  This will work for some minor changes to the spec.
@@ -189,7 +190,7 @@ class WorkflowProcessor(object):
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
             #try:
-            bpmn_workflow.do_engine_steps()
+            # bpmn_workflow.do_engine_steps()
            # except WorkflowException as we:
            #     raise ApiError.from_task_spec("error_loading_workflow", str(we), we.sender)
         return bpmn_workflow

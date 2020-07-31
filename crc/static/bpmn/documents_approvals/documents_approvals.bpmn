@@ -44,7 +44,7 @@
 {% endif %}{% endfor %}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:properties>
-          <camunda:property name="display_name" value="Documents and Approvals" />
+          <camunda:property name="display_name" value="'Documents and Approvals'" />
         </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_142jtxs</bpmn:incoming>
