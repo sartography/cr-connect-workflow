@@ -29,7 +29,8 @@
     <bpmn:scriptTask id="Task_1v0e2zu" name="Load Personnel">
       <bpmn:incoming>Flow_0t6p1sb</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1p568pp</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo investigators</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['investigators'] = study_info('investigators')</bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">

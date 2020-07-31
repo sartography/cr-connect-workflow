@@ -8,7 +8,8 @@
     <bpmn:scriptTask id="ScriptTask_02924vs" name="Load IRB Details">
       <bpmn:incoming>SequenceFlow_1fmyo77</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_18nr0gf</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo details</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['details'] = study_info('details')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1fmyo77" sourceRef="StartEvent_1" targetRef="ScriptTask_02924vs" />
     <bpmn:sequenceFlow id="SequenceFlow_18nr0gf" sourceRef="ScriptTask_02924vs" targetRef="Activity_FromIRB-API" />
