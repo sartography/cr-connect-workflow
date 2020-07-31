@@ -31,6 +31,13 @@ paths:
         '304':
           description: Redirection to the hosted frontend with an auth_token header.
   /user:
+    parameters:
+      - name: admin_impersonate_uid
+        in: query
+        required: false
+        description: For admins, the unique uid of an existing user to impersonate.
+        schema:
+          type: string
     get:
       operationId: crc.api.user.get_current_user
       summary: Returns the current user.
@@ -38,10 +45,26 @@ paths:
         - Users
       responses:
         '200':
-          description: The currently authenticated user.
+          description: The currently-authenticated user, or, if the current user is an admin and admin_impersonate_uid is provided, this will be the user with the given uid.
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/User"
+  /list_users:
+    get:
+      operationId: crc.api.user.get_all_users
+      security:
+        - auth_admin: ['secret']
+      summary: Returns a list of all users in the database.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: All users in the database.
+          content:
+            application/json:
+              schema:
+                type: array
                 $ref: "#/components/schemas/User"
   # /v1.0/study
   /study:
@@ -56,6 +79,7 @@ paths:
           content:
             application/json:
               schema:
+                type: array
                 $ref: "#/components/schemas/Study"
     post:
       operationId: crc.api.study.add_study
@@ -572,6 +596,18 @@ paths:
         description: The type of action the event documents, options include "ASSIGNMENT" for tasks that are waiting on you, "COMPLETE" for things have completed.
         schema:
           type: string
+      - name: workflow
+        in: query
+        required: false
+        description: Restrict results to the given workflow.
+        schema:
+          type: number
+      - name: study
+        in: query
+        required: false
+        description: Restrict results to the given study.
+        schema:
+          type: number
     get:
       operationId: crc.api.workflow.get_task_events
       summary: Returns a list of task events related to the current user.  Can be filtered by type.
@@ -608,6 +644,12 @@ paths:
           in: query
           required: false
           description: Set this to true to reset the workflow
+          schema:
+            type: boolean
+        - name: do_engine_steps
+          in: query
+          required: false
+          description: Defaults to true, can be set to false if you are just looking at the workflow not completeing it.
           schema:
             type: boolean
       tags:
@@ -1046,7 +1088,7 @@ components:
           example: dhf8r
         protocol_builder_status:
           type: string
-          enum: [INCOMPLETE, ACTIVE, HOLD, OPEN, ABANDONED]
+          enum: ['incomplete', 'active', 'hold', 'open', 'abandoned']
           example: done
         sponsor:
           type: string

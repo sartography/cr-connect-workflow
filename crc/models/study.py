@@ -25,6 +25,7 @@ class StudyModel(db.Model):
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
     on_hold = db.Column(db.Boolean, default=False)
+    enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
         self.hsr_number = pbs.HSRNUMBER
@@ -32,16 +33,18 @@ class StudyModel(db.Model):
         self.user_uid = pbs.NETBADGEID
         self.last_updated = pbs.DATE_MODIFIED
 
-        self.protocol_builder_status = ProtocolBuilderStatus.ACTIVE
+        self.protocol_builder_status = ProtocolBuilderStatus.active
         if pbs.HSRNUMBER:
-            self.protocol_builder_status = ProtocolBuilderStatus.OPEN
+            self.protocol_builder_status = ProtocolBuilderStatus.open
         if self.on_hold:
-            self.protocol_builder_status = ProtocolBuilderStatus.HOLD
+            self.protocol_builder_status = ProtocolBuilderStatus.hold
 
 
 class WorkflowMetadata(object):
-    def __init__(self, id, name, display_name, description, spec_version, category_id, category_display_name, state: WorkflowState, status: WorkflowStatus,
-                 total_tasks, completed_tasks, display_order):
+    def __init__(self, id, name = None, display_name = None, description = None, spec_version = None,
+                 category_id  = None, category_display_name  = None, state: WorkflowState  = None,
+                 status: WorkflowStatus  = None, total_tasks  = None, completed_tasks  = None,
+                 display_order = None):
         self.id = id
         self.name = name
         self.display_name = display_name
@@ -108,7 +111,7 @@ class Study(object):
                  id=None,
                  protocol_builder_status=None,
                  sponsor="", hsr_number="", ind_number="", categories=[],
-                 files=[], approvals=[], **argsv):
+                 files=[], approvals=[], enrollment_date=None, **argsv):
         self.id = id
         self.user_uid = user_uid
         self.title = title
@@ -122,6 +125,7 @@ class Study(object):
         self.approvals = approvals
         self.warnings = []
         self.files = files
+        self.enrollment_date = enrollment_date
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
@@ -154,11 +158,12 @@ class StudySchema(ma.Schema):
     ind_number = fields.String(allow_none=True)
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
     approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
+    enrollment_date = fields.Date(allow_none=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
-                      "sponsor", "ind_number", "approvals", "files"]
+                      "sponsor", "ind_number", "approvals", "files", "enrollment_date"]
         unknown = INCLUDE
 
     @marshmallow.post_load

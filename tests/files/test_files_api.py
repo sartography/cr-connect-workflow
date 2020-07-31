@@ -72,10 +72,10 @@ class TestFilesApi(BaseTest):
         self.assertEqual(file, file2)
 
     def test_add_file_from_task_and_form_errors_on_invalid_form_field_name(self):
-        self.load_example_data()
         self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
         task = processor.next_task()
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         correct_name = task.task_spec.form.fields[0].id
@@ -96,6 +96,7 @@ class TestFilesApi(BaseTest):
         self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
         task = processor.next_task()
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         correct_name = task.task_spec.form.fields[0].id

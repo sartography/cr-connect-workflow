@@ -30,7 +30,7 @@ StudyInfo['documents'] = study_info('documents')</bpmn:script>
     <bpmn:parallelGateway id="Gateway_1nta7st" name="Some Name">
       <bpmn:extensionElements>
         <camunda:properties>
-          <camunda:property name="display_name" value="Some Name" />
+          <camunda:property name="display_name" value="'Some Name'" />
         </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_17ct47v</bpmn:incoming>

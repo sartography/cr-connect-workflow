@@ -13,6 +13,7 @@ from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, Workflow
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
+from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 
@@ -95,19 +96,30 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def get_workflow(workflow_id, soft_reset=False, hard_reset=False):
+def get_workflow(workflow_id, soft_reset=False, hard_reset=False, do_engine_steps=True):
+    """Soft reset will attempt to update to the latest spec without starting over,
+    Hard reset will update to the latest spec and start from the beginning.
+    Read Only will return the workflow in a read only state, without running any
+    engine tasks or logging any events. """
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
+    if do_engine_steps:
+        processor.do_engine_steps()
+        processor.save()
+        WorkflowService.update_task_assignments(processor)
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
-    WorkflowService.update_task_assignments(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def get_task_events(action):
+def get_task_events(action = None, workflow = None, study = None):
     """Provides a way to see a history of what has happened, or get a list of tasks that need your attention."""
     query = session.query(TaskEventModel).filter(TaskEventModel.user_uid == g.user.uid)
     if action:
         query = query.filter(TaskEventModel.action == action)
+    if workflow:
+        query = query.filter(TaskEventModel.workflow_id == workflow)
+    if study:
+        query = query.filter(TaskEventModel.study_id == study)
     events = query.all()
 
     # Turn the database records into something a little richer for the UI to use.
@@ -130,7 +142,7 @@ def set_current_task(workflow_id, task_id):
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
     _verify_user_and_role(processor, spiff_task)
-    user_uid = g.user.uid
+    user_uid = UserService.current_user(allow_admin_impersonate=True).uid
     if spiff_task.state != spiff_task.COMPLETED and spiff_task.state != spiff_task.READY:
         raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
                                         "currently set to COMPLETE or READY.")
@@ -173,7 +185,8 @@ def update_task(workflow_id, task_id, body, terminate_loop=None):
     processor.save()
 
     # Log the action, and any pending task assignments in the event of lanes in the workflow.
-    WorkflowService.log_task_action(g.user.uid, processor, spiff_task, WorkflowService.TASK_ACTION_COMPLETE)
+    user = UserService.current_user(allow_admin_impersonate=False) # Always log as the real user.
+    WorkflowService.log_task_action(user.uid, processor, spiff_task, WorkflowService.TASK_ACTION_COMPLETE)
     WorkflowService.update_task_assignments(processor)
 
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
@@ -233,19 +246,11 @@ def lookup(workflow_id, field_id, query=None, value=None, limit=10):
 
 def _verify_user_and_role(processor, spiff_task):
     """Assures the currently logged in user can access the given workflow and task, or
-    raises an error.
-     Allow administrators to modify tasks, otherwise assure that the current user
-     is allowed to edit or update the task. Will raise the appropriate error if user
-     is not authorized. """
+    raises an error.  """
 
-    if 'user' not in g:
-        raise ApiError("logged_out", "You are no longer logged in.", status_code=401)
-
-    if g.user.uid in app.config['ADMIN_UIDS']:
-        return g.user.uid
-
+    user = UserService.current_user(allow_admin_impersonate=True)
     allowed_users = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
-    if g.user.uid not in allowed_users:
+    if user.uid not in allowed_users:
         raise ApiError.from_task("permission_denied",
                                  f"This task must be completed by '{allowed_users}', "
-                                 f"but you are {g.user.uid}", spiff_task)
+                                 f"but you are {user.uid}", spiff_task)

@@ -9,6 +9,7 @@ from crc import session, app
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
 from crc.models.file import FileModelSchema
 from crc.models.workflow import WorkflowStatus
+from crc.models.task_event import TaskEventModel
 
 
 class TestTasksApi(BaseTest):
@@ -42,6 +43,24 @@ class TestTasksApi(BaseTest):
 """
         self.assertTrue(str.startswith(task.documentation, expected_docs))
 
+    def test_get_workflow_without_running_engine_steps(self):
+        # Set up a new workflow
+        workflow = self.create_workflow('two_forms')
+        # get the first form in the two form workflow.
+        workflow_api = self.get_workflow_api(workflow, do_engine_steps=False)
+
+        # There should be no task event logs related to the workflow at this point.
+        task_events = session.query(TaskEventModel).filter(TaskEventModel.workflow_id == workflow.id).all()
+        self.assertEqual(0, len(task_events))
+
+        # Since the workflow was not started, the call to read-only should not execute any engine steps the
+        # current task should be the start event.
+        self.assertEqual("Start", workflow_api.next_task.name)
+
+    def test_get_form_for_previously_completed_task(self):
+        """Assure we can look at previously completed steps without moving the token for the workflow."""
+
+
     def test_two_forms_task(self):
         # Set up a new workflow
         self.load_example_data()
@@ -69,7 +88,6 @@ class TestTasksApi(BaseTest):
             self.assertIsNotNone(val)
 
     def test_error_message_on_bad_gateway_expression(self):
-        self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway')
 
         # get the first form in the two form workflow.
@@ -77,7 +95,6 @@ class TestTasksApi(BaseTest):
         self.complete_form(workflow, task, {"has_bananas": True})
 
     def test_workflow_with_parallel_forms(self):
-        self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway')
 
         # get the first form in the two form workflow.
@@ -89,7 +106,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual("Task_Num_Bananas", workflow_api.next_task.name)
 
     def test_navigation_with_parallel_forms(self):
-        self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway')
 
         # get the first form in the two form workflow.
@@ -107,7 +123,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual("NOOP", nav[3]['state'])
 
     def test_navigation_with_exclusive_gateway(self):
-        self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway_2')
 
         # get the first form in the two form workflow.
@@ -124,7 +139,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual("Task 3", nav[6]['title'])
 
     def test_document_added_to_workflow_shows_up_in_file_list(self):
-        self.load_example_data()
         self.create_reference_document()
         workflow = self.create_workflow('docx')
 
@@ -153,7 +167,6 @@ class TestTasksApi(BaseTest):
 
 
     def test_get_documentation_populated_in_end(self):
-        self.load_example_data()
         workflow = self.create_workflow('random_fact')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
@@ -167,9 +180,7 @@ class TestTasksApi(BaseTest):
         self.assertTrue("norris" in workflow_api.next_task.documentation)
 
     def test_load_workflow_from_outdated_spec(self):
-
         # Start the basic two_forms workflow and complete a task.
-        self.load_example_data()
         workflow = self.create_workflow('two_forms')
         workflow_api = self.get_workflow_api(workflow)
         self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
@@ -194,9 +205,7 @@ class TestTasksApi(BaseTest):
         self.assertTrue(workflow_api.is_latest_spec)
 
     def test_soft_reset_errors_out_and_next_result_is_on_original_version(self):
-
         # Start the basic two_forms workflow and complete a task.
-        self.load_example_data()
         workflow = self.create_workflow('two_forms')
         workflow_api = self.get_workflow_api(workflow)
         self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
@@ -221,7 +230,6 @@ class TestTasksApi(BaseTest):
 
 
     def test_manual_task_with_external_documentation(self):
-        self.load_example_data()
         workflow = self.create_workflow('manual_task_with_external_documentation')
 
         # get the first form in the two form workflow.
@@ -235,7 +243,6 @@ class TestTasksApi(BaseTest):
         self.assertTrue('Dan' in workflow_api.next_task.documentation)
 
     def test_bpmn_extension_properties_are_populated(self):
-        self.load_example_data()
         workflow = self.create_workflow('manual_task_with_external_documentation')
 
         # get the first form in the two form workflow.
@@ -268,9 +275,7 @@ class TestTasksApi(BaseTest):
         # Assure that the names for each task are properly updated, so they aren't all the same.
         self.assertEqual("Primary Investigator", workflow.next_task.properties['display_name'])
 
-
     def test_lookup_endpoint_for_task_field_enumerations(self):
-        self.load_example_data()
         workflow = self.create_workflow('enum_options_with_search')
         # get the first form in the two form workflow.
         workflow = self.get_workflow_api(workflow)
@@ -286,7 +291,6 @@ class TestTasksApi(BaseTest):
         self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
 
     def test_lookup_endpoint_for_task_field_using_lookup_entry_id(self):
-        self.load_example_data()
         workflow = self.create_workflow('enum_options_with_search')
         # get the first form in the two form workflow.
         workflow = self.get_workflow_api(workflow)
@@ -316,7 +320,6 @@ class TestTasksApi(BaseTest):
         # the key/values from the spreadsheet are added directly to the form and it shows up as
         # a dropdown.  This tests the case of wanting to get additional data when a user selects
         # something from a dropdown.
-        self.load_example_data()
         workflow = self.create_workflow('enum_options_from_file')
         # get the first form in the two form workflow.
         workflow = self.get_workflow_api(workflow)
@@ -334,7 +337,6 @@ class TestTasksApi(BaseTest):
         self.assertIsInstance(results[0]['data'], dict)
 
     def test_enum_from_task_data(self):
-        self.load_example_data()
         workflow = self.create_workflow('enum_options_from_task_data')
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
@@ -359,7 +361,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual('Chesterfield', options[2]['data']['first_name'])
 
     def test_lookup_endpoint_for_task_ldap_field_lookup(self):
-        self.load_example_data()
         workflow = self.create_workflow('ldap_lookup')
         # get the first form
         workflow = self.get_workflow_api(workflow)
@@ -378,7 +379,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual(1, len(results))
 
     def test_sub_process(self):
-        self.load_example_data()
         workflow = self.create_workflow('subprocess')
 
         workflow_api = self.get_workflow_api(workflow)
@@ -399,7 +399,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual(WorkflowStatus.complete, workflow_api.status)
 
     def test_update_task_resets_token(self):
-        self.load_example_data()
         workflow = self.create_workflow('exclusive_gateway')
 
         # Start the workflow.
@@ -476,4 +475,6 @@ class TestTasksApi(BaseTest):
 
         workflow = self.get_workflow_api(workflow)
         self.assertEqual(WorkflowStatus.complete, workflow.status)
+
+
 

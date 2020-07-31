@@ -116,7 +116,7 @@
           </camunda:formField>
         </camunda:formData>
         <camunda:properties>
-          <camunda:property name="display_name" value="Select Template Type" />
+          <camunda:property name="display_name" value="'Select Template Type'" />
         </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0schnpa</bpmn:incoming>
