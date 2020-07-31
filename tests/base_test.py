@@ -16,17 +16,19 @@ from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
+from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
+from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
 from example_data import ExampleDataLoader
 
-#UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
+# UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
 import logging
+
 logging.basicConfig()
 
 
@@ -37,47 +39,56 @@ class BaseTest(unittest.TestCase):
 
     if not app.config['TESTING']:
         raise (Exception("INVALID TEST CONFIGURATION. This is almost always in import order issue."
-               "The first class to import in each test should be the base_test.py file."))
+                         "The first class to import in each test should be the base_test.py file."))
 
     auths = {}
     test_uid = "dhf8r"
 
     users = [
         {
-            'uid':'dhf8r',
-            'email_address':'dhf8r@virginia.EDU',
-            'display_name':'Daniel Harold Funk',
-            'affiliation':'staff@virginia.edu;member@virginia.edu',
-            'eppn':'dhf8r@virginia.edu',
-            'first_name':'Daniel',
-            'last_name':'Funk',
-            'title':'SOFTWARE ENGINEER V'
-        }
+            'uid': 'dhf8r',
+            'email_address': 'dhf8r@virginia.EDU',
+            'display_name': 'Daniel Harold Funk',
+            'affiliation': 'staff@virginia.edu;member@virginia.edu',
+            'eppn': 'dhf8r@virginia.edu',
+            'first_name': 'Daniel',
+            'last_name': 'Funk',
+            'title': 'SOFTWARE ENGINEER V'
+        },
+        {
+            'uid': 'lbd3p',
+            'email_address': 'lbd3p@virginia.EDU',
+            'display_name': 'Laura Barnes',
+            'affiliation': 'staff@virginia.edu;member@virginia.edu',
+            'eppn': 'lbd3p@virginia.edu',
+            'first_name': 'Laura',
+            'last_name': 'Barnes',
+            'title': 'Associate Professor of Systems and Information Engineering'
+        },
     ]
 
     studies = [
         {
-            'id':0,
-            'title':'The impact of fried pickles on beer consumption in bipedal software developers.',
-            'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.active,
-            'primary_investigator_id':'dhf8r',
-            'sponsor':'Sartography Pharmaceuticals',
-            'ind_number':'1234',
-            'user_uid':'dhf8r'
+            'id': 0,
+            'title': 'The impact of fried pickles on beer consumption in bipedal software developers.',
+            'last_updated': datetime.datetime.now(),
+            'protocol_builder_status': ProtocolBuilderStatus.active,
+            'primary_investigator_id': 'dhf8r',
+            'sponsor': 'Sartography Pharmaceuticals',
+            'ind_number': '1234',
+            'user_uid': 'dhf8r'
         },
         {
-            'id':1,
-            'title':'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
-            'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.active,
-            'primary_investigator_id':'dhf8r',
-            'sponsor':'Makerspace & Co.',
-            'ind_number':'5678',
-            'user_uid':'dhf8r'
+            'id': 1,
+            'title': 'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
+            'last_updated': datetime.datetime.now(),
+            'protocol_builder_status': ProtocolBuilderStatus.active,
+            'primary_investigator_id': 'dhf8r',
+            'sponsor': 'Makerspace & Co.',
+            'ind_number': '5678',
+            'user_uid': 'dhf8r'
         }
     ]
-
 
     @classmethod
     def setUpClass(cls):
@@ -98,7 +109,7 @@ class BaseTest(unittest.TestCase):
 
     def tearDown(self):
         ExampleDataLoader.clean_db()
-        g.user = None
+        self.logout()
         self.auths = {}
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
@@ -118,7 +129,8 @@ class BaseTest(unittest.TestCase):
         self.assertIsNotNone(user_model.display_name)
         self.assertEqual(user_model.uid, uid)
         self.assertTrue('user' in g, 'User should be in Flask globals')
-        self.assertEqual(uid, g.user.uid, 'Logged in user should match given user uid')
+        user = UserService.current_user(allow_admin_impersonate=True)
+        self.assertEqual(uid, user.uid, 'Logged in user should match given user uid')
 
         return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
 
@@ -135,16 +147,21 @@ class BaseTest(unittest.TestCase):
         else:
             ExampleDataLoader().load_test_data()
 
-        for user_json in self.users:
-            db.session.add(UserModel(**user_json))
-        db.session.commit()
+        # If in production mode, only add the first user.
+        if app.config['PRODUCTION']:
+            session.add(UserModel(**self.users[0]))
+        else:
+            for user_json in self.users:
+                session.add(UserModel(**user_json))
+
+        session.commit()
         for study_json in self.studies:
             study_model = StudyModel(**study_json)
-            db.session.add(study_model)
+            session.add(study_model)
             StudyService._add_all_workflow_specs_to_study(study_model)
-            db.session.execute(Sequence(StudyModel.__tablename__ + '_id_seq'))
-        db.session.commit()
-        db.session.flush()
+            session.execute(Sequence(StudyModel.__tablename__ + '_id_seq'))
+        session.commit()
+        session.flush()
 
         specs = session.query(WorkflowSpecModel).all()
         self.assertIsNotNone(specs)
@@ -168,8 +185,8 @@ class BaseTest(unittest.TestCase):
         """Loads a spec into the database based on a directory in /tests/data"""
         if category_id is None:
             category = WorkflowSpecCategoryModel(name="test", display_name="Test Workflows", display_order=0)
-            db.session.add(category)
-            db.session.commit()
+            session.add(category)
+            session.commit()
             category_id = category.id
 
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
@@ -217,14 +234,13 @@ class BaseTest(unittest.TestCase):
 
         return '?%s' % '&'.join(query_string_list)
 
-
     def replace_file(self, name, file_path):
         """Replaces a stored file with the given name with the contents of the file at the given path."""
         file_service = FileService()
         file = open(file_path, "rb")
         data = file.read()
 
-        file_model = db.session.query(FileModel).filter(FileModel.name == name).first()
+        file_model = session.query(FileModel).filter(FileModel.name == name).first()
         noise, file_extension = os.path.splitext(file_path)
         content_type = CONTENT_TYPES[file_extension[1:]]
         file_service.update_file(file_model, data, content_type)
@@ -233,18 +249,19 @@ class BaseTest(unittest.TestCase):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()
         if user is None:
             user = UserModel(uid=uid, email_address=email, display_name=display_name)
-            db.session.add(user)
-            db.session.commit()
+            session.add(user)
+            session.commit()
         return user
 
-    def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer", primary_investigator_id="lb3dp"):
+    def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer",
+                     primary_investigator_id="lb3dp"):
         study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
             study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.active,
                                user_uid=user.uid, primary_investigator_id=primary_investigator_id)
-            db.session.add(study)
-            db.session.commit()
+            session.add(study)
+            session.commit()
         return study
 
     def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses,
@@ -271,8 +288,8 @@ class BaseTest(unittest.TestCase):
         return full_study
 
     def create_workflow(self, workflow_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
-        db.session.flush()
-        spec = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
+        session.flush()
+        spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
         if spec is None:
             if display_name is None:
                 display_name = workflow_name
@@ -291,21 +308,22 @@ class BaseTest(unittest.TestCase):
         file.close()
 
     def create_approval(
-        self,
-        study=None,
-        workflow=None,
-        approver_uid=None,
-        status=None,
-        version=None,
+            self,
+            study=None,
+            workflow=None,
+            approver_uid=None,
+            status=None,
+            version=None,
     ):
         study = study or self.create_study()
         workflow = workflow or self.create_workflow()
         approver_uid = approver_uid or self.test_uid
         status = status or ApprovalStatus.PENDING.value
         version = version or 1
-        approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status, version=version)
-        db.session.add(approval)
-        db.session.commit()
+        approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status,
+                                 version=version)
+        session.add(approval)
+        session.commit()
         return approval
 
     def get_workflow_api(self, workflow, soft_reset=False, hard_reset=False, do_engine_steps=True, user_uid="dhf8r"):
@@ -322,7 +340,6 @@ class BaseTest(unittest.TestCase):
         workflow_api = WorkflowApiSchema().load(json_data)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
-
 
     def complete_form(self, workflow_in, task_in, dict_data, error_code=None, terminate_loop=None, user_uid="dhf8r"):
         prev_completed_task_count = workflow_in.completed_tasks
@@ -388,12 +405,18 @@ class BaseTest(unittest.TestCase):
 
         self.assertEqual(task_in.multi_instance_count, event.mi_count)
         if task_in.multi_instance_type == 'looping' and not terminate_loop:
-            self.assertEqual(task_in.multi_instance_index+1, event.mi_index)
+            self.assertEqual(task_in.multi_instance_index + 1, event.mi_index)
         else:
             self.assertEqual(task_in.multi_instance_index, event.mi_index)
         self.assertEqual(task_in.process_name, event.process_name)
         self.assertIsNotNone(event.date)
 
-
         workflow = WorkflowApiSchema().load(json_data)
         return workflow
+
+    def logout(self):
+        if 'user' in g:
+            del g.user
+
+        if 'impersonate_user' in g:
+            del g.impersonate_user

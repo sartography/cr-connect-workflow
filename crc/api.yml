@@ -31,6 +31,13 @@ paths:
         '304':
           description: Redirection to the hosted frontend with an auth_token header.
   /user:
+    parameters:
+      - name: admin_impersonate_uid
+        in: query
+        required: false
+        description: For admins, the unique uid of an existing user to impersonate.
+        schema:
+          type: string
     get:
       operationId: crc.api.user.get_current_user
       summary: Returns the current user.
@@ -38,10 +45,26 @@ paths:
         - Users
       responses:
         '200':
-          description: The currently authenticated user.
+          description: The currently-authenticated user, or, if the current user is an admin and admin_impersonate_uid is provided, this will be the user with the given uid.
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/User"
+  /list_users:
+    get:
+      operationId: crc.api.user.get_all_users
+      security:
+        - auth_admin: ['secret']
+      summary: Returns a list of all users in the database.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: All users in the database.
+          content:
+            application/json:
+              schema:
+                type: array
                 $ref: "#/components/schemas/User"
   # /v1.0/study
   /study:
@@ -56,6 +79,7 @@ paths:
           content:
             application/json:
               schema:
+                type: array
                 $ref: "#/components/schemas/Study"
     post:
       operationId: crc.api.study.add_study

@@ -18,6 +18,9 @@ Make sure all of the following are properly installed on your system:
     - [Install pipenv](https://pipenv-es.readthedocs.io/es/stable/)
     - [Add ${HOME}/.local/bin to your PATH](https://github.com/pypa/pipenv/issues/2122#issue-319600584)
 
+### Running Postgres
+
+
 ### Project Initialization
 1. Clone this repository.
 2. In PyCharm:
