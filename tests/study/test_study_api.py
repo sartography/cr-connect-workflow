@@ -189,9 +189,9 @@ class TestStudyApi(BaseTest):
         for study in json_data:
             if study['status'] == 'abandoned': # One study does not exist in user_studies.json
                 num_abandoned += 1
-            if study['status'] == 'in progress': # One study is marked complete without HSR Number
+            if study['status'] == 'in_progress': # One study is marked complete without HSR Number
                 num_in_progress += 1
-            if study['status'] == 'open for enrollment':  # One study is marked complete and has an HSR Number
+            if study['status'] == 'open_for_enrollment':  # One study is marked complete and has an HSR Number
                 num_open += 1
 
         db_studies_after = session.query(StudyModel).all()

@@ -1064,7 +1064,7 @@ components:
           example: dhf8r
         status:
           type: string
-          enum: ['in progress', 'hold', 'open for enrollment', 'abandoned']
+          enum: ['in_progress', 'hold', 'open_for_enrollment', 'abandoned']
           example: done
         sponsor:
           type: string
