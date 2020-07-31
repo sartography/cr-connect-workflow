@@ -190,7 +190,7 @@ class WorkflowProcessor(object):
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
             #try:
-            bpmn_workflow.do_engine_steps()
+            # bpmn_workflow.do_engine_steps()
            # except WorkflowException as we:
            #     raise ApiError.from_task_spec("error_loading_workflow", str(we), we.sender)
         return bpmn_workflow
