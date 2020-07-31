@@ -8,7 +8,7 @@ from tests.base_test import BaseTest
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.study import StudySchema, StudyModel
+from crc.models.study import StudySchema, StudyModel, StudyStatus
 from crc.models.user import UserModel
 
 
@@ -220,7 +220,7 @@ class TestAuthentication(BaseTest):
         return {
             "title": "blah",
             "last_updated": datetime.now(tz=timezone.utc),
-            "protocol_builder_status": ProtocolBuilderStatus.active,
+            "status": StudyStatus.in_progress,
             "primary_investigator_id": uid,
             "user_uid": uid,
         }

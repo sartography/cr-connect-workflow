@@ -15,9 +15,8 @@ from crc import app, db, session
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
-from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.task_event import TaskEventModel
-from crc.models.study import StudyModel
+from crc.models.study import StudyModel, StudyStatus
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
@@ -60,7 +59,7 @@ class BaseTest(unittest.TestCase):
             'id':0,
             'title':'The impact of fried pickles on beer consumption in bipedal software developers.',
             'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.active,
+            'status':StudyStatus.in_progress,
             'primary_investigator_id':'dhf8r',
             'sponsor':'Sartography Pharmaceuticals',
             'ind_number':'1234',
@@ -70,7 +69,7 @@ class BaseTest(unittest.TestCase):
             'id':1,
             'title':'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
             'last_updated':datetime.datetime.now(),
-            'protocol_builder_status':ProtocolBuilderStatus.active,
+            'status':StudyStatus.in_progress,
             'primary_investigator_id':'dhf8r',
             'sponsor':'Makerspace & Co.',
             'ind_number':'5678',
@@ -241,7 +240,7 @@ class BaseTest(unittest.TestCase):
         study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
-            study = StudyModel(title=title, protocol_builder_status=ProtocolBuilderStatus.active,
+            study = StudyModel(title=title, status=StudyStatus.in_progress,
                                user_uid=user.uid, primary_investigator_id=primary_investigator_id)
             db.session.add(study)
             db.session.commit()
