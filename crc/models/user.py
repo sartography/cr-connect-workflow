@@ -1,6 +1,7 @@
 import datetime
 
 import jwt
+from marshmallow import fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db, app
@@ -21,6 +22,10 @@ class UserModel(db.Model):
 
     # TODO: Add Department and School
 
+    def is_admin(self):
+        # Currently admin abilities are set in the configuration, but this
+        # may change in the future.
+        return self.uid in app.config['ADMIN_UIDS']
 
     def encode_auth_token(self):
         """
@@ -60,4 +65,14 @@ class UserModelSchema(SQLAlchemyAutoSchema):
         model = UserModel
         load_instance = True
         include_relationships = True
+    is_admin = fields.Method('get_is_admin', dump_only=True)
 
+    def get_is_admin(self, obj):
+        return obj.is_admin()
+
+
+class AdminSessionModel(db.Model):
+    __tablename__ = 'admin_session'
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String, unique=True)
+    admin_impersonate_uid = db.Column(db.String)

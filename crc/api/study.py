@@ -8,6 +8,7 @@ from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import Study, StudyModel, StudySchema, StudyStatus
 from crc.services.study_service import StudyService
+from crc.services.user_service import UserService
 
 
 def add_study(body):
@@ -17,7 +18,7 @@ def add_study(body):
     if 'title' not in body:
         raise ApiError("missing_title", "Can't create a new study without a title.")
 
-    study_model = StudyModel(user_uid=g.user.uid,
+    study_model = StudyModel(user_uid=UserService.current_user().uid,
                              title=body['title'],
                              primary_investigator_id=body['primary_investigator_id'],
                              last_updated=datetime.now(),
@@ -65,8 +66,9 @@ def delete_study(study_id):
 
 def user_studies():
     """Returns all the studies associated with the current user. """
-    StudyService.synch_with_protocol_builder_if_enabled(g.user)
-    studies = StudyService.get_studies_for_user(g.user)
+    user = UserService.current_user(allow_admin_impersonate=True)
+    StudyService.synch_with_protocol_builder_if_enabled(user)
+    studies = StudyService.get_studies_for_user(user)
     results = StudySchema(many=True).dump(studies)
     return results
 

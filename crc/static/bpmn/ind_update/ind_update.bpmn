@@ -12,7 +12,8 @@
     <bpmn:scriptTask id="ScriptTask_LoadIRBDetails" name="Load IRB Details">
       <bpmn:incoming>SequenceFlow_1dhb8f4</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1uzcl1f</bpmn:outgoing>
-      <bpmn:script>#! StudyInfo details</bpmn:script>
+      <bpmn:script>StudyInfo = {}
+StudyInfo['details'] = study_info('details')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1uzcl1f" sourceRef="ScriptTask_LoadIRBDetails" targetRef="Task_SupplementIDE" />
     <bpmn:businessRuleTask id="Task_SupplementIDE" name="Current IND Status" camunda:decisionRef="decision_ind_check">
