@@ -16,9 +16,9 @@ from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, Workfl
 
 
 class StudyStatus(enum.Enum):
-    in_progress = 'in progress'
+    in_progress = 'in_progress'
     hold = 'hold'
-    open_for_enrollment = 'open for enrollment'
+    open_for_enrollment = 'open_for_enrollment'
     abandoned = 'abandoned'
 
 
