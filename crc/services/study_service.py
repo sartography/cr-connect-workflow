@@ -12,7 +12,7 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileModelSchema, File
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
+from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
@@ -64,7 +64,7 @@ class StudyService(object):
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.  Don't execute this for Abandoned studies, as
         # we don't have the information to process them.
-        if study.protocol_builder_status != ProtocolBuilderStatus.abandoned:
+        if study.status != StudyStatus.abandoned:
             status = StudyService.__get_study_status(study_model)
             study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
@@ -265,7 +265,7 @@ class StudyService(object):
             for study in db_studies:
                 pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
                 if not pb_study:
-                    study.protocol_builder_status = ProtocolBuilderStatus.abandoned
+                    study.status = StudyStatus.abandoned
 
             db.session.commit()
 

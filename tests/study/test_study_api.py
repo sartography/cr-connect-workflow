@@ -11,7 +11,7 @@ from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.approval import ApprovalStatus
 from crc.models.task_event import TaskEventModel
-from crc.models.study import StudyModel, StudySchema
+from crc.models.study import StudyModel, StudySchema, StudyStatus
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -24,16 +24,17 @@ class TestStudyApi(BaseTest):
         "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
                  "for Interstellar Spacecraft",
         "last_updated": datetime.now(tz=timezone.utc),
-        "protocol_builder_status": ProtocolBuilderStatus.active,
         "primary_investigator_id": "tmm2x",
         "user_uid": "dhf8r",
     }
 
     def add_test_study(self):
+        study_schema = StudySchema().dump(self.TEST_STUDY)
+        study_schema['status'] = StudyStatus.in_progress.value
         rv = self.app.post('/v1.0/study',
                            content_type="application/json",
                            headers=self.logged_in_headers(),
-                           data=json.dumps(StudySchema().dump(self.TEST_STUDY)))
+                           data=json.dumps(study_schema))
         self.assert_success(rv)
         return json.loads(rv.get_data(as_text=True))
 
@@ -135,15 +136,16 @@ class TestStudyApi(BaseTest):
         self.load_example_data()
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
-        study.protocol_builder_status = ProtocolBuilderStatus.active
+        study_schema = StudySchema().dump(study)
+        study_schema['status'] = StudyStatus.in_progress.value
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
-                          data=json.dumps(StudySchema().dump(study)))
+                          data=json.dumps(study_schema))
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(study.title, json_data['title'])
-        self.assertEqual(study.protocol_builder_status.name, json_data['protocol_builder_status'])
+        self.assertEqual(study.status.value, json_data['status'])
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -181,15 +183,15 @@ class TestStudyApi(BaseTest):
 
         num_incomplete = 0
         num_abandoned = 0
-        num_active = 0
+        num_in_progress = 0
         num_open = 0
 
         for study in json_data:
-            if study['protocol_builder_status'] == 'abandoned': # One study does not exist in user_studies.json
+            if study['status'] == 'abandoned': # One study does not exist in user_studies.json
                 num_abandoned += 1
-            if study['protocol_builder_status'] == 'active': # One study is marked complete without HSR Number
-                num_active += 1
-            if study['protocol_builder_status'] == 'open':  # One study is marked complete and has an HSR Number
+            if study['status'] == 'in_progress': # One study is marked complete without HSR Number
+                num_in_progress += 1
+            if study['status'] == 'open_for_enrollment':  # One study is marked complete and has an HSR Number
                 num_open += 1
 
         db_studies_after = session.query(StudyModel).all()
@@ -197,10 +199,10 @@ class TestStudyApi(BaseTest):
         self.assertGreater(num_db_studies_after, num_db_studies_before)
         self.assertEqual(num_abandoned, 1)
         self.assertEqual(num_open, 1)
-        self.assertEqual(num_active, 2)
+        self.assertEqual(num_in_progress, 2)
         self.assertEqual(num_incomplete, 0)
         self.assertEqual(len(json_data), num_db_studies_after)
-        self.assertEqual(num_open + num_active + num_incomplete + num_abandoned, num_db_studies_after)
+        self.assertEqual(num_open + num_in_progress + num_incomplete + num_abandoned, num_db_studies_after)
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -228,7 +230,7 @@ class TestStudyApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(study.id, json_data['id'])
         self.assertEqual(study.title, json_data['title'])
-        self.assertEqual(study.protocol_builder_status.name, json_data['protocol_builder_status'])
+        self.assertEqual(study.status.value, json_data['status'])
         self.assertEqual(study.primary_investigator_id, json_data['primary_investigator_id'])
         self.assertEqual(study.sponsor, json_data['sponsor'])
         self.assertEqual(study.ind_number, json_data['ind_number'])
