@@ -17,6 +17,7 @@ class ProtocolBuilderInvestigatorType(enum.Enum):
     SCI = "Scientific Contact"
 
 
+# Deprecated: Marked for removal
 class ProtocolBuilderStatus(enum.Enum):
     # • Active: found in PB and no HSR number and not hold
     # • Hold: store boolean value in CR Connect (add to Study Model)

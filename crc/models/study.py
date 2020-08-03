@@ -1,3 +1,7 @@
+import datetime
+import enum
+import json
+
 import marshmallow
 from marshmallow import INCLUDE, fields
 from marshmallow_enum import EnumField
@@ -11,12 +15,26 @@ from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, Workfl
     WorkflowModel
 
 
+class StudyStatus(enum.Enum):
+    in_progress = 'in_progress'
+    hold = 'hold'
+    open_for_enrollment = 'open_for_enrollment'
+    abandoned = 'abandoned'
+
+
+class IrbStatus(enum.Enum):
+    incomplete_in_protocol_builder = 'incomplete in protocol builder'
+    completed_in_protocol_builder = 'completed in protocol builder'
+    hsr_assigned = 'hsr number assigned'
+
+
 class StudyModel(db.Model):
     __tablename__ = 'study'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
     last_updated = db.Column(db.DateTime(timezone=True), default=func.now())
-    protocol_builder_status = db.Column(db.Enum(ProtocolBuilderStatus))
+    status = db.Column(db.Enum(StudyStatus))
+    irb_status = db.Column(db.Enum(IrbStatus))
     primary_investigator_id = db.Column(db.String, nullable=True)
     sponsor = db.Column(db.String, nullable=True)
     hsr_number = db.Column(db.String, nullable=True)
@@ -33,11 +51,13 @@ class StudyModel(db.Model):
         self.user_uid = pbs.NETBADGEID
         self.last_updated = pbs.DATE_MODIFIED
 
-        self.protocol_builder_status = ProtocolBuilderStatus.active
+        self.irb_status = IrbStatus.incomplete_in_protocol_builder
+        self.status = StudyStatus.in_progress
         if pbs.HSRNUMBER:
-            self.protocol_builder_status = ProtocolBuilderStatus.open
+            self.irb_status = IrbStatus.hsr_assigned
+            self.status = StudyStatus.open_for_enrollment
         if self.on_hold:
-            self.protocol_builder_status = ProtocolBuilderStatus.hold
+            self.status = StudyStatus.hold
 
 
 class WorkflowMetadata(object):
@@ -108,15 +128,15 @@ class CategorySchema(ma.Schema):
 class Study(object):
 
     def __init__(self, title, last_updated, primary_investigator_id, user_uid,
-                 id=None,
-                 protocol_builder_status=None,
+                 id=None, status=None, irb_status=None,
                  sponsor="", hsr_number="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, **argsv):
         self.id = id
         self.user_uid = user_uid
         self.title = title
         self.last_updated = last_updated
-        self.protocol_builder_status = protocol_builder_status
+        self.status = status
+        self.irb_status = irb_status
         self.primary_investigator_id = primary_investigator_id
         self.sponsor = sponsor
         self.hsr_number = hsr_number
@@ -135,9 +155,29 @@ class Study(object):
         return instance
 
     def update_model(self, study_model: StudyModel):
-        for k,v in  self.__dict__.items():
-            if not k.startswith('_'):
-                study_model.__dict__[k] = v
+        """As the case for update was very reduced, it's mostly and specifically
+        updating only the study status and generating a history record
+        """
+        status = StudyStatus(self.status)
+        study_model.last_updated = datetime.datetime.now()
+        study_model.status = status
+
+        if status == StudyStatus.open_for_enrollment:
+            study_model.enrollment_date = self.enrollment_date
+
+        # change = {
+        #     'status': ProtocolBuilderStatus(self.protocol_builder_status).value,
+        #     'comment': '' if not hasattr(self, 'comment') else self.comment,
+        #     'date': str(datetime.datetime.now())
+        # }
+
+        # if study_model.changes_history:
+        #     changes_history = json.loads(study_model.changes_history)
+        #     changes_history.append(change)
+        # else:
+        #     changes_history = [change]
+        # study_model.changes_history = json.dumps(changes_history)
+
 
     def model_args(self):
         """Arguments that can be passed into the Study Model to update it."""
@@ -147,12 +187,33 @@ class Study(object):
         return self_dict
 
 
+class StudyForUpdateSchema(ma.Schema):
+
+    id = fields.Integer(required=False, allow_none=True)
+    status = EnumField(StudyStatus, by_value=True)
+    hsr_number = fields.String(allow_none=True)
+    sponsor = fields.String(allow_none=True)
+    ind_number = fields.String(allow_none=True)
+    enrollment_date = fields.DateTime(allow_none=True)
+    comment = fields.String(allow_none=True)
+
+    class Meta:
+        model = Study
+        unknown = INCLUDE
+
+    @marshmallow.post_load
+    def make_study(self, data, **kwargs):
+        """Can load the basic study data for updates to the database, but categories are write only"""
+        return Study(**data)
+
+
 class StudySchema(ma.Schema):
 
     id = fields.Integer(required=False, allow_none=True)
     categories = fields.List(fields.Nested(CategorySchema), dump_only=True)
     warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
-    protocol_builder_status = EnumField(ProtocolBuilderStatus)
+    protocol_builder_status = EnumField(StudyStatus, by_value=True)
+    status = EnumField(StudyStatus, by_value=True)
     hsr_number = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)

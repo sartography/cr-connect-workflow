@@ -6,7 +6,7 @@ from tests.base_test import BaseTest
 
 from crc import db, app
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.study import StudyModel
+from crc.models.study import StudyModel, StudyStatus
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, \
     WorkflowSpecCategoryModel
@@ -40,7 +40,7 @@ class TestStudyService(BaseTest):
             for study in db.session.query(StudyModel).all():
                 StudyService().delete_study(study.id)
 
-        study = StudyModel(title="My title", protocol_builder_status=ProtocolBuilderStatus.active, user_uid=user.uid)
+        study = StudyModel(title="My title", status=StudyStatus.in_progress, user_uid=user.uid)
         db.session.add(study)
 
         self.load_test_spec("random_fact", category_id=cat.id)
