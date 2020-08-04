@@ -90,6 +90,7 @@ class StudyService(object):
             session.delete(dep)
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
         session.query(WorkflowModel).filter_by(id=workflow.id).delete()
+        session.commit()
 
     @staticmethod
     def get_categories():
