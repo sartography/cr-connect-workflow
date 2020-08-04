@@ -327,9 +327,7 @@ class WorkflowService(object):
             mi_type = MultiInstanceType.none
 
         props = {}
-        print("hasattr(spiff_task.task_spec, 'extensions')", hasattr(spiff_task.task_spec, 'extensions'))
         if hasattr(spiff_task.task_spec, 'extensions'):
-            print('spiff_task.task_spec.extensions', spiff_task.task_spec.extensions)
             for key, val in spiff_task.task_spec.extensions.items():
                 props[key] = val
 
@@ -374,7 +372,6 @@ class WorkflowService(object):
         # Replace the title with the display name if it is set in the task properties,
         # otherwise strip off the first word of the task, as that should be following
         # a BPMN standard, and should not be included in the display.
-        print('task.properties:', task.properties)
         if task.properties and "display_name" in task.properties:
             try:
                 task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties[Task.PROP_EXTENSIONS_TITLE])
@@ -388,7 +385,6 @@ class WorkflowService(object):
     @staticmethod
     def _process_properties(spiff_task, props):
         """Runs all the property values through the Jinja2 processor to inject data."""
-        print('props', props)
         for k, v in props.items():
             try:
                 template = Template(v)
