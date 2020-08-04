@@ -1092,18 +1092,16 @@ components:
           example: done
         sponsor:
           type: string
+          x-nullable: true
           example: "Sartography Pharmaceuticals"
         ind_number:
           type: string
+          x-nullable: true
           example: "27b-6-42"
         hsr_number:
           type: string
           x-nullable: true
           example: "27b-6-1212"
-        categories:
-          type: array
-          items:
-            $ref: "#/components/schemas/WorkflowSpecCategory"
     WorkflowSpec:
       properties:
         id:
