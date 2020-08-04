@@ -2,6 +2,7 @@ import json
 
 from crc import session
 from crc.api.common import ApiError
+from crc.models.protocol_builder import ProtocolBuilderInvestigatorType
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowStatus
 from crc.scripts.script import Script
@@ -30,7 +31,7 @@ class StudyInfo(Script):
             },
             "investigators": {
                 'PI': {
-                    'label': 'Primary Investigator',
+                    'label': ProtocolBuilderInvestigatorType.PI.value,
                     'display': 'Always',
                     'unique': 'Yes',
                     'user_id': 'dhf8r',
@@ -166,7 +167,7 @@ Returns information specific to the protocol.
                 },
                 "investigators": {
                     "PI": {
-                        "label": "Primary Investigator",
+                        "label": ProtocolBuilderInvestigatorType.PI.value,
                         "display": "Always",
                         "unique": "Yes",
                         "user_id": "dhf8r",
@@ -182,7 +183,7 @@ Returns information specific to the protocol.
                         "date_cached": "2020-08-04T19:32:08.006128+00:00"
                     },
                     "SC_I": {
-                        "label": "Study Coordinator I",
+                        "label": ProtocolBuilderInvestigatorType.SC_I.value,
                         "display": "Always",
                         "unique": "Yes",
                         "user_id": "ajl2j",
@@ -198,7 +199,7 @@ Returns information specific to the protocol.
                         "date_cached": "2020-08-04T19:32:10.699666+00:00"
                     },
                     "SC_II": {
-                        "label": "Study Coordinator II",
+                        "label": ProtocolBuilderInvestigatorType.SC_II.value,
                         "display": "Optional",
                         "unique": "Yes",
                         "user_id": "cah3us",
@@ -216,7 +217,7 @@ Returns information specific to the protocol.
                 },
                 "pi": {
                     "PI": {
-                        "label": "Primary Investigator",
+                        "label": ProtocolBuilderInvestigatorType.PI.value,
                         "display": "Always",
                         "unique": "Yes",
                         "user_id": "dhf8r",
@@ -235,7 +236,7 @@ Returns information specific to the protocol.
                 "roles":
                     {
                         "INVESTIGATORTYPE": "PI",
-                        "INVESTIGATORTYPEFULL": "Primary Investigator",
+                        "INVESTIGATORTYPEFULL": ProtocolBuilderInvestigatorType.PI.value,
                         "NETBADGEID": "dhf8r"
                     },
                 "details":
