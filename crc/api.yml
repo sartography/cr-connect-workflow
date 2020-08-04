@@ -1082,6 +1082,7 @@ components:
           example: "2019-12-25T09:12:33.001Z"
         primary_investigator_id:
           type: string
+          x-nullable: true
           example: dhf8r
         user_uid:
           type: string
