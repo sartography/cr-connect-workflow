@@ -327,7 +327,9 @@ class WorkflowService(object):
             mi_type = MultiInstanceType.none
 
         props = {}
+        print("hasattr(spiff_task.task_spec, 'extensions')", hasattr(spiff_task.task_spec, 'extensions'))
         if hasattr(spiff_task.task_spec, 'extensions'):
+            print('spiff_task.task_spec.extensions', spiff_task.task_spec.extensions)
             for key, val in spiff_task.task_spec.extensions.items():
                 props[key] = val
 
@@ -372,11 +374,13 @@ class WorkflowService(object):
         # Replace the title with the display name if it is set in the task properties,
         # otherwise strip off the first word of the task, as that should be following
         # a BPMN standard, and should not be included in the display.
+        print('task.properties:', task.properties)
         if task.properties and "display_name" in task.properties:
             try:
-                task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties['display_name'])
+                task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties[Task.PROP_EXTENSIONS_TITLE])
             except Exception as e:
-                app.logger.error("Failed to set title on task due to type error." + str(e), exc_info=True)
+                raise ApiError.from_task(code="task_title_error", message="Could not set task title on task %s with '%s' property because %s" %
+                                                              (spiff_task.task_spec.name, Task.PROP_EXTENSIONS_TITLE, str(e)), task=spiff_task)
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
         return task
@@ -384,6 +388,7 @@ class WorkflowService(object):
     @staticmethod
     def _process_properties(spiff_task, props):
         """Runs all the property values through the Jinja2 processor to inject data."""
+        print('props', props)
         for k, v in props.items():
             try:
                 template = Template(v)

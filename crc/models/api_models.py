@@ -37,6 +37,9 @@ class Task(object):
     #    Custom properties and validations defined in Camunda form fields    #
     ##########################################################################
 
+    # Custom task title
+    PROP_EXTENSIONS_TITLE = "display_name"
+
     # Repeating form section
     PROP_OPTIONS_REPEAT = "repeat"
 
