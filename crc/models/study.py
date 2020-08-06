@@ -28,6 +28,11 @@ class IrbStatus(enum.Enum):
     hsr_assigned = 'hsr number assigned'
 
 
+class StudyEventType(enum.Enum):
+    user = 'user'
+    automatic = 'automatic'
+
+
 class StudyModel(db.Model):
     __tablename__ = 'study'
     id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +63,17 @@ class StudyModel(db.Model):
             self.status = StudyStatus.open_for_enrollment
         if self.on_hold:
             self.status = StudyStatus.hold
+
+
+class StudyEvent(db.Model):
+    __tablename__ = 'study_event'
+    id = db.Column(db.Integer, primary_key=True)
+    study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
+    study = db.relationship(StudyModel)
+    create_date = db.Column(db.DateTime(timezone=True), default=func.now())
+    status = db.Column(db.Enum(StudyStatus))
+    comment = db.Column(db.String, default='')
+    event_type = db.Column(db.Enum(StudyEventType))
 
 
 class WorkflowMetadata(object):
@@ -128,7 +144,7 @@ class CategorySchema(ma.Schema):
 class Study(object):
 
     def __init__(self, title, last_updated, primary_investigator_id, user_uid,
-                 id=None, status=None, irb_status=None,
+                 id=None, status=None, irb_status=None, comment="",
                  sponsor="", hsr_number="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, **argsv):
         self.id = id
@@ -137,6 +153,7 @@ class Study(object):
         self.last_updated = last_updated
         self.status = status
         self.irb_status = irb_status
+        self.comment = comment
         self.primary_investigator_id = primary_investigator_id
         self.sponsor = sponsor
         self.hsr_number = hsr_number
@@ -165,18 +182,14 @@ class Study(object):
         if status == StudyStatus.open_for_enrollment:
             study_model.enrollment_date = self.enrollment_date
 
-        # change = {
-        #     'status': ProtocolBuilderStatus(self.protocol_builder_status).value,
-        #     'comment': '' if not hasattr(self, 'comment') else self.comment,
-        #     'date': str(datetime.datetime.now())
-        # }
-
-        # if study_model.changes_history:
-        #     changes_history = json.loads(study_model.changes_history)
-        #     changes_history.append(change)
-        # else:
-        #     changes_history = [change]
-        # study_model.changes_history = json.dumps(changes_history)
+        study_event = StudyEvent(
+            study=study_model,
+            status=status,
+            comment='' if not hasattr(self, 'comment') else self.comment,
+            event_type=StudyEventType.user
+        )
+        db.session.add(study_event)
+        db.session.commit()
 
 
     def model_args(self):
