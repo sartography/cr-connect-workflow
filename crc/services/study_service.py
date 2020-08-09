@@ -53,6 +53,7 @@ class StudyService(object):
         loading up and executing all the workflows in a study to calculate information."""
         if not study_model:
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
+
         study = Study.from_model(study_model)
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
