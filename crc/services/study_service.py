@@ -60,7 +60,7 @@ class StudyService(object):
         study.approvals = ApprovalService.get_approvals_for_study(study.id)
         files = FileService.get_files_for_study(study.id)
         files = (File.from_models(model, FileService.get_file_data(model.id),
-                         FileService.get_doc_dictionary()) for model in files)
+                                  FileService.get_doc_dictionary()) for model in files)
         study.files = list(files)
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.  Don't execute this for Abandoned studies, as
@@ -86,26 +86,18 @@ class StudyService(object):
     @staticmethod
     def delete_workflow(workflow_id):
         workflow = session.query(WorkflowModel).get(workflow_id)
-        for file in session.query(FileModel).filter_by(workflow_id=workflow_id).all():
-            FileService.delete_file(file.id)
-        for dep in workflow.dependencies:
-            session.delete(dep)
+        if not workflow:
+            return
+
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
-        session.query(ApprovalFile).filter(ApprovalModel.workflow_id==workflow_id).delete(synchronize_session='fetch')
-        session.query(ApprovalModel).filter_by(workflow_id=workflow.id).delete()
-        session.query(LookupDataModel).filter(
-            LookupFileModel.workflow_spec_id==workflow.workflow_spec_id
-        ).delete(synchronize_session='fetch')
-        session.query(LookupFileModel).filter_by(workflow_spec_id=workflow.workflow_spec_id).delete()
-
-        session.query(WorkflowSpecDependencyFile).filter(
-            FileDataModel.file_model_id==FileModel.id,
-            FileModel.workflow_id==workflow_id
-        ).delete(synchronize_session='fetch')
-
-
-        session.query(FileDataModel).filter(FileModel.workflow_id==workflow_id).delete(synchronize_session='fetch')
+        session.query(FileDataModel).filter(FileModel.workflow_id == workflow_id).delete(synchronize_session='fetch')
         session.query(FileModel).filter_by(workflow_id=workflow_id).delete()
+        # Workflow Dependencies should cascade delete, so no need to delete those seperately.
+
+        # Todo:  Remove approvals completely.
+        session.query(ApprovalFile).filter(ApprovalModel.workflow_id == workflow_id).delete(synchronize_session='fetch')
+        session.query(ApprovalModel).filter_by(workflow_id=workflow.id).delete()
+
         session.delete(workflow)
         session.commit()
 
@@ -244,9 +236,9 @@ class StudyService(object):
     @staticmethod
     def get_protocol(study_id):
         """Returns the study protocol, if it has been uploaded."""
-        file = db.session.query(FileModel)\
-            .filter_by(study_id=study_id)\
-            .filter_by(form_field_key='Study_Protocol_Document')\
+        file = db.session.query(FileModel) \
+            .filter_by(study_id=study_id) \
+            .filter_by(form_field_key='Study_Protocol_Document') \
             .first()
 
         return FileModelSchema().dump(file)
@@ -332,7 +324,7 @@ class StudyService(object):
         return WorkflowProcessor.run_master_spec(master_specs[0], study_model)
 
     @staticmethod
-    def _add_all_workflow_specs_to_study(study_model:StudyModel):
+    def _add_all_workflow_specs_to_study(study_model: StudyModel):
         existing_models = session.query(WorkflowModel).filter(WorkflowModel.study == study_model).all()
         existing_specs = list(m.workflow_spec_id for m in existing_models)
         new_specs = session.query(WorkflowSpecModel). \
