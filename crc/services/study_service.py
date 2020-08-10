@@ -90,9 +90,9 @@ class StudyService(object):
             return
 
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
+        session.query(WorkflowSpecDependencyFile).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
         session.query(FileDataModel).filter(FileModel.workflow_id == workflow_id).delete(synchronize_session='fetch')
-        session.query(FileModel).filter_by(workflow_id=workflow_id).delete()
-        # Workflow Dependencies should cascade delete, so no need to delete those seperately.
+        session.query(FileModel).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
 
         # Todo:  Remove approvals completely.
         session.query(ApprovalFile).filter(ApprovalModel.workflow_id == workflow_id).delete(synchronize_session='fetch')
