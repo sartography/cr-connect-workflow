@@ -374,9 +374,10 @@ class WorkflowService(object):
         # a BPMN standard, and should not be included in the display.
         if task.properties and "display_name" in task.properties:
             try:
-                task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties['display_name'])
+                task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties[Task.PROP_EXTENSIONS_TITLE])
             except Exception as e:
-                app.logger.error("Failed to set title on task due to type error." + str(e), exc_info=True)
+                raise ApiError.from_task(code="task_title_error", message="Could not set task title on task %s with '%s' property because %s" %
+                                                              (spiff_task.task_spec.name, Task.PROP_EXTENSIONS_TITLE, str(e)), task=spiff_task)
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
         return task
