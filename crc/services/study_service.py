@@ -9,13 +9,14 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileModelSchema, File
+from crc.models.approval import ApprovalFile, ApprovalModel
+from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, LookupFileModel, LookupDataModel
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
-    WorkflowStatus
+    WorkflowStatus, WorkflowSpecDependencyFile
 from crc.services.approval_service import ApprovalService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
@@ -83,13 +84,29 @@ class StudyService(object):
         session.commit()
 
     @staticmethod
-    def delete_workflow(workflow):
-        for file in session.query(FileModel).filter_by(workflow_id=workflow.id).all():
+    def delete_workflow(workflow_id):
+        workflow = session.query(WorkflowModel).get(workflow_id)
+        for file in session.query(FileModel).filter_by(workflow_id=workflow_id).all():
             FileService.delete_file(file.id)
         for dep in workflow.dependencies:
             session.delete(dep)
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
-        session.query(WorkflowModel).filter_by(id=workflow.id).delete()
+        session.query(ApprovalFile).filter(ApprovalModel.workflow_id==workflow_id).delete(synchronize_session='fetch')
+        session.query(ApprovalModel).filter_by(workflow_id=workflow.id).delete()
+        session.query(LookupDataModel).filter(
+            LookupFileModel.workflow_spec_id==workflow.workflow_spec_id
+        ).delete(synchronize_session='fetch')
+        session.query(LookupFileModel).filter_by(workflow_spec_id=workflow.workflow_spec_id).delete()
+
+        session.query(WorkflowSpecDependencyFile).filter(
+            FileDataModel.file_model_id==FileModel.id,
+            FileModel.workflow_id==workflow_id
+        ).delete(synchronize_session='fetch')
+
+
+        session.query(FileDataModel).filter(FileModel.workflow_id==workflow_id).delete(synchronize_session='fetch')
+        session.query(FileModel).filter_by(workflow_id=workflow_id).delete()
+        session.delete(workflow)
         session.commit()
 
     @staticmethod
