@@ -79,7 +79,7 @@ class StudyService(object):
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
-            StudyService.delete_workflow(workflow)
+            StudyService.delete_workflow(workflow.id)
         session.query(StudyModel).filter_by(id=study_id).delete()
         session.commit()
 
