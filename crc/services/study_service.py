@@ -91,8 +91,7 @@ class StudyService(object):
 
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
         session.query(WorkflowSpecDependencyFile).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
-        session.query(FileDataModel).filter(FileModel.workflow_id == workflow_id).delete(synchronize_session='fetch')
-        session.query(FileModel).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
+        session.query(FileModel).filter_by(workflow_id=workflow_id).update({'archived': True, 'workflow_id': None})
 
         # Todo:  Remove approvals completely.
         session.query(ApprovalFile).filter(ApprovalModel.workflow_id == workflow_id).delete(synchronize_session='fetch')
