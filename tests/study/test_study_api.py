@@ -11,7 +11,7 @@ from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.approval import ApprovalStatus
 from crc.models.task_event import TaskEventModel
-from crc.models.study import StudyModel, StudySchema, StudyStatus
+from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -134,10 +134,12 @@ class TestStudyApi(BaseTest):
 
     def test_update_study(self):
         self.load_example_data()
+        update_comment = 'Updating the study'
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
         study_schema = StudySchema().dump(study)
         study_schema['status'] = StudyStatus.in_progress.value
+        study_schema['comment'] = update_comment
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
@@ -146,6 +148,12 @@ class TestStudyApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(study.title, json_data['title'])
         self.assertEqual(study.status.value, json_data['status'])
+
+        # Making sure events history is being properly recorded
+        study_events = session.query(StudyEvent)
+        self.assertEqual(study_events.count(), 1)
+        self.assertEqual(study_events.first().status, StudyStatus.in_progress)
+        self.assertEqual(study_events.first().comment, update_comment)
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
