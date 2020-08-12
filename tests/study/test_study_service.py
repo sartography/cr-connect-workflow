@@ -84,7 +84,7 @@ class TestStudyService(BaseTest):
         # Assure the workflow is now started, and knows the total and completed tasks.
         studies = StudyService.get_studies_for_user(user)
         workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
-#        self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
+        # self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
         self.assertTrue(workflow.total_tasks > 0)
         self.assertEqual(0, workflow.completed_tasks)
         self.assertIsNotNone(workflow.spec_version)

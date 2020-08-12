@@ -8,7 +8,6 @@ from crc import app
 from crc.api.common import ApiError
 from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuilderRequiredDocument
 
-
 class ProtocolBuilderService(object):
     STUDY_URL = app.config['PB_USER_STUDIES_URL']
     INVESTIGATOR_URL = app.config['PB_INVESTIGATORS_URL']

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_06pyjz2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_06pyjz2" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
   <bpmn:process id="Process_01143nb" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0kcrx5l</bpmn:outgoing>
@@ -7,76 +7,250 @@
     <bpmn:scriptTask id="ScriptTask_LoadPersonnel" name="Load IRB Personnel">
       <bpmn:incoming>Flow_0kcrx5l</bpmn:incoming>
       <bpmn:outgoing>Flow_1dcsioh</bpmn:outgoing>
-      <bpmn:script>StudyInfo = {}
-StudyInfo['investigators'] = study_info('investigators')</bpmn:script>
+      <bpmn:script>investigators = study_info('investigators')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="EndEvent_1qor16n">
       <bpmn:documentation>## The following information was gathered:
-{% for type, investigator in StudyInfo.investigators.items() %}
-### {{investigator.label}}: {{investigator.display_name}}
-  * Edit Acess? {{investigator.edit_access}}
-  * Send Emails? {{investigator.emails}}
-{% if investigator.label == "Primary Investigator" %}
-  * Experience: {{investigator.experience}}
-{% endif %}
-{% endfor %}</bpmn:documentation>
-      <bpmn:incoming>Flow_1mplloa</bpmn:incoming>
+{% if pi|length == 1 %}
+### PI: {{ pi.PI.display_name }}
+  * Edit Acess? {{ pi.edit_access }}
+  * Send Emails? {{ pi.emails }}
+  * Experience: {{ pi.experience }}
+{% else %}
+### No PI in PB
+{% endif %}</bpmn:documentation>
+      <bpmn:incoming>Flow_1n0k4pd</bpmn:incoming>
+      <bpmn:incoming>Flow_1oqem42</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:userTask id="Activity_EditOtherPersonnel" name="Update Personnel" camunda:formKey="Access &#38; Notifications">
+    <bpmn:userTask id="Activity_EditPI" name="Update PI Info" camunda:formKey="PI_AccessEmailsExperience">
       <bpmn:documentation>### Please provide supplemental information for:
-#### {{investigator.display_name}} 
-##### Title: {{investigator.title}}
+#### {{ pi.PI.display_name }} 
+##### Title: {{ pi.PI.title }}
 
-##### Department: {{investigator.department}}
-##### Affiliation: {{investigator.affiliation}}</bpmn:documentation>
+##### Department: {{ PI_department }}
+##### Affiliation: {{ pi.PI.affiliation }}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="investigator.edit_access" label="Should have Study Team editing access in the system?" type="boolean" defaultValue="false" />
-          <camunda:formField id="investigator.emails" label="Should receive automated email notifications?" type="boolean" defaultValue="false" />
-          <camunda:formField id="investigator.experience" label="Investigator&#39;s Experience" type="textarea">
+          <camunda:formField id="pi.edit_access" label="Should the Principal Investigator have full editing access in the system?" type="boolean" defaultValue="true" />
+          <camunda:formField id="pi.emails" label="Should the Principal Investigator receive automated email notifications?" type="boolean" defaultValue="true" />
+          <camunda:formField id="pi.experience" label="Investigator&#39;s Experience" type="textarea">
             <camunda:properties>
               <camunda:property id="rows" value="5" />
-              <camunda:property id="hide_expression" value="model.investigator.label !== &#34;Primary Investigator&#34;" />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>
         <camunda:properties>
-          <camunda:property name="display_name" value="investigator.label" />
+          <camunda:property name="display_name" value="pi.PI.label" />
         </camunda:properties>
       </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1dcsioh</bpmn:incoming>
+      <bpmn:incoming>Flow_07f7kkd</bpmn:incoming>
       <bpmn:outgoing>Flow_1mplloa</bpmn:outgoing>
-      <bpmn:multiInstanceLoopCharacteristics camunda:collection="StudyInfo.investigators" camunda:elementVariable="investigator" />
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_0kcrx5l" sourceRef="StartEvent_1" targetRef="ScriptTask_LoadPersonnel" />
-    <bpmn:sequenceFlow id="Flow_1mplloa" sourceRef="Activity_EditOtherPersonnel" targetRef="EndEvent_1qor16n" />
-    <bpmn:sequenceFlow id="Flow_1dcsioh" sourceRef="ScriptTask_LoadPersonnel" targetRef="Activity_EditOtherPersonnel" />
+    <bpmn:sequenceFlow id="Flow_1mplloa" sourceRef="Activity_EditPI" targetRef="Activity_0r8pam5" />
+    <bpmn:sequenceFlow id="Flow_1dcsioh" sourceRef="ScriptTask_LoadPersonnel" targetRef="Activity_0bg56lv" />
+    <bpmn:scriptTask id="Activity_0bg56lv" name="Check for PI">
+      <bpmn:incoming>Flow_1dcsioh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1vgepkq</bpmn:outgoing>
+      <bpmn:script>pi = {x:investigators[x] for x in investigators.keys() if x[:2] == 'PI'}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="Gateway_CheckForPI" name="PI Cnt">
+      <bpmn:incoming>Flow_1vgepkq</bpmn:incoming>
+      <bpmn:outgoing>Flow_147b9li</bpmn:outgoing>
+      <bpmn:outgoing>Flow_00prawo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_147b9li" name="1 PI from PB" sourceRef="Gateway_CheckForPI" targetRef="Activity_DeterminePI_Department">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">len(pi.keys()) == 1</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_00prawo" name="No PI from PB" sourceRef="Gateway_CheckForPI" targetRef="Activity_1qwzwyi">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">len(pi.keys()) == 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:manualTask id="Activity_1qwzwyi" name="Show No PI">
+      <bpmn:documentation>No PI entered in PB</bpmn:documentation>
+      <bpmn:incoming>Flow_00prawo</bpmn:incoming>
+      <bpmn:outgoing>Flow_14ti38o</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0elbjpd" sourceRef="Activity_0r8pam5" targetRef="Gateway_0jykh6r" />
+    <bpmn:scriptTask id="Activity_0r8pam5" name="Check for Study Coordinators">
+      <bpmn:incoming>Flow_1mplloa</bpmn:incoming>
+      <bpmn:incoming>Flow_14ti38o</bpmn:incoming>
+      <bpmn:outgoing>Flow_0elbjpd</bpmn:outgoing>
+      <bpmn:script>scs = {x:investigators[x] for x in investigators.keys() if x[:3] == 'SC_'}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="Gateway_0jykh6r">
+      <bpmn:incoming>Flow_0elbjpd</bpmn:incoming>
+      <bpmn:outgoing>Flow_0xifvai</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1oqem42</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0xifvai" name="1 or more Study Coordinators" sourceRef="Gateway_0jykh6r" targetRef="Activity_1bcnjyq">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">len(scs.keys()) &gt;= 1</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_1n0k4pd" sourceRef="Activity_1bcnjyq" targetRef="EndEvent_1qor16n" />
+    <bpmn:userTask id="Activity_1bcnjyq" name="Update SC Info" camunda:formKey="SC_AccessEmails">
+      <bpmn:documentation>### Please provide supplemental information for:
+#### {{ sc.display_name }} 
+##### Title: {{ sc.title }}
+
+
+
+
+##### Department: {{ sc.department }}
+##### Affiliation: {{ sc.affiliation }}</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="sc.access" label="Should this Study Coordinator have full editing access in the system?" type="boolean" defaultValue="true" />
+          <camunda:formField id="sc.emails" label="Should this Study Coordinator receive automated email notifications?" type="boolean" defaultValue="true" />
+        </camunda:formData>
+        <camunda:properties>
+          <camunda:property name="display_name" value="sc.label" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0xifvai</bpmn:incoming>
+      <bpmn:outgoing>Flow_1n0k4pd</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="true" camunda:collection="scs" camunda:elementVariable="sc" />
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1oqem42" name="No Study Coordinators" sourceRef="Gateway_0jykh6r" targetRef="EndEvent_1qor16n">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">len(scs.keys()) == 0</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_14ti38o" sourceRef="Activity_1qwzwyi" targetRef="Activity_0r8pam5" />
+    <bpmn:scriptTask id="Activity_DeterminePI_Department" name="Determine PI E0 Department">
+      <bpmn:incoming>Flow_147b9li</bpmn:incoming>
+      <bpmn:outgoing>Flow_1grahhv</bpmn:outgoing>
+      <bpmn:script>LDAP_dept = pi.PI.department
+length_LDAP_dept = len(LDAP_dept)
+E0_start = LDAP_dept.find("E0:") + 3
+E0_slice = LDAP_dept[E0_start:length_LDAP_dept]
+E0_first_hyphen = E0_slice.find("-")
+E0_dept_start = E0_first_hyphen + 1
+E0_school = E0_slice[0:E0_first_hyphen]
+isSpace = " " in E0_slice
+E0_spec = ""
+E0_dept = ""
+
+if isSpace:
+  E0_first_space = E0_slice.find(" ")
+  E0_spec_start = E0_first_space + 1
+  E0_spec_end = len(E0_slice)
+  E0_dept = E0_slice[E0_dept_start:E0_first_space]
+  E0_spec = E0_slice[E0_spec_start:E0_spec_end]
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1vgepkq" sourceRef="Activity_0bg56lv" targetRef="Gateway_CheckForPI" />
+    <bpmn:sequenceFlow id="Flow_1grahhv" sourceRef="Activity_DeterminePI_Department" targetRef="Activity_1aeas6q" />
+    <bpmn:sequenceFlow id="Flow_07f7kkd" sourceRef="Activity_1aeas6q" targetRef="Activity_EditPI" />
+    <bpmn:businessRuleTask id="Activity_1aeas6q" name="Determine PI Department" camunda:decisionRef="Decision_PI_Dept">
+      <bpmn:incoming>Flow_1grahhv</bpmn:incoming>
+      <bpmn:outgoing>Flow_07f7kkd</bpmn:outgoing>
+    </bpmn:businessRuleTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_01143nb">
+      <bpmndi:BPMNEdge id="Flow_07f7kkd_di" bpmnElement="Flow_07f7kkd">
+        <di:waypoint x="990" y="120" />
+        <di:waypoint x="1130" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1grahhv_di" bpmnElement="Flow_1grahhv">
+        <di:waypoint x="830" y="120" />
+        <di:waypoint x="890" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vgepkq_di" bpmnElement="Flow_1vgepkq">
+        <di:waypoint x="500" y="120" />
+        <di:waypoint x="565" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14ti38o_di" bpmnElement="Flow_14ti38o">
+        <di:waypoint x="1230" y="240" />
+        <di:waypoint x="1340" y="240" />
+        <di:waypoint x="1340" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1oqem42_di" bpmnElement="Flow_1oqem42">
+        <di:waypoint x="1480" y="145" />
+        <di:waypoint x="1480" y="270" />
+        <di:waypoint x="1830" y="270" />
+        <di:waypoint x="1830" y="138" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1625" y="236" width="64" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1n0k4pd_di" bpmnElement="Flow_1n0k4pd">
+        <di:waypoint x="1720" y="120" />
+        <di:waypoint x="1812" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xifvai_di" bpmnElement="Flow_0xifvai">
+        <di:waypoint x="1505" y="120" />
+        <di:waypoint x="1620" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1510" y="86" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0elbjpd_di" bpmnElement="Flow_0elbjpd">
+        <di:waypoint x="1390" y="120" />
+        <di:waypoint x="1455" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00prawo_di" bpmnElement="Flow_00prawo">
+        <di:waypoint x="590" y="145" />
+        <di:waypoint x="590" y="240" />
+        <di:waypoint x="1130" y="240" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="688" y="222" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_147b9li_di" bpmnElement="Flow_147b9li">
+        <di:waypoint x="615" y="120" />
+        <di:waypoint x="730" y="120" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="615" y="103" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1dcsioh_di" bpmnElement="Flow_1dcsioh">
-        <di:waypoint x="360" y="120" />
-        <di:waypoint x="420" y="120" />
+        <di:waypoint x="350" y="120" />
+        <di:waypoint x="400" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1mplloa_di" bpmnElement="Flow_1mplloa">
-        <di:waypoint x="520" y="120" />
-        <di:waypoint x="602" y="120" />
+        <di:waypoint x="1230" y="120" />
+        <di:waypoint x="1290" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0kcrx5l_di" bpmnElement="Flow_0kcrx5l">
         <di:waypoint x="188" y="120" />
-        <di:waypoint x="260" y="120" />
+        <di:waypoint x="250" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="152" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ScriptTask_0h49cmf_di" bpmnElement="ScriptTask_LoadPersonnel">
-        <dc:Bounds x="260" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0d622qi_di" bpmnElement="Activity_EditOtherPersonnel">
-        <dc:Bounds x="420" y="80" width="100" height="80" />
+        <dc:Bounds x="250" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_1qor16n_di" bpmnElement="EndEvent_1qor16n">
-        <dc:Bounds x="602" y="102" width="36" height="36" />
+        <dc:Bounds x="1812" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0d622qi_di" bpmnElement="Activity_EditPI">
+        <dc:Bounds x="1130" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1dq6tzx_di" bpmnElement="Activity_0bg56lv">
+        <dc:Bounds x="400" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0qzf1r3_di" bpmnElement="Gateway_CheckForPI" isMarkerVisible="true">
+        <dc:Bounds x="565" y="95" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="574" y="71" width="31" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0neg931_di" bpmnElement="Activity_1qwzwyi">
+        <dc:Bounds x="1130" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ktvk27_di" bpmnElement="Activity_0r8pam5">
+        <dc:Bounds x="1290" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0jykh6r_di" bpmnElement="Gateway_0jykh6r" isMarkerVisible="true">
+        <dc:Bounds x="1455" y="95" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1nz85vv_di" bpmnElement="Activity_1bcnjyq">
+        <dc:Bounds x="1620" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1z05bvn_di" bpmnElement="Activity_DeterminePI_Department">
+        <dc:Bounds x="730" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0uz6yhu_di" bpmnElement="Activity_1aeas6q">
+        <dc:Bounds x="890" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

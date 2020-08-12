@@ -273,7 +273,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual(5, workflow.next_task.multi_instance_count)
 
         # Assure that the names for each task are properly updated, so they aren't all the same.
-        self.assertEqual("Primary Investigator", workflow.next_task.properties['display_name'])
+        self.assertEqual("Primary Investigator", workflow.next_task.title)
 
     def test_lookup_endpoint_for_task_field_enumerations(self):
         workflow = self.create_workflow('enum_options_with_search')

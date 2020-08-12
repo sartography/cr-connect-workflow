@@ -2,6 +2,7 @@ import json
 
 from crc import session
 from crc.api.common import ApiError
+from crc.models.protocol_builder import ProtocolBuilderInvestigatorType
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowStatus
 from crc.scripts.script import Script
@@ -30,7 +31,7 @@ class StudyInfo(Script):
             },
             "investigators": {
                 'PI': {
-                    'label': 'Primary Investigator',
+                    'label': ProtocolBuilderInvestigatorType.PI.value,
                     'display': 'Always',
                     'unique': 'Yes',
                     'user_id': 'dhf8r',
@@ -164,16 +165,78 @@ Returns information specific to the protocol.
                     "ind_number": "1234",
                     "inactive": False
                 },
-                "investigators":
-                    {
-                        "INVESTIGATORTYPE": "PI",
-                        "INVESTIGATORTYPEFULL": "Primary Investigator",
-                        "NETBADGEID": "dhf8r"
+                "investigators": {
+                    "PI": {
+                        "label": ProtocolBuilderInvestigatorType.PI.value,
+                        "display": "Always",
+                        "unique": "Yes",
+                        "user_id": "dhf8r",
+                        "title": "",
+                        "display_name": "Daniel Harold Funk",
+                        "sponsor_type": "Contractor",
+                        "telephone_number": "0000000000",
+                        "department": "",
+                        "email_address": "dhf8r@virginia.edu",
+                        "given_name": "Daniel",
+                        "uid": "dhf8r",
+                        "affiliation": "",
+                        "date_cached": "2020-08-04T19:32:08.006128+00:00"
                     },
+                    "SC_I": {
+                        "label": ProtocolBuilderInvestigatorType.SC_I.value,
+                        "display": "Always",
+                        "unique": "Yes",
+                        "user_id": "ajl2j",
+                        "title": "",
+                        "display_name": "Aaron Louie",
+                        "sponsor_type": "Contractor",
+                        "telephone_number": "0000000000",
+                        "department": "",
+                        "email_address": "ajl2j@virginia.edu",
+                        "given_name": "Aaron",
+                        "uid": "ajl2j",
+                        "affiliation": "sponsored",
+                        "date_cached": "2020-08-04T19:32:10.699666+00:00"
+                    },
+                    "SC_II": {
+                        "label": ProtocolBuilderInvestigatorType.SC_II.value,
+                        "display": "Optional",
+                        "unique": "Yes",
+                        "user_id": "cah3us",
+                        "title": "",
+                        "display_name": "Alex Herron",
+                        "sponsor_type": "Contractor",
+                        "telephone_number": "0000000000",
+                        "department": "",
+                        "email_address": "cah3us@virginia.edu",
+                        "given_name": "Alex",
+                        "uid": "cah3us",
+                        "affiliation": "sponsored",
+                        "date_cached": "2020-08-04T19:32:10.075852+00:00"
+                    }
+                },
+                "pi": {
+                    "PI": {
+                        "label": ProtocolBuilderInvestigatorType.PI.value,
+                        "display": "Always",
+                        "unique": "Yes",
+                        "user_id": "dhf8r",
+                        "title": "",
+                        "display_name": "Daniel Harold Funk",
+                        "sponsor_type": "Contractor",
+                        "telephone_number": "0000000000",
+                        "department": "",
+                        "email_address": "dhf8r@virginia.edu",
+                        "given_name": "Daniel",
+                        "uid": "dhf8r",
+                        "affiliation": "",
+                        "date_cached": "2020-08-04T19:32:08.006128+00:00"
+                    }
+                },
                 "roles":
                     {
                         "INVESTIGATORTYPE": "PI",
-                        "INVESTIGATORTYPEFULL": "Primary Investigator",
+                        "INVESTIGATORTYPEFULL": ProtocolBuilderInvestigatorType.PI.value,
                         "NETBADGEID": "dhf8r"
                     },
                 "details":
