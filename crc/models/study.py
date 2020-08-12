@@ -13,6 +13,7 @@ from crc.models.file import FileModel, SimpleFileSchema, FileSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
     WorkflowModel
+from crc.services.user_service import UserService
 
 
 class StudyStatus(enum.Enum):
@@ -50,7 +51,7 @@ class StudyModel(db.Model):
     on_hold = db.Column(db.Boolean, default=False)
     enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
     # events = db.relationship("TaskEventModel")
-    events_history = db.relationship("StudyEvent")
+    events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
         self.hsr_number = pbs.HSRNUMBER
@@ -76,6 +77,7 @@ class StudyEvent(db.Model):
     status = db.Column(db.Enum(StudyStatus))
     comment = db.Column(db.String, default='')
     event_type = db.Column(db.Enum(StudyEventType))
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
 class WorkflowMetadata(object):
@@ -190,7 +192,8 @@ class Study(object):
             study=study_model,
             status=status,
             comment='' if not hasattr(self, 'comment') else self.comment,
-            event_type=StudyEventType.user
+            event_type=StudyEventType.user,
+            user_uid=UserService.current_user().uid if UserService.has_user() else None,
         )
         db.session.add(study_event)
         db.session.commit()

@@ -11,7 +11,7 @@ from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.approval import ApprovalStatus
 from crc.models.task_event import TaskEventModel
-from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus
+from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -150,10 +150,11 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study.status.value, json_data['status'])
 
         # Making sure events history is being properly recorded
-        study_events = session.query(StudyEvent)
-        self.assertEqual(study_events.count(), 1)
-        self.assertEqual(study_events.first().status, StudyStatus.in_progress)
-        self.assertEqual(study_events.first().comment, update_comment)
+        study_event = session.query(StudyEvent).first()
+        self.assertIsNotNone(study_event)
+        self.assertEqual(study_event.status, StudyStatus.in_progress)
+        self.assertEqual(study_event.comment, update_comment)
+        self.assertEqual(study_event.user_uid, self.test_uid)
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -253,8 +254,15 @@ class TestStudyApi(BaseTest):
     def test_delete_study_with_workflow_and_status(self):
         self.load_example_data()
         workflow = session.query(WorkflowModel).first()
+        stats1 = StudyEvent(
+            study_id=workflow.study_id,
+            status=StudyStatus.in_progress,
+            comment='Some study status change event',
+            event_type=StudyEventType.user,
+            user_uid=self.users[0]['uid'],
+        )
         stats2 = TaskEventModel(study_id=workflow.study_id, workflow_id=workflow.id, user_uid=self.users[0]['uid'])
-        session.add(stats2)
+        session.add_all([stats1, stats2])
         session.commit()
         rv = self.app.delete('/v1.0/study/%i' % workflow.study_id, headers=self.logged_in_headers())
         self.assert_success(rv)
