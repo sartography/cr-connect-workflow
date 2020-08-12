@@ -39,7 +39,7 @@ requests = "*"
 sentry-sdk = {extras = ["flask"],version = "==0.14.4"}
 sphinx = "*"
 swagger-ui-bundle = "*"
-spiffworkflow = {editable = true, git = "https://github.com/sartography/SpiffWorkflow.git", ref = "master"}
+spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow.git", ref = "master"}
 webtest = "*"
 werkzeug = "*"
 xlrd = "*"
