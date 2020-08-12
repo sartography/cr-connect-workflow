@@ -251,7 +251,6 @@ class ExampleDataLoader:
                          master_spec=False,
                          from_tests=True)
 
-
     def create_spec(self, id, name, display_name="", description="", filepath=None, master_spec=False,
                     category_id=None, display_order=None, from_tests=False):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.

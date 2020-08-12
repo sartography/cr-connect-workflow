@@ -36,6 +36,7 @@ class TestWorkflowProcessor(BaseTest):
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
         self.assertEqual(study.id, processor.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY])
         self.assertIsNotNone(processor)
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
@@ -62,6 +63,7 @@ class TestWorkflowProcessor(BaseTest):
         files = session.query(FileModel).filter_by(workflow_spec_id='decision_table').all()
         self.assertEqual(2, len(files))
         processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
@@ -86,6 +88,7 @@ class TestWorkflowProcessor(BaseTest):
         workflow_spec_model = self.load_test_spec("parallel_tasks")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
 
         # Complete the first steps of the 4 parallel tasks
@@ -127,6 +130,7 @@ class TestWorkflowProcessor(BaseTest):
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("parallel_tasks")
         processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(4, len(next_user_tasks))
@@ -215,6 +219,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(2, len(files))
         workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="docx").first()
         processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(1, len(next_user_tasks))
@@ -278,6 +283,7 @@ class TestWorkflowProcessor(BaseTest):
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
         self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
         task = processor.next_task()
         task.data = {"color": "blue"}

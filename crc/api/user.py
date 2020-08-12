@@ -1,10 +1,11 @@
 import flask
 from flask import g, request
 
-from crc import app, db
+from crc import app, session
 from crc.api.common import ApiError
 from crc.models.user import UserModel, UserModelSchema
 from crc.services.ldap_service import LdapService, LdapModel
+from crc.services.user_service import UserService
 
 """
 .. module:: crc.api.user
@@ -31,14 +32,14 @@ def verify_token(token=None):
     failure_error = ApiError("invalid_token", "Unable to decode the token you provided.  Please re-authenticate",
                              status_code=403)
 
-    if not _is_production() and (token is None or 'user' not in g):
-        g.user = UserModel.query.first()
-        token = g.user.encode_auth_token()
-
     if token:
         try:
             token_info = UserModel.decode_auth_token(token)
             g.user = UserModel.query.filter_by(uid=token_info['sub']).first()
+
+            # If the user is valid, store the token for this session
+            if g.user:
+                g.token = token
         except:
             raise failure_error
         if g.user is not None:
@@ -47,27 +48,37 @@ def verify_token(token=None):
             raise failure_error
 
     # If there's no token and we're in production, get the user from the SSO headers and return their token
-    if not token and _is_production():
+    elif _is_production():
         uid = _get_request_uid(request)
 
         if uid is not None:
             db_user = UserModel.query.filter_by(uid=uid).first()
 
+            # If the user is valid, store the user and token for this session
             if db_user is not None:
                 g.user = db_user
                 token = g.user.encode_auth_token().decode()
+                g.token = token
                 token_info = UserModel.decode_auth_token(token)
                 return token_info
 
             else:
-                raise ApiError("no_user", "User not found. Please login via the frontend app before accessing this feature.",
-                         status_code=403)
+                raise ApiError("no_user",
+                               "User not found. Please login via the frontend app before accessing this feature.",
+                               status_code=403)
+
+    else:
+        # Fall back to a default user if this is not production.
+        g.user = UserModel.query.first()
+        token = g.user.encode_auth_token()
+        token_info = UserModel.decode_auth_token(token)
+        return token_info
 
 
 def verify_token_admin(token=None):
     """
-        Verifies the token for the user (if provided) in non-production environment. If in production environment,
-        checks that the user is in the list of authorized admins
+        Verifies the token for the user (if provided) in non-production environment.
+        If in production environment, checks that the user is in the list of authorized admins
 
         Args:
             token: Optional[str]
@@ -75,21 +86,44 @@ def verify_token_admin(token=None):
         Returns:
             token: str
    """
-
-    # If this is production, check that the user is in the list of admins
-    if _is_production():
-        uid = _get_request_uid(request)
-
-        if uid is not None and uid in app.config['ADMIN_UIDS']:
-            return verify_token()
-
-    # If we're not in production, just use the normal verify_token method
-    else:
-        return verify_token(token)
+    verify_token(token)
+    if "user" in g and g.user.is_admin():
+        token = g.user.encode_auth_token()
+        token_info = UserModel.decode_auth_token(token)
+        return token_info
 
 
-def get_current_user():
-    return UserModelSchema().dump(g.user)
+def start_impersonating(uid):
+    if uid is not None and UserService.user_is_admin():
+        UserService.start_impersonating(uid)
+
+    user = UserService.current_user(allow_admin_impersonate=True)
+    return UserModelSchema().dump(user)
+
+
+def stop_impersonating():
+    if UserService.user_is_admin():
+            UserService.stop_impersonating()
+
+    user = UserService.current_user(allow_admin_impersonate=False)
+    return UserModelSchema().dump(user)
+
+
+def get_current_user(admin_impersonate_uid=None):
+    if UserService.user_is_admin():
+        if admin_impersonate_uid is not None:
+            UserService.start_impersonating(admin_impersonate_uid)
+        else:
+            UserService.stop_impersonating()
+
+    user = UserService.current_user(UserService.user_is_admin() and UserService.admin_is_impersonating())
+    return UserModelSchema().dump(user)
+
+
+def get_all_users():
+    if "user" in g and g.user.is_admin():
+        all_users = session.query(UserModel).all()
+        return UserModelSchema(many=True).dump(all_users)
 
 
 def login(
@@ -131,7 +165,6 @@ def login(
     # X-Forwarded-Host: dev.crconnect.uvadcos.io
     # X-Forwarded-Server: dev.crconnect.uvadcos.io
     # Connection: Keep-Alive
-
 
     # If we're in production, override any uid with the uid from the SSO request headers
     if _is_production():
@@ -180,6 +213,8 @@ def _handle_login(user_info: LdapModel, redirect_url=None):
 
     # Return the frontend auth callback URL, with auth token appended.
     auth_token = user.encode_auth_token().decode()
+    g.token = auth_token
+
     if redirect_url is not None:
         if redirect_url.find("http://") != 0 and redirect_url.find("https://") != 0:
             redirect_url = "http://" + redirect_url
@@ -192,13 +227,13 @@ def _handle_login(user_info: LdapModel, redirect_url=None):
 
 
 def _upsert_user(user_info):
-    user = db.session.query(UserModel).filter(UserModel.uid == user_info.uid).first()
+    user = session.query(UserModel).filter(UserModel.uid == user_info.uid).first()
 
     if user is None:
         # Add new user
         user = UserModel()
     else:
-        user = db.session.query(UserModel).filter(UserModel.uid == user_info.uid).with_for_update().first()
+        user = session.query(UserModel).filter(UserModel.uid == user_info.uid).with_for_update().first()
 
     user.uid = user_info.uid
     user.display_name = user_info.display_name
@@ -206,8 +241,8 @@ def _upsert_user(user_info):
     user.affiliation = user_info.affiliation
     user.title = user_info.title
 
-    db.session.add(user)
-    db.session.commit()
+    session.add(user)
+    session.commit()
     return user
 
 

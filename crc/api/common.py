@@ -1,5 +1,6 @@
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from flask import g
 
 from crc import ma, app
 
@@ -24,6 +25,11 @@ class ApiError(Exception):
         instance.task_id = task.task_spec.name or ""
         instance.task_name = task.task_spec.description or ""
         instance.file_name = task.workflow.spec.file or ""
+
+        # Fixme: spiffworkflow is doing something weird where task ends up referenced in the data in some cases.
+        if "task" in task.data:
+            task.data.pop("task")
+
         instance.task_data = task.data
         app.logger.error(message, exc_info=True)
         return instance
@@ -60,3 +66,5 @@ class ApiErrorSchema(ma.Schema):
 def handle_invalid_usage(error):
     response = ApiErrorSchema().dump(error)
     return response, error.status_code
+
+

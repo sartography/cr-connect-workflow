@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 from datetime import datetime
+from github import Github, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
@@ -78,7 +79,8 @@ class FileService(object):
         """ Opens a reference file (assumes that it is xls file) and returns the data as a
         dictionary, each row keyed on the given index_column name. If there are columns
           that should be represented as integers, pass these as an array of int_columns, lest
-          you get '1.0' rather than '1' """
+          you get '1.0' rather than '1'
+          fixme: This is stupid stupid slow.  Place it in the database and just check if it is up to date."""
         data_model = FileService.get_reference_file_data(reference_file_name)
         xls = ExcelFile(data_model.data)
         df = xls.parse(xls.sheet_names[0])
@@ -332,3 +334,51 @@ class FileService(object):
             file_model.archived = True
             session.commit()
             app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
+
+    @staticmethod
+    def update_from_github(file_ids):
+        gh_token = app.config['GITHUB_TOKEN']
+        _github = Github(gh_token)
+        repo = _github.get_user().get_repo('crispy-fiesta')
+
+        for file_id in file_ids:
+            file_data_model = FileDataModel.query.filter_by(
+                file_model_id=file_id
+            ).order_by(
+                desc(FileDataModel.version)
+            ).first()
+            try:
+                repo_file = repo.get_contents(file_data_model.file_model.name)
+            except UnknownObjectException:
+                # TODO: Add message indicating file is not in the repo
+                pass
+            else:
+                file_data_model.data = repo_file.decoded_content
+                session.add(file_data_model)
+                session.commit()
+
+    @staticmethod
+    def publish_to_github(file_ids):
+        gh_token = app.config['GITHUB_TOKEN']
+        _github = Github(gh_token)
+        repo = _github.get_user().get_repo('crispy-fiesta')
+
+        for file_id in file_ids:
+            file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
+            try:
+                repo_file = repo.get_contents(file_data_model.file_model.name)
+            except UnknownObjectException:
+                repo.create_file(
+                    path=file_data_model.file_model.name,
+                    message=f'Creating {file_data_model.file_model.name}',
+                    content=file_data_model.data
+                )
+                return {'created': True}
+            else:
+                updated = repo.update_file(
+                    path=repo_file.path,
+                    message=f'Updating {file_data_model.file_model.name}',
+                    content=file_data_model.data,
+                    sha=repo_file.sha
+                )
+                return {'updated': True}

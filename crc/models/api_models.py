@@ -143,7 +143,8 @@ class NavigationItemSchema(ma.Schema):
 
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,
-                 spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks, last_updated, title):
+                 spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks,
+                 last_updated, title):
         self.id = id
         self.status = status
         self.next_task = next_task  # The next task that requires user input.

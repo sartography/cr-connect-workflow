@@ -1,6 +1,5 @@
 from copy import copy
 from datetime import datetime
-import json
 from typing import List
 
 import requests
@@ -13,16 +12,15 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileModelSchema, File
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.task_event import TaskEventModel
-from crc.models.study import StudyModel, Study, Category, WorkflowMetadata
+from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata
+from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
+from crc.services.approval_service import ApprovalService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
-from crc.services.approval_service import ApprovalService
-from crc.models.approval import Approval
 
 
 class StudyService(object):
@@ -63,11 +61,10 @@ class StudyService(object):
         files = (File.from_models(model, FileService.get_file_data(model.id),
                          FileService.get_doc_dictionary()) for model in files)
         study.files = list(files)
-
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.  Don't execute this for Abandoned studies, as
         # we don't have the information to process them.
-        if study.protocol_builder_status != ProtocolBuilderStatus.ABANDONED:
+        if study.status != StudyStatus.abandoned:
             status = StudyService.__get_study_status(study_model)
             study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
@@ -268,7 +265,7 @@ class StudyService(object):
             for study in db_studies:
                 pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
                 if not pb_study:
-                    study.protocol_builder_status = ProtocolBuilderStatus.ABANDONED
+                    study.status = StudyStatus.abandoned
 
             db.session.commit()
 
