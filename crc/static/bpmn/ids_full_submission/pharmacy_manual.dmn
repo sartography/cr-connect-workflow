@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_a268e14" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_a268e14" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <decision id="Decision_PharmacyManual" name="Pharmacy Manual">
     <extensionElements>
       <biodi:bounds x="190" y="140" width="180" height="80" />
@@ -17,7 +17,7 @@
           <text>0</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1kidcjg">
-          <text>false</text>
+          <text>False</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0tk68d3">
           <text>"The Pharmacy Manual has not been uploaded.  If you do not intend to upload a manual before your IDS submission, please complete the questions below.  If you do intend to upload a manual, you do not need to complete them."</text>
@@ -28,7 +28,7 @@
           <text>1</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_08v3bfw">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1espyxg">
           <text>"This manual will be sent as part of your IDS Submission"</text>
@@ -39,7 +39,7 @@
           <text>&gt; 1</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1hb3ip1">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0yslf6v">
           <text>"These manuals will be sent as part of your IDS Submission"</text>

@@ -13,7 +13,7 @@
       <output id="OutputClause_1ybi1ud" label="sponsor_funding_source" name="sponsor_funding_source" typeRef="string" />
       <rule id="DecisionRule_1t97mw4">
         <inputEntry id="UnaryTests_0ym4ln2">
-          <text>true</text>
+          <text>True</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1pweuqc">
           <text>"required"</text>
@@ -21,7 +21,7 @@
       </rule>
       <rule id="DecisionRule_1q965wz">
         <inputEntry id="UnaryTests_1mlhh3t">
-          <text>false</text>
+          <text>False</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_073vd6i">
           <text>"disabled"</text>
