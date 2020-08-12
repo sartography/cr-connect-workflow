@@ -132,6 +132,13 @@ class TestStudyApi(BaseTest):
         error_count = len(study["errors"])
         self.assertEqual(workflow_spec_count, workflow_count + error_count)
 
+        study_event = session.query(StudyEvent).first()
+        self.assertIsNotNone(study_event)
+        self.assertEqual(study_event.status, StudyStatus.in_progress)
+        self.assertEqual(study_event.event_type, StudyEventType.automatic)
+        self.assertFalse(study_event.comment)
+        self.assertEqual(study_event.user_uid, self.test_uid)
+
     def test_update_study(self):
         self.load_example_data()
         update_comment = 'Updating the study'
@@ -153,6 +160,7 @@ class TestStudyApi(BaseTest):
         study_event = session.query(StudyEvent).first()
         self.assertIsNotNone(study_event)
         self.assertEqual(study_event.status, StudyStatus.in_progress)
+        self.assertEqual(study_event.status, StudyEventType.user)
         self.assertEqual(study_event.comment, update_comment)
         self.assertEqual(study_event.user_uid, self.test_uid)
 
