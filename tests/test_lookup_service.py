@@ -114,7 +114,7 @@ class TestLookupService(BaseTest):
         self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
         results = LookupService.lookup(workflow, "AllTheNames", "reaction design", limit=10)
-        self.assertEqual(5, len(results), "all results come back for two terms.")
+        self.assertEqual(3, len(results), "all results come back for two terms.")
         self.assertEqual("Reaction Design", results[0].label, "Exact matches come first.")
 
         results = LookupService.lookup(workflow, "AllTheNames", "1 Something", limit=10)
@@ -127,7 +127,7 @@ class TestLookupService(BaseTest):
         self.assertEqual("1 Something", results[0].label, "double spaces should not be an issue.")
 
         results = LookupService.lookup(workflow, "AllTheNames", "in", limit=10)
-        self.assertEqual(7, len(results), "stop words are not removed.")
+        self.assertEqual(10, len(results), "stop words are not removed.")
         self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
         results = LookupService.lookup(workflow, "AllTheNames", "other", limit=10)
