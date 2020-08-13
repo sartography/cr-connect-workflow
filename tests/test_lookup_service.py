@@ -81,10 +81,6 @@ class TestLookupService(BaseTest):
         results = LookupService.lookup(workflow, "AllTheNames", "", limit=10)
         self.assertEqual(10, len(results), "Blank queries return everything, to the limit")
 
-        results = LookupService.lookup(workflow, "AllTheNames", "other", limit=10)
-        self.assertEqual("Other", results[0].label, "Can't find the word 'other', even through it is there.")
-
-
         results = LookupService.lookup(workflow, "AllTheNames", "medicines", limit=10)
         self.assertEqual(1, len(results), "words in the middle of label are detected.")
         self.assertEqual("The Medicines Company", results[0].label)
@@ -130,16 +126,12 @@ class TestLookupService(BaseTest):
         results = LookupService.lookup(workflow, "AllTheNames", "1  Something", limit=10)
         self.assertEqual("1 Something", results[0].label, "double spaces should not be an issue.")
 
+        results = LookupService.lookup(workflow, "AllTheNames", "in", limit=10)
+        self.assertEqual(7, len(results), "stop words are not removed.")
+        self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
+
+        results = LookupService.lookup(workflow, "AllTheNames", "other", limit=10)
+        self.assertEqual("Other", results[0].label, "Can't find the word 'other', which is an english stop word")
 
 
-# 1018	10000 Something	Industry
-# 1019	1000 Something	Industry
-# 1020	1 Something	Industry
-# 1021	10 Something	Industry
-# 1022	10000 Something	Industry
-
-        # Fixme:  Stop words are taken into account on the query side, and haven't found a fix yet.
-        #results = WorkflowService.run_lookup_query(lookup_table.id, "in", limit=10)
-        #self.assertEqual(7, len(results), "stop words are not removed.")
-        #self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
