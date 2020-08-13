@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_0o0ff2r" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_0o0ff2r" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <decision id="decision_ide_check" name="IDE Check">
     <decisionTable id="decisionTable_1">
       <input id="input_1" label="IS_IDE">
@@ -18,10 +18,10 @@
           <text>1</text>
         </inputEntry>
         <inputEntry id="UnaryTests_1w71u9t">
-          <text>not('')</text>
+          <text>? != ''</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1we3duh">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
       </rule>
       <rule id="DecisionRule_199dgpt">
@@ -32,7 +32,7 @@
           <text></text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1fhlpya">
-          <text>false</text>
+          <text>False</text>
         </outputEntry>
       </rule>
     </decisionTable>

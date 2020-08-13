@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_0o0ff2r" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
-  <decision id="decision_ind_check" name="IND Check">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_0o0ff2r" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+  <decision id="decision_ind_check" name="IND Check-feel">
     <decisionTable id="decisionTable_1">
       <input id="input_1" label="IS_IND">
         <inputExpression id="inputExpression_1" typeRef="integer">
@@ -8,17 +8,17 @@
         </inputExpression>
       </input>
       <input id="InputClause_1yk6kx1" label="IND_1 Number?">
-        <inputExpression id="LiteralExpression_00xhtjw" typeRef="string">
+        <inputExpression id="LiteralExpression_00xhtjw" typeRef="string" expressionLanguage="feel">
           <text>StudyInfo.details.IND_1</text>
         </inputExpression>
       </input>
       <input id="InputClause_069sith" label="IND_2 Number?">
-        <inputExpression id="LiteralExpression_1h9kd8o" typeRef="string">
+        <inputExpression id="LiteralExpression_1h9kd8o" typeRef="string" expressionLanguage="feel">
           <text>StudyInfo.details.IND_2</text>
         </inputExpression>
       </input>
       <input id="InputClause_0d0vpur" label="IND_3 Number?">
-        <inputExpression id="LiteralExpression_0zbsg01" typeRef="string">
+        <inputExpression id="LiteralExpression_0zbsg01" typeRef="string" expressionLanguage="feel">
           <text>StudyInfo.details.IND_3</text>
         </inputExpression>
       </input>
@@ -41,7 +41,7 @@
           <text>not('')</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1i7dtia">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0kulwlr">
           <text>"three"</text>
@@ -68,7 +68,7 @@
           <text>""</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1fhlpya">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1h5mox1">
           <text>"two"</text>
@@ -95,7 +95,7 @@
           <text>not('')</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0pooubu">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0nioovi">
           <text>"two"</text>
@@ -122,7 +122,7 @@
           <text>not('')</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_14otjle">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_13qodmm">
           <text>"two"</text>
@@ -149,7 +149,7 @@
           <text>""</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1we3duh">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1jv0san">
           <text>"one"</text>
@@ -176,7 +176,7 @@
           <text></text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0c2mi3l">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1e2kzvw">
           <text>"na"</text>
@@ -203,7 +203,7 @@
           <text></text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1wuhxz7">
-          <text>false</text>
+          <text>False</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1dznftw">
           <text></text>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_dc7ea6f" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_dc7ea6f" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <decision id="ids_full_submission" name="IDS Full Submission">
     <extensionElements>
       <biodi:bounds x="240" y="130" width="180" height="80" />
@@ -13,7 +13,7 @@
       <output id="output_1" label="Menu Status" name="ids_full_submission" typeRef="string" />
       <rule id="DecisionRule_0rj79pz">
         <inputEntry id="UnaryTests_1w0ydbs">
-          <text>true</text>
+          <text>True</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_10u5hnp">
           <text>"hidden"</text>
@@ -21,7 +21,7 @@
       </rule>
       <rule id="DecisionRule_1eyx8lf">
         <inputEntry id="UnaryTests_02h1s2m">
-          <text>false</text>
+          <text>False</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0kdhxz2">
           <text>"required"</text>

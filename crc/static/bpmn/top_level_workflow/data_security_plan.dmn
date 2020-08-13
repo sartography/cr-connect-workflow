@@ -14,7 +14,7 @@
       <rule id="DecisionRule_17xsr74">
         <description></description>
         <inputEntry id="UnaryTests_05ldcq4">
-          <text>true</text>
+          <text>True</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_09oao3s">
           <text>"required"</text>

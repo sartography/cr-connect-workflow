@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_06veek1" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_06veek1" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <decision id="Decision_SharedAMCheck" name="Shared AM Check">
     <decisionTable id="decisionTable_1">
       <input id="InputClause_1koybx6" label="How Many Shared Spaces">
@@ -22,7 +22,7 @@
           <text>0</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_16l50ps">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0ifa4wu">
@@ -34,7 +34,7 @@
           <text>&gt; 0</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0td8sa6">
-          <text>false</text>
+          <text>False</text>
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1uh85sk">
@@ -46,7 +46,7 @@
           <text></text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1iep8ai">
-          <text>true</text>
+          <text>True</text>
         </outputEntry>
       </rule>
     </decisionTable>
