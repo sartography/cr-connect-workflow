@@ -81,6 +81,10 @@ class TestLookupService(BaseTest):
         results = LookupService.lookup(workflow, "AllTheNames", "", limit=10)
         self.assertEqual(10, len(results), "Blank queries return everything, to the limit")
 
+        results = LookupService.lookup(workflow, "AllTheNames", "other", limit=10)
+        self.assertEqual("Other", results[0].label, "Can't find the word 'other', even through it is there.")
+
+
         results = LookupService.lookup(workflow, "AllTheNames", "medicines", limit=10)
         self.assertEqual(1, len(results), "words in the middle of label are detected.")
         self.assertEqual("The Medicines Company", results[0].label)
@@ -118,7 +122,7 @@ class TestLookupService(BaseTest):
         self.assertEqual("Reaction Design", results[0].label, "Exact matches come first.")
 
         results = LookupService.lookup(workflow, "AllTheNames", "1 Something", limit=10)
-        self.assertEqual("1 Something", results[0].label, "Exact matches are prefered")
+        self.assertEqual("1 Something", results[0].label, "Exact matches are preferred")
 
         results = LookupService.lookup(workflow, "AllTheNames", "1 (!-Something", limit=10)
         self.assertEqual("1 Something", results[0].label, "special characters don't flake out")

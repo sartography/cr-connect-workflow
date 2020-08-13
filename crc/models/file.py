@@ -166,10 +166,12 @@ class LookupDataModel(db.Model):
     # query with:
     # search_results = LookupDataModel.query.filter(LookupDataModel.label.match("INTERNAL")).all()
 
+    __ts_vector__ = func.to_tsvector('simple', label)
+
     __table_args__ = (
         Index(
             'ix_lookupdata_tsv',
-            func.to_tsvector('simple', label),  # Use simple, not english to keep stop words in place.
+            __ts_vector__,  # Use simple, not english to keep stop words in place.
             postgresql_using='gin'
             ),
         )
