@@ -160,7 +160,7 @@ class TestStudyApi(BaseTest):
         study_event = session.query(StudyEvent).first()
         self.assertIsNotNone(study_event)
         self.assertEqual(study_event.status, StudyStatus.in_progress)
-        self.assertEqual(study_event.status, StudyEventType.user)
+        self.assertEqual(study_event.event_type, StudyEventType.user)
         self.assertEqual(study_event.comment, update_comment)
         self.assertEqual(study_event.user_uid, self.test_uid)
 
@@ -198,7 +198,6 @@ class TestStudyApi(BaseTest):
         self.assert_success(api_response)
         json_data = json.loads(api_response.get_data(as_text=True))
 
-        num_incomplete = 0
         num_abandoned = 0
         num_in_progress = 0
         num_open = 0
@@ -217,9 +216,18 @@ class TestStudyApi(BaseTest):
         self.assertEqual(num_abandoned, 1)
         self.assertEqual(num_open, 1)
         self.assertEqual(num_in_progress, 2)
-        self.assertEqual(num_incomplete, 0)
         self.assertEqual(len(json_data), num_db_studies_after)
-        self.assertEqual(num_open + num_in_progress + num_incomplete + num_abandoned, num_db_studies_after)
+        self.assertEqual(num_open + num_in_progress + num_abandoned, num_db_studies_after)
+
+        # Automatic events check
+        in_progress_events = session.query(StudyEvent).filter_by(status=StudyStatus.in_progress)
+        self.assertEqual(in_progress_events.count(), 3)  # 3 studies were started
+
+        abandoned_events = session.query(StudyEvent).filter_by(status=StudyStatus.abandoned)
+        self.assertEqual(abandoned_events.count(), 1)  # 1 study has been abandoned
+
+        open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
+        self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs

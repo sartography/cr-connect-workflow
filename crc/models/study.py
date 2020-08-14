@@ -61,11 +61,36 @@ class StudyModel(db.Model):
 
         self.irb_status = IrbStatus.incomplete_in_protocol_builder
         self.status = StudyStatus.in_progress
+        self.update_event(
+            status=StudyStatus.in_progress,
+            event_type=StudyEventType.automatic,
+            user_uid=self.user_uid
+        )
+
         if pbs.HSRNUMBER:
             self.irb_status = IrbStatus.hsr_assigned
             self.status = StudyStatus.open_for_enrollment
+            self.update_event(
+                status=StudyStatus.open_for_enrollment,
+                event_type=StudyEventType.automatic,
+                user_uid=self.user_uid
+            )
         if self.on_hold:
             self.status = StudyStatus.hold
+            self.update_event(
+                status=StudyStatus.hold,
+                event_type=StudyEventType.automatic,
+                user_uid=self.user_uid
+            )
+
+    def update_event(self, status, event_type, user_uid, comment=''):
+        study_event = StudyEvent(study=self,
+                                 status=status,
+                                 event_type=event_type,
+                                 user_uid=user_uid,
+                                 comment=comment)
+        db.session.add(study_event)
+        db.session.commit()
 
 
 class StudyEvent(db.Model):
@@ -188,16 +213,12 @@ class Study(object):
         if status == StudyStatus.open_for_enrollment:
             study_model.enrollment_date = self.enrollment_date
 
-        study_event = StudyEvent(
-            study=study_model,
+        study_model.update_event(
             status=status,
             comment='' if not hasattr(self, 'comment') else self.comment,
             event_type=StudyEventType.user,
-            user_uid=UserService.current_user().uid if UserService.has_user() else None,
+            user_uid=UserService.current_user().uid if UserService.has_user() else None
         )
-        db.session.add(study_event)
-        db.session.commit()
-
 
     def model_args(self):
         """Arguments that can be passed into the Study Model to update it."""

@@ -158,7 +158,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         self.assertEqual(3, len(next_user_tasks))
         # There should be six tasks in the navigation: start event, the script task, end event, and three tasks
         # for the three executions of hte multi-instance.
-        self.assertEquals(6, len(processor.bpmn_workflow.get_nav_list()))
+        self.self.assertEqual(6, len(processor.bpmn_workflow.get_nav_list()))
 
         # We can complete the tasks out of order.
         task = next_user_tasks[2]
@@ -171,12 +171,12 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
 
         # Assure navigation picks up the label of the current element variable.
         nav = WorkflowService.processor_to_workflow_api(processor, task).navigation
-        self.assertEquals("Primary Investigator", nav[2].title)
+        self.self.assertEqual("Primary Investigator", nav[2].title)
 
         task.update_data({"investigator": {"email": "dhf8r@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
-        self.assertEquals(6, len(processor.bpmn_workflow.get_nav_list()))
+        self.self.assertEqual(6, len(processor.bpmn_workflow.get_nav_list()))
 
         task = next_user_tasks[0]
         api_task = WorkflowService.spiff_task_to_api_task(task)
@@ -184,7 +184,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         task.update_data({"investigator":{"email":"asd3v@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
-        self.assertEquals(6, len(processor.bpmn_workflow.get_nav_list()))
+        self.self.assertEqual(6, len(processor.bpmn_workflow.get_nav_list()))
 
         task = next_user_tasks[1]
         api_task = WorkflowService.spiff_task_to_api_task(task)
@@ -192,7 +192,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         task.update_data({"investigator":{"email":"asdf32@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
-        self.assertEquals(6, len(processor.bpmn_workflow.get_nav_list()))
+        self.self.assertEqual(6, len(processor.bpmn_workflow.get_nav_list()))
 
         # Completing the tasks out of order, still provides the correct information.
         expected = self.mock_investigator_response
@@ -203,4 +203,4 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
             task.data['StudyInfo']['investigators'])
 
         self.assertEqual(WorkflowStatus.complete, processor.get_status())
-        self.assertEquals(6, len(processor.bpmn_workflow.get_nav_list()))
+        self.assertEqual(6, len(processor.bpmn_workflow.get_nav_list()))

@@ -24,13 +24,13 @@ def add_study(body):
                              last_updated=datetime.now(),
                              status=StudyStatus.in_progress)
 
-    study_event = StudyEvent(study=study_model,
-                             status=StudyStatus.in_progress,
-                             event_type=StudyEventType.automatic,
-                             user_uid=g.user.uid)
+    study_model.update_event(
+        status=StudyStatus.in_progress,
+        event_type=StudyEventType.automatic,
+        user_uid=g.user.uid
+    )
 
     session.add(study_model)
-    session.add(study_event)
     errors = StudyService._add_all_workflow_specs_to_study(study_model)
     session.commit()
     study = StudyService().get_study(study_model.id)

@@ -12,7 +12,7 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileModelSchema, File
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEvent
+from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
@@ -78,7 +78,6 @@ class StudyService(object):
     @staticmethod
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
-        # session.query(StudyEvent).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
             StudyService.delete_workflow(workflow)
         study = session.query(StudyModel).filter_by(id=study_id).first()
@@ -270,6 +269,11 @@ class StudyService(object):
                 pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
                 if not pb_study:
                     study.status = StudyStatus.abandoned
+                    study.update_event(
+                        status=StudyStatus.abandoned,
+                        event_type=StudyEventType.automatic,
+                        user_uid=study.user_uid
+                    )
 
             db.session.commit()
 
