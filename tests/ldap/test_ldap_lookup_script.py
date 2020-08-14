@@ -1,9 +1,12 @@
+from flask import g
+
 from tests.base_test import BaseTest
 
+from crc import db
+from crc.models.user import UserModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.scripts.ldap import Ldap
 from crc.api.common import ApiError
-from crc import db, mail
 
 
 class TestLdapLookupScript(BaseTest):
@@ -43,6 +46,19 @@ class TestLdapLookupScript(BaseTest):
         script = Ldap()
         with(self.assertRaises(ApiError)):
             user_details = script.do_task(task, workflow.study_id, workflow.id, "PIComputingID")
+
+    def test_get_current_user_details(self):
+        self.load_example_data()
+        self.create_reference_document()
+        workflow = self.create_workflow('empty_workflow')
+        processor = WorkflowProcessor(workflow)
+        task = processor.next_task()
+
+        script = Ldap()
+        g.user = db.session.query(UserModel).filter(UserModel.uid=='dhf8r').first()
+        user_details = script.do_task(task, workflow.study_id, workflow.id)
+        self.assertEqual(user_details['display_name'], 'Dan Funk')
+
 
 
     def test_bpmn_task_receives_user_details(self):
