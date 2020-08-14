@@ -19,7 +19,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
 
     """
             1. get a list of all documents related to the study.
-            2. For this study, is this document required accroding to the protocol builder? 
+            2. For this study, is this document required accroding to the protocol builder?
             3. For ALL uploaded documents, what the total number of files that were uploaded? per instance of this document naming
             convention that we are implementing for the IRB.
     """

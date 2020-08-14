@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_08c3b1a" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_08c3b1a" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <decision id="ids_waiver" name="IDS Waiver">
     <extensionElements>
       <biodi:bounds x="250" y="140" width="180" height="80" />
@@ -13,7 +13,7 @@
       <output id="output_1" label="Menu State" name="ids_waiver" typeRef="string" />
       <rule id="DecisionRule_0dxax4m">
         <inputEntry id="UnaryTests_0fq42gg">
-          <text>true</text>
+          <text>True</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0ixcto2">
           <text>"required"</text>
@@ -21,7 +21,7 @@
       </rule>
       <rule id="DecisionRule_0s4qnxi">
         <inputEntry id="UnaryTests_09k30nw">
-          <text>false</text>
+          <text>False</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0wtnp5f">
           <text>"hidden"</text>
