@@ -55,14 +55,12 @@
       <bpmn:outgoing>Flow_17uqguj</bpmn:outgoing>
       <bpmn:script>pi = {x:investigators[x] for x in investigators.keys() if x[:2] == 'PI'}</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:exclusiveGateway id="Gateway_CheckForPI" name="PI Cnt">
+    <bpmn:exclusiveGateway id="Gateway_CheckForPI" name="PI Cnt" default="Flow_147b9li">
       <bpmn:incoming>Flow_17uqguj</bpmn:incoming>
       <bpmn:outgoing>Flow_147b9li</bpmn:outgoing>
       <bpmn:outgoing>Flow_00prawo</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_147b9li" name="1 PI from PB" sourceRef="Gateway_CheckForPI" targetRef="Activity_EditPI">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">len(pi.keys()) == 1</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_147b9li" name="1 PI from PB" sourceRef="Gateway_CheckForPI" targetRef="Activity_EditPI" />
     <bpmn:sequenceFlow id="Flow_00prawo" name="No PI from PB" sourceRef="Gateway_CheckForPI" targetRef="Activity_1qwzwyi">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">len(pi.keys()) == 0</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
@@ -78,14 +76,12 @@
       <bpmn:outgoing>Flow_0elbjpd</bpmn:outgoing>
       <bpmn:script>scs = {x:investigators[x] for x in investigators.keys() if x[:3] == 'SC_'}</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:exclusiveGateway id="Gateway_0jykh6r">
+    <bpmn:exclusiveGateway id="Gateway_0jykh6r" default="Flow_0xifvai">
       <bpmn:incoming>Flow_0elbjpd</bpmn:incoming>
       <bpmn:outgoing>Flow_0xifvai</bpmn:outgoing>
       <bpmn:outgoing>Flow_1oqem42</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_0xifvai" name="1 or more Study Coordinators" sourceRef="Gateway_0jykh6r" targetRef="Activity_1bcnjyq">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">len(scs.keys()) &gt;= 1</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_0xifvai" name="1 or more Study Coordinators" sourceRef="Gateway_0jykh6r" targetRef="Activity_1bcnjyq" />
     <bpmn:sequenceFlow id="Flow_1n0k4pd" sourceRef="Activity_1bcnjyq" targetRef="EndEvent_1qor16n" />
     <bpmn:userTask id="Activity_1bcnjyq" name="Update SC Info" camunda:formKey="SC_AccessEmails">
       <bpmn:documentation>### Please provide supplemental information for:
