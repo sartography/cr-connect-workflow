@@ -181,20 +181,22 @@ class LookupService(object):
             if len(query) > 0:
                 if ' ' in query:
                     terms = query.split(' ')
-                    new_terms = ["'%s'" % query]
+                    new_terms = []
                     for t in terms:
                         new_terms.append("%s:*" % t)
-                    new_query = ' | '.join(new_terms)
+                    new_query = ' & '.join(new_terms)
+                    new_query = "'%s' | %s" % (query, new_query)
                 else:
                     new_query = "%s:*" % query
 
-                # Run the full text query
-                db_query = db_query.filter(LookupDataModel.label.match(new_query))
-                # But hackishly order by like, which does a good job of
-                # pulling more relevant matches to the top.
+                db_query = db_query.filter(
+                    LookupDataModel.__ts_vector__.match(new_query,  postgresql_regconfig='simple'))
+
+                # Hackishly order by like, which does a good job of pulling more relevant matches to the top.
                 db_query = db_query.order_by(desc(LookupDataModel.label.like("%" + query + "%")))
 
         logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+        logging.info(db_query)
         result = db_query.limit(limit).all()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
         return result
