@@ -13,6 +13,7 @@ from crc.models.file import FileModel, SimpleFileSchema, FileSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
     WorkflowModel
+from crc.services.user_service import UserService
 
 
 class StudyStatus(enum.Enum):
@@ -49,6 +50,8 @@ class StudyModel(db.Model):
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
     on_hold = db.Column(db.Boolean, default=False)
     enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    # events = db.relationship("TaskEventModel")
+    events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
         self.hsr_number = pbs.HSRNUMBER
@@ -69,11 +72,12 @@ class StudyEvent(db.Model):
     __tablename__ = 'study_event'
     id = db.Column(db.Integer, primary_key=True)
     study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
-    study = db.relationship(StudyModel)
+    study = db.relationship(StudyModel, back_populates='events_history')
     create_date = db.Column(db.DateTime(timezone=True), default=func.now())
     status = db.Column(db.Enum(StudyStatus))
     comment = db.Column(db.String, default='')
     event_type = db.Column(db.Enum(StudyEventType))
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
 class WorkflowMetadata(object):
@@ -146,7 +150,7 @@ class Study(object):
     def __init__(self, title, last_updated, primary_investigator_id, user_uid,
                  id=None, status=None, irb_status=None, comment="",
                  sponsor="", hsr_number="", ind_number="", categories=[],
-                 files=[], approvals=[], enrollment_date=None, **argsv):
+                 files=[], approvals=[], enrollment_date=None, events_history=[], **argsv):
         self.id = id
         self.user_uid = user_uid
         self.title = title
@@ -163,11 +167,13 @@ class Study(object):
         self.warnings = []
         self.files = files
         self.enrollment_date = enrollment_date
+        self.events_history = events_history
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
         id = study_model.id # Just read some value, in case the dict expired, otherwise dict may be empty.
         args = dict((k, v) for k, v in study_model.__dict__.items() if not k.startswith('_'))
+        args['events_history'] = study_model.events_history  # For some reason this attribute is not picked up
         instance = cls(**args)
         return instance
 
@@ -186,7 +192,8 @@ class Study(object):
             study=study_model,
             status=status,
             comment='' if not hasattr(self, 'comment') else self.comment,
-            event_type=StudyEventType.user
+            event_type=StudyEventType.user,
+            user_uid=UserService.current_user().uid if UserService.has_user() else None,
         )
         db.session.add(study_event)
         db.session.commit()
@@ -220,6 +227,15 @@ class StudyForUpdateSchema(ma.Schema):
         return Study(**data)
 
 
+class StudyEventSchema(ma.Schema):
+
+    id = fields.Integer(required=False)
+    create_date = fields.DateTime()
+    status = EnumField(StudyStatus, by_value=True)
+    comment = fields.String(allow_none=True)
+    event_type = EnumField(StudyEvent, by_value=True)
+
+
 class StudySchema(ma.Schema):
 
     id = fields.Integer(required=False, allow_none=True)
@@ -233,11 +249,13 @@ class StudySchema(ma.Schema):
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
     approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
     enrollment_date = fields.Date(allow_none=True)
+    events_history = fields.List(fields.Nested('StudyEventSchema'), dump_only=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
-                      "sponsor", "ind_number", "approvals", "files", "enrollment_date"]
+                      "sponsor", "ind_number", "approvals", "files", "enrollment_date",
+                      "events_history"]
         unknown = INCLUDE
 
     @marshmallow.post_load

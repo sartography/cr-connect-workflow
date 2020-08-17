@@ -12,7 +12,7 @@ from crc.models.protocol_builder import ProtocolBuilderStatus, \
 from crc.models.approval import ApprovalStatus
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
-from crc.models.study import StudyModel, StudySchema, StudyStatus
+from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -135,10 +135,12 @@ class TestStudyApi(BaseTest):
 
     def test_update_study(self):
         self.load_example_data()
+        update_comment = 'Updating the study'
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
         study_schema = StudySchema().dump(study)
         study_schema['status'] = StudyStatus.in_progress.value
+        study_schema['comment'] = update_comment
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
                           headers=self.logged_in_headers(),
@@ -147,6 +149,13 @@ class TestStudyApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(study.title, json_data['title'])
         self.assertEqual(study.status.value, json_data['status'])
+
+        # Making sure events history is being properly recorded
+        study_event = session.query(StudyEvent).first()
+        self.assertIsNotNone(study_event)
+        self.assertEqual(study_event.status, StudyStatus.in_progress)
+        self.assertEqual(study_event.comment, update_comment)
+        self.assertEqual(study_event.user_uid, self.test_uid)
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -269,8 +278,15 @@ class TestStudyApi(BaseTest):
     def test_delete_study_with_workflow_and_status(self):
         self.load_example_data()
         workflow = session.query(WorkflowModel).first()
+        stats1 = StudyEvent(
+            study_id=workflow.study_id,
+            status=StudyStatus.in_progress,
+            comment='Some study status change event',
+            event_type=StudyEventType.user,
+            user_uid=self.users[0]['uid'],
+        )
         stats2 = TaskEventModel(study_id=workflow.study_id, workflow_id=workflow.id, user_uid=self.users[0]['uid'])
-        session.add(stats2)
+        session.add_all([stats1, stats2])
         session.commit()
         rv = self.app.delete('/v1.0/study/%i' % workflow.study_id, headers=self.logged_in_headers())
         self.assert_success(rv)

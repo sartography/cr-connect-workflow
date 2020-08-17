@@ -114,11 +114,11 @@ class TestLookupService(BaseTest):
         self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
         results = LookupService.lookup(workflow, "AllTheNames", "reaction design", limit=10)
-        self.assertEqual(5, len(results), "all results come back for two terms.")
+        self.assertEqual(3, len(results), "all results come back for two terms.")
         self.assertEqual("Reaction Design", results[0].label, "Exact matches come first.")
 
         results = LookupService.lookup(workflow, "AllTheNames", "1 Something", limit=10)
-        self.assertEqual("1 Something", results[0].label, "Exact matches are prefered")
+        self.assertEqual("1 Something", results[0].label, "Exact matches are preferred")
 
         results = LookupService.lookup(workflow, "AllTheNames", "1 (!-Something", limit=10)
         self.assertEqual("1 Something", results[0].label, "special characters don't flake out")
@@ -126,16 +126,12 @@ class TestLookupService(BaseTest):
         results = LookupService.lookup(workflow, "AllTheNames", "1  Something", limit=10)
         self.assertEqual("1 Something", results[0].label, "double spaces should not be an issue.")
 
+        results = LookupService.lookup(workflow, "AllTheNames", "in", limit=10)
+        self.assertEqual(10, len(results), "stop words are not removed.")
+        self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
+
+        results = LookupService.lookup(workflow, "AllTheNames", "other", limit=10)
+        self.assertEqual("Other", results[0].label, "Can't find the word 'other', which is an english stop word")
 
 
-# 1018	10000 Something	Industry
-# 1019	1000 Something	Industry
-# 1020	1 Something	Industry
-# 1021	10 Something	Industry
-# 1022	10000 Something	Industry
-
-        # Fixme:  Stop words are taken into account on the query side, and haven't found a fix yet.
-        #results = WorkflowService.run_lookup_query(lookup_table.id, "in", limit=10)
-        #self.assertEqual(7, len(results), "stop words are not removed.")
-        #self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 

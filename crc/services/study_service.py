@@ -13,7 +13,7 @@ from crc.models.approval import ApprovalFile, ApprovalModel
 from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, LookupFileModel, LookupDataModel
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata
+from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEvent
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
@@ -54,6 +54,7 @@ class StudyService(object):
         loading up and executing all the workflows in a study to calculate information."""
         if not study_model:
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
+
         study = Study.from_model(study_model)
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
@@ -78,9 +79,11 @@ class StudyService(object):
     @staticmethod
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
+        # session.query(StudyEvent).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
             StudyService.delete_workflow(workflow.id)
-        session.query(StudyModel).filter_by(id=study_id).delete()
+        study = session.query(StudyModel).filter_by(id=study_id).first()
+        session.delete(study)
         session.commit()
 
     @staticmethod
