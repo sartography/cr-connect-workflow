@@ -46,8 +46,10 @@ PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL +
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
 
-# Github token
+# Github settings
 GITHUB_TOKEN = environ.get('GITHUB_TOKEN', None)
+GITHUB_REPO = environ.get('GITHUB_REPO', None)
+TARGET_BRANCH = environ.get('TARGET_BRANCH', None)
 
 # Email configuration
 DEFAULT_SENDER = 'askresearch@virginia.edu'
