@@ -388,5 +388,5 @@ class TestWorkflowProcessor(BaseTest):
         self._populate_form_with_random_data(task)
         processor.complete_task(task)
         supervisor_task = processor.next_user_tasks()[0]
-        self.assertEquals("supervisor", supervisor_task.task_spec.lane)
+        self.assertEqual("supervisor", supervisor_task.task_spec.lane)
 

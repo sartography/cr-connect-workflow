@@ -13,7 +13,8 @@ from crc.models.approval import ApprovalFile, ApprovalModel
 from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, LookupFileModel, LookupDataModel
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEvent
+from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
+    IrbStatus
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
@@ -79,7 +80,6 @@ class StudyService(object):
     @staticmethod
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
-        # session.query(StudyEvent).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
             StudyService.delete_workflow(workflow.id)
         study = session.query(StudyModel).filter_by(id=study_id).first()
@@ -262,24 +262,53 @@ class StudyService(object):
             db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
 
             # Update all studies from the protocol builder, create new studies as needed.
-            # Futher assures that every active study (that does exist in the protocol builder)
+            # Further assures that every active study (that does exist in the protocol builder)
             # has a reference to every available workflow (though some may not have started yet)
             for pb_study in pb_studies:
+                new_status = None
                 db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
                 if not db_study:
                     db_study = StudyModel(id=pb_study.STUDYID)
+                    db_study.status = None  # Force a new sa
+                    new_status = StudyStatus.in_progress
                     session.add(db_study)
                     db_studies.append(db_study)
+
+                if pb_study.HSRNUMBER:
+                    db_study.irb_status = IrbStatus.hsr_assigned
+                    if db_study.status != StudyStatus.open_for_enrollment:
+                        new_status = StudyStatus.open_for_enrollment
+
                 db_study.update_from_protocol_builder(pb_study)
                 StudyService._add_all_workflow_specs_to_study(db_study)
+
+                # If there is a new automatic status change and there isn't a manual change in place, record it.
+                if new_status and db_study.status != StudyStatus.hold:
+                    db_study.status = new_status
+                    StudyService.add_study_update_event(db_study,
+                                                        status=new_status,
+                                                        event_type=StudyEventType.automatic)
 
             # Mark studies as inactive that are no longer in Protocol Builder
             for study in db_studies:
                 pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
-                if not pb_study:
+                if not pb_study and study.status != StudyStatus.abandoned:
                     study.status = StudyStatus.abandoned
+                    StudyService.add_study_update_event(study,
+                                                        status=StudyStatus.abandoned,
+                                                        event_type=StudyEventType.automatic)
 
             db.session.commit()
+
+    @staticmethod
+    def add_study_update_event(study, status, event_type, user_uid=None, comment=''):
+        study_event = StudyEvent(study=study,
+                                 status=status,
+                                 event_type=event_type,
+                                 user_uid=user_uid,
+                                 comment=comment)
+        db.session.add(study_event)
+        db.session.commit()
 
     @staticmethod
     def __update_status_of_workflow_meta(workflow_metas, status):
