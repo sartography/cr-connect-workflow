@@ -38,6 +38,27 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         workflow_model = StudyService._create_workflow_model(study_model, spec_model)
         return WorkflowProcessor(workflow_model)
 
+
+    @patch('crc.services.study_service.StudyService.get_investigators')
+    def test_load_irb_from_db(self, mock_study_service):
+        # This depends on getting a list of investigators back from the protocol builder.
+        mock_study_service.return_value = self.mock_investigator_response
+
+        self.load_example_data()
+        workflow_spec_model = self.create_workflow("irb_api_personnel")
+        study = session.query(StudyModel).first()
+        processor = WorkflowProcessor(workflow_spec_model)
+        processor.do_engine_steps()
+        task_list = processor.get_ready_user_tasks()
+        processor.complete_task(task_list[0])
+        processor.do_engine_steps()
+        nav_list = processor.bpmn_workflow.get_nav_list()
+        processor.save()
+        # reload after save
+        processor = WorkflowProcessor(workflow_spec_model)
+        nav_list2 = processor.bpmn_workflow.get_nav_list()
+        self.assertEqual(nav_list,nav_list2)
+
     @patch('crc.services.study_service.StudyService.get_investigators')
     def test_create_and_complete_workflow(self, mock_study_service):
         # This depends on getting a list of investigators back from the protocol builder.
