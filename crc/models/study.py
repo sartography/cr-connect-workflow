@@ -61,36 +61,6 @@ class StudyModel(db.Model):
 
         self.irb_status = IrbStatus.incomplete_in_protocol_builder
         self.status = StudyStatus.in_progress
-        self.update_event(
-            status=StudyStatus.in_progress,
-            event_type=StudyEventType.automatic,
-            user_uid=self.user_uid
-        )
-
-        if pbs.HSRNUMBER:
-            self.irb_status = IrbStatus.hsr_assigned
-            self.status = StudyStatus.open_for_enrollment
-            self.update_event(
-                status=StudyStatus.open_for_enrollment,
-                event_type=StudyEventType.automatic,
-                user_uid=self.user_uid
-            )
-        if self.on_hold:
-            self.status = StudyStatus.hold
-            self.update_event(
-                status=StudyStatus.hold,
-                event_type=StudyEventType.automatic,
-                user_uid=self.user_uid
-            )
-
-    def update_event(self, status, event_type, user_uid, comment=''):
-        study_event = StudyEvent(study=self,
-                                 status=status,
-                                 event_type=event_type,
-                                 user_uid=user_uid,
-                                 comment=comment)
-        db.session.add(study_event)
-        db.session.commit()
 
 
 class StudyEvent(db.Model):
@@ -201,24 +171,6 @@ class Study(object):
         args['events_history'] = study_model.events_history  # For some reason this attribute is not picked up
         instance = cls(**args)
         return instance
-
-    def update_model(self, study_model: StudyModel):
-        """As the case for update was very reduced, it's mostly and specifically
-        updating only the study status and generating a history record
-        """
-        status = StudyStatus(self.status)
-        study_model.last_updated = datetime.datetime.now()
-        study_model.status = status
-
-        if status == StudyStatus.open_for_enrollment:
-            study_model.enrollment_date = self.enrollment_date
-
-        study_model.update_event(
-            status=status,
-            comment='' if not hasattr(self, 'comment') else self.comment,
-            event_type=StudyEventType.user,
-            user_uid=UserService.current_user().uid if UserService.has_user() else None
-        )
 
     def model_args(self):
         """Arguments that can be passed into the Study Model to update it."""
