@@ -55,7 +55,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         except NameError as e:
             raise ApiError('name_error',
                             f'something you are referencing does not exist:'
-                            f' {script}, {e.name}')
+                            f' {script}, {e}')
 
        # else:
        #     self.run_predefined_script(task, script[2:], data)  # strip off the first two characters.
