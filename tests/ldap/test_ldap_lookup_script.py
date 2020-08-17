@@ -3,6 +3,7 @@ from flask import g
 from tests.base_test import BaseTest
 
 from crc import db
+from crc.services.workflow_service import WorkflowService
 from crc.models.user import UserModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.scripts.ldap import Ldap
@@ -62,7 +63,7 @@ class TestLdapLookupScript(BaseTest):
 
 
     def test_bpmn_task_receives_user_details(self):
-        workflow = self.create_workflow('ldap_replace')
+        workflow = self.create_workflow('ldap_script')
 
         task_data = {
           'Supervisor': 'dhf8r',
@@ -84,3 +85,8 @@ class TestLdapLookupScript(BaseTest):
         self.assertEqual(task.data['Supervisor']['sponsor_type'], 'Staff')
         self.assertEqual(task.data['Supervisor']['uid'], 'dhf8r')
         self.assertEqual(task.data['Supervisor']['proper_name'], 'Dan Funk - (dhf8r)')
+
+    def test_ldap_validation(self):
+        workflow = self.create_workflow('ldap_script')
+        # This should not raise an error.
+        WorkflowService.test_spec('ldap_script', required_only=False)
