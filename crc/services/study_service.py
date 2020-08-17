@@ -9,14 +9,15 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileModelSchema, File
+from crc.models.approval import ApprovalFile, ApprovalModel
+from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, LookupFileModel, LookupDataModel
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
     IrbStatus
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
-    WorkflowStatus
+    WorkflowStatus, WorkflowSpecDependencyFile
 from crc.services.approval_service import ApprovalService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
@@ -80,19 +81,26 @@ class StudyService(object):
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
-            StudyService.delete_workflow(workflow)
+            StudyService.delete_workflow(workflow.id)
         study = session.query(StudyModel).filter_by(id=study_id).first()
         session.delete(study)
         session.commit()
 
     @staticmethod
-    def delete_workflow(workflow):
-        for file in session.query(FileModel).filter_by(workflow_id=workflow.id).all():
-            FileService.delete_file(file.id)
-        for dep in workflow.dependencies:
-            session.delete(dep)
+    def delete_workflow(workflow_id):
+        workflow = session.query(WorkflowModel).get(workflow_id)
+        if not workflow:
+            return
+
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
-        session.query(WorkflowModel).filter_by(id=workflow.id).delete()
+        session.query(WorkflowSpecDependencyFile).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
+        session.query(FileModel).filter_by(workflow_id=workflow_id).update({'archived': True, 'workflow_id': None})
+
+        # Todo:  Remove approvals completely.
+        session.query(ApprovalFile).filter(ApprovalModel.workflow_id == workflow_id).delete(synchronize_session='fetch')
+        session.query(ApprovalModel).filter_by(workflow_id=workflow.id).delete()
+
+        session.delete(workflow)
         session.commit()
 
     @staticmethod
