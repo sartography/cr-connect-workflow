@@ -135,7 +135,7 @@ class TestStudyApi(BaseTest):
         study_event = session.query(StudyEvent).first()
         self.assertIsNotNone(study_event)
         self.assertEqual(study_event.status, StudyStatus.in_progress)
-        self.assertEqual(study_event.event_type, StudyEventType.automatic)
+        self.assertEqual(study_event.event_type, StudyEventType.user)
         self.assertFalse(study_event.comment)
         self.assertEqual(study_event.user_uid, self.test_uid)
 
@@ -145,7 +145,7 @@ class TestStudyApi(BaseTest):
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
         study_schema = StudySchema().dump(study)
-        study_schema['status'] = StudyStatus.in_progress.value
+        study_schema['status'] = StudyStatus.hold.value
         study_schema['comment'] = update_comment
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
@@ -159,7 +159,7 @@ class TestStudyApi(BaseTest):
         # Making sure events history is being properly recorded
         study_event = session.query(StudyEvent).first()
         self.assertIsNotNone(study_event)
-        self.assertEqual(study_event.status, StudyStatus.in_progress)
+        self.assertEqual(study_event.status, StudyStatus.hold)
         self.assertEqual(study_event.event_type, StudyEventType.user)
         self.assertEqual(study_event.comment, update_comment)
         self.assertEqual(study_event.user_uid, self.test_uid)
@@ -221,7 +221,7 @@ class TestStudyApi(BaseTest):
 
         # Automatic events check
         in_progress_events = session.query(StudyEvent).filter_by(status=StudyStatus.in_progress)
-        self.assertEqual(in_progress_events.count(), 3)  # 3 studies were started
+        self.assertEqual(in_progress_events.count(), 1)  # 1 study is in progress
 
         abandoned_events = session.query(StudyEvent).filter_by(status=StudyStatus.abandoned)
         self.assertEqual(abandoned_events.count(), 1)  # 1 study has been abandoned
