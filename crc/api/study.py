@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.study import Study, StudyModel, StudySchema, StudyForUpdateSchema, StudyStatus
+from crc.models.study import Study, StudyEvent, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, StudyStatus
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 
@@ -23,8 +23,12 @@ def add_study(body):
                              primary_investigator_id=body['primary_investigator_id'],
                              last_updated=datetime.now(),
                              status=StudyStatus.in_progress)
-
     session.add(study_model)
+    StudyService.add_study_update_event(study_model,
+                                        status=StudyStatus.in_progress,
+                                        event_type=StudyEventType.user,
+                                        user_uid=g.user.uid)
+
     errors = StudyService._add_all_workflow_specs_to_study(study_model)
     session.commit()
     study = StudyService().get_study(study_model.id)
@@ -34,6 +38,7 @@ def add_study(body):
 
 
 def update_study(study_id, body):
+    """Pretty limited, but allows manual modifications to the study status """
     if study_id is None:
         raise ApiError('unknown_study', 'Please provide a valid Study ID.')
 
@@ -42,7 +47,20 @@ def update_study(study_id, body):
         raise ApiError('unknown_study', 'The study "' + study_id + '" is not recognized.')
 
     study: Study = StudyForUpdateSchema().load(body)
-    study.update_model(study_model)
+
+    status = StudyStatus(study.status)
+    study_model.last_updated = datetime.now()
+
+    if study_model.status != status:
+        study_model.status = status
+        StudyService.add_study_update_event(study_model, status, StudyEventType.user,
+                                            user_uid=UserService.current_user().uid if UserService.has_user() else None,
+                                            comment='' if not hasattr(study, 'comment') else study.comment,
+                                            )
+
+    if status == StudyStatus.open_for_enrollment:
+        study_model.enrollment_date = study.enrollment_date
+
     session.add(study_model)
     session.commit()
     # Need to reload the full study to return it to the frontend

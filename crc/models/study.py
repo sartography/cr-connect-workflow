@@ -61,11 +61,6 @@ class StudyModel(db.Model):
 
         self.irb_status = IrbStatus.incomplete_in_protocol_builder
         self.status = StudyStatus.in_progress
-        if pbs.HSRNUMBER:
-            self.irb_status = IrbStatus.hsr_assigned
-            self.status = StudyStatus.open_for_enrollment
-        if self.on_hold:
-            self.status = StudyStatus.hold
 
 
 class StudyEvent(db.Model):
@@ -176,28 +171,6 @@ class Study(object):
         args['events_history'] = study_model.events_history  # For some reason this attribute is not picked up
         instance = cls(**args)
         return instance
-
-    def update_model(self, study_model: StudyModel):
-        """As the case for update was very reduced, it's mostly and specifically
-        updating only the study status and generating a history record
-        """
-        status = StudyStatus(self.status)
-        study_model.last_updated = datetime.datetime.now()
-        study_model.status = status
-
-        if status == StudyStatus.open_for_enrollment:
-            study_model.enrollment_date = self.enrollment_date
-
-        study_event = StudyEvent(
-            study=study_model,
-            status=status,
-            comment='' if not hasattr(self, 'comment') else self.comment,
-            event_type=StudyEventType.user,
-            user_uid=UserService.current_user().uid if UserService.has_user() else None,
-        )
-        db.session.add(study_event)
-        db.session.commit()
-
 
     def model_args(self):
         """Arguments that can be passed into the Study Model to update it."""
