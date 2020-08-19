@@ -7,16 +7,17 @@
     <bpmn:endEvent id="Event_0izrcj4">
       <bpmn:incoming>Flow_11e7jgz</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:scriptTask id="Activity_0s5v97n" name="Ldap Replace">
+    <bpmn:scriptTask id="Activity_0s5v97n" name="Ldap Script">
       <bpmn:incoming>Flow_08n2npe</bpmn:incoming>
       <bpmn:outgoing>Flow_1xlrgne</bpmn:outgoing>
       <bpmn:script>Supervisor = ldap(Supervisor)
-Investigator = ldap(Investigator)</bpmn:script>
+Investigator = ldap(Investigator)
+me = ldap()</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_1synsig" sourceRef="StartEvent_1" targetRef="Activity_1l9vih3" />
     <bpmn:sequenceFlow id="Flow_1xlrgne" sourceRef="Activity_0s5v97n" targetRef="Activity_0f78ek5" />
     <bpmn:sequenceFlow id="Flow_08n2npe" sourceRef="Activity_1l9vih3" targetRef="Activity_0s5v97n" />
-    <bpmn:userTask id="Activity_1l9vih3" name="Set UIDs">
+    <bpmn:userTask id="Activity_1l9vih3" name="Set UIDs" camunda:formKey="SetUids">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="Supervisor" label="Approver" type="string" />

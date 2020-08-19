@@ -24,8 +24,19 @@ Examples:
 supervisor_info = ldap(supervisor_uid)   // Sets the supervisor information to ldap details for the given uid.
 """
 
-    def do_task_validate_only(self, task, *args, **kwargs):
-        return self.set_users_info_in_task(task, args)
+    def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
+        return {
+            "display_name": "John Smith",
+            "given_name": "Johnismidges Ego Smithogglesnots",
+            "email_address": "jes@ogglesnots.org",
+            "telephone_number": "540-457-0023",
+            "title": "Prodigious Experilisious Emeritus Eqs.",
+            "department": "Department of Cheese and Fungus Combustibles",
+            "affiliation": "Not really",
+            "sponsor_type": "Department of Fungus",
+            "uid": "jes42",
+            "proper_name": "Smith"
+        }
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         return self.set_users_info_in_task(task, args)

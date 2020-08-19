@@ -10,6 +10,7 @@ from crc import session, app
 from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.approval import ApprovalStatus
+from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
@@ -132,13 +133,20 @@ class TestStudyApi(BaseTest):
         error_count = len(study["errors"])
         self.assertEqual(workflow_spec_count, workflow_count + error_count)
 
+        study_event = session.query(StudyEvent).first()
+        self.assertIsNotNone(study_event)
+        self.assertEqual(study_event.status, StudyStatus.in_progress)
+        self.assertEqual(study_event.event_type, StudyEventType.user)
+        self.assertFalse(study_event.comment)
+        self.assertEqual(study_event.user_uid, self.test_uid)
+
     def test_update_study(self):
         self.load_example_data()
         update_comment = 'Updating the study'
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
         study_schema = StudySchema().dump(study)
-        study_schema['status'] = StudyStatus.in_progress.value
+        study_schema['status'] = StudyStatus.hold.value
         study_schema['comment'] = update_comment
         rv = self.app.put('/v1.0/study/%i' % study.id,
                           content_type="application/json",
@@ -152,7 +160,8 @@ class TestStudyApi(BaseTest):
         # Making sure events history is being properly recorded
         study_event = session.query(StudyEvent).first()
         self.assertIsNotNone(study_event)
-        self.assertEqual(study_event.status, StudyStatus.in_progress)
+        self.assertEqual(study_event.status, StudyStatus.hold)
+        self.assertEqual(study_event.event_type, StudyEventType.user)
         self.assertEqual(study_event.comment, update_comment)
         self.assertEqual(study_event.user_uid, self.test_uid)
 
@@ -190,7 +199,6 @@ class TestStudyApi(BaseTest):
         self.assert_success(api_response)
         json_data = json.loads(api_response.get_data(as_text=True))
 
-        num_incomplete = 0
         num_abandoned = 0
         num_in_progress = 0
         num_open = 0
@@ -209,9 +217,18 @@ class TestStudyApi(BaseTest):
         self.assertEqual(num_abandoned, 1)
         self.assertEqual(num_open, 1)
         self.assertEqual(num_in_progress, 2)
-        self.assertEqual(num_incomplete, 0)
         self.assertEqual(len(json_data), num_db_studies_after)
-        self.assertEqual(num_open + num_in_progress + num_incomplete + num_abandoned, num_db_studies_after)
+        self.assertEqual(num_open + num_in_progress + num_abandoned, num_db_studies_after)
+
+        # Automatic events check
+        in_progress_events = session.query(StudyEvent).filter_by(status=StudyStatus.in_progress)
+        self.assertEqual(in_progress_events.count(), 1)  # 1 study is in progress
+
+        abandoned_events = session.query(StudyEvent).filter_by(status=StudyStatus.abandoned)
+        self.assertEqual(abandoned_events.count(), 1)  # 1 study has been abandoned
+
+        open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
+        self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -244,12 +261,35 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study.sponsor, json_data['sponsor'])
         self.assertEqual(study.ind_number, json_data['ind_number'])
 
-
     def test_delete_study(self):
         self.load_example_data()
         study = session.query(StudyModel).first()
         rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
         self.assert_success(rv)
+
+    def test_delete_workflow(self):
+        self.load_example_data()
+        workflow = session.query(WorkflowModel).first()
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="anything.png", content_type="text",
+                                      binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr" )
+
+        workflow_files = session.query(FileModel).filter_by(workflow_id=workflow.id)
+        self.assertEqual(workflow_files.count(), 1)
+        workflow_files_ids = [file.id for file in workflow_files]
+
+        rv = self.app.delete(f'/v1.0/workflow/{workflow.id}', headers=self.logged_in_headers())
+        self.assert_success(rv)
+
+        # No files should have the deleted workflow id anymore
+        workflow_files = session.query(FileModel).filter_by(workflow_id=workflow.id)
+        self.assertEqual(workflow_files.count(), 0)
+
+        # Finally, let's confirm the file was archived
+        workflow_files = session.query(FileModel).filter(FileModel.id.in_(workflow_files_ids))
+        for file in workflow_files:
+            self.assertTrue(file.archived)
+            self.assertIsNone(file.workflow_id)
 
     def test_delete_study_with_workflow_and_status(self):
         self.load_example_data()

@@ -31,6 +31,7 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(0, len(self.validate_workflow("random_fact")))
         self.assertEqual(0, len(self.validate_workflow("study_details")))
         self.assertEqual(0, len(self.validate_workflow("two_forms")))
+        self.assertEqual(0, len(self.validate_workflow("ldap_lookup")))
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
