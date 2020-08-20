@@ -40,9 +40,10 @@ class TestStudyApi(BaseTest):
 
     def test_eval_hide_expression(self):
         """Assures we can use python to process a hide expression fron the front end"""
-        rv = self.app.put('/v1.0/eval?expression=x.y==2',
-                          data='{"x":{"y":2}}', follow_redirects=True,
+        rv = self.app.put('/v1.0/eval',
+                          data='{"expression": "x.y==2", "data": {"x":{"y":2}}}', follow_redirects=True,
                           content_type='application/json',
                           headers=self.logged_in_headers())
         self.assert_success(rv)
-        self.assertEqual("true", rv.get_data(as_text=True).strip())
+        response = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(True, response['result'])
