@@ -4,6 +4,7 @@ import string
 import uuid
 from datetime import datetime
 import random
+from typing import List
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
@@ -25,7 +26,7 @@ from crc.models.api_models import Task, MultiInstanceType, NavigationItem, Navig
 from crc.models.file import LookupDataModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
-from crc.models.user import UserModel
+from crc.models.user import UserModel, UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
@@ -357,6 +358,9 @@ class WorkflowService(object):
         # not be a previously completed MI Task.
         if add_docs_and_forms:
             task.data = spiff_task.data
+            if UserService.has_user():
+                current_user = UserService.current_user(allow_admin_impersonate=True)
+                task.data['current_user'] = UserModelSchema().dump(current_user)
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
                 for i, field in enumerate(task.form.fields):
@@ -480,7 +484,7 @@ class WorkflowService(object):
                 WorkflowService.log_task_action(user_id, processor, task, WorkflowService.TASK_ACTION_ASSIGNMENT)
 
     @staticmethod
-    def get_users_assigned_to_task(processor, spiff_task):
+    def get_users_assigned_to_task(processor, spiff_task) -> List[str]:
         if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
             return [processor.workflow_model.study.user_uid]
             # todo: return a list of all users that can edit the study by default
@@ -489,7 +493,22 @@ class WorkflowService(object):
         lane_users = spiff_task.data[spiff_task.task_spec.lane]
         if not isinstance(lane_users, list):
             lane_users = [lane_users]
-        return lane_users
+
+        lane_uids = []
+        for user in lane_users:
+            if isinstance(user, dict):
+                if 'value' in user and user['value'] is not None:
+                    lane_uids.append(user['value'])
+                else:
+                    raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
+                                                              spiff_task.task_spec.name, task=spiff_task)
+            elif isinstance(user, str):
+                lane_uids.append(user)
+            else:
+                raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user is not a string or dict" %
+                                                              spiff_task.task_spec.name, task=spiff_task)
+
+        return lane_uids
 
     @staticmethod
     def log_task_action(user_uid, processor, spiff_task, action):
