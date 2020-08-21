@@ -72,7 +72,7 @@ def send_email(address):
 
 
 def evaluate_python_expression(body):
-    """Evaluate the given python expression, returning it's result.  This is useful if the
+    """Evaluate the given python expression, returning its result.  This is useful if the
     front end application needs to do real-time processing on task data. If for instance
     there is a hide expression that is based on a previous value in the same form."""
     try:
