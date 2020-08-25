@@ -2,7 +2,7 @@ import hashlib
 import json
 import os
 from datetime import datetime
-from github import Github, UnknownObjectException
+from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
@@ -336,10 +336,20 @@ class FileService(object):
             app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
 
     @staticmethod
-    def update_from_github(file_ids):
+    def get_repo_branches():
         gh_token = app.config['GITHUB_TOKEN']
+        github_repo = app.config['GITHUB_REPO']
         _github = Github(gh_token)
-        repo = _github.get_user().get_repo('crispy-fiesta')
+        repo = _github.get_user().get_repo(github_repo)
+        branches = [branch.name for branch in repo.get_branches()]
+        return branches
+
+    @staticmethod
+    def update_from_github(file_ids, source_target=GithubObject.NotSet):
+        gh_token = app.config['GITHUB_TOKEN']
+        github_repo = app.config['GITHUB_REPO']
+        _github = Github(gh_token)
+        repo = _github.get_user().get_repo(github_repo)
 
         for file_id in file_ids:
             file_data_model = FileDataModel.query.filter_by(
@@ -348,10 +358,9 @@ class FileService(object):
                 desc(FileDataModel.version)
             ).first()
             try:
-                repo_file = repo.get_contents(file_data_model.file_model.name)
+                repo_file = repo.get_contents(file_data_model.file_model.name, ref=source_target)
             except UnknownObjectException:
-                # TODO: Add message indicating file is not in the repo
-                pass
+                return {'error': 'Attempted to update from repository but file was not present'}
             else:
                 file_data_model.data = repo_file.decoded_content
                 session.add(file_data_model)
@@ -359,26 +368,29 @@ class FileService(object):
 
     @staticmethod
     def publish_to_github(file_ids):
+        target_branch = app.config['TARGET_BRANCH'] if app.config['TARGET_BRANCH'] else GithubObject.NotSet
         gh_token = app.config['GITHUB_TOKEN']
+        github_repo = app.config['GITHUB_REPO']
         _github = Github(gh_token)
-        repo = _github.get_user().get_repo('crispy-fiesta')
-
+        repo = _github.get_user().get_repo(github_repo)
         for file_id in file_ids:
             file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
             try:
-                repo_file = repo.get_contents(file_data_model.file_model.name)
+                repo_file = repo.get_contents(file_data_model.file_model.name, ref=target_branch)
             except UnknownObjectException:
                 repo.create_file(
                     path=file_data_model.file_model.name,
                     message=f'Creating {file_data_model.file_model.name}',
-                    content=file_data_model.data
+                    content=file_data_model.data,
+                    branch=target_branch
                 )
                 return {'created': True}
             else:
                 updated = repo.update_file(
                     path=repo_file.path,
                     message=f'Updating {file_data_model.file_model.name}',
-                    content=file_data_model.data,
-                    sha=repo_file.sha
+                    content=file_data_model.data + b'brah-model',
+                    sha=repo_file.sha,
+                    branch=target_branch
                 )
                 return {'updated': True}

@@ -14,9 +14,9 @@ class FakeGithubCreates(Mock):
         class FakeUser(Mock):
             def get_repo(var, name):
                 class FakeRepo(Mock):
-                    def get_contents(var, filename):
+                    def get_contents(var, filename, ref):
                         raise UnknownObjectException(status='Failure', data='Failed data')
-                    def update_file(var, path, message, content, sha):
+                    def update_file(var, path, message, content, sha, branch):
                         pass
                 return FakeRepo()
         return FakeUser()
@@ -27,14 +27,22 @@ class FakeGithub(Mock):
         class FakeUser(Mock):
             def get_repo(var, name):
                 class FakeRepo(Mock):
-                    def get_contents(var, filename):
+                    def get_contents(var, filename, ref):
                         fake_file = Mock()
                         fake_file.decoded_content = b'Some bytes'
                         fake_file.path = '/el/path/'
                         fake_file.data = 'Serious data'
                         fake_file.sha = 'Sha'
                         return fake_file
-                    def update_file(var, path, message, content, sha):
+                    def get_branches(var):
+                        branch1 = Mock()
+                        branch1.name = 'branch1'
+                        branch2 = Mock()
+                        branch2.name = 'branch2'
+                        master = Mock()
+                        master.name = 'master'
+                        return [branch1, branch2, master]
+                    def update_file(var, path, message, content, sha, branch):
                         pass
                 return FakeRepo()
         return FakeUser()
@@ -198,3 +206,11 @@ class TestFileService(BaseTest):
         result = FileService.publish_to_github([file_model.id])
 
         self.assertEqual(result['updated'], True)
+
+    @patch('crc.services.file_service.Github')
+    def test_get_repo_branches(self, mock_github):
+        mock_github.return_value = FakeGithub()
+
+        branches = FileService.get_repo_branches()
+
+        self.assertIsInstance(branches, list)
