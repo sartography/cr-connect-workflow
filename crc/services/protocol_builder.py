@@ -13,6 +13,7 @@ class ProtocolBuilderService(object):
     INVESTIGATOR_URL = app.config['PB_INVESTIGATORS_URL']
     REQUIRED_DOCS_URL = app.config['PB_REQUIRED_DOCS_URL']
     STUDY_DETAILS_URL = app.config['PB_STUDY_DETAILS_URL']
+    SPONSORS_URL = app.config['PB_STUDY_DETAILS_URL']
 
     @staticmethod
     def is_enabled():
@@ -53,6 +54,10 @@ class ProtocolBuilderService(object):
     @staticmethod
     def get_study_details(study_id) -> {}:
         return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.STUDY_DETAILS_URL)
+
+    @staticmethod
+    def get_sponsors(study_id) -> {}:
+        return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.SPONSORS_URL)
 
     @staticmethod
     def __enabled_or_raise():

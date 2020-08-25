@@ -48,3 +48,15 @@ class TestProtocolBuilder(BaseTest):
         self.assertIsNotNone(response)
         self.assertEqual(64, len(response))
         self.assertEqual(1234, response['IND_1'])
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_get_study_sponsors(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        response = ProtocolBuilderService.get_sponsors(self.test_study_id)
+        self.assertIsNotNone(response)
+        self.assertEqual(3, len(response))
+        self.assertEqual(2, response[0]["SS_STUDY"])
+        self.assertEqual(2453, response[0]["SPONSOR_ID"])
+        self.assertEqual("Abbott Ltd", response[0]["SP_NAME"])
