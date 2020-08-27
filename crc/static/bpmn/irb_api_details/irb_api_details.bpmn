@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_00j2iu5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_00j2iu5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
   <bpmn:process id="Process_1gmf4la" isExecutable="true">
     <bpmn:documentation />
     <bpmn:startEvent id="StartEvent_1">
@@ -8,8 +8,7 @@
     <bpmn:scriptTask id="ScriptTask_02924vs" name="Load IRB Details">
       <bpmn:incoming>SequenceFlow_1fmyo77</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_18nr0gf</bpmn:outgoing>
-      <bpmn:script>StudyInfo = {}
-StudyInfo['details'] = study_info('details')</bpmn:script>
+      <bpmn:script>details = study_info('details')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1fmyo77" sourceRef="StartEvent_1" targetRef="ScriptTask_02924vs" />
     <bpmn:sequenceFlow id="SequenceFlow_18nr0gf" sourceRef="ScriptTask_02924vs" targetRef="Activity_FromIRB-API" />
@@ -20,7 +19,7 @@ StudyInfo['details'] = study_info('details')</bpmn:script>
     <bpmn:manualTask id="Activity_FromIRB-API" name="From IRB API">
       <bpmn:documentation>| Data Point | Value | Help |
 |:-------------- |:-------- |:------ |
-{% for key, value in StudyInfo.details.items() -%}
+{% for key, value in details.items() -%}
 | {{key}} | {%- if value == None -%}
 \-\-
 {%- else -%}
@@ -56,20 +55,20 @@ Question not presented
         <di:waypoint x="470" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1fmyo77_di" bpmnElement="SequenceFlow_1fmyo77">
-        <di:waypoint x="228" y="117" />
+        <di:waypoint x="238" y="117" />
         <di:waypoint x="310" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="192" y="99" width="36" height="36" />
+        <dc:Bounds x="202" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ScriptTask_02924vs_di" bpmnElement="ScriptTask_02924vs">
         <dc:Bounds x="310" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_19nawos_di" bpmnElement="Activity_FromIRB-API">
-        <dc:Bounds x="470" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_1qvyxg7_di" bpmnElement="EndEvent_1qvyxg7">
         <dc:Bounds x="672" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_19nawos_di" bpmnElement="Activity_FromIRB-API">
+        <dc:Bounds x="470" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

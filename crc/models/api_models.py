@@ -40,30 +40,51 @@ class Task(object):
     # Custom task title
     PROP_EXTENSIONS_TITLE = "display_name"
 
-    # Repeating form section
-    PROP_OPTIONS_REPEAT = "repeat"
-
-    # Read-only field
-    PROP_OPTIONS_READ_ONLY = "read_only"
-
-    # LDAP lookup
-    PROP_LDAP_LOOKUP = "ldap.lookup"
 
     # Autocomplete field
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
 
     # Required field
-    VALIDATION_REQUIRED = "required"
+    FIELD_CONSTRAINT_REQUIRED = "required"
+
+    # Field properties and expressions Expressions
+    FIELD_PROP_REPEAT = "repeat"
+    FIELD_PROP_READ_ONLY = "read_only"
+    FIELD_PROP_LDAP_LOOKUP = "ldap.lookup"
+    FIELD_PROP_HIDE_EXPRESSION = "hide_expression"
+    FIELD_PROP_REQUIRED_EXPRESSION = "required_expression"
+    FIELD_PROP_LABEL_EXPRESSION = "label_expression"
+    FIELD_PROP_VALUE_EXPRESSION = "value_expression"
+    FIELD_PROP_REPEAT_HIDE_EXPRESSION = "repeat_hide_expression"
 
     # Enum field options values pulled from a spreadsheet
-    PROP_OPTIONS_FILE_NAME = "spreadsheet.name"
-    PROP_OPTIONS_FILE_VALUE_COLUMN = "spreadsheet.value.column"
-    PROP_OPTIONS_FILE_LABEL_COLUMN = "spreadsheet.label.column"
+    FIELD_PROP_SPREADSHEET_NAME = "spreadsheet.name"
+    FIELD_PROP_SPREADSHEET_VALUE_COLUMN = "spreadsheet.value.column"
+    FIELD_PROP_SPREADSHEET_LABEL_COLUMN = "spreadsheet.label.column"
 
     # Enum field options values pulled from task data
-    PROP_OPTIONS_DATA_NAME = "data.name"
-    PROP_OPTIONS_DATA_VALUE_COLUMN = "data.value.column"
-    PROP_OPTIONS_DATA_LABEL_COLUMN = "data.label.column"
+    FIELD_PROP_DATA_NAME = "data.name"
+    FIELD_PROP_VALUE_COLUMN = "data.value.column"
+    FIELD_PROP_LABEL_COLUMN = "data.label.column"
+
+    # Group and Repeat functions
+    FIELD_PROP_GROUP = "group"
+    FIELD_PROP_REPLEAT = "repeat"
+    FIELD_PROP_REPLEAT_TITLE = "repeat_title"
+    FIELD_PROP_REPLEAT_BUTTON = "repeat_button_label"
+
+    # Additional properties
+    FIELD_PROP_ENUM_TYPE = "enum_type"
+    FIELD_PROP_TEXT_AREA_ROWS = "rows"
+    FIELD_PROP_TEXT_AREA_COLS = "cols"
+    FIELD_PROP_TEXT_AREA_AUTO = "autosize"
+    FIELD_PROP_PLACEHOLDER = "placeholder"
+    FIELD_PROP_DESCRIPTION = "description"
+    FIELD_PROP_MARKDOWN_DESCRIPTION = "markdown_description"
+    FIELD_PROP_HELP = "help"
+
+
+
 
     ##########################################################################
 
@@ -85,6 +106,9 @@ class Task(object):
         self.process_name = process_name
         self.properties = properties  # Arbitrary extension properties from BPMN editor.
 
+    @classmethod
+    def valid_property_names(cls):
+        return [value for name, value in vars(cls).items() if name.startswith('FIELD_PROP')]
 
 class OptionSchema(ma.Schema):
     class Meta:

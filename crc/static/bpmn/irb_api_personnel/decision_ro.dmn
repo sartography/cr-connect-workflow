@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_0adc6e9" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Decision_RO" name="Determine RO">
+    <extensionElements>
+      <biodi:bounds x="420" y="180" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="RO Same As PI&#39;s Primary Dept?">
+        <inputExpression id="inputExpression_1" typeRef="boolean">
+          <text>isRO_SameAsPIsPriDept</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_1xgnpdy" label="RO School">
+        <inputExpression id="LiteralExpression_1bqutsa" typeRef="string">
+          <text>RO_StudySchool.value</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="RO School" name="RO_School" typeRef="string" />
+      <output id="OutputClause_0f76t6l" label="RO Department" name="RO_Dept" typeRef="string" />
+      <rule id="DecisionRule_0218zu9">
+        <inputEntry id="UnaryTests_061tvgo">
+          <text>True</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1r0zkd8">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1p32kxk">
+          <text>pi.E0.schoolName</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_07rulgc" expressionLanguage="feel">
+          <text>pi.E0.deptName</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_04pw6py">
+        <inputEntry id="UnaryTests_0u65ktf">
+          <text>False</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_14yvbz3">
+          <text>"AS"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1ujjyis">
+          <text>RO_StudySchool.label</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_06p10h4">
+          <text>RO_StudyDeptArtsSciences.label</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0l0orcb">
+        <inputEntry id="UnaryTests_1nfg5uh">
+          <text>False</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0o5tflu">
+          <text>"CU"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0ukcma3">
+          <text>RO_StudySchool.label</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_03wc2vv">
+          <text>RO_StudyDeptEducatoin.label</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0j2d370">
+        <inputEntry id="UnaryTests_0m6l42r">
+          <text>False</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_00yvxdr">
+          <text>"MD"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0vy8mcu">
+          <text>RO_StudySchool.label</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0a2j3zg">
+          <text>RO_StudyDeptMedicine.label</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

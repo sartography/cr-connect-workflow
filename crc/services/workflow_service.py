@@ -4,6 +4,7 @@ import string
 import uuid
 from datetime import datetime
 import random
+from typing import List
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException
@@ -25,7 +26,7 @@ from crc.models.api_models import Task, MultiInstanceType, NavigationItem, Navig
 from crc.models.file import LookupDataModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
-from crc.models.user import UserModel
+from crc.models.user import UserModel, UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
@@ -124,18 +125,47 @@ class WorkflowService(object):
         if not hasattr(task.task_spec, 'form'): return
 
         form_data = task.data # Just like with the front end, we start with what was already there, and modify it.
+        hide_groups = []
         for field in task_api.form.fields:
-            if required_only and (not field.has_validation(Task.VALIDATION_REQUIRED) or
-                                  field.get_validation(Task.VALIDATION_REQUIRED).lower().strip() != "true"):
+            # Assure field has valid properties
+            WorkflowService.check_field_properties(field, task)
+
+            # First, assure that all expressions can fire, even if they aren't required fields.
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
+                if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
+                    continue # Don't mess about with hidden fields.
+            if field.has_property(Task.FIELD_PROP_REQUIRED_EXPRESSION):
+                result = WorkflowService.evaluate_property(Task.FIELD_PROP_REQUIRED_EXPRESSION, field, task)
+                if not result and required_only:
+                    continue # Don't complete fields that are not required.
+            if field.has_property(Task.FIELD_PROP_LABEL_EXPRESSION):
+                result = WorkflowService.evaluate_property(Task.FIELD_PROP_LABEL_EXPRESSION, field, task)
+                field.label = result
+            if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION):
+                result = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
+                field.default_value = result
+                form_data[field.id] = field.default_value
+            if required_only and (not field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED) or
+                                  field.get_validation(Task.FIELD_CONSTRAINT_REQUIRED).lower().strip() != "true"):
+                if field.default_value:
+                    form_data[field.id] = field.default_value
                 continue # Don't include any fields that aren't specifically marked as required.
-            if field.has_property("read_only") and field.get_property("read_only").lower().strip() == "true":
+            elif field.has_property("read_only") and field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
+                if field.default_value:
+                    form_data[field.id] = field.default_value
                 continue # Don't mess about with read only fields.
-            if field.has_property(Task.PROP_OPTIONS_REPEAT):
-                group = field.get_property(Task.PROP_OPTIONS_REPEAT)
-                if group not in form_data:
+
+            if field.has_property(Task.FIELD_PROP_REPEAT):
+                group = field.get_property(Task.FIELD_PROP_REPEAT)
+                if field.has_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION):
+                    result = WorkflowService.evaluate_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION, field, task)
+                    if not result:
+                        hide_groups.append(group)
+                if group not in form_data and group not in hide_groups:
                     form_data[group] = [{},{},{}]
-                for i in range(3):
-                    form_data[group][i][field.id] = WorkflowService.get_random_data_for_field(field, task)
+                if group in form_data and group not in hide_groups:
+                    for i in range(3):
+                        form_data[group][i][field.id] = WorkflowService.get_random_data_for_field(field, task)
             else:
                 form_data[field.id] = WorkflowService.get_random_data_for_field(field, task)
         if task.data is None:
@@ -143,10 +173,33 @@ class WorkflowService(object):
         task.data.update(form_data)
 
     @staticmethod
+    def check_field_properties(field, task):
+        """Assures that all properties are valid on a given workflow."""
+        field_prop_names = list(map(lambda fp: fp.id, field.properties))
+        valid_names = Task.valid_property_names()
+        for name in field_prop_names:
+            if name not in valid_names:
+                raise ApiError.from_task("invalid_field_property",
+                                         f'The field {field.id} contains an unsupported '
+                                         f'property: {name}', task=task)
+
+    @staticmethod
+    def evaluate_property(property_name, field, task):
+        expression = field.get_property(property_name)
+        try:
+            return task.workflow.script_engine.evaluate_expression(task, expression)
+        except Exception as e:
+            message = f"The field {field.id} contains an invalid expression. {e}"
+            raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
+
+
+
+
+    @staticmethod
     def get_random_data_for_field(field, task):
-        has_ldap_lookup = field.has_property(Task.PROP_LDAP_LOOKUP)
-        has_file_lookup = field.has_property(Task.PROP_OPTIONS_FILE_NAME)
-        has_data_lookup = field.has_property(Task.PROP_OPTIONS_DATA_NAME)
+        has_ldap_lookup = field.has_property(Task.FIELD_PROP_LDAP_LOOKUP)
+        has_file_lookup = field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME)
+        has_data_lookup = field.has_property(Task.FIELD_PROP_DATA_NAME)
         has_lookup = has_ldap_lookup or has_file_lookup or has_data_lookup
 
         if field.type == "enum" and not has_lookup:
@@ -357,6 +410,9 @@ class WorkflowService(object):
         # not be a previously completed MI Task.
         if add_docs_and_forms:
             task.data = spiff_task.data
+            if UserService.has_user():
+                current_user = UserService.current_user(allow_admin_impersonate=True)
+                task.data['current_user'] = UserModelSchema().dump(current_user)
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
                 for i, field in enumerate(task.form.fields):
@@ -429,33 +485,33 @@ class WorkflowService(object):
         # If this is an auto-complete field, do not populate options, a lookup will happen later.
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             pass
-        elif field.has_property(Task.PROP_OPTIONS_FILE_NAME):
+        elif field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
             lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
             if not hasattr(field, 'options'):
                 field.options = []
             for d in data:
                 field.options.append({"id": d.value, "name": d.label, "data": d.data})
-        elif field.has_property(Task.PROP_OPTIONS_DATA_NAME):
+        elif field.has_property(Task.FIELD_PROP_DATA_NAME):
             field.options = WorkflowService.get_options_from_task_data(spiff_task, field)
         return field
 
     @staticmethod
     def get_options_from_task_data(spiff_task, field):
-        if not (field.has_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN) or
-                field.has_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)):
+        if not (field.has_property(Task.FIELD_PROP_VALUE_COLUMN) or
+                field.has_property(Task.FIELD_PROP_LABEL_COLUMN)):
             raise ApiError.from_task("invalid_enum",
                                      f"For enumerations based on task data, you must include 3 properties: "
-                                     f"{Task.PROP_OPTIONS_DATA_NAME}, {Task.PROP_OPTIONS_DATA_VALUE_COLUMN}, "
-                                     f"{Task.PROP_OPTIONS_DATA_LABEL_COLUMN}", task=spiff_task)
-        prop = field.get_property(Task.PROP_OPTIONS_DATA_NAME)
+                                     f"{Task.FIELD_PROP_DATA_NAME}, {Task.FIELD_PROP_VALUE_COLUMN}, "
+                                     f"{Task.FIELD_PROP_LABEL_COLUMN}", task=spiff_task)
+        prop = field.get_property(Task.FIELD_PROP_DATA_NAME)
         if prop not in spiff_task.data:
             raise ApiError.from_task("invalid_enum", f"For enumerations based on task data, task data must have "
                                                      f"a property called {prop}", task=spiff_task)
         # Get the enum options from the task data
         data_model = spiff_task.data[prop]
-        value_column = field.get_property(Task.PROP_OPTIONS_DATA_VALUE_COLUMN)
-        label_column = field.get_property(Task.PROP_OPTIONS_DATA_LABEL_COLUMN)
+        value_column = field.get_property(Task.FIELD_PROP_VALUE_COLUMN)
+        label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
         items = data_model.items() if isinstance(data_model, dict) else data_model
         options = []
         for item in items:
@@ -480,7 +536,7 @@ class WorkflowService(object):
                 WorkflowService.log_task_action(user_id, processor, task, WorkflowService.TASK_ACTION_ASSIGNMENT)
 
     @staticmethod
-    def get_users_assigned_to_task(processor, spiff_task):
+    def get_users_assigned_to_task(processor, spiff_task) -> List[str]:
         if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
             return [processor.workflow_model.study.user_uid]
             # todo: return a list of all users that can edit the study by default
@@ -489,7 +545,22 @@ class WorkflowService(object):
         lane_users = spiff_task.data[spiff_task.task_spec.lane]
         if not isinstance(lane_users, list):
             lane_users = [lane_users]
-        return lane_users
+
+        lane_uids = []
+        for user in lane_users:
+            if isinstance(user, dict):
+                if 'value' in user and user['value'] is not None:
+                    lane_uids.append(user['value'])
+                else:
+                    raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
+                                                              spiff_task.task_spec.name, task=spiff_task)
+            elif isinstance(user, str):
+                lane_uids.append(user)
+            else:
+                raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user is not a string or dict" %
+                                                              spiff_task.task_spec.name, task=spiff_task)
+
+        return lane_uids
 
     @staticmethod
     def log_task_action(user_uid, processor, spiff_task, action):
@@ -525,11 +596,11 @@ class WorkflowService(object):
 
         if hasattr(task.task_spec, 'form'):
             for field in task.task_spec.form.fields:
-                if field.has_property(Task.PROP_OPTIONS_READ_ONLY) and \
-                        field.get_property(Task.PROP_OPTIONS_READ_ONLY).lower().strip() == "true":
+                if field.has_property(Task.FIELD_PROP_READ_ONLY) and \
+                        field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
                     continue  # Don't add read-only data
-                elif field.has_property(Task.PROP_OPTIONS_REPEAT):
-                    group = field.get_property(Task.PROP_OPTIONS_REPEAT)
+                elif field.has_property(Task.FIELD_PROP_REPEAT):
+                    group = field.get_property(Task.FIELD_PROP_REPEAT)
                     if group in latest_data:
                         data[group] = latest_data[group]
                 elif isinstance(task.task_spec, MultiInstanceTask):

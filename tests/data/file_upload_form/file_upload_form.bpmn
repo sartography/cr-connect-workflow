@@ -19,7 +19,6 @@ OGC will upload the Non-Funded Executed Agreement after it has been negotiated b
             <camunda:properties>
               <camunda:property id="group" value="upload" />
               <camunda:property id="repeat" value="upload" />
-              <camunda:property id="Property_02h2d61" />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>

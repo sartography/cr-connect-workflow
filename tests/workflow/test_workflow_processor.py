@@ -355,7 +355,7 @@ class TestWorkflowProcessor(BaseTest):
 
         # It should mark the sponsor funding source as disabled since the funding required (12) is not included in the required docs.
         self.assertTrue("sponsor_funding_source" in data)
-        self.assertEqual("disabled", data["sponsor_funding_source"])
+        self.assertEqual("required", data["sponsor_funding_source"])
 
     def test_enum_with_no_choices_raises_api_error(self):
         self.load_example_data()

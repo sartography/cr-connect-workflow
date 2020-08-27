@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0be39yr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_0be39yr" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
   <bpmn:process id="Process_1cme33c" isExecutable="false">
     <bpmn:parallelGateway id="ParallelGateway_0ecwf3g">
       <bpmn:incoming>Flow_1wqp7vf</bpmn:incoming>
@@ -130,14 +130,17 @@
       <bpmn:incoming>Flow_1d4dncx</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1o39rt4</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:userTask id="UserTask_0ebxkp7" name="Enter Study Info" camunda:formKey="Study Info">
+    <bpmn:userTask id="UserTask_0ebxkp7" name="Enter Study Info" camunda:formKey="StudyInfo">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="StudyShortName" label="Study Short Name" type="string">
             <camunda:properties>
               <camunda:property id="help" value="- This title is primarily used for Office of Grants and Contracts / Office of Sponsored Programs (OGC/OSP) related processes.\n- Length limit: 30 characters. It is automatically populated on Save based on School, Award Owning Organization, PI&#39;s computing ID, and study short name provided earlier and used for the workflow." />
-              <camunda:property id="description" value="Important: Until the system integration with ResearchUVa is in place, for consistency and alignment, please remember to enter this same title when you complete ePRF information in ResearchUVa." />
+              <camunda:property id="description" value="Important: Limit is 17 characters.  Until the system integration with ResearchUVa is in place, for consistency and alignment, please remember to enter this same title when you complete ePRF information in ResearchUVa." />
             </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="max_length" config="17" />
+            </camunda:validation>
           </camunda:formField>
           <camunda:formField id="FullProtocolTitle" label="Full Protocol Title" type="string">
             <camunda:properties>
@@ -212,8 +215,7 @@
     <bpmn:scriptTask id="Activity_10nxpt2" name="Load Study Details">
       <bpmn:incoming>SequenceFlow_1r3yrhy</bpmn:incoming>
       <bpmn:outgoing>Flow_09h1imz</bpmn:outgoing>
-      <bpmn:script>StudyInfo = {}
-StudyInfo['details'] = study_info('details')</bpmn:script>
+      <bpmn:script>details = study_info('details')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:businessRuleTask id="Activity_PBMultiSiteCheckQ12" name="PB Multi-Site Check Q12" camunda:decisionRef="Decision_core_info_multi_site_q12">
       <bpmn:incoming>Flow_09h1imz</bpmn:incoming>
@@ -257,7 +259,7 @@ StudyInfo['details'] = study_info('details')</bpmn:script>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1v7oplk_di" bpmnElement="SequenceFlow_1v7oplk">
         <di:waypoint x="1215" y="325" />
-        <di:waypoint x="1268" y="325" />
+        <di:waypoint x="1282" y="325" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0rw17h2_di" bpmnElement="SequenceFlow_0rw17h2">
         <di:waypoint x="1090" y="500" />
@@ -305,7 +307,7 @@ StudyInfo['details'] = study_info('details')</bpmn:script>
         <dc:Bounds x="1165" y="300" width="50" height="50" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_16uwhzg_di" bpmnElement="EndEvent_16uwhzg">
-        <dc:Bounds x="1268" y="307" width="36" height="36" />
+        <dc:Bounds x="1282" y="307" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="StartEvent_1mhzkcr_di" bpmnElement="StartEvent_1mhzkcr">
         <dc:Bounds x="152" y="307" width="36" height="36" />

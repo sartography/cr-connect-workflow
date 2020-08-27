@@ -44,11 +44,14 @@ class TestWorkflowProcessorLoopingTask(BaseTest):
         task = self.get_workflow_api(workflow).next_task
         self.assertEqual(task.name,'Event_End')
         self.assertEqual(workflow.completed_tasks,workflow.total_tasks)
-        self.assertEqual(task.data, {'GetNames_CurrentVar': 2,
-                                     'GetNames': {'1': {'Name': 'Peter Norvig',
-                                                                'Nickname': 'Pete'},
-                                                         '2': {'Name': 'Stuart Russell',
-                                                                'Nickname': 'Stu'}}})
+        expectedDict = {
+            'GetNames_CurrentVar': 2,
+            'GetNames': {
+                '1': {'Name': 'Peter Norvig', 'Nickname': 'Pete'},
+                '2': {'Name': 'Stuart Russell', 'Nickname': 'Stu'}
+            }
+        }
+        self.assert_dict_contains_subset(task.data, expectedDict)
 
 
 

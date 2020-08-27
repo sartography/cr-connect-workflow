@@ -1,0 +1,951 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_d28686b" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_RO_Chair" name="RO Department Chair">
+    <extensionElements>
+      <biodi:bounds x="300" y="130" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="RO Department">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text>RO_Department</text>
+        </inputExpression>
+      </input>
+      <output id="OutputClause_0a23e1m" label="RO Chair Computer ID" name="RO_Chair_CID" typeRef="string" />
+      <output id="output_1" label="RO Chair Name &#38; Degree" name="RO_Chair_Name_Degree" typeRef="string" />
+      <output id="OutputClause_0ysj4lb" label="RO Chair Title" name="RO_Chair_Title" typeRef="string" />
+      <output id="OutputClause_1cw9kan" label="RO Chair Sig Block" name="RO_Chair_Sig_Block" typeRef="string" />
+      <output id="OutputClause_0lym39s" label="RO Designee 1 CID" name="RO_D1_CID" typeRef="string" />
+      <output id="OutputClause_1jjvdz1" label="RO Designee 1 Name &#38; Degree" name="RO_D1_Name_Degree" typeRef="string" />
+      <output id="OutputClause_07o7aw8" label="RO Designee 1 Title" name="RO_D1_Title" typeRef="string" />
+      <output id="OutputClause_0vfjwcc" label="RO Designee 1 Sig Block" name="RO_D1_Sig_Block" typeRef="string" />
+      <rule id="DecisionRule_130my8k">
+        <inputEntry id="UnaryTests_0utry5v">
+          <text>"Anesthesiology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0npmzip">
+          <text>"gfr2f"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0tk1vjc">
+          <text>"George F. Rich, MD, PhD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0e67jw1">
+          <text>"Harrison Medical Teaching Professor and Chair"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_01dz6m5">
+          <text>"Department of Anesthesiology"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0n6oua7">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0zajaid">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0grhgrz">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1goqtom">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1p25iet">
+        <inputEntry id="UnaryTests_1twyz8n">
+          <text>"Biochemistry &amp; Molecular Genetics"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0mk1ouw">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_02ypl0q">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1g170wj">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1jhsveh">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_082aspf">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0awx5vb">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0aukxvo">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0009kji">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_11vnz24">
+        <inputEntry id="UnaryTests_1n5hdk0">
+          <text>"Biomedical Engineering"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1ki2y5r">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1nbiz8o">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0zidebq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_002cq1c">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0j5jqsg">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0lbxiqn">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0wkbs71">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1wlnj8l">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0o9l1g4">
+        <inputEntry id="UnaryTests_00c9fvd">
+          <text>"Brain Institute"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0a5eyr5">
+          <text>"jk8t"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0e4jt7e">
+          <text>"Jaideep Kapur, MD, PhD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1kjp55c">
+          <text>"Director of UVA Brain Institute"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_17791yy">
+          <text>"Eugene Meyer III Professor of Neuroscience"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0v9pxd6">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_07n4c21">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0hvam0u">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_19e4obt">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_07agfmq">
+        <inputEntry id="UnaryTests_1ne2xho">
+          <text>"Cell Biology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1mt2ueq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0wfnk1a">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1bdq1nk">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_17cxb6g">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1n5mxii">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1tzwz8h">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_06ibam8">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0o5p6mi">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0tbdzg7">
+        <inputEntry id="UnaryTests_192cb1q">
+          <text>"Center for Diabetes Technology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_00jss4e">
+          <text>"hgm7s"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_10za2my">
+          <text>"Harry G. Mitchell"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_096h7xv">
+          <text>"Chief Operating Officer"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_07qfbku">
+          <text>"Center for Diabetes Technology"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0obq3ta">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0a8ph15">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1tscoeq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_047859r">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0mnaifs">
+        <inputEntry id="UnaryTests_1pbp49w">
+          <text>"Center for Research in Reproduction"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0zkt3i2">
+          <text>"jcm9h"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_19cb1bz">
+          <text>"John C. Marshall, MD, PhD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0uktq93">
+          <text>"Director, Center for Research in Reproduction"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0v8z227">
+          <text>"Andrew D. Hart Professor of Medicine"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_18x17lq">
+          <text>"cm2hq"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1l41pgn">
+          <text>"Christopher McCartney, MD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1qhexw2">
+          <text>"Associate Professor of Medicine"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0th4s9k">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1g9heo9">
+        <inputEntry id="UnaryTests_06vfwmk">
+          <text>"Dermatology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1yav83a">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1apthzx">
+          <text>"Art P. Saavedra, MD, PhD, MBA"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0hhk5mn">
+          <text>"Endowed Professor and Chair of Dermatology"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1yp78ih">
+          <text>"Chief of Ambulatory Strategy and Operations, Department of Dematology"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_163a3e0">
+          <text>"ltg4ga"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0nknugg">
+          <text>"Leisa Gonnella"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1rj0p0p">
+          <text>"Chief Operating Officer, Administrator"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1p9cuj3">
+          <text>"Department of Dermatology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1w4vnv2">
+        <inputEntry id="UnaryTests_1uxzlwk">
+          <text>"Emergency Medicine"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0y4klbl">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_00rdpy1">
+          <text>"Robert O'Connor, MD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_00v04f6">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0rse4cx">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1w8ejrj">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0qdmvgy">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0tjzvg5">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0jfgfhp">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0v9kyu9">
+        <inputEntry id="UnaryTests_0obk165">
+          <text>"Family Medicine"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1u4cfnj">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0g02cea">
+          <text>"Li Li, MD, PhD, MPH"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_06vuegj">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1qhnttc">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_12xt0ep">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1qa5kcs">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0za5gpp">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1twuim4">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0yft3o2">
+        <inputEntry id="UnaryTests_11hmf6p">
+          <text>"Institute of Law, Psychiatry and Public Policy (institutional)"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1k99mrq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1en1sr3">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0q5jqja">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_011ucce">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0bogqw7">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0jxkapm">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_13xl7b5">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1pwpak6">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0tn1ntu">
+        <inputEntry id="UnaryTests_03sw24v">
+          <text>"Keck Center for Cellular Imaging (institutional)"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_13i4uts">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0rzmxbc">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1c1hbm4">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_01151r2">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_087iw0o">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0snuc6d">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_13kstqw">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1e8264r">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1xa7pks">
+        <inputEntry id="UnaryTests_1pppuin">
+          <text>"Kinesiology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_17bh2dl">
+          <text>"alw2v"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0f8mbsy">
+          <text>"Arthur L. Weltman"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ktzrw6">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0bs8674">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_02nf3re">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1oxr1hm">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0n7l563">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0opge44">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_07gq82a">
+        <inputEntry id="UnaryTests_1usw6cv">
+          <text>"Microbiology, Immunology, and Cancer Biology (MIC)"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0ayt0hb">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0zas7lc">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1t5vcgd">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0nfe8zu">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_02lfwjn">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1qgnopz">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1mw0evh">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_109mquo">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1ugttjx">
+        <inputEntry id="UnaryTests_0l14jnz">
+          <text>"Molecular Physiology &amp; Biological Physics"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0cmnhcl">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0nz91ut">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1mvclh2">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1vz32qe">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ra8i39">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ssvvwf">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_09y17lm">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1jl7ljp">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_13zj816">
+        <inputEntry id="UnaryTests_03te6ro">
+          <text>"Neurology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0i51oau">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ym154j">
+          <text>"Howard Goodkin MD, PhD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0txl5cj">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0sekcao">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0gfwwav">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0aszk0t">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1co84ru">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_03q6up9">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1d162e6">
+        <inputEntry id="UnaryTests_0t4sokv">
+          <text>"Neuroscience"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1tfzksp">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1lszybr">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1976phh">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1h2752z">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0jnhvv5">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1rzehm7">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0n5fge7">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1a80hnb">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1qa4tbk">
+        <inputEntry id="UnaryTests_0h7ex0k">
+          <text>"Neurosurgery"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1jrc8uu">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ivww3e">
+          <text>"Mark E. Shaffrey, MD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1xdcxk9">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1d9vr6b">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1fd2214">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0lce0kt">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1nlp8dp">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1uy1fel">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_194hj7g">
+        <inputEntry id="UnaryTests_1lmoxki">
+          <text>"Obstetrics &amp; Gynecology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1d2368t">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0l5nykm">
+          <text>"James (Jef) E  Ferguson II, MD, MBA"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0jwhpxm">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1391acv">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0si3942">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0d1n3k1">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1i5o5yn">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0dn6xa0">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1feefxw">
+        <inputEntry id="UnaryTests_1bquriu">
+          <text>"Ophthalmology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1cvve9k">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0rcmv2x">
+          <text>"Peter Netland, MD, PhD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0lb9uaq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_063dzsz">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_097bq13">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1pu38e4">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0sea7rb">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0uhn2ma">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0kk6ajr">
+        <inputEntry id="UnaryTests_0j98tua">
+          <text>"Orthopedic Surgery"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1jpdhy8">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_14lbprk">
+          <text>"A. Bobby Chhabra, MD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_16su4fp">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0br0ljc">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_18tsp9o">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0iytnrt">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1sqb3bn">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_00hwx9m">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1ckz8ox">
+        <inputEntry id="UnaryTests_1gkxt51">
+          <text>"Otolaryngology- Head &amp; Neck Surgery"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1jxatpo">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1urdeg3">
+          <text>"Stephen S. Park, MD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1puli8h">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_05hanjd">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_05z5vca">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_140631p">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0sg2tkh">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1cco0sk">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_04eribm">
+        <inputEntry id="UnaryTests_1a11t50">
+          <text>"Pathology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0kh06ih">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ovk0xq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0dc4w43">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_14xd721">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1w3elof">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0cndgkq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_09cqz3x">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_19ke3cp">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_04do91b">
+        <inputEntry id="UnaryTests_1hg6qgn">
+          <text>"Pediatrics"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0wipbsc">
+          <text>"jpn2r"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1h4gtcc">
+          <text>"James P. Nataro, MD, PhD, MBA, FAAP"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_18uyr1o">
+          <text>"Chair, Department of Pediatrics"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_04ajeps">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_130lm87">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ghciu1">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ywnhpr">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1lgvui4">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0lb8hi5">
+        <inputEntry id="UnaryTests_0y76uqi">
+          <text>"Pharmacology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0zjqu5t">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0xu1r2k">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_12a5zfs">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1t7jwlp">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0c3vy0f">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0mdcrsx">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1hup339">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0mqbucf">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0csfjb9">
+        <inputEntry id="UnaryTests_0ccnf2c">
+          <text>"Plastic and Maxillofacial Surgery"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0so2ly5">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_09ynoch">
+          <text>"Thomas J. Gampper, MD, FACS"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ized9e">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0i6xbfl">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ip9317">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1nurrpl">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0cdiqdv">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_12im461">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0ie3f70">
+        <inputEntry id="UnaryTests_10hi0vn">
+          <text>"Psychiatry and Neurobehavioral Sciences"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_05qrc3z">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1tcqtd0">
+          <text>"Anita H. Clayton, MD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_16paqdh">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1lomodj">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_128hjyq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ct7zgi">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1g86k3w">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_05bq3ae">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1iavxz0">
+        <inputEntry id="UnaryTests_1myl3be">
+          <text>"Public Health Sciences"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0kdn3sp">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ayhurb">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_193gp8u">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0t4xqbq">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ct3aon">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_11975jk">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0c75zal">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1joannt">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1d7j3pd">
+        <inputEntry id="UnaryTests_1m7gkcr">
+          <text>"Radiation Oncology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1xg47wl">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_11ufvnv">
+          <text>"James M. Larner, MD, FASTRO"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1bm58kb">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1uqjshy">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0pombk0">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0yxaw3s">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_00i47mj">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0z7nmmd">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0gzdz53">
+        <inputEntry id="UnaryTests_0mo9711">
+          <text>"Radiology and Medical Imaging"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_07shsb0">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1v4defw">
+          <text>"Alan H. Matsumoto, MD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0gqqxxj">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1oowa0l">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0p9rbw9">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1rmnnwe">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1p31rj5">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0zhi6dq">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1immrvr">
+        <inputEntry id="UnaryTests_01pmp6n">
+          <text>"Surgery"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_026jlgr">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_01ao8qh">
+          <text>"Alexander S. Krupnick , MD"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1yqde5y">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0obxa2t">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0tvp046">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0yww9ti">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_19qm59b">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1rjo16e">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_148egsn">
+        <inputEntry id="UnaryTests_0x77krc">
+          <text>"Urology"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1xwdb9q">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1qsi7o3">
+          <text>"Kristen L.Greene, MD, MAS, FACS"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0hi3yzf">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_04tmu5b">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_15ixegr">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1mjzs1w">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_16wfyws">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ehj16p">
+          <text></text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
