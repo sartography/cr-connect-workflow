@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_a3b9c9b" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Decision_PI_Dept" name="PI Department">
+    <extensionElements>
+      <biodi:bounds x="300" y="140" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="InputClause_12xvnxx" label="E0 Dept">
+        <inputExpression id="LiteralExpression_1q9d9zi" typeRef="string">
+          <text>pi.E0.deptAbbrv</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="PI Department" name="PI_E0_deptName" typeRef="string" />
+      <rule id="DecisionRule_1b5ywn5">
+        <inputEntry id="UnaryTests_1bev7id">
+          <text>"ANES"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1nzq40i">
+          <text>"Anesthesiology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0wbq6tr">
+        <inputEntry id="UnaryTests_1vs880z">
+          <text>"BIOC"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0tgoozf">
+          <text>"Biochemistry &amp; Molecular Genetics"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0zojm1d">
+        <inputEntry id="UnaryTests_0kgwioh">
+          <text>"BIOM"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_08w2wq9">
+          <text>"Biomedical Engineering"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0owmu0q">
+        <inputEntry id="UnaryTests_0rywcw8">
+          <text>"CELL"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0ru3sax">
+          <text>"Cell Biology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1ryvd9v">
+        <inputEntry id="UnaryTests_0yrysju">
+          <text>"DMED"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1c4iwlq">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_11nfq9u">
+        <inputEntry id="UnaryTests_15017iw">
+          <text>"INMD"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_193ae27">
+          <text>"Institute of Law, Psychiatry and Public Policy (institutional)"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0lwmys9">
+        <inputEntry id="UnaryTests_0bgwlbf">
+          <text>"INMD-Ctr"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1p0b3ea">
+          <text>"Keck Center for Cellular Imaging (institutional)"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1qjzff0">
+        <inputEntry id="UnaryTests_10jnj9r">
+          <text>"MICR"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1qpt4pk">
+          <text>"Microbiology, Immunology, and Cancer Biology (MIC)"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_08qhcy9">
+        <inputEntry id="UnaryTests_19uyawr">
+          <text>"MPHY"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_06z2wux">
+          <text>"Molecular Physiology &amp; Biological Physics"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0ovrx5p">
+        <inputEntry id="UnaryTests_0pg1um2">
+          <text>"NERS"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0p5gvct">
+          <text>"Neurosurgery"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_135q0hq">
+        <inputEntry id="UnaryTests_0e11w4s">
+          <text>"NESC"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0bu5hgk">
+          <text>"Neuroscience"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_18zb09n">
+        <inputEntry id="UnaryTests_0fvagjn">
+          <text>"NEUR"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0tl3ksn">
+          <text>"Neurology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1vev1e3">
+        <inputEntry id="UnaryTests_07qj3jf">
+          <text>"OBGY"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_067ehpk">
+          <text>"Obstetrics and Gynecology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_08k4jec">
+        <inputEntry id="UnaryTests_0nlzxc2">
+          <text>"OPHT"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_103y6qq">
+          <text>"Ophthalmology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0a48i89">
+        <inputEntry id="UnaryTests_1y5nfzo">
+          <text>"ORTP"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1cr3wq0">
+          <text>"Orthopaedic Surgery"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0km2u3f">
+        <inputEntry id="UnaryTests_1buhr78">
+          <text>"PATH"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0nx1reo">
+          <text>"Pathology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1gc10ny">
+        <inputEntry id="UnaryTests_1uru4m4">
+          <text>"PBHS"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_073f0bn">
+          <text>"Public Health Sciences"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_145vhtj">
+        <inputEntry id="UnaryTests_1y8kr8n">
+          <text>"PEDT"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1k444fj">
+          <text>"Pediatrics"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_05u0zki">
+        <inputEntry id="UnaryTests_1uudg05">
+          <text>"PHAR"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1mz3u7d">
+          <text>"Pharmacology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0o9ozyh">
+        <inputEntry id="UnaryTests_1ytw7l4">
+          <text>"PLSR"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0mxv6ov">
+          <text>"Plastic and Maxillofacial Surgery"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0wbzqhg">
+        <inputEntry id="UnaryTests_0uwi3mu">
+          <text>"PSCH"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1lsruwb">
+          <text>"Psychiatry and Neurobehavioral Sciences"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1ukpgze">
+        <inputEntry id="UnaryTests_0ijuf1f">
+          <text>"RADL"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1tjwp0q">
+          <text>"Radiology and Medical Imaging"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_04la8a6">
+        <inputEntry id="UnaryTests_1f5hv2r">
+          <text>"RONC"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0g10afk">
+          <text>"Radiation Oncology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0qwccau">
+        <inputEntry id="UnaryTests_0661n6g">
+          <text>"SURG"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1iuug6l">
+          <text>"Surgery"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0jleevh">
+        <inputEntry id="UnaryTests_1cpprhv">
+          <text>"UROL"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0kllkvf">
+          <text>"Urology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_08vdy19">
+        <inputEntry id="UnaryTests_1rl58pv">
+          <text>"Not in LDAP"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0rueyva">
+          <text>"Not in LDAP"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

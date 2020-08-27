@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_b2e2651" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Decision_RO_Dept" name="Responsible Org Department">
+    <extensionElements>
+      <biodi:bounds x="300" y="140" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="RO Same As PIs Primary Department">
+        <inputExpression id="inputExpression_1" typeRef="boolean">
+          <text>isRO_SameAsPIsPriDept</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="RO School" name="RO_School" typeRef="string" />
+      <output id="OutputClause_0f6vbck" label="RO Department" name="RO_Department" typeRef="string" />
+      <rule id="DecisionRule_0e2hvpp">
+        <description>RO same as PI's Primary Department</description>
+        <inputEntry id="UnaryTests_1eenh83">
+          <text>True</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1tq8k0h">
+          <text>pi.E0.schoolName</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1g8im4z">
+          <text>pi.E0.deptName</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_04ff0di">
+        <inputEntry id="UnaryTests_1fsa0de">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0phratv">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_13dyeq0">
+          <text></text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>
