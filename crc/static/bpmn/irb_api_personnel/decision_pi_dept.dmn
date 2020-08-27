@@ -7,10 +7,10 @@
     <decisionTable id="decisionTable_1">
       <input id="InputClause_12xvnxx" label="E0 Dept">
         <inputExpression id="LiteralExpression_1q9d9zi" typeRef="string">
-          <text>E0_dept</text>
+          <text>pi.E0.deptAbbrv</text>
         </inputExpression>
       </input>
-      <output id="output_1" label="PI Department" name="PI_department" typeRef="string" />
+      <output id="output_1" label="PI Department" name="PI_E0_deptName" typeRef="string" />
       <rule id="DecisionRule_1b5ywn5">
         <inputEntry id="UnaryTests_1bev7id">
           <text>"ANES"</text>
@@ -209,6 +209,14 @@
         </inputEntry>
         <outputEntry id="LiteralExpression_0kllkvf">
           <text>"Urology"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_08vdy19">
+        <inputEntry id="UnaryTests_1rl58pv">
+          <text>"Not in LDAP"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0rueyva">
+          <text>"Not in LDAP"</text>
         </outputEntry>
       </rule>
     </decisionTable>

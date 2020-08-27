@@ -7,7 +7,7 @@
     <decisionTable id="decisionTable_1">
       <input id="input_1" label="PB - MultiSite UVA PI">
         <inputExpression id="inputExpression_1" typeRef="string">
-          <text>StudyInfo.details.IS_UVA_PI_MULTI</text>
+          <text>details.IS_UVA_PI_MULTI</text>
         </inputExpression>
       </input>
       <output id="output_1" label="Task Header" name="ElementDoc_MultiSite_Q14" typeRef="string" />

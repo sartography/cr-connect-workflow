@@ -39,10 +39,23 @@ class TestStudyApi(BaseTest):
         self.assertIsNotNone(scripts[0]['description'])
 
     def test_eval_hide_expression(self):
-        """Assures we can use python to process a hide expression fron the front end"""
-        rv = self.app.put('/v1.0/eval?expression=x.y==2',
-                          data='{"x":{"y":2}}', follow_redirects=True,
+        """Assures we can use python to process a hide expression from the front end"""
+        rv = self.app.put('/v1.0/eval',
+                          data='{"expression": "x.y==2", "data": {"x":{"y":2}}}', follow_redirects=True,
                           content_type='application/json',
                           headers=self.logged_in_headers())
         self.assert_success(rv)
-        self.assertEqual("true", rv.get_data(as_text=True).strip())
+        response = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(True, response['result'])
+
+    def test_eval_expression_with_strings(self):
+        """Assures we can use python to process a value expression from the front end"""
+        rv = self.app.put('/v1.0/eval',
+                          data='{"expression": "\'Hello, \' + user.first_name + \' \' + user.last_name + \'!!!\'", '
+                               '"data": {"user":{"first_name": "Trillian", "last_name": "Astra"}}}',
+                          follow_redirects=True,
+                          content_type='application/json',
+                          headers=self.logged_in_headers())
+        self.assert_success(rv)
+        response = json.loads(rv.get_data(as_text=True))
+        self.assertEqual('Hello, Trillian Astra!!!', response['result'])

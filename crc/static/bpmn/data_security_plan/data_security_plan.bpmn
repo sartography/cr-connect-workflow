@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1wv9t3c" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1wv9t3c" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
   <bpmn:process id="Process_19ej1y2" name="Data Securty Plan" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1co48s3">
       <bpmn:outgoing>SequenceFlow_100w7co</bpmn:outgoing>
@@ -140,11 +140,11 @@
       <bpmn:documentation>UVA servers &amp; websites:</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="CollStorUVaLocUVaServersWebsites" label="Check all that apply:" type="enum">
+          <camunda:formField id="CollStorUVA_LocUVA_ServersWebsites" label="Check all that apply:" type="enum">
             <camunda:properties>
               <camunda:property id="enum_type" value="checkbox" />
               <camunda:property id="help" value="You may locate the server/drive name and path by taking the following steps:\n\n- Windows: Click your “computer icon”, right click on the Drive icon (e.g., F). Then click on ”properties”. The server/drive name and path will appear at the very top of the box.\n- If you need additional assistance, contact your department computer support or system administrator for assistance." />
-              <camunda:property id="spreadsheet.name" value="HIPAA_Ids.xls" />
+              <camunda:property id="spreadsheet.name" value="UVA_ServersWebsitesList.xls" />
               <camunda:property id="spreadsheet.value.column" value="Value" />
               <camunda:property id="spreadsheet.label.column" value="Label" />
             </camunda:properties>
@@ -353,6 +353,7 @@ Indicate all the possible formats in which you will transmit your data outside o
               <camunda:property id="spreadsheet.name" value="HIPAA_Ids.xls" />
               <camunda:property id="spreadsheet.value.column" value="Value" />
               <camunda:property id="spreadsheet.label.column" value="Label" />
+              <camunda:property id="enum_type" value="checkbox" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
@@ -422,7 +423,7 @@ Indicate all the possible formats in which you will transmit your data outside o
       <bpmn:outgoing>SequenceFlow_0lere0k</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:endEvent id="EndEvent_151cj59">
-      <bpmn:documentation>Done message</bpmn:documentation>
+      <bpmn:documentation>Please download and check your DSP doc.</bpmn:documentation>
       <bpmn:incoming>SequenceFlow_16kyite</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:exclusiveGateway id="ExclusiveGateway_0pi0c2d" name="Outside of UVa?">
@@ -444,16 +445,16 @@ Indicate all the possible formats in which you will transmit your data outside o
     <bpmn:sequenceFlow id="SequenceFlow_0m2op9s" sourceRef="Task_0q6ir2l" targetRef="Task_0uotpzg" />
     <bpmn:sequenceFlow id="SequenceFlow_0jyty9m" sourceRef="Task_0uotpzg" targetRef="Task_EnterHIPAAIdentifiers" />
     <bpmn:sequenceFlow id="SequenceFlow_0blyor8" sourceRef="Task_EnterHIPAAIdentifiers" targetRef="Task_196zozc" />
-    <bpmn:sequenceFlow id="SequenceFlow_0k2r83n" sourceRef="ExclusiveGateway_1lpm3pa" targetRef="Task_1ypw8ge" />
-    <bpmn:sequenceFlow id="SequenceFlow_0t6xl9i" sourceRef="ExclusiveGateway_0pi0c2d" targetRef="Task_1ypw8ge">
+    <bpmn:sequenceFlow id="SequenceFlow_0k2r83n" sourceRef="ExclusiveGateway_1lpm3pa" targetRef="Task_GenDoc" />
+    <bpmn:sequenceFlow id="SequenceFlow_0t6xl9i" sourceRef="ExclusiveGateway_0pi0c2d" targetRef="Task_GenDoc">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">DateTransmittedOutside == False</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="SequenceFlow_16kyite" sourceRef="Task_1ypw8ge" targetRef="EndEvent_151cj59" />
-    <bpmn:scriptTask id="Task_1ypw8ge" name="Generate DSP">
+    <bpmn:sequenceFlow id="SequenceFlow_16kyite" sourceRef="Task_GenDoc" targetRef="EndEvent_151cj59" />
+    <bpmn:scriptTask id="Task_GenDoc" name="Generate DSP">
       <bpmn:incoming>SequenceFlow_0k2r83n</bpmn:incoming>
       <bpmn:incoming>SequenceFlow_0t6xl9i</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_16kyite</bpmn:outgoing>
-      <bpmn:script>complete_template('NEW_DSP_template.docx','Study_DataSecurityPlan')</bpmn:script>
+      <bpmn:script>complete_template('NEW_DSP_template.docx', 'Study_DataSecurityPlan')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Task_0q6ir2l" name="View Instructions">
       <bpmn:documentation>##### Instructions
@@ -735,7 +736,7 @@ Indicate all the possible formats in which you will collect or receive your orig
       <bpmndi:BPMNShape id="ParallelGateway_1284xgu_di" bpmnElement="ExclusiveGateway_0x3t2vl">
         <dc:Bounds x="1725" y="365" width="50" height="50" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="ScriptTask_1616pnb_di" bpmnElement="Task_1ypw8ge">
+      <bpmndi:BPMNShape id="ScriptTask_1616pnb_di" bpmnElement="Task_GenDoc">
         <dc:Bounds x="2140" y="350" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1l6rjbr_di" bpmnElement="Task_0q6ir2l">

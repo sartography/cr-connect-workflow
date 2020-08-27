@@ -222,6 +222,13 @@ class BaseTest(unittest.TestCase):
             data = json.loads(rv.get_data(as_text=True))
             self.assertEqual(error_code, data["code"])
 
+    def assert_dict_contains_subset(self, container, subset):
+        def extract_dict_a_from_b(a, b):
+            return dict([(k, b[k]) for k in a.keys() if k in b.keys()])
+
+        extract = extract_dict_a_from_b(subset, container)
+        self.assertEqual(subset, extract)
+
     @staticmethod
     def user_info_to_query_string(user_info, redirect_url):
         query_string_list = []

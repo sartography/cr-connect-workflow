@@ -7,7 +7,7 @@
     <decisionTable id="decisionTable_1">
       <input id="input_1" label="PB - Is Multi-Site">
         <inputExpression id="inputExpression_1" typeRef="string">
-          <text>StudyInfo.details.IS_MULTI_SITE</text>
+          <text>details.IS_MULTI_SITE</text>
         </inputExpression>
       </input>
       <output id="output_1" label="Task Header" name="ElementDoc_MultiSite_Q12" typeRef="string" />

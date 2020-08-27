@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_d28686b" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
-  <decision id="Decision_dept_chair" name="Department Chair">
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_d28686b" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_RO_Chair" name="RO Department Chair">
     <extensionElements>
-      <biodi:bounds x="290" y="130" width="180" height="80" />
+      <biodi:bounds x="300" y="130" width="180" height="80" />
     </extensionElements>
     <decisionTable id="decisionTable_1">
-      <input id="input_1" label="PI Department">
+      <input id="input_1" label="RO Department">
         <inputExpression id="inputExpression_1" typeRef="string">
-          <text>PI_department</text>
+          <text>RO_Department</text>
         </inputExpression>
       </input>
-      <output id="OutputClause_0a23e1m" label="Chair Computer ID" name="Chair_CID" typeRef="string" />
-      <output id="output_1" label="Chair Name &#38; Degree" name="Chair_Name_Degree" typeRef="string" />
-      <output id="OutputClause_0ysj4lb" label="Chair Title" name="Chair_Title" typeRef="string" />
-      <output id="OutputClause_1cw9kan" label="Chair Sig Block" name="Chair_Sig_Block" typeRef="string" />
-      <output id="OutputClause_0lym39s" label="Designee 1 CID" name="D1_CID" typeRef="string" />
-      <output id="OutputClause_1jjvdz1" label="Designee 1 Name &#38; Degree" name="D1_Name_Degree" typeRef="string" />
-      <output id="OutputClause_07o7aw8" label="Designee 1 Title" name="D1_Title" typeRef="string" />
-      <output id="OutputClause_0vfjwcc" label="Designee 1 Sig Block" name="D1_Sig_Block" typeRef="string" />
+      <output id="OutputClause_0a23e1m" label="RO Chair Computer ID" name="RO_Chair_CID" typeRef="string" />
+      <output id="output_1" label="RO Chair Name &#38; Degree" name="RO_Chair_Name_Degree" typeRef="string" />
+      <output id="OutputClause_0ysj4lb" label="RO Chair Title" name="RO_Chair_Title" typeRef="string" />
+      <output id="OutputClause_1cw9kan" label="RO Chair Sig Block" name="RO_Chair_Sig_Block" typeRef="string" />
+      <output id="OutputClause_0lym39s" label="RO Designee 1 CID" name="RO_D1_CID" typeRef="string" />
+      <output id="OutputClause_1jjvdz1" label="RO Designee 1 Name &#38; Degree" name="RO_D1_Name_Degree" typeRef="string" />
+      <output id="OutputClause_07o7aw8" label="RO Designee 1 Title" name="RO_D1_Title" typeRef="string" />
+      <output id="OutputClause_0vfjwcc" label="RO Designee 1 Sig Block" name="RO_D1_Sig_Block" typeRef="string" />
       <rule id="DecisionRule_130my8k">
         <inputEntry id="UnaryTests_0utry5v">
           <text>"Anesthesiology"</text>

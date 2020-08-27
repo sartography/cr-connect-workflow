@@ -427,13 +427,13 @@ class WorkflowProcessor(object):
             if nav_item['task_id'] == task.id:
                 return nav_item
 
-    def find_task_and_field_by_field_id(self, field_id):
+    def find_spec_and_field_by_field_id(self, field_id):
         """Tracks down a form field by name in the workflow spec,
          only looks at ready tasks. Returns a tuple of the task, and form"""
-        for spiff_task in self.bpmn_workflow.get_tasks():
-            if hasattr(spiff_task.task_spec, "form"):
-                for field in spiff_task.task_spec.form.fields:
+        for spec in self.bpmn_workflow.spec.task_specs.values():
+            if hasattr(spec, "form"):
+                for field in spec.form.fields:
                     if field.id == field_id:
-                        return spiff_task, field
+                        return spec, field
         raise ApiError("invalid_field",
                        "Unable to find a task in the workflow with a lookup field called: %s" % field_id)
