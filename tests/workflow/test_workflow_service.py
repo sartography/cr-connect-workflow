@@ -93,3 +93,8 @@ class TestWorkflowService(BaseTest):
         workflow_spec_model = self.load_test_spec("decision_table_invalid")
         with self.assertRaises(ApiError):
             WorkflowService.test_spec(workflow_spec_model.id)
+
+
+    def test_expressions_in_forms(self):
+        workflow_spec_model = self.load_test_spec("form_expressions")
+        WorkflowService.test_spec(workflow_spec_model.id)
