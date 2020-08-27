@@ -2,12 +2,12 @@
 <definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.4.1">
   <decision id="enter_core_info" name="Enter Core Info">
     <extensionElements>
-      <biodi:bounds x="160" y="60" width="180" height="80" />
+      <biodi:bounds x="250" y="110" width="180" height="80" />
     </extensionElements>
     <decisionTable id="decisionTable_1">
       <input id="InputClause_1ki80j6" label="required doc ids">
         <inputExpression id="LiteralExpression_10mfcy7" typeRef="boolean" expressionLanguage="Python">
-          <text>StudyInfo.documents['UVACompl_PRCAppr']['required']</text>
+          <text>documents['UVACompl_PRCAppr']['required']</text>
         </inputExpression>
       </input>
       <output id="output_1" label="enter_core_info" name="enter_core_info" typeRef="string" />

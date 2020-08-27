@@ -535,7 +535,7 @@ This area is only for off label use or non-FDA approved imaging, or if you are i
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0f9d82z_di" bpmnElement="SequenceFlow_0f9d82z">
         <di:waypoint x="730" y="447" />
-        <di:waypoint x="792" y="447" />
+        <di:waypoint x="802" y="447" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0oaa5d7_di" bpmnElement="SequenceFlow_0oaa5d7">
         <di:waypoint x="575" y="447" />
@@ -642,7 +642,7 @@ This area is only for off label use or non-FDA approved imaging, or if you are i
         <dc:Bounds x="630" y="407" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_13y1gik_di" bpmnElement="EndEvent_13y1gik">
-        <dc:Bounds x="792" y="429" width="36" height="36" />
+        <dc:Bounds x="802" y="429" width="36" height="36" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

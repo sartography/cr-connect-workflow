@@ -13,8 +13,8 @@
       <bpmn:documentation># Documents &amp; Approvals
 
 &gt; ## Protocol Document Management
-{% if StudyInfo.documents.Study_Protocol_Document is defined -%}
-{%- set p = StudyInfo.documents.Study_Protocol_Document -%}
+{% if documents.Study_Protocol_Document is defined -%}
+{%- set p = documents.Study_Protocol_Document -%}
 {% if p.files|length -%}
 {%- set f = p.files[0] -%}
 &gt; [{{p.display_name}}](/study/{{p.study_id}}/workflow/{{f.workflow_id}}/task/{{f.task_id}})
@@ -28,14 +28,14 @@
 &gt; ## Approvals
 &gt; | Name | Status | Help |
 |:---- |:------ |:---- |
-{% for approval in StudyInfo.approvals -%}
+{% for approval in approvals -%}
 | [{{approval.display_name}}](/study/{{approval.study_id}}/workflow/{{approval.workflow_id}}) | {{approval.status}} | [?](/help/{{approval.workflow_spec_id}}) |
 {% endfor %}
 
 &gt; ## Documents
 &gt; | Name | Status | Help | Download |
 |:---- |:------ |:---- |:-------- |
-{% for key, doc in StudyInfo.documents.items() %}{% if doc.required -%}
+{% for key, doc in documents.items() %}{% if doc.required -%}
     {% if doc.files|length -%}
         | [{{doc.display_name}}](/study/{{doc.study_id}}/workflow/{{doc.workflow_id}}/task/{{doc.task_id}}) | {{doc.status}} | [Context here](/help/documents/{{doc.code}}) | [Download](/file/{{doc.file_id}}/data) |
     {%- else -%}
@@ -44,7 +44,7 @@
 {% endif %}{% endfor %}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:properties>
-          <camunda:property name="display_name" value="'Documents and Approvals'" />
+          <camunda:property name="display_name" value="Documents and Approvals" />
         </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_142jtxs</bpmn:incoming>
@@ -53,13 +53,12 @@
     <bpmn:scriptTask id="Activity_0a14x7j" name="Load Approvals">
       <bpmn:incoming>Flow_0c7ryff</bpmn:incoming>
       <bpmn:outgoing>Flow_142jtxs</bpmn:outgoing>
-      <bpmn:script>StudyInfo['approvals'] = study_info('approvals')</bpmn:script>
+      <bpmn:script>approvals = study_info('approvals')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_1aju60t" name="Load Documents">
       <bpmn:incoming>Flow_1k3su2q</bpmn:incoming>
       <bpmn:outgoing>Flow_0c7ryff</bpmn:outgoing>
-      <bpmn:script>StudyInfo = {}
-StudyInfo['documents'] = study_info('documents')</bpmn:script>
+      <bpmn:script>documents = study_info('documents')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_142jtxs" sourceRef="Activity_0a14x7j" targetRef="Activity_DisplayDocsAndApprovals" />
     <bpmn:sequenceFlow id="Flow_0c7ryff" sourceRef="Activity_1aju60t" targetRef="Activity_0a14x7j" />
@@ -68,7 +67,7 @@ StudyInfo['documents'] = study_info('documents')</bpmn:script>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1gmf4la">
       <bpmndi:BPMNEdge id="Flow_1k3su2q_di" bpmnElement="Flow_1k3su2q">
-        <di:waypoint x="188" y="117" />
+        <di:waypoint x="258" y="117" />
         <di:waypoint x="390" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0c7ryff_di" bpmnElement="Flow_0c7ryff">
@@ -84,7 +83,7 @@ StudyInfo['documents'] = study_info('documents')</bpmn:script>
         <di:waypoint x="882" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="152" y="99" width="36" height="36" />
+        <dc:Bounds x="222" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_1qvyxg7_di" bpmnElement="EndEvent_1qvyxg7">
         <dc:Bounds x="882" y="99" width="36" height="36" />

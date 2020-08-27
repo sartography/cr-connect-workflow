@@ -116,7 +116,7 @@ If you have any questions about the process, contact contract negotiator or Offi
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_160jfpk_di" bpmnElement="SequenceFlow_160jfpk">
         <di:waypoint x="595" y="337" />
-        <di:waypoint x="682" y="337" />
+        <di:waypoint x="662" y="337" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_0afrh4e_di" bpmnElement="SequenceFlow_0afrh4e">
         <di:waypoint x="460" y="190" />
@@ -135,8 +135,8 @@ If you have any questions about the process, contact contract negotiator or Offi
       <bpmndi:BPMNShape id="StartEvent_1p6s47e_di" bpmnElement="StartEvent_1p6s47e">
         <dc:Bounds x="122" y="319" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="EndEvent_14p904o_di" bpmnElement="EndEvent_14p904o">
-        <dc:Bounds x="682" y="319" width="36" height="36" />
+      <bpmndi:BPMNShape id="UserTask_03iirsg_di" bpmnElement="UserTask_03iirsg">
+        <dc:Bounds x="360" y="150" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="ParallelGateway_02f3709_di" bpmnElement="ExclusiveGateway_0m1n8mu">
         <dc:Bounds x="225" y="312" width="50" height="50" />
@@ -150,8 +150,8 @@ If you have any questions about the process, contact contract negotiator or Offi
       <bpmndi:BPMNShape id="UserTask_1fv8l08_di" bpmnElement="Task_0xn3d6z">
         <dc:Bounds x="360" y="430" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="UserTask_03iirsg_di" bpmnElement="UserTask_03iirsg">
-        <dc:Bounds x="360" y="150" width="100" height="80" />
+      <bpmndi:BPMNShape id="EndEvent_14p904o_di" bpmnElement="EndEvent_14p904o">
+        <dc:Bounds x="662" y="319" width="36" height="36" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
