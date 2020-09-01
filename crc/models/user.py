@@ -34,8 +34,8 @@ class UserModel(db.Model):
         """
         hours = float(app.config['TOKEN_AUTH_TTL_HOURS'])
         payload = {
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=hours, minutes=0, seconds=0),
-            'iat': datetime.datetime.utcnow(),
+#            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=hours, minutes=0, seconds=0),
+#            'iat': datetime.datetime.utcnow(),
             'sub': self.uid
         }
         return jwt.encode(

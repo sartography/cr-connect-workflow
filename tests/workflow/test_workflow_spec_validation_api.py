@@ -125,3 +125,12 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertIsNotNone(final_data)
         self.assertIn('string_required', final_data)
         self.assertNotIn('string_not_required', final_data)
+
+    def test_enum_defaults_correctly_populated(self):
+        self.load_example_data()
+        spec_model = self.load_test_spec('required_fields')
+        final_data = WorkflowService.test_spec(spec_model.id, required_only=True)
+        self.assertIsNotNone(final_data)
+        self.assertIn('enum_with_default', final_data)
+        self.assertEquals('maybe', final_data['enum_with_default']['value'])
+

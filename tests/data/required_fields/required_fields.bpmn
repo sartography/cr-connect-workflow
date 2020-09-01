@@ -18,6 +18,11 @@
             </camunda:validation>
           </camunda:formField>
           <camunda:formField id="string_not_required" type="string" />
+          <camunda:formField id="enum_with_default" label="My Enum" type="enum" defaultValue="maybe">
+            <camunda:value id="yes" name="Yes" />
+            <camunda:value id="no" name="No" />
+            <camunda:value id="maybe" name="Maybe so, I don&#39;t know." />
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0lvudp8</bpmn:incoming>

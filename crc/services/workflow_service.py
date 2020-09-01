@@ -130,29 +130,32 @@ class WorkflowService(object):
             # Assure field has valid properties
             WorkflowService.check_field_properties(field, task)
 
-            # First, assure that all expressions can fire, even if they aren't required fields.
-            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
-                if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
-                    continue # Don't mess about with hidden fields.
-            if field.has_property(Task.FIELD_PROP_REQUIRED_EXPRESSION):
-                result = WorkflowService.evaluate_property(Task.FIELD_PROP_REQUIRED_EXPRESSION, field, task)
-                if not result and required_only:
-                    continue # Don't complete fields that are not required.
+            # Process the label of the field if it is dynamic.
             if field.has_property(Task.FIELD_PROP_LABEL_EXPRESSION):
                 result = WorkflowService.evaluate_property(Task.FIELD_PROP_LABEL_EXPRESSION, field, task)
                 field.label = result
-            if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION):
-                result = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
-                field.default_value = result
-                form_data[field.id] = field.default_value
-            if required_only and (not field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED) or
-                                  field.get_validation(Task.FIELD_CONSTRAINT_REQUIRED).lower().strip() != "true"):
-                if field.default_value:
-                    form_data[field.id] = field.default_value
-                continue # Don't include any fields that aren't specifically marked as required.
-            elif field.has_property("read_only") and field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
-                if field.default_value:
-                    form_data[field.id] = field.default_value
+
+            # If the field is hidden, it should not produce a value.
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
+                if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
+                    continue
+
+            # If there is a default value, set it.
+            if field.default_value:
+                form_data[field.id] = WorkflowService.get_default_value(field, task)
+
+            # If we are only populating required fields, and this isn't required. stop here.
+            if required_only:
+                if (not field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED) or
+                        field.get_validation(Task.FIELD_CONSTRAINT_REQUIRED).lower().strip() != "true"):
+                    continue # Don't include any fields that aren't specifically marked as required.
+                if field.has_property(Task.FIELD_PROP_REQUIRED_EXPRESSION):
+                    result = WorkflowService.evaluate_property(Task.FIELD_PROP_REQUIRED_EXPRESSION, field, task)
+                    if not result and required_only:
+                        continue # Don't complete fields that are not required.
+
+            # If it is read only, stop here.
+            if field.has_property("read_only") and field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
                 continue # Don't mess about with read only fields.
 
             if field.has_property(Task.FIELD_PROP_REPEAT):
@@ -192,15 +195,63 @@ class WorkflowService(object):
             message = f"The field {field.id} contains an invalid expression. {e}"
             raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
 
-
+    @staticmethod
+    def has_lookup(field):
+        """Returns true if this is a lookup field."""
+        """Note, this does not include enums based on task data, that
+        is populated when the form is created, not as a lookup from a data table. """
+        has_ldap_lookup = field.has_property(Task.FIELD_PROP_LDAP_LOOKUP)
+        has_file_lookup = field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME)
+        return has_ldap_lookup or has_file_lookup
 
 
     @staticmethod
+    def get_default_value(field, task):
+        has_lookup = WorkflowService.has_lookup(field)
+
+        default = field.default_value
+        # If there is a value expression, use that rather than the default value.
+        if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION):
+            result = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
+            default = result
+
+        # If no default exists, return None
+        if not default: return None
+
+        if field.type == "enum" and not has_lookup:
+            default_option = next((obj for obj in field.options if obj.id == default), None)
+            if not default_option:
+                raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
+                                                            "the enum options ", task)
+            return {'value': default_option.id, 'label': default_option.name}
+        elif field.type == "autocomplete" or field.type == "enum":
+            lookup_model = LookupService.get_lookup_model(task, field)
+            if field.has_property(Task.FIELD_PROP_LDAP_LOOKUP):  # All ldap records get the same person.
+                return None # There is no default value for ldap.
+            elif lookup_model:
+                data = db.session.query(LookupDataModel).\
+                    filter(LookupDataModel.lookup_file_model == lookup_model). \
+                    filter(LookupDataModel.value == default).\
+                    first()
+                if not data:
+                    raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
+                                                                "the enum options ", task)
+                return {"value": data.value, "label": data.label, "data": data.data}
+            else:
+                raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
+                                                                 "are incorrect: %s " % field.id, task)
+        elif field.type == "long":
+            return int(default)
+        elif field.type == 'boolean':
+            return bool(default)
+        else:
+            return default
+
+    @staticmethod
     def get_random_data_for_field(field, task):
-        has_ldap_lookup = field.has_property(Task.FIELD_PROP_LDAP_LOOKUP)
-        has_file_lookup = field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME)
-        has_data_lookup = field.has_property(Task.FIELD_PROP_DATA_NAME)
-        has_lookup = has_ldap_lookup or has_file_lookup or has_data_lookup
+        """Randomly populates the field,  mainly concerned with getting enums correct, as
+        the rest are pretty easy."""
+        has_lookup = WorkflowService.has_lookup(field)
 
         if field.type == "enum" and not has_lookup:
             # If it's a normal enum field with no lookup,
@@ -208,17 +259,10 @@ class WorkflowService(object):
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    return {
-                        'value': random_choice['id'],
-                        'label': random_choice['name']
-                    }
+                    return {'value': random_choice['id'], 'label': random_choice['name']}
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
-                    # Assume it is an EnumFormFieldOption
-                    return {
-                        'value': random_choice.id,
-                        'label': random_choice.name
-                    }
+                    return {'value': random_choice.id, 'label': random_choice.name}
             else:
                 raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
                                                          " with no options" % field.id, task)
@@ -226,19 +270,8 @@ class WorkflowService(object):
             # If it has a lookup, get the lookup model from the spreadsheet or task data, then return a random option
             # from the lookup model
             lookup_model = LookupService.get_lookup_model(task, field)
-            if has_ldap_lookup:  # All ldap records get the same person.
-                return {
-                        "label": "dhf8r",
-                        "value": "Dan Funk",
-                        "data": {
-                            "uid": "dhf8r",
-                            "display_name": "Dan Funk",
-                            "given_name": "Dan",
-                            "email_address": "dhf8r@virginia.edu",
-                            "department": "Depertment of Psychocosmographictology",
-                            "affiliation": "Rousabout",
-                            "sponsor_type": "Staff"}
-                        }
+            if field.has_property(Task.FIELD_PROP_LDAP_LOOKUP):  # All ldap records get the same person.
+                return WorkflowService._random_ldap_record()
             elif lookup_model:
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
@@ -260,8 +293,21 @@ class WorkflowService(object):
         else:
             return WorkflowService._random_string()
 
-    def __get_options(self):
-        pass
+    @staticmethod
+    def _random_ldap_record():
+        return {
+            "label": "dhf8r",
+            "value": "Dan Funk",
+            "data": {
+                "uid": "dhf8r",
+                "display_name": "Dan Funk",
+                "given_name": "Dan",
+                "email_address": "dhf8r@virginia.edu",
+                "department": "Department of Psychocosmographictology",
+                "affiliation": "Roustabout",
+                "sponsor_type": "Staff"}
+        }
+
 
     @staticmethod
     def _random_string(string_length=10):
