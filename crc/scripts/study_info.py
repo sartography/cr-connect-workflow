@@ -213,7 +213,7 @@ Returns information specific to the protocol.
                         "uid": "cah3us",
                         "affiliation": "sponsored",
                         "date_cached": "2020-08-04T19:32:10.075852+00:00"
-                    }
+                    },
                 },
                 "pi": {
                     "PI": {

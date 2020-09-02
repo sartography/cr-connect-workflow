@@ -124,10 +124,11 @@ class LookupService(object):
             lookup_model = LookupFileModel(workflow_spec_id=workflow_model.workflow_spec_id,
                                            field_id=field_id,
                                            is_ldap=True)
+
         else:
-            raise ApiError("unknown_lookup_option",
+            raise ApiError.from_task_spec("unknown_lookup_option",
                            "Lookup supports using spreadsheet or LDAP options, "
-                           "and neither of those was provided.")
+                           "and neither of those was provided.", spec)
         db.session.add(lookup_model)
         db.session.commit()
         return lookup_model
