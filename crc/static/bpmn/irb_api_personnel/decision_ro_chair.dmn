@@ -5,9 +5,14 @@
       <biodi:bounds x="300" y="130" width="180" height="80" />
     </extensionElements>
     <decisionTable id="decisionTable_1">
+      <input id="InputClause_1tmg6oz" label="RO School">
+        <inputExpression id="LiteralExpression_1jygszu" typeRef="string">
+          <text>ro['schoolName']</text>
+        </inputExpression>
+      </input>
       <input id="input_1" label="RO Department">
         <inputExpression id="inputExpression_1" typeRef="string">
-          <text>RO_Department</text>
+          <text>ro.deptName</text>
         </inputExpression>
       </input>
       <output id="OutputClause_0a23e1m" label="RO Chair Computer ID" name="RO_Chair_CID" typeRef="string" />
@@ -19,6 +24,9 @@
       <output id="OutputClause_07o7aw8" label="RO Designee 1 Title" name="RO_D1_Title" typeRef="string" />
       <output id="OutputClause_0vfjwcc" label="RO Designee 1 Sig Block" name="RO_D1_Sig_Block" typeRef="string" />
       <rule id="DecisionRule_130my8k">
+        <inputEntry id="UnaryTests_11fhttw">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0utry5v">
           <text>"Anesthesiology"</text>
         </inputEntry>
@@ -48,11 +56,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1p25iet">
+        <inputEntry id="UnaryTests_0cm1n91">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1twyz8n">
           <text>"Biochemistry &amp; Molecular Genetics"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0mk1ouw">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_02ypl0q">
           <text></text>
@@ -77,11 +88,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_11vnz24">
+        <inputEntry id="UnaryTests_1tjedoq">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1n5hdk0">
           <text>"Biomedical Engineering"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1ki2y5r">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1nbiz8o">
           <text></text>
@@ -106,6 +120,9 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0o9l1g4">
+        <inputEntry id="UnaryTests_1556t91">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_00c9fvd">
           <text>"Brain Institute"</text>
         </inputEntry>
@@ -135,11 +152,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_07agfmq">
+        <inputEntry id="UnaryTests_0d7yk1p">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1ne2xho">
           <text>"Cell Biology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1mt2ueq">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0wfnk1a">
           <text></text>
@@ -164,6 +184,9 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0tbdzg7">
+        <inputEntry id="UnaryTests_1k5v1bv">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_192cb1q">
           <text>"Center for Diabetes Technology"</text>
         </inputEntry>
@@ -193,6 +216,9 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0mnaifs">
+        <inputEntry id="UnaryTests_0gs3vzv">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1pbp49w">
           <text>"Center for Research in Reproduction"</text>
         </inputEntry>
@@ -222,11 +248,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1g9heo9">
+        <inputEntry id="UnaryTests_1ihrcph">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_06vfwmk">
           <text>"Dermatology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1yav83a">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1apthzx">
           <text>"Art P. Saavedra, MD, PhD, MBA"</text>
@@ -251,11 +280,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1w4vnv2">
+        <inputEntry id="UnaryTests_04etk6e">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1uxzlwk">
           <text>"Emergency Medicine"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0y4klbl">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_00rdpy1">
           <text>"Robert O'Connor, MD"</text>
@@ -280,11 +312,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0v9kyu9">
+        <inputEntry id="UnaryTests_1e7emvh">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0obk165">
           <text>"Family Medicine"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1u4cfnj">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0g02cea">
           <text>"Li Li, MD, PhD, MPH"</text>
@@ -309,11 +344,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0yft3o2">
+        <inputEntry id="UnaryTests_0dtsrhv">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_11hmf6p">
           <text>"Institute of Law, Psychiatry and Public Policy (institutional)"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1k99mrq">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1en1sr3">
           <text></text>
@@ -338,11 +376,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0tn1ntu">
+        <inputEntry id="UnaryTests_1p30xlq">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_03sw24v">
           <text>"Keck Center for Cellular Imaging (institutional)"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_13i4uts">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0rzmxbc">
           <text></text>
@@ -367,6 +408,9 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1xa7pks">
+        <inputEntry id="UnaryTests_0s4hegk">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1pppuin">
           <text>"Kinesiology"</text>
         </inputEntry>
@@ -396,11 +440,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_07gq82a">
+        <inputEntry id="UnaryTests_13yl0l9">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1usw6cv">
           <text>"Microbiology, Immunology, and Cancer Biology (MIC)"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0ayt0hb">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0zas7lc">
           <text></text>
@@ -425,11 +472,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1ugttjx">
+        <inputEntry id="UnaryTests_1ih7ufh">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0l14jnz">
           <text>"Molecular Physiology &amp; Biological Physics"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0cmnhcl">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0nz91ut">
           <text></text>
@@ -454,11 +504,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_13zj816">
+        <inputEntry id="UnaryTests_0phyrdh">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_03te6ro">
           <text>"Neurology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0i51oau">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1ym154j">
           <text>"Howard Goodkin MD, PhD"</text>
@@ -483,11 +536,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1d162e6">
+        <inputEntry id="UnaryTests_1am3lrp">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0t4sokv">
           <text>"Neuroscience"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1tfzksp">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1lszybr">
           <text></text>
@@ -512,11 +568,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1qa4tbk">
+        <inputEntry id="UnaryTests_08n4jea">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0h7ex0k">
           <text>"Neurosurgery"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1jrc8uu">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1ivww3e">
           <text>"Mark E. Shaffrey, MD"</text>
@@ -541,11 +600,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_194hj7g">
+        <inputEntry id="UnaryTests_0gztswi">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1lmoxki">
           <text>"Obstetrics &amp; Gynecology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1d2368t">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0l5nykm">
           <text>"James (Jef) E  Ferguson II, MD, MBA"</text>
@@ -570,11 +632,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1feefxw">
+        <inputEntry id="UnaryTests_1kpo7kv">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1bquriu">
           <text>"Ophthalmology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1cvve9k">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0rcmv2x">
           <text>"Peter Netland, MD, PhD"</text>
@@ -599,11 +664,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0kk6ajr">
+        <inputEntry id="UnaryTests_133bpdr">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0j98tua">
           <text>"Orthopedic Surgery"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1jpdhy8">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_14lbprk">
           <text>"A. Bobby Chhabra, MD"</text>
@@ -628,11 +696,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1ckz8ox">
+        <inputEntry id="UnaryTests_0gkay9k">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1gkxt51">
           <text>"Otolaryngology- Head &amp; Neck Surgery"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1jxatpo">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1urdeg3">
           <text>"Stephen S. Park, MD"</text>
@@ -657,11 +728,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_04eribm">
+        <inputEntry id="UnaryTests_1bl9v24">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1a11t50">
           <text>"Pathology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0kh06ih">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1ovk0xq">
           <text></text>
@@ -686,6 +760,9 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_04do91b">
+        <inputEntry id="UnaryTests_0p5kzg0">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1hg6qgn">
           <text>"Pediatrics"</text>
         </inputEntry>
@@ -715,11 +792,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0lb8hi5">
+        <inputEntry id="UnaryTests_0t3tay9">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0y76uqi">
           <text>"Pharmacology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0zjqu5t">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0xu1r2k">
           <text></text>
@@ -744,11 +824,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0csfjb9">
+        <inputEntry id="UnaryTests_05hhikf">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0ccnf2c">
           <text>"Plastic and Maxillofacial Surgery"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0so2ly5">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_09ynoch">
           <text>"Thomas J. Gampper, MD, FACS"</text>
@@ -773,11 +856,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0ie3f70">
+        <inputEntry id="UnaryTests_0i2yux8">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_10hi0vn">
           <text>"Psychiatry and Neurobehavioral Sciences"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_05qrc3z">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1tcqtd0">
           <text>"Anita H. Clayton, MD"</text>
@@ -802,11 +888,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1iavxz0">
+        <inputEntry id="UnaryTests_06vf3d1">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1myl3be">
           <text>"Public Health Sciences"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0kdn3sp">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1ayhurb">
           <text></text>
@@ -831,11 +920,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1d7j3pd">
+        <inputEntry id="UnaryTests_1vnjj2d">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_1m7gkcr">
           <text>"Radiation Oncology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1xg47wl">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_11ufvnv">
           <text>"James M. Larner, MD, FASTRO"</text>
@@ -860,11 +952,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0gzdz53">
+        <inputEntry id="UnaryTests_0pab2ze">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0mo9711">
           <text>"Radiology and Medical Imaging"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_07shsb0">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1v4defw">
           <text>"Alan H. Matsumoto, MD"</text>
@@ -889,11 +984,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1immrvr">
+        <inputEntry id="UnaryTests_0da2hqg">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_01pmp6n">
           <text>"Surgery"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_026jlgr">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_01ao8qh">
           <text>"Alexander S. Krupnick , MD"</text>
@@ -918,11 +1016,14 @@
         </outputEntry>
       </rule>
       <rule id="DecisionRule_148egsn">
+        <inputEntry id="UnaryTests_1uvy0in">
+          <text>"Medicine"</text>
+        </inputEntry>
         <inputEntry id="UnaryTests_0x77krc">
           <text>"Urology"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1xwdb9q">
-          <text></text>
+          <text>"???"</text>
         </outputEntry>
         <outputEntry id="LiteralExpression_1qsi7o3">
           <text>"Kristen L.Greene, MD, MAS, FACS"</text>
@@ -943,6 +1044,134 @@
           <text></text>
         </outputEntry>
         <outputEntry id="LiteralExpression_0ehj16p">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1sqzg5z">
+        <inputEntry id="UnaryTests_0g50os8">
+          <text>"Arts &amp; Sciences"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0u654ih">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0asqxhv">
+          <text>"???"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0a5u29z">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ur1exr">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0u39hoe">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1y9uthe">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1bqakav">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1x2urhx">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ucz5wo">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1ojtqxb">
+        <inputEntry id="UnaryTests_14plg6o">
+          <text>"Engineering"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0zhyoi2">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_02h0kft">
+          <text>"???"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_08lu3h0">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0vvri9p">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0o1d5u0">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1dsyes4">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1lst6bt">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0mav5gd">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_14lsedk">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_02cdjwo">
+        <inputEntry id="UnaryTests_17p8qkw">
+          <text>"Education"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1rhi9jd">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0xrp8fy">
+          <text>"???"</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_01hvbpu">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1xf8hgn">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_15p9jow">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1nxi7l2">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0pk3ial">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1ky2jof">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0fbtmfi">
+          <text></text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1qq7zag">
+        <inputEntry id="UnaryTests_05lwegm">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1h31i7u">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_09ipl3z">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1nqtqr2">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1py8gjc">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1f6x2vd">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_13ssjwl">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0lzwr5g">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1v0o3b3">
+          <text></text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1kbgybn">
           <text></text>
         </outputEntry>
       </rule>
