@@ -280,12 +280,15 @@ class ExampleDataLoader:
         db.session.add(spec)
         db.session.commit()
         if not filepath and not from_tests:
-            filepath = os.path.join(app.root_path, 'static', 'bpmn', id, "*")
+            filepath = os.path.join(app.root_path, 'static', 'bpmn', id, "*.*")
         if not filepath and from_tests:
-            filepath = os.path.join(app.root_path, '..', 'tests', 'data', id, "*")
+            filepath = os.path.join(app.root_path, '..', 'tests', 'data', id, "*.*")
 
         files = glob.glob(filepath)
         for file_path in files:
+            if os.path.isdir(file_path):
+                continue # Don't try to process sub directories
+
             noise, file_extension = os.path.splitext(file_path)
             filename = os.path.basename(file_path)
 
