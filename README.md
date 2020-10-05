@@ -12,15 +12,56 @@ These instructions assume you're using these development and tools:
 ### Environment Setup
 Make sure all of the following are properly installed on your system:
 1. `python3` & `pip3`:
-    - [Install python3 & pip3](https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-programming-environment-on-an-ubuntu-18-04-server)
+    - [Install python3 & pip3 on Linux](https://www.digitalocean.com/community/tutorials/how-to-install-python-3-and-set-up-a-programming-environment-on-an-ubuntu-18-04-server)
     - [Installing Python 3 on Linux](https://docs.python-guide.org/starting/install3/linux/)
+    - For windows, install Python 3.8 from Mircosoft Store, which comes with pip3
 2. `pipenv`:
+    - From a terminal or Powershell, 'pip install pipenv'
+    - For windows, make note of the location where the pipenv.exe is placed, it will tell you in the output.  For me
+      it was C:\Users\danie\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.8_qbz5n2kfra8p0\LocalCache\local-packages\Python38\Scripts\pipenv.exe
     - [Install pipenv](https://pipenv-es.readthedocs.io/es/stable/)
-    - [Add ${HOME}/.local/bin to your PATH](https://github.com/pypa/pipenv/issues/2122#issue-319600584)
+    - [For Linux: Add ${HOME}/.local/bin to your PATH](https://github.com/pypa/pipenv/issues/2122#issue-319600584)
+     
 3. `install depdencies`
     - pipenv install 
     - pipenv install --dev    (for development dependencies)
+
 ### Running Postgres
+We use a docker container to run postgres, making it easier to get running
+locally (at least for linux) Docker containers on windows are alitt
+trickly, so see detailed directions below ...
+
+#### Linux 
+1. There is a sub-directory called "postgres" that contains a docker-compose script.
+
+#### Windows
+You will need to install Docker (and Docker Compose which comes with this) installed. See:
+https://docs.docker.com/compose/install/  I had good success using Docker Desktop to 
+fire up the docker container.
+
+Once you have Docker installed for windows, you will need to enable resource file sharing
+(go the Docker / Settings / Resources / Filesharing and enable File shareing for the full C:/ 
+drive.  
+
+Due to some permission issues with Docker, you need to create a shared docker volume.
+On the command line, cd into your postges directory, and run the following:
+```
+docker volume create --name=data
+```
+
+Finally, you can use docker compose to build the docker instance
+```
+docker-compose -f docker-windows-compose.yml up --no-start
+```
+Assuming you have docker and docker-compose installed correctly, and you fixed the permission
+issues as described above, these should execute without error.
+At which point you can open up the Docker Desktop Dashboard and see postgres now exists
+as a docker container.  Hit play, and it should show that it is running.  Congratulations!
+Postgres is running.  
+
+When you come back to this later, you may need to start the docker container again, but
+it should always be visible in the Docker Desktop Daskboard with a friendly little play
+stop button for your clicking pleasure.
 
 
 ### Project Initialization

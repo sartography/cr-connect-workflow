@@ -1,0 +1,15 @@
+version: '3.7'
+services:
+  db:
+    image:  sartography/cr-connect-db
+    volumes:
+       - data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=crc_user
+      - POSTGRES_PASSWORD=crc_pass
+      - POSTGRES_MULTIPLE_DATABASES=crc_dev,crc_test,pb,pb_test
+volumes:
+  data:
+    external: true
