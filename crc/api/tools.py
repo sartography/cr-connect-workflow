@@ -71,14 +71,15 @@ def send_email(address):
     return send_test_email(address, [address])
 
 
-def evaluate_python_expression(expression, body):
-    """Evaluate the given python expression, returning it's result.  This is useful if the
+def evaluate_python_expression(body):
+    """Evaluate the given python expression, returning its result.  This is useful if the
     front end application needs to do real-time processing on task data. If for instance
     there is a hide expression that is based on a previous value in the same form."""
     try:
         # fixme: The script engine should be pulled from Workflow Processor,
         #  but the one it returns overwrites the evaluate expression making it uncallable.
         script_engine = PythonScriptEngine()
-        return script_engine.evaluate(expression, **body)
+        result = script_engine.evaluate(body['expression'], **body['data'])
+        return {"result": result}
     except Exception as e:
         raise ApiError("expression_error", str(e))

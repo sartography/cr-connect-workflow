@@ -4,7 +4,7 @@
     <decisionTable id="decisionTable_1">
       <input id="input_1" label="IS_IDE">
         <inputExpression id="inputExpression_1" typeRef="integer">
-          <text>StudyInfo.details.IS_IDE</text>
+          <text>details.IS_IDE</text>
         </inputExpression>
       </input>
       <output id="output_1" label="Menu Staus" name="ide_supplement" typeRef="string" />

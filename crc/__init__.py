@@ -1,11 +1,11 @@
+import json
 import logging
 import os
 import sentry_sdk
 
 import connexion
-from jinja2 import Environment, FileSystemLoader
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
+from connexion import ProblemException
+from flask import Response
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_mail import Mail
@@ -58,6 +58,18 @@ if app.config['SENTRY_ENVIRONMENT']:
         dsn="https://25342ca4e2d443c6a5c49707d68e9f40@o401361.ingest.sentry.io/5260915",
         integrations=[FlaskIntegration()]
     )
+
+
+# Connexion Error handling
+def render_errors(exception):
+    from crc.api.common import ApiError, ApiErrorSchema
+    error = ApiError(code=exception.title, message=exception.details, status_code=exception.status)
+    return Response(ApiErrorSchema().dump(error), status=401, mimetype="application/json")
+
+
+connexion_app.add_error_handler(ProblemException, render_errors)
+
+
 
 print('=== USING THESE CONFIG SETTINGS: ===')
 print('APPLICATION_ROOT = ', app.config['APPLICATION_ROOT'])

@@ -107,12 +107,18 @@ class ExampleDataLoader:
                          description="Upload the Study Protocol here.",
                          category_id=1,
                          display_order=0)
+        self.create_spec(id="non_uva_approval",
+                         name="non_uva",
+                         display_name="Non-UVA Institutional Approval",
+                         description="TBD",
+                         category_id=1,
+                         display_order=1)
         self.create_spec(id="core_info",
                          name="core_info",
                          display_name="Core Info",
                          description="TBD",
                          category_id=1,
-                         display_order=1)
+                         display_order=2)
 
         # Approvals
         self.create_spec(id="ids_full_submission",
@@ -139,6 +145,12 @@ class ExampleDataLoader:
                          description="TBD",
                          category_id=2,
                          display_order=3)
+        self.create_spec(id="department_chair_approval",
+                         name="department_chair_approval",
+                         display_name="Department Chair Approval",
+                         description="TBD",
+                         category_id=2,
+                         display_order=4)
 
         # Data Security Plan
         self.create_spec(id="data_security_plan",
@@ -308,3 +320,58 @@ class ExampleDataLoader:
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()
+
+def ldap(): return "x";
+def study_info(i): return {"x":"Y"};
+
+
+me = ldap()
+investigators = study_info('investigators')
+pi = investigators.get('PI', None)
+is_me_pi = False
+if pi is not None:
+    hasPI = True
+    if pi['uid'] == me['uid']:
+        is_me_pi = True
+else:
+    hasPI = False
+
+dc = investigators.get('DEPT_CH', None)
+pcs = {}
+is_me_pc = False
+for k in investigators.keys():
+    if k in ['SC_I','SC_II','IRBC']:
+        investigator = investigators.get(k)
+        if investigator['uid'] != me['uid']:
+            pcs[k] = investigator
+        else:
+            is_me_pc = True
+            is_me_pc_role = investigator['label']
+        del(investigator)
+cnt_pcs = len(pcs.keys())
+acs = {}
+is_me_ac = False
+for k in investigators.keys():
+    if k == 'AS_C':
+        investigator = investigators.get(k)
+        if investigator['uid'] != me['uid']:
+            acs[k] = investigator
+        else:
+            is_me_ac = True
+            is_me_ac_role = investigator['label']
+        del investigator
+
+cnt_acs = len(acs.keys())
+subs = {}
+is_me_subs = False
+for k in investigators.keys():
+    if k[:2] == 'SI':
+        investigator = investigators.get(k)
+        if investigator['uid'] != me['uid']:
+            subs[k] = investigator
+        else:
+            is_me_subs = True
+        del investigator
+
+cnt_subs = len(subs.keys())
+del investigators

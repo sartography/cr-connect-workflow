@@ -84,7 +84,7 @@ class LookupService(object):
         Returns:  an array of LookupData, suitable for returning to the API.
         """
         processor = WorkflowProcessor(workflow_model)  # VERY expensive, Ludicrous for lookup / type ahead
-        spiff_task, field = processor.find_task_and_field_by_field_id(field_id)
+        spec, field = processor.find_spec_and_field_by_field_id(field_id)
 
         # Clear out all existing lookup models for this workflow and field.
         existing_models = db.session.query(LookupFileModel) \
@@ -94,20 +94,20 @@ class LookupService(object):
             db.session.delete(model)
 
         #  Use the contents of a file to populate enum field options
-        if field.has_property(Task.PROP_OPTIONS_FILE_NAME):
-            if not (field.has_property(Task.PROP_OPTIONS_FILE_VALUE_COLUMN) or
-                    field.has_property(Task.PROP_OPTIONS_FILE_LABEL_COLUMN)):
-                raise ApiError.from_task("invalid_enum",
+        if field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
+            if not (field.has_property(Task.FIELD_PROP_SPREADSHEET_VALUE_COLUMN) or
+                    field.has_property(Task.FIELD_PROP_SPREADSHEET_LABEL_COLUMN)):
+                raise ApiError.from_task_spec("invalid_enum",
                                          "For enumerations based on an xls file, you must include 3 properties: %s, "
-                                         "%s, and %s" % (Task.PROP_OPTIONS_FILE_NAME,
-                                                         Task.PROP_OPTIONS_FILE_VALUE_COLUMN,
-                                                         Task.PROP_OPTIONS_FILE_LABEL_COLUMN),
-                                         task=spiff_task)
+                                         "%s, and %s" % (Task.FIELD_PROP_SPREADSHEET_NAME,
+                                                         Task.FIELD_PROP_SPREADSHEET_VALUE_COLUMN,
+                                                         Task.FIELD_PROP_SPREADSHEET_LABEL_COLUMN),
+                                         task_spec=spec)
 
             # Get the file data from the File Service
-            file_name = field.get_property(Task.PROP_OPTIONS_FILE_NAME)
-            value_column = field.get_property(Task.PROP_OPTIONS_FILE_VALUE_COLUMN)
-            label_column = field.get_property(Task.PROP_OPTIONS_FILE_LABEL_COLUMN)
+            file_name = field.get_property(Task.FIELD_PROP_SPREADSHEET_NAME)
+            value_column = field.get_property(Task.FIELD_PROP_SPREADSHEET_VALUE_COLUMN)
+            label_column = field.get_property(Task.FIELD_PROP_SPREADSHEET_LABEL_COLUMN)
             latest_files = FileService.get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id,
                                                            workflow_id=workflow_model.id,
                                                            name=file_name)
@@ -120,14 +120,15 @@ class LookupService(object):
                                                             workflow_model.workflow_spec_id, field_id)
 
         #  Use the results of an LDAP request to populate enum field options
-        elif field.has_property(Task.PROP_LDAP_LOOKUP):
+        elif field.has_property(Task.FIELD_PROP_LDAP_LOOKUP):
             lookup_model = LookupFileModel(workflow_spec_id=workflow_model.workflow_spec_id,
                                            field_id=field_id,
                                            is_ldap=True)
+
         else:
-            raise ApiError("unknown_lookup_option",
+            raise ApiError.from_task_spec("unknown_lookup_option",
                            "Lookup supports using spreadsheet or LDAP options, "
-                           "and neither of those was provided.")
+                           "and neither of those was provided.", spec)
         db.session.add(lookup_model)
         db.session.commit()
         return lookup_model

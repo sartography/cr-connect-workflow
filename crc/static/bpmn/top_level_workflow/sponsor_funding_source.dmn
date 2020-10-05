@@ -2,29 +2,30 @@
 <definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <decision id="sponsor_funding_source" name="Sponsor Funding Source">
     <extensionElements>
-      <biodi:bounds x="190" y="80" width="180" height="80" />
+      <biodi:bounds x="280" y="90" width="180" height="80" />
     </extensionElements>
     <decisionTable id="DecisionTable_00zdxg0">
       <input id="InputClause_02n3ccs" label="CoCApplication Required?">
         <inputExpression id="LiteralExpression_1ju4o1o" typeRef="boolean" expressionLanguage="feel">
-          <text>StudyInfo.documents.AD_LabManual.required</text>
+          <text>documents.AD_LabManual.required</text>
         </inputExpression>
       </input>
       <output id="OutputClause_1ybi1ud" label="sponsor_funding_source" name="sponsor_funding_source" typeRef="string" />
       <rule id="DecisionRule_1t97mw4">
         <inputEntry id="UnaryTests_0ym4ln2">
-          <text>True</text>
+          <text>true</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1pweuqc">
           <text>"required"</text>
         </outputEntry>
       </rule>
       <rule id="DecisionRule_1q965wz">
+        <description>was "disabled"</description>
         <inputEntry id="UnaryTests_1mlhh3t">
-          <text>False</text>
+          <text>false</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_073vd6i">
-          <text>"disabled"</text>
+          <text>"required"</text>
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0zh6o60">
