@@ -159,7 +159,8 @@ class WorkflowProcessor(object):
                     # database model to which it is associated, and scripts running within the model
                     # can then load data as needed.
                 self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
+                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(
+                    self.bpmn_workflow,include_spec=True)
                 self.save()
 
         except MissingSpecError as ke:
@@ -184,7 +185,8 @@ class WorkflowProcessor(object):
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
         if workflow_model.bpmn_workflow_json:
-            bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
+            bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
+                                                                  workflow_spec=None)
         else:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
@@ -349,7 +351,7 @@ class WorkflowProcessor(object):
             raise ApiError.from_task("task_error", str(we), we.task)
 
     def serialize(self):
-        return self._serializer.serialize_workflow(self.bpmn_workflow)
+        return self._serializer.serialize_workflow(self.bpmn_workflow,include_spec=True)
 
     def next_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
