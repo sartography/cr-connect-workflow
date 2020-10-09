@@ -134,17 +134,19 @@ class WorkflowProcessor(object):
             which should work in casees where a soft reset fails.
         If neither flag is set, it will use the same version of the specification that was used to originally
         create the workflow model. """
+
         self.workflow_model = workflow_model
 
         if soft_reset or len(workflow_model.dependencies) == 0:  # Depenencies of 0 means the workflow was never started.
             self.spec_data_files = FileService.get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id)
+            spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         else:
             self.spec_data_files = FileService.get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id,
                 workflow_id=workflow_model.id)
+            spec = None
 
-        spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         self.workflow_spec_id = workflow_model.workflow_spec_id
         try:
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec, validate_only)
@@ -186,7 +188,7 @@ class WorkflowProcessor(object):
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
         if workflow_model.bpmn_workflow_json:
             bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
-                                                                  workflow_spec=None)
+                                                                  workflow_spec=spec)
         else:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
