@@ -188,7 +188,7 @@ class TestWorkflowProcessor(BaseTest):
         processor.complete_task(task)
 
         # Modify the specification, with a major change.
-        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
         # Attempting a soft update on a structural change should raise a sensible error.
@@ -292,7 +292,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("Step 2", next_task.task_spec.description)
 
         # Modify the specification, with a major change that alters the flow and can't be serialized effectively.
-        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
         # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.

@@ -188,7 +188,7 @@ class TestTasksApi(BaseTest):
 
         # Modify the specification, with a major change that alters the flow and can't be deserialized
         # effectively, if it uses the latest spec files.
-        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
         workflow_api = self.get_workflow_api(workflow)
@@ -213,7 +213,7 @@ class TestTasksApi(BaseTest):
 
         # Modify the specification, with a major change that alters the flow and can't be deserialized
         # effectively, if it uses the latest spec files.
-        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'mods', 'two_forms_struc_mod.bpmn')
+        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
         # perform a soft reset returns an error
