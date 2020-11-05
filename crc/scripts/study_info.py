@@ -29,6 +29,33 @@ class StudyInfo(Script):
                 "ind_number": "1234",
                 "inactive": False
             },
+            "sponsors": [
+          {
+            "COMMONRULEAGENCY": None,
+            "SPONSOR_ID": 2453,
+            "SP_NAME": "Abbott Ltd",
+            "SP_TYPE": "Private",
+            "SP_TYPE_GROUP_NAME": None,
+            "SS_STUDY": 2
+          },
+          {
+            "COMMONRULEAGENCY": None,
+            "SPONSOR_ID": 2387,
+            "SP_NAME": "Abbott-Price",
+            "SP_TYPE": "Incoming Sub Award",
+            "SP_TYPE_GROUP_NAME": "Government",
+            "SS_STUDY": 2
+          },
+          {
+            "COMMONRULEAGENCY": None,
+            "SPONSOR_ID": 1996,
+            "SP_NAME": "Abernathy-Heidenreich",
+            "SP_TYPE": "Foundation/Not for Profit",
+            "SP_TYPE_GROUP_NAME": "Other External Funding",
+            "SS_STUDY": 2
+          }
+        ],
+
             "investigators": {
                 'PI': {
                     'label': ProtocolBuilderInvestigatorType.PI.value,
@@ -165,6 +192,33 @@ Returns information specific to the protocol.
                     "ind_number": "1234",
                     "inactive": False
                 },
+          "sponsors": [
+          {
+            "COMMONRULEAGENCY": None,
+            "SPONSOR_ID": 2453,
+            "SP_NAME": "Abbott Ltd",
+            "SP_TYPE": "Private",
+            "SP_TYPE_GROUP_NAME": None,
+            "SS_STUDY": 2
+          },
+          {
+            "COMMONRULEAGENCY": None,
+            "SPONSOR_ID": 2387,
+            "SP_NAME": "Abbott-Price",
+            "SP_TYPE": "Incoming Sub Award",
+            "SP_TYPE_GROUP_NAME": "Government",
+            "SS_STUDY": 2
+          },
+          {
+            "COMMONRULEAGENCY": None,
+            "SPONSOR_ID": 1996,
+            "SP_NAME": "Abernathy-Heidenreich",
+            "SP_TYPE": "Foundation/Not for Profit",
+            "SP_TYPE_GROUP_NAME": "Other External Funding",
+            "SS_STUDY": 2
+          }
+        ],
+
                 "investigators": {
                     "PI": {
                         "label": ProtocolBuilderInvestigatorType.PI.value,
