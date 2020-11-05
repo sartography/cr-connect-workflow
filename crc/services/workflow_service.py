@@ -141,7 +141,7 @@ class WorkflowService(object):
                     continue
 
             # If there is a default value, set it.
-            if field.has_property('default_value') and field.default_value:
+            if hasattr(field,'default_value') and field.default_value:
                 form_data[field.id] = WorkflowService.get_default_value(field, task)
 
             # If we are only populating required fields, and this isn't required. stop here.
