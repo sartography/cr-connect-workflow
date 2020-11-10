@@ -1,9 +1,12 @@
 from unittest.mock import patch
+import flask
+
 
 from tests.base_test import BaseTest
 
 from crc import session, app
 from crc.models.study import StudyModel
+from crc.models.user import UserModel
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
@@ -27,6 +30,7 @@ class TestSudySponsorsScript(BaseTest):
 
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
         self.load_example_data()
@@ -41,5 +45,6 @@ class TestSudySponsorsScript(BaseTest):
         data = processor.next_task().data
         self.assertIn('sponsors', data)
         self.assertIn('out', data)
+        self.assertEquals('empty', data['empty'])
         self.assertEquals('newval', data['out'])
         self.assertEquals(3, len(data['sponsors']))

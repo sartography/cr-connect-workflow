@@ -12,7 +12,7 @@
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1bqiin0" sourceRef="Task_Script_Load_Study_Sponsors" targetRef="Activity_0cm6tn2" />
     <bpmn:endEvent id="EndEvent_171dj09">
-      <bpmn:incoming>Flow_0g9waf3</bpmn:incoming>
+      <bpmn:incoming>Flow_05136ua</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_09cika8" sourceRef="Activity_0cm6tn2" targetRef="Activity_0d8iftx" />
     <bpmn:scriptTask id="Activity_0cm6tn2" name="setval">
@@ -26,12 +26,18 @@
       <bpmn:outgoing>Flow_1oeqjuy</bpmn:outgoing>
       <bpmn:script>out = study_data_get('testme','bogus')</bpmn:script>
     </bpmn:scriptTask>
-    <bpmn:sequenceFlow id="Flow_0g9waf3" sourceRef="Activity_1yup9u7" targetRef="EndEvent_171dj09" />
+    <bpmn:sequenceFlow id="Flow_0g9waf3" sourceRef="Activity_1yup9u7" targetRef="Activity_0xw717o" />
     <bpmn:scriptTask id="Activity_1yup9u7" name="reset value">
       <bpmn:incoming>Flow_1oeqjuy</bpmn:incoming>
       <bpmn:outgoing>Flow_0g9waf3</bpmn:outgoing>
       <bpmn:script>study_data_set('testme','badval')</bpmn:script>
     </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_0xw717o" name="Make sure user_data_get doesn&#39;t get the study_data_set variable">
+      <bpmn:incoming>Flow_0g9waf3</bpmn:incoming>
+      <bpmn:outgoing>Flow_05136ua</bpmn:outgoing>
+      <bpmn:script>empty = user_data_get('testme','empty')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_05136ua" sourceRef="Activity_0xw717o" targetRef="EndEvent_171dj09" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0exnnpv">
@@ -50,7 +56,7 @@
         <dc:Bounds x="270" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_171dj09_di" bpmnElement="EndEvent_171dj09">
-        <dc:Bounds x="932" y="99" width="36" height="36" />
+        <dc:Bounds x="792" y="672" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_09cika8_di" bpmnElement="Flow_09cika8">
         <di:waypoint x="540" y="117" />
@@ -67,12 +73,19 @@
         <dc:Bounds x="600" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_0g9waf3_di" bpmnElement="Flow_0g9waf3">
-        <di:waypoint x="860" y="117" />
-        <di:waypoint x="932" y="117" />
+        <di:waypoint x="810" y="157" />
+        <di:waypoint x="810" y="250" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Activity_0cj83fx_di" bpmnElement="Activity_1yup9u7">
         <dc:Bounds x="760" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0pqth07_di" bpmnElement="Activity_0xw717o">
+        <dc:Bounds x="760" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_05136ua_di" bpmnElement="Flow_05136ua">
+        <di:waypoint x="810" y="330" />
+        <di:waypoint x="810" y="672" />
+      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
