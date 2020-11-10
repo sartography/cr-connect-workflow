@@ -109,3 +109,14 @@ class ScriptValidationError:
     @classmethod
     def from_api_error(cls, api_error: ApiError):
         return cls(api_error.code, api_error.message)
+
+class DataStoreBase():
+    def overwritten(self,value,prev_value):
+        if prev_value == None:
+            overwritten = False
+        else:
+            if prev_value == value:
+                overwritten = False
+            else:
+                overwritten = True
+        return overwritten
