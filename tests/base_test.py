@@ -17,6 +17,7 @@ from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudyStatus
+from crc.models.data_store import DataStoreModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
