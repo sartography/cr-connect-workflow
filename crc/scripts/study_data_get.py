@@ -13,15 +13,8 @@ class StudyDataGet(Script,DataStoreBase):
         self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        self.check_args(args,2)
-        study = session.query(DataStoreModel).filter_by(study_id=study_id,user_id=None,key=args[0]).first()
-        if study:
-            return study.value
-        else:
-            return args[1]
+        return self.get_data_common(study_id,
+                                    None,
+                                    'study_data_get',
+                                    *args)
 
-    def check_args(self, args, maxlen=1):
-        if len(args) < 1 or len(args) > maxlen :
-            raise ApiError(code="missing_argument",
-            message="The study_data_get script takes either one or two arguments, starting with the key and an " + \
-                    "optional default")

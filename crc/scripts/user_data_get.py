@@ -14,15 +14,7 @@ class UserDataGet(Script,DataStoreBase):
         self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        self.check_args(args,2)
-        study = session.query(DataStoreModel).filter_by(study_id=None,user_id=g.user.uid,key=args[0]).first()
-        if study:
-            return study.value
-        else:
-            return args[1]
-
-    def check_args(self, args, maxlen=1):
-        if len(args) < 1 or len(args) > maxlen :
-            raise ApiError(code="missing_argument",
-            message="The study_data_get script takes either one or two arguments, starting with the key and an " + \
-                    "optional default")
+        return self.get_data_common(None,
+                                    g.user.uid,
+                                    'user_data_get',
+                                    *args)

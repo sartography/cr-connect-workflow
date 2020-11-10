@@ -1,9 +1,10 @@
 import importlib
 import os
 import pkgutil
-
+from crc import session
 from crc.api.common import ApiError
-
+from crc.models.data_store import DataStoreModel
+from crc.models.workflow import WorkflowModel
 
 class Script(object):
     """ Provides an abstract class that defines how scripts should work, this
@@ -120,3 +121,54 @@ class DataStoreBase():
             else:
                 overwritten = True
         return overwritten
+
+    def set_validate_common(self, study_id, workflow_id, user_id, script_name, *args):
+        self.check_args_2(args,script_name)
+        workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+        self.get_prev_value(study_id=study_id,user_id=user_id, key=args[0])
+
+    def check_args(self, args, maxlen=1, script_name='study_data_get'):
+        if len(args) < 1 or len(args) > maxlen :
+            raise ApiError(code="missing_argument",
+
+            message="The %s script takes either one or two arguments, starting with the key and an "%script_name + \
+                    "optional default")
+
+    def check_args_2(self, args, script_name='study_data_set'):
+        if len(args) != 2:
+            raise ApiError(code="missing_argument",
+            message="The %s script takes two arguments, starting with the key and a "%script_name +\
+                    "value for the key")
+
+    def get_prev_value(self,study_id,user_id,key):
+        study = session.query(DataStoreModel).filter_by(study_id=study_id,user_id=user_id,key=key).first()
+        return study
+
+    def set_data_common(self, task, study_id, user_id, workflow_id, script_name, *args, **kwargs):
+
+        self.check_args_2(args,script_name=script_name)
+        study = self.get_prev_value(study_id=study_id,user_id=user_id, key=args[0])
+        workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+        if study is not None:
+            prev_value = study.key
+        else:
+            prev_value = None
+            study = DataStoreModel(key=args[0],value=args[1],
+                                   study_id=study_id,
+                                   task_id=task.id,
+                                   user_id=user_id,             # Make this available to any User
+                                   workflow_id= workflow_id,
+                                   spec_id=workflow.workflow_spec_id)
+
+        overwritten = self.overwritten(study.value,prev_value)
+        session.add(study)
+        return (study.value, prev_value, overwritten)
+
+
+    def get_data_common(self, study_id, user_id, script_name, *args):
+        self.check_args(args,2,script_name)
+        study = session.query(DataStoreModel).filter_by(study_id=study_id,user_id=user_id,key=args[0]).first()
+        if study:
+            return study.value
+        else:
+            return args[1]
