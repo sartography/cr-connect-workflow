@@ -19,10 +19,11 @@ class StudyDataSet(Script,DataStoreBase):
 
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        return self.set_data_common(task,
+        return self.set_data_common(task.id,
                                     study_id,
                                     None,
                                     workflow_id,
+                                    None,
                                     'study_data_set',
                                     *args,
                                     **kwargs)

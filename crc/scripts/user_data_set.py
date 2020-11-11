@@ -21,10 +21,11 @@ class UserDataSet(Script,DataStoreBase):
 
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        return self.set_data_common(task,
+        return self.set_data_common(task.id,
                                     None,
                                     g.user.uid,
                                     workflow_id,
+                                    None,
                                     'user_data_set',
                                     *args,
                                     **kwargs)

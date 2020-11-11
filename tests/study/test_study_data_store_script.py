@@ -17,6 +17,7 @@ class TestSudySponsorsScript(BaseTest):
 
 
     def test_study_sponsors_script_validation(self):
+        flask.g.user = UserModel(uid='dhf8r')
         self.load_example_data() # study_info script complains if irb_documents.xls is not loaded
                                  # during the validate phase I'm going to assume that we will never
                                  # have a case where irb_documents.xls is not loaded ??

@@ -1026,6 +1026,148 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Approval"
+  /datastore/study/get:
+    parameters:
+      - name: key
+        in: query
+        required: true
+        description: The key to lookup.
+        schema:
+          type: string
+          format: string
+      - name: default
+        in: query
+        required: false
+        description: Default Value if key doesn't exist.
+        schema:
+          type: string
+          format: string
+      - name: study_id
+        in: query
+        required: true
+        description: The study id we are concerned with .
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.data_store.study_data_get
+      summary: Provides a single study
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: A value from the data store, or a default if provided, or None if not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+  /datastore/study/set:
+    parameters:
+      - name: key
+        in: query
+        required: true
+        description: The key to lookup.
+        schema:
+          type: string
+          format: string
+      - name: value
+        in: query
+        required: true
+        description: Default Value if key doesn't exist.
+        schema:
+          type: string
+          format: string
+      - name: study_id
+        in: query
+        required: true
+        description: The study id we are concerned with .
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.data_store.study_data_set
+      summary: Provides a single study
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Sets a value in the data store for a study.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+  /datastore/user/get:
+    parameters:
+      - name: key
+        in: query
+        required: true
+        description: The key to lookup.
+        schema:
+          type: string
+          format: string
+      - name: default
+        in: query
+        required: false
+        description: Default Value if key doesn't exist.
+        schema:
+          type: string
+          format: string
+      - name: user_id
+        in: query
+        required: true
+        description: The study id we are concerned with .
+        schema:
+          type: string
+          format: string
+    get:
+      operationId: crc.api.data_store.user_data_get
+      summary: Provides a single study
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: A value from the data store, or a default if provided, or None if not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+  /datastore/user/set:
+    parameters:
+      - name: key
+        in: query
+        required: true
+        description: The key to lookup.
+        schema:
+          type: string
+          format: string
+      - name: value
+        in: query
+        required: true
+        description: Default Value if key doesn't exist.
+        schema:
+          type: string
+          format: string
+      - name: user_id
+        in: query
+        required: true
+        description: The user id we are concerned with .
+        schema:
+          type: string
+          format: string
+    get:
+      operationId: crc.api.data_store.user_data_set
+      summary: Provides a single study
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Sets a value in the data store for a study.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+
+
 components:
   securitySchemes:
     jwt:
@@ -1495,4 +1637,3 @@ components:
           type: number
           format: integer
           example: 5
-
