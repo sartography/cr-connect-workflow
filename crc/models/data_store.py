@@ -6,7 +6,8 @@ from crc import db
 
 class DataStoreModel(db.Model):
     __tablename__ = 'data_store'
-    key = db.Column(db.String, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String)
     workflow_id = db.Column(db.Integer)
     study_id = db.Column(db.Integer)
     task_id = db.Column(db.String)
