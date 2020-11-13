@@ -5,6 +5,7 @@ from crc import session
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.workflow import WorkflowModel
+from datetime import datetime
 
 class Script(object):
     """ Provides an abstract class that defines how scripts should work, this
@@ -164,6 +165,7 @@ class DataStoreBase():
                                    workflow_id= workflow_id,
                                    spec_id=workflow_spec_id)
         study.value = args[1]
+        study.last_updated = datetime.now()
         overwritten = self.overwritten(study.value,prev_value)
         session.add(study)
         session.commit()
@@ -184,10 +186,3 @@ class DataStoreBase():
         study = session.query(DataStoreModel).filter_by(study_id=study_id,user_id=user_id)
         return (study)
 
-
-
-
-    def del_data_common(self, study_id, user_id, script_name, *args):
-        self.check_args(args,1,script_name)
-        session.query(DataStoreModel).filter_by(study_id=study_id, user_id=user_id, key=args[0]).delete()
-        session.commit()

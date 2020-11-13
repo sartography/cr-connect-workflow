@@ -1026,6 +1026,124 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Approval"
+  /datastore:
+    post:
+      operationId: crc.api.data_store.add_datastore
+      summary: Add datastore item with the given parameters.
+      tags:
+        - DataStore
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataStore'
+      responses:
+        '200':
+          description: Datastore updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataStore"
+
+  /datastore/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The key to lookup.
+        schema:
+          type: string
+          format: string
+
+    get:
+      operationId: crc.api.data_store.datastore_get
+      summary: Get a datastore item by id
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: A value from the data store, or a default if provided, or None if not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataStore"
+    put:
+      operationId: crc.api.data_store.update_datastore
+      summary: Updates an existing datastore item with the given parameters.
+      tags:
+        - DataStore
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataStore'
+      responses:
+        '200':
+          description: Datastore updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataStore"
+
+
+    delete:
+      operationId: crc.api.data_store.datastore_del
+      summary: Deletes a value from the data store by id
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Deletes a value from a data store.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataStore"
+
+
+  /datastore/study/{study_id}:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The study id we are concerned with .
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.data_store.study_multi_get
+      summary: Gets all datastore items for a study_id
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Get all values from the data store for a study_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataStore"
+  /datastore/user/{user_id}:
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        description: The user id we are concerned with .
+        schema:
+          type: string
+          format: string
+    get:
+      operationId: crc.api.data_store.user_multi_get
+      summary: Gets all datastore items by user_id
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Get all values from the data store for a user_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataStore"
+
+
   /datastore/study/get:
     parameters:
       - name: key
@@ -1047,42 +1165,23 @@ paths:
         required: true
         description: The study id we are concerned with .
         schema:
-          type: integer
-          format: int32
+          type: string
+          format: string
     get:
       operationId: crc.api.data_store.study_data_get
-      summary: Provides a single study
+      summary: A value from the data store, or a default if provided, or None if not found.
       tags:
-        - DataStore
+        - DataStore Script Equivalent
       responses:
         '200':
           description: A value from the data store, or a default if provided, or None if not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Study"
+                type: string
+                example: "The Value"
 
-  /datastore/study/get_multi:
-    parameters:
-      - name: study_id
-        in: query
-        required: true
-        description: The study id we are concerned with .
-        schema:
-          type: integer
-          format: int32
-    get:
-      operationId: crc.api.data_store.study_multi_get
-      summary: Provides a single study
-      tags:
-        - DataStore
-      responses:
-        '200':
-          description: Get all values from the data store for a study_id
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Study"
+
   /datastore/study/set:
     parameters:
       - name: key
@@ -1108,44 +1207,17 @@ paths:
           format: int32
     get:
       operationId: crc.api.data_store.study_data_set
-      summary: Provides a single study
+      summary: Creates or updates a key/value pair for a study
       tags:
-        - DataStore
+        - DataStore Script Equivalent
       responses:
         '200':
           description: Sets a value in the data store for a study.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Study"
-  /datastore/study/del:
-    parameters:
-      - name: key
-        in: query
-        required: true
-        description: The key to lookup.
-        schema:
-          type: string
-          format: string
-      - name: study_id
-        in: query
-        required: true
-        description: The study id we are concerned with .
-        schema:
-          type: string
-          format: string
-    get:
-      operationId: crc.api.data_store.study_data_del
-      summary: Deletes a value from the data store for a study
-      tags:
-        - DataStore
-      responses:
-        '200':
-          description: Deletes a value from a data store.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Study"
+                $ref: "#/components/schemas/DataStoreScript"
+
   /datastore/user/get:
     parameters:
       - name: key
@@ -1171,38 +1243,20 @@ paths:
           format: string
     get:
       operationId: crc.api.data_store.user_data_get
-      summary: Provides a single study
+      summary: Provides the value for the key, or the default if not found
       tags:
-        - DataStore
+        - DataStore Script Equivalent
       responses:
         '200':
           description: A value from the data store, or a default if provided, or None if not found.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Study"
+                type: string
+                example: "The Value"
 
-  /datastore/user/get_multi:
-    parameters:
-      - name: user_id
-        in: query
-        required: true
-        description: The user id we are concerned with .
-        schema:
-          type: string
-          format: string
-    get:
-      operationId: crc.api.data_store.user_multi_get
-      summary: Provides a single study
-      tags:
-        - DataStore
-      responses:
-        '200':
-          description: Get all values from the data store for a user_id.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Study"
+
+
   /datastore/user/set:
     parameters:
       - name: key
@@ -1228,44 +1282,16 @@ paths:
           format: string
     get:
       operationId: crc.api.data_store.user_data_set
-      summary: Provides a single study
+      summary: Creates or updates a key/value pair for a user
       tags:
-        - DataStore
+        - DataStore Script Equivalent
       responses:
         '200':
           description: Sets a value in the data store for a study.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Study"
-  /datastore/user/del:
-    parameters:
-      - name: key
-        in: query
-        required: true
-        description: The key to lookup.
-        schema:
-          type: string
-          format: string
-      - name: user_id
-        in: query
-        required: true
-        description: The study id we are concerned with .
-        schema:
-          type: string
-          format: string
-    get:
-      operationId: crc.api.data_store.user_data_del
-      summary: Deletes a value from the data store for a user
-      tags:
-        - DataStore
-      responses:
-        '200':
-          description: Deletes a value from a data store.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Study"
+                $ref: "#/components/schemas/DataStoreScript"
 components:
   securitySchemes:
     jwt:
@@ -1336,6 +1362,50 @@ components:
           type: string
           x-nullable: true
           example: "27b-6-1212"
+    DataStoreScript:
+      properties:
+        new_value:
+          type: string
+          example: New Value
+        old_value:
+          type: string
+          example: Old Value
+        overwritten:
+          type: boolean
+          example: true
+    DataStore:
+      properties:
+        id:
+          type: integer
+          example: 1234
+        key:
+          type: string
+          example: MyKey
+        workflow_id:
+          type: integer
+          x-nullable: true
+          example: 12
+        study_id:
+          type: integer
+          x-nullable: true
+          example: 42
+        user_id:
+          type: string
+          x-nullable: true
+          example: dhf8r
+        task_id:
+          type: string
+          x-nullable: true
+          example: MyTask
+        spec_id:
+          type: string
+          x-nullable: true
+          example: My Spec Name
+        value:
+          type: string
+          x-nullable: true
+          example: Some Value
+
     WorkflowSpec:
       properties:
         id:
