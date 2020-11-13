@@ -144,6 +144,8 @@ class DataStoreBase():
         study = session.query(DataStoreModel).filter_by(study_id=study_id,user_id=user_id,key=key).first()
         return study
 
+
+
     def set_data_common(self, task_id, study_id, user_id, workflow_id, workflow_spec_id, script_name, *args, **kwargs):
 
         self.check_args_2(args,script_name=script_name)
@@ -177,3 +179,15 @@ class DataStoreBase():
             return study.value
         else:
             return args[1]
+
+    def get_multi_common(self, study_id, user_id):
+        study = session.query(DataStoreModel).filter_by(study_id=study_id,user_id=user_id)
+        return (study)
+
+
+
+
+    def del_data_common(self, study_id, user_id, script_name, *args):
+        self.check_args(args,1,script_name)
+        session.query(DataStoreModel).filter_by(study_id=study_id, user_id=user_id, key=args[0]).delete()
+        session.commit()

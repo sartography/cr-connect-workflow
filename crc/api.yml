@@ -1061,6 +1061,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
+
+  /datastore/study/get_multi:
+    parameters:
+      - name: study_id
+        in: query
+        required: true
+        description: The study id we are concerned with .
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.data_store.study_multi_get
+      summary: Provides a single study
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Get all values from the data store for a study_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
   /datastore/study/set:
     parameters:
       - name: key
@@ -1092,6 +1114,34 @@ paths:
       responses:
         '200':
           description: Sets a value in the data store for a study.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
+  /datastore/study/del:
+    parameters:
+      - name: key
+        in: query
+        required: true
+        description: The key to lookup.
+        schema:
+          type: string
+          format: string
+      - name: study_id
+        in: query
+        required: true
+        description: The study id we are concerned with .
+        schema:
+          type: string
+          format: string
+    get:
+      operationId: crc.api.data_store.study_data_del
+      summary: Deletes a value from the data store for a study
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Deletes a value from a data store.
           content:
             application/json:
               schema:
@@ -1131,6 +1181,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
+
+  /datastore/user/get_multi:
+    parameters:
+      - name: user_id
+        in: query
+        required: true
+        description: The user id we are concerned with .
+        schema:
+          type: string
+          format: string
+    get:
+      operationId: crc.api.data_store.user_multi_get
+      summary: Provides a single study
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Get all values from the data store for a user_id.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
   /datastore/user/set:
     parameters:
       - name: key
@@ -1166,8 +1238,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
-
-
+  /datastore/user/del:
+    parameters:
+      - name: key
+        in: query
+        required: true
+        description: The key to lookup.
+        schema:
+          type: string
+          format: string
+      - name: user_id
+        in: query
+        required: true
+        description: The study id we are concerned with .
+        schema:
+          type: string
+          format: string
+    get:
+      operationId: crc.api.data_store.user_data_del
+      summary: Deletes a value from the data store for a user
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Deletes a value from a data store.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Study"
 components:
   securitySchemes:
     jwt:
