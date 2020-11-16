@@ -31,4 +31,4 @@ class TestMessageEvent(BaseTest):
         #
         # test to see if our changes made it to the DB
         study_result = db.session.query(StudyModel).filter(StudyModel.id==study_id).first()
-        self.assertEqual(study_result.title, 'my_string')
+        self.assertEqual(study_result.title, 'New Title')
