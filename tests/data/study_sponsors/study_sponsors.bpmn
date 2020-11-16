@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0kmksnn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0kmksnn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <bpmn:process id="Process_0exnnpv" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_1nfe5m9</bpmn:outgoing>
@@ -8,7 +8,8 @@
     <bpmn:scriptTask id="Task_Script_Load_Study_Sponsors" name="Load Study Sponsors">
       <bpmn:incoming>SequenceFlow_1nfe5m9</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1bqiin0</bpmn:outgoing>
-      <bpmn:script>sponsors = study_sponsors()</bpmn:script>
+      <bpmn:script>sponsors = study_info('sponsors')
+</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1bqiin0" sourceRef="Task_Script_Load_Study_Sponsors" targetRef="EndEvent_171dj09" />
     <bpmn:endEvent id="EndEvent_171dj09">

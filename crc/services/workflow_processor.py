@@ -134,17 +134,19 @@ class WorkflowProcessor(object):
             which should work in casees where a soft reset fails.
         If neither flag is set, it will use the same version of the specification that was used to originally
         create the workflow model. """
+
         self.workflow_model = workflow_model
 
         if soft_reset or len(workflow_model.dependencies) == 0:  # Depenencies of 0 means the workflow was never started.
             self.spec_data_files = FileService.get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id)
+            spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         else:
             self.spec_data_files = FileService.get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id,
                 workflow_id=workflow_model.id)
+            spec = None
 
-        spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         self.workflow_spec_id = workflow_model.workflow_spec_id
         try:
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec, validate_only)
@@ -159,7 +161,8 @@ class WorkflowProcessor(object):
                     # database model to which it is associated, and scripts running within the model
                     # can then load data as needed.
                 self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
+                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(
+                    self.bpmn_workflow,include_spec=True)
                 self.save()
 
         except MissingSpecError as ke:
@@ -184,7 +187,8 @@ class WorkflowProcessor(object):
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
         if workflow_model.bpmn_workflow_json:
-            bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json, workflow_spec=spec)
+            bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
+                                                                  workflow_spec=spec)
         else:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
@@ -349,7 +353,7 @@ class WorkflowProcessor(object):
             raise ApiError.from_task("task_error", str(we), we.task)
 
     def serialize(self):
-        return self._serializer.serialize_workflow(self.bpmn_workflow)
+        return self._serializer.serialize_workflow(self.bpmn_workflow,include_spec=True)
 
     def next_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
