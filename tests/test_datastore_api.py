@@ -21,7 +21,7 @@ class DataStoreTest(BaseTest):
         "value": "Some Value"
 
     }
-    def add_test_study(self):
+    def add_test_study_data(self):
         study_data = DataStoreSchema().dump(self.TEST_STUDY_ITEM)
         rv = self.app.post('/v1.0/datastore',
                            content_type="application/json",
@@ -29,6 +29,19 @@ class DataStoreTest(BaseTest):
                            data=json.dumps(study_data))
         self.assert_success(rv)
         return json.loads(rv.get_data(as_text=True))
+
+    def add_test_user_data(self):
+        study_data = DataStoreSchema().dump(self.TEST_STUDY_ITEM)
+        study_data['user_id'] = 'dhf8r'
+        del(study_data['study_id'])
+        study_data['value'] = 'User Value'
+        rv = self.app.post('/v1.0/datastore',
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
+                           data=json.dumps(study_data))
+        self.assert_success(rv)
+        return json.loads(rv.get_data(as_text=True))
+
 
 
     def test_get_study_data(self):
@@ -38,7 +51,7 @@ class DataStoreTest(BaseTest):
         """NOTE:  The protocol builder is not enabled or mocked out.  As the master workflow (which is empty),
         and the test workflow do not need it, and it is disabled in the configuration."""
         self.load_example_data()
-        new_study = self.add_test_study()
+        new_study = self.add_test_study_data()
         new_study = session.query(DataStoreModel).filter_by(id=new_study["id"]).first()
 
         api_response = self.app.get('/v1.0/datastore/%i' % new_study.id,
@@ -55,7 +68,7 @@ class DataStoreTest(BaseTest):
 
     def test_update_study(self):
         self.load_example_data()
-        new_study = self.add_test_study()
+        new_study = self.add_test_study_data()
         new_study = session.query(DataStoreModel).filter_by(id=new_study["id"]).first()
         new_study.value = 'MyNewValue'
         api_response = self.app.put('/v1.0/datastore/%i' % new_study.id,
@@ -76,7 +89,7 @@ class DataStoreTest(BaseTest):
 
     def test_delete_study(self):
         self.load_example_data()
-        new_study = self.add_test_study()
+        new_study = self.add_test_study_data()
         oldid = new_study['id']
         new_study = session.query(DataStoreModel).filter_by(id=new_study["id"]).first()
         rv = self.app.delete('/v1.0/datastore/%i' % new_study.id, headers=self.logged_in_headers())
@@ -84,3 +97,25 @@ class DataStoreTest(BaseTest):
         studyreponse = session.query(DataStoreModel).filter_by(id=oldid).first()
         self.assertEqual(studyreponse,None)
 
+
+
+    def test_data_crosstalk(self):
+        """Test to make sure that data saved for user or study is not acessible from the other method"""
+
+        self.load_example_data()
+        new_study = self.add_test_study_data()
+        new_user = self.add_test_user_data()
+
+        api_response = self.app.get('/v1.0/datastore/user/get?key=%s&user_id=%s' % (new_user['key'],
+                                                                                    new_user['user_id']),
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response)
+        d = api_response.get_data(as_text=True)
+        self.assertEqual(eval(d),'User Value')
+
+        api_response = self.app.get('/v1.0/datastore/study/get?key=%s&study_id=%d' %(new_study['key'],
+                                                                                     new_study['study_id']),
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response)
+        d = api_response.get_data(as_text=True)
+        self.assertEqual(eval(d),'Some Value')

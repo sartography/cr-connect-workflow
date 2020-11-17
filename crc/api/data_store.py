@@ -29,9 +29,9 @@ def study_data_get(study_id,key,default=None):
     if key is None:
         raise ApiError('invalid_key', 'Please provide a valid key')
     dsb = DataStoreBase()
-    retval=dsb.get_data_common(study_id,None,'api_study_data_get',key,default)
-    json_value = json.dumps(retval, ensure_ascii=False, indent=2)
-    return json_value
+    retval = dsb.get_data_common(study_id,None,'api_study_data_get',key,default)
+    #json_value = json.dumps(retval, ensure_ascii=False, indent=2) # just return raw text
+    return retval
 
 def study_multi_get(study_id):
     """Get all data_store values for a given study_id study"""
@@ -93,8 +93,8 @@ def user_data_get(user_id,key,default=None):
                                'api_user_data_get',
                                key,default)
 
-    json_value = json.dumps(retval, ensure_ascii=False, indent=2)
-    return json_value
+    #json_value = json.dumps(retval, ensure_ascii=False, indent=2) # just return raw text
+    return retval
 
 def user_multi_get(user_id):
     """Get all data values in the data_store for a userid"""
