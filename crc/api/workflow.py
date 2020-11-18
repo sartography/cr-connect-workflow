@@ -148,7 +148,6 @@ def set_current_task(workflow_id, task_id):
                                         "currently set to COMPLETE or READY.")
 
     # If we have an interrupt task, run it.
-    # processor.bpmn_workflow.signal(message_name='token_reset')
     processor.bpmn_workflow.cancel_notify()
 
     # Only reset the token if the task doesn't already have it.
