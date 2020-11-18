@@ -1,15 +1,13 @@
+import json
 from datetime import datetime
 
-from flask import g
-from sqlalchemy.exc import IntegrityError
-import json
 from crc import session
-from crc.scripts.script import DataStoreBase
-from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.data_store import DataStoreModel,DataStoreSchema
+from crc.api.common import ApiError
+from crc.models.data_store import DataStoreModel, DataStoreSchema
+from crc.scripts.data_store_base import DataStoreBase
 
 
-def study_data_set(study_id,key,value):
+def study_data_set(study_id, key, value):
     """Set a study data value in the data_store, mimic the script endpoint"""
     if study_id is None:
         raise ApiError('unknown_study', 'Please provide a valid Study ID.')
@@ -17,11 +15,12 @@ def study_data_set(study_id,key,value):
     if key is None:
         raise ApiError('invalid_key', 'Please provide a valid key')
     dsb = DataStoreBase()
-    retval=dsb.set_data_common('api',study_id,None,None,None,'api_study_data_set',key,value)
+    retval = dsb.set_data_common('api', study_id, None, None, None, 'api_study_data_set', key, value)
     json_value = json.dumps(retval, ensure_ascii=False, indent=2)
     return json_value
 
-def study_data_get(study_id,key,default=None):
+
+def study_data_get(study_id, key, default=None):
     """Get a study data value in the data_store, mimic the script endpoint"""
     if study_id is None:
         raise ApiError('unknown_study', 'Please provide a valid Study ID.')
@@ -29,9 +28,10 @@ def study_data_get(study_id,key,default=None):
     if key is None:
         raise ApiError('invalid_key', 'Please provide a valid key')
     dsb = DataStoreBase()
-    retval = dsb.get_data_common(study_id,None,'api_study_data_get',key,default)
-    #json_value = json.dumps(retval, ensure_ascii=False, indent=2) # just return raw text
+    retval = dsb.get_data_common(study_id, None, 'api_study_data_get', key, default)
+    # json_value = json.dumps(retval, ensure_ascii=False, indent=2) # just return raw text
     return retval
+
 
 def study_multi_get(study_id):
     """Get all data_store values for a given study_id study"""
@@ -39,14 +39,12 @@ def study_multi_get(study_id):
         raise ApiError('unknown_study', 'Please provide a valid Study ID.')
 
     dsb = DataStoreBase()
-    retval=dsb.get_multi_common(study_id,None)
+    retval = dsb.get_multi_common(study_id, None)
     results = DataStoreSchema(many=True).dump(retval)
     return results
 
 
-
-
-def study_data_del(study_id,key):
+def study_data_del(study_id, key):
     """Delete a study data value in the data store"""
     if study_id is None:
         raise ApiError('unknown_study', 'Please provide a valid Study ID.')
@@ -54,12 +52,12 @@ def study_data_del(study_id,key):
     if key is None:
         raise ApiError('invalid_key', 'Please provide a valid key')
     dsb = DataStoreBase()
-    dsb.del_data_common(study_id,None,'api_study_data_get',key)
+    dsb.del_data_common(study_id, None, 'api_study_data_get', key)
     json_value = json.dumps('deleted', ensure_ascii=False, indent=2)
     return json_value
 
 
-def user_data_set(user_id,key,value):
+def user_data_set(user_id, key, value):
     """Set a user data value in the data_store, mimic the script endpoint"""
     if user_id is None:
         raise ApiError('unknown_study', 'Please provide a valid UserID.')
@@ -68,19 +66,19 @@ def user_data_set(user_id,key,value):
         raise ApiError('invalid_key', 'Please provide a valid key')
     dsb = DataStoreBase()
 
-    retval=dsb.set_data_common('api',
-                               None,
-                               user_id,
-                               None,
-                               None,
-                               'api_user_data_set',
-                               key,value)
+    retval = dsb.set_data_common('api',
+                                 None,
+                                 user_id,
+                                 None,
+                                 None,
+                                 'api_user_data_set',
+                                 key, value)
 
     json_value = json.dumps(retval, ensure_ascii=False, indent=2)
     return json_value
 
 
-def user_data_get(user_id,key,default=None):
+def user_data_get(user_id, key, default=None):
     """Get a user data value from the data_store, mimic the script endpoint"""
     if user_id is None:
         raise ApiError('unknown_study', 'Please provide a valid UserID.')
@@ -88,13 +86,14 @@ def user_data_get(user_id,key,default=None):
     if key is None:
         raise ApiError('invalid_key', 'Please provide a valid key')
     dsb = DataStoreBase()
-    retval=dsb.get_data_common(None,
-                               user_id,
-                               'api_user_data_get',
-                               key,default)
+    retval = dsb.get_data_common(None,
+                                 user_id,
+                                 'api_user_data_get',
+                                 key, default)
 
-    #json_value = json.dumps(retval, ensure_ascii=False, indent=2) # just return raw text
+    # json_value = json.dumps(retval, ensure_ascii=False, indent=2) # just return raw text
     return retval
+
 
 def user_multi_get(user_id):
     """Get all data values in the data_store for a userid"""
@@ -102,11 +101,10 @@ def user_multi_get(user_id):
         raise ApiError('unknown_study', 'Please provide a valid UserID.')
 
     dsb = DataStoreBase()
-    retval=dsb.get_multi_common(None,
-                               user_id)
+    retval = dsb.get_multi_common(None,
+                                  user_id)
     results = DataStoreSchema(many=True).dump(retval)
     return results
-
 
 
 def datastore_del(id):
@@ -116,11 +114,13 @@ def datastore_del(id):
     json_value = json.dumps('deleted', ensure_ascii=False, indent=2)
     return json_value
 
+
 def datastore_get(id):
     """Delete a data store item for a user_id and a key"""
     item = session.query(DataStoreModel).filter_by(id=id).first()
     results = DataStoreSchema(many=False).dump(item)
     return results
+
 
 def update_datastore(id, body):
     """allow a modification to a datastore item """
@@ -134,8 +134,8 @@ def update_datastore(id, body):
     # I'm not sure if there is a generic way to use the
     # schema to both parse the body and update the SQLAlchemy record
     for key in body:
-        if hasattr(item,key):
-            setattr(item,key,body[key])
+        if hasattr(item, key):
+            setattr(item, key, body[key])
     item.last_updated = datetime.now()
     session.add(item)
     session.commit()
@@ -146,7 +146,7 @@ def add_datastore(body):
     """ add a new datastore item """
 
     print(body)
-    if body.get(id,None):
+    if body.get(id, None):
         raise ApiError('id_specified', 'You may not specify an id for a new datastore item')
 
     if 'key' not in body:
@@ -158,17 +158,16 @@ def add_datastore(body):
     if (not 'user_id' in body) and (not 'study_id' in body):
         raise ApiError('conflicting_values', 'A datastore item should have either a study_id or a user_id')
 
-
     if 'user_id' in body and 'study_id' in body:
         raise ApiError('conflicting_values', 'A datastore item should have either a study_id or a user_id, '
                                              'but not both')
 
-    item = DataStoreModel(key=body['key'],value=body['value'])
+    item = DataStoreModel(key=body['key'], value=body['value'])
     # I'm not sure if there is a generic way to use the
     # schema to both parse the body and update the SQLAlchemy record
     for key in body:
-        if hasattr(item,key):
-            setattr(item,key,body[key])
+        if hasattr(item, key):
+            setattr(item, key, body[key])
     item.last_updated = datetime.now()
     session.add(item)
     session.commit()

@@ -1,14 +1,12 @@
-import requests
-
-from crc.scripts.script import Script, DataStoreBase
-from crc import session
-from crc.models.data_store import DataStoreModel
 from flask import g
 
-class UserDataGet(Script,DataStoreBase):
+from crc.scripts.data_store_base import DataStoreBase
+from crc.scripts.script import Script
+
+
+class UserDataGet(Script, DataStoreBase):
     def get_description(self):
         return """Gets user data from the data store."""
-
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         self.do_task(task, study_id, workflow_id, *args, **kwargs)

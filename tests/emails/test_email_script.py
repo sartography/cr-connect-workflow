@@ -1,12 +1,6 @@
-from tests.base_test import BaseTest
-
+from crc import mail
 from crc.models.email import EmailModel
-from crc.services.file_service import FileService
-from crc.scripts.email import Email
-from crc.services.workflow_processor import WorkflowProcessor
-from crc.api.common import ApiError
-
-from crc import db, mail
+from tests.base_test import BaseTest
 
 
 class TestEmailScript(BaseTest):

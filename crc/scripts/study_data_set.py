@@ -1,14 +1,10 @@
-import requests
+from crc.scripts.data_store_base import DataStoreBase
+from crc.scripts.script import Script
 
-from crc.scripts.script import Script, DataStoreBase
-from crc import session
-from crc.models.workflow import WorkflowModel
-from crc.models.data_store import DataStoreModel
 
 class StudyDataSet(Script,DataStoreBase):
     def get_description(self):
         return """Sets study data from the data store."""
-
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         self.set_validate_common(study_id,
@@ -16,7 +12,6 @@ class StudyDataSet(Script,DataStoreBase):
                                  None,
                                  'study_data_set',
                                  *args)
-
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         return self.set_data_common(task.id,
