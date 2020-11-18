@@ -106,16 +106,15 @@ class DataStoreTest(BaseTest):
         new_study = self.add_test_study_data()
         new_user = self.add_test_user_data()
 
-        api_response = self.app.get('/v1.0/datastore/user/get?key=%s&user_id=%s' % (new_user['key'],
-                                                                                    new_user['user_id']),
+        api_response = self.app.get(f'/v1.0/datastore/user/{new_user["user_id"]}',
                                     headers=self.logged_in_headers(), content_type="application/json")
         self.assert_success(api_response)
-        d = api_response.get_data(as_text=True)
-        self.assertEqual(eval(d),'User Value')
+        d = json.loads(api_response.get_data(as_text=True))
+        self.assertEqual(d[0]['value'],'User Value')
 
-        api_response = self.app.get('/v1.0/datastore/study/get?key=%s&study_id=%d' %(new_study['key'],
-                                                                                     new_study['study_id']),
+        api_response = self.app.get(f'/v1.0/datastore/study/{new_study["study_id"]}',
                                     headers=self.logged_in_headers(), content_type="application/json")
+
         self.assert_success(api_response)
-        d = api_response.get_data(as_text=True)
-        self.assertEqual(eval(d),'Some Value')
+        d = json.loads(api_response.get_data(as_text=True))
+        self.assertEqual(d[0]['value'],'Some Value')
