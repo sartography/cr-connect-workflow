@@ -30,5 +30,5 @@ class TestMessageEvent(BaseTest):
         # which should run the script in our task
         #
         # test to see if our changes made it to the DB
-        study_result = db.session.query(StudyModel).filter(StudyModel.id==study_id).first()
-        self.assertEqual(study_result.title, 'New Title')
+        study_result = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        self.assertEqual('New Title', study_result.title)

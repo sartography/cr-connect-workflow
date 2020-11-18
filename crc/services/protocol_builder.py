@@ -13,7 +13,7 @@ class ProtocolBuilderService(object):
     INVESTIGATOR_URL = app.config['PB_INVESTIGATORS_URL']
     REQUIRED_DOCS_URL = app.config['PB_REQUIRED_DOCS_URL']
     STUDY_DETAILS_URL = app.config['PB_STUDY_DETAILS_URL']
-    SPONSORS_URL = app.config['PB_STUDY_DETAILS_URL']
+    SPONSORS_URL = app.config['PB_SPONSORS_URL']
 
     @staticmethod
     def is_enabled():

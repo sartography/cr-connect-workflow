@@ -49,7 +49,7 @@ printdata = formdata</bpmn:script>
     <bpmn:sequenceFlow id="Flow_07i0gvv" sourceRef="Activity_HowMany" targetRef="Activity_PrintData" />
     <bpmn:boundaryEvent id="Event_TokenReset" name="TokenReset" attachedToRef="Activity_HowMany">
       <bpmn:outgoing>Flow_16q1uec</bpmn:outgoing>
-      <bpmn:cancelEventDefinition id="CancelEventDefinition_0hhrtkn" />
+      <bpmn:signalEventDefinition id="SignalEventDefinition_1z0t8sw" />
     </bpmn:boundaryEvent>
   </bpmn:process>
   <bpmn:message id="Message_0iyvlbz" name="token_reset" />
@@ -112,7 +112,7 @@ printdata = formdata</bpmn:script>
       <bpmndi:BPMNShape id="Activity_0hkt70o_di" bpmnElement="Activity_HowMany">
         <dc:Bounds x="550" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1wob1ti_di" bpmnElement="Event_TokenReset">
+      <bpmndi:BPMNShape id="Event_0ged3nz_di" bpmnElement="Event_TokenReset">
         <dc:Bounds x="582" y="139" width="36" height="36" />
         <bpmndi:BPMNLabel>
           <dc:Bounds x="610" y="173" width="59" height="14" />

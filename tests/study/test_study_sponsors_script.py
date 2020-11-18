@@ -4,7 +4,6 @@ from tests.base_test import BaseTest
 
 from crc import session, app
 from crc.models.study import StudyModel
-from crc.scripts.study_sponsors import StudySponsors
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
@@ -13,7 +12,12 @@ class TestSudySponsorsScript(BaseTest):
     test_uid = "dhf8r"
     test_study_id = 1
 
+
     def test_study_sponsors_script_validation(self):
+        self.load_example_data() # study_info script complains if irb_documents.xls is not loaded
+                                 # during the validate phase I'm going to assume that we will never
+                                 # have a case where irb_documents.xls is not loaded ??
+
         self.load_test_spec("study_sponsors")
         WorkflowService.test_spec("study_sponsors")  # This would raise errors if it didn't validate
 

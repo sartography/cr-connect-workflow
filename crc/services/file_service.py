@@ -227,7 +227,7 @@ class FileService(object):
     def get_spec_data_files(workflow_spec_id, workflow_id=None, name=None):
         """Returns all the FileDataModels related to a workflow specification.
         If a workflow is specified, returns the version of the spec relatted
-        to that workflow, otherwise, returns the lastes files."""
+        to that workflow, otherwise, returns the lastest files."""
         if workflow_id:
             query = session.query(FileDataModel) \
                     .join(WorkflowSpecDependencyFile) \
