@@ -1212,17 +1212,6 @@ components:
           type: string
           x-nullable: true
           example: "27b-6-1212"
-    DataStoreScript:
-      properties:
-        new_value:
-          type: string
-          example: New Value
-        old_value:
-          type: string
-          example: Old Value
-        overwritten:
-          type: boolean
-          example: true
     DataStore:
       properties:
         id:
