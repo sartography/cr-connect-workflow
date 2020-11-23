@@ -26,10 +26,12 @@ DB_PORT = environ.get('DB_PORT', default="5432")
 DB_NAME = environ.get('DB_NAME', default="crc_dev")
 DB_USER = environ.get('DB_USER', default="crc_user")
 DB_PASSWORD = environ.get('DB_PASSWORD', default="crc_pass")
-SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}   # May help with some disconnect issues.
+SQLALCHEMY_ENGINE_OPTIONS = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+}
 SQLALCHEMY_POOL_SIZE = 10
 SQLALCHEMY_MAX_OVERFLOW = 20
-SQLALCHEMY_POOL_RECYCLE = 1800
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_DATABASE_URI = environ.get(
     'SQLALCHEMY_DATABASE_URI',
@@ -41,10 +43,6 @@ TOKEN_AUTH_TTL_HOURS = float(environ.get('TOKEN_AUTH_TTL_HOURS', default=24))
 SECRET_KEY = environ.get('SECRET_KEY', default="Shhhh!!! This is secret!  And better darn well not show up in prod.")
 FRONTEND_AUTH_CALLBACK = environ.get('FRONTEND_AUTH_CALLBACK', default="http://localhost:4200/session")
 SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
-SQLALCHEMY_ENGINE_OPTIONS = {
-    "pool_pre_ping": True,
-    "pool_recycle": 300,
-}
 # %s/%i placeholders expected for uva_id and study_id in various calls.
 PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
 PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/v2.0/").strip('/') + '/'  # Trailing slash required
