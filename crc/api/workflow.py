@@ -147,6 +147,9 @@ def set_current_task(workflow_id, task_id):
         raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
                                         "currently set to COMPLETE or READY.")
 
+    # If we have an interrupt task, run it.
+    processor.bpmn_workflow.cancel_notify()
+
     # Only reset the token if the task doesn't already have it.
     if spiff_task.state == spiff_task.COMPLETED:
         spiff_task.reset_token(reset_data=True)  # Don't try to copy the existing data back into this task.
