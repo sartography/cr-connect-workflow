@@ -19,7 +19,6 @@ connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
 app.config.from_object('config.default')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
     app.config.from_object('config.testing')
@@ -27,6 +26,7 @@ if "TESTING" in os.environ and os.environ["TESTING"] == "true":
 else:
     app.config.root_path = app.instance_path
     app.config.from_pyfile('config.py', silent=True)
+
 
 db = SQLAlchemy(app)
 """:type: sqlalchemy.orm.SQLAlchemy"""
