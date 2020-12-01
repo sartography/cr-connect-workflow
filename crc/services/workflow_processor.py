@@ -32,6 +32,14 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
     It will execute python code read in from the bpmn.  It will also make any scripts in the
      scripts directory available for execution. """
 
+    def evaluate(self, task, expression):
+        """
+        Evaluate the given expression, within the context of the given task and
+        return the result.
+        """
+        return self.evaluate_expression(task, expression)
+
+
     def execute(self, task: SpiffTask, script, data):
 
         study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
@@ -100,8 +108,25 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         Evaluate the given expression, within the context of the given task and
         return the result.
         """
-        exp, valid = self.validateExpression(expression)
-        return self._eval(exp, **task.data)
+        study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+        if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
+            workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+        else:
+            workflow_id = None
+
+        try:
+            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
+            else:
+                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
+            exp, valid = self.validateExpression(expression)
+            return self._eval(exp, externalMethods=augmentMethods, **task.data)
+
+        except Exception as e:
+            raise WorkflowTaskExecException(task,
+                                            "Error evaluating expression "
+                                            "'%s', %s" % (expression, str(e)))
+
 
     @staticmethod
     def camel_to_snake(camel):
