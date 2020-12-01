@@ -327,7 +327,7 @@ class ExampleDataLoader:
         file.close()
 
     def load_default_user(self):
-        user = UserModel(uid="xxx9x", email="xxx9x@virginia.edu", display_name="Development User")
+        user = UserModel(uid="xxx9x", email_address="xxx9x@virginia.edu", display_name="Development User")
         db.session.add(user)
         db.session.commit()
 
