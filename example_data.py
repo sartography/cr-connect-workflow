@@ -22,8 +22,6 @@ class ExampleDataLoader:
     def load_all(self):
 
         self.load_reference_documents()
-        self.load_default_user()
-
         categories = [
             WorkflowSpecCategoryModel(
                 id=0,
