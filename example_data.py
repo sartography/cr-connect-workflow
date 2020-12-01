@@ -4,6 +4,7 @@ import os
 
 from crc import app, db, session
 from crc.models.file import CONTENT_TYPES
+from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
 
@@ -20,6 +21,7 @@ class ExampleDataLoader:
     def load_all(self):
 
         self.load_reference_documents()
+        self.load_default_user()
 
         categories = [
             WorkflowSpecCategoryModel(
@@ -323,6 +325,11 @@ class ExampleDataLoader:
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()
+
+    def load_default_user(self):
+        user = UserModel(uid="xxx9x", email="xxx9x@virginia.edu", display_name="Development User")
+        db.session.add(user)
+        db.session.commit()
 
 def ldap(): return "x";
 def study_info(i): return {"x":"Y"};

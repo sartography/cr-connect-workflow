@@ -70,6 +70,8 @@ def verify_token(token=None):
     else:
         # Fall back to a default user if this is not production.
         g.user = UserModel.query.first()
+        if not g.user:
+            raise ApiError("no_user", "You are in development mode, but there are no users in the database.  Add one, and it will use it.")
         token = g.user.encode_auth_token()
         token_info = UserModel.decode_auth_token(token)
         return token_info
