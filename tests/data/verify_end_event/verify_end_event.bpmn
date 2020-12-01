@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_00j2iu5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_1gmf4la" isExecutable="true">
+    <bpmn:documentation />
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1fmyo77</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="ScriptTask_02924vs" name="Load IRB Details">
+      <bpmn:incoming>SequenceFlow_1fmyo77</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_18nr0gf</bpmn:outgoing>
+      <bpmn:script>details = study_info('details')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1fmyo77" sourceRef="StartEvent_1" targetRef="ScriptTask_02924vs" />
+    <bpmn:sequenceFlow id="SequenceFlow_18nr0gf" sourceRef="ScriptTask_02924vs" targetRef="Activity_FromIRB-API" />
+    <bpmn:endEvent id="EndEvent_1qvyxg7">
+      <bpmn:documentation>| Data Point | Value | Help |
+|:-------------- |:-------- |:------ |
+{% for key, value in details.items() -%}
+| {{key}} | {%- if value == None -%}
+\-\-
+{%- else -%}
+{%- if value is number -%}
+{%- if value = 1 -%}
+True
+{%- elif value == 0 -%}
+False
+{%- else -%}
+{{value}}
+{%- endif -%}
+{%- elif value is string -%}
+{%- if value|length -%}
+{{value}}
+{%- else -%}
+Question not presented
+{%- endif -%}
+{%- endif -%}
+{%- endif -%} | [Context here](/help)
+{% endfor -%}</bpmn:documentation>
+      <bpmn:incoming>Flow_0m7unlb</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0m7unlb" sourceRef="Activity_FromIRB-API" targetRef="EndEvent_1qvyxg7" />
+    <bpmn:manualTask id="Activity_FromIRB-API" name="From IRB API">
+      <bpmn:documentation>| Data Point | Value | Help |
+|:-------------- |:-------- |:------ |
+{% for key, value in details.items() -%}
+| {{key}} | {%- if value == None -%}
+\-\-
+{%- else -%}
+{%- if value is number -%}
+{%- if value == 1 -%}
+True
+{%- elif value == 0 -%}
+False
+{%- else -%}
+{{value}}
+{%- endif -%}
+{%- elif value is string -%}
+{%- if value|length -%}
+{{value}}
+{%- else -%}
+Question not presented
+{%- endif -%}
+{%- endif -%}
+{%- endif -%} | [Context here](/help)
+{% endfor -%}</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_18nr0gf</bpmn:incoming>
+      <bpmn:outgoing>Flow_0m7unlb</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1gmf4la">
+      <bpmndi:BPMNEdge id="Flow_0m7unlb_di" bpmnElement="Flow_0m7unlb">
+        <di:waypoint x="520" y="117" />
+        <di:waypoint x="622" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_18nr0gf_di" bpmnElement="SequenceFlow_18nr0gf">
+        <di:waypoint x="360" y="117" />
+        <di:waypoint x="420" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1fmyo77_di" bpmnElement="SequenceFlow_1fmyo77">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="260" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_02924vs_di" bpmnElement="ScriptTask_02924vs">
+        <dc:Bounds x="260" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1qvyxg7_di" bpmnElement="EndEvent_1qvyxg7">
+        <dc:Bounds x="622" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_19nawos_di" bpmnElement="Activity_FromIRB-API">
+        <dc:Bounds x="420" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

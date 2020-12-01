@@ -116,6 +116,7 @@ class WorkflowService(object):
                 raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         WorkflowService.delete_test_data()
+        WorkflowService._process_documentation(processor.bpmn_workflow.last_task.parent.parent)
         return processor.bpmn_workflow.last_task.data
 
     @staticmethod

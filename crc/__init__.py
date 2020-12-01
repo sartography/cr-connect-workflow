@@ -89,6 +89,7 @@ def load_example_data():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
     ExampleDataLoader().load_all()
+    ExampleDataLoader().load_default_user()
 
 
 @app.cli.command()
