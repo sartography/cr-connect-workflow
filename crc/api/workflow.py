@@ -1,11 +1,15 @@
+import hashlib
+import json
 import uuid
+from hashlib import md5
 
+import pandas as pd
 from SpiffWorkflow.util.deep_merge import DeepMerge
 from flask import g
-from crc import session, app
+from crc import session, db
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
-from crc.models.file import FileModel, LookupDataSchema
+from crc.models.file import FileModel, LookupDataSchema, FileDataModel
 from crc.models.study import StudyModel, WorkflowMetadata
 from crc.models.task_event import TaskEventModel, TaskEventModelSchema, TaskEvent, TaskEventSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
@@ -257,3 +261,62 @@ def _verify_user_and_role(processor, spiff_task):
         raise ApiError.from_task("permission_denied",
                                  f"This task must be completed by '{allowed_users}', "
                                  f"but you are {user.uid}", spiff_task)
+def join_uuids(uuids):
+    """Joins a pandas Series of uuids and combines them in one hash"""
+    combined_uuids = ''.join([str(uuid) for uuid in uuids.sort_values()]) # ensure that values are always
+                                                                          # in the same order
+    return hashlib.md5(combined_uuids.encode('utf8')).hexdigest() # make a hash of the hashes
+
+def get_all_spec_state():
+#     big_nasty_sql = """
+#
+#     with first as (
+# select file_model_id,version,max(version) over (partition by file_model_id) maxversion,f
+#     .name,
+#        workflow_spec_id,date_created,md5_hash
+# from file f join file_data fd on fd.
+#     file_model_id = f.id
+# where workflow_spec_id is not null
+# order by workflow_spec_id,file_model_id,version desc),
+# second as (select name,workflow_spec_id,date_created,md5_hash from first
+# where maxversion = version)
+# select row_to_json(t) workflow_spec_state
+# from (
+#      select workflow_spec_id,max(date_created) last_update,md5(max(
+#        (
+#          select array_to_json(array_agg(row_to_json(d)))
+#          from (select name,md5_hash from second where second.workflow_spec_id = second2.workflow_spec_id) d
+#
+#                 )::text)) as files_hash
+#     from second as second2
+#     group by 1
+#          ) t
+#     """
+#     json_results = []
+#     result = db.engine.execute(big_nasty_sql)
+    x = session.query(FileDataModel).join(FileModel)
+
+    # there might be a cleaner way of getting a data frome from some of the
+    # fields in the ORM - but this works OK
+    filelist = []
+    for file in x:
+        filelist.append({'file_model_id':file.file_model_id,
+                         'workflow_spec_id': file.file_model.workflow_spec_id,
+                         'md5_hash':file.md5_hash,
+                         'filename':file.file_model.name,
+                         'date_created':file.date_created})
+    df = pd.DataFrame(filelist)
+
+    # get a distinct list of file_model_id's with the most recent file_data retained
+    df = df.sort_values('date_created').drop_duplicates(['file_model_id'],keep='last').copy()
+
+    # take that list and then group by workflow_spec and retain the most recently touched file
+    # and make a consolidated hash of the md5_checksums - this acts as a 'thumbprint' for each
+    # workflow spec
+    df = df.groupby('workflow_spec_id').agg({'date_created':'max',
+                                             'md5_hash':join_uuids}).copy()
+
+    df = df.reset_index()[['workflow_spec_id','date_created','md5_hash']].copy()
+
+    return df.to_json(orient='records')
+
