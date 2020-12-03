@@ -20,7 +20,7 @@ from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
-
+from flask_cors import cross_origin
 
 def all_specifications():
     schema = WorkflowSpecModelSchema(many=True)
@@ -267,7 +267,7 @@ def join_uuids(uuids):
                                                                           # in the same order
     return hashlib.md5(combined_uuids.encode('utf8')).hexdigest() # make a hash of the hashes
 
-@cross_origin() # allow all cross origin requests so we can hit it with a dev box
+@cross_origin() # allow even dev boxes to hit this without restrictions
 def get_all_spec_state():
     df = get_all_spec_state_dataframe()
     return df.reset_index().to_json(orient='records')
