@@ -304,6 +304,11 @@ def get_changed_workflows(remote):
 
 
 def get_all_spec_state():
+    """
+    Return a list of all workflow specs along with last updated date and a
+    thumbprint of all of the files that are used for that workflow_spec
+    Convert into a dict list from a dataframe
+    """
     df = get_all_spec_state_dataframe()
     return df.reset_index().to_dict(orient='records')
 
@@ -311,6 +316,7 @@ def get_all_spec_state_dataframe():
     """
     Return a list of all workflow specs along with last updated date and a
     thumbprint of all of the files that are used for that workflow_spec
+    Return a dataframe
     """
     x = session.query(FileDataModel).join(FileModel)
 
