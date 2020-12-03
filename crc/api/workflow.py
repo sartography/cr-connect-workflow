@@ -267,33 +267,16 @@ def join_uuids(uuids):
                                                                           # in the same order
     return hashlib.md5(combined_uuids.encode('utf8')).hexdigest() # make a hash of the hashes
 
+@cross_origin() # allow all cross origin requests so we can hit it with a dev box
 def get_all_spec_state():
-#     big_nasty_sql = """
-#
-#     with first as (
-# select file_model_id,version,max(version) over (partition by file_model_id) maxversion,f
-#     .name,
-#        workflow_spec_id,date_created,md5_hash
-# from file f join file_data fd on fd.
-#     file_model_id = f.id
-# where workflow_spec_id is not null
-# order by workflow_spec_id,file_model_id,version desc),
-# second as (select name,workflow_spec_id,date_created,md5_hash from first
-# where maxversion = version)
-# select row_to_json(t) workflow_spec_state
-# from (
-#      select workflow_spec_id,max(date_created) last_update,md5(max(
-#        (
-#          select array_to_json(array_agg(row_to_json(d)))
-#          from (select name,md5_hash from second where second.workflow_spec_id = second2.workflow_spec_id) d
-#
-#                 )::text)) as files_hash
-#     from second as second2
-#     group by 1
-#          ) t
-#     """
-#     json_results = []
-#     result = db.engine.execute(big_nasty_sql)
+    df = get_all_spec_state_dataframe()
+    return df.reset_index().to_json(orient='records')
+
+def get_all_spec_state_dataframe():
+    """
+    Return a list of all workflow specs along with last updated date and a
+    thumbprint of all of the files that are used for that workflow_spec
+    """
     x = session.query(FileDataModel).join(FileModel)
 
     # there might be a cleaner way of getting a data frome from some of the
@@ -315,8 +298,9 @@ def get_all_spec_state():
     # workflow spec
     df = df.groupby('workflow_spec_id').agg({'date_created':'max',
                                              'md5_hash':join_uuids}).copy()
+    df = df[['date_created','md5_hash']].copy()
+    df['date_created'] = df['date_created'].astype('str')
 
-    df = df.reset_index()[['workflow_spec_id','date_created','md5_hash']].copy()
 
-    return df.to_json(orient='records')
+    return df
 
