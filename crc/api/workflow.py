@@ -21,6 +21,7 @@ from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 from flask_cors import cross_origin
+import requests
 
 def all_specifications():
     schema = WorkflowSpecModelSchema(many=True)
@@ -267,10 +268,44 @@ def join_uuids(uuids):
                                                                           # in the same order
     return hashlib.md5(combined_uuids.encode('utf8')).hexdigest() # make a hash of the hashes
 
-@cross_origin() # allow even dev boxes to hit this without restrictions
+def get_changed_workflows(remote):
+    """
+    gets a remote endpoint - gets the workflows and then
+    determines what workflows are different from the remote endpoint
+    """
+    x = requests.get('http://'+remote+'/v1.0/workflow_spec/all')
+
+    # This is probably very and may allow cross site attacks - fix later
+    remote = pd.DataFrame(eval(x.text))
+    local = get_all_spec_state_dataframe().reset_index()
+    different  = remote.merge(local, right_on=['workflow_spec_id','md5_hash'], left_on=['workflow_spec_id',
+                                                                                        'md5_hash'], how = 'outer' , indicator=True).loc[
+        lambda x : x['_merge']!='both']
+
+    different.loc[different['_merge']=='left_only','location'] = 'remote'
+    different.loc[different['_merge']=='right_only','location'] = 'local'
+    #changedfiles = different.copy()
+    index = different['date_created_x'].isnull()
+    different.loc[index,'date_created_x'] = different[index]['date_created_y']
+    different = different[['workflow_spec_id','date_created_x','location']].copy()
+    different.columns=['workflow_spec_id','date_created','location']
+    changedfiles = different.sort_values('date_created',ascending=False).groupby('workflow_spec_id').first()
+    remote_spec_ids = remote[['workflow_spec_id']]
+    local_spec_ids = local[['workflow_spec_id']]
+
+    left = remote_spec_ids[~remote_spec_ids['workflow_spec_id'].isin(local_spec_ids['workflow_spec_id'])]
+    right = local_spec_ids[~local_spec_ids['workflow_spec_id'].isin(remote_spec_ids['workflow_spec_id'])]
+    changedfiles['new'] = False
+    changedfiles.loc[changedfiles.index.isin(left['workflow_spec_id']), 'new'] = True
+    output = changedfiles[~changedfiles.index.isin(right['workflow_spec_id'])]
+    return output.reset_index().to_dict(orient='records')
+
+
+
+
 def get_all_spec_state():
     df = get_all_spec_state_dataframe()
-    return df.reset_index().to_json(orient='records')
+    return df.reset_index().to_dict(orient='records')
 
 def get_all_spec_state_dataframe():
     """

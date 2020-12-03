@@ -100,10 +100,38 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Study"
+  /workflow_spec/diff:
+    get:
+      operationId: crc.api.workflow.get_changed_workflows
+      summary: Provides a list of workflow specs and their signature
+      security: []  # Disable security for this endpoint only - we'll sanity check
+      # in the endpoint
+      parameters:
+        - name: remote
+          in: query
+          required: true
+          description: The remote endpoint
+          schema:
+            type: string
+      tags:
+        - Workflow Spec States
+      responses:
+        '200':
+          description: An array of workflow specs, with last touched date and file signature.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Study"
+
+
   /workflow_spec/all:
     get:
       operationId: crc.api.workflow.get_all_spec_state
       summary: Provides a list of workflow specs and their signature
+      security: []  # Disable security for this endpoint only - we'll sanity check
+                    # in the endpoint
       tags:
         - Workflow Spec States
       responses:
