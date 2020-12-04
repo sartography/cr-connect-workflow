@@ -171,7 +171,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
 
         # Assure navigation picks up the label of the current element variable.
         nav = WorkflowService.processor_to_workflow_api(processor, task).navigation
-        self.assertEqual("Primary Investigator", nav[2].title)
+        self.assertEqual("Primary Investigator", nav[2].description)
 
         task.update_data({"investigator": {"email": "dhf8r@virginia.edu"}})
         processor.complete_task(task)

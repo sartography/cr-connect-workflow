@@ -1,9 +1,8 @@
-import copy
-import json
 import string
-import uuid
 from datetime import datetime
 import random
+import string
+from datetime import datetime
 from typing import List
 
 import jinja2
@@ -17,15 +16,14 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
-from flask import g
 from jinja2 import Template
 
 from crc import db, app
 from crc.api.common import ApiError
-from crc.models.api_models import Task, MultiInstanceType, NavigationItem, NavigationItemSchema, WorkflowApi
+from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.file import LookupDataModel
-from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
+from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
 from crc.services.file_service import FileService
@@ -326,28 +324,20 @@ class WorkflowService(object):
         # Some basic cleanup of the title for the for the navigation.
         navigation = []
         for nav_item in nav_dict:
-            spiff_task = processor.bpmn_workflow.get_task(nav_item['task_id'])
-            if 'description' in nav_item:
-                nav_item['title'] = nav_item.pop('description')
-                # fixme: duplicate code from the workflow_service. Should only do this in one place.
-                if nav_item['title'] is not None and ' ' in nav_item['title']:
-                    nav_item['title'] = nav_item['title'].partition(' ')[2]
-            else:
-                nav_item['title'] = ""
+            spiff_task = processor.bpmn_workflow.get_task(nav_item.task_id)
             if spiff_task:
-                nav_item['task'] = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
-                nav_item['title'] = nav_item['task'].title  # Prefer the task title.
-
+                # Use existing logic to set the description, and alter the state based on permissions.
+                api_task = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
+                nav_item.description = api_task.title
                 user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
                 if not UserService.in_list(user_uids, allow_admin_impersonate=True):
-                    nav_item['state'] = WorkflowService.TASK_STATE_LOCKED
-
+                    nav_item.state = WorkflowService.TASK_STATE_LOCKED
             else:
-                nav_item['task'] = None
-
-
-            navigation.append(NavigationItem(**nav_item))
-            NavigationItemSchema().dump(nav_item)
+                # Strip off the first word in the description, to meet guidlines for BPMN.
+                if nav_item.description:
+                    if nav_item.description is not None and ' ' in nav_item.description:
+                        nav_item.description = nav_item.description.partition(' ')[2]
+            navigation.append(nav_item)
 
         spec = db.session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
         workflow_api = WorkflowApi(

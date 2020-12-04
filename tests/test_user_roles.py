@@ -1,6 +1,8 @@
 import json
 
 from tests.base_test import BaseTest
+
+from crc.models.api_models import NavigationItemSchema
 from crc.models.workflow import WorkflowStatus
 from crc import db
 from crc.api.common import ApiError
@@ -62,8 +64,8 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
 
         nav = workflow_api.navigation
-        self.assertEqual(5, len(nav))
-        self.assertEqual("supervisor", nav[1]['lane'])
+        self.assertEqual(9, len(nav))
+        self.assertEqual("supervisor", nav[2].lane)
 
     def test_get_outstanding_tasks_awaiting_current_user(self):
         submitter = self.create_user(uid='lje5u')
@@ -121,12 +123,12 @@ class TestTasksApi(BaseTest):
         # Navigation as Submitter with ready task.
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
         nav = workflow_api.navigation
-        self.assertEqual(5, len(nav))
-        self.assertEqual('READY', nav[0]['state'])  # First item is ready, no progress yet.
-        self.assertEqual('LOCKED', nav[1]['state'])  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('LOCKED', nav[2]['state'])  # third item is a gateway, and belongs to no one, and is locked.
-        self.assertEqual('NOOP', nav[3]['state'])  # Approved Path, has no operation
-        self.assertEqual('NOOP', nav[4]['state'])  # Rejected Path, has no operation.
+        self.assertEqual(9, len(nav))
+        self.assertEqual('READY', nav[1].state)  # First item is ready, no progress yet.
+        self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
+        # third item is a gateway, and belongs to no one
+        self.assertEqual(None, nav[4].state)  # Approved Path, has no operation
+        self.assertEqual(None, nav[6].state)  # Rejected Path, has no operation.
         self.assertEqual('READY', workflow_api.next_task.state)
 
         # Navigation as Submitter after handoff to supervisor
@@ -134,9 +136,9 @@ class TestTasksApi(BaseTest):
         data['supervisor'] = supervisor.uid
         workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
         nav = workflow_api.navigation
-        self.assertEqual('COMPLETED', nav[0]['state'])  # First item is ready, no progress yet.
-        self.assertEqual('LOCKED', nav[1]['state'])  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('LOCKED', nav[2]['state'])  # third item is a gateway, and belongs to no one, and is locked.
+        self.assertEqual('COMPLETED', nav[1].state)  # First item is ready, no progress yet.
+        self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
+        self.assertEqual('MAYBE', nav[7].state)  # third item is a gateway, and belongs to no one, and is locked.
         self.assertEqual('LOCKED', workflow_api.next_task.state)
         # In the event the next task is locked, we should say something sensible here.
         # It is possible to look at the role of the task, and say The next task "TASK TITLE" will
@@ -149,10 +151,10 @@ class TestTasksApi(BaseTest):
         # Navigation as Supervisor
         workflow_api = self.get_workflow_api(workflow, user_uid=supervisor.uid)
         nav = workflow_api.navigation
-        self.assertEqual(5, len(nav))
-        self.assertEqual('LOCKED', nav[0]['state'])  # First item belongs to the submitter, and is locked.
-        self.assertEqual('READY', nav[1]['state'])  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('LOCKED', nav[2]['state'])  # third item is a gateway, and belongs to no one, and is locked.
+        self.assertEqual(9, len(nav))
+        self.assertEqual('LOCKED', nav[1].state)  # First item belongs to the submitter, and is locked.
+        self.assertEqual('READY', nav[2].state)  # Second item is ready, as we are now the supervisor.
+        self.assertEqual('LOCKED', nav[7].state)  # Feedback is locked.
         self.assertEqual('READY', workflow_api.next_task.state)
 
         data = workflow_api.next_task.data
@@ -161,28 +163,28 @@ class TestTasksApi(BaseTest):
 
         # Navigation as Supervisor, after completing task.
         nav = workflow_api.navigation
-        self.assertEqual(5, len(nav))
-        self.assertEqual('LOCKED', nav[0]['state'])  # First item belongs to the submitter, and is locked.
-        self.assertEqual('COMPLETED', nav[1]['state'])  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('COMPLETED', nav[2]['state'])  # third item is a gateway, and is now complete.
+        self.assertEqual(9, len(nav))
+        self.assertEqual('LOCKED', nav[1].state)  # First item belongs to the submitter, and is locked.
+        self.assertEqual('COMPLETED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
+        self.assertEqual('LOCKED', nav[7].state)  # Feedback is LOCKED
         self.assertEqual('LOCKED', workflow_api.next_task.state)
 
         # Navigation as Submitter, coming back in to a rejected workflow to view the rejection message.
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
         nav = workflow_api.navigation
-        self.assertEqual(5, len(nav))
-        self.assertEqual('COMPLETED', nav[0]['state'])  # First item belongs to the submitter, and is locked.
-        self.assertEqual('LOCKED', nav[1]['state'])  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('LOCKED', nav[2]['state'])  # third item is a gateway belonging to the supervisor, and is locked.
+        self.assertEqual(9, len(nav))
+        self.assertEqual('COMPLETED', nav[1].state)  # First item belongs to the submitter, and is locked.
+        self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
+        self.assertEqual('READY', nav[7].state)  # Feedbck is now READY
         self.assertEqual('READY', workflow_api.next_task.state)
 
         # Navigation as Submitter, re-completing the original request a second time, and sending it for review.
         workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
         nav = workflow_api.navigation
-        self.assertEqual(5, len(nav))
-        self.assertEqual('READY', nav[0]['state'])  # When you loop back the task is again in the ready state.
-        self.assertEqual('LOCKED', nav[1]['state'])  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('LOCKED', nav[2]['state'])  # third item is a gateway belonging to the supervisor, and is locked.
+        self.assertEqual(9, len(nav))
+        self.assertEqual('READY', nav[1].state)  # When you loop back the task is again in the ready state.
+        self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
+        self.assertEqual('COMPLETED', nav[7].state)  # Feedback is completed
         self.assertEqual('READY', workflow_api.next_task.state)
 
         data["favorite_color"] = "blue"
