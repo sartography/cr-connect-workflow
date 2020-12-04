@@ -405,6 +405,8 @@ def get_workflow_spec_files_dataframe(workflowid):
                          'md5_hash':file.md5_hash,
                          'filename':file.file_model.name,
                          'date_created':file.date_created})
+    if len(filelist) == 0:
+        return pd.DataFrame(columns=['file_model_id','workflow_spec_id','md5_hash','filename','date_created'])
     df = pd.DataFrame(filelist).sort_values('date_created').groupby('file_model_id').last()
     df['date_created'] = df['date_created'].astype('str')
     return df
