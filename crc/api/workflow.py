@@ -320,6 +320,53 @@ def get_changed_workflows(remote):
     return output.reset_index().to_dict(orient='records')
 
 
+def get_changed_files(remote,workflow_spec_id):
+    """
+    gets a remote endpoint - gets the files for a workflow_spec on both
+    local and remote and determines what files have been change and returns a list of those
+    files
+    """
+    response = requests.get('http://'+remote+'/v1.0/workflow_spec/'+workflow_spec_id+'/files')
+    # This is probably very and may allow cross site attacks - fix later
+    remote = pd.DataFrame(json.loads(response.text))
+    # get the local thumbprints & make sure that 'workflow_spec_id' is a column, not an index
+    local = get_workflow_spec_files_dataframe(workflow_spec_id).reset_index()
+    local['md5_hash'] = local['md5_hash'].astype('str')
+    different = remote.merge(local,
+                             right_on=['filename','md5_hash'],
+                             left_on=['filename','md5_hash'],
+                             how = 'outer' ,
+                             indicator=True).loc[lambda x : x['_merge']!='both']
+
+    # each line has a tag on it - if was in the left or the right,
+    # label it so we know if that was on the remote or local machine
+    different.loc[different['_merge']=='left_only','location'] = 'remote'
+    different.loc[different['_merge']=='right_only','location'] = 'local'
+
+    # this takes the different date_created_x and date-created_y columns and
+    # combines them back into one date_created column
+    index = different['date_created_x'].isnull()
+    different.loc[index,'date_created_x'] = different[index]['date_created_y']
+    different = different[['date_created_x','filename','location']].copy()
+
+    different.columns=['date_created','filename','location']
+    # our different list will have multiple entries for a workflow if there is a version on either side
+    # we want to grab the most recent one, so we sort and grab the most recent one for each workflow
+    changedfiles = different.sort_values('date_created',ascending=False).groupby('filename').first()
+
+    # get an exclusive or list of workflow ids - that is we want lists of files that are
+    # on one machine or the other, but not both
+    remote_spec_ids = remote[['filename']]
+    local_spec_ids = local[['filename']]
+    left = remote_spec_ids[~remote_spec_ids['filename'].isin(local_spec_ids['filename'])]
+    right = local_spec_ids[~local_spec_ids['filename'].isin(remote_spec_ids['filename'])]
+    changedfiles['new'] = False
+    changedfiles.loc[changedfiles.index.isin(left['filename']), 'new'] = True
+    changedfiles.loc[changedfiles.index.isin(right['filename']),'new'] = True
+
+    # return the list as a dict, let swagger convert it to json
+    return changedfiles.reset_index().to_dict(orient='records')
+
 
 
 def get_all_spec_state():
@@ -331,6 +378,39 @@ def get_all_spec_state():
     df = get_all_spec_state_dataframe()
     return df.reset_index().to_dict(orient='records')
 
+
+def get_workflow_spec_files(workflow_spec_id):
+    """
+    Return a list of all workflow specs along with last updated date and a
+    thumbprint of all of the files that are used for that workflow_spec
+    Convert into a dict list from a dataframe
+    """
+    df = get_workflow_spec_files_dataframe(workflow_spec_id)
+    return df.reset_index().to_dict(orient='records')
+
+
+def get_workflow_spec_files_dataframe(workflowid):
+    """
+    Return a list of all files for a workflow_spec along with last updated date and a
+    hash so we can determine file differences for a changed workflow on a box.
+    Return a dataframe
+    """
+    x = session.query(FileDataModel).join(FileModel).filter(FileModel.workflow_spec_id==workflowid)
+    # there might be a cleaner way of getting a data frome from some of the
+    # fields in the ORM - but this works OK
+    filelist = []
+    for file in x:
+        filelist.append({'file_model_id':file.file_model_id,
+                         'workflow_spec_id': file.file_model.workflow_spec_id,
+                         'md5_hash':file.md5_hash,
+                         'filename':file.file_model.name,
+                         'date_created':file.date_created})
+    df = pd.DataFrame(filelist).sort_values('date_created').groupby('file_model_id').last()
+    df['date_created'] = df['date_created'].astype('str')
+    return df
+
+
+
 def get_all_spec_state_dataframe():
     """
     Return a list of all workflow specs along with last updated date and a
@@ -338,7 +418,6 @@ def get_all_spec_state_dataframe():
     Return a dataframe
     """
     x = session.query(FileDataModel).join(FileModel)
-
     # there might be a cleaner way of getting a data frome from some of the
     # fields in the ORM - but this works OK
     filelist = []

@@ -126,10 +126,69 @@ paths:
                   $ref: "#/components/schemas/Study"
 
 
+  /workflow_spec/{workflow_spec_id}/files:
+    get:
+      operationId: crc.api.workflow.get_workflow_spec_files
+      summary: Provides a list of workflow specs and their signature
+      security: []  # Disable security for this endpoint only - we'll sanity check
+                    # in the endpoint
+      parameters:
+        - name: workflow_spec_id
+          in: path
+          required: true
+          description: The workflow_spec id
+          schema:
+            type: string
+
+      tags:
+        - Workflow Spec States
+      responses:
+        '200':
+          description: An array of workflow specs, with last touched date and file signature.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Study"
+
+  /workflow_spec/{workflow_spec_id}/files/diff:
+    get:
+      operationId: crc.api.workflow.get_changed_files
+      summary: Provides a list of workflow specs and their signature
+      security: []  # Disable security for this endpoint only - we'll sanity check
+                    # in the endpoint
+      parameters:
+        - name: workflow_spec_id
+          in: path
+          required: true
+          description: The workflow_spec id
+          schema:
+            type: string
+        - name: remote
+          in: query
+          required: true
+          description: The remote endpoint
+          schema:
+            type: string
+
+      tags:
+        - Workflow Spec States
+      responses:
+        '200':
+          description: An array of workflow specs, with last touched date and file signature.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Study"
+
+
   /workflow_spec/all:
     get:
       operationId: crc.api.workflow.get_all_spec_state
-      summary: Provides a list of workflow specs and their signature
+      summary: Provides a list of files for a workflow spec
       security: []  # Disable security for this endpoint only - we'll sanity check
                     # in the endpoint
       tags:
