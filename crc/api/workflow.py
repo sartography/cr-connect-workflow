@@ -345,11 +345,15 @@ def get_changed_files(remote,workflow_spec_id):
 
     # this takes the different date_created_x and date-created_y columns and
     # combines them back into one date_created column
-    index = different['date_created_x'].isnull()
-    different.loc[index,'date_created_x'] = different[index]['date_created_y']
-    different = different[['date_created_x','filename','location']].copy()
+    dualfields = ['date_created','type','primary','content_type','primary_process_id']
+    for merge in dualfields:
+        index = different[merge+'_x'].isnull()
+        different.loc[index,merge+'_x'] = different[index][merge+'_y']
 
-    different.columns=['date_created','filename','location']
+    fieldlist = [fld+'_x' for fld in dualfields]
+    different = different[ fieldlist + ['md5_hash','filename','location']].copy()
+
+    different.columns=dualfields+['md5_hash','filename','location']
     # our different list will have multiple entries for a workflow if there is a version on either side
     # we want to grab the most recent one, so we sort and grab the most recent one for each workflow
     changedfiles = different.sort_values('date_created',ascending=False).groupby('filename').first()
@@ -363,7 +367,7 @@ def get_changed_files(remote,workflow_spec_id):
     changedfiles['new'] = False
     changedfiles.loc[changedfiles.index.isin(left['filename']), 'new'] = True
     changedfiles.loc[changedfiles.index.isin(right['filename']),'new'] = True
-
+    changedfiles = changedfiles.replace({pd.np.nan: None})
     # return the list as a dict, let swagger convert it to json
     return changedfiles.reset_index().to_dict(orient='records')
 
@@ -404,9 +408,21 @@ def get_workflow_spec_files_dataframe(workflowid):
                          'workflow_spec_id': file.file_model.workflow_spec_id,
                          'md5_hash':file.md5_hash,
                          'filename':file.file_model.name,
+                         'type':file.file_model.type.name,
+                         'primary':file.file_model.primary,
+                         'content_type':file.file_model.content_type,
+                         'primary_process_id':file.file_model.primary_process_id,
                          'date_created':file.date_created})
     if len(filelist) == 0:
-        return pd.DataFrame(columns=['file_model_id','workflow_spec_id','md5_hash','filename','date_created'])
+        return pd.DataFrame(columns=['file_model_id',
+                                     'workflow_spec_id',
+                                     'md5_hash',
+                                     'filename',
+                                     'type',
+                                     'primary',
+                                     'content_type',
+                                     'primary_process_id',
+                                     'date_created'])
     df = pd.DataFrame(filelist).sort_values('date_created').groupby('file_model_id').last()
     df['date_created'] = df['date_created'].astype('str')
     return df

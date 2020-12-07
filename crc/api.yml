@@ -578,6 +578,29 @@ paths:
       responses:
         '204':
           description: The file has been removed.
+  /file/{md5_hash}/data:
+    parameters:
+      - name: md5_hash
+        in: path
+        required: true
+        description: The md5 hash of the file requested
+        schema:
+          type: string
+    get:
+      operationId: crc.api.file.get_file_data_by_hash
+      summary: Returns only the file contents
+      security: []  # Disable security for this endpoint only.
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the actual file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
   /file/{file_id}/data:
     parameters:
       - name: file_id

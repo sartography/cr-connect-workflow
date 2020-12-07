@@ -6,7 +6,7 @@ from flask import send_file
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileSchema, FileModel, File, FileModelSchema
+from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 
@@ -99,6 +99,9 @@ def update_file_data(file_id):
     file_model = FileService.update_file(file_model, file.stream.read(), file.content_type)
     return FileSchema().dump(to_file_api(file_model))
 
+def get_file_data_by_hash(md5_hash):
+    filedatamodel = session.query(FileDataModel).filter(FileDataModel.md5_hash == md5_hash).first()
+    return get_file_data(filedatamodel.file_model_id)
 
 def get_file_data(file_id, version=None):
     file_data = FileService.get_file_data(file_id, version)
