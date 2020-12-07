@@ -101,7 +101,7 @@ def update_file_data(file_id):
 
 def get_file_data_by_hash(md5_hash):
     filedatamodel = session.query(FileDataModel).filter(FileDataModel.md5_hash == md5_hash).first()
-    return get_file_data(filedatamodel.file_model_id)
+    return get_file_data(filedatamodel.file_model_id,version=filedatamodel.version)
 
 def get_file_data(file_id, version=None):
     file_data = FileService.get_file_data(file_id, version)
