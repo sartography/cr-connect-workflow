@@ -7,6 +7,8 @@ from crc.scripts.script import Script
 from crc.services.ldap_service import LdapService
 from crc.services.mails import send_mail
 
+from email_validator import validate_email, EmailNotValidError
+
 
 class Email(Script):
     """This Script allows to be introduced as part of a workflow and called from there, specifying
@@ -30,7 +32,8 @@ Email Subject ApprvlApprvr1 PIComputingID
     def do_task(self, task, *args, **kwargs):
         args = [arg for arg in args if type(arg) == str]
         subject = self.get_subject(task, args)
-        recipients = self.get_users_info(task, args)
+        # recipients = self.get_users_info(task, args)
+        recipients = self.get_email_recipients(task, args)
         content, content_html = self.get_content(task)
         if recipients:
             send_mail(
@@ -40,6 +43,43 @@ Email Subject ApprvlApprvr1 PIComputingID
                 content=content,
                 content_html=content_html
             )
+
+    def get_email_recipients(self, task, args):
+        emails = []
+
+        if len(args[1]) < 1:
+            raise ApiError(code="missing_argument",
+                           message="Email script requires at least one argument, "
+                                   "an email address to process. "
+                                   "Multiple email addresses are accepted.")
+        if isinstance(args[1], str):
+            try:
+                valid = validate_email(args[1])
+            except EmailNotValidError as e:
+                # email is not valid, exception message is human-readable
+                raise ApiError(code="invalid_argument",
+                           message="Email script requires a valid email address. "
+                                   "%s " % e)
+                print(str(e))
+            else:
+                emails.append(valid.email)
+
+        elif isinstance(args[1], list):
+            for arg in args[1]:
+                if isinstance(arg, str):
+                    # TODO: need to validate
+                    try:
+                        valid = validate_email(args[1])
+                    except EmailNotValidError as e:
+                        # email is not valid, exception message is human-readable
+                        raise ApiError(code="invalid_argument",
+                                       message="Email script requires a valid email address."
+                                               "Multiple address are allowed.")
+                        print(str(e))
+                    else:
+                        emails.append(valid.email)
+
+        return emails
 
     def get_users_info(self, task, args):
         if len(args) < 1:
