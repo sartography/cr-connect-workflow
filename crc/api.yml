@@ -152,6 +152,38 @@ paths:
                 items:
                   $ref: "#/components/schemas/Study"
 
+  /workflow_spec/{workflow_spec_id}/files/sync:
+    get:
+      operationId: crc.api.workflow.sync_changed_files
+      summary: Provides a list of files that were updated
+      security: []  # Disable security for this endpoint only - we'll sanity check
+                    # in the endpoint
+      parameters:
+        - name: workflow_spec_id
+          in: path
+          required: true
+          description: The workflow_spec id
+          schema:
+            type: string
+        - name: remote
+          in: query
+          required: true
+          description: The remote endpoint
+          schema:
+            type: string
+
+      tags:
+        - Workflow Spec States
+      responses:
+        '200':
+          description: An array of workflow specs, with last touched date and file signature.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Study"
+
   /workflow_spec/{workflow_spec_id}/files/diff:
     get:
       operationId: crc.api.workflow.get_changed_files
@@ -334,6 +366,7 @@ paths:
     get:
       operationId: crc.api.workflow.get_workflow_specification
       summary: Returns a single workflow specification
+      security: []
       tags:
         - Workflow Specifications
       responses:
@@ -578,7 +611,7 @@ paths:
       responses:
         '204':
           description: The file has been removed.
-  /file/{md5_hash}/data:
+  /file/{md5_hash}/hash_data:
     parameters:
       - name: md5_hash
         in: path

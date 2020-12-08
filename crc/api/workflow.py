@@ -1,6 +1,7 @@
 import hashlib
 import json
 import uuid
+from io import StringIO
 from hashlib import md5
 
 import pandas as pd
@@ -319,8 +320,56 @@ def get_changed_workflows(remote):
     # return the list as a dict, let swagger convert it to json
     return output.reset_index().to_dict(orient='records')
 
+def sync_all_changed_files(remote):
+    pass
 
-def get_changed_files(remote,workflow_spec_id):
+def sync_changed_files(remote,workflow_spec_id):
+    # make sure that spec is local before syncing files
+    remotespectext  =  requests.get('http://'+remote+'/v1.0/workflow-specification/'+workflow_spec_id)
+    specdict = json.loads(remotespectext.text)
+    localspec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
+    if localspec is None:
+        localspec = WorkflowSpecModel()
+        localspec.id = workflow_spec_id
+    if specdict['category'] == None:
+        localspec.category = None
+    else:
+        localspec.category = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.id
+                                                                         == specdict['category']['id']).first()
+    localspec.display_order = specdict['display_order']
+    localspec.display_name = specdict['display_name']
+    localspec.name = specdict['name']
+    localspec.description = specdict['description']
+    session.add(localspec)
+
+    changedfiles = get_changed_files(remote,workflow_spec_id,as_df=True)
+    updatefiles = changedfiles[~((changedfiles['new']==True) & (changedfiles['location']=='local'))]
+    deletefiles = changedfiles[((changedfiles['new']==True) & (changedfiles['location']=='local'))]
+    for delfile in deletefiles.reset_index().to_dict(orient='records'):
+        currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
+                                            FileModel.name == delfile['filename']).first()
+        FileService.delete_file(currentfile.id)
+    for updatefile in updatefiles.reset_index().to_dict(orient='records'):
+        currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
+                                            FileModel.name == updatefile['filename']).first()
+        if not currentfile:
+            currentfile = FileModel()
+            currentfile.name = updatefile['filename']
+            currentfile.workflow_spec_id = workflow_spec_id
+
+        currentfile.date_created = updatefile['date_created']
+        currentfile.type = updatefile['type']
+        currentfile.primary = updatefile['primary']
+        currentfile.content_type = updatefile['content_type']
+        currentfile.primary_process_id = updatefile['primary_process_id']
+        session.add(currentfile)
+
+        response = requests.get('http://'+remote+'/v1.0/file/'+updatefile['md5_hash']+'/hash_data')
+        FileService.update_file(currentfile,response.content,updatefile['type'])
+    session.commit()
+
+
+def get_changed_files(remote,workflow_spec_id,as_df=False):
     """
     gets a remote endpoint - gets the files for a workflow_spec on both
     local and remote and determines what files have been change and returns a list of those
@@ -369,7 +418,10 @@ def get_changed_files(remote,workflow_spec_id):
     changedfiles.loc[changedfiles.index.isin(right['filename']),'new'] = True
     changedfiles = changedfiles.replace({pd.np.nan: None})
     # return the list as a dict, let swagger convert it to json
-    return changedfiles.reset_index().to_dict(orient='records')
+    if as_df:
+        return changedfiles
+    else:
+        return changedfiles.reset_index().to_dict(orient='records')
 
 
 
