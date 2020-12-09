@@ -7,7 +7,7 @@ from hashlib import md5
 import pandas as pd
 from SpiffWorkflow.util.deep_merge import DeepMerge
 from flask import g
-from crc import session, db
+from crc import session, db, app
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
 from crc.models.file import FileModel, LookupDataSchema, FileDataModel
@@ -269,12 +269,19 @@ def join_uuids(uuids):
                                                                           # in the same order
     return hashlib.md5(combined_uuids.encode('utf8')).hexdigest() # make a hash of the hashes
 
-def get_changed_workflows(remote):
+def verify_token(token, required_scopes):
+    if token == app.config['API_TOKEN']:
+        return {'scope':['any']}
+    else:
+        raise ApiError("permission_denied","API Token information is not correct")
+
+
+def get_changed_workflows(remote,as_df=False):
     """
     gets a remote endpoint - gets the workflows and then
     determines what workflows are different from the remote endpoint
     """
-    response = requests.get('http://'+remote+'/v1.0/workflow_spec/all')
+    response = requests.get('http://'+remote+'/v1.0/workflow_spec/all',headers={'X-CR-API-KEY':app.config['API_TOKEN']})
 
     # This is probably very and may allow cross site attacks - fix later
     remote = pd.DataFrame(json.loads(response.text))
@@ -318,14 +325,25 @@ def get_changed_workflows(remote):
     output = changedfiles[~changedfiles.index.isin(right['workflow_spec_id'])]
 
     # return the list as a dict, let swagger convert it to json
-    return output.reset_index().to_dict(orient='records')
+    if as_df:
+        return output
+    else:
+        return output.reset_index().to_dict(orient='records')
 
-def sync_all_changed_files(remote):
-    pass
+
+def sync_all_changed_workflows(remote):
+
+    workflowsdf = get_changed_workflows(remote,as_df=True)
+    workflows = workflowsdf.reset_index().to_dict(orient='records')
+    for workflow in workflows:
+        sync_changed_files(remote,workflow['workflow_spec_id'])
+    return [x['workflow_spec_id'] for x in workflows]
+
 
 def sync_changed_files(remote,workflow_spec_id):
     # make sure that spec is local before syncing files
-    remotespectext  =  requests.get('http://'+remote+'/v1.0/workflow-specification/'+workflow_spec_id)
+    remotespectext  =  requests.get('http://'+remote+'/v1.0/workflow-specification/'+workflow_spec_id,
+                                    headers={'X-CR-API-KEY': app.config['API_TOKEN']})
     specdict = json.loads(remotespectext.text)
     localspec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
     if localspec is None:
@@ -343,13 +361,20 @@ def sync_changed_files(remote,workflow_spec_id):
     session.add(localspec)
 
     changedfiles = get_changed_files(remote,workflow_spec_id,as_df=True)
+    if len(changedfiles)==0:
+        return []
     updatefiles = changedfiles[~((changedfiles['new']==True) & (changedfiles['location']=='local'))]
+    updatefiles = updatefiles.reset_index().to_dict(orient='records')
+
     deletefiles = changedfiles[((changedfiles['new']==True) & (changedfiles['location']=='local'))]
-    for delfile in deletefiles.reset_index().to_dict(orient='records'):
+    deletefiles = deletefiles.reset_index().to_dict(orient='records')
+
+    for delfile in deletefiles:
         currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
                                             FileModel.name == delfile['filename']).first()
         FileService.delete_file(currentfile.id)
-    for updatefile in updatefiles.reset_index().to_dict(orient='records'):
+
+    for updatefile in updatefiles:
         currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
                                             FileModel.name == updatefile['filename']).first()
         if not currentfile:
@@ -364,9 +389,11 @@ def sync_changed_files(remote,workflow_spec_id):
         currentfile.primary_process_id = updatefile['primary_process_id']
         session.add(currentfile)
 
-        response = requests.get('http://'+remote+'/v1.0/file/'+updatefile['md5_hash']+'/hash_data')
+        response = requests.get('http://'+remote+'/v1.0/file/'+updatefile['md5_hash']+'/hash_data',
+                                headers={'X-CR-API-KEY': app.config['API_TOKEN']})
         FileService.update_file(currentfile,response.content,updatefile['type'])
     session.commit()
+    return [x['filename'] for x in updatefiles]
 
 
 def get_changed_files(remote,workflow_spec_id,as_df=False):
@@ -375,7 +402,8 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
     local and remote and determines what files have been change and returns a list of those
     files
     """
-    response = requests.get('http://'+remote+'/v1.0/workflow_spec/'+workflow_spec_id+'/files')
+    response = requests.get('http://'+remote+'/v1.0/workflow_spec/'+workflow_spec_id+'/files',
+                            headers={'X-CR-API-KEY':app.config['API_TOKEN']})
     # This is probably very and may allow cross site attacks - fix later
     remote = pd.DataFrame(json.loads(response.text))
     # get the local thumbprints & make sure that 'workflow_spec_id' is a column, not an index
@@ -386,7 +414,11 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
                              left_on=['filename','md5_hash'],
                              how = 'outer' ,
                              indicator=True).loc[lambda x : x['_merge']!='both']
-
+    if len(different) == 0:
+        if as_df:
+            return different
+        else:
+            return []
     # each line has a tag on it - if was in the left or the right,
     # label it so we know if that was on the remote or local machine
     different.loc[different['_merge']=='left_only','location'] = 'remote'
