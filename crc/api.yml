@@ -220,7 +220,7 @@ paths:
   /workflow_spec/{workflow_spec_id}/files/diff:
     get:
       operationId: crc.api.workflow.get_changed_files
-      summary: Provides a list of files for a workflow specs that differ from remote and their signature
+      summary: Provides a list of files for a workflow specs that differ from remote and their signature.
       security :
         - ApiKeyAuth : []
 
