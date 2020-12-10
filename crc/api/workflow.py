@@ -352,8 +352,17 @@ def sync_changed_files(remote,workflow_spec_id):
     if specdict['category'] == None:
         localspec.category = None
     else:
-        localspec.category = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.id
-                                                                         == specdict['category']['id']).first()
+        localcategory = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name
+                                                                        == specdict['category']['name']).first()
+        if localcategory == None:
+            #category doesn't exist - lets make it
+            localcategory = WorkflowSpecCategoryModel()
+            localcategory.name = specdict['category']['name']
+            localcategory.display_name = specdict['category']['display_name']
+            localcategory.display_order = specdict['category']['display_order']
+            session.add(localcategory)
+        localspec.category = localcategory
+
     localspec.display_order = specdict['display_order']
     localspec.display_name = specdict['display_name']
     localspec.name = specdict['name']
@@ -372,7 +381,12 @@ def sync_changed_files(remote,workflow_spec_id):
     for delfile in deletefiles:
         currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
                                             FileModel.name == delfile['filename']).first()
-        FileService.delete_file(currentfile.id)
+
+        # it is more appropriate to archive the file than delete
+        # due to the fact that we might have workflows that are using the
+        # file data
+        currentfile.archived = True
+        session.add(currentfile)
 
     for updatefile in updatefiles:
         currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
