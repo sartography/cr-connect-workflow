@@ -100,9 +100,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Study"
-  /workflow_spec/pullall:
+  /workflow_sync/pullall:
     get:
-      operationId: crc.api.workflow.sync_all_changed_workflows
+      operationId: crc.api.workflow_sync.sync_all_changed_workflows
       summary: Sync all workflows that have changed on the remote side and provide a list of the results
       security:
         - ApiKeyAuth : []
@@ -115,7 +115,7 @@ paths:
           schema:
             type: string
       tags:
-        - Workflow Spec States
+        - Workflow Sync API
       responses:
         '200':
           description: An array of workflow specs that were synced from remote.
@@ -130,9 +130,9 @@ paths:
 
 
 
-  /workflow_spec/diff:
+  /workflow_sync/diff:
     get:
-      operationId: crc.api.workflow.get_changed_workflows
+      operationId: crc.api.workflow_sync.get_changed_workflows
       summary: Provides a list of workflow that differ from remote and if it is new or not
       security :
         - ApiKeyAuth : []
@@ -145,7 +145,7 @@ paths:
           schema:
             type: string
       tags:
-        - Workflow Spec States
+        - Workflow Sync API
       responses:
         '200':
           description: An array of workflow specs, with last touched date and which one is most recent.
@@ -157,9 +157,9 @@ paths:
                   $ref: "#/components/schemas/WorkflowSpecDiffList"
 
 
-  /workflow_spec/{workflow_spec_id}/files:
+  /workflow_sync/{workflow_spec_id}/files:
     get:
-      operationId: crc.api.workflow.get_workflow_spec_files
+      operationId: crc.api.workflow_sync.get_workflow_spec_files
       summary: Provides a list of files for a workflow spec on this machine.
       security :
         - ApiKeyAuth : []
@@ -172,7 +172,7 @@ paths:
             type: string
 
       tags:
-        - Workflow Spec States
+        - Workflow Sync API
       responses:
         '200':
           description: An array of files for a workflow spec on the local system, with details.
@@ -183,9 +183,9 @@ paths:
                 items:
                   $ref: "#/components/schemas/WorkflowSpecFilesList"
 
-  /workflow_spec/{workflow_spec_id}/files/sync:
+  /workflow_sync/{workflow_spec_id}/files/sync:
     get:
-      operationId: crc.api.workflow.sync_changed_files
+      operationId: crc.api.workflow_sync.sync_changed_files
       summary: Syncs files from a workflow on a remote system and provides a list of files that were updated
       security :
         - ApiKeyAuth : []
@@ -204,7 +204,7 @@ paths:
             type: string
 
       tags:
-        - Workflow Spec States
+        - Workflow Sync API
       responses:
         '200':
           description: A list of files that were synced for the workflow.
@@ -217,9 +217,9 @@ paths:
                 example : ["data_security_plan.dmn",'some_other_file.xml']
 
 
-  /workflow_spec/{workflow_spec_id}/files/diff:
+  /workflow_sync/{workflow_spec_id}/files/diff:
     get:
-      operationId: crc.api.workflow.get_changed_files
+      operationId: crc.api.workflow_sync.get_changed_files
       summary: Provides a list of files for a workflow specs that differ from remote and their signature.
       security :
         - ApiKeyAuth : []
@@ -239,7 +239,7 @@ paths:
             type: string
 
       tags:
-        - Workflow Spec States
+        - Workflow Sync API
       responses:
         '200':
           description: An array of files that are different from remote, with last touched date and file signature.
@@ -251,15 +251,15 @@ paths:
                   $ref: "#/components/schemas/WorkflowSpecFilesDiff"
 
 
-  /workflow_spec/all:
+  /workflow_sync/all:
     get:
-      operationId: crc.api.workflow.get_all_spec_state
+      operationId: crc.api.workflow_sync.get_all_spec_state
       summary: Provides a list of workflow specs, last update date and thumbprint
       security:
         - ApiKeyAuth : []
 
       tags:
-        - Workflow Spec States
+        - Workflow Sync API
       responses:
         '200':
           description: An array of workflow specs, with last touched date and file signature.
@@ -547,7 +547,7 @@ paths:
           description: The workflow spec category has been removed.
   /file:
     parameters:
-      - name: workflow_spec_id
+      - name: workflow_sync_id
         in: query
         required: false
         description: The unique id of a workflow specification
@@ -1353,7 +1353,7 @@ components:
         type : apiKey
         in : header
         name : X-CR-API-KEY
-        x-apikeyInfoFunc: crc.api.workflow.verify_token
+        x-apikeyInfoFunc: crc.api.workflow_sync.verify_token
 
   schemas:
     User:
@@ -1380,7 +1380,7 @@ components:
           type: string
     WorkflowSpecDiffList:
       properties:
-        workflow_spec_id:
+        workflow_sync_id:
           type: string
           example : top_level_workflow
         date_created :
@@ -1397,7 +1397,7 @@ components:
         file_model_id:
           type : integer
           example : 171
-        workflow_spec_id :
+        workflow_sync_id :
           type: string
           example : top_level_workflow
         filename :
@@ -1455,7 +1455,7 @@ components:
 
     WorkflowSpecAll:
       properties:
-        workflow_spec_id :
+        workflow_sync_id :
           type: string
           example : acaf1258-43b4-437e-8846-f612afa66811
         date_created :
@@ -1587,7 +1587,7 @@ components:
         content_type:
           type: string
           example: "application/xml"
-        workflow_spec_id:
+        workflow_sync_id:
           type: string
           example: "random_fact"
           x-nullable: true
@@ -1609,7 +1609,7 @@ components:
             $ref: "#/components/schemas/NavigationItem"
         next_task:
           $ref: "#/components/schemas/Task"
-        workflow_spec_id:
+        workflow_sync_id:
           type: string
         spec_version:
           type: string
@@ -1625,7 +1625,7 @@ components:
       example:
         id: 291234
         status: 'user_input_required'
-        workflow_spec_id: 'random_fact'
+        workflow_sync_id: 'random_fact'
         spec_version: 'v1.1 [22,23]'
         is_latest_spec: True
         next_task:
