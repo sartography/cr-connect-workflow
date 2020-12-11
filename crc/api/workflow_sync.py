@@ -7,6 +7,7 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
+from crc.services.workflow_sync import WorkflowSyncService
 
 
 def join_uuids(uuids):
@@ -27,21 +28,16 @@ def get_changed_workflows(remote,as_df=False):
     gets a remote endpoint - gets the workflows and then
     determines what workflows are different from the remote endpoint
     """
-    try:
-        response = requests.get('http://'+remote+'/v1.0/workflow_sync/all',headers={'X-CR-API-KEY':app.config['API_TOKEN']})
-    except:
-        raise ApiError("endpoint error", 'had a problem connecting to '+remote)
-    if not response.ok:
-        raise ApiError("endpoint error", response.text)
 
-    remote = pd.DataFrame(json.loads(response.text))
+    remote_workflows_list = WorkflowSyncService.get_all_remote_workflows(remote)
+    remote_workflows = pd.DataFrame(remote_workflows_list)
 
     # get the local thumbprints & make sure that 'workflow_spec_id' is a column, not an index
     local = get_all_spec_state_dataframe().reset_index()
 
     # merge these on workflow spec id and hash - this will
     # make two different date columns date_x and date_y
-    different  = remote.merge(local,
+    different  = remote_workflows.merge(local,
                               right_on=['workflow_spec_id','md5_hash'],
                               left_on=['workflow_spec_id','md5_hash'],
                               how = 'outer' ,
@@ -66,7 +62,7 @@ def get_changed_workflows(remote,as_df=False):
 
     # get an exclusive or list of workflow ids - that is we want lists of files that are
     # on one machine or the other, but not both
-    remote_spec_ids = remote[['workflow_spec_id']]
+    remote_spec_ids = remote_workflows[['workflow_spec_id']]
     local_spec_ids = local[['workflow_spec_id']]
     left = remote_spec_ids[~remote_spec_ids['workflow_spec_id'].isin(local_spec_ids['workflow_spec_id'])]
     right = local_spec_ids[~local_spec_ids['workflow_spec_id'].isin(remote_spec_ids['workflow_spec_id'])]
@@ -96,16 +92,8 @@ def sync_all_changed_workflows(remote):
 
 def sync_changed_files(remote,workflow_spec_id):
     # make sure that spec is local before syncing files
-    try:
-        remotespectext  =  requests.get('http://'+remote+'/v1.0/workflow-specification/'+workflow_spec_id,
-                                    headers={'X-CR-API-KEY': app.config['API_TOKEN']})
-    except:
-        raise ApiError("endpoint error", 'had a problem connecting to '+remote)
 
-    if not remotespectext.ok:
-        raise ApiError("endpoint error", response.text)
-
-    specdict = json.loads(remotespectext.text)
+    specdict = WorkflowSyncService.get_remote_workfow_spec(remote,workflow_spec_id)
 
     localspec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
     if localspec is None:
@@ -164,16 +152,8 @@ def sync_changed_files(remote,workflow_spec_id):
         currentfile.content_type = updatefile['content_type']
         currentfile.primary_process_id = updatefile['primary_process_id']
         session.add(currentfile)
-        try:
-            response = requests.get('http://'+remote+'/v1.0/file/'+updatefile['md5_hash']+'/hash_data',
-                                headers={'X-CR-API-KEY': app.config['API_TOKEN']})
-        except:
-            raise ApiError("endpoint error", 'had a problem connecting to ' + remote)
-
-        if not response.ok:
-            raise ApiError("endpoint error", response.text)
-
-        FileService.update_file(currentfile,response.content,updatefile['type'])
+        content = WorkflowSyncService.get_remote_file_by_hash(remote,updatefile['md5_hash'])
+        FileService.update_file(currentfile,content,updatefile['type'])
     session.commit()
     return [x['filename'] for x in updatefiles]
 
@@ -184,21 +164,12 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
     local and remote and determines what files have been change and returns a list of those
     files
     """
-    try:
-        response = requests.get('http://'+remote+'/v1.0/workflow_sync/'+workflow_spec_id+'/files',
-                            headers={'X-CR-API-KEY':app.config['API_TOKEN']})
-    except:
-        raise ApiError("endpoint error", 'had a problem connecting to '+remote)
-
-    if not response.ok:
-        raise ApiError("endpoint error", response.text)
-
-    # This is probably very and may allow cross site attacks - fix later
-    remote = pd.DataFrame(json.loads(response.text))
+    remote_file_list = WorkflowSyncService.get_remote_workflow_spec_files(remote,workflow_spec_id)
+    remote_files = pd.DataFrame(remote_file_list)
     # get the local thumbprints & make sure that 'workflow_spec_id' is a column, not an index
     local = get_workflow_spec_files_dataframe(workflow_spec_id).reset_index()
     local['md5_hash'] = local['md5_hash'].astype('str')
-    different = remote.merge(local,
+    different = remote_files.merge(local,
                              right_on=['filename','md5_hash'],
                              left_on=['filename','md5_hash'],
                              how = 'outer' ,
