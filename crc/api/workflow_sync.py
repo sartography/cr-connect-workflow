@@ -31,7 +31,7 @@ def get_changed_workflows(remote,as_df=False):
         response = requests.get('http://'+remote+'/v1.0/workflow_sync/all',headers={'X-CR-API-KEY':app.config['API_TOKEN']})
     except:
         raise ApiError("endpoint error", 'had a problem connecting to '+remote)
-    if response.status_code != 200:
+    if not response.ok:
         raise ApiError("endpoint error", response.text)
 
     remote = pd.DataFrame(json.loads(response.text))
@@ -102,7 +102,7 @@ def sync_changed_files(remote,workflow_spec_id):
     except:
         raise ApiError("endpoint error", 'had a problem connecting to '+remote)
 
-    if remotespectext.status_code != 200:
+    if not remotespectext.ok:
         raise ApiError("endpoint error", response.text)
 
     specdict = json.loads(remotespectext.text)
@@ -170,7 +170,7 @@ def sync_changed_files(remote,workflow_spec_id):
         except:
             raise ApiError("endpoint error", 'had a problem connecting to ' + remote)
 
-        if response.status_code != 200:
+        if not response.ok:
             raise ApiError("endpoint error", response.text)
 
         FileService.update_file(currentfile,response.content,updatefile['type'])
@@ -190,7 +190,7 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
     except:
         raise ApiError("endpoint error", 'had a problem connecting to '+remote)
 
-    if response.status_code != 200:
+    if not response.ok:
         raise ApiError("endpoint error", response.text)
 
     # This is probably very and may allow cross site attacks - fix later
