@@ -8,7 +8,11 @@ from crc.models.file import FileModel, FileDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
 from crc.services.workflow_sync import WorkflowSyncService
+from crc.api.workflow import get_workflow_specification
 
+
+def get_sync_workflow_specification(workflow_spec_id):
+    return get_workflow_specification(workflow_spec_id)
 
 def join_uuids(uuids):
     """Joins a pandas Series of uuids and combines them in one hash"""

@@ -25,13 +25,8 @@ class WorkflowSyncService(object):
         """
         this just gets the details of a workflow spec from the
         remote side.
-
-        FIXME: for testing I had changed the security on the API endpoint
-        below so that I could run it - I need to restore the security on this
-        and make a new workflow_sync endpoint that just calls this same function
-        so that I can use the API_TOKEN rather than the other token setup
         """
-        url = remote+'/v1.0/workflow-specification/'+workflow_spec_id
+        url = remote+'/v1.0/workflow-sync/'+workflow_spec_id+'/spec'
         return WorkflowSyncService.__make_request(url)
 
     @staticmethod
