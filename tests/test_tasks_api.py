@@ -68,7 +68,7 @@ class TestTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('two_forms', workflow_api.workflow_spec_id)
-        self.assertEqual(4, len(workflow_api.navigation))
+        self.assertEqual(5, len(workflow_api.navigation))
         self.assertIsNotNone(workflow_api.next_task.form)
         self.assertEqual("UserTask", workflow_api.next_task.type)
         self.assertEqual("StepOne", workflow_api.next_task.name)
@@ -113,7 +113,7 @@ class TestTasksApi(BaseTest):
 
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
-        self.assertEqual(3, len(nav))
+        self.assertEqual(4, len(nav))
         self.assertEqual("Do You Have Bananas", nav[1].description)
         self.assertEqual("Bananas?", nav[2].description)
         self.assertEqual("LIKELY", nav[2].state)
@@ -135,7 +135,7 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
-        self.assertEqual(6, len(nav))
+        self.assertEqual(7, len(nav))
         self.assertEqual("Task 1", nav[1].description)
         self.assertEqual("Which Branch?", nav[2].description)
         self.assertEqual("a", nav[2].children[0].description)
@@ -276,7 +276,7 @@ class TestTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow = self.get_workflow_api(workflow)
         navigation = self.get_workflow_api(workflow).navigation
-        self.assertEqual(4, len(navigation)) # Start task, form_task, multi_task, end task
+        self.assertEqual(5, len(navigation)) # Start task, form_task, multi_task, end task
         self.assertEqual("UserTask", workflow.next_task.type)
         self.assertEqual(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
         self.assertEqual(5, workflow.next_task.multi_instance_count)
@@ -394,7 +394,7 @@ class TestTasksApi(BaseTest):
         navigation = workflow_api.navigation
         task = workflow_api.next_task
 
-        self.assertEqual(4, len(navigation))
+        self.assertEqual(5, len(navigation))
         self.assertEqual("UserTask", task.type)
         self.assertEqual("Activity_A", task.name)
         self.assertEqual("My Sub Process", task.process_name)
@@ -461,7 +461,7 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance_parallel')
 
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual(8, len(workflow_api.navigation))
+        self.assertEqual(9, len(workflow_api.navigation))
         ready_items = [nav for nav in workflow_api.navigation if nav.state == "READY"]
         self.assertEqual(5, len(ready_items))
 

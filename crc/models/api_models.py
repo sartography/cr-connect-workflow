@@ -158,10 +158,12 @@ class NavigationItemSchema(ma.Schema):
         state = data.pop('state', None)
         task_id = data.pop('task_id', None)
         children = data.pop('children', [])
+        spec_type = data.pop('spec_type', None)
         item = NavItem(**data)
         item.state = state
         item.task_id = task_id
         item.children = children
+        item.spec_type = spec_type
         return item
 
 class WorkflowApi(object):
