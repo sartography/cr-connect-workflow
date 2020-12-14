@@ -1,11 +1,13 @@
 import uuid
+
 from flask import g
-from crc import session, db, app
+
+from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
-from crc.models.file import FileModel, LookupDataSchema, FileDataModel
+from crc.models.api_models import WorkflowApiSchema
+from crc.models.file import FileModel, LookupDataSchema
 from crc.models.study import StudyModel, WorkflowMetadata
-from crc.models.task_event import TaskEventModel, TaskEventModelSchema, TaskEvent, TaskEventSchema
+from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.file_service import FileService
@@ -14,6 +16,7 @@ from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
+
 
 def all_specifications():
     schema = WorkflowSpecModelSchema(many=True)

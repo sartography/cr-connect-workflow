@@ -68,7 +68,7 @@ class TestTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('two_forms', workflow_api.workflow_spec_id)
-        self.assertEqual(2, len(workflow_api.navigation))
+        self.assertEqual(5, len(workflow_api.navigation))
         self.assertIsNotNone(workflow_api.next_task.form)
         self.assertEqual("UserTask", workflow_api.next_task.type)
         self.assertEqual("StepOne", workflow_api.next_task.name)
@@ -113,14 +113,20 @@ class TestTasksApi(BaseTest):
 
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
-        self.assertEqual(6, len(nav))
-        self.assertEqual("Do You Have Bananas", nav[0]['title'])
-        self.assertEqual("Bananas?", nav[1]['title'])
-        self.assertEqual("FUTURE", nav[1]['state'])
-        self.assertEqual("yes", nav[2]['title'])
-        self.assertEqual("NOOP", nav[2]['state'])
-        self.assertEqual("no", nav[4]['title'])
-        self.assertEqual("NOOP", nav[4]['state'])
+        self.assertEqual(4, len(nav))
+        self.assertEqual("Do You Have Bananas", nav[1].description)
+        self.assertEqual("Bananas?", nav[2].description)
+        self.assertEqual("LIKELY", nav[2].state)
+
+        self.assertEqual("yes", nav[2].children[0].description)
+        self.assertEqual("LIKELY", nav[2].children[0].state)
+        self.assertEqual("of Bananas", nav[2].children[0].children[0].description)
+        self.assertEqual("EndEvent", nav[2].children[0].children[1].spec_type)
+
+        self.assertEqual("no", nav[2].children[1].description)
+        self.assertEqual("MAYBE", nav[2].children[1].state)
+        self.assertEqual("no bananas", nav[2].children[1].children[0].description)
+        self.assertEqual("EndEvent", nav[2].children[1].children[1].spec_type)
 
     def test_navigation_with_exclusive_gateway(self):
         workflow = self.create_workflow('exclusive_gateway_2')
@@ -130,13 +136,16 @@ class TestTasksApi(BaseTest):
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
         self.assertEqual(7, len(nav))
-        self.assertEqual("Task 1", nav[0]['title'])
-        self.assertEqual("Which Branch?", nav[1]['title'])
-        self.assertEqual("a", nav[2]['title'])
-        self.assertEqual("Task 2a", nav[3]['title'])
-        self.assertEqual("b", nav[4]['title'])
-        self.assertEqual("Task 2b", nav[5]['title'])
-        self.assertEqual("Task 3", nav[6]['title'])
+        self.assertEqual("Task 1", nav[1].description)
+        self.assertEqual("Which Branch?", nav[2].description)
+        self.assertEqual("a", nav[2].children[0].description)
+        self.assertEqual("Task 2a", nav[2].children[0].children[0].description)
+        self.assertEqual("b", nav[2].children[1].description)
+        self.assertEqual("Task 2b", nav[2].children[1].children[0].description)
+        self.assertEqual(None, nav[3].description)
+        self.assertEqual("Task 3", nav[4].description)
+        self.assertEqual("EndEvent", nav[5].spec_type)
+
 
     def test_document_added_to_workflow_shows_up_in_file_list(self):
         self.create_reference_document()
@@ -267,7 +276,7 @@ class TestTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow = self.get_workflow_api(workflow)
         navigation = self.get_workflow_api(workflow).navigation
-        self.assertEqual(4, len(navigation)) # Start task, form_task, multi_task, end task
+        self.assertEqual(5, len(navigation)) # Start task, form_task, multi_task, end task
         self.assertEqual("UserTask", workflow.next_task.type)
         self.assertEqual(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
         self.assertEqual(5, workflow.next_task.multi_instance_count)
@@ -385,7 +394,7 @@ class TestTasksApi(BaseTest):
         navigation = workflow_api.navigation
         task = workflow_api.next_task
 
-        self.assertEqual(2, len(navigation))
+        self.assertEqual(5, len(navigation))
         self.assertEqual("UserTask", task.type)
         self.assertEqual("Activity_A", task.name)
         self.assertEqual("My Sub Process", task.process_name)
@@ -452,8 +461,8 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance_parallel')
 
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual(8, len(workflow_api.navigation))
-        ready_items = [nav for nav in workflow_api.navigation if nav['state'] == "READY"]
+        self.assertEqual(9, len(workflow_api.navigation))
+        ready_items = [nav for nav in workflow_api.navigation if nav.state == "READY"]
         self.assertEqual(5, len(ready_items))
 
         self.assertEqual("UserTask", workflow_api.next_task.type)
@@ -461,8 +470,8 @@ class TestTasksApi(BaseTest):
         self.assertEqual("Primary Investigator", workflow_api.next_task.title)
 
         for i in random.sample(range(5), 5):
-            task = TaskSchema().load(ready_items[i]['task'])
-            rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, task.id),
+            task_id = ready_items[i].task_id
+            rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, task_id),
                               headers=self.logged_in_headers(),
                               content_type="application/json")
             self.assert_success(rv)
@@ -470,7 +479,7 @@ class TestTasksApi(BaseTest):
             workflow = WorkflowApiSchema().load(json_data)
             data = workflow.next_task.data
             data['investigator']['email'] = "dhf8r@virginia.edu"
-            self.complete_form(workflow, task, data)
+            self.complete_form(workflow, workflow.next_task, data)
             #tasks = self.get_workflow_api(workflow).user_tasks
 
         workflow = self.get_workflow_api(workflow)
