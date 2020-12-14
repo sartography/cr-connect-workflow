@@ -1,6 +1,6 @@
+from tests.base_test import BaseTest
 from crc import mail
 from crc.models.email import EmailModel
-from tests.base_test import BaseTest
 
 
 class TestEmailScript(BaseTest):
@@ -9,8 +9,8 @@ class TestEmailScript(BaseTest):
         workflow = self.create_workflow('email')
 
         task_data = {
-          'PIComputingID': 'dhf8r',
-          'ApprvlApprvr1': 'lb3dp'
+          'PIComputingID': 'dhf8r@virginia.edu',
+          'ApprvlApprvr1': 'lb3dp@virginia.edu'
         }
         task = self.get_workflow_api(workflow).next_task
 

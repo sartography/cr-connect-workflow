@@ -6,7 +6,6 @@ from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
-import flask
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from pandas import ExcelFile
 from sqlalchemy import desc
@@ -82,7 +81,7 @@ class FileService(object):
           you get '1.0' rather than '1'
           fixme: This is stupid stupid slow.  Place it in the database and just check if it is up to date."""
         data_model = FileService.get_reference_file_data(reference_file_name)
-        xls = ExcelFile(data_model.data)
+        xls = ExcelFile(data_model.data, engine='openpyxl')
         df = xls.parse(xls.sheet_names[0])
         for c in int_columns:
             df[c] = df[c].fillna(0)

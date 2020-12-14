@@ -166,9 +166,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual('READY', nav[3].children[1].state)  # sequence flow for denied is ready
         self.assertEqual('LOCKED', nav[3].children[1].children[0].state)  # Feedback is locked, it belongs to submitter
         self.assertEqual('LOCKED', nav[3].children[1].children[0].state)  # Approval is locked, it belongs to the submitter
-
-
-
         self.assertEqual('LOCKED', workflow_api.next_task.state)
 
         # Navigation as Submitter, coming back in to a rejected workflow to view the rejection message.
@@ -182,7 +179,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual('READY', nav[3].children[1].state)  # sequence flow for denied is ready
         self.assertEqual('READY', nav[3].children[1].children[0].state)  # Feedback is locked, it belongs to submitter
         self.assertEqual('READY', nav[3].children[1].children[0].state)  # Approval is locked, it belongs to the submitter
-
 
         # Navigation as Submitter, re-completing the original request a second time, and sending it for review.
         workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
