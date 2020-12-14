@@ -113,14 +113,14 @@ class TestTasksApi(BaseTest):
 
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
-        self.assertEqual(5, len(nav))
+        self.assertEqual(6, len(nav))
         self.assertEqual("Do You Have Bananas", nav[0]['title'])
         self.assertEqual("Bananas?", nav[1]['title'])
         self.assertEqual("FUTURE", nav[1]['state'])
         self.assertEqual("yes", nav[2]['title'])
         self.assertEqual("NOOP", nav[2]['state'])
-        self.assertEqual("no", nav[3]['title'])
-        self.assertEqual("NOOP", nav[3]['state'])
+        self.assertEqual("no", nav[4]['title'])
+        self.assertEqual("NOOP", nav[4]['state'])
 
     def test_navigation_with_exclusive_gateway(self):
         workflow = self.create_workflow('exclusive_gateway_2')
