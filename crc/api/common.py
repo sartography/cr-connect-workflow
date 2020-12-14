@@ -4,6 +4,8 @@ from flask import g
 
 from crc import ma, app
 
+import sentry_sdk
+
 
 class ApiError(Exception):
     def __init__(self, code, message, status_code=400,
@@ -16,6 +18,13 @@ class ApiError(Exception):
         self.file_name = file_name or ""  # OPTIONAL: The file that caused the error.
         self.tag = tag or ""  # OPTIONAL: The XML Tag that caused the issue.
         self.task_data = task_data or ""  # OPTIONAL: A snapshot of data connected to the task when error ocurred.
+        if hasattr(g,'user'):
+            user = g.user.uid
+        else:
+            user = 'Unknown'
+        self.task_user = user
+        # This is for sentry logging into Slack
+        sentry_sdk.set_context("User", {'user': user})
         Exception.__init__(self, self.message)
 
     @classmethod
@@ -59,7 +68,7 @@ class ApiError(Exception):
 class ApiErrorSchema(ma.Schema):
     class Meta:
         fields = ("code", "message", "workflow_name", "file_name", "task_name", "task_id",
-                  "task_data")
+                  "task_data", "task_user")
 
 
 @app.errorhandler(ApiError)
