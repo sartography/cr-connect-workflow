@@ -165,7 +165,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study_event.comment, update_comment)
         self.assertEqual(study_event.user_uid, self.test_uid)
 
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_investigators
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies

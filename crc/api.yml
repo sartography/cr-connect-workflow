@@ -100,6 +100,200 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Study"
+  /workflow_sync/pullall:
+    get:
+      operationId: crc.api.workflow_sync.sync_all_changed_workflows
+      summary: Sync all workflows that have changed on the remote side and provide a list of the results
+      security:
+        - ApiKeyAuth : []
+      # in the endpoint
+      parameters:
+        - name: remote
+          in: query
+          required: true
+          description: The remote endpoint
+          schema:
+            type: string
+      tags:
+        - Workflow Sync API
+      responses:
+        '200':
+          description: An array of workflow specs that were synced from remote.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                example : ['top_level_workflow','3b495037-f7d4-4509-bf58-cee41c0c6b0e']
+
+
+
+
+  /workflow_sync/diff:
+    get:
+      operationId: crc.api.workflow_sync.get_changed_workflows
+      summary: Provides a list of workflow that differ from remote and if it is new or not
+      security :
+        - ApiKeyAuth : []
+      # in the endpoint
+      parameters:
+        - name: remote
+          in: query
+          required: true
+          description: The remote endpoint
+          schema:
+            type: string
+      tags:
+        - Workflow Sync API
+      responses:
+        '200':
+          description: An array of workflow specs, with last touched date and which one is most recent.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpecDiffList"
+
+  /workflow_sync/{workflow_spec_id}/spec:
+    parameters:
+      - name: workflow_spec_id
+        in: path
+        required: false
+        description: The unique id of an existing workflow specification to modify.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.workflow_sync.get_sync_workflow_specification
+      summary: Returns a single workflow specification
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - Workflow Sync API
+      responses:
+        '200':
+          description: Workflow specification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+
+
+  /workflow_sync/{workflow_spec_id}/files:
+    get:
+      operationId: crc.api.workflow_sync.get_workflow_spec_files
+      summary: Provides a list of files for a workflow spec on this machine.
+      security :
+        - ApiKeyAuth : []
+      parameters:
+        - name: workflow_spec_id
+          in: path
+          required: true
+          description: The workflow_spec id
+          schema:
+            type: string
+
+      tags:
+        - Workflow Sync API
+      responses:
+        '200':
+          description: An array of files for a workflow spec on the local system, with details.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpecFilesList"
+
+  /workflow_sync/{workflow_spec_id}/files/sync:
+    get:
+      operationId: crc.api.workflow_sync.sync_changed_files
+      summary: Syncs files from a workflow on a remote system and provides a list of files that were updated
+      security :
+        - ApiKeyAuth : []
+      parameters:
+        - name: workflow_spec_id
+          in: path
+          required: true
+          description: The workflow_spec id
+          schema:
+            type: string
+        - name: remote
+          in: query
+          required: true
+          description: The remote endpoint
+          schema:
+            type: string
+
+      tags:
+        - Workflow Sync API
+      responses:
+        '200':
+          description: A list of files that were synced for the workflow.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type : string
+                example : ["data_security_plan.dmn",'some_other_file.xml']
+
+
+  /workflow_sync/{workflow_spec_id}/files/diff:
+    get:
+      operationId: crc.api.workflow_sync.get_changed_files
+      summary: Provides a list of files for a workflow specs that differ from remote and their signature.
+      security :
+        - ApiKeyAuth : []
+
+      parameters:
+        - name: workflow_spec_id
+          in: path
+          required: true
+          description: The workflow_spec id
+          schema:
+            type: string
+        - name: remote
+          in: query
+          required: true
+          description: The remote endpoint
+          schema:
+            type: string
+
+      tags:
+        - Workflow Sync API
+      responses:
+        '200':
+          description: An array of files that are different from remote, with last touched date and file signature.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpecFilesDiff"
+
+
+  /workflow_sync/all:
+    get:
+      operationId: crc.api.workflow_sync.get_all_spec_state
+      summary: Provides a list of workflow specs, last update date and thumbprint
+      security:
+        - ApiKeyAuth : []
+
+      tags:
+        - Workflow Sync API
+      responses:
+        '200':
+          description: An array of workflow specs, with last touched date and file signature.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpecAll"
+
+
   /study/all:
     get:
       operationId: crc.api.study.all_studies
@@ -474,6 +668,30 @@ paths:
       responses:
         '204':
           description: The file has been removed.
+  /file/{md5_hash}/hash_data:
+    parameters:
+      - name: md5_hash
+        in: path
+        required: true
+        description: The md5 hash of the file requested
+        schema:
+          type: string
+    get:
+      operationId: crc.api.file.get_file_data_by_hash
+      summary: Returns only the file contents
+      security:
+        - ApiKeyAuth: []
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the actual file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
   /file/{file_id}/data:
     parameters:
       - name: file_id
@@ -1154,6 +1372,12 @@ components:
       scheme: bearer
       bearerFormat: JWT
       x-bearerInfoFunc: crc.api.user.verify_token_admin
+    ApiKeyAuth :
+        type : apiKey
+        in : header
+        name : X-CR-API-KEY
+        x-apikeyInfoFunc: crc.api.workflow_sync.verify_token
+
   schemas:
     User:
       properties:
@@ -1177,6 +1401,92 @@ components:
       properties:
         id:
           type: string
+    WorkflowSpecDiffList:
+      properties:
+        workflow_spec_id:
+          type: string
+          example : top_level_workflow
+        date_created :
+          type: string
+          example : 2020-12-09 16:55:12.951500+00:00
+        location :
+          type : string
+          example : remote
+        new :
+          type : boolean
+          example : false
+    WorkflowSpecFilesList:
+      properties:
+        file_model_id:
+          type : integer
+          example : 171
+        workflow_spec_id :
+          type: string
+          example : top_level_workflow
+        filename :
+          type: string
+          example : data_security_plan.dmn
+        date_created :
+          type: string
+          example : 2020-12-01 13:58:12.420333+00:00
+        type:
+          type : string
+          example : dmn
+        primary :
+          type : boolean
+          example : false
+        content_type:
+          type: string
+          example : text/xml
+        primary_process_id:
+          type : string
+          example : null
+        md5_hash:
+          type: string
+          example: f12e2bbd-a20c-673b-ccb8-a8a1ea9c5b7b
+
+
+    WorkflowSpecFilesDiff:
+      properties:
+        filename :
+          type: string
+          example : data_security_plan.dmn
+        date_created :
+          type: string
+          example : 2020-12-01 13:58:12.420333+00:00
+        type:
+          type : string
+          example : dmn
+        primary :
+          type : boolean
+          example : false
+        content_type:
+          type: string
+          example : text/xml
+        primary_process_id:
+          type : string
+          example : null
+        md5_hash:
+          type: string
+          example: f12e2bbd-a20c-673b-ccb8-a8a1ea9c5b7b
+        location:
+          type : string
+          example : remote
+        new:
+          type: boolean
+          example : false
+
+    WorkflowSpecAll:
+      properties:
+        workflow_spec_id :
+          type: string
+          example : acaf1258-43b4-437e-8846-f612afa66811
+        date_created :
+          type: string
+          example : 2020-12-01 13:58:12.420333+00:00
+        md5_hash:
+          type: string
+          example: c30fd597f21715018eab12f97f9d4956
     Study:
       properties:
         id:

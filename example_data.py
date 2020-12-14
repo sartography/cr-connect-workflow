@@ -66,6 +66,7 @@ class ExampleDataLoader:
                 display_order=6
             ),
         ]
+        db.session.execute("select setval('workflow_spec_category_id_seq',7);")
         db.session.add_all(categories)
         db.session.commit()
 
