@@ -113,19 +113,20 @@ class TestTasksApi(BaseTest):
 
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
-        self.assertEqual(9, len(nav))
+        self.assertEqual(3, len(nav))
         self.assertEqual("Do You Have Bananas", nav[1].description)
         self.assertEqual("Bananas?", nav[2].description)
-        self.assertEqual("FUTURE", nav[2].state)
-        self.assertEqual("yes", nav[3].description)
-        self.assertEqual(None, nav[3].state)
-        self.assertEqual("Task_Num_Bananas", nav[4].name)
-        self.assertEqual("LIKELY", nav[4].state)
-        self.assertEqual("EndEvent", nav[5].spec_type)
-        self.assertEqual("no", nav[6].description)
-        self.assertEqual(None, nav[6].state)
-        self.assertEqual("Task_Why_No_Bananas", nav[7].name)
-        self.assertEqual("MAYBE", nav[7].state)
+        self.assertEqual("LIKELY", nav[2].state)
+
+        self.assertEqual("yes", nav[2].children[0].description)
+        self.assertEqual("LIKELY", nav[2].children[0].state)
+        self.assertEqual("of Bananas", nav[2].children[0].children[0].description)
+        self.assertEqual("EndEvent", nav[2].children[0].children[1].spec_type)
+
+        self.assertEqual("no", nav[2].children[1].description)
+        self.assertEqual("MAYBE", nav[2].children[1].state)
+        self.assertEqual("no bananas", nav[2].children[1].children[0].description)
+        self.assertEqual("EndEvent", nav[2].children[1].children[1].spec_type)
 
     def test_navigation_with_exclusive_gateway(self):
         workflow = self.create_workflow('exclusive_gateway_2')
@@ -134,14 +135,17 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         self.assertIsNotNone(workflow_api.navigation)
         nav = workflow_api.navigation
-        self.assertEqual(10, len(nav))
+        self.assertEqual(6, len(nav))
         self.assertEqual("Task 1", nav[1].description)
         self.assertEqual("Which Branch?", nav[2].description)
-        self.assertEqual("a", nav[3].description)
-        self.assertEqual("Task 2a", nav[4].description)
-        self.assertEqual("b", nav[5].description)
-        self.assertEqual("Task 2b", nav[6].description)
-        self.assertEqual("Task 3", nav[8].description)
+        self.assertEqual("a", nav[2].children[0].description)
+        self.assertEqual("Task 2a", nav[2].children[0].children[0].description)
+        self.assertEqual("b", nav[2].children[1].description)
+        self.assertEqual("Task 2b", nav[2].children[1].children[0].description)
+        self.assertEqual(None, nav[3].description)
+        self.assertEqual("Task 3", nav[4].description)
+        self.assertEqual("EndEvent", nav[5].spec_type)
+
 
     def test_document_added_to_workflow_shows_up_in_file_list(self):
         self.create_reference_document()
@@ -390,7 +394,7 @@ class TestTasksApi(BaseTest):
         navigation = workflow_api.navigation
         task = workflow_api.next_task
 
-        self.assertEqual(5, len(navigation))
+        self.assertEqual(4, len(navigation))
         self.assertEqual("UserTask", task.type)
         self.assertEqual("Activity_A", task.name)
         self.assertEqual("My Sub Process", task.process_name)

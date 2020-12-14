@@ -64,7 +64,7 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
 
         nav = workflow_api.navigation
-        self.assertEqual(9, len(nav))
+        self.assertEqual(4, len(nav))
         self.assertEqual("supervisor", nav[2].lane)
 
     def test_get_outstanding_tasks_awaiting_current_user(self):
@@ -123,12 +123,10 @@ class TestTasksApi(BaseTest):
         # Navigation as Submitter with ready task.
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
         nav = workflow_api.navigation
-        self.assertEqual(9, len(nav))
+        self.assertEqual(4, len(nav))
         self.assertEqual('READY', nav[1].state)  # First item is ready, no progress yet.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        # third item is a gateway, and belongs to no one
-        self.assertEqual(None, nav[4].state)  # Approved Path, has no operation
-        self.assertEqual(None, nav[6].state)  # Rejected Path, has no operation.
+        self.assertEqual('LIKELY', nav[3].state)  # Third item is a gateway, which contains things that are also locked.
         self.assertEqual('READY', workflow_api.next_task.state)
 
         # Navigation as Submitter after handoff to supervisor
@@ -138,8 +136,7 @@ class TestTasksApi(BaseTest):
         nav = workflow_api.navigation
         self.assertEqual('COMPLETED', nav[1].state)  # First item is ready, no progress yet.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('MAYBE', nav[7].state)  # third item is a gateway, and belongs to no one, and is locked.
-        self.assertEqual('LOCKED', workflow_api.next_task.state)
+        self.assertEqual('LIKELY', nav[3].state)  # third item is a gateway, and belongs to no one
         # In the event the next task is locked, we should say something sensible here.
         # It is possible to look at the role of the task, and say The next task "TASK TITLE" will
         # be handled by 'dhf8r', who is full-filling the role of supervisor. the Task Data
@@ -151,10 +148,9 @@ class TestTasksApi(BaseTest):
         # Navigation as Supervisor
         workflow_api = self.get_workflow_api(workflow, user_uid=supervisor.uid)
         nav = workflow_api.navigation
-        self.assertEqual(9, len(nav))
         self.assertEqual('LOCKED', nav[1].state)  # First item belongs to the submitter, and is locked.
         self.assertEqual('READY', nav[2].state)  # Second item is ready, as we are now the supervisor.
-        self.assertEqual('LOCKED', nav[7].state)  # Feedback is locked.
+        self.assertEqual('LIKELY', nav[3].state)  # Feedback is locked.
         self.assertEqual('READY', workflow_api.next_task.state)
 
         data = workflow_api.next_task.data
@@ -163,28 +159,37 @@ class TestTasksApi(BaseTest):
 
         # Navigation as Supervisor, after completing task.
         nav = workflow_api.navigation
-        self.assertEqual(9, len(nav))
         self.assertEqual('LOCKED', nav[1].state)  # First item belongs to the submitter, and is locked.
         self.assertEqual('COMPLETED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('LOCKED', nav[7].state)  # Feedback is LOCKED
+        self.assertEqual('READY', nav[3].state)  # Gateway is ready, and should be unfolded
+        self.assertEqual(None, nav[3].children[0].state)  # sequence flow for approved is none - we aren't going this way.
+        self.assertEqual('READY', nav[3].children[1].state)  # sequence flow for denied is ready
+        self.assertEqual('LOCKED', nav[3].children[1].children[0].state)  # Feedback is locked, it belongs to submitter
+        self.assertEqual('LOCKED', nav[3].children[1].children[0].state)  # Approval is locked, it belongs to the submitter
+
+
+
         self.assertEqual('LOCKED', workflow_api.next_task.state)
 
         # Navigation as Submitter, coming back in to a rejected workflow to view the rejection message.
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
         nav = workflow_api.navigation
-        self.assertEqual(9, len(nav))
+        self.assertEqual(4, len(nav))
         self.assertEqual('COMPLETED', nav[1].state)  # First item belongs to the submitter, and is locked.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('READY', nav[7].state)  # Feedbck is now READY
-        self.assertEqual('READY', workflow_api.next_task.state)
+        self.assertEqual('READY', nav[3].state)
+        self.assertEqual(None, nav[3].children[0].state)  # sequence flow for approved is none - we aren't going this way.
+        self.assertEqual('READY', nav[3].children[1].state)  # sequence flow for denied is ready
+        self.assertEqual('READY', nav[3].children[1].children[0].state)  # Feedback is locked, it belongs to submitter
+        self.assertEqual('READY', nav[3].children[1].children[0].state)  # Approval is locked, it belongs to the submitter
+
 
         # Navigation as Submitter, re-completing the original request a second time, and sending it for review.
         workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
         nav = workflow_api.navigation
-        self.assertEqual(9, len(nav))
         self.assertEqual('READY', nav[1].state)  # When you loop back the task is again in the ready state.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('COMPLETED', nav[7].state)  # Feedback is completed
+        self.assertEqual('COMPLETED', nav[3].state)  # Feedback is completed
         self.assertEqual('READY', workflow_api.next_task.state)
 
         data["favorite_color"] = "blue"

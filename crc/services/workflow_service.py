@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List
 
 import jinja2
-from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
@@ -14,7 +14,7 @@ from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.StartEvent import StartEvent
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
-from SpiffWorkflow.specs import CancelTask, StartTask
+from SpiffWorkflow.specs import CancelTask, StartTask, MultiChoice
 from SpiffWorkflow.util.deep_merge import DeepMerge
 from jinja2 import Template
 
@@ -319,25 +319,9 @@ class WorkflowService(object):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
 
-        nav_dict = processor.bpmn_workflow.get_nav_list()
+        navigation = processor.bpmn_workflow.get_deep_nav_list()
+        WorkflowService.update_navigation(navigation, processor)
 
-        # Some basic cleanup of the title for the for the navigation.
-        navigation = []
-        for nav_item in nav_dict:
-            spiff_task = processor.bpmn_workflow.get_task(nav_item.task_id)
-            if spiff_task:
-                # Use existing logic to set the description, and alter the state based on permissions.
-                api_task = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
-                nav_item.description = api_task.title
-                user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
-                if not UserService.in_list(user_uids, allow_admin_impersonate=True):
-                    nav_item.state = WorkflowService.TASK_STATE_LOCKED
-            else:
-                # Strip off the first word in the description, to meet guidlines for BPMN.
-                if nav_item.description:
-                    if nav_item.description is not None and ' ' in nav_item.description:
-                        nav_item.description = nav_item.description.partition(' ')[2]
-            navigation.append(nav_item)
 
         spec = db.session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
         workflow_api = WorkflowApi(
@@ -367,6 +351,29 @@ class WorkflowService(object):
         return workflow_api
 
     @staticmethod
+    def update_navigation(navigation: List[NavItem], processor: WorkflowProcessor):
+        # Recursive function to walk down through children, and clean up descriptions, and statuses
+        for nav_item in navigation:
+            spiff_task = processor.bpmn_workflow.get_task(nav_item.task_id)
+            if spiff_task:
+                # Use existing logic to set the description, and alter the state based on permissions.
+                api_task = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
+                nav_item.description = api_task.title
+                user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
+                if (isinstance(spiff_task.task_spec, UserTask) or isinstance(spiff_task.task_spec, ManualTask)) \
+                        and not UserService.in_list(user_uids, allow_admin_impersonate=True):
+                    nav_item.state = WorkflowService.TASK_STATE_LOCKED
+            else:
+                # Strip off the first word in the description, to meet guidlines for BPMN.
+                if nav_item.description:
+                    if nav_item.description is not None and ' ' in nav_item.description:
+                        nav_item.description = nav_item.description.partition(' ')[2]
+
+            # Recurse here
+            WorkflowService.update_navigation(nav_item.children, processor)
+
+
+    @staticmethod
     def get_previously_submitted_data(workflow_id, spiff_task):
         """ If the user has completed this task previously, find the form data for the last submission."""
         query = db.session.query(TaskEventModel) \
@@ -391,6 +398,7 @@ class WorkflowService(object):
                 return {}
         else:
             return {}
+
 
 
     @staticmethod

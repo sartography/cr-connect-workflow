@@ -144,21 +144,24 @@ class TaskSchema(ma.Schema):
 class NavigationItemSchema(ma.Schema):
     class Meta:
         fields = ["spec_id", "name", "spec_type", "task_id", "description", "backtracks", "indent",
-                  "lane", "state"]
+                  "lane", "state", "children"]
         unknown = INCLUDE
     state = marshmallow.fields.String(required=False, allow_none=True)
     description = marshmallow.fields.String(required=False, allow_none=True)
     backtracks = marshmallow.fields.String(required=False, allow_none=True)
     lane = marshmallow.fields.String(required=False, allow_none=True)
     task_id = marshmallow.fields.String(required=False, allow_none=True)
+    children = marshmallow.fields.List(marshmallow.fields.Nested(lambda: NavigationItemSchema()))
 
     @marshmallow.post_load
     def make_nav(self, data, **kwargs):
         state = data.pop('state', None)
         task_id = data.pop('task_id', None)
+        children = data.pop('children', [])
         item = NavItem(**data)
         item.state = state
         item.task_id = task_id
+        item.children = children
         return item
 
 class WorkflowApi(object):
