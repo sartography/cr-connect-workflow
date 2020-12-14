@@ -97,7 +97,7 @@ def sync_all_changed_workflows(remote):
 def sync_changed_files(remote,workflow_spec_id):
     # make sure that spec is local before syncing files
 
-    specdict = WorkflowSyncService.get_remote_workfow_spec(remote,workflow_spec_id)
+    specdict = WorkflowSyncService.get_remote_workflow_spec(remote,workflow_spec_id)
 
     localspec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
     if localspec is None:
@@ -173,6 +173,8 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
     # get the local thumbprints & make sure that 'workflow_spec_id' is a column, not an index
     local = get_workflow_spec_files_dataframe(workflow_spec_id).reset_index()
     local['md5_hash'] = local['md5_hash'].astype('str')
+    remote_files['md5_hash'] = remote_files['md5_hash'].astype('str')
+
     different = remote_files.merge(local,
                              right_on=['filename','md5_hash'],
                              left_on=['filename','md5_hash'],
@@ -205,7 +207,7 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
 
     # get an exclusive or list of workflow ids - that is we want lists of files that are
     # on one machine or the other, but not both
-    remote_spec_ids = remote[['filename']]
+    remote_spec_ids = remote_files[['filename']]
     local_spec_ids = local[['filename']]
     left = remote_spec_ids[~remote_spec_ids['filename'].isin(local_spec_ids['filename'])]
     right = local_spec_ids[~local_spec_ids['filename'].isin(remote_spec_ids['filename'])]

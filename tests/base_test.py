@@ -207,7 +207,7 @@ class BaseTest(unittest.TestCase):
     @staticmethod
     def workflow_sync_response(file_name):
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', 'workflow_sync_responses', file_name)
-        with open(filepath, 'r') as myfile:
+        with open(filepath, 'rb') as myfile:
             data = myfile.read()
         return data
 
