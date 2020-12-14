@@ -204,6 +204,14 @@ class BaseTest(unittest.TestCase):
             data = myfile.read()
         return data
 
+    @staticmethod
+    def workflow_sync_response(file_name):
+        filepath = os.path.join(app.root_path, '..', 'tests', 'data', 'workflow_sync_responses', file_name)
+        with open(filepath, 'rb') as myfile:
+            data = myfile.read()
+        return data
+
+
     def assert_success(self, rv, msg=""):
         try:
             data = json.loads(rv.get_data(as_text=True))

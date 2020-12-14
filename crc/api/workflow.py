@@ -1,11 +1,9 @@
 import uuid
-
-from SpiffWorkflow.util.deep_merge import DeepMerge
 from flask import g
-from crc import session, app
+from crc import session, db, app
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
-from crc.models.file import FileModel, LookupDataSchema
+from crc.models.file import FileModel, LookupDataSchema, FileDataModel
 from crc.models.study import StudyModel, WorkflowMetadata
 from crc.models.task_event import TaskEventModel, TaskEventModelSchema, TaskEvent, TaskEventSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
@@ -16,7 +14,6 @@ from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
-
 
 def all_specifications():
     schema = WorkflowSpecModelSchema(many=True)
