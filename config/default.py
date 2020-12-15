@@ -6,6 +6,14 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values to the front end.
 
+# The API_TOKEN is used to ensure that the
+# workflow synch can work without a lot of
+# back and forth.
+# you may want to change this to something simple for testing!!
+# NB, if you change this in the local endpoint,
+# it needs to be changed in the remote endpoint as well
+API_TOKEN = environ.get('API_TOKEN', default = 'af95596f327c9ecc007b60414fc84b61')
+
 NAME = "CR Connect Workflow"
 FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default="5000")
 CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default="localhost:4200, localhost:5002"))

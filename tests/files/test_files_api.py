@@ -46,7 +46,7 @@ class TestFilesApi(BaseTest):
                           content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        self.assertEqual(2, len(json_data))
+        self.assertEqual(3, len(json_data))
 
 
     def test_create_file(self):

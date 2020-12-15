@@ -69,7 +69,7 @@ class WorkflowStatus(enum.Enum):
 
 
 class WorkflowSpecDependencyFile(db.Model):
-    """Connects a workflow to the version of the specification files it depends on to execute"""
+    """Connects to a workflow to test the version of the specification files it depends on to execute"""
     file_data_id = db.Column(db.Integer, db.ForeignKey(FileDataModel.id), primary_key=True)
     workflow_id = db.Column(db.Integer, db.ForeignKey("workflow.id"), primary_key=True)
 
