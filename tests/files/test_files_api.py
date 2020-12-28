@@ -243,10 +243,12 @@ class TestFilesApi(BaseTest):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
         file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
+        file_id = file.id
         rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
         rv = self.app.delete('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
-        rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
+        db.session.flush()
+        rv = self.app.get('/v1.0/file/%i' % file_id, headers=self.logged_in_headers())
         self.assertEqual(404, rv.status_code)
 
     def test_delete_file_after_approval(self):
