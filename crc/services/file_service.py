@@ -7,6 +7,7 @@ from uuid import UUID
 from lxml import etree
 
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
+from lxml.etree import XMLSyntaxError
 from pandas import ExcelFile
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
@@ -152,8 +153,11 @@ class FileService(object):
 
         # If this is a BPMN, extract the process id.
         if file_model.type == FileType.bpmn:
-            bpmn: etree.Element = etree.fromstring(binary_data)
-            file_model.primary_process_id = FileService.get_process_id(bpmn)
+            try:
+                bpmn: etree.Element = etree.fromstring(binary_data)
+                file_model.primary_process_id = FileService.get_process_id(bpmn)
+            except XMLSyntaxError as xse:
+                raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_model.name)
 
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
