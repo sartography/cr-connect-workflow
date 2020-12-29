@@ -96,6 +96,7 @@ class WorkflowService(object):
 
         while not processor.bpmn_workflow.is_completed():
             try:
+                processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
                 processor.bpmn_workflow.do_engine_steps()
                 tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                 for task in tasks:

@@ -1,7 +1,5 @@
 import hashlib
-import json
 import pandas as pd
-import requests
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
