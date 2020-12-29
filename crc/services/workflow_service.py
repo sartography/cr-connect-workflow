@@ -127,6 +127,10 @@ class WorkflowService(object):
         form_data = task.data # Just like with the front end, we start with what was already there, and modify it.
         hide_groups = []
         for field in task_api.form.fields:
+            # Assure we have a field type
+            if field.type is None:
+                raise ApiError(code='invalid_form_data',
+                               message='Field type is None. A field type must be provided.')
             # Assure field has valid properties
             WorkflowService.check_field_properties(field, task)
 
