@@ -102,7 +102,16 @@ def get_workflow(workflow_id, soft_reset=False, hard_reset=False, do_engine_step
     Read Only will return the workflow in a read only state, without running any
     engine tasks or logging any events. """
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
+    processor = WorkflowProcessor(workflow_model)
+    if soft_reset or hard_reset:
+        try:
+            processor.cancel_notify()
+        except Exception as e:
+            raise e
+        finally:
+            # In the event of a reset, ALWAYS allow the reset, even if the cancel_notify fails for some reason.
+            processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
+
     if do_engine_steps:
         processor.do_engine_steps()
         processor.save()
@@ -148,7 +157,7 @@ def set_current_task(workflow_id, task_id):
                                         "currently set to COMPLETE or READY.")
 
     # If we have an interrupt task, run it.
-    processor.bpmn_workflow.cancel_notify()
+    processor.cancel_notify()
 
     # Only reset the token if the task doesn't already have it.
     if spiff_task.state == spiff_task.COMPLETED:
