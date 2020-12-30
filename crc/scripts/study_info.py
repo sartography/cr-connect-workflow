@@ -407,9 +407,11 @@ Returns information specific to the protocol.
             retval = StudyService().get_documents_status(study_id)
         if cmd == 'protocol':
             retval = StudyService().get_protocol(study_id)
+        if isinstance(retval, list):
+            retval = [Box(item) for item in retval]
         if isinstance(retval,dict) and prefix is not None:
             return Box({x:retval[x] for x in retval.keys() if x[:len(prefix)] == prefix})
-        elif isinstance(retval,dict):
+        elif isinstance(retval,dict) :
             return Box(retval)
         else:
             return retval
