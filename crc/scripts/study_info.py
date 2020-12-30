@@ -326,7 +326,7 @@ Returns information specific to the protocol.
                         "IS_HGT": None,
                         "IS_IBC": None,
                         "IS_IDE": None,
-                        "IS_IND": None,
+                        "IS_IND": 1,
                         "IS_MENTAL_IMPAIRMENT_POP": None,
                         "IS_MINOR": None,
                         "IS_MINOR_PARTICIPANT": None,
