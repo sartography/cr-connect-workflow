@@ -131,6 +131,10 @@ class WorkflowService(object):
             if field.type is None:
                 raise ApiError(code='invalid_form_data',
                                message='Field type is None. A field type must be provided.')
+            # Assure we have valid ids
+            if not WorkflowService.check_field_id(field.id):
+                raise ApiError(code='invalid_form_id',
+                               message="A field ID must begin with a letter, and can only contain letters, numbers, and '_'")
             # Assure field has valid properties
             WorkflowService.check_field_properties(field, task)
 
@@ -178,6 +182,18 @@ class WorkflowService(object):
         if task.data is None:
             task.data = {}
         task.data.update(form_data)
+
+    @staticmethod
+    def check_field_id(id):
+        """Assures that field names are valid Python and Javascript names."""
+        if not id[0].isalpha():
+            return False
+        for char in id[1:len(id)]:
+            if char.isalnum() or char == '_':
+                pass
+            else:
+                return False
+        return True
 
     @staticmethod
     def check_field_properties(field, task):
