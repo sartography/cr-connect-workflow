@@ -586,6 +586,13 @@ class WorkflowService(object):
         items = data_model.items() if isinstance(data_model, dict) else data_model
         options = []
         for item in items:
+            if value_column not in item:
+                raise ApiError.from_task("invalid_enum", f"The value column '{value_column}' does not exist for item {item}",
+                                         task=spiff_task)
+            if label_column not in item:
+                raise ApiError.from_task("invalid_enum", f"The label column '{label_column}' does not exist for item {item}",
+                                         task=spiff_task)
+
             options.append({"id": item[value_column], "name": item[label_column], "data": item})
         return options
 
