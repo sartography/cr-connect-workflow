@@ -35,14 +35,22 @@ class FileService(object):
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
                                name, content_type, binary_data, primary=False, is_status=False):
         """Create a new file and associate it with a workflow spec."""
-        file_model = FileModel(
-            workflow_spec_id=workflow_spec.id,
-            name=name,
-            primary=primary,
-            is_status=is_status,
-        )
+        # Raise ApiError if the file already exists
+        if session.query(FileModel)\
+            .filter(FileModel.workflow_spec_id == workflow_spec.id)\
+            .filter(FileModel.name == name).first():
 
-        return FileService.update_file(file_model, binary_data, content_type)
+            raise ApiError(code="Duplicate File",
+                           message='If you want to replace the file, use the update mechanism.')
+        else:
+            file_model = FileModel(
+                workflow_spec_id=workflow_spec.id,
+                name=name,
+                primary=primary,
+                is_status=is_status,
+            )
+
+            return FileService.update_file(file_model, binary_data, content_type)
 
     @staticmethod
     def is_allowed_document(code):
