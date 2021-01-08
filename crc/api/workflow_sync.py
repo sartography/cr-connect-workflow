@@ -37,6 +37,14 @@ def get_changed_workflows(remote,as_df=False):
     # get the local thumbprints & make sure that 'workflow_spec_id' is a column, not an index
     local = get_all_spec_state_dataframe().reset_index()
 
+    if local.empty:
+        # return the list as a dict, let swagger convert it to json
+        remote_workflows['new'] = True
+        if as_df:
+            return remote_workflows
+        else:
+            return remote_workflows.reset_index().to_dict(orient='records')
+
     # merge these on workflow spec id and hash - this will
     # make two different date columns date_x and date_y
     different  = remote_workflows.merge(local,
@@ -44,8 +52,7 @@ def get_changed_workflows(remote,as_df=False):
                               left_on=['workflow_spec_id','md5_hash'],
                               how = 'outer' ,
                               indicator=True).loc[lambda x : x['_merge']!='both']
-    if len(different)==0:
-        return []
+
     # each line has a tag on it - if was in the left or the right,
     # label it so we know if that was on the remote or local machine
     different.loc[different['_merge']=='left_only','location'] = 'remote'
@@ -73,6 +80,8 @@ def get_changed_workflows(remote,as_df=False):
     changedfiles['new'] = False
     changedfiles.loc[changedfiles.index.isin(left['workflow_spec_id']), 'new'] = True
     output = changedfiles[~changedfiles.index.isin(right['workflow_spec_id'])]
+
+
 
     # return the list as a dict, let swagger convert it to json
     if as_df:
@@ -294,6 +303,10 @@ def get_all_spec_state_dataframe():
                          'filename':file.file_model.name,
                          'date_created':file.date_created})
     df = pd.DataFrame(filelist)
+
+    # If the file list is empty, return an empty data frame
+    if df.empty:
+        return df
 
     # get a distinct list of file_model_id's with the most recent file_data retained
     df = df.sort_values('date_created').drop_duplicates(['file_model_id'],keep='last').copy()
