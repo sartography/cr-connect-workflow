@@ -47,41 +47,45 @@ def get_changed_workflows(remote,as_df=False):
 
     # merge these on workflow spec id and hash - this will
     # make two different date columns date_x and date_y
-    different  = remote_workflows.merge(local,
+    different = remote_workflows.merge(local,
                               right_on=['workflow_spec_id','md5_hash'],
                               left_on=['workflow_spec_id','md5_hash'],
                               how = 'outer' ,
                               indicator=True).loc[lambda x : x['_merge']!='both']
 
-    # each line has a tag on it - if was in the left or the right,
-    # label it so we know if that was on the remote or local machine
-    different.loc[different['_merge']=='left_only','location'] = 'remote'
-    different.loc[different['_merge']=='right_only','location'] = 'local'
+    # If there are no differences, then we can just return.
+    if not different.empty:
 
-    # this takes the different date_created_x and date-created_y columns and
-    # combines them back into one date_created column
-    index = different['date_created_x'].isnull()
-    different.loc[index,'date_created_x'] = different[index]['date_created_y']
-    different = different[['workflow_spec_id','date_created_x','location']].copy()
-    different.columns=['workflow_spec_id','date_created','location']
+        # each line has a tag on it - if was in the left or the right,
+        # label it so we know if that was on the remote or local machine
+        different.loc[different['_merge']=='left_only','location'] = 'remote'
+        different.loc[different['_merge']=='right_only','location'] = 'local'
 
-    # our different list will have multiple entries for a workflow if there is a version on either side
-    # we want to grab the most recent one, so we sort and grab the most recent one for each workflow
-    changedfiles = different.sort_values('date_created',ascending=False).groupby('workflow_spec_id').first()
+        # this takes the different date_created_x and date-created_y columns and
+        # combines them back into one date_created column
+        index = different['date_created_x'].isnull()
+        different.loc[index,'date_created_x'] = different[index]['date_created_y']
+        different = different[['workflow_spec_id','date_created_x','location']].copy()
+        different.columns=['workflow_spec_id','date_created','location']
 
-    # get an exclusive or list of workflow ids - that is we want lists of files that are
-    # on one machine or the other, but not both
-    remote_spec_ids = remote_workflows[['workflow_spec_id']]
-    local_spec_ids = local[['workflow_spec_id']]
-    left = remote_spec_ids[~remote_spec_ids['workflow_spec_id'].isin(local_spec_ids['workflow_spec_id'])]
-    right = local_spec_ids[~local_spec_ids['workflow_spec_id'].isin(remote_spec_ids['workflow_spec_id'])]
+        # our different list will have multiple entries for a workflow if there is a version on either side
+        # we want to grab the most recent one, so we sort and grab the most recent one for each workflow
+        changedfiles = different.sort_values('date_created',ascending=False).groupby('workflow_spec_id').first()
 
-    # flag files as new that are only on the remote box and remove the files that are only on the local box
-    changedfiles['new'] = False
-    changedfiles.loc[changedfiles.index.isin(left['workflow_spec_id']), 'new'] = True
-    output = changedfiles[~changedfiles.index.isin(right['workflow_spec_id'])]
+        # get an exclusive or list of workflow ids - that is we want lists of files that are
+        # on one machine or the other, but not both
+        remote_spec_ids = remote_workflows[['workflow_spec_id']]
+        local_spec_ids = local[['workflow_spec_id']]
+        left = remote_spec_ids[~remote_spec_ids['workflow_spec_id'].isin(local_spec_ids['workflow_spec_id'])]
+        right = local_spec_ids[~local_spec_ids['workflow_spec_id'].isin(remote_spec_ids['workflow_spec_id'])]
 
+        # flag files as new that are only on the remote box and remove the files that are only on the local box
+        changedfiles['new'] = False
+        changedfiles.loc[changedfiles.index.isin(left['workflow_spec_id']), 'new'] = True
+        output = changedfiles[~changedfiles.index.isin(right['workflow_spec_id'])]
 
+    else:
+        output = different
 
     # return the list as a dict, let swagger convert it to json
     if as_df:

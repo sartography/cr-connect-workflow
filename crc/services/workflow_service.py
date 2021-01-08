@@ -130,9 +130,16 @@ class WorkflowService(object):
             # Assure we have a field type
             if field.type is None:
                 raise ApiError(code='invalid_form_data',
-                               message=f'Type is missing for field "{field.id}". A field type must be provided.',
-                               task_id=task.id,
-                               task_name=task.get_name())
+                                message = f'Type is missing for field "{field.id}". A field type must be provided.',
+                                task_id = task.id,
+                                task_name = task.get_name())
+                # Assure we have valid ids
+            if not WorkflowService.check_field_id(field.id):
+                raise ApiError(code='invalid_form_id',
+                               message=f'Invalid Field name: "{field.id}".  A field ID must begin with a letter, '
+                                       f'and can only contain letters, numbers, and "_"',
+                               task_id = task.id,
+                               task_name = task.get_name())
             # Assure field has valid properties
             WorkflowService.check_field_properties(field, task)
 
@@ -180,6 +187,18 @@ class WorkflowService(object):
         if task.data is None:
             task.data = {}
         task.data.update(form_data)
+
+    @staticmethod
+    def check_field_id(id):
+        """Assures that field names are valid Python and Javascript names."""
+        if not id[0].isalpha():
+            return False
+        for char in id[1:len(id)]:
+            if char.isalnum() or char == '_':
+                pass
+            else:
+                return False
+        return True
 
     @staticmethod
     def check_field_properties(field, task):
