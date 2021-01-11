@@ -21,6 +21,14 @@ def join_uuids(uuids):
     return hashlib.md5(combined_uuids.encode('utf8')).hexdigest() # make a hash of the hashes
 
 def verify_token(token, required_scopes):
+    """
+    Part of the Swagger API permissions for the syncing API
+    The env variable for this is defined in config/default.py
+
+    If you are 'playing' with the swagger interface, you will want to copy the
+    token that is defined there and use it to authenticate the API if you are
+    emulating copying files between systems.
+    """
     if token == app.config['API_TOKEN']:
         return {'scope':['any']}
     else:
@@ -84,7 +92,12 @@ def get_changed_workflows(remote,as_df=False):
 
 
 def sync_all_changed_workflows(remote):
-
+    """
+    Does what it says, gets a list of all workflows that are different between
+    two systems and pulls all of the workflows and files that are different on the
+    remote system. The idea is that we can make the local system 'look' like the remote
+    system for deployment or testing.
+    """
     workflowsdf = get_changed_workflows(remote,as_df=True)
     if len(workflowsdf) ==0:
         return []
@@ -96,6 +109,10 @@ def sync_all_changed_workflows(remote):
 
 
 def file_get(workflow_spec_id,filename):
+    """
+    Helper function to take care of the special case where we
+    are looking for files that are marked is_reference
+    """
     if workflow_spec_id == 'REFERENCE_FILES':
         currentfile = session.query(FileModel).filter(FileModel.is_reference == True,
                                                       FileModel.name == filename).first()
@@ -105,6 +122,14 @@ def file_get(workflow_spec_id,filename):
     return currentfile
 
 def sync_changed_files(remote,workflow_spec_id):
+    """
+    This grabs a list of all files for a workflow_spec that are different between systems,
+    and gets the remote copy of any file that has changed
+
+    We also have a special case for "REFERENCE_FILES" where there is not workflow_spec_id,
+    but all of the files are marked in the database as is_reference - and they need to be
+    handled slightly differently.
+    """
     # make sure that spec is local before syncing files
     if workflow_spec_id != 'REFERENCE_FILES':
         specdict = WorkflowSyncService.get_remote_workflow_spec(remote,workflow_spec_id)
@@ -277,6 +302,9 @@ def get_workflow_spec_files_dataframe(workflowid):
     Return a list of all files for a workflow_spec along with last updated date and a
     hash so we can determine file differences for a changed workflow on a box.
     Return a dataframe
+
+    In the special case of "REFERENCE_FILES" we get all of the files that are
+    marked as is_reference
     """
     if workflowid == 'REFERENCE_FILES':
         x = session.query(FileDataModel).join(FileModel).filter(FileModel.is_reference == True)
