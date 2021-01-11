@@ -148,7 +148,13 @@ def update_task(workflow_id, task_id, body, terminate_loop=None):
     if terminate_loop:
         spiff_task.terminate_loop()
 
+    # This is a stopgap measure to fix an issue with the current site, without creating some major data problems
+    # elsewhere.  If personnel are being passed in from the body, be sure that we update that data to match
+    # the provided personnel exactly, rather than merging in the changes.
     spiff_task.update_data(body)
+    if "personnel" in body:
+        spiff_task.data["personnel"] = body["personnel"]
+
     processor.complete_task(spiff_task)
     processor.do_engine_steps()
     processor.save()
