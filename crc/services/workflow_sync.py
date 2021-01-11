@@ -26,7 +26,7 @@ class WorkflowSyncService(object):
         this just gets the details of a workflow spec from the
         remote side.
         """
-        url = remote+'/v1.0/workflow-sync/'+workflow_spec_id+'/spec'
+        url = remote+'/v1.0/workflow_sync/'+workflow_spec_id+'/spec'
         return WorkflowSyncService.__make_request(url)
 
     @staticmethod
@@ -39,7 +39,7 @@ class WorkflowSyncService(object):
         try:
             response = requests.get(url,headers={'X-CR-API-KEY':app.config['API_TOKEN']})
         except:
-            raise ApiError("workflow_sync_error",response.text)
+            raise ApiError("workflow_sync_error",url)
         if response.ok and response.text:
             if return_contents:
                 return response.content
