@@ -28,6 +28,7 @@ class Task(object):
 
     # Autocomplete field
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
+    FIELD_TYPE_AUTO_COMPLETE_MAX = "autocomplete_num"  # Not used directly, passed in from the front end.
 
     # Required field
     FIELD_CONSTRAINT_REQUIRED = "required"
