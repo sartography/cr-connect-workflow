@@ -115,7 +115,7 @@ class TestWorkflowService(BaseTest):
             .filter(TaskEventModel.action == WorkflowService.TASK_ACTION_COMPLETE) \
             .order_by(TaskEventModel.date).all()  # Get them back in order.
 
-        self.assertEqual(17, len(task_logs))
+        self.assertEqual(18, len(task_logs))
         for log in task_logs:
             task = processor.bpmn_workflow.get_tasks_from_spec_name(log.task_name)[0]
             self.assertIsNotNone(log.form_data)
