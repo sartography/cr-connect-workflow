@@ -134,6 +134,15 @@ class BaseTest(unittest.TestCase):
 
         return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
 
+    def delete_example_data(self, use_crc_data=False, use_rrt_data=False):
+        """
+        delete everything that matters in the local database - this is used to
+        test ground zero copy of workflow specs.
+        """
+        session.execute("delete from workflow; delete from file_data; delete from file; delete from workflow_spec;")
+        session.commit()
+
+
     def load_example_data(self, use_crc_data=False, use_rrt_data=False):
         """use_crc_data will cause this to load the mammoth collection of documents
         we built up developing crc, use_rrt_data will do the same for hte rrt project,

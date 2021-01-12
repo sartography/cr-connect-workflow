@@ -12,6 +12,27 @@ from crc.models.workflow import WorkflowSpecModel
 from datetime import datetime
 from crc.services.file_service import FileService
 
+def get_random_fact_pos(othersys):
+    """
+    Make sure we get the 'random_fact' workflow spec
+    no matter what order it is in
+    """
+    rf2pos = 0
+    for pos in range(len(othersys)):
+        if othersys[pos]['workflow_spec_id'] == 'random_fact':
+            rf2pos = pos
+    return rf2pos
+
+
+def get_random_fact_2_pos(othersys):
+    """
+    Makes sure we get the random_fact2.bpmn file no matter what order it is in
+    """
+    rf2pos = 0
+    for pos in range(len(othersys)):
+        if othersys[pos]['filename'] == 'random_fact2.bpmn':
+            rf2pos = pos
+    return rf2pos
 
 
 class TestWorkflowSync(BaseTest):
@@ -30,8 +51,9 @@ class TestWorkflowSync(BaseTest):
     def test_remote_workflow_change(self, mock_get):
         self.load_example_data()
         othersys = get_all_spec_state()
-        othersys[1]['date_created'] = str(datetime.now())
-        othersys[1]['md5_hash'] = '12345'
+        rf2pos = get_random_fact_pos(othersys)
+        othersys[rf2pos]['date_created'] = str(datetime.now())
+        othersys[rf2pos]['md5_hash'] = '12345'
         mock_get.return_value = othersys
         response = get_changed_workflows('localhost:0000') #endpoint is not used due to mock
         self.assertIsNotNone(response)
@@ -80,30 +102,25 @@ class TestWorkflowSync(BaseTest):
         self.assertIsNotNone(response)
         self.assertEqual(response,[])
 
-
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec_files')
-    def test_file_differences(self, mock_get):
+    def test_file_differences_clean_slate(self, mock_get):
+        """ This test is basically for coverage"""
         self.load_example_data()
         othersys = get_workflow_spec_files('random_fact')
-        othersys[1]['date_created'] = str(datetime.now())
-        othersys[1]['md5_hash'] = '12345'
         mock_get.return_value = othersys
+        self.delete_example_data()
         response = get_changed_files('localhost:0000','random_fact',as_df=False) #endpoint is not used due to mock
         self.assertIsNotNone(response)
-        self.assertEqual(len(response),1)
-        self.assertEqual(response[0]['filename'], 'random_fact2.bpmn')
+        self.assertEqual(len(response),2)
         self.assertEqual(response[0]['location'], 'remote')
-        self.assertEqual(response[0]['new'], False)
+        self.assertEqual(response[0]['new'], True)
 
 
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec_files')
     def test_file_differences(self, mock_get):
         self.load_example_data()
         othersys = get_workflow_spec_files('random_fact')
-        rf2pos = 0
-        for pos in range(len(othersys)):
-            if othersys[pos]['filename'] == 'random_fact2.bpmn':
-                rf2pos = pos
+        rf2pos = get_random_fact_2_pos(othersys)
         othersys[rf2pos]['date_created'] = str(datetime.now())
         othersys[rf2pos]['md5_hash'] = '12345'
         mock_get.return_value = othersys
@@ -119,20 +136,22 @@ class TestWorkflowSync(BaseTest):
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec')
     def test_workflow_differences(self, workflow_mock, spec_files_mock, file_data_mock):
         self.load_example_data()
+        # make a remote workflow that is slightly different from local
         remote_workflow = get_workflow_specification('random_fact')
         self.assertEqual(remote_workflow['display_name'],'Random Fact')
         remote_workflow['description'] = 'This Workflow came from Remote'
         remote_workflow['display_name'] = 'Remote Workflow'
         workflow_mock.return_value = remote_workflow
+        # change the remote file date and hash
         othersys = get_workflow_spec_files('random_fact')
-        for pos in range(len(othersys)):
-            if othersys[pos]['filename'] == 'random_fact2.bpmn':
-                rf2pos = pos
+        rf2pos = get_random_fact_2_pos(othersys)
         othersys[rf2pos]['date_created'] = str(datetime.now())
         othersys[rf2pos]['md5_hash'] = '12345'
         spec_files_mock.return_value = othersys
+        # actually go get a different file
         file_data_mock.return_value = self.workflow_sync_response('random_fact2.bpmn')
         response = sync_changed_files('localhost:0000','random_fact') # endpoint not used due to mock
+        # now make sure that everything gets pulled over
         self.assertIsNotNone(response)
         self.assertEqual(len(response),1)
         self.assertEqual(response[0], 'random_fact2.bpmn')
@@ -144,6 +163,39 @@ class TestWorkflowSync(BaseTest):
 
 
 
+    @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_file_by_hash')
+    @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec_files')
+    def test_ref_file_differences(self, spec_files_mock, file_data_mock):
+        """
+        Make sure we copy over a new reference file if it exists
+        """
+        self.load_example_data()
+        # make a remote workflow that is slightly different from local
+        othersys = get_workflow_spec_files('REFERENCE_FILES')
+        newfile = {'file_model_id':9999,
+                   'workflow_spec_id': None,
+                   'filename':'test.txt',
+                   'type':'txt',
+                   'primary':False,
+                   'content_type':'text/text',
+                   'primary_process_id':None,
+                   'date_created':str(datetime.now()),
+                   'md5_hash':'12345'
+        }
+        othersys.append(newfile)
+        spec_files_mock.return_value = othersys
+        # actually go get a different file
+        file_data_mock.return_value = self.workflow_sync_response('test.txt')
+        response = sync_changed_files('localhost:0000','REFERENCE_FILES') # endpoint not used due to mock
+        # now make sure that everything gets pulled over
+        self.assertIsNotNone(response)
+        self.assertEqual(len(response),1)
+        self.assertEqual(response[0], 'test.txt')
+        ref_file = FileService.get_reference_file_data('test.txt')
+        self.assertEqual('24a2ab0d-1138-a80a-0b98-ed38894f5a04',str(ref_file.md5_hash))
+
+
+
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec_files')
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec')
     def test_file_deleted(self, workflow_mock, spec_files_mock):
@@ -151,7 +203,8 @@ class TestWorkflowSync(BaseTest):
         remote_workflow = get_workflow_specification('random_fact')
         workflow_mock.return_value = remote_workflow
         othersys = get_workflow_spec_files('random_fact')
-        del(othersys[1])
+        rf2pos = get_random_fact_2_pos(othersys)
+        del(othersys[rf2pos])
         spec_files_mock.return_value = othersys
         response = sync_changed_files('localhost:0000','random_fact') # endpoint not used due to mock
         self.assertIsNotNone(response)
