@@ -100,8 +100,12 @@ class TestWorkflowSync(BaseTest):
     def test_file_differences(self, mock_get):
         self.load_example_data()
         othersys = get_workflow_spec_files('random_fact')
-        othersys[1]['date_created'] = str(datetime.now())
-        othersys[1]['md5_hash'] = '12345'
+        rf2pos = 0
+        for pos in range(len(othersys)):
+            if othersys[pos]['filename'] == 'random_fact2.bpmn':
+                rf2pos = pos
+        othersys[rf2pos]['date_created'] = str(datetime.now())
+        othersys[rf2pos]['md5_hash'] = '12345'
         mock_get.return_value = othersys
         response = get_changed_files('localhost:0000','random_fact',as_df=False) #endpoint is not used due to mock
         self.assertIsNotNone(response)
@@ -113,7 +117,7 @@ class TestWorkflowSync(BaseTest):
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_file_by_hash')
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec_files')
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec')
-    def test_file_differences(self, workflow_mock, spec_files_mock, file_data_mock):
+    def test_workflow_differences(self, workflow_mock, spec_files_mock, file_data_mock):
         self.load_example_data()
         remote_workflow = get_workflow_specification('random_fact')
         self.assertEqual(remote_workflow['display_name'],'Random Fact')
@@ -121,8 +125,11 @@ class TestWorkflowSync(BaseTest):
         remote_workflow['display_name'] = 'Remote Workflow'
         workflow_mock.return_value = remote_workflow
         othersys = get_workflow_spec_files('random_fact')
-        othersys[1]['date_created'] = str(datetime.now())
-        othersys[1]['md5_hash'] = '12345'
+        for pos in range(len(othersys)):
+            if othersys[pos]['filename'] == 'random_fact2.bpmn':
+                rf2pos = pos
+        othersys[rf2pos]['date_created'] = str(datetime.now())
+        othersys[rf2pos]['md5_hash'] = '12345'
         spec_files_mock.return_value = othersys
         file_data_mock.return_value = self.workflow_sync_response('random_fact2.bpmn')
         response = sync_changed_files('localhost:0000','random_fact') # endpoint not used due to mock
