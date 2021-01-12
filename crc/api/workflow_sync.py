@@ -121,6 +121,62 @@ def file_get(workflow_spec_id,filename):
                                             FileModel.name == filename).first()
     return currentfile
 
+def create_or_update_local_spec(remote,workflow_spec_id):
+    specdict = WorkflowSyncService.get_remote_workflow_spec(remote, workflow_spec_id)
+    # if we are updating from a master spec, then we want to make sure it is the only
+    # master spec in our local system.
+    if specdict['is_master_spec']:
+        masterspecs = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == True).all()
+        for masterspec in masterspecs:
+            masterspec.is_master_spec = False
+            session.add(masterspec)
+
+    localspec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
+    if localspec is None:
+        localspec = WorkflowSpecModel()
+        localspec.id = workflow_spec_id
+    if specdict['category'] == None:
+        localspec.category = None
+    else:
+        localcategory = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name
+                                                                        == specdict['category']['name']).first()
+        if localcategory == None:
+            # category doesn't exist - lets make it
+            localcategory = WorkflowSpecCategoryModel()
+            localcategory.name = specdict['category']['name']
+            localcategory.display_name = specdict['category']['display_name']
+            localcategory.display_order = specdict['category']['display_order']
+            session.add(localcategory)
+        localspec.category = localcategory
+
+    localspec.display_order = specdict['display_order']
+    localspec.display_name = specdict['display_name']
+    localspec.name = specdict['name']
+    localspec.is_master_spec = specdict['is_master_spec']
+    localspec.description = specdict['description']
+    session.add(localspec)
+
+def update_or_create_current_file(remote,workflow_spec_id,updatefile):
+    currentfile = file_get(workflow_spec_id, updatefile['filename'])
+    if not currentfile:
+        currentfile = FileModel()
+        currentfile.name = updatefile['filename']
+        if workflow_spec_id == 'REFERENCE_FILES':
+            currentfile.workflow_spec_id = None
+            currentfile.is_reference = True
+        else:
+            currentfile.workflow_spec_id = workflow_spec_id
+
+    currentfile.date_created = updatefile['date_created']
+    currentfile.type = updatefile['type']
+    currentfile.primary = updatefile['primary']
+    currentfile.content_type = updatefile['content_type']
+    currentfile.primary_process_id = updatefile['primary_process_id']
+    session.add(currentfile)
+    content = WorkflowSyncService.get_remote_file_by_hash(remote, updatefile['md5_hash'])
+    FileService.update_file(currentfile, content, updatefile['type'])
+
+
 def sync_changed_files(remote,workflow_spec_id):
     """
     This grabs a list of all files for a workflow_spec that are different between systems,
@@ -132,40 +188,7 @@ def sync_changed_files(remote,workflow_spec_id):
     """
     # make sure that spec is local before syncing files
     if workflow_spec_id != 'REFERENCE_FILES':
-        specdict = WorkflowSyncService.get_remote_workflow_spec(remote,workflow_spec_id)
-        # if we are updating from a master spec, then we want to make sure it is the only
-        # master spec in our local system.
-        if specdict['is_master_spec']:
-            masterspecs = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == True).all()
-            for masterspec in masterspecs:
-                masterspec.is_master_spec = False
-                session.add(masterspec)
-
-        localspec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
-        if localspec is None:
-            localspec = WorkflowSpecModel()
-            localspec.id = workflow_spec_id
-        if specdict['category'] == None:
-            localspec.category = None
-        else:
-            localcategory = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name
-                                                                            == specdict['category']['name']).first()
-            if localcategory == None:
-                #category doesn't exist - lets make it
-                localcategory = WorkflowSpecCategoryModel()
-                localcategory.name = specdict['category']['name']
-                localcategory.display_name = specdict['category']['display_name']
-                localcategory.display_order = specdict['category']['display_order']
-                session.add(localcategory)
-            localspec.category = localcategory
-
-        localspec.display_order = specdict['display_order']
-        localspec.display_name = specdict['display_name']
-        localspec.name = specdict['name']
-        localspec.is_master_spec = specdict['is_master_spec']
-        localspec.description = specdict['description']
-        session.add(localspec)
-
+        create_or_update_local_spec(remote,workflow_spec_id)
 
 
     changedfiles = get_changed_files(remote,workflow_spec_id,as_df=True)
@@ -187,24 +210,7 @@ def sync_changed_files(remote,workflow_spec_id):
         session.add(currentfile)
 
     for updatefile in updatefiles:
-        currentfile = file_get(workflow_spec_id,updatefile['filename'])
-        if not currentfile:
-            currentfile = FileModel()
-            currentfile.name = updatefile['filename']
-            if workflow_spec_id == 'REFERENCE_FILES':
-                currentfile.workflow_spec_id = None
-                currentfile.is_reference = True
-            else:
-                currentfile.workflow_spec_id = workflow_spec_id
-
-        currentfile.date_created = updatefile['date_created']
-        currentfile.type = updatefile['type']
-        currentfile.primary = updatefile['primary']
-        currentfile.content_type = updatefile['content_type']
-        currentfile.primary_process_id = updatefile['primary_process_id']
-        session.add(currentfile)
-        content = WorkflowSyncService.get_remote_file_by_hash(remote,updatefile['md5_hash'])
-        FileService.update_file(currentfile,content,updatefile['type'])
+        update_or_create_current_file(remote,workflow_spec_id,updatefile)
     session.commit()
     return [x['filename'] for x in updatefiles]
 
