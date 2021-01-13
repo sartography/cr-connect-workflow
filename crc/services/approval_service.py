@@ -132,17 +132,16 @@ class ApprovalService(object):
                 if task:
                     return task
 
-        if approval.status != ApprovalStatus.APPROVED.value:
-            return {}
-        for related_approval in approval.related_approvals:
-            if related_approval.status != ApprovalStatus.APPROVED.value:
-                continue
         workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == approval.workflow_id).first()
         data = json.loads(workflow.bpmn_workflow_json)
         last_task = find_task(data['last_task']['__uuid__'], data['task_tree'])
         personnel = extract_value(last_task, 'personnel')
         training_val = extract_value(last_task, 'RequiredTraining')
-        pi_supervisor = extract_value(last_task, 'PISupervisor')['value']
+        supervisor_value = extract_value(last_task, 'PISupervisor')
+        if isinstance(supervisor_value, dict):
+            pi_supervisor = supervisor_value['value']
+        else:
+            pi_supervisor = str(supervisor_value)
         review_complete = 'AllRequiredTraining' in training_val
         pi_uid = workflow.study.primary_investigator_id
         pi_details = LdapService.user_info(pi_uid)
