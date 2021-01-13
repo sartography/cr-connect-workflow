@@ -10,6 +10,7 @@ from crc import app, db, session
 from crc.api.common import ApiError
 
 from crc.models.approval import ApprovalModel, ApprovalStatus, ApprovalFile, Approval
+from crc.models.ldap import LdapSchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 from crc.services.file_service import FileService
@@ -151,11 +152,14 @@ class ApprovalService(object):
             'Review': review_complete
         }
         details['person_details'] = []
-        details['person_details'].append(pi_details)
+        pi_details_dict = LdapSchema().dump(pi_details)
+        pi_details_dict['role'] = "PI"
+        details['person_details'].append(pi_details_dict)
         for person in personnel:
             uid = person['PersonnelComputingID']['value']
-            details['person_details'].append(LdapService.user_info(uid))
-
+            person_data = person['PersonnelComputingID']["data"]
+            person_data["role"] = person['PersonnelType']
+            details['person_details'].append(person_data)
         return details
 
     @staticmethod
@@ -180,15 +184,15 @@ class ApprovalService(object):
                     continue
 
                 for person in details['person_details']:
-                    first_name = person.given_name
-                    last_name = person.display_name.replace(first_name, '').strip()
+                    first_name = person['given_name']
+                    last_name = person['display_name'].replace(first_name, '').strip()
                     record = [
-                        person.uid,
+                        person['uid'],
                         last_name,
                         first_name,
                         '',
                         'Academic Researcher',
-                        details['Supervisor'] if person.uid == details['person_details'][0].uid else 'askresearch'
+                        details['Supervisor'] if person['uid'] == details['person_details'][0]['uid'] else 'askresearch'
                     ]
 
                     if record not in health_attesting_rows:
@@ -213,11 +217,13 @@ class ApprovalService(object):
                         "study_id": approval.study_id,
                         "pi_uid": details['PI_Details'].uid,
                         "pi": details['PI_Details'].display_name,
-                        "name": person.display_name,
-                        "uid": person.uid,
-                        "email": person.email_address,
-                        "supervisor": details['Supervisor'] if person.uid == details['person_details'][0].uid else "",
+                        "name": person['display_name'],
+                        "uid": person['uid'],
+                        "email": person['email_address'],
+                        "role": person['role'],
+                        "supervisor": details['Supervisor'] if person['uid'] == details['person_details'][0]['uid'] else "",
                         "review_complete": details['Review'],
+                        "status": approval.status
                     }
 
                     output.append(record)
