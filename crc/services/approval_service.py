@@ -207,35 +207,48 @@ class ApprovalService(object):
         approvals = ApprovalService.get_all_approvals(include_cancelled=False)
         output = []
         errors = []
+
+        rows = [
+            ['study_id',
+             'pi_uid',
+             'pi',
+             'name',
+             'uid',
+             'email',
+             'role',
+             'supervisor',
+             'completed_training',
+             'status',
+             ]
+        ]
         for approval in approvals:
             try:
                 details = ApprovalService.get_approval_details(approval)
 
                 for person in details['person_details']:
-                    record = {
-                        "study_id": approval.study_id,
-                        "pi_uid": details['PI_Details'].uid,
-                        "pi": details['PI_Details'].display_name,
-                        "name": person['display_name'],
-                        "uid": person['uid'],
-                        "email": person['email_address'],
-                        "role": person['role'],
-                        "supervisor": details['Supervisor'] if person['uid'] == details['person_details'][0]['uid'] else "",
-                        "review_complete": details['Review'],
-                        "status": approval.status
-                    }
-
-                    output.append(record)
+                    new_row = [
+                        approval.study_id,
+                        details['PI_Details'].uid,
+                        details['PI_Details'].display_name,
+                        person['display_name'],
+                        person['uid'],
+                        person['email_address'],
+                        person['role'],
+                        details['Supervisor'] if person['uid'] == details['person_details'][0]['uid'] else "",
+                        details['Review'],
+                        approval.status
+                    ]
+                    rows.append(new_row)
 
             except Exception as e:
-                errors.append(
+                rows.append([
                     f'Error pulling data for workflow #{approval.workflow_id} '
                     f'(Approval status: {approval.status} - '
                     f'More details in Sentry): {str(e)}'
-                )
+                ])
                 # Detailed information sent to Sentry
                 app.logger.error(f'Error pulling data for workflow {approval.workflow_id}', exc_info=True)
-        return {"results": output, "errors": errors }
+        return rows
 
     @staticmethod
     def update_approval(approval_id, approver_uid):

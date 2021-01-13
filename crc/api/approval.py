@@ -105,9 +105,15 @@ def get_health_attesting_csv():
 def get_csv():
     """A damn lie, it's a json file. A huge bit of a one-off for RRT, but 3 weeks of midnight work can convince a
     man to do just about anything"""
-    content = ApprovalService.get_not_really_csv_content()
 
-    return content
+    records = ApprovalService.get_not_really_csv_content()
+    si = io.StringIO()
+    cw = csv.writer(si)
+    cw.writerows(records)
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=personnel.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 # ----- come back to the world of the living ---- #
 
