@@ -852,16 +852,16 @@ paths:
       operationId: crc.api.workflow.get_workflow
       summary: Returns a workflow, can also be used to do a soft or hard reset on the workflow.
       parameters:
-        - name: soft_reset
+        - name: clear_data
           in: query
           required: false
-          description: Set this to true to use the latest workflow specification to load minor modifications to the spec.
+          description: Set this to true to clear data when starting workflow.
           schema:
             type: boolean
-        - name: hard_reset
+        - name: reload_spec
           in: query
           required: false
-          description: Set this to true to reset the workflow
+          description: Set this to true to load latest workflow spec.
           schema:
             type: boolean
         - name: do_engine_steps
