@@ -204,7 +204,7 @@ class TestTasksApi(BaseTest):
         self.assertTrue(workflow_api.spec_version.startswith("v1 "))
         self.assertFalse(workflow_api.is_latest_spec)
 
-        workflow_api = self.get_workflow_api(workflow, hard_reset=True)
+        workflow_api = self.restart_workflow_api(workflow_api, clear_data=True)
         self.assertTrue(workflow_api.spec_version.startswith("v2 "))
         self.assertTrue(workflow_api.is_latest_spec)
 
