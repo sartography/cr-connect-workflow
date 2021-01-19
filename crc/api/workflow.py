@@ -96,36 +96,27 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def get_workflow(workflow_id, reload_spec=False, clear_data=False, do_engine_steps=True):
-    """Soft reset will attempt to update to the latest spec without starting over,
-    Hard reset will update to the latest spec and start from the beginning.
-    Read Only will return the workflow in a read only state, without running any
-    engine tasks or logging any events. """
+def get_workflow(workflow_id, do_engine_steps=True):
+    """Retrieve workflow based on workflow_id, and return it in the last saved State.
+       If do_engine_steps is False, return the workflow without running any engine tasks or logging any events. """
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow_model, reload_spec=reload_spec, clear_data=clear_data)
-    if reload_spec or clear_data:
-        try:
-            processor.cancel_notify()
-        except Exception as e:
-            raise e
-        finally:
-            # In the event of a reset, ALWAYS allow the reset, even if the cancel_notify fails for some reason.
-            processor = WorkflowProcessor(workflow_model, reload_spec=reload_spec, clear_data=clear_data)
+    processor = WorkflowProcessor(workflow_model)
 
     if do_engine_steps:
         processor.do_engine_steps()
         processor.save()
         WorkflowService.update_task_assignments(processor)
+
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
-    if clear_data:
-        remove_keys = []
-        for datum in workflow_api_model.next_task.data:
-            if datum != 'current_user':
-                remove_keys.append(datum)
-        if len(remove_keys) > 0:
-            for key in remove_keys:
-                del(workflow_api_model.next_task.data[key])
     return WorkflowApiSchema().dump(workflow_api_model)
+
+
+def restart_workflow(workflow_id, clear_data=False):
+    """Restart a workflow with the latest spec.
+       Clear data allows user to restart the workflow without previous data."""
+    workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    WorkflowProcessor.reset(workflow_model, clear_data=clear_data)
+    return get_workflow(workflow_model.id)
 
 
 def get_task_events(action = None, workflow = None, study = None):
