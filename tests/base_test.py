@@ -341,19 +341,30 @@ class BaseTest(unittest.TestCase):
         session.commit()
         return approval
 
-    def get_workflow_api(self, workflow, reload_spec=False, clear_data=False, do_engine_steps=True, user_uid="dhf8r"):
-        user = session.query(UserModel).filter_by(uid=user_uid).first()
-        self.assertIsNotNone(user)
-        url = (f'/v1.0/workflow/{workflow.id}' 
-               f'?clear_data={str(clear_data)}'
-               f'&reload_spec={str(reload_spec)}'
-               f'&do_engine_steps={str(do_engine_steps)}')
+    def get_workflow_common(self, url, user):
         rv = self.app.get(url,
                           headers=self.logged_in_headers(user),
                           content_type="application/json")
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         workflow_api = WorkflowApiSchema().load(json_data)
+        return workflow_api
+
+    def get_workflow_api(self, workflow, do_engine_steps=True, user_uid="dhf8r"):
+        user = session.query(UserModel).filter_by(uid=user_uid).first()
+        self.assertIsNotNone(user)
+        url = (f'/v1.0/workflow/{workflow.id}' 
+               f'?do_engine_steps={str(do_engine_steps)}')
+        workflow_api = self.get_workflow_common(url, user)
+        self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
+        return workflow_api
+
+    def restart_workflow_api(self, workflow, clear_data=False, user_uid="dhf8r"):
+        user = session.query(UserModel).filter_by(uid=user_uid).first()
+        self.assertIsNotNone(user)
+        url = (f'/v1.0/workflow/{workflow.id}/restart' 
+               f'?clear_data={str(clear_data)}')
+        workflow_api = self.get_workflow_common(url, user)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
