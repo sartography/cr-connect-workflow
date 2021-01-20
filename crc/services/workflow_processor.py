@@ -21,6 +21,7 @@ import crc
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
+from crc.models.task_event import TaskEventModel
 from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecDependencyFile
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
@@ -150,19 +151,12 @@ class WorkflowProcessor(object):
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
 
-    def __init__(self, workflow_model: WorkflowModel,
-                 soft_reset=False, hard_reset=False, validate_only=False):
-        """Create a Workflow Processor based on the serialized information available in the workflow model.
-        If soft_reset is set to true, it will try to use the latest version of the workflow specification
-            without resetting to the beginning of the workflow.  This will work for some minor changes to the spec.
-        If hard_reset is set to true, it will use the latest spec, and start the workflow over from the beginning.
-            which should work in casees where a soft reset fails.
-        If neither flag is set, it will use the same version of the specification that was used to originally
-        create the workflow model. """
+    def __init__(self, workflow_model: WorkflowModel, validate_only=False):
+        """Create a Workflow Processor based on the serialized information available in the workflow model."""
 
         self.workflow_model = workflow_model
 
-        if soft_reset or len(workflow_model.dependencies) == 0:  # Depenencies of 0 means the workflow was never started.
+        if workflow_model.bpmn_workflow_json is None:  # The workflow was never started.
             self.spec_data_files = FileService.get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id)
             spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
@@ -187,28 +181,35 @@ class WorkflowProcessor(object):
                     # can then load data as needed.
                 self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
                 workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(
-                    self.bpmn_workflow,include_spec=True)
+                    self.bpmn_workflow, include_spec=True)
                 self.save()
 
         except MissingSpecError as ke:
             raise ApiError(code="unexpected_workflow_structure",
                            message="Failed to deserialize workflow"
                                    " '%s' version %s, due to a mis-placed or missing task '%s'" %
-                                   (self.workflow_spec_id, self.get_version_string(), str(ke)) +
-                                   " This is very likely due to a soft reset where there was a structural change.")
-        if hard_reset:
-            # Now that the spec is loaded, get the data and rebuild the bpmn with the new details
-            self.hard_reset()
-            workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(self.bpmn_workflow)
-            self.save()
-        if soft_reset:
-            self.save()
+                                   (self.workflow_spec_id, self.get_version_string(), str(ke)))
 
         # set whether this is the latest spec file.
         if self.spec_data_files == FileService.get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id):
             self.is_latest_spec = True
         else:
             self.is_latest_spec = False
+
+    @classmethod
+    def reset(cls, workflow_model, clear_data=False):
+        print('WorkflowProcessor: reset: ')
+
+        workflow_model.bpmn_workflow_json = None
+        if clear_data:
+            # Clear form_data from task_events
+            task_events = session.query(TaskEventModel). \
+                filter(TaskEventModel.workflow_id == workflow_model.id).all()
+            for task_event in task_events:
+                task_event.form_data = {}
+                session.add(task_event)
+        session.commit()
+        return cls(workflow_model)
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
         if workflow_model.bpmn_workflow_json:
@@ -355,18 +356,18 @@ class WorkflowProcessor(object):
         else:
             return WorkflowStatus.waiting
 
-    def hard_reset(self):
-        """Recreate this workflow. This will be useful when a workflow specification changes.
-         """
-        self.spec_data_files = FileService.get_spec_data_files(workflow_spec_id=self.workflow_spec_id)
-        new_spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
-        new_bpmn_workflow = BpmnWorkflow(new_spec, script_engine=self._script_engine)
-        new_bpmn_workflow.data = self.bpmn_workflow.data
-        try:
-            new_bpmn_workflow.do_engine_steps()
-        except WorkflowException as we:
-            raise ApiError.from_task_spec("hard_reset_engine_steps_error", str(we), we.sender)
-        self.bpmn_workflow = new_bpmn_workflow
+    # def hard_reset(self):
+    #     """Recreate this workflow. This will be useful when a workflow specification changes.
+    #      """
+    #     self.spec_data_files = FileService.get_spec_data_files(workflow_spec_id=self.workflow_spec_id)
+    #     new_spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
+    #     new_bpmn_workflow = BpmnWorkflow(new_spec, script_engine=self._script_engine)
+    #     new_bpmn_workflow.data = self.bpmn_workflow.data
+    #     try:
+    #         new_bpmn_workflow.do_engine_steps()
+    #     except WorkflowException as we:
+    #         raise ApiError.from_task_spec("hard_reset_engine_steps_error", str(we), we.sender)
+    #     self.bpmn_workflow = new_bpmn_workflow
 
     def get_status(self):
         return self.status_of(self.bpmn_workflow)

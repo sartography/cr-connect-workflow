@@ -173,28 +173,6 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("workflow_validation_error", context.exception.code)
         self.assertTrue("bpmn:startEvent" in context.exception.message)
 
-    def test_workflow_spec_key_error(self):
-        """Frequently seeing errors in the logs about a 'Key' error, where a workflow
-        references something that doesn't exist in the midst of processing. Want to
-        make sure we produce errors to the front end that allows us to debug this."""
-        # Start the two_forms workflow, and enter some data in the first form.
-        self.load_example_data()
-        study = session.query(StudyModel).first()
-        workflow_spec_model = self.load_test_spec("two_forms")
-        processor = self.get_processor(study, workflow_spec_model)
-        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
-        task = processor.next_task()
-        task.data = {"color": "blue"}
-        processor.complete_task(task)
-
-        # Modify the specification, with a major change.
-        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
-        self.replace_file("two_forms.bpmn", file_path)
-
-        # Attempting a soft update on a structural change should raise a sensible error.
-        with self.assertRaises(ApiError) as context:
-            processor3 = WorkflowProcessor(processor.workflow_model, soft_reset=True)
-        self.assertEqual("unexpected_workflow_structure", context.exception.code)
 
     def test_workflow_with_bad_expression_raises_sensible_error(self):
         self.load_example_data()
@@ -301,7 +279,9 @@ class TestWorkflowProcessor(BaseTest):
         self.assertFalse(processor2.is_latest_spec) # Still at version 1.
 
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
-        processor3 = WorkflowProcessor(processor.workflow_model, hard_reset=True)
+        WorkflowProcessor.reset(processor2.workflow_model)
+        processor3 = WorkflowProcessor(processor.workflow_model)
+        processor3.do_engine_steps()
         self.assertEqual("Step 1", processor3.next_task().task_spec.description)
         self.assertTrue(processor3.is_latest_spec) # Now at version 2.
         task = processor3.next_task()

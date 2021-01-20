@@ -53,7 +53,9 @@ class TestLookupService(BaseTest):
         file.close()
 
         # restart the workflow, so it can pick up the changes.
-        WorkflowProcessor(workflow, soft_reset=True)
+
+        processor = WorkflowProcessor.reset(workflow)
+        workflow = processor.workflow_model
 
         LookupService.lookup(workflow, "sponsor", "sam", limit=10)
         lookup_records = session.query(LookupFileModel).all()

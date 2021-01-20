@@ -850,20 +850,8 @@ paths:
             format: int32
     get:
       operationId: crc.api.workflow.get_workflow
-      summary: Returns a workflow, can also be used to do a soft or hard reset on the workflow.
+      summary: Returns a workflow.
       parameters:
-        - name: soft_reset
-          in: query
-          required: false
-          description: Set this to true to use the latest workflow specification to load minor modifications to the spec.
-          schema:
-            type: boolean
-        - name: hard_reset
-          in: query
-          required: false
-          description: Set this to true to reset the workflow
-          schema:
-            type: boolean
         - name: do_engine_steps
           in: query
           required: false
@@ -889,6 +877,35 @@ paths:
       responses:
         '204':
           description: The workflow was removed
+  /workflow/{workflow_id}/restart:
+    parameters:
+      - name: workflow_id
+        in: path
+        required: true
+        description: The id of the workflow
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.workflow.restart_workflow
+      summary: Restarts a workflow with the latest spec. Can also clear data.
+      parameters:
+        - name: clear_data
+          in: query
+          required: false
+          description: Set this to true to clear data when starting workflow.
+          schema:
+            type: boolean
+      tags:
+        - Workflows and Tasks
+      responses:
+        '200':
+          description: Returns updated workflow, possibly without data.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+
   /workflow/{workflow_id}/task/{task_id}/data:
     parameters:
       - name: workflow_id
