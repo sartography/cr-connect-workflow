@@ -151,12 +151,12 @@ class WorkflowProcessor(object):
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
 
-    def __init__(self, workflow_model: WorkflowModel, spec=None, validate_only=False):
+    def __init__(self, workflow_model: WorkflowModel, validate_only=False):
         """Create a Workflow Processor based on the serialized information available in the workflow model."""
 
         self.workflow_model = workflow_model
 
-        if workflow_model.bpmn_workflow_json is None and spec is None:  # The workflow was never started.
+        if workflow_model.bpmn_workflow_json is None:  # The workflow was never started.
             self.spec_data_files = FileService.get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id)
             spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
@@ -208,7 +208,8 @@ class WorkflowProcessor(object):
             for task_event in task_events:
                 task_event.form_data = {}
                 session.add(task_event)
-            session.commit()
+        session.commit()
+        return cls(workflow_model)
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
         if workflow_model.bpmn_workflow_json:
