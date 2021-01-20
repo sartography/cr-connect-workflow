@@ -228,7 +228,8 @@ class TestTasksApi(BaseTest):
         self.assertEqual(1, len(self.get_assignment_task_events(supervisor.uid)))
 
         # Resetting the workflow at this point should clear the event log.
-        workflow_api = self.get_workflow_api(workflow, hard_reset=True, user_uid=submitter.uid)
+        workflow_api = self.restart_workflow_api(workflow, user_uid=submitter.uid)
+        workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
         self.assertEqual(0, len(self.get_assignment_task_events(supervisor.uid)))
 
         # Re-complete first task, and awaiting tasks should shift to 0 for for submitter, and 1 for supervisor

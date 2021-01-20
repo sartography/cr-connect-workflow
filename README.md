@@ -64,6 +64,44 @@ it should always be visible in the Docker Desktop Daskboard with a friendly litt
 stop button for your clicking pleasure.
 
 
+### Environment Setup Part #2
+If you want to run CR-Connect in development mode you must have the following two services running:
+1. `Postgres Docker`:  There is a sub-directory called Postgres that contains a docker image that will set up an empty
+database for CR-Connect, and for Protocol Builder Mock, mentioned below.  For must systems, you can 'cd' into this
+directory and just run start.sh to fire up the Postgres service, and stop.sh to shut it back down again.
+create .env file in /postgres with the following two lines in it:
+```
+DB_USER=crc_user
+DB_PASS=crc_pass
+```
+With this in place, from the command line:
+```bash
+cd postgres
+./start.sh
+```
+You can now build the database structure in the newly created database with the following lines
+```baseh
+cd ..  (into base directory)
+flask db upgrade
+flask load-example-data (this creates some basic workflows for you to use)
+```
+
+
+
+2. `Protocol Builder Mock`: We created a mock of the Protocol Builder, a critical service at UVA that is a deep
+dependency for CR-Connect.  You can find the details here: [Protocol Builder Mock](https://github.com/sartography/protocol-builder-mock)
+Be sure this is up and running on Port 5002 or you will encounter errors when the system starts up.
+
+With Protocol Builder Mock up and running, visit http://localhost:5001 and create a study.  Set the user
+and primary investigator to dhf8r - which is a user in the mock ldap service, and this will later show up when you
+fire up the interface.
+
+### Configuration
+1. `instance/config.py`: This will 
+
+
+
+
 ### Project Initialization
 1. Clone this repository.
 2. In PyCharm:
