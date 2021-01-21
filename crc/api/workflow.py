@@ -1,11 +1,13 @@
 import uuid
+
 from flask import g
-from crc import session, db, app
+
+from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.api_models import WorkflowApi, WorkflowApiSchema, NavigationItem, NavigationItemSchema
-from crc.models.file import FileModel, LookupDataSchema, FileDataModel
+from crc.models.api_models import WorkflowApiSchema
+from crc.models.file import FileModel, LookupDataSchema
 from crc.models.study import StudyModel, WorkflowMetadata
-from crc.models.task_event import TaskEventModel, TaskEventModelSchema, TaskEvent, TaskEventSchema
+from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.file_service import FileService
@@ -14,6 +16,7 @@ from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
+
 
 def all_specifications():
     schema = WorkflowSpecModelSchema(many=True)
@@ -93,19 +96,27 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
-def get_workflow(workflow_id, soft_reset=False, hard_reset=False, do_engine_steps=True):
-    """Soft reset will attempt to update to the latest spec without starting over,
-    Hard reset will update to the latest spec and start from the beginning.
-    Read Only will return the workflow in a read only state, without running any
-    engine tasks or logging any events. """
+def get_workflow(workflow_id, do_engine_steps=True):
+    """Retrieve workflow based on workflow_id, and return it in the last saved State.
+       If do_engine_steps is False, return the workflow without running any engine tasks or logging any events. """
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor(workflow_model, soft_reset=soft_reset, hard_reset=hard_reset)
+    processor = WorkflowProcessor(workflow_model)
+
     if do_engine_steps:
         processor.do_engine_steps()
         processor.save()
         WorkflowService.update_task_assignments(processor)
+
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
+
+
+def restart_workflow(workflow_id, clear_data=False):
+    """Restart a workflow with the latest spec.
+       Clear data allows user to restart the workflow without previous data."""
+    workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+    WorkflowProcessor.reset(workflow_model, clear_data=clear_data)
+    return get_workflow(workflow_model.id)
 
 
 def get_task_events(action = None, workflow = None, study = None):
@@ -145,7 +156,7 @@ def set_current_task(workflow_id, task_id):
                                         "currently set to COMPLETE or READY.")
 
     # If we have an interrupt task, run it.
-    processor.bpmn_workflow.cancel_notify()
+    processor.cancel_notify()
 
     # Only reset the token if the task doesn't already have it.
     if spiff_task.state == spiff_task.COMPLETED:

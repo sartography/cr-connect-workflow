@@ -6,8 +6,8 @@ from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
-import flask
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
+from lxml.etree import XMLSyntaxError
 from pandas import ExcelFile
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
@@ -35,14 +35,22 @@ class FileService(object):
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
                                name, content_type, binary_data, primary=False, is_status=False):
         """Create a new file and associate it with a workflow spec."""
-        file_model = FileModel(
-            workflow_spec_id=workflow_spec.id,
-            name=name,
-            primary=primary,
-            is_status=is_status,
-        )
+        # Raise ApiError if the file already exists
+        if session.query(FileModel)\
+            .filter(FileModel.workflow_spec_id == workflow_spec.id)\
+            .filter(FileModel.name == name).first():
 
-        return FileService.update_file(file_model, binary_data, content_type)
+            raise ApiError(code="Duplicate File",
+                           message='If you want to replace the file, use the update mechanism.')
+        else:
+            file_model = FileModel(
+                workflow_spec_id=workflow_spec.id,
+                name=name,
+                primary=primary,
+                is_status=is_status,
+            )
+
+            return FileService.update_file(file_model, binary_data, content_type)
 
     @staticmethod
     def is_allowed_document(code):
@@ -82,7 +90,7 @@ class FileService(object):
           you get '1.0' rather than '1'
           fixme: This is stupid stupid slow.  Place it in the database and just check if it is up to date."""
         data_model = FileService.get_reference_file_data(reference_file_name)
-        xls = ExcelFile(data_model.data)
+        xls = ExcelFile(data_model.data, engine='openpyxl')
         df = xls.parse(xls.sheet_names[0])
         for c in int_columns:
             df[c] = df[c].fillna(0)
@@ -153,8 +161,11 @@ class FileService(object):
 
         # If this is a BPMN, extract the process id.
         if file_model.type == FileType.bpmn:
-            bpmn: etree.Element = etree.fromstring(binary_data)
-            file_model.primary_process_id = FileService.get_process_id(bpmn)
+            try:
+                bpmn: etree.Element = etree.fromstring(binary_data)
+                file_model.primary_process_id = FileService.get_process_id(bpmn)
+            except XMLSyntaxError as xse:
+                raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_model.name)
 
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,

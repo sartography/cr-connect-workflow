@@ -1,6 +1,7 @@
 import enum
 
 import marshmallow
+from SpiffWorkflow.navigation import NavItem
 from marshmallow import INCLUDE
 from marshmallow_enum import EnumField
 
@@ -15,22 +16,6 @@ class MultiInstanceType(enum.Enum):
     sequential = "sequential"
 
 
-class NavigationItem(object):
-    def __init__(self, id, task_id, name, title, backtracks, level, indent, child_count, state, is_decision,
-                 task=None, lane=None):
-        self.id = id
-        self.task_id = task_id
-        self.name = name,
-        self.title = title
-        self.backtracks = backtracks
-        self.level = level
-        self.indent = indent
-        self.child_count = child_count
-        self.state = state
-        self.is_decision = is_decision
-        self.task = task
-        self.lane = lane
-
 class Task(object):
 
     ##########################################################################
@@ -43,6 +28,7 @@ class Task(object):
 
     # Autocomplete field
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
+    FIELD_TYPE_AUTO_COMPLETE_MAX = "autocomplete_num"  # Not used directly, passed in from the front end.
 
     # Required field
     FIELD_CONSTRAINT_REQUIRED = "required"
@@ -158,15 +144,28 @@ class TaskSchema(ma.Schema):
 
 class NavigationItemSchema(ma.Schema):
     class Meta:
-        fields = ["id", "task_id", "name", "title", "backtracks", "level", "indent", "child_count", "state",
-                  "is_decision", "task", "lane"]
+        fields = ["spec_id", "name", "spec_type", "task_id", "description", "backtracks", "indent",
+                  "lane", "state", "children"]
         unknown = INCLUDE
-    task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False, allow_none=True)
+    state = marshmallow.fields.String(required=False, allow_none=True)
+    description = marshmallow.fields.String(required=False, allow_none=True)
     backtracks = marshmallow.fields.String(required=False, allow_none=True)
     lane = marshmallow.fields.String(required=False, allow_none=True)
-    title = marshmallow.fields.String(required=False, allow_none=True)
     task_id = marshmallow.fields.String(required=False, allow_none=True)
+    children = marshmallow.fields.List(marshmallow.fields.Nested(lambda: NavigationItemSchema()))
 
+    @marshmallow.post_load
+    def make_nav(self, data, **kwargs):
+        state = data.pop('state', None)
+        task_id = data.pop('task_id', None)
+        children = data.pop('children', [])
+        spec_type = data.pop('spec_type', None)
+        item = NavItem(**data)
+        item.state = state
+        item.task_id = task_id
+        item.children = children
+        item.spec_type = spec_type
+        return item
 
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,

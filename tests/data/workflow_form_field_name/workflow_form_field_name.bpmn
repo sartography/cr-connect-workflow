@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_06dpn07" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_1iqn8uk" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0dbfi6t</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0dbfi6t" sourceRef="StartEvent_1" targetRef="Activity_09rr8u7" />
+    <bpmn:manualTask id="Activity_09rr8u7" name="Hello">
+      <bpmn:documentation>&lt;H1&gt;Hello&lt;/H1&gt;</bpmn:documentation>
+      <bpmn:incoming>Flow_0dbfi6t</bpmn:incoming>
+      <bpmn:outgoing>Flow_02rje6r</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_02rje6r" sourceRef="Activity_09rr8u7" targetRef="Activity_GetName" />
+    <bpmn:userTask id="Activity_GetName" name="Get Name" camunda:formKey="GetName">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="name" label="Name" type="string" defaultValue="World" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_02rje6r</bpmn:incoming>
+      <bpmn:outgoing>Flow_1iphrck</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1iphrck" sourceRef="Activity_GetName" targetRef="Activity_GetTitle" />
+    <bpmn:userTask id="Activity_GetTitle" name="Get Title" camunda:formKey="GetTitle">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="user-title" label="Title" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1iphrck</bpmn:incoming>
+      <bpmn:outgoing>Flow_0cxh51h</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0cxh51h" sourceRef="Activity_GetTitle" targetRef="Activity_SayHello" />
+    <bpmn:scriptTask id="Activity_SayHello" name="Say Hello">
+      <bpmn:incoming>Flow_0cxh51h</bpmn:incoming>
+      <bpmn:outgoing>Flow_0hbiuz4</bpmn:outgoing>
+      <bpmn:script>print('Hello', name)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="Event_13veu8t">
+      <bpmn:incoming>Flow_0hbiuz4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0hbiuz4" sourceRef="Activity_SayHello" targetRef="Event_13veu8t" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1iqn8uk">
+      <bpmndi:BPMNEdge id="Flow_0dbfi6t_di" bpmnElement="Flow_0dbfi6t">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02rje6r_di" bpmnElement="Flow_02rje6r">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1iphrck_di" bpmnElement="Flow_1iphrck">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0cxh51h_di" bpmnElement="Flow_0cxh51h">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="750" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0hbiuz4_di" bpmnElement="Flow_0hbiuz4">
+        <di:waypoint x="850" y="117" />
+        <di:waypoint x="912" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_132twgr_di" bpmnElement="Activity_09rr8u7">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0it9qzi_di" bpmnElement="Activity_GetName">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_19s9l3h_di" bpmnElement="Activity_GetTitle">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05qpklh_di" bpmnElement="Activity_SayHello">
+        <dc:Bounds x="750" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_13veu8t_di" bpmnElement="Event_13veu8t">
+        <dc:Bounds x="912" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

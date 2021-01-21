@@ -1,7 +1,7 @@
 from unittest.mock import patch
+from tests.base_test import BaseTest
 
 from crc import db
-from tests.base_test import BaseTest
 from crc.api.workflow_sync import get_all_spec_state, \
                                   get_changed_workflows, \
                                   get_workflow_spec_files, \

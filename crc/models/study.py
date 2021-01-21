@@ -60,7 +60,6 @@ class StudyModel(db.Model):
         self.last_updated = pbs.DATE_MODIFIED
 
         self.irb_status = IrbStatus.incomplete_in_protocol_builder
-        self.status = StudyStatus.in_progress
 
 
 class StudyEvent(db.Model):

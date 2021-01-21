@@ -89,6 +89,7 @@ def load_example_data():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
     ExampleDataLoader().load_all()
+    ExampleDataLoader().load_default_user()
 
 
 @app.cli.command()
@@ -97,6 +98,13 @@ def load_example_rrt_data():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
     ExampleDataLoader().load_rrt()
+
+
+@app.cli.command()
+def load_reference_files():
+    """Load example data into the database."""
+    from example_data import ExampleDataLoader
+    ExampleDataLoader().load_reference_documents()
 
 @app.cli.command()
 def clear_db():
