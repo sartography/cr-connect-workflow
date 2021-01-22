@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_889ace0" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_a7f16c2" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_02xzhf3</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_02xzhf3" sourceRef="StartEvent_1" targetRef="Activity_UserInput" />
+    <bpmn:sequenceFlow id="Flow_0d46qnz" sourceRef="Activity_UserInput" targetRef="Activity_DecisionLookup" />
+    <bpmn:sequenceFlow id="Flow_1d7sv9v" sourceRef="Activity_DecisionLookup" targetRef="Activity_PickColor" />
+    <bpmn:userTask id="Activity_UserInput" name="User Input" camunda:formKey="UserInput">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="user_input" label="Select Yes or No" type="boolean" defaultValue="True" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_02xzhf3</bpmn:incoming>
+      <bpmn:outgoing>Flow_0d46qnz</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:businessRuleTask id="Activity_DecisionLookup" name="Decision Lookup" camunda:resultVariable="lookup_output" camunda:decisionRef="Decision_Value_Expression">
+      <bpmn:incoming>Flow_0d46qnz</bpmn:incoming>
+      <bpmn:outgoing>Flow_1d7sv9v</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:userTask id="Activity_PickColor" name="Pick a Color" camunda:formKey="MyFormKey">
+      <bpmn:documentation>&lt;h1&gt;Hello {{ lookup_output }}&lt;/h1&gt;</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="color_select" label="Pick a color" type="enum">
+            <camunda:properties>
+              <camunda:property id="value_expression" value="lookup_output" />
+            </camunda:properties>
+            <camunda:value id="black" name="Black" />
+            <camunda:value id="white" name="White" />
+            <camunda:value id="grey" name="Grey" />
+            <camunda:value id="gray" name="Gray" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1d7sv9v</bpmn:incoming>
+      <bpmn:outgoing>Flow_01x96w8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_01x96w8" sourceRef="Activity_PickColor" targetRef="Activity_Display_Color" />
+    <bpmn:manualTask id="Activity_Display_Color" name="Display Color">
+      <bpmn:documentation>&lt;h1&gt;Hello&lt;/h1&gt;
+&lt;div&gt;You picked {{ color_select.label }}&lt;/div&gt;</bpmn:documentation>
+      <bpmn:incoming>Flow_01x96w8</bpmn:incoming>
+      <bpmn:outgoing>Flow_05tzoiy</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_074ypt0">
+      <bpmn:incoming>Flow_05tzoiy</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_05tzoiy" sourceRef="Activity_Display_Color" targetRef="Event_074ypt0" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_a7f16c2">
+      <bpmndi:BPMNEdge id="Flow_05tzoiy_di" bpmnElement="Flow_05tzoiy">
+        <di:waypoint x="850" y="177" />
+        <di:waypoint x="912" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_01x96w8_di" bpmnElement="Flow_01x96w8">
+        <di:waypoint x="690" y="177" />
+        <di:waypoint x="750" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1d7sv9v_di" bpmnElement="Flow_1d7sv9v">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="590" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d46qnz_di" bpmnElement="Flow_0d46qnz">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02xzhf3_di" bpmnElement="Flow_02xzhf3">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xfaikf_di" bpmnElement="Activity_UserInput">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_16u20va_di" bpmnElement="Activity_DecisionLookup">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0dpzpf2_di" bpmnElement="Activity_PickColor">
+        <dc:Bounds x="590" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_157v5xp_di" bpmnElement="Activity_Display_Color">
+        <dc:Bounds x="750" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_074ypt0_di" bpmnElement="Event_074ypt0">
+        <dc:Bounds x="912" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
