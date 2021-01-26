@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <meta charset="UTF-8">
+    <style>
+        body {font-family: sans-serif;}
+        #header, #footer{background-color: #232D48; color:white; }
+        #footer{text-align: center;}
+    </style>
+    <title>Research Ramp-Up Toolkit</title>
+    {% endblock %}
+</head>
+<body>
+    <div id="header">{% block header %}
+        <div id="logo">
+            <span>
+                <img class="logo"
+                     height="72px"
+                     src="{{ url_for('static', filename='uva_rotunda.svg', _external=True) }}"
+                     alt="University of Virginia">
+                Research Ramp-Up Toolkit
+            </span>
+        </div>
+    {% endblock %}</div>
+    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="footer">{% block footer %}{% endblock %}</div>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="43.79221"
+   width="43.330002"
+   version="1.1"
+   viewBox="0 0 43.330002 43.79221"
+   data-name="Layer 1"
+   id="Layer_1"
+   sodipodi:docname="uva_rotunda.svg"
+   inkscape:version="0.92.4 (f8dce91, 2019-08-02)">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="705"
+     inkscape:window-height="480"
+     id="namedview21"
+     showgrid="false"
+     fit-margin-top="8"
+     fit-margin-left="8"
+     fit-margin-right="8"
+     fit-margin-bottom="8"
+     inkscape:zoom="7.9215345"
+     inkscape:cx="21.665"
+     inkscape:cy="21.896104"
+     inkscape:window-x="912"
+     inkscape:window-y="253"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Layer_1" />
+  <metadata
+     id="metadata107">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Artboard 1</dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs4">
+    <style
+       id="style2">.cls-1,.cls-2{fill:#e57200;}.cls-2,.cls-3{fill-rule:evenodd;}.cls-3,.cls-4{fill:#232d4b;}</style>
+  </defs>
+  <title
+     id="title6">Artboard 1</title>
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200"
+     id="polygon8"
+     points="22.87,30.46 22.87,19.25 25.23,19.25 25.23,30.46 "
+     class="cls-1" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200"
+     id="polygon10"
+     points="10.16,30.46 10.16,19.25 12.44,19.25 12.44,30.46 "
+     class="cls-1" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200"
+     id="polygon12"
+     points="13.23,30.46 13.23,19.25 15.66,19.25 15.66,30.46 "
+     class="cls-1" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200"
+     id="polygon14"
+     points="16.44,30.46 16.44,19.25 18.87,19.25 18.87,30.46 "
+     class="cls-1" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200"
+     id="polygon16"
+     points="22.09,19.25 22.09,30.46 19.66,30.46 19.66,19.25 "
+     class="cls-1" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200"
+     id="polygon18"
+     points="11.13,18.46 17.84,14.33 24.22,18.46 "
+     class="cls-1" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200"
+     id="polygon20"
+     points="9.62,18.46 4.01,18.46 4.01,14.29 16.41,14.29 "
+     class="cls-1" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200"
+     id="polygon22"
+     points="19.23,14.29 31.31,14.29 31.31,18.46 25.67,18.46 "
+     class="cls-1" />
+  <path
+     style="fill:#e57200"
+     id="path24"
+     d="M 33.58,15.052206 H 9.74 a 13.6,13.6 0 0 1 23.84,0 z"
+     class="cls-1"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:#e57200;fill-rule:evenodd"
+     id="path26"
+     d="m 8,22.752206 v -0.65 l 0.16,0.11 -0.11,0.35 v 0.19 z m 4.64,9.27 H 11.6 l 0.53,-0.38 0.52,0.38 z m 0.73,0 h -0.71 l -0.2,-0.62 0.54,-0.39 h -0.67 l -0.2,-0.63 -0.21,0.63 h -0.66 l 0.54,0.39 -0.21,0.62 H 8 v -9.19 l 0.5,-0.37 0.53,0.39 -0.2,-0.63 0.53,-0.38 H 8.71 l -0.2,-0.63 -0.09,0.28 -0.13,0.35 H 8 v -1 h 5.38 v 11.18 z m -5.37,-6.76 0.53,0.39 -0.2,0.63 0.53,-0.39 0.53,0.39 -0.2,-0.63 0.53,-0.39 H 9.07 l -0.2,-0.62 -0.2,0.62 z m 1.84,3.57 -0.21,0.63 0.53,-0.39 0.54,0.39 -0.21,-0.63 0.51,-0.39 h -0.62 l -0.21,-0.63 -0.2,0.63 H 9.31 l 0.54,0.39 z"
+     class="cls-2"
+     inkscape:connector-curvature="0" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200;fill-rule:evenodd"
+     id="polygon28"
+     points="9.38,31.25 9.38,34.23 4.01,34.23 4.01,31.25 "
+     class="cls-2" />
+  <polygon
+     transform="translate(4,1.562208)"
+     style="fill:#e57200;fill-rule:evenodd"
+     id="polygon30"
+     points="26.01,31.25 31.31,31.25 31.31,34.23 26.01,34.23 "
+     class="cls-2" />
+  <path
+     style="fill:#e57200;fill-rule:evenodd"
+     id="path32"
+     d="m 22,35.792206 h -0.6 l 0.3,-0.22 z m -4.06,-0.87 -0.21,0.62 0.54,-0.38 0.53,0.38 -0.2,-0.62 0.53,-0.39 h -0.66 l -0.2,-0.63 -0.27,0.66 h -0.66 l 0.54,0.39 z m 3.43,0.41 -0.15,0.46 h -7 v -3 H 15 l -0.15,0.46 h -0.66 l 0.54,0.39 -0.21,0.63 0.54,-0.39 0.53,0.39 -0.2,-0.63 0.53,-0.39 h -0.66 l -0.15,-0.46 h 13.11 l -0.16,0.46 H 27.4 l 0.54,0.39 -0.21,0.63 0.54,-0.39 0.53,0.39 -0.2,-0.63 0.53,-0.39 h -0.66 l -0.15,-0.46 h 0.91 v 3 h -7.07 l -0.16,-0.46 0.54,-0.38 h -0.66 l -0.21,-0.63 -0.2,0.63 h -0.66 l 0.53,0.38 z m 4,-0.41 0.54,-0.39 h -0.66 l -0.25,-0.63 -0.2,0.63 h -0.66 l 0.53,0.39 -0.2,0.62 0.53,-0.38 0.54,0.38 -0.21,-0.62 z"
+     class="cls-2"
+     inkscape:connector-curvature="0" />
+  <path
+     style="fill:#e57200;fill-rule:evenodd"
+     id="path34"
+     d="m 35.31,22.132206 v 0.51 l -0.14,-0.42 z m 0,9.89 H 30 v -11.21 h 5.3 v 1 h -0.26 l -0.21,-0.63 -0.2,0.63 H 34 l 0.53,0.38 -0.2,0.63 0.53,-0.39 0.47,0.34 v 2.49 h -0.62 l -0.21,-0.62 -0.2,0.62 h -0.66 l 0.53,0.39 -0.2,0.63 0.53,-0.39 0.54,0.39 -0.21,-0.63 0.5,-0.36 v 6.73 z m -3.55,0 -0.2,-0.62 0.53,-0.39 h -0.66 l -0.2,-0.63 -0.21,0.63 h -0.66 l 0.54,0.39 -0.2,0.62 0.53,-0.38 z m 1.75,-3.19 0.53,-0.39 h -0.66 l -0.2,-0.63 -0.2,0.63 h -0.66 l 0.53,0.39 -0.2,0.63 0.53,-0.39 0.53,0.39 z"
+     class="cls-2"
+     inkscape:connector-curvature="0" />
+</svg>

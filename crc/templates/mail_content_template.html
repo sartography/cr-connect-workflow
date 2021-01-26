@@ -1,0 +1,16 @@
+{% extends "mail_main_template.html" %}
+{% block head %}
+  {{ super() }}
+{% endblock %}}
+{% block header %}
+  {{ super() }}
+{% endblock %}}
+{% block content %}
+    <div>
+        {{ email_body | safe }}
+    </div>
+{% endblock %}
+{% block footer %}
+  {{ super() }}
+  <span>Ramp-Up Toolkit Configurator - University of Virginia</span>
+{% endblock %}}
