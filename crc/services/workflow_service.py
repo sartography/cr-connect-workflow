@@ -108,6 +108,12 @@ class WorkflowService(object):
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
+                    # make sure forms have a form key
+                    if hasattr(task_api, 'form') and task_api.form is not None and task_api.form.key == '':
+                        raise ApiError(code='missing_form_key',
+                                       message='Forms must include a Form Key.',
+                                       task_id=task.id,
+                                       task_name=task.get_name())
                     WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                     processor.complete_task(task)
             except WorkflowException as we:
