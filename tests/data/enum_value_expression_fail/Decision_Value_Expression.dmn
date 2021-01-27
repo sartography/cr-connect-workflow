@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_4ddf19d" name="DRD" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Decision_Value_Expression" name="Decision 1">
+    <extensionElements>
+      <biodi:bounds x="157" y="81" width="180" height="80" />
+    </extensionElements>
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="User Input">
+        <inputExpression id="inputExpression_1" typeRef="boolean">
+          <text>user_input</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Lookup Output" name="lookup_output" typeRef="string" />
+      <rule id="DecisionRule_1y5u0zy">
+        <inputEntry id="UnaryTests_10u8r2i">
+          <text>True</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1dshav8">
+          <text>'black'</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0pnsbfu">
+        <inputEntry id="UnaryTests_1lasqlz">
+          <text>False</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1nrtq17">
+          <text>'white'</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0ujcwwp">
+        <inputEntry id="UnaryTests_139wk1t">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0emea64">
+          <text>'grey'</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

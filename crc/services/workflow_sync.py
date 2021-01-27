@@ -39,7 +39,7 @@ class WorkflowSyncService(object):
         try:
             response = requests.get(url,headers={'X-CR-API-KEY':app.config['API_TOKEN']})
         except:
-            raise ApiError("workflow_sync_error",response.text)
+            raise ApiError("workflow_sync_error",url)
         if response.ok and response.text:
             if return_contents:
                 return response.content

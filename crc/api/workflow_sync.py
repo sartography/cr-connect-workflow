@@ -19,6 +19,14 @@ def join_uuids(uuids):
     return hashlib.md5(combined_uuids.encode('utf8')).hexdigest() # make a hash of the hashes
 
 def verify_token(token, required_scopes):
+    """
+    Part of the Swagger API permissions for the syncing API
+    The env variable for this is defined in config/default.py
+
+    If you are 'playing' with the swagger interface, you will want to copy the
+    token that is defined there and use it to authenticate the API if you are
+    emulating copying files between systems.
+    """
     if token == app.config['API_TOKEN']:
         return {'scope':['any']}
     else:
@@ -95,20 +103,44 @@ def get_changed_workflows(remote,as_df=False):
 
 
 def sync_all_changed_workflows(remote):
-
+    """
+    Does what it says, gets a list of all workflows that are different between
+    two systems and pulls all of the workflows and files that are different on the
+    remote system. The idea is that we can make the local system 'look' like the remote
+    system for deployment or testing.
+    """
     workflowsdf = get_changed_workflows(remote,as_df=True)
     if len(workflowsdf) ==0:
         return []
     workflows = workflowsdf.reset_index().to_dict(orient='records')
     for workflow in workflows:
         sync_changed_files(remote,workflow['workflow_spec_id'])
+    sync_changed_files(remote,'REFERENCE_FILES')
     return [x['workflow_spec_id'] for x in workflows]
 
 
-def sync_changed_files(remote,workflow_spec_id):
-    # make sure that spec is local before syncing files
+def file_get(workflow_spec_id,filename):
+    """
+    Helper function to take care of the special case where we
+    are looking for files that are marked is_reference
+    """
+    if workflow_spec_id == 'REFERENCE_FILES':
+        currentfile = session.query(FileModel).filter(FileModel.is_reference == True,
+                                                      FileModel.name == filename).first()
+    else:
+        currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
+                                            FileModel.name == filename).first()
+    return currentfile
 
-    specdict = WorkflowSyncService.get_remote_workflow_spec(remote,workflow_spec_id)
+def create_or_update_local_spec(remote,workflow_spec_id):
+    specdict = WorkflowSyncService.get_remote_workflow_spec(remote, workflow_spec_id)
+    # if we are updating from a master spec, then we want to make sure it is the only
+    # master spec in our local system.
+    if specdict['is_master_spec']:
+        masterspecs = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == True).all()
+        for masterspec in masterspecs:
+            masterspec.is_master_spec = False
+            session.add(masterspec)
 
     localspec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
     if localspec is None:
@@ -120,7 +152,7 @@ def sync_changed_files(remote,workflow_spec_id):
         localcategory = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name
                                                                         == specdict['category']['name']).first()
         if localcategory == None:
-            #category doesn't exist - lets make it
+            # category doesn't exist - lets make it
             localcategory = WorkflowSpecCategoryModel()
             localcategory.name = specdict['category']['name']
             localcategory.display_name = specdict['category']['display_name']
@@ -131,8 +163,44 @@ def sync_changed_files(remote,workflow_spec_id):
     localspec.display_order = specdict['display_order']
     localspec.display_name = specdict['display_name']
     localspec.name = specdict['name']
+    localspec.is_master_spec = specdict['is_master_spec']
     localspec.description = specdict['description']
     session.add(localspec)
+
+def update_or_create_current_file(remote,workflow_spec_id,updatefile):
+    currentfile = file_get(workflow_spec_id, updatefile['filename'])
+    if not currentfile:
+        currentfile = FileModel()
+        currentfile.name = updatefile['filename']
+        if workflow_spec_id == 'REFERENCE_FILES':
+            currentfile.workflow_spec_id = None
+            currentfile.is_reference = True
+        else:
+            currentfile.workflow_spec_id = workflow_spec_id
+
+    currentfile.date_created = updatefile['date_created']
+    currentfile.type = updatefile['type']
+    currentfile.primary = updatefile['primary']
+    currentfile.content_type = updatefile['content_type']
+    currentfile.primary_process_id = updatefile['primary_process_id']
+    session.add(currentfile)
+    content = WorkflowSyncService.get_remote_file_by_hash(remote, updatefile['md5_hash'])
+    FileService.update_file(currentfile, content, updatefile['type'])
+
+
+def sync_changed_files(remote,workflow_spec_id):
+    """
+    This grabs a list of all files for a workflow_spec that are different between systems,
+    and gets the remote copy of any file that has changed
+
+    We also have a special case for "REFERENCE_FILES" where there is not workflow_spec_id,
+    but all of the files are marked in the database as is_reference - and they need to be
+    handled slightly differently.
+    """
+    # make sure that spec is local before syncing files
+    if workflow_spec_id != 'REFERENCE_FILES':
+        create_or_update_local_spec(remote,workflow_spec_id)
+
 
     changedfiles = get_changed_files(remote,workflow_spec_id,as_df=True)
     if len(changedfiles)==0:
@@ -144,8 +212,7 @@ def sync_changed_files(remote,workflow_spec_id):
     deletefiles = deletefiles.reset_index().to_dict(orient='records')
 
     for delfile in deletefiles:
-        currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
-                                            FileModel.name == delfile['filename']).first()
+        currentfile = file_get(workflow_spec_id,delfile['filename'])
 
         # it is more appropriate to archive the file than delete
         # due to the fact that we might have workflows that are using the
@@ -154,21 +221,7 @@ def sync_changed_files(remote,workflow_spec_id):
         session.add(currentfile)
 
     for updatefile in updatefiles:
-        currentfile = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id,
-                                            FileModel.name == updatefile['filename']).first()
-        if not currentfile:
-            currentfile = FileModel()
-            currentfile.name = updatefile['filename']
-            currentfile.workflow_spec_id = workflow_spec_id
-
-        currentfile.date_created = updatefile['date_created']
-        currentfile.type = updatefile['type']
-        currentfile.primary = updatefile['primary']
-        currentfile.content_type = updatefile['content_type']
-        currentfile.primary_process_id = updatefile['primary_process_id']
-        session.add(currentfile)
-        content = WorkflowSyncService.get_remote_file_by_hash(remote,updatefile['md5_hash'])
-        FileService.update_file(currentfile,content,updatefile['type'])
+        update_or_create_current_file(remote,workflow_spec_id,updatefile)
     session.commit()
     return [x['filename'] for x in updatefiles]
 
@@ -185,6 +238,13 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
     local = get_workflow_spec_files_dataframe(workflow_spec_id).reset_index()
     local['md5_hash'] = local['md5_hash'].astype('str')
     remote_files['md5_hash'] = remote_files['md5_hash'].astype('str')
+    if len(local) == 0:
+        remote_files['new'] = True
+        remote_files['location'] = 'remote'
+        if as_df:
+            return remote_files
+        else:
+            return remote_files.reset_index().to_dict(orient='records')
 
     different = remote_files.merge(local,
                              right_on=['filename','md5_hash'],
@@ -259,8 +319,14 @@ def get_workflow_spec_files_dataframe(workflowid):
     Return a list of all files for a workflow_spec along with last updated date and a
     hash so we can determine file differences for a changed workflow on a box.
     Return a dataframe
+
+    In the special case of "REFERENCE_FILES" we get all of the files that are
+    marked as is_reference
     """
-    x = session.query(FileDataModel).join(FileModel).filter(FileModel.workflow_spec_id==workflowid)
+    if workflowid == 'REFERENCE_FILES':
+        x = session.query(FileDataModel).join(FileModel).filter(FileModel.is_reference == True)
+    else:
+        x = session.query(FileDataModel).join(FileModel).filter(FileModel.workflow_spec_id == workflowid)
     # there might be a cleaner way of getting a data frome from some of the
     # fields in the ORM - but this works OK
     filelist = []
@@ -306,7 +372,10 @@ def get_all_spec_state_dataframe():
                          'md5_hash':file.md5_hash,
                          'filename':file.file_model.name,
                          'date_created':file.date_created})
-    df = pd.DataFrame(filelist)
+    if len(filelist) == 0:
+        df = pd.DataFrame(columns=['file_model_id','workflow_spec_id','md5_hash','filename','date_created'])
+    else:
+        df = pd.DataFrame(filelist)
 
     # If the file list is empty, return an empty data frame
     if df.empty:
