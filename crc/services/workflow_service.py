@@ -159,8 +159,12 @@ class WorkflowService(object):
                 if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
                     continue
 
-            # If there is a default value, set it.
-            if hasattr(field,'default_value') and field.default_value:
+            # A task should only have default_value **or** value expression, not both.
+            if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) and (hasattr(field, 'default_value') and field.default_value):
+                raise ApiError(code='default value and value_expression',
+                               message='This task has both a default_value and value_expression. Please fix this to only have one or the other.')
+            # If we have a default_value or value_expression, try to set the default
+            if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or (hasattr(field, 'default_value') and field.default_value):
                 form_data[field.id] = WorkflowService.get_default_value(field, task)
 
             # If we are only populating required fields, and this isn't required. stop here.
@@ -494,6 +498,9 @@ class WorkflowService(object):
                 task.form = spiff_task.task_spec.form
                 for i, field in enumerate(task.form.fields):
                     task.form.fields[i] = WorkflowService.process_options(spiff_task, field)
+                    # If there is a default value, set it.
+                    if field.id not in task.data and WorkflowService.get_default_value(field, spiff_task) is not None:
+                        task.data[field.id] = WorkflowService.get_default_value(field, spiff_task)
             task.documentation = WorkflowService._process_documentation(spiff_task)
 
         # All ready tasks should have a valid name, and this can be computed for
