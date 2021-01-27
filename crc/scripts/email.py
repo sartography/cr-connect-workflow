@@ -110,6 +110,6 @@ email ("My Subject", "dhf8r@virginia.edu", pi.email)
 
         return rendered, wrapped
 
-    # @staticmethod
-    def get_cr_connect_wrapper(self, email_body):
+    @staticmethod
+    def get_cr_connect_wrapper(email_body):
         return render_template('mail_content_template.html', email_body=email_body, base_url=request.base_url)
