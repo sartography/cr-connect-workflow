@@ -25,8 +25,10 @@ class TestWorkflowSpec(BaseTest):
     def test_add_new_workflow_specification(self):
         self.load_example_data()
         num_before = session.query(WorkflowSpecModel).count()
+        category_id = session.query(WorkflowSpecCategoryModel).first().id
+        category_count = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
         spec = WorkflowSpecModel(id='make_cookies', name='make_cookies', display_name='Cooooookies',
-                                 description='Om nom nom delicious cookies')
+                                 description='Om nom nom delicious cookies', category_id=category_id)
         rv = self.app.post('/v1.0/workflow-specification',
                            headers=self.logged_in_headers(),
                            content_type="application/json",
@@ -36,6 +38,9 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(spec.display_name, db_spec.display_name)
         num_after = session.query(WorkflowSpecModel).count()
         self.assertEqual(num_after, num_before + 1)
+        self.assertEqual(category_count, db_spec.display_order)
+        category_count_after = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
+        self.assertEqual(category_count_after, category_count + 1)
 
     def test_get_workflow_specification(self):
         self.load_example_data()
