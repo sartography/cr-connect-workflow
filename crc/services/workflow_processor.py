@@ -196,10 +196,10 @@ class WorkflowProcessor(object):
         else:
             self.is_latest_spec = False
 
-    @classmethod
-    def reset(cls, workflow_model, clear_data=False):
+    def reset(self, workflow_model, clear_data=False):
         print('WorkflowProcessor: reset: ')
 
+        self.cancel_notify()
         workflow_model.bpmn_workflow_json = None
         if clear_data:
             # Clear form_data from task_events
@@ -209,7 +209,7 @@ class WorkflowProcessor(object):
                 task_event.form_data = {}
                 session.add(task_event)
         session.commit()
-        return cls(workflow_model)
+        return self.__init__(workflow_model)
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
         if workflow_model.bpmn_workflow_json:

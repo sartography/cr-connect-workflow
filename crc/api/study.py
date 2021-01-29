@@ -9,6 +9,7 @@ from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import Study, StudyEvent, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, StudyStatus
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
+from crc.services.workflow_service import WorkflowService
 
 
 def add_study(body):
@@ -63,6 +64,10 @@ def update_study(study_id, body):
 
     session.add(study_model)
     session.commit()
+
+    if status == StudyStatus.abandoned or status == StudyStatus.hold:
+        WorkflowService.process_workflows_for_cancels(study_id)
+
     # Need to reload the full study to return it to the frontend
     study = StudyService.get_study(study_id)
     return StudySchema().dump(study)

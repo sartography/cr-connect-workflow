@@ -54,7 +54,8 @@ class TestLookupService(BaseTest):
 
         # restart the workflow, so it can pick up the changes.
 
-        processor = WorkflowProcessor.reset(workflow)
+        processor = WorkflowProcessor(workflow)
+        processor.reset(workflow)
         workflow = processor.workflow_model
 
         LookupService.lookup(workflow, "sponsor", "sam", limit=10)
