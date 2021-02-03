@@ -24,6 +24,8 @@ def all_specifications():
 
 
 def add_workflow_specification(body):
+    count = session.query(WorkflowSpecModel).filter_by(category_id=body['category_id']).count()
+    body['display_order'] = count
     new_spec: WorkflowSpecModel = WorkflowSpecModelSchema().load(body, session=session)
     session.add(new_spec)
     session.commit()
