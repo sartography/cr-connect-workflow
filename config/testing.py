@@ -27,3 +27,6 @@ ADMIN_UIDS = ['dhf8r']
 print('### USING TESTING CONFIG: ###')
 print('SQLALCHEMY_DATABASE_URI = ', SQLALCHEMY_DATABASE_URI)
 print('TESTING = ', TESTING)
+
+from config.default import DEFAULT_PORT
+SERVER_NAME = f'localhost:{DEFAULT_PORT}'
