@@ -10,6 +10,7 @@ from crc.models.study import StudyModel, WorkflowMetadata
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
+from crc.services.error_service import ValidationErrorService
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
@@ -47,15 +48,16 @@ def validate_workflow_specification(spec_id):
     try:
         WorkflowService.test_spec(spec_id)
     except ApiError as ae:
-        ae.message = "When populating all fields ... " + ae.message
-        errors.append(ae)
+        # ae.message = "When populating all fields ... \n" + ae.message
+        errors.append(('all', ae))
     try:
         # Run the validation twice, the second time, just populate the required fields.
         WorkflowService.test_spec(spec_id, required_only=True)
     except ApiError as ae:
-        ae.message = "When populating only required fields ... " + ae.message
-        errors.append(ae)
-    return ApiErrorSchema(many=True).dump(errors)
+        # ae.message = "When populating only required fields ... \n" + ae.message
+        errors.append(('required', ae))
+    interpreted_errors = ValidationErrorService.interpret_validation_errors(errors)
+    return ApiErrorSchema(many=True).dump(interpreted_errors)
 
 
 def update_workflow_specification(spec_id, body):
