@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1xiske1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_TestBooleanDefault" name="Test Boolean Default" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1x41riu</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_SelectBoolean" name="Boolean Select" camunda:formKey="PickOne">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="pick_one" label="Pick One" type="boolean">
+            <camunda:properties>
+              <camunda:property id="value_expression" value="yes_no" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0zp5mss</bpmn:incoming>
+      <bpmn:outgoing>Flow_0m31ypa</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0m31ypa" sourceRef="Activity_SelectBoolean" targetRef="Activity_GoodBye" />
+    <bpmn:manualTask id="Activity_GoodBye" name="Good Bye">
+      <bpmn:documentation>&lt;H1&gt;Good Bye&lt;/H1&gt;
+&lt;div&gt;&lt;span&gt;Pick One: {% if pick_one %}{{ pick_one}}{% endif %} &lt;/span&gt;&lt;/div&gt;
+</bpmn:documentation>
+      <bpmn:incoming>Flow_0m31ypa</bpmn:incoming>
+      <bpmn:outgoing>Flow_0f3gndz</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_0rgpb6o">
+      <bpmn:incoming>Flow_0f3gndz</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0f3gndz" sourceRef="Activity_GoodBye" targetRef="Event_0rgpb6o" />
+    <bpmn:sequenceFlow id="Flow_1x41riu" sourceRef="StartEvent_1" targetRef="Activity_Hello" />
+    <bpmn:manualTask id="Activity_Hello" name="Hello">
+      <bpmn:documentation>&lt;H1&gt;Hello&lt;/H1&gt;</bpmn:documentation>
+      <bpmn:incoming>Flow_1x41riu</bpmn:incoming>
+      <bpmn:outgoing>Flow_1i32jb7</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_1i32jb7" sourceRef="Activity_Hello" targetRef="Activity_PreData" />
+    <bpmn:sequenceFlow id="Flow_0zp5mss" sourceRef="Activity_PreData" targetRef="Activity_SelectBoolean" />
+    <bpmn:scriptTask id="Activity_PreData" name="Pre Data">
+      <bpmn:incoming>Flow_1i32jb7</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zp5mss</bpmn:outgoing>
+      <bpmn:script>if not 'yes_no' in globals():
+    yes_no = False</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_TestBooleanDefault">
+      <bpmndi:BPMNEdge id="Flow_0f3gndz_di" bpmnElement="Flow_0f3gndz">
+        <di:waypoint x="820" y="117" />
+        <di:waypoint x="882" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0m31ypa_di" bpmnElement="Flow_0m31ypa">
+        <di:waypoint x="662" y="117" />
+        <di:waypoint x="720" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zp5mss_di" bpmnElement="Flow_0zp5mss">
+        <di:waypoint x="500" y="117" />
+        <di:waypoint x="562" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1i32jb7_di" bpmnElement="Flow_1i32jb7">
+        <di:waypoint x="340" y="117" />
+        <di:waypoint x="400" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1x41riu_di" bpmnElement="Flow_1x41riu">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="240" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_0vujv1w_di" bpmnElement="Activity_SelectBoolean">
+        <dc:Bounds x="562" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_13n6p58_di" bpmnElement="Activity_GoodBye">
+        <dc:Bounds x="720" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0rgpb6o_di" bpmnElement="Event_0rgpb6o">
+        <dc:Bounds x="882" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0vu3ozg_di" bpmnElement="Activity_Hello">
+        <dc:Bounds x="240" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ug5gxt_di" bpmnElement="Activity_PreData">
+        <dc:Bounds x="400" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
