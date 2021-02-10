@@ -365,6 +365,7 @@ class WorkflowService(object):
 
 
         spec = db.session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
+        is_review = FileService.is_workflow_review(processor.workflow_spec_id)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
             status=processor.get_status(),
@@ -376,6 +377,7 @@ class WorkflowService(object):
             total_tasks=len(navigation),
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
+            is_review=is_review,
             title=spec.display_name
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.

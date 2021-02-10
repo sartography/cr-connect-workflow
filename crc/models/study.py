@@ -13,6 +13,7 @@ from crc.models.file import FileModel, SimpleFileSchema, FileSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
     WorkflowModel
+from crc.services.file_service import FileService
 from crc.services.user_service import UserService
 
 
@@ -78,7 +79,7 @@ class WorkflowMetadata(object):
     def __init__(self, id, name = None, display_name = None, description = None, spec_version = None,
                  category_id  = None, category_display_name  = None, state: WorkflowState  = None,
                  status: WorkflowStatus  = None, total_tasks  = None, completed_tasks  = None,
-                 display_order = None):
+                 is_review=None,display_order = None):
         self.id = id
         self.name = name
         self.display_name = display_name
@@ -90,11 +91,13 @@ class WorkflowMetadata(object):
         self.status = status
         self.total_tasks = total_tasks
         self.completed_tasks = completed_tasks
+        self.is_review = is_review
         self.display_order = display_order
 
 
     @classmethod
     def from_workflow(cls, workflow: WorkflowModel):
+        is_review = FileService.is_workflow_review(workflow.workflow_spec_id)
         instance = cls(
             id=workflow.id,
             name=workflow.workflow_spec.name,
@@ -107,6 +110,7 @@ class WorkflowMetadata(object):
             status=workflow.status,
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,
+            is_review=is_review,
             display_order=workflow.workflow_spec.display_order
         )
         return instance
@@ -119,7 +123,7 @@ class WorkflowMetadataSchema(ma.Schema):
         model = WorkflowMetadata
         additional = ["id", "name", "display_name", "description",
                  "total_tasks", "completed_tasks", "display_order",
-                      "category_id", "category_display_name"]
+                      "category_id", "is_review", "category_display_name"]
         unknown = INCLUDE
 
 
@@ -144,9 +148,13 @@ class Study(object):
     def __init__(self, title, last_updated, primary_investigator_id, user_uid,
                  id=None, status=None, irb_status=None, comment="",
                  sponsor="", hsr_number="", ind_number="", categories=[],
-                 files=[], approvals=[], enrollment_date=None, events_history=[], **argsv):
+                 files=[], approvals=[], enrollment_date=None, events_history=[],
+                 last_activity_user="",last_activity_date =None,create_user_display="", **argsv):
         self.id = id
         self.user_uid = user_uid
+        self.create_user_display = create_user_display
+        self.last_activity_date = last_activity_date
+        self.last_activity_user = last_activity_user
         self.title = title
         self.last_updated = last_updated
         self.status = status
@@ -227,6 +235,7 @@ class StudySchema(ma.Schema):
         model = Study
         additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
                       "sponsor", "ind_number", "approvals", "files", "enrollment_date",
+                      "create_user_display", "last_activity_date","last_activity_user",
                       "events_history"]
         unknown = INCLUDE
 

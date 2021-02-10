@@ -23,7 +23,7 @@ from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
-
+from SpiffWorkflow import Task as SpiffTask
 
 class StudyService(object):
     """Provides common tools for working with a Study"""
@@ -57,6 +57,12 @@ class StudyService(object):
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
 
         study = Study.from_model(study_model)
+        study.create_user_display = LdapService.user_info(study.user_uid).display_name
+        last_event: TaskEventModel = session.query(TaskEventModel)\
+            .filter_by(study_id=study_id,action='COMPLETE')\
+            .order_by(TaskEventModel.date.desc()).first()
+        study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
+        study.last_activity_date = last_event.date
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
         study.approvals = ApprovalService.get_approvals_for_study(study.id)
