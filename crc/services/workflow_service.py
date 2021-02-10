@@ -256,6 +256,8 @@ class WorkflowService(object):
             return None
 
         if field.type == "enum" and not has_lookup:
+            if isinstance(default, str) and default.strip() == '':
+                return
             default_option = next((obj for obj in field.options if obj.id == default), None)
             if not default_option:
                 raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
