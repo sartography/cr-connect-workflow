@@ -44,18 +44,18 @@ def get_workflow_specification(spec_id):
 
 
 def validate_workflow_specification(spec_id):
-    errors = []
+    errors = {}
     try:
         WorkflowService.test_spec(spec_id)
     except ApiError as ae:
         # ae.message = "When populating all fields ... \n" + ae.message
-        errors.append(('all', ae))
+        errors['all'] = ae
     try:
         # Run the validation twice, the second time, just populate the required fields.
         WorkflowService.test_spec(spec_id, required_only=True)
     except ApiError as ae:
         # ae.message = "When populating only required fields ... \n" + ae.message
-        errors.append(('required', ae))
+        errors['required'] = ae
     interpreted_errors = ValidationErrorService.interpret_validation_errors(errors)
     return ApiErrorSchema(many=True).dump(interpreted_errors)
 
