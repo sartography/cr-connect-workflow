@@ -86,8 +86,6 @@ flask db upgrade
 flask load-example-data (this creates some basic workflows for you to use)
 ```
 
-
-
 2. `Protocol Builder Mock`: We created a mock of the Protocol Builder, a critical service at UVA that is a deep
 dependency for CR-Connect.  You can find the details here: [Protocol Builder Mock](https://github.com/sartography/protocol-builder-mock)
 Be sure this is up and running on Port 5002 or you will encounter errors when the system starts up.
@@ -97,10 +95,9 @@ and primary investigator to dhf8r - which is a user in the mock ldap service, an
 fire up the interface.
 
 ### Configuration
-1. `instance/config.py`: This will 
-
-
-
+1. `instance/config.py`: This will configure the application for your local instance, overriding the configuration
+in config/default
+ 
 
 ### Project Initialization
 1. Clone this repository.
