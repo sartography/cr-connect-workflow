@@ -166,6 +166,8 @@ class WorkflowService(object):
             # If we have a default_value or value_expression, try to set the default
             if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or (hasattr(field, 'default_value') and field.default_value):
                 form_data[field.id] = WorkflowService.get_default_value(field, task)
+                if not field.has_property(Task.FIELD_PROP_REPEAT):
+                    continue
 
             # If we are only populating required fields, and this isn't required. stop here.
             if required_only:
