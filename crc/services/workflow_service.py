@@ -322,7 +322,11 @@ class WorkflowService(object):
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
                 options = [{"value": d.value, "label": d.label, "data": d.data} for d in data]
-                return random.choice(options)
+                if len(options) > 0:
+                    return random.choice(options)
+                else:
+                    raise ApiError.from_task("invalid enum", "You specified an enumeration field (%s),"
+                                                             " with no options" % field.id, task)
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
