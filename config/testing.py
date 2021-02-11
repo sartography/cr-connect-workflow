@@ -27,3 +27,7 @@ ADMIN_UIDS = ['dhf8r']
 print('### USING TESTING CONFIG: ###')
 print('SQLALCHEMY_DATABASE_URI = ', SQLALCHEMY_DATABASE_URI)
 print('TESTING = ', TESTING)
+
+#Use the mock ldap.
+LDAP_URL = 'mock'
+
