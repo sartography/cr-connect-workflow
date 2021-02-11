@@ -154,8 +154,14 @@ class WorkflowService(object):
                 result = WorkflowService.evaluate_property(Task.FIELD_PROP_LABEL_EXPRESSION, field, task)
                 field.label = result
 
-            # If the field is hidden, it should not produce a value.
-            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
+            # If a field is hidden and required, it must have a default value or value_expression
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
+                if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or not (hasattr(field, 'default_value')):
+                    raise ApiError(code='hidden and required field missing default',
+                                   message='Fields that are required but can be hidden must have either a default value or a value_expression')
+
+            # If the field is hidden and not required, it should not produce a value.
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and not field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
                 if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
                     continue
 
