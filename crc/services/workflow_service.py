@@ -251,7 +251,9 @@ class WorkflowService(object):
             default = result
 
         # If no default exists, return None
-        if not default: return None
+        # Note: if default is False, we don't want to execute this code
+        if default is None:
+            return None
 
         if field.type == "enum" and not has_lookup:
             default_option = next((obj for obj in field.options if obj.id == default), None)
@@ -278,7 +280,10 @@ class WorkflowService(object):
         elif field.type == "long":
             return int(default)
         elif field.type == 'boolean':
-            return bool(default)
+            default = str(default).lower()
+            if default == 'true' or default == 't':
+                return True
+            return False
         else:
             return default
 
@@ -704,5 +709,10 @@ class WorkflowService(object):
 
         return data
 
-
-
+    @staticmethod
+    def process_workflows_for_cancels(study_id):
+        workflows = db.session.query(WorkflowModel).filter_by(study_id=study_id).all()
+        for workflow in workflows:
+            if workflow.status == WorkflowStatus.user_input_required or workflow.status == WorkflowStatus.waiting:
+                processor = WorkflowProcessor(workflow)
+                processor.reset(workflow)

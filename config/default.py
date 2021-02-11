@@ -15,7 +15,8 @@ JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values 
 API_TOKEN = environ.get('API_TOKEN', default = 'af95596f327c9ecc007b60414fc84b61')
 
 NAME = "CR Connect Workflow"
-FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default="5000")
+DEFAULT_PORT = "5000"
+FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default=DEFAULT_PORT)
 CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default="localhost:4200, localhost:5002"))
 TESTING = environ.get('TESTING', default="false") == "true"
 PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")

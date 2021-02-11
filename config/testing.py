@@ -31,3 +31,5 @@ print('TESTING = ', TESTING)
 #Use the mock ldap.
 LDAP_URL = 'mock'
 
+from config.default import DEFAULT_PORT
+SERVER_NAME = f'localhost:{DEFAULT_PORT}'
