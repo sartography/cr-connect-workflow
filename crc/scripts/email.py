@@ -26,7 +26,7 @@ Example:
 email ("My Subject", "dhf8r@virginia.edu", pi.email)
 """
 
-    def do_task_validate_only(self, task, *args, **kwargs):
+    def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         self.get_subject(args)
         self.get_email_recipients(task, args)
         self.get_content(task)

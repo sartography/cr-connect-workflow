@@ -1,8 +1,18 @@
 from tests.base_test import BaseTest
 from crc import mail
+import json
 
 
 class TestEmailScript(BaseTest):
+
+    def test_email_script_validation(self):
+        # This validates scripts.email.do_task_validate_only
+        # It also tests that we don't overwrite the default email_address with random text during validation
+        # Otherwise json would have an error about parsing the email address
+        self.load_example_data()
+        spec_model = self.load_test_spec('email_script')
+        rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
+        self.assertEqual([], rv.json)
 
     def test_email_script(self):
         with mail.record_messages() as outbox:
@@ -12,6 +22,7 @@ class TestEmailScript(BaseTest):
             first_task = self.get_workflow_api(workflow).next_task
 
             workflow = self.get_workflow_api(workflow)
+            self.assertEqual('dan@sartography.com', workflow.next_task.data['email_address'])
             self.complete_form(workflow, first_task, {'email_address': 'test@example.com'})
 
             self.assertEqual(1, len(outbox))
