@@ -214,7 +214,12 @@ def _handle_login(user_info: LdapModel, redirect_url=None):
     g.user = user
 
     # Return the frontend auth callback URL, with auth token appended.
-    auth_token = user.encode_auth_token()#.decode()
+   auth_token = user.encode_auth_token()
+    if type(auth_token) != str:
+         try:
+            auth_token = auth_token.decode()
+         except:
+            raise(ValueError("ValueError Auth Token not understood"))
     g.token = auth_token
 
     if redirect_url is not None:
