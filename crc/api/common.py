@@ -68,7 +68,7 @@ class ApiError(Exception):
 class ApiErrorSchema(ma.Schema):
     class Meta:
         fields = ("code", "message", "workflow_name", "file_name", "task_name", "task_id",
-                  "task_data", "task_user")
+                  "task_data", "task_user", "hint")
 
 
 @app.errorhandler(ApiError)
