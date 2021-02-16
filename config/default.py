@@ -60,8 +60,12 @@ PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL +
 PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
 PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
 PB_SPONSORS_URL = environ.get('PB_SPONSORS_URL', default=PB_BASE_URL + "sponsors?studyid=%i")
+
+# Ldap Configuration
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
 LDAP_TIMEOUT_SEC = int(environ.get('LDAP_TIMEOUT_SEC', default=1))
+LDAP_USER = environ.get('LDAP_USER', default='')
+LDAP_PASS = environ.get('LDAP_PASS', default='')
 
 # Github settings
 GITHUB_TOKEN = environ.get('GITHUB_TOKEN', None)

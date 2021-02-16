@@ -154,8 +154,14 @@ class WorkflowService(object):
                 result = WorkflowService.evaluate_property(Task.FIELD_PROP_LABEL_EXPRESSION, field, task)
                 field.label = result
 
-            # If the field is hidden, it should not produce a value.
-            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
+            # If a field is hidden and required, it must have a default value or value_expression
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
+                if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or not (hasattr(field, 'default_value')):
+                    raise ApiError(code='hidden and required field missing default',
+                                   message='Fields that are required but can be hidden must have either a default value or a value_expression')
+
+            # If the field is hidden and not required, it should not produce a value.
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and not field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
                 if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
                     continue
 
@@ -166,6 +172,8 @@ class WorkflowService(object):
             # If we have a default_value or value_expression, try to set the default
             if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or (hasattr(field, 'default_value') and field.default_value):
                 form_data[field.id] = WorkflowService.get_default_value(field, task)
+                if not field.has_property(Task.FIELD_PROP_REPEAT):
+                    continue
 
             # If we are only populating required fields, and this isn't required. stop here.
             if required_only:
@@ -256,6 +264,8 @@ class WorkflowService(object):
             return None
 
         if field.type == "enum" and not has_lookup:
+            if isinstance(default, str) and default.strip() == '':
+                return
             default_option = next((obj for obj in field.options if obj.id == default), None)
             if not default_option:
                 raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
@@ -316,7 +326,11 @@ class WorkflowService(object):
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
                 options = [{"value": d.value, "label": d.label, "data": d.data} for d in data]
-                return random.choice(options)
+                if len(options) > 0:
+                    return random.choice(options)
+                else:
+                    raise ApiError.from_task("invalid enum", "You specified an enumeration field (%s),"
+                                                             " with no options" % field.id, task)
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
