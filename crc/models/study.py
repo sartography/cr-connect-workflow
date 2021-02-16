@@ -219,14 +219,13 @@ class StudySchema(ma.Schema):
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
-    approvals = fields.List(fields.Nested('ApprovalSchema'), dump_only=True)
     enrollment_date = fields.Date(allow_none=True)
     events_history = fields.List(fields.Nested('StudyEventSchema'), dump_only=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
-                      "sponsor", "ind_number", "approvals", "files", "enrollment_date",
+                      "sponsor", "ind_number", "files", "enrollment_date",
                       "events_history"]
         unknown = INCLUDE
 
