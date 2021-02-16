@@ -61,8 +61,12 @@ class StudyService(object):
         last_event: TaskEventModel = session.query(TaskEventModel)\
             .filter_by(study_id=study_id,action='COMPLETE')\
             .order_by(TaskEventModel.date.desc()).first()
-        study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
-        study.last_activity_date = last_event.date
+        if last_event is None:
+            study.last_activity_user = 'Not Started'
+            study.last_activity_date = ""
+        else:
+            study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
+            study.last_activity_date = last_event.date
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
         study.approvals = ApprovalService.get_approvals_for_study(study.id)
