@@ -74,6 +74,8 @@ class StudyService(object):
         # master spec and runs it.  Don't execute this for Abandoned studies, as
         # we don't have the information to process them.
         if study.status != StudyStatus.abandoned:
+            # this line is taking 99% of the time that is used in get_study.
+            # see ticket #196
             status = StudyService.__get_study_status(study_model)
             study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
