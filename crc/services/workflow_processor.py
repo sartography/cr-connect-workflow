@@ -22,10 +22,12 @@ from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel, FileType
 from crc.models.task_event import TaskEventModel
+from crc.models.user import UserModelSchema
 from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecDependencyFile
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc import app
+from crc.services.user_service import UserService
 
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
@@ -167,9 +169,17 @@ class WorkflowProcessor(object):
             spec = None
 
         self.workflow_spec_id = workflow_model.workflow_spec_id
+
         try:
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec, validate_only)
             self.bpmn_workflow.script_engine = self._script_engine
+
+            if UserService.has_user():
+                current_user = UserService.current_user(allow_admin_impersonate=True)
+                current_user_data = UserModelSchema().dump(current_user)
+                tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
+                for task in tasks:
+                    task.data['current_user'] = current_user_data
 
             if self.WORKFLOW_ID_KEY not in self.bpmn_workflow.data:
                 if not workflow_model.id:
