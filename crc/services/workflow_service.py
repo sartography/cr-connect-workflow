@@ -512,9 +512,6 @@ class WorkflowService(object):
         # not be a previously completed MI Task.
         if add_docs_and_forms:
             task.data = spiff_task.data
-            if UserService.has_user():
-                current_user = UserService.current_user(allow_admin_impersonate=True)
-                task.data['current_user'] = UserModelSchema().dump(current_user)
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
                 for i, field in enumerate(task.form.fields):
