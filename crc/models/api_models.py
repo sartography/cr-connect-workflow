@@ -200,7 +200,7 @@ class WorkflowApiSchema(ma.Schema):
     def make_workflow(self, data, **kwargs):
         keys = ['id', 'status', 'next_task', 'navigation',
                 'workflow_spec_id', 'spec_version', 'is_latest_spec', "total_tasks", "completed_tasks",
-                "last_updated", "title"]
+                "last_updated", "is_review", "title"]
         filtered_fields = {key: data[key] for key in keys}
         filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])
         return WorkflowApi(**filtered_fields)
