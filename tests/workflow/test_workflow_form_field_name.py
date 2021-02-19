@@ -10,5 +10,5 @@ class TestFormFieldName(BaseTest):
 
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(json_data[0]['message'],
-                         'When populating all fields ... Invalid Field name: "user-title".  A field ID must begin '
+                         'When populating all fields ... \nInvalid Field name: "user-title".  A field ID must begin '
                          'with a letter, and can only contain letters, numbers, and "_"')
