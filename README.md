@@ -141,6 +141,26 @@ additional edits required.)
 ## Documentation
 Additional Documentation is available on [ReadTheDocs](https://cr-connect-workflow.readthedocs.io/en/latest/#)
 
+## Manual Synch
+You can move all the BPMN diagrams from one system to another (upgrading and replacing as needed)  This is how
+we will transfer files from staging to production. 
+Eventually we will connect this into the front end code for the BPMN Editor, but for now, you can do so by:
+
+1. Run flask clear-db to clear out your local database if desried (this isn't reuired, but will give you a clean slate 
+to get an exact replica of production/testing whatever)
+
+2. Log into the Swagger UI for the system you want to move all files to (this could be a local development machine)
+
+3. Set the API Token under authentication.  This token must match what is on the testing server.  This might
+match what is in the default config, at least, that will work for staging.
+
+4. Run the workflow_synch/pullall in swagger, using the url for the site you want to pull from:
+   something like "https://testing.crconnect.uvadcos.io/api"
+
+5. Be patient.  It may take a minute or more to pull everything down.
+
+
+
 ### Additional Reading
 
 1. [BPMN](https://www.process.st/bpmn-tutorial/)  Is the tool we are using to create diagrams

@@ -13,7 +13,6 @@ from sqlalchemy import Sequence
 
 from crc import app, db, session
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
-from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudyStatus

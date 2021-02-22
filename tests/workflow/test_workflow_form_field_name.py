@@ -12,3 +12,14 @@ class TestFormFieldName(BaseTest):
         self.assertEqual(json_data[0]['message'],
                          'When populating all fields ... Invalid Field name: "user-title".  A field ID must begin '
                          'with a letter, and can only contain letters, numbers, and "_"')
+
+    def test_form_field_name_with_period(self):
+        workflow = self.create_workflow('workflow_form_field_name')
+
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
+        self.complete_form(workflow_api, first_task, {})
+
+        workflow_api = self.get_workflow_api(workflow)
+        second_task = workflow_api.next_task
+        self.assertEqual('me.name', second_task.form['fields'][1]['id'])
