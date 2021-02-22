@@ -12,6 +12,8 @@ class TestWorkflowHiddenRequiredField(BaseTest):
 
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(json_data[0]['code'], 'hidden and required field missing default')
+        self.assertIn('task_id', json_data[0])
+        self.assertIn('task_name', json_data[0])
 
     def test_default_used(self):
         # If a field is hidden and required, make sure we use the default value
