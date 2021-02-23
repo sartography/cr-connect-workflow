@@ -21,7 +21,7 @@ from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
-
+from SpiffWorkflow import Task as SpiffTask
 
 class StudyService(object):
     """Provides common tools for working with a Study"""
@@ -55,6 +55,16 @@ class StudyService(object):
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
 
         study = Study.from_model(study_model)
+        study.create_user_display = LdapService.user_info(study.user_uid).display_name
+        last_event: TaskEventModel = session.query(TaskEventModel)\
+            .filter_by(study_id=study_id,action='COMPLETE')\
+            .order_by(TaskEventModel.date.desc()).first()
+        if last_event is None:
+            study.last_activity_user = 'Not Started'
+            study.last_activity_date = ""
+        else:
+            study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
+            study.last_activity_date = last_event.date
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
         files = FileService.get_files_for_study(study.id)
@@ -65,6 +75,8 @@ class StudyService(object):
         # master spec and runs it.  Don't execute this for Abandoned studies, as
         # we don't have the information to process them.
         if study.status != StudyStatus.abandoned:
+            # this line is taking 99% of the time that is used in get_study.
+            # see ticket #196
             status = StudyService.__get_study_status(study_model)
             study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
