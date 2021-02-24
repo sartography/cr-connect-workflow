@@ -1,7 +1,11 @@
+import re
+
 generic_message = """Workflow validation failed. For more information about the error, see below."""
 
 known_errors = {'Error is Non-default exclusive outgoing sequence flow  without condition':
-                    {'message': 'Missing condition', 'hint': 'Add a Condition Type to your gateway path.'}}
+                    {'message': 'Missing condition', 'hint': 'Add a Condition Type to your gateway path.'},
+                '^Could not set task title on task (\w+) with \'(.*)\' property because \\1: Error evaluating expression \'(.*)\', "\'Box\' object has no attribute \'\\2\'"$':
+                    {'hint': 'You are overriding the title for task xxx, using the display_name extension, and it is causing an error.  Look under the extensions tab for the task, and check the value you are setting for the display_name'}}
 
 
 class ValidationErrorService(object):
