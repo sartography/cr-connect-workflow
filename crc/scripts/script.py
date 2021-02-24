@@ -35,8 +35,17 @@ class Script(object):
         updating the task data.
         """
         def make_closure(subclass,task,study_id,workflow_id):
+            """
+            yes - this is black magic
+            Essentially, we want to build a list of all of the submodules (i.e. email, user_data_get, etc)
+            and a function that is assocated with them.
+            This basically creates an Instance of the class and returns a function that calls do_task
+            on the instance of that class.
+            the next for x in range, then grabs the name of the module and associates it with the function
+            that we created.
+            """
             instance = subclass()
-            return lambda *a : subclass.do_task(instance,task,study_id,workflow_id,*a)
+            return lambda *ar,**kw: subclass.do_task(instance,task,study_id,workflow_id,*ar,**kw)
         execlist = {}
         subclasses = Script.get_all_subclasses()
         for x in range(len(subclasses)):
