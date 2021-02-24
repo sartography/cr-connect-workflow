@@ -158,7 +158,9 @@ class WorkflowService(object):
             if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
                 if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or not (hasattr(field, 'default_value')):
                     raise ApiError(code='hidden and required field missing default',
-                                   message='Fields that are required but can be hidden must have either a default value or a value_expression')
+                                   message='Fields that are required but can be hidden must have either a default value or a value_expression',
+                                   task_id='task.id',
+                                   task_name=task.get_name())
 
             # If the field is hidden and not required, it should not produce a value.
             if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and not field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
@@ -212,7 +214,7 @@ class WorkflowService(object):
         if not id[0].isalpha():
             return False
         for char in id[1:len(id)]:
-            if char.isalnum() or char == '_':
+            if char.isalnum() or char == '_' or char == '.':
                 pass
             else:
                 return False
@@ -379,6 +381,7 @@ class WorkflowService(object):
 
 
         spec = db.session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
+        is_review = FileService.is_workflow_review(processor.workflow_spec_id)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
             status=processor.get_status(),
@@ -390,6 +393,7 @@ class WorkflowService(object):
             total_tasks=len(navigation),
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
+            is_review=is_review,
             title=spec.display_name
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.

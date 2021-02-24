@@ -100,9 +100,6 @@ class TestStudyService(BaseTest):
         self.assertEqual(1, workflow.completed_tasks)
 
         # Get approvals
-        approvals = StudyService.get_approvals(studies[0].id)
-        self.assertGreater(len(approvals), 0)
-        self.assertIsNotNone(approvals[0]['display_order'])
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_get_required_docs(self, mock_docs):

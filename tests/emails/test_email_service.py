@@ -1,7 +1,6 @@
 from tests.base_test import BaseTest
 
 from crc import session
-from crc.models.approval import ApprovalModel, ApprovalStatus
 from crc.models.email import EmailModel
 from crc.services.email_service import EmailService
 

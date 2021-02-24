@@ -9,7 +9,6 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
 from crc.api.common import ApiError
-from crc.models.approval import ApprovalFile, ApprovalModel
 from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, LookupFileModel, LookupDataModel
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
@@ -18,12 +17,11 @@ from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowM
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
-from crc.services.approval_service import ApprovalService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
-
+from SpiffWorkflow import Task as SpiffTask
 
 class StudyService(object):
     """Provides common tools for working with a Study"""
@@ -57,9 +55,18 @@ class StudyService(object):
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
 
         study = Study.from_model(study_model)
+        study.create_user_display = LdapService.user_info(study.user_uid).display_name
+        last_event: TaskEventModel = session.query(TaskEventModel)\
+            .filter_by(study_id=study_id,action='COMPLETE')\
+            .order_by(TaskEventModel.date.desc()).first()
+        if last_event is None:
+            study.last_activity_user = 'Not Started'
+            study.last_activity_date = ""
+        else:
+            study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
+            study.last_activity_date = last_event.date
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService.__get_workflow_metas(study_id)
-        study.approvals = ApprovalService.get_approvals_for_study(study.id)
         files = FileService.get_files_for_study(study.id)
         files = (File.from_models(model, FileService.get_file_data(model.id),
                                   FileService.get_doc_dictionary()) for model in files)
@@ -68,6 +75,8 @@ class StudyService(object):
         # master spec and runs it.  Don't execute this for Abandoned studies, as
         # we don't have the information to process them.
         if study.status != StudyStatus.abandoned:
+            # this line is taking 99% of the time that is used in get_study.
+            # see ticket #196
             status = StudyService.__get_study_status(study_model)
             study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
@@ -210,10 +219,6 @@ class StudyService(object):
         session.query(WorkflowSpecDependencyFile).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
         session.query(FileModel).filter_by(workflow_id=workflow_id).update({'archived': True, 'workflow_id': None})
 
-        # Todo:  Remove approvals completely.
-        session.query(ApprovalFile).filter(ApprovalModel.workflow_id == workflow_id).delete(synchronize_session='fetch')
-        session.query(ApprovalModel).filter_by(workflow_id=workflow.id).delete()
-
         session.delete(workflow)
         session.commit()
 
@@ -226,32 +231,6 @@ class StudyService(object):
         for cat_model in cat_models:
             categories.append(Category(cat_model))
         return categories
-
-    @staticmethod
-    def get_approvals(study_id):
-        """Returns a list of non-hidden approval workflows."""
-        study = StudyService.get_study(study_id)
-        cat = next(c for c in study.categories if c.name == 'approvals')
-
-        approvals = []
-        for wf in cat.workflows:
-            if wf.state is WorkflowState.hidden:
-                continue
-
-            workflow = db.session.query(WorkflowModel).filter_by(id=wf.id).first()
-            approvals.append({
-                'study_id': study_id,
-                'workflow_id': wf.id,
-                'display_name': wf.display_name,
-                'display_order': wf.display_order or 0,
-                'name': wf.name,
-                'state': wf.state.value,
-                'status': wf.status.value,
-                'workflow_spec_id': workflow.workflow_spec_id,
-            })
-
-        approvals.sort(key=lambda k: k['display_order'])
-        return approvals
 
     @staticmethod
     def get_documents_status(study_id):

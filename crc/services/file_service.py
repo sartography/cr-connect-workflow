@@ -58,6 +58,13 @@ class FileService(object):
         return code in doc_dict
 
     @staticmethod
+    def is_workflow_review(workflow_spec_id):
+        files = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id).all()
+        review = any([f.is_review for f in files])
+        return review
+
+
+    @staticmethod
     def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
         """Create a new file and associate it with the workflow
         Please note that the irb_doc_code MUST be a known file in the irb_documents.xslx reference document."""
@@ -164,6 +171,7 @@ class FileService(object):
             try:
                 bpmn: etree.Element = etree.fromstring(binary_data)
                 file_model.primary_process_id = FileService.get_process_id(bpmn)
+                file_model.is_review = FileService.has_swimlane(bpmn)
             except XMLSyntaxError as xse:
                 raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_model.name)
 
@@ -176,6 +184,19 @@ class FileService(object):
         session.flush()  # Assure the id is set on the model before returning it.
 
         return file_model
+
+    @staticmethod
+    def has_swimlane(et_root: etree.Element):
+        """
+        Look through XML and determine if there are any swimlanes present that have a label.
+        """
+        elements = et_root.xpath('//bpmn:lane',
+                                  namespaces={'bpmn':'http://www.omg.org/spec/BPMN/20100524/MODEL'})
+        retval = False
+        for el in elements:
+            if el.get('name'):
+                retval = True
+        return retval
 
     @staticmethod
     def get_process_id(et_root: etree.Element):

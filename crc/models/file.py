@@ -85,6 +85,7 @@ class FileModel(db.Model):
     # A request was made to delete the file, but we can't because there are
     # active approvals or running workflows that depend on it.  So we archive
     # it instead, hide it in the interface.
+    is_review = db.Column(db.Boolean, default=False, nullable=True)
     archived = db.Column(db.Boolean, default=False, nullable=False)
 
 class File(object):
