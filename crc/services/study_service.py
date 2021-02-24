@@ -107,7 +107,7 @@ class StudyService(object):
         person = db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id)&(
                 StudyAssociated.uid == uid))
         if person:
-            newAssociate = {'uid',person.uid}
+            newAssociate = {'uid':person.uid}
             newAssociate['role'] = person.role
             newAssociate['send_email'] = person.send_email
             newAssociate['access'] = person.access
@@ -129,7 +129,7 @@ class StudyService(object):
         people_list = [{'uid':ownerid,'role':'owner','send_email':True,'access':True}]
         people = db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id)
         for person in people:
-            newAssociate = {'uid',person.uid}
+            newAssociate = {'uid':person.uid}
             newAssociate['role'] = person.role
             newAssociate['send_email'] = person.send_email
             newAssociate['access'] = person.access
@@ -165,12 +165,13 @@ class StudyService(object):
         db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id).delete()
         for person in associates:
             newAssociate = StudyAssociated()
+            newAssociate.study_id = study_id
             newAssociate.uid = person['uid']
             newAssociate.role = person.get('role', None)
             newAssociate.send_email = person.get('send_email', False)
             newAssociate.access = person.get('access',False)
-            db.session.add(newAssociate)
-        db.commit()
+            session.add(newAssociate)
+        session.commit()
 
     @staticmethod
     def update_study_associate(study_id=None,uid=None,role="",send_email=False,access=False):
@@ -191,13 +192,14 @@ class StudyService(object):
                                                                                          uid) ).delete()
 
         newAssociate = StudyAssociated()
+        newAssociate.study_id = study_id
         newAssociate.uid = uid
         newAssociate.role = role
         newAssociate.send_email = send_email
         newAssociate.access = access
-        db.session.add(newAssociate)
-        db.commit()
-        return true
+        session.add(newAssociate)
+        session.commit()
+        return True
 
 
     @staticmethod

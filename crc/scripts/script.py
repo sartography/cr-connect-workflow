@@ -68,7 +68,7 @@ class Script(object):
 
         def make_closure_validate(subclass,task,study_id,workflow_id):
             instance = subclass()
-            return lambda *a : subclass.do_task_validate_only(instance,task,study_id,workflow_id,*a)
+            return lambda *a, **b: subclass.do_task_validate_only(instance,task,study_id,workflow_id,*a,**b)
         execlist = {}
         subclasses = Script.get_all_subclasses()
         for x in range(len(subclasses)):
