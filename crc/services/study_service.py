@@ -29,7 +29,7 @@ class StudyService(object):
     @staticmethod
     def get_studies_for_user(user):
         """Returns a list of all studies for the given user."""
-        associated = session.query(StudyAssociated).filter_by(uid=user.uid).all()
+        associated = session.query(StudyAssociated).filter_by(uid=user.uid,access=True).all()
         associated_studies = [x.study_id for x in associated]
         db_studies = session.query(StudyModel).filter((StudyModel.user_uid==user.uid)|
                                                       (StudyModel.id.in_(associated_studies))).all()

@@ -1,12 +1,15 @@
+import json
 from unittest.mock import patch
 import flask
 
 from crc.api.common import ApiError
+from crc.services.user_service import UserService
 from tests.base_test import BaseTest
 
 from crc import session, app
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
+from crc.api.study import user_studies
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
@@ -121,6 +124,7 @@ class TestSudySponsorsScript(BaseTest):
         self.assertEqual(len(tasks),1)
         users = WorkflowService.get_users_assigned_to_task(processor,tasks[0])
         self.assertFalse('cah3us' in users)
+        self.assertFalse('lje5u' in users)
         self.assertTrue('lb3dp' in users)
         self.assertTrue('dhf8r' in users)
         # the above should emulate what is going on when we determine if a user can
@@ -128,3 +132,32 @@ class TestSudySponsorsScript(BaseTest):
         # in theory all endpoints that need to be limited are calling the
         # WorkflowService.get_users_assigned_to_task function to determine
         # who is allowed access
+
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_sponsors_script_ensure_access(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        flask.g.user = UserModel(uid='dhf8r')
+        app.config['PB_ENABLED'] = True
+
+        self.load_example_data()
+        self.create_reference_document()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
+        workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
+        WorkflowService.test_spec("study_sponsors_associate_switch_user")
+        processor = WorkflowProcessor(workflow_model)
+        processor.do_engine_steps()
+        # change user and make sure we can access the study
+        flask.g.user = UserModel(uid='lb3dp')
+        flask.g.token = 'my spiffy token'
+        app.config['PB_ENABLED'] = False
+        output = user_studies()
+        self.assertEqual(output[0]['id'], 0)
+        self.assertEqual(output[0]['user_uid'], 'dhf8r')
+        flask.g.user = UserModel(uid='lje5u')
+        flask.g.token = 'my spiffy token'
+        app.config['PB_ENABLED'] = False
+        output = user_studies()
+        self.assertEqual(len(output),0)

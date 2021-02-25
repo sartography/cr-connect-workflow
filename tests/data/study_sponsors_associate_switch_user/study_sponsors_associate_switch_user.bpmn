@@ -15,7 +15,8 @@
     <bpmn:scriptTask id="Activity_0cm6tn2" name="setval">
       <bpmn:incoming>SequenceFlow_1bqiin0</bpmn:incoming>
       <bpmn:outgoing>Flow_09cika8</bpmn:outgoing>
-      <bpmn:script>update_study_associate(uid='lb3dp',role='SuperDude',send_email=False,access=True)</bpmn:script>
+      <bpmn:script>update_study_associate(uid='lb3dp',role='SuperGal',send_email=False,access=True)
+update_study_associate(uid='lje5u',role='SuperGal2',send_email=False,access=False)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="Event_0c8gcuh">
       <bpmn:incoming>Flow_0axwrzg</bpmn:incoming>
