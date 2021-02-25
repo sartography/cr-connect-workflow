@@ -649,8 +649,8 @@ class WorkflowService(object):
     @staticmethod
     def get_users_assigned_to_task(processor, spiff_task) -> List[str]:
         if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
-            return [processor.workflow_model.study.user_uid]
-            # todo: return a list of all users that can edit the study by default
+            associated = StudyService.get_study_associates(processor.workflow_model.study.id)
+            return [user['uid'] for user in associated]
         if spiff_task.task_spec.lane not in spiff_task.data:
             return []  # No users are assignable to the task at this moment
         lane_users = spiff_task.data[spiff_task.task_spec.lane]
