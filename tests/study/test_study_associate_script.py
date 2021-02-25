@@ -78,3 +78,53 @@ class TestSudySponsorsScript(BaseTest):
         processor = WorkflowProcessor(workflow_model)
         with self.assertRaises(ApiError):
             processor.do_engine_steps()
+
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_sponsors_script_primary_user(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        flask.g.user = UserModel(uid='dhf8r')
+        app.config['PB_ENABLED'] = True
+
+        self.load_example_data()
+        self.create_reference_document()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
+        workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
+        WorkflowService.test_spec("study_sponsors_associate_switch_user")
+        processor = WorkflowProcessor(workflow_model)
+        processor.do_engine_steps()
+        tasks = processor.next_user_tasks()
+        self.assertEqual(len(tasks),1)
+        processor.complete_task(tasks[0])
+        processor.do_engine_steps()
+        self.assertTrue(processor.bpmn_workflow.is_completed())
+
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_sponsors_script_valid_users(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        flask.g.user = UserModel(uid='dhf8r')
+        app.config['PB_ENABLED'] = True
+
+        self.load_example_data()
+        self.create_reference_document()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
+        workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
+        WorkflowService.test_spec("study_sponsors_associate_switch_user")
+        processor = WorkflowProcessor(workflow_model)
+        processor.do_engine_steps()
+        tasks = processor.next_user_tasks()
+        self.assertEqual(len(tasks),1)
+        users = WorkflowService.get_users_assigned_to_task(processor,tasks[0])
+        self.assertFalse('cah3us' in users)
+        self.assertTrue('lb3dp' in users)
+        self.assertTrue('dhf8r' in users)
+        # the above should emulate what is going on when we determine if a user can
+        # make changes to a study or not.
+        # in theory all endpoints that need to be limited are calling the
+        # WorkflowService.get_users_assigned_to_task function to determine
+        # who is allowed access
