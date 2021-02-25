@@ -1,7 +1,7 @@
 from unittest.mock import patch
 import flask
 
-
+from crc.api.common import ApiError
 from tests.base_test import BaseTest
 
 from crc import session, app
@@ -49,4 +49,25 @@ class TestSudySponsorsScript(BaseTest):
         self.assertEquals([{'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
                            {'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True}]
                            , data['out'])
+        self.assertEquals({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True}
+                          , data['out2'])
+
         self.assertEquals(3, len(data['sponsors']))
+
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_sponsors_script_fail(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        flask.g.user = UserModel(uid='dhf8r')
+        app.config['PB_ENABLED'] = True
+
+        self.load_example_data()
+        self.create_reference_document()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("study_sponsors_associate_fail")
+        workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
+        WorkflowService.test_spec("study_sponsors_associate_fail")
+        processor = WorkflowProcessor(workflow_model)
+        with self.assertRaises(ApiError):
+            processor.do_engine_steps()

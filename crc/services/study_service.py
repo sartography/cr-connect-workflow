@@ -105,14 +105,14 @@ class StudyService(object):
 
 
         person = db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id)&(
-                StudyAssociated.uid == uid))
+                StudyAssociated.uid == uid)).first()
         if person:
             newAssociate = {'uid':person.uid}
             newAssociate['role'] = person.role
             newAssociate['send_email'] = person.send_email
             newAssociate['access'] = person.access
             return newAssociate
-        raise ApiError('uid_not_associated_with_study',"user id %s was not assocated with study number %d"%(uid,
+        raise ApiError('uid_not_associated_with_study',"user id %s was not associated with study number %d"%(uid,
                                                                                                             study_id))
 
     @staticmethod

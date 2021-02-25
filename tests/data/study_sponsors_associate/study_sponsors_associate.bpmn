@@ -20,7 +20,8 @@
     <bpmn:scriptTask id="Activity_0d8iftx" name="getval">
       <bpmn:incoming>Flow_09cika8</bpmn:incoming>
       <bpmn:outgoing>Flow_0cttkwp</bpmn:outgoing>
-      <bpmn:script>out = get_study_associates()</bpmn:script>
+      <bpmn:script>out = get_study_associates()
+out2 = get_study_associate('lb3dp')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="Event_0c8gcuh">
       <bpmn:incoming>Flow_0cttkwp</bpmn:incoming>
