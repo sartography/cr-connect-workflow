@@ -52,6 +52,13 @@ class TestSudySponsorsScript(BaseTest):
         self.assertEquals({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True}
                           , data['out2'])
 
+        self.assertEquals([{'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
+                           {'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True}]
+                           , data['out3'])
+        self.assertEquals({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True}
+                          , data['out4'])
+
+
         self.assertEquals(3, len(data['sponsors']))
 
 
