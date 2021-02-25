@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0kmksnn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+  <bpmn:process id="Process_0exnnpv" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1nfe5m9</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1nfe5m9" sourceRef="StartEvent_1" targetRef="Task_Script_Load_Study_Sponsors" />
+    <bpmn:scriptTask id="Task_Script_Load_Study_Sponsors" name="Load Study Sponsors">
+      <bpmn:incoming>SequenceFlow_1nfe5m9</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1bqiin0</bpmn:outgoing>
+      <bpmn:script>sponsors = study_info('sponsors')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1bqiin0" sourceRef="Task_Script_Load_Study_Sponsors" targetRef="Activity_0cm6tn2" />
+    <bpmn:sequenceFlow id="Flow_09cika8" sourceRef="Activity_0cm6tn2" targetRef="Activity_0d8iftx" />
+    <bpmn:scriptTask id="Activity_0cm6tn2" name="setval">
+      <bpmn:incoming>SequenceFlow_1bqiin0</bpmn:incoming>
+      <bpmn:outgoing>Flow_09cika8</bpmn:outgoing>
+      <bpmn:script>update_study_associate(uid='cah3us',role='SuperDude',send_email=False,access=True)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_0d8iftx" name="getval">
+      <bpmn:incoming>Flow_09cika8</bpmn:incoming>
+      <bpmn:outgoing>Flow_0cttkwp</bpmn:outgoing>
+      <bpmn:script>out = get_study_associates()
+out2 = get_study_associate('lb3dp')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="Event_0c8gcuh">
+      <bpmn:incoming>Flow_0cttkwp</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0cttkwp" sourceRef="Activity_0d8iftx" targetRef="Event_0c8gcuh" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0exnnpv">
+      <bpmndi:BPMNEdge id="SequenceFlow_1bqiin0_di" bpmnElement="SequenceFlow_1bqiin0">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="440" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1nfe5m9_di" bpmnElement="SequenceFlow_1nfe5m9">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ScriptTask_1mp6xid_di" bpmnElement="Task_Script_Load_Study_Sponsors">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_09cika8_di" bpmnElement="Flow_09cika8">
+        <di:waypoint x="540" y="117" />
+        <di:waypoint x="600" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_0wnwluq_di" bpmnElement="Activity_0cm6tn2">
+        <dc:Bounds x="440" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0cq37mm_di" bpmnElement="Activity_0d8iftx">
+        <dc:Bounds x="600" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0c8gcuh_di" bpmnElement="Event_0c8gcuh">
+        <dc:Bounds x="762" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0cttkwp_di" bpmnElement="Flow_0cttkwp">
+        <di:waypoint x="700" y="117" />
+        <di:waypoint x="762" y="117" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
