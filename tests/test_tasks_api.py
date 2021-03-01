@@ -266,8 +266,8 @@ class TestTasksApi(BaseTest):
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
         field_id = task.form['fields'][0]['id']
-        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, field_id, 'c'), # All records with a word that starts with 'c'
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s/%s?query=%s&limit=5' %
+                          (workflow.id, task.name, field_id, 'c'), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
@@ -281,8 +281,8 @@ class TestTasksApi(BaseTest):
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
         field_id = task.form['fields'][0]['id']
-        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, field_id, 'c'), # All records with a word that starts with 'c'
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s/%s?query=%s&limit=5' %
+                          (workflow.id, task.name, field_id, 'c'), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
@@ -290,8 +290,8 @@ class TestTasksApi(BaseTest):
         self.assertEqual(5, len(results))
         self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
 
-        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
-                          (workflow.id, field_id, results[0]['value']), # All records with a word that starts with 'c'
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s/%s?value=%s' %
+                          (workflow.id, task.name, field_id, results[0]['value']), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         results = json.loads(rv.get_data(as_text=True))
@@ -311,8 +311,8 @@ class TestTasksApi(BaseTest):
         task = workflow.next_task
         field_id = task.form['fields'][0]['id']
         option_id = task.form['fields'][0]['options'][0]['id']
-        rv = self.app.get('/v1.0/workflow/%i/lookup/%s?value=%s' %
-                          (workflow.id, field_id, option_id), # All records with a word that starts with 'c'
+        rv = self.app.get('/v1.0/workflow/%i/lookup/%s/%s?value=%s' %
+                          (workflow.id, task.name, field_id, option_id), # All records with a word that starts with 'c'
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)
@@ -352,8 +352,8 @@ class TestTasksApi(BaseTest):
         task = workflow.next_task
         field_id = task.form['fields'][0]['id']
         # lb3dp is a user record in the mock ldap responses for tests.
-        rv = self.app.get('/v1.0/workflow/%s/lookup/%s?query=%s&limit=5' %
-                          (workflow.id, field_id, 'lb3dp'),
+        rv = self.app.get('/v1.0/workflow/%s/lookup/%s/%s?query=%s&limit=5' %
+                          (workflow.id, task.name, field_id, 'lb3dp'),
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         self.assert_success(rv)

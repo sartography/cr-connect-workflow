@@ -40,13 +40,14 @@ class LookupService(object):
     def get_lookup_model(spiff_task, field):
         workflow_id = spiff_task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
-        return LookupService.__get_lookup_model(workflow, field.id)
+        return LookupService.__get_lookup_model(workflow, spiff_task.task_spec.name, field.id)
 
     @staticmethod
-    def __get_lookup_model(workflow, field_id):
+    def __get_lookup_model(workflow, task_spec_id, field_id):
         lookup_model = db.session.query(LookupFileModel) \
             .filter(LookupFileModel.workflow_spec_id == workflow.workflow_spec_id) \
             .filter(LookupFileModel.field_id == field_id) \
+            .filter(LookupFileModel.task_spec_id == task_spec_id) \
             .order_by(desc(LookupFileModel.id)).first()
 
         # one more quick query, to see if the lookup file is still related to this workflow.
@@ -59,14 +60,14 @@ class LookupService(object):
 
         if not is_current:
             # Very very very expensive, but we don't know need this till we do.
-            lookup_model = LookupService.create_lookup_model(workflow, field_id)
+            lookup_model = LookupService.create_lookup_model(workflow, task_spec_id, field_id)
 
         return lookup_model
 
     @staticmethod
-    def lookup(workflow, field_id, query, value=None, limit=10):
+    def lookup(workflow, task_spec_id, field_id, query, value=None, limit=10):
 
-        lookup_model = LookupService.__get_lookup_model(workflow, field_id)
+        lookup_model = LookupService.__get_lookup_model(workflow, task_spec_id, field_id)
 
         if lookup_model.is_ldap:
             return LookupService._run_ldap_query(query, limit)
@@ -74,7 +75,7 @@ class LookupService(object):
             return LookupService._run_lookup_query(lookup_model, query, value, limit)
 
     @staticmethod
-    def create_lookup_model(workflow_model, field_id):
+    def create_lookup_model(workflow_model, task_spec_id, field_id):
         """
         This is all really expensive, but should happen just once (per file change).
 
@@ -84,11 +85,12 @@ class LookupService(object):
         Returns:  an array of LookupData, suitable for returning to the API.
         """
         processor = WorkflowProcessor(workflow_model)  # VERY expensive, Ludicrous for lookup / type ahead
-        spec, field = processor.find_spec_and_field_by_field_id(field_id)
+        spec, field = processor.find_spec_and_field(task_spec_id, field_id)
 
         # Clear out all existing lookup models for this workflow and field.
         existing_models = db.session.query(LookupFileModel) \
             .filter(LookupFileModel.workflow_spec_id == workflow_model.workflow_spec_id) \
+            .filter(LookupFileModel.task_spec_id == task_spec_id) \
             .filter(LookupFileModel.field_id == field_id).all()
         for model in existing_models:  # Do it one at a time to cause the required cascade of deletes.
             db.session.delete(model)
@@ -117,7 +119,7 @@ class LookupService(object):
                 data_model = latest_files[0]
 
             lookup_model = LookupService.build_lookup_table(data_model, value_column, label_column,
-                                                            workflow_model.workflow_spec_id, field_id)
+                                                            workflow_model.workflow_spec_id, task_spec_id, field_id)
 
         #  Use the results of an LDAP request to populate enum field options
         elif field.has_property(Task.FIELD_PROP_LDAP_LOOKUP):
@@ -134,7 +136,7 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def build_lookup_table(data_model: FileDataModel, value_column, label_column, workflow_spec_id, field_id):
+    def build_lookup_table(data_model: FileDataModel, value_column, label_column, workflow_spec_id, task_spec_id, field_id):
         """ In some cases the lookup table can be very large.  This method will add all values to the database
          in a way that can be searched and returned via an api call - rather than sending the full set of
           options along with the form.  It will only open the file and process the options if something has
@@ -153,6 +155,7 @@ class LookupService(object):
 
         lookup_model = LookupFileModel(workflow_spec_id=workflow_spec_id,
                                        field_id=field_id,
+                                       task_spec_id=task_spec_id,
                                        file_data_model_id=data_model.id,
                                        is_ldap=False)
 

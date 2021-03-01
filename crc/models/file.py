@@ -148,6 +148,7 @@ class LookupFileModel(db.Model):
     __tablename__ = 'lookup_file'
     id = db.Column(db.Integer, primary_key=True)
     workflow_spec_id = db.Column(db.String)
+    task_spec_id = db.Column(db.String)
     field_id = db.Column(db.String)
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
     file_data_model_id = db.Column(db.Integer, db.ForeignKey('file_data.id'))
