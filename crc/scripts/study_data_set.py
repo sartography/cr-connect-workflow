@@ -4,7 +4,7 @@ from crc.scripts.script import Script
 
 class StudyDataSet(Script,DataStoreBase):
     def get_description(self):
-        return """Sets study data from the data store."""
+        return """Sets study data from the data store. Takes two positional arguments key and value"""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         self.set_validate_common(study_id,

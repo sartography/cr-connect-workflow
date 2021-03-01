@@ -6,7 +6,7 @@ from crc.scripts.script import Script
 
 class UserDataGet(Script, DataStoreBase):
     def get_description(self):
-        return """Gets user data from the data store."""
+        return """Gets user data from the data store - takes only one argument 'key' """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         self.do_task(task, study_id, workflow_id, *args, **kwargs)

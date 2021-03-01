@@ -35,6 +35,7 @@ class StudyEventType(enum.Enum):
     automatic = 'automatic'
 
 
+
 class StudyModel(db.Model):
     __tablename__ = 'study'
     id = db.Column(db.Integer, primary_key=True)
@@ -51,7 +52,7 @@ class StudyModel(db.Model):
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
     on_hold = db.Column(db.Boolean, default=False)
     enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    # events = db.relationship("TaskEventModel")
+    #events = db.relationship("TaskEventModel")
     events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
@@ -62,6 +63,21 @@ class StudyModel(db.Model):
 
         self.irb_status = IrbStatus.incomplete_in_protocol_builder
 
+
+class StudyAssociated(db.Model):
+    """
+    This model allows us to associate people with a study, and optionally
+    give them edit access. This allows us to create a table with PI, D_CH, etc.
+    and give access to people other than the study owner.
+    Task_Events will still work as they have previously
+    """
+    __tablename__ = 'study_associated_user'
+    id = db.Column(db.Integer, primary_key=True)
+    study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
+    uid = db.Column(db.String, db.ForeignKey('ldap_model.uid'), nullable=False)
+    role = db.Column(db.String, nullable=True)
+    send_email = db.Column(db.Boolean, nullable=True)
+    access = db.Column(db.Boolean, nullable=True)
 
 class StudyEvent(db.Model):
     __tablename__ = 'study_event'

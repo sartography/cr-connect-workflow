@@ -48,6 +48,13 @@ class LdapService(object):
             LdapService.conn = conn
         return LdapService.conn
 
+    @staticmethod
+    def user_exists(uva_uid):
+        try:
+            x = LdapService.user_info(uva_uid)
+        except:
+            return False
+        return True
 
     @staticmethod
     def user_info(uva_uid):
