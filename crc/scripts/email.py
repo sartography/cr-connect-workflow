@@ -7,7 +7,9 @@ from crc import app
 from crc.api.common import ApiError
 from crc.scripts.script import Script
 from crc.services.ldap_service import LdapService
-from crc.services.mails import send_mail
+from crc.services.email_service import EmailService
+
+from flask import render_template, request
 
 
 class Email(Script):
@@ -24,26 +26,28 @@ Example:
 email ("My Subject", "dhf8r@virginia.edu", pi.email)
 """
 
-    def do_task_validate_only(self, task, *args, **kwargs):
-        self.get_subject(task, args)
+    def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
+        self.get_subject(args)
         self.get_email_recipients(task, args)
         self.get_content(task)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
-        if len(args) < 1:
+        if len(args) < 2:
             raise ApiError(code="missing_argument",
                            message="Email script requires a subject and at least one email address as arguments")
-        subject = args[0]
+        subject = self.get_subject(args)
         recipients = self.get_email_recipients(task, args)
-        content, content_html = self.get_content(task)
+
         if recipients:
-            send_mail(
+            content, content_html = self.get_content(task)
+            EmailService.add_email(
                 subject=subject,
                 sender=app.config['DEFAULT_SENDER'],
                 recipients=recipients,
                 content=content,
-                content_html=content_html
+                content_html=content_html,
+                study_id=study_id
             )
 
     def check_valid_email(self, email):
@@ -82,7 +86,8 @@ email ("My Subject", "dhf8r@virginia.edu", pi.email)
 
         return emails
 
-    def get_subject(self, task, args):
+    @staticmethod
+    def get_subject(args):
         # subject = ''
         if len(args[0]) < 1:
             raise ApiError(code="missing_argument",
@@ -100,5 +105,11 @@ email ("My Subject", "dhf8r@virginia.edu", pi.email)
         content = task.task_spec.documentation
         template = Template(content)
         rendered = template.render(task.data)
-        rendered_markdown = markdown.markdown(rendered).replace('\n', '<br>')
-        return rendered, rendered_markdown
+        rendered_markdown = markdown.markdown(rendered)
+        wrapped = self.get_cr_connect_wrapper(rendered_markdown)
+
+        return rendered, wrapped
+
+    @staticmethod
+    def get_cr_connect_wrapper(email_body):
+        return render_template('mail_content_template.html', email_body=email_body, base_url=request.base_url)

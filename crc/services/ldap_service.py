@@ -1,10 +1,13 @@
+import logging
 import os
+import ssl
+from os import path
 
 from attr import asdict
 from ldap3.core.exceptions import LDAPExceptionError
 
 from crc import app, db
-from ldap3 import Connection, Server, MOCK_SYNC, RESTARTABLE
+from ldap3 import Connection, Server, MOCK_SYNC, RESTARTABLE, SASL, DIGEST_MD5, ALL, Tls, EXTERNAL, SYNC
 
 from crc.api.common import ApiError
 from crc.models.ldap import LdapModel, LdapSchema
@@ -24,17 +27,24 @@ class LdapService(object):
     @staticmethod
     def __get_conn():
         if not LdapService.conn:
-            if app.config['TESTING'] or app.config['LDAP_URL'] == 'mock':
+            if app.config['LDAP_URL'] == 'mock':
                 server = Server('my_fake_server')
                 conn = Connection(server, client_strategy=MOCK_SYNC)
                 file_path = os.path.abspath(os.path.join(app.root_path, '..', 'tests', 'data', 'ldap_response.json'))
                 conn.strategy.entries_from_json(file_path)
                 conn.bind()
+            elif "LDAP_USER" in app.config and app.config['LDAP_USER'].strip() != '':
+                server = Server(host=app.config['LDAP_URL'], use_ssl=True)
+                conn = Connection(server, auto_bind=True,
+                                  user=app.config['LDAP_USER'],
+                                  password=app.config['LDAP_PASS'],
+                                  receive_timeout=app.config['LDAP_TIMEOUT_SEC'],
+                                  client_strategy=RESTARTABLE)
             else:
                 server = Server(app.config['LDAP_URL'], connect_timeout=app.config['LDAP_TIMEOUT_SEC'])
                 conn = Connection(server, auto_bind=True,
-                                       receive_timeout=app.config['LDAP_TIMEOUT_SEC'],
-                                       client_strategy=RESTARTABLE)
+                                  receive_timeout=app.config['LDAP_TIMEOUT_SEC'],
+                                  client_strategy=RESTARTABLE)
             LdapService.conn = conn
         return LdapService.conn
 

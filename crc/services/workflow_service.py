@@ -154,8 +154,16 @@ class WorkflowService(object):
                 result = WorkflowService.evaluate_property(Task.FIELD_PROP_LABEL_EXPRESSION, field, task)
                 field.label = result
 
-            # If the field is hidden, it should not produce a value.
-            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
+            # If a field is hidden and required, it must have a default value or value_expression
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
+                if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or not (hasattr(field, 'default_value')):
+                    raise ApiError(code='hidden and required field missing default',
+                                   message='Fields that are required but can be hidden must have either a default value or a value_expression',
+                                   task_id='task.id',
+                                   task_name=task.get_name())
+
+            # If the field is hidden and not required, it should not produce a value.
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and not field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
                 if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
                     continue
 
@@ -166,6 +174,8 @@ class WorkflowService(object):
             # If we have a default_value or value_expression, try to set the default
             if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or (hasattr(field, 'default_value') and field.default_value):
                 form_data[field.id] = WorkflowService.get_default_value(field, task)
+                if not field.has_property(Task.FIELD_PROP_REPEAT):
+                    continue
 
             # If we are only populating required fields, and this isn't required. stop here.
             if required_only:
@@ -204,7 +214,7 @@ class WorkflowService(object):
         if not id[0].isalpha():
             return False
         for char in id[1:len(id)]:
-            if char.isalnum() or char == '_':
+            if char.isalnum() or char == '_' or char == '.':
                 pass
             else:
                 return False
@@ -251,9 +261,13 @@ class WorkflowService(object):
             default = result
 
         # If no default exists, return None
-        if not default: return None
+        # Note: if default is False, we don't want to execute this code
+        if default is None:
+            return None
 
         if field.type == "enum" and not has_lookup:
+            if isinstance(default, str) and default.strip() == '':
+                return
             default_option = next((obj for obj in field.options if obj.id == default), None)
             if not default_option:
                 raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
@@ -278,7 +292,10 @@ class WorkflowService(object):
         elif field.type == "long":
             return int(default)
         elif field.type == 'boolean':
-            return bool(default)
+            default = str(default).lower()
+            if default == 'true' or default == 't':
+                return True
+            return False
         else:
             return default
 
@@ -311,7 +328,11 @@ class WorkflowService(object):
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
                 options = [{"value": d.value, "label": d.label, "data": d.data} for d in data]
-                return random.choice(options)
+                if len(options) > 0:
+                    return random.choice(options)
+                else:
+                    raise ApiError.from_task("invalid enum", "You specified an enumeration field (%s),"
+                                                             " with no options" % field.id, task)
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
@@ -360,6 +381,7 @@ class WorkflowService(object):
 
 
         spec = db.session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
+        is_review = FileService.is_workflow_review(processor.workflow_spec_id)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
             status=processor.get_status(),
@@ -371,6 +393,7 @@ class WorkflowService(object):
             total_tasks=len(navigation),
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
+            is_review=is_review,
             title=spec.display_name
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
@@ -491,9 +514,6 @@ class WorkflowService(object):
         # not be a previously completed MI Task.
         if add_docs_and_forms:
             task.data = spiff_task.data
-            if UserService.has_user():
-                current_user = UserService.current_user(allow_admin_impersonate=True)
-                task.data['current_user'] = UserModelSchema().dump(current_user)
             if hasattr(spiff_task.task_spec, "form"):
                 task.form = spiff_task.task_spec.form
                 for i, field in enumerate(task.form.fields):
@@ -704,5 +724,10 @@ class WorkflowService(object):
 
         return data
 
-
-
+    @staticmethod
+    def process_workflows_for_cancels(study_id):
+        workflows = db.session.query(WorkflowModel).filter_by(study_id=study_id).all()
+        for workflow in workflows:
+            if workflow.status == WorkflowStatus.user_input_required or workflow.status == WorkflowStatus.waiting:
+                processor = WorkflowProcessor(workflow)
+                processor.reset(workflow)

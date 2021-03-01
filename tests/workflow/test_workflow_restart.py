@@ -1,9 +1,11 @@
 from tests.base_test import BaseTest
 
+from crc import session
+from crc.models.study import StudyModel
 
-class TestMessageEvent(BaseTest):
+class TestWorkflowRestart(BaseTest):
 
-    def test_message_event(self):
+    def test_workflow_restart(self):
 
         workflow = self.create_workflow('message_event')
 
@@ -32,3 +34,49 @@ class TestMessageEvent(BaseTest):
         self.assertNotIn('formdata', workflow_api.next_task.data)
 
         print('Nice Test')
+
+    def test_workflow_restart_on_cancel_notify(self):
+        workflow = self.create_workflow('message_event')
+        study_id = workflow.study_id
+
+        # Start the workflow.
+        first_task = self.get_workflow_api(workflow).next_task
+        self.assertEqual('Activity_GetData', first_task.name)
+        workflow_api = self.get_workflow_api(workflow)
+        self.complete_form(workflow_api, first_task, {'formdata': 'asdf'})
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertEqual('Activity_HowMany', workflow_api.next_task.name)
+
+        workflow_api = self.restart_workflow_api(workflow)
+        study_result = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        self.assertEqual('New Title', study_result.title)
+
+    def test_workflow_restart_before_cancel_notify(self):
+        workflow = self.create_workflow('message_event')
+        study_id = workflow.study_id
+
+        first_task = self.get_workflow_api(workflow).next_task
+        self.assertEqual('Activity_GetData', first_task.name)
+
+        study_result = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        self.assertEqual('Beer consumption in the bipedal software engineer', study_result.title)
+
+    def test_workflow_restart_after_cancel_notify(self):
+        workflow = self.create_workflow('message_event')
+        study_id = workflow.study_id
+
+        # Start the workflow.
+        first_task = self.get_workflow_api(workflow).next_task
+        self.assertEqual('Activity_GetData', first_task.name)
+        workflow_api = self.get_workflow_api(workflow)
+        self.complete_form(workflow_api, first_task, {'formdata': 'asdf'})
+
+        workflow_api = self.get_workflow_api(workflow)
+        next_task = workflow_api.next_task
+        self.assertEqual('Activity_HowMany', next_task.name)
+        self.complete_form(workflow_api, next_task, {'how_many': 3})
+
+        workflow_api = self.restart_workflow_api(workflow)
+        study_result = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        self.assertEqual('Beer consumption in the bipedal software engineer', study_result.title)
+

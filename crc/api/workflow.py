@@ -8,6 +8,7 @@ from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModel, LookupDataSchema
 from crc.models.study import StudyModel, WorkflowMetadata
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
+from crc.models.user import UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema
 from crc.services.error_service import ValidationErrorService
@@ -25,6 +26,8 @@ def all_specifications():
 
 
 def add_workflow_specification(body):
+    count = session.query(WorkflowSpecModel).filter_by(category_id=body['category_id']).count()
+    body['display_order'] = count
     new_spec: WorkflowSpecModel = WorkflowSpecModelSchema().load(body, session=session)
     session.add(new_spec)
     session.commit()
@@ -117,13 +120,17 @@ def restart_workflow(workflow_id, clear_data=False):
     """Restart a workflow with the latest spec.
        Clear data allows user to restart the workflow without previous data."""
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    WorkflowProcessor.reset(workflow_model, clear_data=clear_data)
+    WorkflowProcessor(workflow_model).reset(workflow_model, clear_data=clear_data)
     return get_workflow(workflow_model.id)
 
 
 def get_task_events(action = None, workflow = None, study = None):
     """Provides a way to see a history of what has happened, or get a list of tasks that need your attention."""
-    query = session.query(TaskEventModel).filter(TaskEventModel.user_uid == g.user.uid)
+    user = UserService.current_user(allow_admin_impersonate=True)
+    studies = session.query(StudyModel).filter(StudyModel.user_uid==user.uid)
+    studyids = [s.id for s in studies]
+    query = session.query(TaskEventModel).filter((TaskEventModel.study_id.in_(studyids)) | \
+                                                 (TaskEventModel.user_uid==user.uid))
     if action:
         query = query.filter(TaskEventModel.action == action)
     if workflow:

@@ -4,6 +4,7 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from crc import db, ma
 from crc.models.study import StudyModel, StudySchema, WorkflowMetadataSchema, WorkflowMetadata
 from crc.models.workflow import WorkflowModel
+from crc.services.ldap_service import LdapService
 
 
 class TaskEventModel(db.Model):
@@ -43,6 +44,7 @@ class TaskEvent(object):
         self.study = study
         self.workflow = workflow
         self.user_uid = model.user_uid
+        self.user_display = LdapService.user_info(model.user_uid).display_name
         self.action = model.action
         self.task_id = model.task_id
         self.task_title = model.task_title
@@ -60,6 +62,6 @@ class TaskEventSchema(ma.Schema):
     task_lane = fields.String(allow_none=True, required=False)
     class Meta:
         model = TaskEvent
-        additional = ["id", "user_uid", "action", "task_id", "task_title",
+        additional = ["id", "user_uid", "user_display", "action", "task_id", "task_title",
                       "task_name", "task_type", "task_state", "task_lane", "date"]
         unknown = INCLUDE
