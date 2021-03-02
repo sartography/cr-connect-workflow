@@ -36,7 +36,7 @@ class StudyService(object):
 
         studies = []
         for study_model in db_studies:
-            studies.append(StudyService.get_study(study_model.id, study_model))
+            studies.append(StudyService.get_study(study_model.id, study_model,do_status=False))
         return studies
 
     @staticmethod
@@ -51,7 +51,7 @@ class StudyService(object):
         return studies
 
     @staticmethod
-    def get_study(study_id, study_model: StudyModel = None):
+    def get_study(study_id, study_model: StudyModel = None, do_status=True):
         """Returns a study model that contains all the workflows organized by category.
         IMPORTANT:  This is intended to be a lightweight call, it should never involve
         loading up and executing all the workflows in a study to calculate information."""
@@ -81,8 +81,9 @@ class StudyService(object):
         if study.status != StudyStatus.abandoned:
             # this line is taking 99% of the time that is used in get_study.
             # see ticket #196
-            status = StudyService.__get_study_status(study_model)
-            study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
+            if do_status:
+                status = StudyService.__get_study_status(study_model)
+                study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
 
             # Group the workflows into their categories.
             for category in study.categories:
