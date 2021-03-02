@@ -186,6 +186,7 @@ Returns information specific to the protocol.
                 "info": {
                     "id": 12,
                     "title": "test",
+                    "short_title": "tst",
                     "primary_investigator_id":21,
                     "user_uid": "dif84",
                     "sponsor": "sponsor",

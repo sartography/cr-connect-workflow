@@ -40,6 +40,7 @@ class StudyModel(db.Model):
     __tablename__ = 'study'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String)
+    short_title = db.Column(db.String, nullable=True)
     last_updated = db.Column(db.DateTime(timezone=True), default=func.now())
     status = db.Column(db.Enum(StudyStatus))
     irb_status = db.Column(db.Enum(IrbStatus))
@@ -161,7 +162,7 @@ class CategorySchema(ma.Schema):
 
 class Study(object):
 
-    def __init__(self, title, last_updated, primary_investigator_id, user_uid,
+    def __init__(self, title, short_title, last_updated, primary_investigator_id, user_uid,
                  id=None, status=None, irb_status=None, comment="",
                  sponsor="", hsr_number="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, events_history=[],
@@ -172,6 +173,7 @@ class Study(object):
         self.last_activity_date = last_activity_date
         self.last_activity_user = last_activity_user
         self.title = title
+        self.short_title = short_title
         self.last_updated = last_updated
         self.status = status
         self.irb_status = irb_status
@@ -243,6 +245,7 @@ class StudySchema(ma.Schema):
     protocol_builder_status = EnumField(StudyStatus, by_value=True)
     status = EnumField(StudyStatus, by_value=True)
     hsr_number = fields.String(allow_none=True)
+    short_title = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
@@ -251,7 +254,7 @@ class StudySchema(ma.Schema):
 
     class Meta:
         model = Study
-        additional = ["id", "title", "last_updated", "primary_investigator_id", "user_uid",
+        additional = ["id", "title", "short_title", "last_updated", "primary_investigator_id", "user_uid",
                       "sponsor", "ind_number", "files", "enrollment_date",
                       "create_user_display", "last_activity_date","last_activity_user",
                       "events_history"]
