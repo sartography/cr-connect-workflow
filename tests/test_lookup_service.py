@@ -89,6 +89,9 @@ class TestLookupService(BaseTest):
         results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="pigs", limit=10)
         self.assertEqual(1, len(results), "It is possible to find an item based on the id, rather than as a search")
         self.assertIsNotNone(results[0].data)
+        results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="apples", limit=10)
+        self.assertEqual(0, len(results), "We shouldn't find our fruits mixed in with our animals.")
+
 
         processor.reset(workflow, clear_data=True)
         processor.do_engine_steps()
@@ -100,6 +103,8 @@ class TestLookupService(BaseTest):
         results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="apples", limit=10)
         self.assertEqual(1, len(results), "It is possible to find an item based on the id, rather than as a search")
         self.assertIsNotNone(results[0].data)
+        results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="pigs", limit=10)
+        self.assertEqual(0, len(results), "We shouldn't find our animals mixed in with our fruits.")
 
 
     def test_some_full_text_queries(self):
