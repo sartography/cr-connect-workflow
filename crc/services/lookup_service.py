@@ -60,6 +60,7 @@ class LookupService(object):
 
         if not is_current:
             # Very very very expensive, but we don't know need this till we do.
+            logging.warning("!!!! Making a very expensive call to update the lookup models.")
             lookup_model = LookupService.create_lookup_model(workflow, task_spec_id, field_id)
 
         return lookup_model
