@@ -105,7 +105,7 @@ email ("My Subject", "dhf8r@virginia.edu", pi.email)
         content = task.task_spec.documentation
         template = Template(content)
         rendered = template.render(task.data)
-        rendered_markdown = markdown.markdown(rendered).replace('\n', '<br>')
+        rendered_markdown = markdown.markdown(rendered)
         wrapped = self.get_cr_connect_wrapper(rendered_markdown)
 
         return rendered, wrapped
