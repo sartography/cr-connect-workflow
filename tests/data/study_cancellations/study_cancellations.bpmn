@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0a9entn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0a9entn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
   <bpmn:process id="Process_1dagb7t" name="TestMessage" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="Start">
       <bpmn:outgoing>Flow_0xym55y</bpmn:outgoing>
@@ -7,7 +7,7 @@
     <bpmn:sequenceFlow id="Flow_16q1uec" name="TestMessageFlow" sourceRef="Event_TokenReset" targetRef="Activity_TestMessage" />
     <bpmn:scriptTask id="Activity_TestMessage" name="Test Message" camunda:resultVariable="test_message">
       <bpmn:incoming>Flow_16q1uec</bpmn:incoming>
-      <bpmn:script>update_study("title:'New Title'")
+      <bpmn:script>update_study(title='New Title')
 print('New Title')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0xym55y" sourceRef="StartEvent_1" targetRef="Activity_Hello" />
@@ -58,7 +58,7 @@ print('New Title')</bpmn:script>
     <bpmn:scriptTask id="Activity_CancelMessage" name="Cancel Message" camunda:resultVariable="cancel_message">
       <bpmn:documentation>&lt;H1&gt;Cancel Message&lt;/H1&gt;</bpmn:documentation>
       <bpmn:incoming>Flow_13xidv2</bpmn:incoming>
-      <bpmn:script>update_study("title:'Second Title'")
+      <bpmn:script>update_study(title='Second Title')
 print('Second Title')</bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>

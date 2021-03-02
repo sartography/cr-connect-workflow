@@ -26,7 +26,7 @@ class TestMessageEvent(BaseTest):
                      headers=self.logged_in_headers(),
                      content_type="application/json")
 
-        # set_current_task should call the interupt (signal) task
+        # set_current_task should call the interrupt (signal) task
         # which should run the script in our task
         #
         # test to see if our changes made it to the DB
