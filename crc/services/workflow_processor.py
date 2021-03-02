@@ -349,8 +349,8 @@ class WorkflowProcessor(object):
             spec = parser.get_spec(process_id)
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
-                           message="Failed to parse Workflow Specification '%s'" % workflow_spec_id +
-                                   "Error is %s" % str(ve),
+                           message="Failed to parse Workflow Specification '%s'. \n" % workflow_spec_id +
+                                   "Error is %s. \n" % str(ve),
                            file_name=ve.filename,
                            task_id=ve.id,
                            tag=ve.tag)
