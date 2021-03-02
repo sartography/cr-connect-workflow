@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_13oadue" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+  <bpmn:process id="Process_1e56be7" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_07vc55t</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_07vc55t" sourceRef="StartEvent_1" targetRef="Activity_0s5qx04" />
+    <bpmn:exclusiveGateway id="Gateway_1j2ytgn">
+      <bpmn:incoming>Flow_1m73p95</bpmn:incoming>
+      <bpmn:outgoing>Flow_0gb1k4g</bpmn:outgoing>
+      <bpmn:outgoing>Flow_08kr305</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0gb1k4g" sourceRef="Gateway_1j2ytgn" targetRef="animals">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">type == 'fruit'</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_08kr305" sourceRef="Gateway_1j2ytgn" targetRef="fruits">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">type=="fruit"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway_14eyj6z">
+      <bpmn:incoming>Flow_09ik0zr</bpmn:incoming>
+      <bpmn:incoming>Flow_1tzwe06</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ym0gex</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_09ik0zr" sourceRef="animals" targetRef="Gateway_14eyj6z" />
+    <bpmn:sequenceFlow id="Flow_1tzwe06" sourceRef="fruits" targetRef="Gateway_14eyj6z" />
+    <bpmn:endEvent id="Event_0guzzkq">
+      <bpmn:incoming>Flow_1ym0gex</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1ym0gex" sourceRef="Gateway_14eyj6z" targetRef="Event_0guzzkq" />
+    <bpmn:userTask id="animals" name="Animals" camunda:formKey="FormA">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="selectedItem" label="Select An Item" type="enum">
+            <camunda:properties>
+              <camunda:property id="spreadsheet.name" value="animals.xlsx" />
+              <camunda:property id="spreadsheet.value.column" value="Value" />
+              <camunda:property id="spreadsheet.label.column" value="Label" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0gb1k4g</bpmn:incoming>
+      <bpmn:outgoing>Flow_09ik0zr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="fruits" name="Fruits" camunda:formKey="FromB">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="selectedItem" type="enum">
+            <camunda:properties>
+              <camunda:property id="spreadsheet.name" value="fruits.xlsx" />
+              <camunda:property id="spreadsheet.value.column" value="Value" />
+              <camunda:property id="spreadsheet.label.column" value="Label" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_08kr305</bpmn:incoming>
+      <bpmn:outgoing>Flow_1tzwe06</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1m73p95" sourceRef="Activity_0s5qx04" targetRef="Gateway_1j2ytgn" />
+    <bpmn:userTask id="Activity_0s5qx04" name="What do you like" camunda:formKey="choose">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="type" type="enum">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+            <camunda:value id="animals" name="Animals" />
+            <camunda:value id="fruits" name="Fruits" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_07vc55t</bpmn:incoming>
+      <bpmn:outgoing>Flow_1m73p95</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:textAnnotation id="TextAnnotation_1vfpzfh">
+      <bpmn:text>Sheet one and sheet two each reference different spread sheets, but  they use  the same form name.</bpmn:text>
+    </bpmn:textAnnotation>
+    <bpmn:association id="Association_0w3ioqq" sourceRef="animals" targetRef="TextAnnotation_1vfpzfh" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1e56be7">
+      <bpmndi:BPMNShape id="TextAnnotation_1vfpzfh_di" bpmnElement="TextAnnotation_1vfpzfh">
+        <dc:Bounds x="640" y="80" width="200" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_07vc55t_di" bpmnElement="Flow_07vc55t">
+        <di:waypoint x="188" y="307" />
+        <di:waypoint x="250" y="307" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0gb1k4g_di" bpmnElement="Flow_0gb1k4g">
+        <di:waypoint x="410" y="282" />
+        <di:waypoint x="410" y="240" />
+        <di:waypoint x="490" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08kr305_di" bpmnElement="Flow_08kr305">
+        <di:waypoint x="410" y="332" />
+        <di:waypoint x="410" y="370" />
+        <di:waypoint x="490" y="370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09ik0zr_di" bpmnElement="Flow_09ik0zr">
+        <di:waypoint x="590" y="240" />
+        <di:waypoint x="670" y="240" />
+        <di:waypoint x="670" y="282" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1tzwe06_di" bpmnElement="Flow_1tzwe06">
+        <di:waypoint x="590" y="370" />
+        <di:waypoint x="670" y="370" />
+        <di:waypoint x="670" y="332" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ym0gex_di" bpmnElement="Flow_1ym0gex">
+        <di:waypoint x="695" y="307" />
+        <di:waypoint x="752" y="307" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1m73p95_di" bpmnElement="Flow_1m73p95">
+        <di:waypoint x="350" y="307" />
+        <di:waypoint x="385" y="307" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Gateway_1j2ytgn_di" bpmnElement="Gateway_1j2ytgn" isMarkerVisible="true">
+        <dc:Bounds x="385" y="282" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_14eyj6z_di" bpmnElement="Gateway_14eyj6z" isMarkerVisible="true">
+        <dc:Bounds x="645" y="282" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0guzzkq_di" bpmnElement="Event_0guzzkq">
+        <dc:Bounds x="752" y="289" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0eua66n_di" bpmnElement="animals">
+        <dc:Bounds x="490" y="200" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0kcbe51_di" bpmnElement="fruits">
+        <dc:Bounds x="490" y="330" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="289" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1fixobo_di" bpmnElement="Activity_0s5qx04">
+        <dc:Bounds x="250" y="267" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Association_0w3ioqq_di" bpmnElement="Association_0w3ioqq">
+        <di:waypoint x="589" y="208" />
+        <di:waypoint x="694" y="140" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

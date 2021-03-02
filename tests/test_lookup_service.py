@@ -18,14 +18,14 @@ class TestLookupService(BaseTest):
         file_model = session.query(FileModel).filter(FileModel.name == "customer_list.xls").first()
         file_data_model = session.query(FileDataModel).filter(FileDataModel.file_model == file_model).first()
         with self.assertRaises(ApiError):
-            LookupService.lookup(workflow, "not_the_right_field", "sam", limit=10)
+            LookupService.lookup(workflow, "Task_Enum_Lookup", "not_the_right_field", "sam", limit=10)
 
     def test_lookup_table_is_not_created_more_than_once(self):
         spec = BaseTest.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
-        LookupService.lookup(workflow, "sponsor", "sam", limit=10)
-        LookupService.lookup(workflow, "sponsor", "something", limit=10)
-        LookupService.lookup(workflow, "sponsor", "blah", limit=10)
+        LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
+        LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "something", limit=10)
+        LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "blah", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
         self.assertEqual(1, len(lookup_records))
@@ -37,7 +37,7 @@ class TestLookupService(BaseTest):
         spec = BaseTest.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
         file_model = session.query(FileModel).filter(FileModel.name == "sponsors.xls").first()
-        LookupService.lookup(workflow, "sponsor", "sam", limit=10)
+        LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
         self.assertEqual(1, len(lookup_records))
@@ -58,7 +58,7 @@ class TestLookupService(BaseTest):
         processor.reset(workflow)
         workflow = processor.workflow_model
 
-        LookupService.lookup(workflow, "sponsor", "sam", limit=10)
+        LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         lookup_record = lookup_records[0]
         lookup_data = session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_record).all()
@@ -69,10 +69,42 @@ class TestLookupService(BaseTest):
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
-        results = LookupService.lookup(workflow, "AllTheNames", "", value="1000", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "", value="1000", limit=10)
         self.assertEqual(1, len(results), "It is possible to find an item based on the id, rather than as a search")
         self.assertIsNotNone(results[0].data)
         self.assertIsInstance(results[0].data, dict)
+
+
+    def test_lookup_with_two_spreadsheets_with_the_same_field_name_in_different_forms(self):
+        spec = BaseTest.load_test_spec('enum_options_competing_files')
+        workflow = self.create_workflow('enum_options_competing_files')
+        processor = WorkflowProcessor(workflow)
+
+        processor.do_engine_steps()
+        task = processor.get_ready_user_tasks()[0]
+        task.data = {"type": "animal"}
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.get_ready_user_tasks()[0]
+        results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="pigs", limit=10)
+        self.assertEqual(1, len(results), "It is possible to find an item based on the id, rather than as a search")
+        self.assertIsNotNone(results[0].data)
+        results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="apples", limit=10)
+        self.assertEqual(0, len(results), "We shouldn't find our fruits mixed in with our animals.")
+
+
+        processor.reset(workflow, clear_data=True)
+        processor.do_engine_steps()
+        task = processor.get_ready_user_tasks()[0]
+        task.data = {"type": "fruit"}
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.get_ready_user_tasks()[0]
+        results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="apples", limit=10)
+        self.assertEqual(1, len(results), "It is possible to find an item based on the id, rather than as a search")
+        self.assertIsNotNone(results[0].data)
+        results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="pigs", limit=10)
+        self.assertEqual(0, len(results), "We shouldn't find our animals mixed in with our fruits.")
 
 
     def test_some_full_text_queries(self):
@@ -81,59 +113,59 @@ class TestLookupService(BaseTest):
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
 
-        results = LookupService.lookup(workflow, "AllTheNames", "", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "", limit=10)
         self.assertEqual(10, len(results), "Blank queries return everything, to the limit")
 
-        results = LookupService.lookup(workflow, "AllTheNames", "medicines", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "medicines", limit=10)
         self.assertEqual(1, len(results), "words in the middle of label are detected.")
         self.assertEqual("The Medicines Company", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "UVA", limit=10)
+        results = LookupService.lookup(workflow,"TaskEnumLookup", "AllTheNames", "UVA", limit=10)
         self.assertEqual(1, len(results), "Beginning of label is found.")
         self.assertEqual("UVA - INTERNAL - GM USE ONLY", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "uva", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup","AllTheNames", "uva", limit=10)
         self.assertEqual(1, len(results), "case does not matter.")
         self.assertEqual("UVA - INTERNAL - GM USE ONLY", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "medici", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "medici", limit=10)
         self.assertEqual(1, len(results), "partial words are picked up.")
         self.assertEqual("The Medicines Company", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "Genetics Savings", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "Genetics Savings", limit=10)
         self.assertEqual(1, len(results), "multiple terms are picked up..")
         self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "Genetics Sav", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "Genetics Sav", limit=10)
         self.assertEqual(1, len(results), "prefix queries still work with partial terms")
         self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "Gen Sav", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "Gen Sav", limit=10)
         self.assertEqual(1, len(results), "prefix queries still work with ALL the partial terms")
         self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "Inc", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "Inc", limit=10)
         self.assertEqual(7, len(results), "short terms get multiple correct results.")
         self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "reaction design", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "reaction design", limit=10)
         self.assertEqual(3, len(results), "all results come back for two terms.")
         self.assertEqual("Reaction Design", results[0].label, "Exact matches come first.")
 
-        results = LookupService.lookup(workflow, "AllTheNames", "1 Something", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "1 Something", limit=10)
         self.assertEqual("1 Something", results[0].label, "Exact matches are preferred")
 
-        results = LookupService.lookup(workflow, "AllTheNames", "1 (!-Something", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "1 (!-Something", limit=10)
         self.assertEqual("1 Something", results[0].label, "special characters don't flake out")
 
-        results = LookupService.lookup(workflow, "AllTheNames", "1  Something", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "1  Something", limit=10)
         self.assertEqual("1 Something", results[0].label, "double spaces should not be an issue.")
 
-        results = LookupService.lookup(workflow, "AllTheNames", "in", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "in", limit=10)
         self.assertEqual(10, len(results), "stop words are not removed.")
         self.assertEqual("Genetics Savings & Clone, Inc.", results[0].label)
 
-        results = LookupService.lookup(workflow, "AllTheNames", "other", limit=10)
+        results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "other", limit=10)
         self.assertEqual("Other", results[0].label, "Can't find the word 'other', which is an english stop word")
 
 
