@@ -262,12 +262,13 @@ class WorkflowService(object):
 
         # If no default exists, return None
         # Note: if default is False, we don't want to execute this code
-        if default is None:
-            return None
+        if default is None or (isinstance(default, str) and default.strip() == ''):
+            if field.type == "enum" or field.type == "autocomplete":
+                return {'value': None, 'label': None}
+            else:
+                return None
 
         if field.type == "enum" and not has_lookup:
-            if isinstance(default, str) and default.strip() == '':
-                return
             default_option = next((obj for obj in field.options if obj.id == default), None)
             if not default_option:
                 raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "

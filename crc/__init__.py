@@ -63,7 +63,7 @@ if app.config['SENTRY_ENVIRONMENT']:
 # Connexion Error handling
 def render_errors(exception):
     from crc.api.common import ApiError, ApiErrorSchema
-    error = ApiError(code=exception.title, message=exception.details, status_code=exception.status)
+    error = ApiError(code=exception.title, message=exception.detail, status_code=exception.status)
     return Response(ApiErrorSchema().dump(error), status=401, mimetype="application/json")
 
 
