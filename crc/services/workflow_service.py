@@ -156,9 +156,10 @@ class WorkflowService(object):
 
             # If a field is hidden and required, it must have a default value or value_expression
             if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
-                if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or not (hasattr(field, 'default_value')):
+                if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) and \
+                        (not (hasattr(field, 'default_value')) or field.default_value is None):
                     raise ApiError(code='hidden and required field missing default',
-                                   message='Fields that are required but can be hidden must have either a default value or a value_expression',
+                                   message=f'Field "{field.id}" is required but can be hidden. It must have either a default value or a value_expression',
                                    task_id='task.id',
                                    task_name=task.get_name())
 
