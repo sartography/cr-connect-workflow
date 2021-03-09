@@ -173,10 +173,19 @@ class WorkflowProcessor(object):
         else:
             self.is_latest_spec = False
 
-    def reset(self, workflow_model, clear_data=False):
+    @staticmethod
+    def reset(workflow_model, clear_data=False):
         print('WorkflowProcessor: reset: ')
 
-        self.cancel_notify()
+        # Try to execute a cancel notify
+        try:
+            wp = WorkflowProcessor(workflow_model)
+            wp.cancel_notify() # The executes a notification to all endpoints that
+        except Exception as e:
+            app.logger.error(f"Unable to send a cancel notify for workflow %s during a reset."
+                             f" Continuing with the reset anyway so we don't get in an unresolvable"
+                             f" state. An %s error occured with the following information: %s" %
+                             (workflow_model.id, e.__class__.__name__, str(e)))
         workflow_model.bpmn_workflow_json = None
         if clear_data:
             # Clear form_data from task_events
@@ -186,7 +195,7 @@ class WorkflowProcessor(object):
                 task_event.form_data = {}
                 session.add(task_event)
         session.commit()
-        return self.__init__(workflow_model)
+        return WorkflowProcessor(workflow_model)
 
     def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
         if workflow_model.bpmn_workflow_json:
