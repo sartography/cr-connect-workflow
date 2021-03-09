@@ -66,7 +66,7 @@ class DataStoreTest(BaseTest):
 
 
 
-    def test_update_study(self):
+    def test_update_datastore(self):
         self.load_example_data()
         new_study = self.add_test_study_data()
         new_study = session.query(DataStoreModel).filter_by(id=new_study["id"]).first()
@@ -87,7 +87,7 @@ class DataStoreTest(BaseTest):
 
 
 
-    def test_delete_study(self):
+    def test_delete_datastore(self):
         self.load_example_data()
         new_study = self.add_test_study_data()
         oldid = new_study['id']
