@@ -731,5 +731,4 @@ class WorkflowService(object):
         workflows = db.session.query(WorkflowModel).filter_by(study_id=study_id).all()
         for workflow in workflows:
             if workflow.status == WorkflowStatus.user_input_required or workflow.status == WorkflowStatus.waiting:
-                processor = WorkflowProcessor(workflow)
-                processor.reset(workflow)
+                WorkflowProcessor.reset(workflow, clear_data=False)
