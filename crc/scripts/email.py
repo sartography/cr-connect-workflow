@@ -3,11 +3,13 @@ import re
 import markdown
 from jinja2 import Template
 
-from crc import app
+from crc import app, session
 from crc.api.common import ApiError
+from crc.models.user import UserModel
 from crc.scripts.script import Script
 from crc.services.ldap_service import LdapService
 from crc.services.email_service import EmailService
+from crc.services.study_service import StudyService
 
 from flask import render_template, request
 
@@ -27,17 +29,34 @@ email ("My Subject", "dhf8r@virginia.edu", pi.email)
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.get_subject(args)
-        self.get_email_recipients(task, args)
+        self.get_subject(kwargs['subject'])
+        self.get_email_recipients(kwargs['recipients'])
         self.get_content(task)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
-        if len(args) < 2:
+        if 'subject' in kwargs and 'recipients' in kwargs:
+            subject = self.get_subject(kwargs['subject'])
+
+            # we can send the email to all the people associated with a study
+            # who have send_email set to True
+            if kwargs['recipients'] == 'associated':
+                recipient_uids = []
+                recipients = []
+                associates = StudyService.get_study_associates(study_id)
+                for associate in associates:
+                    if associate['send_email'] is True:
+                        recipient_uids.append(associate['uid'])
+                        # Shoe.query.filter(Shoe.id.in_(my_list_of_ids)).all()
+                returned = UserModel.query.filter(UserModel.uid.in_(recipient_uids)).all()
+                for item in returned:
+                    recipients.append(item.email_address)
+            else:
+                recipients = self.get_email_recipients(kwargs['recipients'])
+
+        else:
             raise ApiError(code="missing_argument",
                            message="Email script requires a subject and at least one email address as arguments")
-        subject = self.get_subject(args)
-        recipients = self.get_email_recipients(task, args)
 
         if recipients:
             content, content_html = self.get_content(task)
@@ -50,50 +69,39 @@ email ("My Subject", "dhf8r@virginia.edu", pi.email)
                 study_id=study_id
             )
 
-    def check_valid_email(self, email):
+    @staticmethod
+    def check_valid_email(email):
         # regex from https://emailregex.com/
         regex = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
-        if (re.search(regex, email)):
+        if re.search(regex, email):
             return True
         else:
             return False
 
-    def get_email_recipients(self, task, args):
+    def get_email_recipients(self, recipients):
         emails = []
 
-        if len(args) < 2:
-            raise ApiError(code="missing_argument",
-                           message="Email script requires at least one email address as an argument. "
-                                   "Multiple email addresses are accepted.")
+        # Recipient can be an email address or list of email addresses
+        if isinstance(recipients, str):
+            emails_to_check = [recipients]
+        elif isinstance(recipients, list):
+            emails_to_check = recipients
+        else:
+            raise ApiError(code="invalid_argument",
+                           message=f"Email script requires a valid email address (or list of addresses), but received '{recipients}'")
 
-        # Every argument following the subject should be an email, or a list of emails.
-        for arg in args[1:]:
-            if isinstance(arg, str):
-                emails_to_check = [arg]
-            elif isinstance(arg, list):
-                emails_to_check = arg
+        for e in emails_to_check:
+            if self.check_valid_email(e):
+                emails.append(e)
             else:
                 raise ApiError(code="invalid_argument",
-                               message=f"Email script requires a valid email address, but received '{arg}'")
-
-            for e in emails_to_check:
-                if self.check_valid_email(e):
-                    emails.append(e)
-                else:
-                    raise ApiError(code="invalid_argument",
-                                   message="The email address you provided could not be parsed. "
-                                           "The value you provided is '%s" % e)
+                               message="The email address you provided could not be parsed. "
+                                       "The value you provided is '%s" % e)
 
         return emails
 
     @staticmethod
-    def get_subject(args):
-        # subject = ''
-        if len(args[0]) < 1:
-            raise ApiError(code="missing_argument",
-                           message="No subject was provided for the email message.")
-
-        subject = args[0]
+    def get_subject(subject):
         if not subject or not isinstance(subject, str):
             raise ApiError(code="invalid_argument",
                            message="The subject you provided could not be parsed. "
