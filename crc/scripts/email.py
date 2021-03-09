@@ -3,7 +3,7 @@ import re
 import markdown
 from jinja2 import Template
 
-from crc import app, session
+from crc import app
 from crc.api.common import ApiError
 from crc.models.user import UserModel
 from crc.scripts.script import Script
