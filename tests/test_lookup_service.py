@@ -54,8 +54,7 @@ class TestLookupService(BaseTest):
 
         # restart the workflow, so it can pick up the changes.
 
-        processor = WorkflowProcessor(workflow)
-        processor.reset(workflow)
+        processor = WorkflowProcessor.reset(workflow)
         workflow = processor.workflow_model
 
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
@@ -92,8 +91,7 @@ class TestLookupService(BaseTest):
         results = LookupService.lookup(workflow, task.task_spec.name, "selectedItem", "", value="apples", limit=10)
         self.assertEqual(0, len(results), "We shouldn't find our fruits mixed in with our animals.")
 
-
-        processor.reset(workflow, clear_data=True)
+        processor = WorkflowProcessor.reset(workflow, clear_data=True)
         processor.do_engine_steps()
         task = processor.get_ready_user_tasks()[0]
         task.data = {"type": "fruit"}

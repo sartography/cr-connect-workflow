@@ -11,7 +11,7 @@ from crc.scripts.complete_template import CompleteTemplate
 from crc.scripts.script import Script
 import crc.scripts
 from crc.services.mails import send_test_email
-from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
 
 
 def render_markdown(data, template):
@@ -76,10 +76,11 @@ def evaluate_python_expression(body):
     front end application needs to do real-time processing on task data. If for instance
     there is a hide expression that is based on a previous value in the same form."""
     try:
-        # fixme: The script engine should be pulled from Workflow Processor,
-        #  but the one it returns overwrites the evaluate expression making it uncallable.
-        script_engine = PythonScriptEngine()
-        result = script_engine.evaluate(body['expression'], **body['data'])
+        script_engine = CustomBpmnScriptEngine()
+        result = script_engine.eval(body['expression'], body['data'])
         return {"result": result}
     except Exception as e:
-        raise ApiError("expression_error", str(e))
+        raise ApiError("expression_error", f"Failed to evaluate the expression '%s'. %s" %
+                       (body['expression'], str(e)),
+                       task_data = body["data"])
+
