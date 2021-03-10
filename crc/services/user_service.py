@@ -62,7 +62,7 @@ class UserService(object):
         if uid is None:
             raise ApiError("invalid_uid", "Please provide a valid user uid.")
 
-        if not UserService.admin_is_impersonating() and UserService.is_different_user(uid):
+        if  UserService.is_different_user(uid):
             # Impersonate the user if the given uid is valid.
             impersonate_user = session.query(UserModel).filter(UserModel.uid == uid).first()
 
@@ -70,6 +70,7 @@ class UserService(object):
                 g.impersonate_user = impersonate_user
 
                 # Store the uid and user session token.
+                session.query(AdminSessionModel).filter(AdminSessionModel.token==g.token).delete()
                 session.add(AdminSessionModel(token=g.token, admin_impersonate_uid=uid))
                 session.commit()
             else:
