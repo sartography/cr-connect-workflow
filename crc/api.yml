@@ -1035,17 +1035,37 @@ paths:
                 type: string
   /send_email:
     parameters:
-      - name: address
-        in: query
+      - in: query
+        name: subject
+        required: true
+        description: The subject of the email.
+        schema:
+          type: string
+      - in: query
+        name: address
         required: true
         description: The address to send a test email to.
         schema:
           type: string
-    get:
+      - in: query
+        name: data
+        required: false
+        description:
+          The data to use in populating the message.
+        schema:
+          type: string
+        example: {"id_1": "value_1", "id_2": "value_2"}
+    put:
       operationId: crc.api.tools.send_email
-      summary: Sends an email so we can see if things work or not.
+      summary: Sends an email so we can see what the message will look like.
       tags:
         - Configurator Tools
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
       responses:
         '201':
           description: Returns any error messages that might come back from sending the email.
