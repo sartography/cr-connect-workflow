@@ -10,8 +10,10 @@ from crc.api.common import ApiError
 from crc.scripts.complete_template import CompleteTemplate
 from crc.scripts.script import Script
 import crc.scripts
-from crc.services.mails import send_test_email
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.email_service import EmailService
+from crc.services.workflow_processor import WorkflowProcessor, CustomBpmnScriptEngine
+from config.default import DEFAULT_SENDER
 
 
 def render_markdown(data, template):
@@ -64,11 +66,14 @@ def list_scripts():
     return script_meta
 
 
-def send_email(address):
+def send_email(subject, address, body, data=None):
     """Just sends a quick test email to assure the system is working."""
-    if not address:
-        address = "dan@sartography.com"
-    return send_test_email(address, [address])
+    if address and body:
+        body = body.decode('UTF-8')
+        return send_test_email(subject, address, body, json.loads(data))
+    else:
+        raise ApiError(code='missing_parameter',
+                       message='You must provide an email address and a message.')
 
 
 def evaluate_python_expression(body):
@@ -83,3 +88,14 @@ def evaluate_python_expression(body):
         return {"result": result}
     except Exception as e:
         raise ApiError("expression_error", str(e))
+
+
+def send_test_email(subject, address, message, data=None):
+    rendered, wrapped = EmailService().get_rendered_content(message, data)
+    EmailService.add_email(
+        subject=subject,
+        sender=DEFAULT_SENDER,
+        recipients=[address],
+        content=rendered,
+        content_html=wrapped)
+
