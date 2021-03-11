@@ -2,7 +2,7 @@ import json
 import os
 
 from tests.base_test import BaseTest
-from crc import app
+from crc import app, mail
 
 
 class TestStudyApi(BaseTest):
@@ -59,3 +59,25 @@ class TestStudyApi(BaseTest):
         self.assert_success(rv)
         response = json.loads(rv.get_data(as_text=True))
         self.assertEqual('Hello, Trillian Astra!!!', response['result'])
+
+    def test_send_email(self):
+        subject = 'CR Connect Test Email'
+        address = 'user@example.com'
+        data = {'user': 'Person of Interest'}
+        message = """
+Dear {{ user }},
+
+Thank you for using this email example.
+I hope this makes sense.
+
+Yours faithfully,
+CR Connect
+"""
+        with mail.record_messages() as outbox:
+            rv = self.app.put('/v1.0/send_email?subject=%s&address=%s&data=%s' %
+                              (subject, address, json.dumps(data)), data=json.dumps(message), headers=self.logged_in_headers())
+            self.assert_success(rv)
+            self.assertEqual(1, len(outbox))
+            self.assertEqual(subject, outbox[0].subject)
+            self.assertEqual(['user@example.com'], outbox[0].recipients)
+            self.assertIn('Person of Interest', outbox[0].body)
