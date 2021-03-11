@@ -12,6 +12,7 @@ from crc.scripts.script import Script
 
 from crc.services.email_service import EmailService
 from config.default import DEFAULT_SENDER
+from crc.services.workflow_processor import CustomBpmnScriptEngine
 
 
 def render_markdown(data, template):
