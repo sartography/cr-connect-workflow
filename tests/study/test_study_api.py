@@ -1,17 +1,19 @@
 import json
 from profile import Profile
 
+from crc.services.ldap_service import LdapService
 from tests.base_test import BaseTest
 
 from datetime import datetime, timezone
 from unittest.mock import patch
 
+from crc.models.email import EmailModel
 from crc import session, app
 from crc.models.protocol_builder import ProtocolBuilderStatus, \
     ProtocolBuilderStudySchema
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
-from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType
+from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType, StudyAssociated
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -274,7 +276,7 @@ class TestStudyApi(BaseTest):
             self.assertTrue(file.archived)
             self.assertIsNone(file.workflow_id)
 
-    def test_delete_study_with_workflow_and_status(self):
+    def test_delete_study_with_workflow_and_status_etc(self):
         self.load_example_data()
         workflow = session.query(WorkflowModel).first()
         stats1 = StudyEvent(
@@ -284,6 +286,14 @@ class TestStudyApi(BaseTest):
             event_type=StudyEventType.user,
             user_uid=self.users[0]['uid'],
         )
+        LdapService.user_info('dhf8r') # Assure that there is a dhf8r in ldap for StudyAssociated.
+
+        email = EmailModel(subject="x", study_id=workflow.study_id)
+        associate = StudyAssociated(study_id=workflow.study_id, uid=self.users[0]['uid'])
+        event = StudyEvent(study_id=workflow.study_id)
+        session.add_all([email, associate, event])
+
+
         stats2 = TaskEventModel(study_id=workflow.study_id, workflow_id=workflow.id, user_uid=self.users[0]['uid'])
         session.add_all([stats1, stats2])
         session.commit()
@@ -291,7 +301,6 @@ class TestStudyApi(BaseTest):
         self.assert_success(rv)
         del_study = session.query(StudyModel).filter(StudyModel.id == workflow.study_id).first()
         self.assertIsNone(del_study)
-
 
 
     # """

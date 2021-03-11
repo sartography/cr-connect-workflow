@@ -156,9 +156,10 @@ class WorkflowService(object):
 
             # If a field is hidden and required, it must have a default value or value_expression
             if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED):
-                if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or not (hasattr(field, 'default_value')):
+                if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) and \
+                        (not (hasattr(field, 'default_value')) or field.default_value is None):
                     raise ApiError(code='hidden and required field missing default',
-                                   message='Fields that are required but can be hidden must have either a default value or a value_expression',
+                                   message=f'Field "{field.id}" is required but can be hidden. It must have either a default value or a value_expression',
                                    task_id='task.id',
                                    task_name=task.get_name())
 
@@ -262,12 +263,13 @@ class WorkflowService(object):
 
         # If no default exists, return None
         # Note: if default is False, we don't want to execute this code
-        if default is None:
-            return None
+        if default is None or (isinstance(default, str) and default.strip() == ''):
+            if field.type == "enum" or field.type == "autocomplete":
+                return {'value': None, 'label': None}
+            else:
+                return None
 
         if field.type == "enum" and not has_lookup:
-            if isinstance(default, str) and default.strip() == '':
-                return
             default_option = next((obj for obj in field.options if obj.id == default), None)
             if not default_option:
                 raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
@@ -729,5 +731,4 @@ class WorkflowService(object):
         workflows = db.session.query(WorkflowModel).filter_by(study_id=study_id).all()
         for workflow in workflows:
             if workflow.status == WorkflowStatus.user_input_required or workflow.status == WorkflowStatus.waiting:
-                processor = WorkflowProcessor(workflow)
-                processor.reset(workflow)
+                WorkflowProcessor.reset(workflow, clear_data=False)

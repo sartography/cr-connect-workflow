@@ -213,6 +213,27 @@ class TestTasksApi(BaseTest):
         self.assertTrue(workflow_api.spec_version.startswith("v2 "))
         self.assertTrue(workflow_api.is_latest_spec)
 
+    def test_reset_workflow_from_broken_spec(self):
+        # Start the basic two_forms workflow and complete a task.
+        workflow = self.create_workflow('two_forms')
+        workflow_api = self.get_workflow_api(workflow)
+        self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
+        self.assertTrue(workflow_api.is_latest_spec)
+
+        # Break the bpmn json
+        workflow.bpmn_workflow_json = '{"something":"broken"}'
+        session.add(workflow)
+        session.commit()
+
+        # Try to load the workflow, we should get an error
+        with self.assertRaises(Exception):
+            workflow_api = self.complete_form(workflow, workflow_api.next_task, {"name": "Dan"})
+
+        # Now, Reset the workflow, and we should not get an error
+        workflow_api = self.restart_workflow_api(workflow_api, clear_data=True)
+        self.assertIsNotNone(workflow_api)
+
+
 
     def test_manual_task_with_external_documentation(self):
         workflow = self.create_workflow('manual_task_with_external_documentation')

@@ -120,7 +120,7 @@ def restart_workflow(workflow_id, clear_data=False):
     """Restart a workflow with the latest spec.
        Clear data allows user to restart the workflow without previous data."""
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    WorkflowProcessor(workflow_model).reset(workflow_model, clear_data=clear_data)
+    WorkflowProcessor.reset(workflow_model, clear_data=clear_data)
     return get_workflow(workflow_model.id)
 
 
