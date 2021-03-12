@@ -538,8 +538,13 @@ class WorkflowService(object):
             try:
                 task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties[Task.PROP_EXTENSIONS_TITLE])
             except Exception as e:
-                raise ApiError.from_task(code="task_title_error", message="Could not set task title on task %s with '%s' property because %s" %
-                                                              (spiff_task.task_spec.name, Task.PROP_EXTENSIONS_TITLE, str(e)), task=spiff_task)
+                # if the task is ready, we should raise an error, but if it is in the future or the past, we may not
+                # have the information we need to properly set the title, so don't error out, and just use what is
+                # provided.
+                if spiff_task.state == spiff_task.READY:
+                    raise ApiError.from_task(code="task_title_error", message="Could not set task title on task %s with '%s' property because %s" %
+                                                                  (spiff_task.task_spec.name, Task.PROP_EXTENSIONS_TITLE, str(e)), task=spiff_task)
+                # Otherwise, just use the curreent title.
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
         return task
