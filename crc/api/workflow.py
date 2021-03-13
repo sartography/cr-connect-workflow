@@ -179,7 +179,7 @@ def set_current_task(workflow_id, task_id):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def update_task(workflow_id, task_id, body, terminate_loop=None):
+def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=False):
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     if workflow_model is None:
         raise ApiError("invalid_workflow_id", "The given workflow id is not valid.", status_code=404)
@@ -191,6 +191,8 @@ def update_task(workflow_id, task_id, body, terminate_loop=None):
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
     _verify_user_and_role(processor, spiff_task)
+    user = UserService.current_user(allow_admin_impersonate=False) # Always log as the real user.
+
     if not spiff_task:
         raise ApiError("empty_task", "Processor failed to obtain task.", status_code=404)
     if spiff_task.state != spiff_task.READY:
@@ -199,18 +201,33 @@ def update_task(workflow_id, task_id, body, terminate_loop=None):
 
     if terminate_loop:
         spiff_task.terminate_loop()
-    spiff_task.update_data(body)
-    processor.complete_task(spiff_task)
-    processor.do_engine_steps()
-    processor.save()
 
-    # Log the action, and any pending task assignments in the event of lanes in the workflow.
-    user = UserService.current_user(allow_admin_impersonate=False) # Always log as the real user.
-    WorkflowService.log_task_action(user.uid, processor, spiff_task, WorkflowService.TASK_ACTION_COMPLETE)
+    # Update the task
+    __update_task(processor, spiff_task, body, user)
+
+    # If we need to update all tasks, then get the next ready task and if it a multi-instance with the same
+    # task spec, complete that form as well.
+    if update_all:
+        next_task = processor.next_task()
+        form_data = WorkflowService().extract_form_data(body, spiff_task)
+        while next_task and next_task.task_info()["mi_index"] > 0:
+            __update_task(processor, next_task, form_data, user)
+            next_task = processor.next_task()
+
     WorkflowService.update_task_assignments(processor)
-
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
+
+
+def __update_task(processor, task, data, user):
+    """All the things that need to happen when we complete a form, abstracted
+    here because we need to do it multiple times when completing all tasks in
+    a multi-instance task"""
+    task.update_data(data)
+    processor.complete_task(task)
+    processor.do_engine_steps()
+    processor.save()
+    WorkflowService.log_task_action(user.uid, processor, task, WorkflowService.TASK_ACTION_COMPLETE)
 
 
 def list_workflow_spec_categories():

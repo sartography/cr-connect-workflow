@@ -68,24 +68,24 @@ class BaseTest(unittest.TestCase):
 
     studies = [
         {
-            'id':0,
-            'title':'The impact of fried pickles on beer consumption in bipedal software developers.',
-            'last_updated':datetime.datetime.now(),
-            'status':StudyStatus.in_progress,
-            'primary_investigator_id':'dhf8r',
-            'sponsor':'Sartography Pharmaceuticals',
-            'ind_number':'1234',
-            'user_uid':'dhf8r'
+            'id': 0,
+            'title': 'The impact of fried pickles on beer consumption in bipedal software developers.',
+            'last_updated': datetime.datetime.now(),
+            'status': StudyStatus.in_progress,
+            'primary_investigator_id': 'dhf8r',
+            'sponsor': 'Sartography Pharmaceuticals',
+            'ind_number': '1234',
+            'user_uid': 'dhf8r'
         },
         {
-            'id':1,
-            'title':'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
-            'last_updated':datetime.datetime.now(),
-            'status':StudyStatus.in_progress,
-            'primary_investigator_id':'dhf8r',
-            'sponsor':'Makerspace & Co.',
-            'ind_number':'5678',
-            'user_uid':'dhf8r'
+            'id': 1,
+            'title': 'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
+            'last_updated': datetime.datetime.now(),
+            'status': StudyStatus.in_progress,
+            'primary_investigator_id': 'dhf8r',
+            'sponsor': 'Makerspace & Co.',
+            'ind_number': '5678',
+            'user_uid': 'dhf8r'
         }
     ]
 
@@ -140,7 +140,6 @@ class BaseTest(unittest.TestCase):
         """
         session.execute("delete from workflow; delete from file_data; delete from file; delete from workflow_spec;")
         session.commit()
-
 
     def load_example_data(self, use_crc_data=False, use_rrt_data=False):
         """use_crc_data will cause this to load the mammoth collection of documents
@@ -218,7 +217,6 @@ class BaseTest(unittest.TestCase):
         with open(filepath, 'rb') as myfile:
             data = myfile.read()
         return data
-
 
     def assert_success(self, rv, msg=""):
         try:
@@ -361,7 +359,7 @@ class BaseTest(unittest.TestCase):
     def get_workflow_api(self, workflow, do_engine_steps=True, user_uid="dhf8r"):
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
-        url = (f'/v1.0/workflow/{workflow.id}' 
+        url = (f'/v1.0/workflow/{workflow.id}'
                f'?do_engine_steps={str(do_engine_steps)}')
         workflow_api = self.get_workflow_common(url, user)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
@@ -370,13 +368,14 @@ class BaseTest(unittest.TestCase):
     def restart_workflow_api(self, workflow, clear_data=False, user_uid="dhf8r"):
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
-        url = (f'/v1.0/workflow/{workflow.id}/restart' 
+        url = (f'/v1.0/workflow/{workflow.id}/restart'
                f'?clear_data={str(clear_data)}')
         workflow_api = self.get_workflow_common(url, user)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
-    def complete_form(self, workflow_in, task_in, dict_data, error_code=None, terminate_loop=None, user_uid="dhf8r"):
+    def complete_form(self, workflow_in, task_in, dict_data, update_all=False, error_code=None, terminate_loop=None,
+                      user_uid="dhf8r"):
         prev_completed_task_count = workflow_in.completed_tasks
         if isinstance(task_in, dict):
             task_id = task_in["id"]
@@ -385,16 +384,16 @@ class BaseTest(unittest.TestCase):
 
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
+        args = ""
         if terminate_loop:
-            rv = self.app.put('/v1.0/workflow/%i/task/%s/data?terminate_loop=true' % (workflow_in.id, task_id),
-                              headers=self.logged_in_headers(user=user),
-                              content_type="application/json",
-                              data=json.dumps(dict_data))
-        else:
-            rv = self.app.put('/v1.0/workflow/%i/task/%s/data' % (workflow_in.id, task_id),
-                              headers=self.logged_in_headers(user=user),
-                              content_type="application/json",
-                              data=json.dumps(dict_data))
+            args += "?terminate_loop=true"
+        if update_all:
+            args += "?update_all=true"
+
+        rv = self.app.put('/v1.0/workflow/%i/task/%s/data%s' % (workflow_in.id, task_id, args),
+                          headers=self.logged_in_headers(user=user),
+                          content_type="application/json",
+                          data=json.dumps(dict_data))
         if error_code:
             self.assert_failure(rv, error_code=error_code)
             return
@@ -408,7 +407,7 @@ class BaseTest(unittest.TestCase):
         # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
         self.assertIsNotNone(workflow.total_tasks)
         # presumably, we also need to deal with sequential items here too . .
-        if not task_in.multi_instance_type == 'looping':
+        if not task_in.multi_instance_type == 'looping' and not update_all:
             self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
 
         # Assure a record exists in the Task Events

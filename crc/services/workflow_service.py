@@ -724,7 +724,12 @@ class WorkflowService(object):
                 elif isinstance(task.task_spec, MultiInstanceTask):
                     group = task.task_spec.elementVar
                     if group in latest_data:
-                        data[group] = latest_data[group]
+                        if isinstance(group, int):
+                            data[group] = latest_data[group]
+                        elif field.id in latest_data[group]:
+                            if group not in data:
+                                data[group] = {}
+                                data[group][field.id] = latest_data[group][field.id]
                 else:
                     if field.id in latest_data:
                         data[field.id] = latest_data[field.id]
