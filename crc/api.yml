@@ -904,6 +904,12 @@ paths:
         description: Terminate the loop on a looping task
         schema:
           type: boolean
+      - name: update_all
+        in: query
+        required: false
+        description: In the case of a multi-instance user task, update all tasks with the submitted values.
+        schema:
+          type: boolean
     put:
       operationId: crc.api.workflow.update_task
       summary: Exclusively for User Tasks, submits form data as a flat set of key/values.

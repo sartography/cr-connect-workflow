@@ -1,13 +1,7 @@
-from unittest.mock import patch
-
-from crc import session
-from crc.models.api_models import MultiInstanceType
-from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowStatus
+from tests.base_test import BaseTest
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
-from tests.base_test import BaseTest
 
 
 class TestWorkflowProcessorLoopingTask(BaseTest):

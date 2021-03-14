@@ -98,3 +98,19 @@ class TestWorkflowService(BaseTest):
     def test_expressions_in_forms(self):
         workflow_spec_model = self.load_test_spec("form_expressions")
         WorkflowService.test_spec(workflow_spec_model.id)
+
+    def test_set_value(self):
+        destiation = {}
+        path = "a.b.c"
+        value = "abracadara"
+        result = WorkflowService.set_dot_value(path, value, destiation)
+        self.assertEqual(value, destiation["a"]["b"]["c"])
+
+    def test_get_dot_value(self):
+        path = "a.b.c"
+        source = {"a":{"b":{"c" : "abracadara"}}, "a.b.c":"garbage"}
+        result = WorkflowService.get_dot_value(path, source)
+        self.assertEqual("abracadara", result)
+
+        result2 = WorkflowService.get_dot_value(path, {"a.b.c":"garbage"})
+        self.assertEqual("garbage", result2)

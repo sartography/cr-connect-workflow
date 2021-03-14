@@ -6,8 +6,8 @@ class TestBooleanDefault(BaseTest):
     def do_test(self, yes_no):
         workflow = self.create_workflow('boolean_default_value')
         workflow_api = self.get_workflow_api(workflow)
-        first_task = workflow_api.next_task
-        result = self.complete_form(workflow_api, first_task, {'yes_no': yes_no})
+        set_default_task = workflow_api.next_task
+        result = self.complete_form(workflow_api, set_default_task, {'yes_no': yes_no})
         return result
 
     def test_boolean_true_string(self):

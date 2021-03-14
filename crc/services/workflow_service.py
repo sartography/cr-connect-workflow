@@ -16,6 +16,7 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask, MultiChoice
 from SpiffWorkflow.util.deep_merge import DeepMerge
+from box import Box
 from jinja2 import Template
 
 from crc import db, app
@@ -709,7 +710,8 @@ class WorkflowService(object):
 
     @staticmethod
     def extract_form_data(latest_data, task):
-        """Removes data from latest_data that would be added by the child task or any of its children."""
+        """Extracts data from the latest_data that is directly related to the form that is being
+        submitted."""
         data = {}
 
         if hasattr(task.task_spec, 'form'):
@@ -721,15 +723,48 @@ class WorkflowService(object):
                     group = field.get_property(Task.FIELD_PROP_REPEAT)
                     if group in latest_data:
                         data[group] = latest_data[group]
-                elif isinstance(task.task_spec, MultiInstanceTask):
-                    group = task.task_spec.elementVar
-                    if group in latest_data:
-                        data[group] = latest_data[group]
                 else:
-                    if field.id in latest_data:
-                        data[field.id] = latest_data[field.id]
-
+                    value = WorkflowService.get_dot_value(field.id, latest_data)
+                    if value is not None:
+                        WorkflowService.set_dot_value(field.id, value, data)
         return data
+
+    @staticmethod
+    def get_dot_value(path, source):
+        ### Given a path in dot notation, uas as 'fruit.type' tries to find that value in
+        ### the source, but looking deep in the dictionary.
+        paths = path.split(".")  # [a,b,c]
+        s = source
+        index = 0
+        for p in paths:
+            index += 1
+            if isinstance(s, dict) and p in s:
+                if index == len(paths):
+                    return s[p]
+                else:
+                    s = s[p]
+        if path in source:
+            return source[path]
+        return None
+
+
+    @staticmethod
+    def set_dot_value(path, value, target):
+        ### Given a path in dot notation, such as "fruit.type", and a value "apple", will
+        ### set the value in the target dictionary, as target["fruit"]["type"]="apple"
+        destination = target
+        paths = path.split(".")  # [a,b,c]
+        index = 0
+        for p in paths:
+            index += 1
+            if p not in destination:
+                if index == len(paths):
+                    destination[p] = value
+                else:
+                    destination[p] = {}
+            destination = destination[p]
+        return target
+
 
     @staticmethod
     def process_workflows_for_cancels(study_id):

@@ -256,30 +256,6 @@ class TestTasksApi(BaseTest):
         self.assertEqual("JustAValue", task.properties['JustAKey'])
 
 
-    @patch('crc.services.protocol_builder.requests.get')
-    def test_multi_instance_task(self, mock_get):
-
-        self.load_example_data()
-
-        # Enable the protocol builder.
-        app.config['PB_ENABLED'] = True
-
-        # This depends on getting a list of investigators back from the protocol builder.
-        mock_get.return_value.ok = True
-        mock_get.return_value.text = self.protocol_builder_response('investigators.json')
-
-        workflow = self.create_workflow('multi_instance')
-
-        # get the first form in the two form workflow.
-        workflow = self.get_workflow_api(workflow)
-        navigation = self.get_workflow_api(workflow).navigation
-        self.assertEqual(5, len(navigation)) # Start task, form_task, multi_task, end task
-        self.assertEqual("UserTask", workflow.next_task.type)
-        self.assertEqual(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
-        self.assertEqual(5, workflow.next_task.multi_instance_count)
-
-        # Assure that the names for each task are properly updated, so they aren't all the same.
-        self.assertEqual("Primary Investigator", workflow.next_task.title)
 
     def test_lookup_endpoint_for_task_field_enumerations(self):
         workflow = self.create_workflow('enum_options_with_search')
@@ -444,43 +420,4 @@ class TestTasksApi(BaseTest):
         self.complete_form(workflow, workflow.next_task, {"has_bananas": False})
         workflow = self.get_workflow_api(workflow)
         self.assertEqual('Task_Why_No_Bananas', workflow.next_task.name)
-
-    @patch('crc.services.protocol_builder.requests.get')
-    def test_parallel_multi_instance(self, mock_get):
-
-        # Assure we get nine investigators back from the API Call, as set in the investigators.json file.
-        app.config['PB_ENABLED'] = True
-        mock_get.return_value.ok = True
-        mock_get.return_value.text = self.protocol_builder_response('investigators.json')
-
-        self.load_example_data()
-
-        workflow = self.create_workflow('multi_instance_parallel')
-
-        workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual(9, len(workflow_api.navigation))
-        ready_items = [nav for nav in workflow_api.navigation if nav.state == "READY"]
-        self.assertEqual(5, len(ready_items))
-
-        self.assertEqual("UserTask", workflow_api.next_task.type)
-        self.assertEqual("MultiInstanceTask",workflow_api.next_task.name)
-        self.assertEqual("Primary Investigator", workflow_api.next_task.title)
-
-        for i in random.sample(range(5), 5):
-            task_id = ready_items[i].task_id
-            rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, task_id),
-                              headers=self.logged_in_headers(),
-                              content_type="application/json")
-            self.assert_success(rv)
-            json_data = json.loads(rv.get_data(as_text=True))
-            workflow = WorkflowApiSchema().load(json_data)
-            data = workflow.next_task.data
-            data['investigator']['email'] = "dhf8r@virginia.edu"
-            self.complete_form(workflow, workflow.next_task, data)
-            #tasks = self.get_workflow_api(workflow).user_tasks
-
-        workflow = self.get_workflow_api(workflow)
-        self.assertEqual(WorkflowStatus.complete, workflow.status)
-
-
 
