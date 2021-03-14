@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_a87d172" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_TestEmail" name="Test Email Script" isExecutable="true">
+    <bpmn:documentation>&lt;H1&gt;Welcome&lt;/H1&gt;
+&lt;div&gt;&lt;p&gt;This workflow asks for an email address and sends an email to that address.&lt;/p&gt;&lt;/div&gt;</bpmn:documentation>
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1rmzlhd</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_GetEmailAddress" name="Get Email Address" camunda:formKey="EmailAddress">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="address" label="Please enter an email address" type="string" defaultValue="username@company.com" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0b5st2e</bpmn:incoming>
+      <bpmn:outgoing>Flow_0vf43xo</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0vf43xo" sourceRef="Activity_GetEmailAddress" targetRef="Activity_SendEmail" />
+    <bpmn:scriptTask id="Activity_SendEmail" name="Send Email Message">
+      <bpmn:documentation>Greetings,
+
+
+ 
+ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec vitae volutpat dui. Quisque vitae orci sit amet nisl luctus porttitor id ac lorem. 
+
+
+- Proin vulputate arcu nisi, id pharetra nisi laoreet a. Cras nec lacus magna. 
+- Maecenas at eros feugiat, sagittis metus sit amet, luctus sem. 
+- Integer ut mollis erat. 
+- Ut euismod, massa non dignissim varius, nibh metus faucibus sem, quis gravida lorem dui eu enim.
+
+
+Curabitur eget odio tristique, maximus libero pharetra, tincidunt ex. Nulla facilisi. Vivamus euismod sapien massa, vitae sagittis sem dictum nec. Vivamus vel erat consectetur, tincidunt mi ut, pellentesque dolor. Phasellus nisl dui, mollis vitae consectetur non, volutpat sed arcu. 
+Donec porttitor est ut massa rutrum euismod. Vestibulum massa leo, cursus nec erat et, lacinia lacinia eros. Vestibulum tempus, ligula quis sodales consectetur, enim mi dignissim purus, eget euismod nulla magna et ex.
+Nam vulputate nibh lorem, nec finibus massa fermentum semper. Curabitur maximus sollicitudin arcu sollicitudin aliquet. Aliquam erat volutpat. Nullam gravida feugiat ante, vel ullamcorper orci. Nulla ac pretium justo. Interdum et malesuada fames ac ante ipsum primis in faucibus. Suspendisse pharetra justo ac odio accumsan tincidunt. In hac habitasse platea dictumst.
+
+
+Praesent in odio neque. Mauris hendrerit, urna nec tincidunt faucibus, nunc lectus molestie magna, eget varius dolor enim et turpis. Ut efficitur lacus consequat vehicula cursus. Sed sem velit, sagittis a molestie vitae, lobortis interdum orci. 
+
+
+Phasellus non sapien sit amet velit vestibulum blandit ac at quam. Suspendisse potenti. Nunc eget sagittis nisi. Pellentesque ac felis risus. Maecenas libero nibh, vulputate non mauris vitae, ornare auctor dui. 
+
+Later,
+The Big Sender</bpmn:documentation>
+      <bpmn:incoming>Flow_0vf43xo</bpmn:incoming>
+      <bpmn:outgoing>Flow_1p951bc</bpmn:outgoing>
+      <bpmn:script>subject = 'test email'
+recipients = 'associated'
+email(subject=subject, recipients=recipients)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1p951bc" sourceRef="Activity_SendEmail" targetRef="Activity_GoodBye" />
+    <bpmn:manualTask id="Activity_GoodBye" name="GoodBye&#10;">
+      <bpmn:documentation>&lt;H1&gt;Thank you&lt;/H1&gt;
+&lt;div&gt;&lt;p&gt;You should receive an email message at {{ address }}.&lt;/p&gt;&lt;/div&gt;</bpmn:documentation>
+      <bpmn:incoming>Flow_1p951bc</bpmn:incoming>
+      <bpmn:outgoing>Flow_00wbedu</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_1syrm19">
+      <bpmn:incoming>Flow_00wbedu</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_00wbedu" sourceRef="Activity_GoodBye" targetRef="Event_1syrm19" />
+    <bpmn:sequenceFlow id="Flow_1rmzlhd" sourceRef="StartEvent_1" targetRef="Activity_AddAssociates" />
+    <bpmn:sequenceFlow id="Flow_0b5st2e" sourceRef="Activity_AddAssociates" targetRef="Activity_GetEmailAddress" />
+    <bpmn:scriptTask id="Activity_AddAssociates" name="Add Associates">
+      <bpmn:incoming>Flow_1rmzlhd</bpmn:incoming>
+      <bpmn:outgoing>Flow_0b5st2e</bpmn:outgoing>
+      <bpmn:script>update_study_associates([{'uid':'dhf8r','role':'Chief Bee Keeper', 'send_email': True, 'access':True},{'uid':'lb3dp','role':'Chief Cat Herder', 'send_email': True, 'access':True}])</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_TestEmail">
+      <bpmndi:BPMNEdge id="Flow_0b5st2e_di" bpmnElement="Flow_0b5st2e">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1rmzlhd_di" bpmnElement="Flow_1rmzlhd">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00wbedu_di" bpmnElement="Flow_00wbedu">
+        <di:waypoint x="850" y="117" />
+        <di:waypoint x="912" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1p951bc_di" bpmnElement="Flow_1p951bc">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="750" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0vf43xo_di" bpmnElement="Flow_0vf43xo">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18vxsz8_di" bpmnElement="Activity_GetEmailAddress">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xkeslt_di" bpmnElement="Activity_SendEmail">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_14i1svj_di" bpmnElement="Activity_GoodBye">
+        <dc:Bounds x="750" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1syrm19_di" bpmnElement="Event_1syrm19">
+        <dc:Bounds x="912" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1fre6a2_di" bpmnElement="Activity_AddAssociates">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
