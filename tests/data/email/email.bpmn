@@ -25,7 +25,7 @@ Email content to be delivered to {{ ApprvlApprvr1 }}
     <bpmn:sequenceFlow id="Flow_1synsig" sourceRef="StartEvent_1" targetRef="Activity_1l9vih3" />
     <bpmn:sequenceFlow id="Flow_1xlrgne" sourceRef="Activity_0s5v97n" targetRef="Event_0izrcj4" />
     <bpmn:sequenceFlow id="Flow_08n2npe" sourceRef="Activity_1l9vih3" targetRef="Activity_0s5v97n" />
-    <bpmn:userTask id="Activity_1l9vih3" name="Set Recipients">
+    <bpmn:userTask id="Activity_1l9vih3" name="Set Recipients" camunda:formKey="MyFormKey">
       <bpmn:extensionElements>
         <camunda:formData>
           <camunda:formField id="ApprvlApprvr1" label="Approver" type="string" />

@@ -202,16 +202,20 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
     if terminate_loop:
         spiff_task.terminate_loop()
 
+    # Extract the details specific to the form submitted
+    form_data = WorkflowService().extract_form_data(body, spiff_task)
+
     # Update the task
-    __update_task(processor, spiff_task, body, user)
+    __update_task(processor, spiff_task, form_data, user)
 
     # If we need to update all tasks, then get the next ready task and if it a multi-instance with the same
     # task spec, complete that form as well.
     if update_all:
+        last_index = spiff_task.task_info()["mi_index"]
         next_task = processor.next_task()
-        form_data = WorkflowService().extract_form_data(body, spiff_task)
-        while next_task and next_task.task_info()["mi_index"] > 0:
+        while next_task and next_task.task_info()["mi_index"] > last_index:
             __update_task(processor, next_task, form_data, user)
+            last_index = next_task.task_info()["mi_index"]
             next_task = processor.next_task()
 
     WorkflowService.update_task_assignments(processor)
