@@ -80,7 +80,12 @@ class StudyInfo(Script):
                     'display': 'Optional',
                     'unique': 'Yes',
                     'user_id': 'asd3v',
-                    'error': 'Unable to locate a user with id asd3v in LDAP'}
+                    'error': 'Unable to locate a user with id asd3v in LDAP'},
+                'DEPT_CH': {
+                    'label': 'Department Chair',
+                    'display': 'Always',
+                    'unique': 'Yes',
+                    'user_id': 'lb3dp'}
             },
             "documents": {
                 'AD_CoCApp': {'category1': 'Ancillary Document', 'category2': 'CoC Application', 'category3': '',
