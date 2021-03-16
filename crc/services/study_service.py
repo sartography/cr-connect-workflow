@@ -421,13 +421,15 @@ class StudyService(object):
         warnings = []
         for wfm in workflow_metas:
             if wfm.name in status.keys():
-                if not WorkflowState.has_value(status[wfm.name]):
+                if not WorkflowState.has_value(status[wfm.name]['status']):
                     warnings.append(ApiError("invalid_status",
                                              "Workflow '%s' can not be set to '%s', should be one of %s" % (
                                                  wfm.name, status[wfm.name], ",".join(WorkflowState.list())
                                              )))
                 else:
-                    wfm.state = WorkflowState[status[wfm.name]]
+                    wfm.state = WorkflowState[status[wfm.name]['status']]
+                    if status[wfm.name]['message']:
+                        wfm.state_message = status[wfm.name]['message']
             else:
                 warnings.append(ApiError("missing_status", "No status specified for workflow %s" % wfm.name))
         return warnings
