@@ -97,7 +97,7 @@ class WorkflowService(object):
 
         count = 0
         while not processor.bpmn_workflow.is_completed():
-            if count < 1000:
+            if count < 100:  # check for infinite loop
                 try:
                     processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
                     processor.bpmn_workflow.do_engine_steps()
@@ -124,8 +124,9 @@ class WorkflowService(object):
                     WorkflowService.delete_test_data()
                     raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
             else:
-                raise ApiError.from_workflow_exception(code='validation_loop',
-                                                       message=f'There appears to be an infinite loop in the validation. spec_id: {spec_id}')
+                raise ApiError.from_task(code='validation_loop',
+                                         message=f'There appears to be an infinite loop in the validation. Task is {task.task_spec.description}',
+                                         task=task)
 
         WorkflowService.delete_test_data()
         WorkflowService._process_documentation(processor.bpmn_workflow.last_task.parent.parent)
