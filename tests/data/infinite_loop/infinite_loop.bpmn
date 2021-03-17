@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_81799d0" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_InfiniteLoop" name="Infinite Loop" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0ldlhrt</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0ldlhrt" sourceRef="StartEvent_1" targetRef="Activity_StudyInfo" />
+    <bpmn:scriptTask id="Activity_StudyInfo" name="Get Study Info">
+      <bpmn:incoming>Flow_0ldlhrt</bpmn:incoming>
+      <bpmn:incoming>Flow_05mrx8v</bpmn:incoming>
+      <bpmn:outgoing>Flow_0pddur1</bpmn:outgoing>
+      <bpmn:script>investigators = study_info('investigators')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0pddur1" sourceRef="Activity_StudyInfo" targetRef="Activity_DisplayInvestigators" />
+    <bpmn:manualTask id="Activity_DisplayInvestigators" name="Display Investigators">
+      <bpmn:documentation>Investigators: {{ investigators }}</bpmn:documentation>
+      <bpmn:incoming>Flow_0pddur1</bpmn:incoming>
+      <bpmn:outgoing>Flow_03m3cuy</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:exclusiveGateway id="Gateway_0n9lzir" name="Test DEPT_CH" default="Flow_05mrx8v">
+      <bpmn:incoming>Flow_03m3cuy</bpmn:incoming>
+      <bpmn:outgoing>Flow_05mrx8v</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1212fe2</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_03m3cuy" sourceRef="Activity_DisplayInvestigators" targetRef="Gateway_0n9lzir" />
+    <bpmn:sequenceFlow id="Flow_05mrx8v" name="not has DEPT_CH" sourceRef="Gateway_0n9lzir" targetRef="Activity_StudyInfo" />
+    <bpmn:sequenceFlow id="Flow_1212fe2" name="Has DEPT_CH" sourceRef="Gateway_0n9lzir" targetRef="Activity_GoodBye">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">hasattr(investigators, 'DEPT_CH')</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_0azm9il">
+      <bpmn:incoming>Flow_14jn215</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_14jn215" sourceRef="Activity_GoodBye" targetRef="Event_0azm9il" />
+    <bpmn:manualTask id="Activity_GoodBye" name="Good Bye">
+      <bpmn:documentation># Thank You</bpmn:documentation>
+      <bpmn:incoming>Flow_1212fe2</bpmn:incoming>
+      <bpmn:outgoing>Flow_14jn215</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_InfiniteLoop">
+      <bpmndi:BPMNEdge id="Flow_14jn215_di" bpmnElement="Flow_14jn215">
+        <di:waypoint x="810" y="177" />
+        <di:waypoint x="882" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1212fe2_di" bpmnElement="Flow_1212fe2">
+        <di:waypoint x="645" y="177" />
+        <di:waypoint x="710" y="177" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="645" y="159" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_05mrx8v_di" bpmnElement="Flow_05mrx8v">
+        <di:waypoint x="620" y="152" />
+        <di:waypoint x="620" y="80" />
+        <di:waypoint x="320" y="80" />
+        <di:waypoint x="320" y="137" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="447" y="62" width="52" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03m3cuy_di" bpmnElement="Flow_03m3cuy">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="595" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0pddur1_di" bpmnElement="Flow_0pddur1">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ldlhrt_di" bpmnElement="Flow_0ldlhrt">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ueb1ky_di" bpmnElement="Activity_StudyInfo">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1y5mgz2_di" bpmnElement="Activity_DisplayInvestigators">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0n9lzir_di" bpmnElement="Gateway_0n9lzir" isMarkerVisible="true">
+        <dc:Bounds x="595" y="152" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="584" y="209" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0azm9il_di" bpmnElement="Event_0azm9il">
+        <dc:Bounds x="882" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wbzf51_di" bpmnElement="Activity_GoodBye">
+        <dc:Bounds x="710" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
