@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_09rv9vf" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_StatusMessage" name="Status Message" isExecutable="true">
+    <bpmn:documentation>Testing Workflow Status Messages</bpmn:documentation>
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_0x4n744</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0x4n744" sourceRef="StartEvent_1" targetRef="Task_SetName" />
+    <bpmn:sequenceFlow id="SequenceFlow_1o630oy" sourceRef="Task_SetName" targetRef="Task_Decision" />
+    <bpmn:businessRuleTask id="Task_Decision" name="Make Decision" camunda:decisionRef="Decision_Dog">
+      <bpmn:incoming>SequenceFlow_1o630oy</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1foyag7</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1foyag7" sourceRef="Task_Decision" targetRef="Task_GoodBye" />
+    <bpmn:manualTask id="Task_GoodBye" name="Say Good Bye">
+      <bpmn:documentation>&lt;div&gt;&lt;span&gt;Good Bye {{ dog.name }}&lt;/span&gt;&lt;/div&gt;
+&lt;div&gt;&lt;span&gt;You are such a good {{ dog.breed }}&lt;/span&gt;&lt;/div&gt;
+</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_1foyag7</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1bc1ugw</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="EndEvent_19dasnt">
+      <bpmn:incoming>SequenceFlow_1bc1ugw</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1bc1ugw" sourceRef="Task_GoodBye" targetRef="EndEvent_19dasnt" />
+    <bpmn:userTask id="Task_SetName" name="Set Name" camunda:formKey="NameForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="name" label="Name" type="string" defaultValue="Layla" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0x4n744</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1o630oy</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_StatusMessage">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="165" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_0x4n744_di" bpmnElement="SequenceFlow_0x4n744">
+        <di:waypoint x="201" y="117" />
+        <di:waypoint x="260" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1o630oy_di" bpmnElement="SequenceFlow_1o630oy">
+        <di:waypoint x="360" y="117" />
+        <di:waypoint x="420" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="BusinessRuleTask_0dwwkqn_di" bpmnElement="Task_Decision">
+        <dc:Bounds x="420" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1foyag7_di" bpmnElement="SequenceFlow_1foyag7">
+        <di:waypoint x="520" y="117" />
+        <di:waypoint x="580" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="ManualTask_0nb6k7f_di" bpmnElement="Task_GoodBye">
+        <dc:Bounds x="580" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_19dasnt_di" bpmnElement="EndEvent_19dasnt">
+        <dc:Bounds x="742" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_1bc1ugw_di" bpmnElement="SequenceFlow_1bc1ugw">
+        <di:waypoint x="680" y="117" />
+        <di:waypoint x="742" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="UserTask_1h3sio1_di" bpmnElement="Task_SetName">
+        <dc:Bounds x="260" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
