@@ -7,7 +7,7 @@ from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import Study, StudyEvent, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
-    StudyStatus
+    StudyStatus, StudyAssociatedSchema
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
@@ -79,6 +79,9 @@ def get_study(study_id):
     if (study is None):
         raise ApiError("unknown_study",  'The study "' + study_id + '" is not recognized.', status_code=404)
     return StudySchema().dump(study)
+
+def get_study_associates(study_id):
+    return StudyService.get_study_associates(study_id)
 
 
 def delete_study(study_id):

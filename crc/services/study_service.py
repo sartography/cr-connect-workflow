@@ -14,7 +14,7 @@ from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, Loo
 from crc.models.ldap import LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
-    IrbStatus, StudyAssociated
+    IrbStatus, StudyAssociated, StudyAssociatedSchema
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
@@ -113,11 +113,7 @@ class StudyService(object):
         person = db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id)&(
                 StudyAssociated.uid == uid)).first()
         if person:
-            newAssociate = {'uid':person.uid}
-            newAssociate['role'] = person.role
-            newAssociate['send_email'] = person.send_email
-            newAssociate['access'] = person.access
-            return newAssociate
+            return StudyAssociatedSchema().dump(person)
         raise ApiError('uid_not_associated_with_study',"user id %s was not associated with study number %d"%(uid,
                                                                                                             study_id))
 
@@ -132,19 +128,16 @@ class StudyService(object):
             raise ApiError('study_not_found','No study found with id = %d'%study_id)
 
         ownerid = study.user_uid
-        people_list = [{'uid':ownerid,'role':'owner','send_email':True,'access':True}]
+        
         people = db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id)
-        for person in people:
-            newAssociate = {'uid':person.uid}
-            newAssociate['role'] = person.role
-            newAssociate['send_email'] = person.send_email
-            newAssociate['access'] = person.access
-            people_list.append(newAssociate)
+        
+        people_list = [{'uid':ownerid,'role':'owner','send_email':True,'access':True}]
+        people_list += StudyAssociatedSchema().dump(people, many=True)
         return people_list
 
 
     @staticmethod
-    def update_study_associates(study_id,associates):
+    def update_study_associates(study_id, associates):
         """
         updates the list of associates in the database for a study_id and a list
         of dicts that contains associates

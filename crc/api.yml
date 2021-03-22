@@ -357,6 +357,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
+  /study/{study_id}/associates':
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which workflows should be returned.
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.study.get_study_associates
+      summary: Provides a single study
+      tags:
+        - Studies
+      responses:
+        '200':
+          description: An Study Associate Object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudyAssociate"
+
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -1387,6 +1409,41 @@ components:
           type: string
           example: c30fd597f21715018eab12f97f9d4956
     Study:
+      properties:
+        id:
+          type: integer
+          example: 1234
+        title:
+          type: string
+          example: The impact of fried pickles on beer consumption in bipedal software developers.
+        last_updated:
+          type: string
+          format: date_time
+          example: "2019-12-25T09:12:33.001Z"
+        primary_investigator_id:
+          type: string
+          x-nullable: true
+          example: dhf8r
+        user_uid:
+          type: string
+          example: dhf8r
+        status:
+          type: string
+          enum: ['in_progress', 'hold', 'open_for_enrollment', 'abandoned']
+          example: done
+        sponsor:
+          type: string
+          x-nullable: true
+          example: "Sartography Pharmaceuticals"
+        ind_number:
+          type: string
+          x-nullable: true
+          example: "27b-6-42"
+        hsr_number:
+          type: string
+          x-nullable: true
+          example: "27b-6-1212"
+    StudyAssociate:
       properties:
         id:
           type: integer
