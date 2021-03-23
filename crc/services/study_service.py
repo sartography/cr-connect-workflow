@@ -23,6 +23,7 @@ from crc.services.ldap_service import LdapService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
 from SpiffWorkflow import Task as SpiffTask
+from crc.services.cache_service import timeit
 
 class StudyService(object):
     """Provides common tools for working with a Study"""
