@@ -1,10 +1,10 @@
+from tests.base_test import BaseTest
 import json
 from unittest.mock import patch
 import flask
 
 from crc.api.common import ApiError
 from crc.services.user_service import UserService
-from tests.base_test import BaseTest
 
 from crc import session, app
 from crc.models.study import StudyModel
