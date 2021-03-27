@@ -421,28 +421,28 @@ class StudyService(object):
         # Update the status on each workflow
         warnings = []
         for wfm in workflow_metas:
+            wfm.state_message = ''
             # do we have a status for you
-            if wfm.name in status.keys():
-                # is it a dictionary
-                if isinstance(status[wfm.name], dict):
-                    if 'status' in status[wfm.name].keys():
-                        # is 'status' a valid WorkflowState
-                        if WorkflowState.has_value(status[wfm.name]['status']):
-                            wfm.state = WorkflowState[status[wfm.name]['status']]
-                            if 'message' in status[wfm.name].keys():
-                                wfm.state_message = status[wfm.name]['message']
-                            else:
-                                wfm.state_message = ''
-                        else:
-                            warnings.append(ApiError("invalid_state",
-                                                     "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                                         wfm.name, status[wfm.name]['status'], ",".join(WorkflowState.list())
-                                                     )))
-                else:
-                    warnings.append(ApiError(code='invalid_status',
-                                             message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.name}. Status is {status[wfm.name]}'))
-            else:
+            if wfm.name not in status.keys():
                 warnings.append(ApiError("missing_status", "No status specified for workflow %s" % wfm.name))
+                continue
+            if not isinstance(status[wfm.name], dict):
+                warnings.append(ApiError(code='invalid_status',
+                                         message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.name}. Status is {status[wfm.name]}'))
+                continue
+            if 'status' not in status[wfm.name].keys():
+                warnings.append(ApiError("missing_status",
+                                         "Workflow '%s' does not have a status setting" % wfm.name))
+                continue
+            if not WorkflowState.has_value(status[wfm.name]['status']):
+                warnings.append(ApiError("invalid_state",
+                                         "Workflow '%s' can not be set to '%s', should be one of %s" % (
+                                             wfm.name, status[wfm.name]['status'], ",".join(WorkflowState.list())
+                                         )))
+                continue
+            wfm.state = WorkflowState[status[wfm.name]['status']]
+            if 'message' in status[wfm.name].keys():
+                wfm.state_message = status[wfm.name]['message']
         return warnings
 
     @staticmethod
