@@ -10,7 +10,7 @@ from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSche
 from crc.models.file import FileModelSchema
 from crc.models.workflow import WorkflowStatus
 from crc.models.task_event import TaskEventModel
-
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 
 class TestTasksApi(BaseTest):
 

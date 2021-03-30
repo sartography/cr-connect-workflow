@@ -4,6 +4,15 @@ cache_store = {}
 
 import time
 
+
+def firsttime():
+    return time.time()
+
+def sincetime(txt,lasttime):
+    thistime=firsttime()
+    print('%s runtime was %2f'%(txt,thistime-lasttime))
+    return thistime
+
 def timeit(f):
 
     def timed(*args, **kw):

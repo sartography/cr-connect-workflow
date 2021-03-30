@@ -1,7 +1,7 @@
 from copy import copy
 from datetime import datetime
 from typing import List
-
+from crc.services.cache_service import timeit
 import requests
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
@@ -53,6 +53,7 @@ class StudyService(object):
         return studies
 
     @staticmethod
+    @timeit
     def get_study(study_id, study_model: StudyModel = None, do_status=True):
         """Returns a study model that contains all the workflows organized by category.
         IMPORTANT:  This is intended to be a lightweight call, it should never involve
@@ -447,6 +448,7 @@ class StudyService(object):
         return workflow_metas
 
     @staticmethod
+    @timeit
     def __get_study_status(study_model):
         """Uses the Top Level Workflow to calculate the status of the study, and it's
         workflow models."""
