@@ -89,6 +89,10 @@
         padding-top: 10px;
       }
 
+      td#logo-td {
+        width: 50px;
+      }
+
       .footer, .header {
         clear: both;
         margin-top: 10px;
@@ -361,7 +365,7 @@
                         <table role="presentation">
                             <tr>
                               <th role="presentation"></th>
-                              <td>
+                              <td id="logo-td">
                                   <img class="logo"
                                        src="{{ url_for('static', filename='uva_rotunda.svg', _external=True) }}"
                                        alt="University of Virginia">

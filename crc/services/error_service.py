@@ -17,7 +17,8 @@ generic_message = """Workflow validation failed. For more information about the 
 known_errors = {'Error is Non-default exclusive outgoing sequence flow  without condition':
                 {'hint': 'Add a Condition Type to your gateway path.'},
 
-                'Could not set task title on task (\w+) with \'(.*)\' property because \\1: Error evaluating expression \'(.*)\', "\'Box\' object has no attribute \'\\2\'"$':
+                'Could not set task title on task (\w+) with \'(.*)\' property because \\1: Error evaluating '
+                'expression \'(.*)\', $':
                 {'hint': 'You are overriding the title for task `{task_id}`, using the `{property}` extension, and it is causing an error.  Look under the extensions tab for the task, and check the value you are setting for the property.',
                  'groups': {'task_id': 0, 'property': 1}}}
 
