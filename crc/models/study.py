@@ -96,7 +96,7 @@ class WorkflowMetadata(object):
     def __init__(self, id, name = None, display_name = None, description = None, spec_version = None,
                  category_id  = None, category_display_name  = None, state: WorkflowState  = None,
                  status: WorkflowStatus  = None, total_tasks  = None, completed_tasks  = None,
-                 is_review=None,display_order = None):
+                 is_review=None,display_order = None, state_message = None):
         self.id = id
         self.name = name
         self.display_name = display_name
@@ -105,6 +105,7 @@ class WorkflowMetadata(object):
         self.category_id = category_id
         self.category_display_name = category_display_name
         self.state = state
+        self.state_message = state_message
         self.status = status
         self.total_tasks = total_tasks
         self.completed_tasks = completed_tasks
@@ -140,7 +141,7 @@ class WorkflowMetadataSchema(ma.Schema):
         model = WorkflowMetadata
         additional = ["id", "name", "display_name", "description",
                  "total_tasks", "completed_tasks", "display_order",
-                      "category_id", "is_review", "category_display_name"]
+                      "category_id", "is_review", "category_display_name", "state_message"]
         unknown = INCLUDE
 
 
