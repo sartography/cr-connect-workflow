@@ -65,7 +65,8 @@ paths:
             application/json:
               schema:
                 type: array
-                $ref: "#/components/schemas/User"
+                items:
+                  $ref: "#/components/schemas/User"
   # /v1.0/study
   /study:
     get:
@@ -80,7 +81,8 @@ paths:
             application/json:
               schema:
                 type: array
-                $ref: "#/components/schemas/Study"
+                items:
+                  $ref: "#/components/schemas/Study"
     post:
       operationId: crc.api.study.add_study
       summary: Creates a new study with the given parameters.
@@ -159,6 +161,7 @@ paths:
   /workflow_sync/{workflow_spec_id}/spec:
     parameters:
       - name: workflow_spec_id
+        required: true
         in: path
         description: The unique id of an existing workflow specification to modify.
         schema:
@@ -392,7 +395,7 @@ paths:
     parameters:
       - name: spec_id
         in: path
-        required: false
+        required: true
         description: The unique id of an existing workflow specification to modify.
         schema:
           type: string
@@ -441,7 +444,7 @@ paths:
     parameters:
       - name: spec_id
         in: path
-        required: false
+        required: true
         description: The unique id of an existing workflow specification to validate.
         schema:
           type: string
@@ -497,7 +500,7 @@ paths:
     parameters:
       - name: cat_id
         in: path
-        required: false
+        required: true
         description: The unique id of an existing workflow spec category to modify.
         schema:
           type: string
@@ -1513,8 +1516,7 @@ components:
           example: "random_fact"
           x-nullable: true
         file:
-          type: file
-          format: binary
+          type: string 
     Workflow:
       properties:
         id:
@@ -1522,7 +1524,7 @@ components:
           type: integer
           format: int64
         status:
-          type: enum
+          type: string
           enum: ['new','user_input_required','waiting','complete']
         navigation:
           type: array
@@ -1576,7 +1578,7 @@ components:
         data:
           type: object
         multi_instance_type:
-          type: enum
+          type: string
           enum: ['none', 'looping', 'parallel', 'sequential']
         multi_instance_count:
           type: number
@@ -1709,7 +1711,7 @@ components:
           type: string
           readOnly: true
         type:
-          type: enum
+          type: string
           enum: ['string', 'long', 'boolean', 'date', 'enum']
           readOnly: true
         label:
@@ -1785,7 +1787,7 @@ components:
           type: string
           example: "Chuck Norris"
         data:
-          type: any
+          type: string
     NavigationItem:
       properties:
         id:
@@ -1815,7 +1817,7 @@ components:
           type: integer
           example: 4
         state:
-          type: enum
+          type: string
           enum: ['FUTURE', 'WAITING', 'READY', 'CANCELLED', 'COMPLETED','LIKELY','MAYBE']
           readOnly: true
         is_decision:
