@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" id="Definitions_1eg3sxk" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <decision id="Decision_Dog" name="Dogs">
+    <decisionTable id="decisionTable_1">
+      <input id="input_1" label="Name">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text>name</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" label="Name" name="dog.name" typeRef="string" />
+      <output id="OutputClause_1wqk5xi" label="Breed" name="dog.breed" typeRef="string" />
+      <rule id="DecisionRule_1h6w5qu">
+        <inputEntry id="UnaryTests_0m8eblt">
+          <text>'Layla'</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_186aovp">
+          <text>'Layla'</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_10jbx5v">
+          <text>'Aussie'</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0ziemrx">
+        <inputEntry id="UnaryTests_0okkroj">
+          <text>'Mona'</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0r1apkh">
+          <text>'Mona'</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_08vl869">
+          <text>'Aussie Mix'</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0fykwob">
+        <inputEntry id="UnaryTests_044ophk">
+          <text>'Jerry'</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0508umo">
+          <text>'Jerry'</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0ysgqib">
+          <text>'Aussie Mix'</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_05jugdn">
+        <inputEntry id="UnaryTests_1jri40s">
+          <text>'Zoey'</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1r5jrzq">
+          <text>'Zoey'</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0aqjmjy">
+          <text>'Healer'</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0gehtk4">
+        <inputEntry id="UnaryTests_09f1t9t">
+          <text>'Etta'</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0kp8mvr">
+          <text>'Etta'</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0wwry9c">
+          <text>'Healer Mix'</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

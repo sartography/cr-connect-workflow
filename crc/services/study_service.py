@@ -71,7 +71,7 @@ class StudyService(object):
             study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
             study.last_activity_date = last_event.date
         study.categories = StudyService.get_categories()
-        workflow_metas = StudyService.__get_workflow_metas(study_id)
+        workflow_metas = StudyService._get_workflow_metas(study_id)
         files = FileService.get_files_for_study(study.id)
         files = (File.from_models(model, FileService.get_file_data(model.id),
                                   FileService.get_doc_dictionary()) for model in files)
@@ -83,8 +83,9 @@ class StudyService(object):
             # this line is taking 99% of the time that is used in get_study.
             # see ticket #196
             if do_status:
-                status = StudyService.__get_study_status(study_model)
-                study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
+                # __get_study_status() runs the master workflow to generate the status dictionary
+                status = StudyService._get_study_status(study_model)
+                study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas, status)
 
             # Group the workflows into their categories.
             for category in study.categories:
@@ -416,24 +417,36 @@ class StudyService(object):
         db.session.commit()
 
     @staticmethod
-    def __update_status_of_workflow_meta(workflow_metas, status):
+    def _update_status_of_workflow_meta(workflow_metas, status):
         # Update the status on each workflow
         warnings = []
         for wfm in workflow_metas:
-            if wfm.name in status.keys():
-                if not WorkflowState.has_value(status[wfm.name]):
-                    warnings.append(ApiError("invalid_status",
-                                             "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                                 wfm.name, status[wfm.name], ",".join(WorkflowState.list())
-                                             )))
-                else:
-                    wfm.state = WorkflowState[status[wfm.name]]
-            else:
+            wfm.state_message = ''
+            # do we have a status for you
+            if wfm.name not in status.keys():
                 warnings.append(ApiError("missing_status", "No status specified for workflow %s" % wfm.name))
+                continue
+            if not isinstance(status[wfm.name], dict):
+                warnings.append(ApiError(code='invalid_status',
+                                         message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.name}. Status is {status[wfm.name]}'))
+                continue
+            if 'status' not in status[wfm.name].keys():
+                warnings.append(ApiError("missing_status",
+                                         "Workflow '%s' does not have a status setting" % wfm.name))
+                continue
+            if not WorkflowState.has_value(status[wfm.name]['status']):
+                warnings.append(ApiError("invalid_state",
+                                         "Workflow '%s' can not be set to '%s', should be one of %s" % (
+                                             wfm.name, status[wfm.name]['status'], ",".join(WorkflowState.list())
+                                         )))
+                continue
+            wfm.state = WorkflowState[status[wfm.name]['status']]
+            if 'message' in status[wfm.name].keys():
+                wfm.state_message = status[wfm.name]['message']
         return warnings
 
     @staticmethod
-    def __get_workflow_metas(study_id):
+    def _get_workflow_metas(study_id):
         # Add in the Workflows for each category
         workflow_models = db.session.query(WorkflowModel). \
             join(WorkflowSpecModel). \
@@ -446,7 +459,7 @@ class StudyService(object):
         return workflow_metas
 
     @staticmethod
-    def __get_study_status(study_model):
+    def _get_study_status(study_model):
         """Uses the Top Level Workflow to calculate the status of the study, and it's
         workflow models."""
         master_specs = db.session.query(WorkflowSpecModel). \
