@@ -6,10 +6,10 @@ from crc.models.protocol_builder import ProtocolBuilderInvestigatorType
 from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowStatus
 from crc.scripts.script import Script
+from crc.services.cache_service import timeit
 from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
-from box import Box
 
 class StudyInfo(Script):
     """Please see the detailed description that is provided below. """
@@ -186,7 +186,7 @@ Returns information specific to the protocol.
         # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
         FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
         FileService.get_reference_file_data(FileService.INVESTIGATOR_LIST)
-        data = Box({
+        data = {
             "study":{
                 "info": {
                     "id": 12,
@@ -378,13 +378,14 @@ Returns information specific to the protocol.
                     'id': 0,
                 }
             }
-        })
+        }
         if args[0]=='documents':
             return StudyService().get_documents_status(study_id)
         return data['study'][args[0]]
         #self.add_data_to_task(task=task, data=data["study"])
         #self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
+    @timeit
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         self.check_args(args,2)
         prefix = None
@@ -413,12 +414,12 @@ Returns information specific to the protocol.
             retval = StudyService().get_documents_status(study_id)
         if cmd == 'protocol':
             retval = StudyService().get_protocol(study_id)
-        if isinstance(retval, list):
-            retval = [Box(item) for item in retval]
-        if isinstance(retval,dict) and prefix is not None:
-            return Box({x:retval[x] for x in retval.keys() if x[:len(prefix)] == prefix})
-        elif isinstance(retval,dict) :
-            return Box(retval)
+#        if isinstance(retval, list):
+#            retval = [Box(item) for item in retval]
+#        if isinstance(retval,dict) and prefix is not None:
+#            return Box({x:retval[x] for x in retval.keys() if x[:len(prefix)] == prefix})
+#        elif isinstance(retval,dict) :
+#            return Box(retval)
         else:
             return retval
 

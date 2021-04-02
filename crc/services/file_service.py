@@ -16,7 +16,7 @@ from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
-
+from crc.services.cache_service import cache
 
 class FileService(object):
     """Provides consistent management and rules for storing, retrieving and processing files."""
@@ -58,6 +58,7 @@ class FileService(object):
         return code in doc_dict
 
     @staticmethod
+    @cache
     def is_workflow_review(workflow_spec_id):
         files = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id).all()
         review = any([f.is_review for f in files])
