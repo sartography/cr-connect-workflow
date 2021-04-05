@@ -16,7 +16,7 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask, MultiChoice
 from SpiffWorkflow.util.deep_merge import DeepMerge
-from box import Box
+
 from jinja2 import Template
 
 from crc import db, app

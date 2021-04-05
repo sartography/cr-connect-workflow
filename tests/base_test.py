@@ -166,8 +166,10 @@ class BaseTest(unittest.TestCase):
             study_model = StudyModel(**study_json)
             session.add(study_model)
             StudyService._add_all_workflow_specs_to_study(study_model)
-            session.execute(Sequence(StudyModel.__tablename__ + '_id_seq'))
-        session.commit()
+            session.commit()
+            update_seq = f"ALTER SEQUENCE %s RESTART WITH %s" % (StudyModel.__tablename__ + '_id_seq', study_model.id + 1)
+            print("Update Sequence." + update_seq)
+            session.execute(update_seq)
         session.flush()
 
         specs = session.query(WorkflowSpecModel).all()

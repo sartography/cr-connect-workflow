@@ -253,10 +253,8 @@ class TestWorkflowProcessor(BaseTest):
         processor = self.get_processor(study, workflow_spec_model)
         self.assertTrue(processor.get_version_string().startswith('v2.1.1'))
 
-
     def test_hard_reset(self):
         self.load_example_data()
-
         # Start the two_forms workflow, and enter some data in the first form.
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
@@ -275,6 +273,8 @@ class TestWorkflowProcessor(BaseTest):
 
         # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
         processor.workflow_model.bpmn_workflow_json = processor.serialize()
+        db.session.add(processor.workflow_model)  ## Assure this isn't transient, which was causing some errors.
+        self.assertIsNotNone(processor.workflow_model.bpmn_workflow_json)
         processor2 = WorkflowProcessor(processor.workflow_model)
         self.assertFalse(processor2.is_latest_spec) # Still at version 1.
 

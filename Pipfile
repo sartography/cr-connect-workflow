@@ -45,7 +45,6 @@ werkzeug = "*"
 xlrd = "*"
 xlsxwriter = "*"
 pygithub = "*"
-python-box = "*"
 python-levenshtein = "*"
 
 

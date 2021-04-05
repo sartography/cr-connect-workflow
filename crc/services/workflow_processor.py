@@ -28,7 +28,7 @@ from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc import app
 from crc.services.user_service import UserService
-
+from crc.services.cache_service import timeit, firsttime, sincetime
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.
@@ -277,16 +277,22 @@ class WorkflowProcessor(object):
             self.workflow_model.dependencies.append(WorkflowSpecDependencyFile(file_data_id=file_data.id))
 
     @staticmethod
+    @timeit
     def run_master_spec(spec_model, study):
         """Executes a BPMN specification for the given study, without recording any information to the database
         Useful for running the master specification, which should not persist. """
+        lasttime = firsttime()
         spec_data_files = FileService.get_spec_data_files(spec_model.id)
+        lasttime = sincetime('load Files', lasttime)
         spec = WorkflowProcessor.get_spec(spec_data_files, spec_model.id)
+        lasttime = sincetime('get spec', lasttime)
         try:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+            lasttime = sincetime('get_workflow', lasttime)
             bpmn_workflow.do_engine_steps()
+            lasttime = sincetime('run steps', lasttime)
         except WorkflowException as we:
             raise ApiError.from_task_spec("error_running_master_spec", str(we), we.sender)
 
