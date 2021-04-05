@@ -1,4 +1,7 @@
 import json
+
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
+
 from tests.base_test import BaseTest
 from unittest.mock import patch
 
@@ -74,3 +77,16 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         string_data = self.protocol_builder_response('required_docs.json')
         return ProtocolBuilderRequiredDocumentSchema(many=True).loads(string_data)
 
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_info_returns_a_box_object(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
+        self.load_example_data()
+        self.create_reference_document()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("two_forms")
+        workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
+        processor = WorkflowProcessor(workflow_model)
+        task = processor.next_task()
+        docs = StudyInfo().do_task(task, study.id, workflow_model.id, "documents")
+        self.assertTrue(isinstance(docs, Box))

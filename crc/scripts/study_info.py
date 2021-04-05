@@ -1,5 +1,7 @@
 import json
 
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
+
 from crc import session
 from crc.api.common import ApiError
 from crc.models.protocol_builder import ProtocolBuilderInvestigatorType
@@ -11,11 +13,12 @@ from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
 
+
 class StudyInfo(Script):
     """Please see the detailed description that is provided below. """
 
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'roles', 'details', 'approvals', 'documents', 'protocol','sponsors']
+    type_options = ['info', 'investigators', 'roles', 'details', 'approvals', 'documents', 'protocol', 'sponsors']
 
     # This is used for test/workflow validation, as well as documentation.
     example_data = {
@@ -30,31 +33,31 @@ class StudyInfo(Script):
                 "inactive": False
             },
             "sponsors": [
-          {
-            "COMMONRULEAGENCY": None,
-            "SPONSOR_ID": 2453,
-            "SP_NAME": "Abbott Ltd",
-            "SP_TYPE": "Private",
-            "SP_TYPE_GROUP_NAME": None,
-            "SS_STUDY": 2
-          },
-          {
-            "COMMONRULEAGENCY": None,
-            "SPONSOR_ID": 2387,
-            "SP_NAME": "Abbott-Price",
-            "SP_TYPE": "Incoming Sub Award",
-            "SP_TYPE_GROUP_NAME": "Government",
-            "SS_STUDY": 2
-          },
-          {
-            "COMMONRULEAGENCY": None,
-            "SPONSOR_ID": 1996,
-            "SP_NAME": "Abernathy-Heidenreich",
-            "SP_TYPE": "Foundation/Not for Profit",
-            "SP_TYPE_GROUP_NAME": "Other External Funding",
-            "SS_STUDY": 2
-          }
-        ],
+                {
+                    "COMMONRULEAGENCY": None,
+                    "SPONSOR_ID": 2453,
+                    "SP_NAME": "Abbott Ltd",
+                    "SP_TYPE": "Private",
+                    "SP_TYPE_GROUP_NAME": None,
+                    "SS_STUDY": 2
+                },
+                {
+                    "COMMONRULEAGENCY": None,
+                    "SPONSOR_ID": 2387,
+                    "SP_NAME": "Abbott-Price",
+                    "SP_TYPE": "Incoming Sub Award",
+                    "SP_TYPE_GROUP_NAME": "Government",
+                    "SS_STUDY": 2
+                },
+                {
+                    "COMMONRULEAGENCY": None,
+                    "SPONSOR_ID": 1996,
+                    "SP_NAME": "Abernathy-Heidenreich",
+                    "SP_TYPE": "Foundation/Not for Profit",
+                    "SP_TYPE_GROUP_NAME": "Other External Funding",
+                    "SS_STUDY": 2
+                }
+            ],
 
             "investigators": {
                 'PI': {
@@ -89,19 +92,21 @@ class StudyInfo(Script):
             },
             "documents": {
                 'AD_CoCApp': {'category1': 'Ancillary Document', 'category2': 'CoC Application', 'category3': '',
-                               'Who Uploads?': 'CRC', 'id': '12',
-                               'description': 'Certificate of Confidentiality Application', 'required': False,
-                               'study_id': 1, 'code': 'AD_CoCApp', 'display_name': 'Ancillary Document / CoC Application',
-                               'count': 0, 'files': []},
+                              'Who Uploads?': 'CRC', 'id': '12',
+                              'description': 'Certificate of Confidentiality Application', 'required': False,
+                              'study_id': 1, 'code': 'AD_CoCApp',
+                              'display_name': 'Ancillary Document / CoC Application',
+                              'count': 0, 'files': []},
                 'UVACompl_PRCAppr': {'category1': 'UVA Compliance', 'category2': 'PRC Approval', 'category3': '',
-                                  'Who Uploads?': 'CRC', 'id': '6', 'description': "Cancer Center's PRC Approval Form",
-                                  'required': True, 'study_id': 1, 'code': 'UVACompl_PRCAppr',
-                                  'display_name': 'UVA Compliance / PRC Approval', 'count': 1, 'files': [
-                                     {'file_id': 10,
-                                      'task_id': 'fakingthisout',
-                                      'workflow_id': 2,
-                                      'workflow_spec_id': 'docx'}],
-                                      'status': 'complete'}
+                                     'Who Uploads?': 'CRC', 'id': '6',
+                                     'description': "Cancer Center's PRC Approval Form",
+                                     'required': True, 'study_id': 1, 'code': 'UVACompl_PRCAppr',
+                                     'display_name': 'UVA Compliance / PRC Approval', 'count': 1, 'files': [
+                        {'file_id': 10,
+                         'task_id': 'fakingthisout',
+                         'workflow_id': 2,
+                         'workflow_spec_id': 'docx'}],
+                                     'status': 'complete'}
             },
             "details":
                 {},
@@ -182,48 +187,48 @@ Returns information specific to the protocol.
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         """For validation only, pretend no results come back from pb"""
-        self.check_args(args,2)
+        self.check_args(args, 2)
         # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
         FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
         FileService.get_reference_file_data(FileService.INVESTIGATOR_LIST)
         data = {
-            "study":{
+            "study": {
                 "info": {
                     "id": 12,
                     "title": "test",
                     "short_title": "tst",
-                    "primary_investigator_id":21,
+                    "primary_investigator_id": 21,
                     "user_uid": "dif84",
                     "sponsor": "sponsor",
                     "ind_number": "1234",
                     "inactive": False
                 },
-          "sponsors": [
-          {
-            "COMMONRULEAGENCY": None,
-            "SPONSOR_ID": 2453,
-            "SP_NAME": "Abbott Ltd",
-            "SP_TYPE": "Private",
-            "SP_TYPE_GROUP_NAME": None,
-            "SS_STUDY": 2
-          },
-          {
-            "COMMONRULEAGENCY": None,
-            "SPONSOR_ID": 2387,
-            "SP_NAME": "Abbott-Price",
-            "SP_TYPE": "Incoming Sub Award",
-            "SP_TYPE_GROUP_NAME": "Government",
-            "SS_STUDY": 2
-          },
-          {
-            "COMMONRULEAGENCY": None,
-            "SPONSOR_ID": 1996,
-            "SP_NAME": "Abernathy-Heidenreich",
-            "SP_TYPE": "Foundation/Not for Profit",
-            "SP_TYPE_GROUP_NAME": "Other External Funding",
-            "SS_STUDY": 2
-          }
-        ],
+                "sponsors": [
+                    {
+                        "COMMONRULEAGENCY": None,
+                        "SPONSOR_ID": 2453,
+                        "SP_NAME": "Abbott Ltd",
+                        "SP_TYPE": "Private",
+                        "SP_TYPE_GROUP_NAME": None,
+                        "SS_STUDY": 2
+                    },
+                    {
+                        "COMMONRULEAGENCY": None,
+                        "SPONSOR_ID": 2387,
+                        "SP_NAME": "Abbott-Price",
+                        "SP_TYPE": "Incoming Sub Award",
+                        "SP_TYPE_GROUP_NAME": "Government",
+                        "SS_STUDY": 2
+                    },
+                    {
+                        "COMMONRULEAGENCY": None,
+                        "SPONSOR_ID": 1996,
+                        "SP_NAME": "Abernathy-Heidenreich",
+                        "SP_TYPE": "Foundation/Not for Profit",
+                        "SP_TYPE_GROUP_NAME": "Other External Funding",
+                        "SS_STUDY": 2
+                    }
+                ],
 
                 "investigators": {
                     "PI": {
@@ -379,15 +384,15 @@ Returns information specific to the protocol.
                 }
             }
         }
-        if args[0]=='documents':
+        if args[0] == 'documents':
             return StudyService().get_documents_status(study_id)
         return data['study'][args[0]]
-        #self.add_data_to_task(task=task, data=data["study"])
-        #self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
+        # self.add_data_to_task(task=task, data=data["study"])
+        # self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
     @timeit
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        self.check_args(args,2)
+        self.check_args(args, 2)
         prefix = None
         if len(args) > 1:
             prefix = args[1]
@@ -414,21 +419,16 @@ Returns information specific to the protocol.
             retval = StudyService().get_documents_status(study_id)
         if cmd == 'protocol':
             retval = StudyService().get_protocol(study_id)
-#        if isinstance(retval, list):
-#            retval = [Box(item) for item in retval]
-#        if isinstance(retval,dict) and prefix is not None:
-#            return Box({x:retval[x] for x in retval.keys() if x[:len(prefix)] == prefix})
-#        elif isinstance(retval,dict) :
-#            return Box(retval)
-        else:
-            return retval
 
-
+        if isinstance(retval, list):
+            return [Box(item) for item in retval]
+        if isinstance(retval, dict) and prefix is not None:
+            return Box({x: retval[x] for x in retval.keys() if x[:len(prefix)] == prefix})
+        elif isinstance(retval, dict):
+            return Box(retval)
 
     def check_args(self, args, maxlen=1):
         if len(args) < 1 or len(args) > maxlen or (args[0] not in StudyInfo.type_options):
             raise ApiError(code="missing_argument",
                            message="The StudyInfo script requires a single argument which must be "
                                    "one of %s" % ",".join(StudyInfo.type_options))
-
-
