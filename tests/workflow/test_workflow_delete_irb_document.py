@@ -19,63 +19,87 @@ class TestDeleteIRBDocument(BaseTest):
         # Should not have any files yet
         files = FileService.get_files_for_study(study_id)
         self.assertEqual(0, len(files))
-        self.assertEqual(False, IsFileUploaded.do_task(IsFileUploaded, first_task, study_id, workflow.id, irb_code))
+        self.assertEqual(False, IsFileUploaded.do_task(
+            IsFileUploaded, first_task, study_id, workflow.id, irb_code))
 
         # Add a file
         FileService.add_workflow_file(workflow_id=workflow.id,
                                       name="filename.txt", content_type="text",
                                       binary_data=b'1234', irb_doc_code=irb_code)
         # Assert we have the file
-        self.assertEqual(True, IsFileUploaded.do_task(IsFileUploaded, first_task, study_id, workflow.id, irb_code))
+        self.assertEqual(True, IsFileUploaded.do_task(
+            IsFileUploaded, first_task, study_id, workflow.id, irb_code))
 
-        # The workflow checks whether the file is uploaded,
-        # and prints the result in documentation
+        # run the workflow, which deletes the file
         self.complete_form(workflow, first_task, {'irb_document': irb_code})
         workflow_api = self.get_workflow_api(workflow)
         second_task = workflow_api.next_task
-        self.assertEqual('# Is file uploaded\nuploaded:  True', second_task.documentation)
+        # make sure it is deleted
+        self.assertEqual(False, IsFileUploaded.do_task(
+            IsFileUploaded, second_task, study_id, workflow.id, irb_code))
 
-        # It then deletes the file, checks if file is deleted,
-        # and prints the result in documentation
-        self.complete_form(workflow, second_task, {})
-        workflow_api = self.get_workflow_api(workflow)
-        third_task = workflow_api.next_task
-        self.assertEqual('# Is file deleted\ndeleted:  True', third_task.documentation)
+        print('test_delete_irb_document')
 
-    def test_delete_irb_document_no_document(self):
+    def test_delete_irb_document_list(self):
+        # try deleting a list of files
         self.load_example_data()
-        irb_code = 'Study_Protocol_Document'
+        irb_code_1 = 'Study_Protocol_Document'
+        irb_code_2 = 'Study_App_Doc'
+        irb_codes = [irb_code_1, irb_code_2]
 
         workflow = self.create_workflow('add_delete_irb_document')
+        study_id = workflow.study_id
 
         workflow_api = self.get_workflow_api(workflow)
         first_task = workflow_api.next_task
 
-        # The workflow checks whether the file is uploaded,
-        # and prints the result in documentation
-        self.complete_form(workflow, first_task, {'irb_document': irb_code})
+        # Should not have any files yet
+        files = FileService.get_files_for_study(study_id)
+        self.assertEqual(0, len(files))
+        self.assertEqual(False, IsFileUploaded.do_task(IsFileUploaded, first_task, study_id, workflow.id, irb_code_1))
+        self.assertEqual(False, IsFileUploaded.do_task(IsFileUploaded, first_task, study_id, workflow.id, irb_code_2))
+
+        # Add a file
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="filename.txt", content_type="text",
+                                      binary_data=b'1234', irb_doc_code=irb_code_1)
+        # Add another file
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="filename.txt", content_type="text",
+                                      binary_data=b'1234', irb_doc_code=irb_code_2)
+        self.assertEqual(True, IsFileUploaded.do_task(
+            IsFileUploaded, first_task, study_id, workflow.id, irb_code_1))
+        self.assertEqual(True, IsFileUploaded.do_task(
+            IsFileUploaded, first_task, study_id, workflow.id, irb_code_2))
+
+        self.complete_form(workflow, first_task, {'irb_document': irb_codes})
         workflow_api = self.get_workflow_api(workflow)
         second_task = workflow_api.next_task
-        self.assertEqual('# Is file uploaded\nuploaded:  False', second_task.documentation)
+        self.assertEqual(False, IsFileUploaded.do_task(
+            IsFileUploaded, second_task, study_id, workflow.id, irb_code_1))
+        self.assertEqual(False, IsFileUploaded.do_task(
+            IsFileUploaded, second_task, study_id, workflow.id, irb_code_2))
+
+    def test_delete_irb_document_no_document(self):
+
+        self.load_example_data()
+        irb_code = 'Study_Protocol_Document'
+        workflow = self.create_workflow('add_delete_irb_document')
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
 
         # There is no document to delete, so we get an error
         with self.assertRaises(AssertionError) as ex:
-            self.complete_form(workflow, second_task, {})
+            self.complete_form(workflow, first_task, {'irb_document': irb_code})
 
     def test_delete_irb_document_bad_document(self):
         self.load_example_data()
         # This is a bad document code
         irb_code = 'Study_Protocol_Doc'
-
         workflow = self.create_workflow('add_delete_irb_document')
-
         workflow_api = self.get_workflow_api(workflow)
         first_task = workflow_api.next_task
 
-        self.complete_form(workflow, first_task, {'irb_document': irb_code})
-        workflow_api = self.get_workflow_api(workflow)
-        second_task = workflow_api.next_task
-        self.assertEqual('# Is file uploaded\nuploaded:  False', second_task.documentation)
-
+        # bad document code, so we should get an error
         with self.assertRaises(AssertionError):
-            self.complete_form(workflow, second_task, {})
+            self.complete_form(workflow, first_task, {'irb_document': irb_code})
