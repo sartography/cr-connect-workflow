@@ -90,3 +90,6 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         task = processor.next_task()
         docs = StudyInfo().do_task(task, study.id, workflow_model.id, "documents")
         self.assertTrue(isinstance(docs, Box))
+        docs = StudyInfo().do_task_validate_only(task, study.id, workflow_model.id, "documents")
+        self.assertTrue(isinstance(docs, Box))
+

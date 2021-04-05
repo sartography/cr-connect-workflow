@@ -385,8 +385,9 @@ Returns information specific to the protocol.
             }
         }
         if args[0] == 'documents':
-            return StudyService().get_documents_status(study_id)
-        return data['study'][args[0]]
+            return self.box_it(StudyService().get_documents_status(study_id))
+        return self.box_it(data['study'][args[0]])
+
         # self.add_data_to_task(task=task, data=data["study"])
         # self.add_data_to_task(task, {"documents": StudyService().get_documents_status(study_id)})
 
@@ -420,12 +421,16 @@ Returns information specific to the protocol.
         if cmd == 'protocol':
             retval = StudyService().get_protocol(study_id)
 
+        return self.box_it(retval, prefix)
+
+    def box_it(self, retval, prefix = None):
         if isinstance(retval, list):
             return [Box(item) for item in retval]
         if isinstance(retval, dict) and prefix is not None:
             return Box({x: retval[x] for x in retval.keys() if x[:len(prefix)] == prefix})
         elif isinstance(retval, dict):
             return Box(retval)
+
 
     def check_args(self, args, maxlen=1):
         if len(args) < 1 or len(args) > maxlen or (args[0] not in StudyInfo.type_options):
