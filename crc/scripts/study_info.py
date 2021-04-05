@@ -18,7 +18,7 @@ class StudyInfo(Script):
     """Please see the detailed description that is provided below. """
 
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'roles', 'details', 'approvals', 'documents', 'protocol', 'sponsors']
+    type_options = ['info', 'investigators', 'roles', 'details', 'documents', 'protocol', 'sponsors']
 
     # This is used for test/workflow validation, as well as documentation.
     example_data = {
@@ -110,14 +110,6 @@ class StudyInfo(Script):
             },
             "details":
                 {},
-            "approvals": {
-                "study_id": 12,
-                "workflow_id": 321,
-                "display_name": "IRB API Details",
-                "name": "irb_api_details",
-                "status": WorkflowStatus.not_started.value,
-                "workflow_spec_id": "irb_api_details",
-            },
             'protocol': {
                 id: 0,
             }
@@ -129,8 +121,7 @@ class StudyInfo(Script):
 
     def get_description(self):
         return """
-StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', 'details', 'approvals',
-'documents' or 'protocol'.
+StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', 'details', 'documents' or 'protocol'.
 
 Adds details about the current study to the Task Data.  The type of information required should be 
 provided as an argument.  The following arguments are available:
@@ -161,12 +152,6 @@ that just those that were set in Protocol Builder.
 ### Details ###
 Returns detailed information about variable keys read in from the Protocol Builder.
 
-### Approvals ###
-Returns data about the status of approvals related to a study.
-```
-{approvals_example}
-```
-
 ### Documents ###
 Returns a list of all documents that might be related to a study, reading all columns from the irb_documents.xsl 
 file. Including information about any files that were uploaded or generated that relate to a given document. 
@@ -181,7 +166,6 @@ Returns information specific to the protocol.
 
         """.format(info_example=self.example_to_string("info"),
                    investigators_example=self.example_to_string("investigators"),
-                   approvals_example=self.example_to_string("approvals"),
                    documents_example=self.example_to_string("documents"),
                    )
 
@@ -371,14 +355,6 @@ Returns information specific to the protocol.
                         "SPONSORS_PROTOCOL_REVISION_DATE": None,
                         "UPLOAD_COMPLETE": None
                     },
-                "approvals": {
-                    "study_id": 12,
-                    "workflow_id": 321,
-                    "display_name": "IRB API Details",
-                    "name": "irb_api_details",
-                    "status": WorkflowStatus.not_started.value,
-                    "workflow_spec_id": "irb_api_details",
-                },
                 'protocol': {
                     'id': 0,
                 }
@@ -414,8 +390,6 @@ Returns information specific to the protocol.
             retval = self.pb.get_study_details(study_id)
         if cmd == 'sponsors':
             retval = self.pb.get_sponsors(study_id)
-        if cmd == 'approvals':
-            retval = StudyService().get_approvals(study_id)
         if cmd == 'documents':
             retval = StudyService().get_documents_status(study_id)
         if cmd == 'protocol':
