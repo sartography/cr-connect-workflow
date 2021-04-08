@@ -1,7 +1,7 @@
+from tests.base_test import BaseTest
 from unittest.mock import patch
 
 from crc import app
-from tests.base_test import BaseTest
 from crc.services.protocol_builder import ProtocolBuilderService
 
 
