@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_3d948db" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_3d948db" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
   <bpmn:process id="Process_44b3aca" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_1j6i6nv</bpmn:outgoing>
@@ -21,22 +21,29 @@
     <bpmn:scriptTask id="Activity_DeleteIRBDocument" name="Delete IRB Document">
       <bpmn:incoming>SequenceFlow_1mmief6</bpmn:incoming>
       <bpmn:outgoing>Flow_1rexoi9</bpmn:outgoing>
-      <bpmn:script>delete_irb_document(irb_document=irb_document)</bpmn:script>
+      <bpmn:script>delete_file(irb_document)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_1mmief6" sourceRef="Activity_WhichIRBDocument" targetRef="Activity_DeleteIRBDocument" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_44b3aca">
-      <bpmndi:BPMNEdge id="Flow_1j6i6nv_di" bpmnElement="Flow_1j6i6nv">
-        <di:waypoint x="215" y="117" />
-        <di:waypoint x="260" y="117" />
+      <bpmndi:BPMNEdge id="SequenceFlow_1mmief6_di" bpmnElement="SequenceFlow_1mmief6">
+        <di:waypoint x="360" y="117" />
+        <di:waypoint x="400" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1rexoi9_di" bpmnElement="Flow_1rexoi9">
         <di:waypoint x="500" y="117" />
         <di:waypoint x="562" y="117" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1j6i6nv_di" bpmnElement="Flow_1j6i6nv">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="260" y="117" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_06rfn6m_di" bpmnElement="Event_06rfn6m">
+        <dc:Bounds x="562" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_176crcy_di" bpmnElement="Activity_WhichIRBDocument">
         <dc:Bounds x="260" y="77" width="100" height="80" />
@@ -44,13 +51,6 @@
       <bpmndi:BPMNShape id="Activity_0om2kg5_di" bpmnElement="Activity_DeleteIRBDocument">
         <dc:Bounds x="400" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_06rfn6m_di" bpmnElement="Event_06rfn6m">
-        <dc:Bounds x="562" y="99" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_1mmief6_di" bpmnElement="SequenceFlow_1mmief6">
-        <di:waypoint x="360" y="117" />
-        <di:waypoint x="400" y="117" />
-      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
