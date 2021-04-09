@@ -273,7 +273,11 @@ class WorkflowService(object):
         # Note: if default is False, we don't want to execute this code
         if default is None or (isinstance(default, str) and default.strip() == ''):
             if field.type == "enum" or field.type == "autocomplete":
-                return {'value': None, 'label': None}
+                # Return empty arrays for multi-select enums, otherwise do a value of None.
+                if field.has_property(Task.FIELD_PROP_ENUM_TYPE) and field.get_property(Task.FIELD_PROP_ENUM_TYPE) == "checkbox":
+                    return []
+                else:
+                    return {'value': None, 'label': None}
             else:
                 return None
 

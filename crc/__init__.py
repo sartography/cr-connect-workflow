@@ -112,3 +112,8 @@ def clear_db():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
 
+@app.cli.command()
+def sync_with_testing():
+    """Load all the workflows currently on testing into this system."""
+    from crc.api import workflow_sync
+    workflow_sync.sync_all_changed_workflows("https://testing.crconnect.uvadcos.io/api")

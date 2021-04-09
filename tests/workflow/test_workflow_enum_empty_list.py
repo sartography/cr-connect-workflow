@@ -1,4 +1,7 @@
 from tests.base_test import BaseTest
+
+from crc.services.workflow_service import WorkflowService
+from crc.services.workflow_processor import WorkflowProcessor
 import json
 
 
@@ -11,3 +14,15 @@ class TestEmptyEnumList(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
 
         self.assertEqual(json_data[0]['code'], 'invalid enum')
+
+    def test_default_values_for_enum_as_checkbox(self):
+        self.load_test_spec('enum_results')
+        workflow = self.create_workflow('enum_results')
+        processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        service = WorkflowService()
+        checkbox_enum_field = task.task_spec.form.fields[0]
+        radio_enum_field = task.task_spec.form.fields[1]
+        self.assertEquals([], service.get_default_value(checkbox_enum_field, task))
+        self.assertEquals({'label': None, 'value': None}, service.get_default_value(radio_enum_field, task))
