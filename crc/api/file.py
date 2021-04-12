@@ -17,13 +17,16 @@ def to_file_api(file_model):
                             FileService.get_doc_dictionary())
 
 
-def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None):
-    if all(v is None for v in [workflow_spec_id, workflow_id, form_field_key]):
+def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None,study_id=None):
+    if all(v is None for v in [workflow_spec_id, workflow_id, form_field_key,study_id]):
         raise ApiError('missing_parameter',
                        'Please specify either a workflow_spec_id or a '
                        'workflow_id with an optional form_field_key')
 
-    file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,
+    if study_id is not None:
+        file_models = FileService.get_files_for_study(study_id=study_id)
+    else:
+        file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,
                                         workflow_id=workflow_id,
                                         irb_doc_code=form_field_key)
 

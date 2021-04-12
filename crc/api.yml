@@ -565,6 +565,12 @@ paths:
         description: The unique key of a workflow task form field.  Make sure this matches a document in the irb_documents.xslx reference sheet.
         schema:
           type: string
+      - name: study_id
+        in: query
+        required: false
+        description: The study that the files are related to
+        schema:
+          type: integer
     get:
       operationId: crc.api.file.get_files
       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
