@@ -457,3 +457,9 @@ class BaseTest(unittest.TestCase):
 
         if 'impersonate_user' in g:
             del g.impersonate_user
+
+    def minimal_bpmn(self, content):
+        """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
+        minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
+        return (minimal_dbpm % content).encode()
+

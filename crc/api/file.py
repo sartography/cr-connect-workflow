@@ -6,7 +6,7 @@ from flask import send_file
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel
+from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel, FileType
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 
@@ -47,9 +47,16 @@ def add_file(workflow_spec_id=None, workflow_id=None, form_field_key=None):
                                                    name=file.filename, content_type=file.content_type,
                                                    binary_data=file.stream.read())
     elif workflow_spec_id:
+        # check if we have a primary already
+        have_primary = FileModel.query.filter(FileModel.workflow_spec_id==workflow_spec_id, FileModel.type==FileType.bpmn, FileModel.primary==True).all()
+        # set this to primary if we don't already have one
+        if not have_primary:
+            primary = True
+        else:
+            primary = False
         workflow_spec = session.query(WorkflowSpecModel).filter_by(id=workflow_spec_id).first()
         file_model = FileService.add_workflow_spec_file(workflow_spec, file.filename, file.content_type,
-                                                        file.stream.read())
+                                                        file.stream.read(), primary=primary)
     else:
         raise ApiError("invalid_file", "You must supply either a workflow spec id or a workflow_id and form_field_key.")
 
