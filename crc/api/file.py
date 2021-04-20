@@ -28,7 +28,7 @@ def ensure_exists(output,categories,expanded):
             if item.level == currentitem:
                 found = True
                 item.filecount = item.filecount + 1
-                item.expanded = expanded
+                item.expanded = expanded | item.expanded
                 ensure_exists(item.children,categories[1:],expanded)
         if not found:
             newlevel = DocumentDirectory(level=currentitem)
