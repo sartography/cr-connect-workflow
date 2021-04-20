@@ -67,6 +67,39 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/User"
+  # /v1.0/document_directory/{study_id}
+  /document_directory/{study_id}:
+    parameters :
+      - name : study_id
+        required : true
+        in : path
+        description : The unique id of a study.
+        schema :
+          type : integer
+      - name : workflow_id
+        in : query
+        required : false
+        schema :
+          type : integer
+    get:
+      operationId: crc.api.file.get_document_directory
+      security:
+        - auth_admin: ['secret']
+      summary: Returns a directory of all files for study in a nested structure
+      tags:
+        - Document Categories
+      responses:
+        '200':
+          description: All IRB Categories defined in the file document.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Admin:
+                    schema:
+                    $ref: "#/components/schemas/DocumentCategories"
+
   # /v1.0/study
   /study:
     get:
@@ -1429,6 +1462,34 @@ components:
           type: string
           x-nullable: true
           example: "27b-6-1212"
+    DocumentCategories:
+      properties:
+        category1:
+          type: string
+          x-nullable: true
+          example: "Ancillary Document"
+        category2:
+          type: string
+          x-nullable: true
+          example: "Lab Manual"
+        category3:
+          type: string
+          x-nullable: true
+          example: ""
+        Who Uploads?:
+          type: string
+          x-nullable: true
+          example: "CRC"
+        description:
+          type: string
+          x-nullable: true
+          example: "some description"
+
+
+
+
+
+
     DataStore:
       properties:
         id:

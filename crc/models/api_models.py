@@ -7,7 +7,7 @@ from marshmallow_enum import EnumField
 
 from crc import ma
 from crc.models.workflow import WorkflowStatus
-
+from crc.models.file import FileSchema
 
 class MultiInstanceType(enum.Enum):
     none = "none"
@@ -166,6 +166,26 @@ class NavigationItemSchema(ma.Schema):
         item.children = children
         item.spec_type = spec_type
         return item
+
+class DocumentDirectorySchema(ma.Schema):
+    level = marshmallow.fields.String()
+    file = marshmallow.fields.Nested(FileSchema)
+    filecount = marshmallow.fields.Integer()
+    expanded = marshmallow.fields.Boolean()
+    children = marshmallow.fields.Nested("self",many=True)
+
+class DocumentDirectory(object):
+    def __init__(self, level=None, file=None, children=None):
+
+        self.level = level
+        self.file = file
+        self.expanded = False
+        self.filecount = 0
+        if children is None:
+            self.children = list()
+        else:
+            self.children=children
+
 
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,
