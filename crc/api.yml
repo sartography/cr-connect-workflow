@@ -94,11 +94,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  Admin:
-                    schema:
-                    $ref: "#/components/schemas/DocumentCategories"
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentDirectory"
 
   # /v1.0/study
   /study:
@@ -1462,34 +1460,29 @@ components:
           type: string
           x-nullable: true
           example: "27b-6-1212"
-    DocumentCategories:
+    DocumentDirectory:
       properties:
-        category1:
+        level:
           type: string
           x-nullable: true
           example: "Ancillary Document"
-        category2:
-          type: string
-          x-nullable: true
-          example: "Lab Manual"
-        category3:
-          type: string
-          x-nullable: true
-          example: ""
-        Who Uploads?:
-          type: string
-          x-nullable: true
-          example: "CRC"
         description:
           type: string
           x-nullable: true
-          example: "some description"
-
-
-
-
-
-
+          example: "Documents that are ancillary to the study"
+        file:
+          $ref: "#/components/schemas/File"
+          x-nullable: true
+        expanded:
+          type: boolean
+          example: False
+        filecount:
+          type: integer
+          example: 1
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/File"
     DataStore:
       properties:
         id:

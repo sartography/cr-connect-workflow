@@ -11,7 +11,8 @@ from crc.models.api_models import DocumentDirectory, DocumentDirectorySchema
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 
-def ensure_exists(output,categories,expanded):
+
+def ensure_exists(output, categories, expanded):
     """
     This is a recursive function, it expects a list of
     levels with a file object at the end (kinda like duck,duck,duck,goose)
@@ -21,28 +22,28 @@ def ensure_exists(output,categories,expanded):
 
     function terminates upon getting an entry that is a file object ( or really anything but string)
     """
-    currentitem = categories[0]
+    current_item = categories[0]
     found = False
-    if isinstance(currentitem,str):
+    if isinstance(current_item, str):
         for item in output:
-            if item.level == currentitem:
+            if item.level == current_item:
                 found = True
                 item.filecount = item.filecount + 1
                 item.expanded = expanded | item.expanded
-                ensure_exists(item.children,categories[1:],expanded)
+                ensure_exists(item.children, categories[1:], expanded)
         if not found:
-            newlevel = DocumentDirectory(level=currentitem)
-            newlevel.filecount = 1
-            newlevel.expanded = expanded
-            output.append(newlevel)
-            ensure_exists(newlevel.children,categories[1:],expanded)
+            new_level = DocumentDirectory(level=current_item)
+            new_level.filecount = 1
+            new_level.expanded = expanded
+            output.append(new_level)
+            ensure_exists(new_level.children, categories[1:], expanded)
     else:
-        newlevel = DocumentDirectory(file=currentitem)
-        newlevel.expanded = expanded
-        output.append(newlevel)
+        new_level = DocumentDirectory(file=current_item)
+        new_level.expanded = expanded
+        output.append(new_level)
 
 
-def get_document_directory(study_id,workflow_id=None):
+def get_document_directory(study_id, workflow_id=None):
     """
     return a nested list of files arranged according to the category hirearchy
     defined in the doc dictionary
@@ -59,7 +60,7 @@ def get_document_directory(study_id,workflow_id=None):
             expand = False
         print(expand)
         categories = [x for x in [doc_code['category1'],doc_code['category2'],doc_code['category3'],file] if x != '']
-        ensure_exists(output,categories,expanded=expand)
+        ensure_exists(output, categories, expanded=expand)
     return DocumentDirectorySchema(many=True).dump(output)
 
 

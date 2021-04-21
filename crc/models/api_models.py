@@ -174,6 +174,7 @@ class DocumentDirectorySchema(ma.Schema):
     expanded = marshmallow.fields.Boolean()
     children = marshmallow.fields.Nested("self",many=True)
 
+
 class DocumentDirectory(object):
     def __init__(self, level=None, file=None, children=None):
 
