@@ -97,7 +97,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(1, len(study.files))
         self.assertEqual("UVA Compliance/PRC Approval", study.files[0]["category"])
         self.assertEqual("Cancer Center's PRC Approval Form", study.files[0]["description"])
-        self.assertEqual("UVA Compliance/PRC Approval.png", study.files[0]["download_name"])
+        self.assertEqual("UVA Compliance/PRC Approval/anything.png", study.files[0]["download_name"])
 
         # TODO: WRITE A TEST FOR STUDY FILES
 

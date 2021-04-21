@@ -98,10 +98,6 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
 
 
-    @staticmethod
-    def camel_to_snake(camel):
-        camel = camel.strip()
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
 
 
 class MyCustomParser(BpmnDmnParser):

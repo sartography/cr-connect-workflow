@@ -108,7 +108,7 @@ class File(object):
                                                        doc_dictionary[model.irb_doc_code]['category2'],
                                                        doc_dictionary[model.irb_doc_code]['category3']]))
             instance.description = doc_dictionary[model.irb_doc_code]['description']
-            instance.download_name = ".".join([instance.category, model.type.value])
+            instance.download_name = "/".join([instance.category, model.name])
         else:
             instance.category = ""
             instance.description = ""
