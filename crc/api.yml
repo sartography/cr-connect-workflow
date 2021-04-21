@@ -911,6 +911,12 @@ paths:
           description: Set this to true to clear data when starting workflow.
           schema:
             type: boolean
+        - name: delete_files
+          in: query
+          required: false
+          description: Set this to true to delete associated files when starting workflow.
+          schema:
+            type: boolean
       tags:
         - Workflows and Tasks
       responses:

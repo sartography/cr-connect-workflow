@@ -367,11 +367,12 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
-    def restart_workflow_api(self, workflow, clear_data=False, user_uid="dhf8r"):
+    def restart_workflow_api(self, workflow, clear_data=False, delete_files=False, user_uid="dhf8r"):
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
         url = (f'/v1.0/workflow/{workflow.id}/restart'
-               f'?clear_data={str(clear_data)}')
+               f'?clear_data={str(clear_data)}'
+               f'&delete_files={str(delete_files)}')
         workflow_api = self.get_workflow_common(url, user)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
@@ -456,3 +457,9 @@ class BaseTest(unittest.TestCase):
 
         if 'impersonate_user' in g:
             del g.impersonate_user
+
+    def minimal_bpmn(self, content):
+        """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
+        minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
+        return (minimal_dbpm % content).encode()
+

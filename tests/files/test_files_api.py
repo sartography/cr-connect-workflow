@@ -13,11 +13,6 @@ from example_data import ExampleDataLoader
 
 class TestFilesApi(BaseTest):
 
-    def minimal_bpmn(self, content):
-        """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
-        minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
-        return (minimal_dbpm % content).encode()
-
     def test_list_files_for_workflow_spec(self):
         self.load_example_data(use_crc_data=True)
         spec_id = 'core_info'
