@@ -77,7 +77,7 @@ def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None,study
                        'workflow_id with an optional form_field_key')
 
     if study_id is not None:
-        file_models = FileService.get_files_for_study(study_id=study_id)
+        file_models = FileService.get_files_for_study(study_id=study_id, irb_doc_code=form_field_key)
     else:
         file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,
                                         workflow_id=workflow_id,
