@@ -783,3 +783,19 @@ class WorkflowService(object):
         for workflow in workflows:
             if workflow.status == WorkflowStatus.user_input_required or workflow.status == WorkflowStatus.waiting:
                 WorkflowProcessor.reset(workflow, clear_data=False)
+
+    @staticmethod
+    def get_workflow_from_spec(workflow_spec_id, user):
+        workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
+                                       study=None,
+                                       user_id=user.uid,
+                                       workflow_spec_id=workflow_spec_id,
+                                       last_updated=datetime.now())
+        db.session.add(workflow_model)
+        db.session.commit()
+        return workflow_model
+
+    @staticmethod
+    def get_standalone_workflow_specs():
+        specs = db.session.query(WorkflowSpecModel).filter_by(standalone=True).all()
+        return specs
