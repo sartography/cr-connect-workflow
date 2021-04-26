@@ -386,15 +386,15 @@ class TestTasksApi(BaseTest):
         # Start the workflow.
         first_task = self.get_workflow_api(workflow).next_task
         self.complete_form(workflow, first_task, {"has_bananas": True})
-        workflow = self.get_workflow_api(workflow)
-        self.assertEqual('Task_Num_Bananas', workflow.next_task.name)
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertEqual('Task_Num_Bananas', workflow_api.next_task.name)
 
         # Trying to re-submit the initial task, and answer differently, should result in an error.
         self.complete_form(workflow, first_task, {"has_bananas": False}, error_code="invalid_state")
 
         # Go ahead and set the number of bananas.
-        workflow = self.get_workflow_api(workflow)
-        task = workflow.next_task
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
 
         self.complete_form(workflow, task, {"num_bananas": 4})
         # We are now at the end of the workflow.
@@ -405,19 +405,19 @@ class TestTasksApi(BaseTest):
                           content_type="application/json")
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        workflow = WorkflowApiSchema().load(json_data)
+        workflow_api = WorkflowApiSchema().load(json_data)
 
         # Assure the Next Task is the one we just reset the token to be on.
-        self.assertEqual("Task_Has_Bananas", workflow.next_task.name)
+        self.assertEqual("Task_Has_Bananas", workflow_api.next_task.name)
 
         # Go ahead and get that workflow one more time, it should still be right.
-        workflow = self.get_workflow_api(workflow)
+        workflow_api = self.get_workflow_api(workflow)
 
         # Assure the Next Task is the one we just reset the token to be on.
-        self.assertEqual("Task_Has_Bananas", workflow.next_task.name)
+        self.assertEqual("Task_Has_Bananas", workflow_api.next_task.name)
 
         # The next task should be a different value.
-        self.complete_form(workflow, workflow.next_task, {"has_bananas": False})
-        workflow = self.get_workflow_api(workflow)
-        self.assertEqual('Task_Why_No_Bananas', workflow.next_task.name)
+        self.complete_form(workflow, workflow_api.next_task, {"has_bananas": False})
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertEqual('Task_Why_No_Bananas', workflow_api.next_task.name)
 

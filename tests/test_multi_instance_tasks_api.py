@@ -67,14 +67,14 @@ class TestMultiinstanceTasksApi(BaseTest):
                               content_type="application/json")
             self.assert_success(rv)
             json_data = json.loads(rv.get_data(as_text=True))
-            workflow = WorkflowApiSchema().load(json_data)
-            data = workflow.next_task.data
+            workflow_api = WorkflowApiSchema().load(json_data)
+            data = workflow_api.next_task.data
             data['investigator']['email'] = "dhf8r@virginia.edu"
-            self.complete_form(workflow, workflow.next_task, data)
+            self.complete_form(workflow, workflow_api.next_task, data)
             #tasks = self.get_workflow_api(workflow).user_tasks
 
-        workflow = self.get_workflow_api(workflow)
-        self.assertEqual(WorkflowStatus.complete, workflow.status)
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertEqual(WorkflowStatus.complete, workflow_api.status)
 
 
     @patch('crc.services.protocol_builder.requests.get')
