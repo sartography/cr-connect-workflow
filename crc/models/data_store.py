@@ -1,5 +1,6 @@
 from flask_marshmallow.sqla import SQLAlchemyAutoSchema
 from marshmallow import EXCLUDE
+from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import func
 import marshmallow
 from marshmallow import INCLUDE, fields
@@ -20,13 +21,8 @@ class DataStoreModel(db.Model):
     value = db.Column(db.String)
 
 
-class DataStoreSchema(ma.Schema):
-    id = fields.Integer(required=False)
-    key = fields.String(required=True)
-    last_updated = fields.DateTime(server_default=func.now(), onupdate=func.now())
-    workflow_id = fields.Integer()
-    study_id = fields.Integer(allow_none=True)
-    task_id = fields.String()
-    spec_id = fields.String()
-    user_id = fields.String(allow_none=True)
-    value = fields.String()
+class DataStoreSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = DataStoreModel
+        load_instance = True
+        sqla_session = db.session

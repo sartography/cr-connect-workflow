@@ -19,8 +19,8 @@ class DataStoreTest(BaseTest):
         "task_id": "MyTask",
         "spec_id": "My Spec Name",
         "value": "Some Value"
-
     }
+
     def add_test_study_data(self):
         study_data = DataStoreSchema().dump(self.TEST_STUDY_ITEM)
         rv = self.app.post('/v1.0/datastore',
@@ -60,11 +60,9 @@ class DataStoreTest(BaseTest):
         d = api_response.get_data(as_text=True)
         study_data = DataStoreSchema().loads(d)
 
-        self.assertEqual(study_data['key'], self.TEST_STUDY_ITEM['key'])
-        self.assertEqual(study_data['value'], self.TEST_STUDY_ITEM['value'])
-        self.assertEqual(study_data['user_id'], None)
-
-
+        self.assertEqual(study_data.key, self.TEST_STUDY_ITEM['key'])
+        self.assertEqual(study_data.value, self.TEST_STUDY_ITEM['value'])
+        self.assertEqual(study_data.user_id, None)
 
     def test_update_datastore(self):
         self.load_example_data()
@@ -72,20 +70,18 @@ class DataStoreTest(BaseTest):
         new_study = session.query(DataStoreModel).filter_by(id=new_study["id"]).first()
         new_study.value = 'MyNewValue'
         api_response = self.app.put('/v1.0/datastore/%i' % new_study.id,
-                                    data=DataStoreSchema().dump(new_study),
+                                    data=DataStoreSchema().dumps(new_study),
                                     headers=self.logged_in_headers(), content_type="application/json")
-
+        self.assert_success(api_response)
 
         api_response = self.app.get('/v1.0/datastore/%i' % new_study.id,
                                     headers=self.logged_in_headers(), content_type="application/json")
         self.assert_success(api_response)
         study_data = DataStoreSchema().loads(api_response.get_data(as_text=True))
 
-        self.assertEqual(study_data['key'], self.TEST_STUDY_ITEM['key'])
-        self.assertEqual(study_data['value'], 'MyNewValue')
-        self.assertEqual(study_data['user_id'], None)
-
-
+        self.assertEqual(study_data.key, self.TEST_STUDY_ITEM['key'])
+        self.assertEqual(study_data.value, 'MyNewValue')
+        self.assertEqual(study_data.user_id, None)
 
     def test_delete_datastore(self):
         self.load_example_data()
@@ -97,10 +93,8 @@ class DataStoreTest(BaseTest):
         studyreponse = session.query(DataStoreModel).filter_by(id=oldid).first()
         self.assertEqual(studyreponse,None)
 
-
-
     def test_data_crosstalk(self):
-        """Test to make sure that data saved for user or study is not acessible from the other method"""
+        """Test to make sure that data saved for user or study is not accessible from the other method"""
 
         self.load_example_data()
         new_study = self.add_test_study_data()
