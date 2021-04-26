@@ -5,6 +5,8 @@ from crc import session
 from crc.models.file import FileModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
 
+from example_data import ExampleDataLoader
+
 
 class TestWorkflowSpec(BaseTest):
 
@@ -28,7 +30,8 @@ class TestWorkflowSpec(BaseTest):
         category_id = session.query(WorkflowSpecCategoryModel).first().id
         category_count = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
         spec = WorkflowSpecModel(id='make_cookies', name='make_cookies', display_name='Cooooookies',
-                                 description='Om nom nom delicious cookies', category_id=category_id)
+                                 description='Om nom nom delicious cookies', category_id=category_id,
+                                 standalone=False)
         rv = self.app.post('/v1.0/workflow-specification',
                            headers=self.logged_in_headers(),
                            content_type="application/json",
@@ -101,3 +104,16 @@ class TestWorkflowSpec(BaseTest):
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertEqual(num_files_after + num_workflows_after, 0)
 
+    def test_get_standalone_workflow_specs(self):
+        self.load_example_data()
+        category = session.query(WorkflowSpecCategoryModel).first()
+        ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=category.id,
+                                        standalone=True, from_tests=True)
+        rv = self.app.get('/v1.0/workflow-specification/standalone', headers=self.logged_in_headers())
+        self.assertEqual(1, len(rv.json))
+
+        ExampleDataLoader().create_spec('email_script', 'Email Script', category_id=category.id,
+                                        standalone=True, from_tests=True)
+
+        rv = self.app.get('/v1.0/workflow-specification/standalone', headers=self.logged_in_headers())
+        self.assertEqual(2, len(rv.json))
