@@ -17,6 +17,21 @@ from crc.api.common import ApiError
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
 from crc.services.cache_service import cache
+import re
+
+
+def camel_to_snake(camel):
+    """
+    make a camelcase from a snakecase
+    with a few things thrown in - we had a case where
+    we were parsing a spreadsheet and using the headings as keys in an object
+    one of the headings was "Who Uploads?"
+    """
+    camel = camel.strip()
+    camel = re.sub(' ', '', camel)
+    camel = re.sub('?', '', camel)
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
+
 
 class FileService(object):
     """Provides consistent management and rules for storing, retrieving and processing files."""
@@ -26,9 +41,26 @@ class FileService(object):
     __doc_dictionary = None
 
     @staticmethod
+    def verify_doc_dictionary(dd):
+        """
+        We are currently getting structured information from an XLS file, if someone accidentally
+        changes a header we will have problems later, so we will verify we have the headers we need
+        here
+        """
+        required_fields = ['category1','category2','category3','description']
+
+        # we only need to check the first item, as all of the keys should be the same
+        key = list(dd.keys())[0]
+        for field in required_fields:
+            if field not in dd[key].keys():
+                raise ApiError(code="Invalid document list %s"%FileService.DOCUMENT_LIST,
+                               message='Please check the headers in %s'%FileService.DOCUMENT_LIST)
+
+    @staticmethod
     def get_doc_dictionary():
         if not FileService.__doc_dictionary:
             FileService.__doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
+        FileService.verify_doc_dictionary(FileService.__doc_dictionary)
         return FileService.__doc_dictionary
 
     @staticmethod

@@ -13,11 +13,6 @@ from example_data import ExampleDataLoader
 
 class TestFilesApi(BaseTest):
 
-    def minimal_bpmn(self, content):
-        """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
-        minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
-        return (minimal_dbpm % content).encode()
-
     def test_list_files_for_workflow_spec(self):
         self.load_example_data(use_crc_data=True)
         spec_id = 'core_info'
@@ -236,6 +231,41 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         self.assertEqual("text/xml; charset=utf-8", rv.content_type)
         self.assertTrue(rv.content_length > 1)
+
+    def test_get_files_for_form_field_returns_only_those_files(self):
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form')
+        processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        correct_name = task.task_spec.form.fields[0].id
+
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+
+        # Note:  this call can be made WITHOUT the task id.
+        rv = self.app.get('/v1.0/file?study_id=%i&workflow_id=%s&form_field_key=%s' %
+                          (workflow.study_id, workflow.id, correct_name), follow_redirects=True,
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(len(json_data), 1)
+
+        # Add another file for a different document type
+        FileService().add_workflow_file(workflow.id, 'Study_App_Doc', 'otherdoc.docx',
+                                        'application/xcode', b"asdfasdf")
+
+        # Note:  this call can be made WITHOUT the task id.
+        rv = self.app.get('/v1.0/file?study_id=%i&workflow_id=%s&form_field_key=%s' %
+                          (workflow.study_id, workflow.id, correct_name), follow_redirects=True,
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(len(json_data), 1)
+
 
     def test_delete_file(self):
         self.load_example_data()

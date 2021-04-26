@@ -2,6 +2,9 @@ from tests.base_test import BaseTest
 
 from crc import session
 from crc.models.study import StudyModel
+from crc.services.file_service import FileService
+from crc.scripts.is_file_uploaded import IsFileUploaded
+
 
 class TestWorkflowRestart(BaseTest):
 
@@ -32,6 +35,44 @@ class TestWorkflowRestart(BaseTest):
         first_task = self.get_workflow_api(workflow).next_task
         self.assertEqual('Activity_GetData', first_task.name)
         self.assertNotIn('formdata', workflow_api.next_task.data)
+
+    def test_workflow_restart_delete_files(self):
+        self.load_example_data()
+        irb_code = 'Study_Protocol_Document'
+
+        workflow = self.create_workflow('add_delete_irb_document')
+        study_id = workflow.study_id
+
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
+
+        # Should not have any files yet
+        files = FileService.get_files_for_study(study_id)
+        self.assertEqual(0, len(files))
+        self.assertEqual(False, IsFileUploaded.do_task(
+            IsFileUploaded, first_task, study_id, workflow.id, irb_code))
+
+        # Add a file
+        FileService.add_workflow_file(workflow_id=workflow.id,
+                                      name="filename.txt", content_type="text",
+                                      binary_data=b'1234', irb_doc_code=irb_code)
+        # Assert we have the file
+        self.assertEqual(True, IsFileUploaded.do_task(
+            IsFileUploaded, first_task, study_id, workflow.id, irb_code))
+
+        workflow_api = self.restart_workflow_api(workflow_api, delete_files=False)
+        first_task = workflow_api.next_task
+
+        # Assert we still have the file
+        self.assertEqual(True, IsFileUploaded.do_task(
+            IsFileUploaded, first_task, study_id, workflow.id, irb_code))
+
+        workflow_api = self.restart_workflow_api(workflow_api, delete_files=True)
+        first_task = workflow_api.next_task
+
+        # Assert we do not have the file
+        self.assertEqual(False, IsFileUploaded.do_task(
+            IsFileUploaded, first_task, study_id, workflow.id, irb_code))
 
     def test_workflow_restart_on_cancel_notify(self):
         workflow = self.create_workflow('message_event')

@@ -67,6 +67,37 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/User"
+  # /v1.0/document_directory/{study_id}
+  /document_directory/{study_id}:
+    parameters :
+      - name : study_id
+        required : true
+        in : path
+        description : The unique id of a study.
+        schema :
+          type : integer
+      - name : workflow_id
+        in : query
+        required : false
+        schema :
+          type : integer
+    get:
+      operationId: crc.api.file.get_document_directory
+      security:
+        - auth_admin: ['secret']
+      summary: Returns a directory of all files for study in a nested structure
+      tags:
+        - Document Categories
+      responses:
+        '200':
+          description: All IRB Categories defined in the file document.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentDirectory"
+
   # /v1.0/study
   /study:
     get:
@@ -592,6 +623,12 @@ paths:
         description: The unique key of a workflow task form field.  Make sure this matches a document in the irb_documents.xslx reference sheet.
         schema:
           type: string
+      - name: study_id
+        in: query
+        required: false
+        description: The study that the files are related to
+        schema:
+          type: integer
     get:
       operationId: crc.api.file.get_files
       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
@@ -899,6 +936,12 @@ paths:
           in: query
           required: false
           description: Set this to true to clear data when starting workflow.
+          schema:
+            type: boolean
+        - name: delete_files
+          in: query
+          required: false
+          description: Set this to true to delete associated files when starting workflow.
           schema:
             type: boolean
       tags:
@@ -1450,6 +1493,29 @@ components:
           type: string
           x-nullable: true
           example: "27b-6-1212"
+    DocumentDirectory:
+      properties:
+        level:
+          type: string
+          x-nullable: true
+          example: "Ancillary Document"
+        description:
+          type: string
+          x-nullable: true
+          example: "Documents that are ancillary to the study"
+        file:
+          $ref: "#/components/schemas/File"
+          x-nullable: true
+        expanded:
+          type: boolean
+          example: False
+        filecount:
+          type: integer
+          example: 1
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/File"
     DataStore:
       properties:
         id:

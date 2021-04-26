@@ -98,10 +98,6 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
 
 
-    @staticmethod
-    def camel_to_snake(camel):
-        camel = camel.strip()
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
 
 
 class MyCustomParser(BpmnDmnParser):
@@ -174,7 +170,7 @@ class WorkflowProcessor(object):
             self.is_latest_spec = False
 
     @staticmethod
-    def reset(workflow_model, clear_data=False):
+    def reset(workflow_model, clear_data=False, delete_files=False):
         print('WorkflowProcessor: reset: ')
 
         # Try to execute a cancel notify
@@ -194,6 +190,10 @@ class WorkflowProcessor(object):
             for task_event in task_events:
                 task_event.form_data = {}
                 session.add(task_event)
+        if delete_files:
+            files = FileModel.query.filter(FileModel.workflow_id == workflow_model.id).all()
+            for file in files:
+                FileService.delete_file(file.id)
         session.commit()
         return WorkflowProcessor(workflow_model)
 
