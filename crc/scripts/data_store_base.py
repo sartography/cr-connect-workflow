@@ -20,10 +20,11 @@ class DataStoreBase(object):
                 overwritten = True
         return overwritten
 
-    def set_validate_common(self, study_id, workflow_id, user_id, script_name, *args):
+
+    def set_validate_common(self, study_id, workflow_id, user_id, script_name, file_id, *args):
         self.check_args_2(args, script_name)
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
-        self.get_prev_value(study_id=study_id, user_id=user_id, key=args[0])
+        self.get_prev_value(study_id=study_id, user_id=user_id, file_id=file_id, key=args[0])
 
     def check_args(self, args, maxlen=1, script_name='study_data_get'):
         if len(args) < 1 or len(args) > maxlen:

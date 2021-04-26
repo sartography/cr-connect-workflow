@@ -11,6 +11,7 @@ class StudyDataSet(Script,DataStoreBase):
                                  workflow_id,
                                  None,
                                  'study_data_set',
+                                 None,
                                  *args)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
@@ -20,6 +21,7 @@ class StudyDataSet(Script,DataStoreBase):
                                     workflow_id,
                                     None,
                                     'study_data_set',
+                                    None,
                                     *args,
                                     **kwargs)
 
