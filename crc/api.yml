@@ -411,6 +411,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
+    post:
+      operationId: crc.api.workflow.get_workflow_from_spec
+      summary: Creates a workflow from a workflow spec and returns the workflow
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
     put:
       operationId: crc.api.workflow.update_workflow_specification
       security:
@@ -440,6 +452,21 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
+  /workflow-specification/standalone:
+    get:
+      operationId: crc.api.workflow.standalone_workflow_specs
+      summary: Provides a list of workflow specifications that can be run outside a study.
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: A list of workflow specifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpec"
   /workflow-specification/{spec_id}/validate:
     parameters:
       - name: spec_id
@@ -1472,6 +1499,9 @@ components:
         category_id:
           type: integer
           nullable: true
+        standalone:
+          type: boolean
+          example: false
         workflow_spec_category:
           $ref: "#/components/schemas/WorkflowSpecCategory"
         is_status:
