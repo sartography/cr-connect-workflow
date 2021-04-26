@@ -373,6 +373,10 @@ class BaseTest(unittest.TestCase):
 
     def complete_form(self, workflow_in, task_in, dict_data, update_all=False, error_code=None, terminate_loop=None,
                       user_uid="dhf8r"):
+        # workflow_in should be a workflow, not a workflow_api
+        # we were passing in workflow_api in many of our tests, and
+        # this caused problems testing standalone workflows
+        standalone = getattr(workflow_in.workflow_spec, 'standalone', False)
         prev_completed_task_count = workflow_in.completed_tasks
         if isinstance(task_in, dict):
             task_id = task_in["id"]
@@ -415,7 +419,8 @@ class BaseTest(unittest.TestCase):
             .order_by(TaskEventModel.date.desc()).all()
         self.assertGreater(len(task_events), 0)
         event = task_events[0]
-        self.assertIsNotNone(event.study_id)
+        if not standalone:
+            self.assertIsNotNone(event.study_id)
         self.assertEqual(user_uid, event.user_uid)
         self.assertEqual(workflow.id, event.workflow_id)
         self.assertEqual(workflow.workflow_spec_id, event.workflow_spec_id)
