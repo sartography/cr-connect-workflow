@@ -13,7 +13,8 @@ class TestAutoSetPrimaryBPMN(BaseTest):
         category_id = session.query(WorkflowSpecCategoryModel).first().id
         # Add a workflow spec
         spec = WorkflowSpecModel(id='make_cookies', name='make_cookies', display_name='Cooooookies',
-                                 description='Om nom nom delicious cookies', category_id=category_id)
+                                 description='Om nom nom delicious cookies', category_id=category_id,
+                                 standalone=False)
         rv = self.app.post('/v1.0/workflow-specification',
                            headers=self.logged_in_headers(),
                            content_type="application/json",
