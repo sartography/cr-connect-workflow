@@ -179,11 +179,6 @@ class BaseTest(unittest.TestCase):
             files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
             self.assertIsNotNone(files)
             self.assertGreater(len(files), 0)
-
-        for spec in specs:
-            files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
-            self.assertIsNotNone(files)
-            self.assertGreater(len(files), 0)
             for file in files:
                 file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
                 self.assertIsNotNone(file_data)
