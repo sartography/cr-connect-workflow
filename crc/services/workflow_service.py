@@ -667,30 +667,39 @@ class WorkflowService(object):
 
     @staticmethod
     def get_users_assigned_to_task(processor, spiff_task) -> List[str]:
-        if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
-            associated = StudyService.get_study_associates(processor.workflow_model.study.id)
-            return [user['uid'] for user in associated if user['access']]
-        if spiff_task.task_spec.lane not in spiff_task.data:
-            return []  # No users are assignable to the task at this moment
-        lane_users = spiff_task.data[spiff_task.task_spec.lane]
-        if not isinstance(lane_users, list):
-            lane_users = [lane_users]
+        if processor.workflow_model.study_id is None and processor.workflow_model.user_id is None:
+            raise ApiError.from_task(code='invalid_workflow',
+                                     message='A workflow must have either a study_id or a user_id.',
+                                     task=spiff_task)
+        # Standalone workflow - we only care about the current user
+        elif processor.workflow_model.study_id is None and processor.workflow_model.user_id is not None:
+            return [processor.workflow_model.user_id]
+        # Workflow associated with a study - get all the users
+        else:
+            if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
+                associated = StudyService.get_study_associates(processor.workflow_model.study.id)
+                return [user['uid'] for user in associated if user['access']]
+            if spiff_task.task_spec.lane not in spiff_task.data:
+                return []  # No users are assignable to the task at this moment
+            lane_users = spiff_task.data[spiff_task.task_spec.lane]
+            if not isinstance(lane_users, list):
+                lane_users = [lane_users]
 
-        lane_uids = []
-        for user in lane_users:
-            if isinstance(user, dict):
-                if 'value' in user and user['value'] is not None:
-                    lane_uids.append(user['value'])
+            lane_uids = []
+            for user in lane_users:
+                if isinstance(user, dict):
+                    if 'value' in user and user['value'] is not None:
+                        lane_uids.append(user['value'])
+                    else:
+                        raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
+                                                                  spiff_task.task_spec.name, task=spiff_task)
+                elif isinstance(user, str):
+                    lane_uids.append(user)
                 else:
-                    raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
-                                                              spiff_task.task_spec.name, task=spiff_task)
-            elif isinstance(user, str):
-                lane_uids.append(user)
-            else:
-                raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user is not a string or dict" %
-                                                              spiff_task.task_spec.name, task=spiff_task)
+                    raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user is not a string or dict" %
+                                                                  spiff_task.task_spec.name, task=spiff_task)
 
-        return lane_uids
+            return lane_uids
 
     @staticmethod
     def log_task_action(user_uid, processor, spiff_task, action):
