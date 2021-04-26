@@ -3,7 +3,7 @@ import json
 from tests.base_test import BaseTest
 from crc import session
 from crc.models.file import FileModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
 
 from example_data import ExampleDataLoader
 
@@ -125,3 +125,22 @@ class TestWorkflowSpec(BaseTest):
         self.assert_success(rv)
         self.assertEqual('hello_world', rv.json['workflow_spec_id'])
         self.assertEqual('Task_GetName', rv.json['next_task']['name'])
+
+    def test_add_workflow_spec_category(self):
+        self.load_example_data()
+        count = session.query(WorkflowSpecCategoryModel).count()
+        category = WorkflowSpecCategoryModel(
+            id=count,
+            name='another_test_category',
+            display_name='Another Test Category',
+            display_order=0
+        )
+        rv = self.app.post(f'/v1.0/workflow-specification-category',
+                           headers=self.logged_in_headers(),
+                           content_type="application/json",
+                           data=json.dumps(WorkflowSpecCategoryModelSchema().dump(category))
+                           )
+        self.assert_success(rv)
+        result = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name=='another_test_category').first()
+        self.assertEqual('Another Test Category', result.display_name)
+        self.assertEqual(count, result.id)
