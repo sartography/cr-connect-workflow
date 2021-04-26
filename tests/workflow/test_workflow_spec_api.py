@@ -144,3 +144,20 @@ class TestWorkflowSpec(BaseTest):
         result = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name=='another_test_category').first()
         self.assertEqual('Another Test Category', result.display_name)
         self.assertEqual(count, result.id)
+
+    def test_update_workflow_spec_category(self):
+        self.load_example_data()
+        category = session.query(WorkflowSpecCategoryModel).first()
+        category_name_before = category.name
+        new_category_name = category_name_before + '_asdf'
+        self.assertNotEqual(category_name_before, new_category_name)
+
+        category.name = new_category_name
+
+        rv = self.app.put(f'/v1.0/workflow-specification-category/{category.id}',
+                          content_type="application/json",
+                          headers=self.logged_in_headers(),
+                          data=json.dumps(WorkflowSpecCategoryModelSchema().dump(category)))
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(new_category_name, json_data['name'])
