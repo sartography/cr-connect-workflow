@@ -15,6 +15,7 @@ class UserDataSet(Script,DataStoreBase):
                                  workflow_id,
                                  g.user.uid,
                                  'user_data_set',
+                                 None,
                                  *args)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
@@ -24,6 +25,7 @@ class UserDataSet(Script,DataStoreBase):
                                     workflow_id,
                                     None,
                                     'user_data_set',
+                                    None,
                                     *args,
                                     **kwargs)
 

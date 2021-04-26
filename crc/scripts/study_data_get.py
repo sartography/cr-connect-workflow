@@ -13,5 +13,6 @@ class StudyDataGet(Script,DataStoreBase):
         return self.get_data_common(study_id,
                                     None,
                                     'study_data_get',
+                                    None,
                                     *args)
 
