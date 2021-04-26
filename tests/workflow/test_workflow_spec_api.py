@@ -117,3 +117,11 @@ class TestWorkflowSpec(BaseTest):
 
         rv = self.app.get('/v1.0/workflow-specification/standalone', headers=self.logged_in_headers())
         self.assertEqual(2, len(rv.json))
+
+    def test_get_workflow_from_workflow_spec(self):
+        self.load_example_data()
+        spec = ExampleDataLoader().create_spec('hello_world', 'Hello World', standalone=True, from_tests=True)
+        rv = self.app.post(f'/v1.0/workflow-specification/{spec.id}', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        self.assertEqual('hello_world', rv.json['workflow_spec_id'])
+        self.assertEqual('Task_GetName', rv.json['next_task']['name'])
