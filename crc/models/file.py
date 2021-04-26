@@ -6,7 +6,8 @@ from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import deferred
+from sqlalchemy.orm import deferred, relationship
+from crc.models.data_store import DataStoreModel # this is needed by the relationship
 
 from crc import db, ma
 
@@ -87,6 +88,7 @@ class FileModel(db.Model):
     # it instead, hide it in the interface.
     is_review = db.Column(db.Boolean, default=False, nullable=True)
     archived = db.Column(db.Boolean, default=False, nullable=False)
+    tags = relationship("DataStoreModel", cascade="all,delete", backref="file")
 
 class File(object):
     @classmethod

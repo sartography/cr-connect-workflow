@@ -15,4 +15,5 @@ class UserDataGet(Script, DataStoreBase):
         return self.get_data_common(None,
                                     g.user.uid,
                                     'user_data_get',
+                                    None,
                                     *args)

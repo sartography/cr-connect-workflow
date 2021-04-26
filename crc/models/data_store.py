@@ -16,6 +16,7 @@ class DataStoreModel(db.Model):
     task_id = db.Column(db.String)
     spec_id = db.Column(db.String)
     user_id = db.Column(db.String, nullable=True)
+    file_id = db.Column(db.Integer, db.ForeignKey('file.id'), nullable=True)
     value = db.Column(db.String)
 
 
