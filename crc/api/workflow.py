@@ -6,7 +6,7 @@ from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModel, LookupDataSchema
-from crc.models.study import StudyModel, WorkflowMetadata
+from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
 from crc.models.user import UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
@@ -145,7 +145,8 @@ def get_task_events(action = None, workflow = None, study = None):
         study = session.query(StudyModel).filter(StudyModel.id == event.study_id).first()
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == event.workflow_id).first()
         workflow_meta = WorkflowMetadata.from_workflow(workflow)
-        task_events.append(TaskEvent(event, study, workflow_meta))
+        if study.status in [StudyStatus.open_for_enrollment, StudyStatus.in_progress]:
+            task_events.append(TaskEvent(event, study, workflow_meta))
     return TaskEventSchema(many=True).dump(task_events)
 
 
