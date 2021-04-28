@@ -290,6 +290,7 @@ class StudyService(object):
             doc['files'] = []
             for file in doc_files:
                 doc['files'].append({'file_id': file.id,
+                                     'name': file.name,
                                      'workflow_id': file.workflow_id})
 
                 # update the document status to match the status of the workflow it is in.
