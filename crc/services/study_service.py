@@ -496,7 +496,7 @@ class StudyService(object):
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        study=study,
                                        workflow_spec_id=spec.id,
-                                       last_updated=datetime.now())
+                                       last_updated=datetime.utcnow())
         session.add(workflow_model)
         session.commit()
         return workflow_model

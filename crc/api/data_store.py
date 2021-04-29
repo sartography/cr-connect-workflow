@@ -55,7 +55,7 @@ def update_datastore(id, body):
         raise ApiError('unknown_item', 'The item "' + id + '" is not recognized.')
 
     DataStoreSchema().load(body, instance=item, session=session)
-    item.last_updated = datetime.now()
+    item.last_updated = datetime.utcnow()
     session.add(item)
     session.commit()
     return DataStoreSchema().dump(item)
@@ -87,7 +87,7 @@ def add_datastore(body):
                                              'but not more than one of these')
 
     item = DataStoreSchema().load(body)
-    item.last_updated = datetime.now()
+    item.last_updated = datetime.utcnow()
     session.add(item)
     session.commit()
     return DataStoreSchema().dump(item)

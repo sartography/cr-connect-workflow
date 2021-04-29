@@ -219,7 +219,7 @@ class WorkflowProcessor(object):
         self.workflow_model.status = self.get_status()
         self.workflow_model.total_tasks = len(tasks)
         self.workflow_model.completed_tasks = sum(1 for t in tasks if t.state in complete_states)
-        self.workflow_model.last_updated = datetime.now()
+        self.workflow_model.last_updated = datetime.utcnow()
         self.update_dependencies(self.spec_data_files)
         session.add(self.workflow_model)
         session.commit()
