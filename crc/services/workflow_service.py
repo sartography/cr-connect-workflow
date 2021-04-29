@@ -408,7 +408,8 @@ class WorkflowService(object):
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
             is_review=is_review,
-            title=spec.display_name
+            title=spec.display_name,
+            study_id=processor.workflow_model.study_id or None
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
