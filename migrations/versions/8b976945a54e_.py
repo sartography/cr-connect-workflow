@@ -18,7 +18,7 @@ depends_on = None
 
 def upgrade():
     op.add_column('workflow', sa.Column('user_id', sa.String(), nullable=True))
-    op.add_column('workflow_spec', sa.Column('standalone', sa.String(), default=False))
+    op.add_column('workflow_spec', sa.Column('standalone', sa.Boolean(), default=False))
     op.execute("UPDATE workflow_spec SET standalone=False WHERE standalone is null;")
     op.execute("ALTER TABLE task_event ALTER COLUMN study_id DROP NOT NULL")
 
