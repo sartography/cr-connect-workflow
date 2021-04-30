@@ -175,6 +175,8 @@ class FileService(object):
             order_by(desc(FileDataModel.date_created)).first()
 
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
+        size = len(binary_data)
+
         if (latest_data_model is not None) and (md5_checksum == latest_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.  If it is arhived,
             # then de-arvhive it.
@@ -210,7 +212,8 @@ class FileService(object):
 
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
-            version=version, md5_hash=md5_checksum, date_created=datetime.now()
+            version=version, md5_hash=md5_checksum, date_created=datetime.now(),
+            size=size
         )
         session.add_all([file_model, new_file_data_model])
         session.commit()

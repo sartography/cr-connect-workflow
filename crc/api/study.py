@@ -74,8 +74,8 @@ def update_study(study_id, body):
     return StudySchema().dump(study)
 
 
-def get_study(study_id):
-    study = StudyService.get_study(study_id)
+def get_study(study_id, update_status=False):
+    study = StudyService.get_study(study_id, do_status=update_status)
     if (study is None):
         raise ApiError("unknown_study",  'The study "' + study_id + '" is not recognized.', status_code=404)
     return StudySchema().dump(study)

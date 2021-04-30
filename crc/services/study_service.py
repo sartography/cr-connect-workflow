@@ -53,7 +53,7 @@ class StudyService(object):
         return studies
 
     @staticmethod
-    def get_study(study_id, study_model: StudyModel = None, do_status=True):
+    def get_study(study_id, study_model: StudyModel = None, do_status=False):
         """Returns a study model that contains all the workflows organized by category.
         IMPORTANT:  This is intended to be a lightweight call, it should never involve
         loading up and executing all the workflows in a study to calculate information."""
