@@ -57,10 +57,12 @@ class WorkflowService(object):
         user = db.session.query(UserModel).filter_by(uid="test").first()
         if not user:
             db.session.add(UserModel(uid="test"))
+            db.session.commit()
         study = db.session.query(StudyModel).filter_by(user_uid="test").first()
         if not study:
             db.session.add(StudyModel(user_uid="test", title="test"))
             db.session.commit()
+            study = db.session.query(StudyModel).filter_by(user_uid="test").first()
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        workflow_spec_id=spec_id,
                                        last_updated=datetime.now(),
