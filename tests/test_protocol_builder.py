@@ -60,3 +60,17 @@ class TestProtocolBuilder(BaseTest):
         self.assertEqual(2, response[0]["SS_STUDY"])
         self.assertEqual(2453, response[0]["SPONSOR_ID"])
         self.assertEqual("Abbott Ltd", response[0]["SP_NAME"])
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_get_irb_info(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('irb_info.json')
+        response = ProtocolBuilderService.get_irb_info(self.test_study_id)
+        self.assertIsNotNone(response)
+        self.assertEqual(3, len(response))
+        self.assertEqual('IRB Event 1', response[0]["IRBEVENT"])
+        self.assertEqual('IRB Event 2', response[1]["IRBEVENT"])
+        self.assertEqual('IRB Event 3', response[2]["IRBEVENT"])
+
+        print('test_get_irb_info')

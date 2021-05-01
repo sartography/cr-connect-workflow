@@ -1,0 +1,38 @@
+[
+  {
+    "AGENDA_DATE": "2021-04-15T00:00:00+00:00",
+    "DATE_MODIFIED": "2021-04-15T00:00:00+00:00",
+    "IRBEVENT": "IRB Event 1",
+    "IRB_ADMINISTRATIVE_REVIEWER": "IRB Admin Reviewer 1",
+    "IRB_OF_RECORD": "IRB of Record 1",
+    "IRB_REVIEW_TYPE": "IRB Review Type 1",
+    "IRB_STATUS": "IRB Status 1",
+    "STUDYIRBREVIEWERADMIN": "Study IRB Review Admin 1",
+    "UVA_IRB_HSR_IS_IRB_OF_RECORD_FOR_ALL_SITES": 1,
+    "UVA_STUDY_TRACKING": "UVA Study Tracking 1"
+  },
+  {
+    "AGENDA_DATE": "2021-04-15T00:00:00+00:00",
+    "DATE_MODIFIED": "2021-04-15T00:00:00+00:00",
+    "IRBEVENT": "IRB Event 2",
+    "IRB_ADMINISTRATIVE_REVIEWER": "IRB Admin Reviewer 2",
+    "IRB_OF_RECORD": "IRB of Record 2",
+    "IRB_REVIEW_TYPE": "IRB Review Type 2",
+    "IRB_STATUS": "IRB Status 2",
+    "STUDYIRBREVIEWERADMIN": "Study IRB Review Admin 2",
+    "UVA_IRB_HSR_IS_IRB_OF_RECORD_FOR_ALL_SITES": 2,
+    "UVA_STUDY_TRACKING": "UVA Study Tracking 2"
+  },
+  {
+    "AGENDA_DATE": "2021-04-15T00:00:00+00:00",
+    "DATE_MODIFIED": "2021-04-15T00:00:00+00:00",
+    "IRBEVENT": "IRB Event 3",
+    "IRB_ADMINISTRATIVE_REVIEWER": "IRB Admin Reviewer 3",
+    "IRB_OF_RECORD": "IRB of Record 3",
+    "IRB_REVIEW_TYPE": "IRB Review Type 3",
+    "IRB_STATUS": "IRB Status 3",
+    "STUDYIRBREVIEWERADMIN": "Study IRB Review Admin 3",
+    "UVA_IRB_HSR_IS_IRB_OF_RECORD_FOR_ALL_SITES": 3,
+    "UVA_STUDY_TRACKING": "UVA Study Tracking 3"
+  }
+]
