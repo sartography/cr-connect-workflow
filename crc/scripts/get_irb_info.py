@@ -16,7 +16,7 @@ class IRBInfo(Script):
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         irb_info = self.pb.get_irb_info(study_id)
-        if isinstance(irb_info, dict):
+        if irb_info:
             return irb_info
         else:
             raise ApiError.from_task(code='missing_irb_info',
