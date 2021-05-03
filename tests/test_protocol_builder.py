@@ -72,5 +72,3 @@ class TestProtocolBuilder(BaseTest):
         self.assertEqual('IRB Event 1', response[0]["IRBEVENT"])
         self.assertEqual('IRB Event 2', response[1]["IRBEVENT"])
         self.assertEqual('IRB Event 3', response[2]["IRBEVENT"])
-
-        print('test_get_irb_info')
