@@ -60,6 +60,7 @@ PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL +
 PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
 PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
 PB_SPONSORS_URL = environ.get('PB_SPONSORS_URL', default=PB_BASE_URL + "sponsors?studyid=%i")
+PB_IRB_INFO_URL = environ.get('PB_IRB_INFO_URL', default=PB_BASE_URL + "current_irb_info/%i")
 
 # Ldap Configuration
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
