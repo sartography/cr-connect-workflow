@@ -13,10 +13,10 @@ class TestMessageEvent(BaseTest):
         # Start the workflow.
         first_task = self.get_workflow_api(workflow).next_task
         self.assertEqual('Activity_GetData', first_task.name)
-        workflow = self.get_workflow_api(workflow)
+
         self.complete_form(workflow, first_task, {'formdata': 'asdf'})
-        workflow = self.get_workflow_api(workflow)
-        self.assertEqual('Activity_HowMany', workflow.next_task.name)
+        workflow_api = self.get_workflow_api(workflow)
+        self.assertEqual('Activity_HowMany', workflow_api.next_task.name)
 
         # reset the workflow
         # this ultimately calls crc.api.workflow.set_current_task
