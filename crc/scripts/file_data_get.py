@@ -10,7 +10,9 @@ class FileDataGet(Script, DataStoreBase):
         return """Gets user data from the data store - takes only two keyword arguments arguments: 'file_id' and 'key' """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.do_task(task, study_id, workflow_id, *args, **kwargs)
+        if self.validate_kw_args(**kwargs):
+            myargs = [kwargs['key']]
+        return True
 
     def validate_kw_args(self,**kwargs):
         if kwargs.get('key',None) is None:
