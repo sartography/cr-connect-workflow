@@ -27,5 +27,6 @@ class TestFileDatastore(BaseTest):
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
         task_data = processor.bpmn_workflow.last_task.data
-        self.assertEqual(task_data['output'],'me')
+        self.assertEqual(task_data['output'], 'me')
+        self.assertEqual(task_data['output2'], 'nope')
 

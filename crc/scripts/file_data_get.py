@@ -28,6 +28,8 @@ class FileDataGet(Script, DataStoreBase):
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         if self.validate_kw_args(**kwargs):
             myargs = [kwargs['key']]
+        if 'default' in kwargs.keys():
+            myargs.append(kwargs['default'])
 
         return self.get_data_common(None,
                                     None,
