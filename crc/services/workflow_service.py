@@ -63,7 +63,7 @@ class WorkflowService(object):
             db.session.commit()
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        workflow_spec_id=spec_id,
-                                       last_updated=datetime.now(),
+                                       last_updated=datetime.utcnow(),
                                        study=study)
         return workflow_model
 
@@ -408,7 +408,8 @@ class WorkflowService(object):
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
             is_review=is_review,
-            title=spec.display_name
+            title=spec.display_name,
+            study_id=processor.workflow_model.study_id or None
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
@@ -667,30 +668,39 @@ class WorkflowService(object):
 
     @staticmethod
     def get_users_assigned_to_task(processor, spiff_task) -> List[str]:
-        if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
-            associated = StudyService.get_study_associates(processor.workflow_model.study.id)
-            return [user['uid'] for user in associated if user['access']]
-        if spiff_task.task_spec.lane not in spiff_task.data:
-            return []  # No users are assignable to the task at this moment
-        lane_users = spiff_task.data[spiff_task.task_spec.lane]
-        if not isinstance(lane_users, list):
-            lane_users = [lane_users]
+        if processor.workflow_model.study_id is None and processor.workflow_model.user_id is None:
+            raise ApiError.from_task(code='invalid_workflow',
+                                     message='A workflow must have either a study_id or a user_id.',
+                                     task=spiff_task)
+        # Standalone workflow - we only care about the current user
+        elif processor.workflow_model.study_id is None and processor.workflow_model.user_id is not None:
+            return [processor.workflow_model.user_id]
+        # Workflow associated with a study - get all the users
+        else:
+            if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
+                associated = StudyService.get_study_associates(processor.workflow_model.study.id)
+                return [user['uid'] for user in associated if user['access']]
+            if spiff_task.task_spec.lane not in spiff_task.data:
+                return []  # No users are assignable to the task at this moment
+            lane_users = spiff_task.data[spiff_task.task_spec.lane]
+            if not isinstance(lane_users, list):
+                lane_users = [lane_users]
 
-        lane_uids = []
-        for user in lane_users:
-            if isinstance(user, dict):
-                if 'value' in user and user['value'] is not None:
-                    lane_uids.append(user['value'])
+            lane_uids = []
+            for user in lane_users:
+                if isinstance(user, dict):
+                    if 'value' in user and user['value'] is not None:
+                        lane_uids.append(user['value'])
+                    else:
+                        raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
+                                                                  spiff_task.task_spec.name, task=spiff_task)
+                elif isinstance(user, str):
+                    lane_uids.append(user)
                 else:
-                    raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
-                                                              spiff_task.task_spec.name, task=spiff_task)
-            elif isinstance(user, str):
-                lane_uids.append(user)
-            else:
-                raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user is not a string or dict" %
-                                                              spiff_task.task_spec.name, task=spiff_task)
+                    raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user is not a string or dict" %
+                                                                  spiff_task.task_spec.name, task=spiff_task)
 
-        return lane_uids
+            return lane_uids
 
     @staticmethod
     def log_task_action(user_uid, processor, spiff_task, action):
@@ -714,7 +724,7 @@ class WorkflowService(object):
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
             mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
             process_name=task.process_name,
-            date=datetime.now(),
+            date=datetime.utcnow(),
         )
         db.session.add(task_event)
         db.session.commit()
@@ -783,3 +793,19 @@ class WorkflowService(object):
         for workflow in workflows:
             if workflow.status == WorkflowStatus.user_input_required or workflow.status == WorkflowStatus.waiting:
                 WorkflowProcessor.reset(workflow, clear_data=False)
+
+    @staticmethod
+    def get_workflow_from_spec(workflow_spec_id, user):
+        workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
+                                       study=None,
+                                       user_id=user.uid,
+                                       workflow_spec_id=workflow_spec_id,
+                                       last_updated=datetime.now())
+        db.session.add(workflow_model)
+        db.session.commit()
+        return workflow_model
+
+    @staticmethod
+    def get_standalone_workflow_specs():
+        specs = db.session.query(WorkflowSpecModel).filter_by(standalone=True).all()
+        return specs

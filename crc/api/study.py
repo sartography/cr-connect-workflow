@@ -23,7 +23,7 @@ def add_study(body):
     study_model = StudyModel(user_uid=UserService.current_user().uid,
                              title=body['title'],
                              primary_investigator_id=body['primary_investigator_id'],
-                             last_updated=datetime.now(),
+                             last_updated=datetime.utcnow(),
                              status=StudyStatus.in_progress)
     session.add(study_model)
     StudyService.add_study_update_event(study_model,
@@ -51,7 +51,7 @@ def update_study(study_id, body):
     study: Study = StudyForUpdateSchema().load(body)
 
     status = StudyStatus(study.status)
-    study_model.last_updated = datetime.now()
+    study_model.last_updated = datetime.utcnow()
 
     if study_model.status != status:
         study_model.status = status

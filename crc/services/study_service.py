@@ -290,6 +290,7 @@ class StudyService(object):
             doc['files'] = []
             for file in doc_files:
                 doc['files'].append({'file_id': file.id,
+                                     'name': file.name,
                                      'workflow_id': file.workflow_id})
 
                 # update the document status to match the status of the workflow it is in.
@@ -495,8 +496,9 @@ class StudyService(object):
     def _create_workflow_model(study: StudyModel, spec):
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        study=study,
+                                       user_id=None,
                                        workflow_spec_id=spec.id,
-                                       last_updated=datetime.now())
+                                       last_updated=datetime.utcnow())
         session.add(workflow_model)
         session.commit()
         return workflow_model

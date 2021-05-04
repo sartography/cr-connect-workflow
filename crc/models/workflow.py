@@ -3,6 +3,7 @@ import enum
 import marshmallow
 from marshmallow import EXCLUDE
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from sqlalchemy import func
 
 from crc import db
 from crc.models.file import FileModel, FileDataModel
@@ -33,6 +34,7 @@ class WorkflowSpecModel(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'), nullable=True)
     category = db.relationship("WorkflowSpecCategoryModel")
     is_master_spec = db.Column(db.Boolean, default=False)
+    standalone = db.Column(db.Boolean, default=False)
 
 
 class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
@@ -87,7 +89,8 @@ class WorkflowModel(db.Model):
     workflow_spec = db.relationship("WorkflowSpecModel")
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
-    last_updated = db.Column(db.DateTime)
+    last_updated = db.Column(db.DateTime(timezone=True),default=func.now())
+    user_id = db.Column(db.String, default=None)
     # Order By is important or generating hashes on reviews.
     dependencies = db.relationship(WorkflowSpecDependencyFile, cascade="all, delete, delete-orphan",
                                    order_by="WorkflowSpecDependencyFile.file_data_id")

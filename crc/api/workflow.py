@@ -101,6 +101,24 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
+def get_workflow_from_spec(spec_id):
+    workflow_model = WorkflowService.get_workflow_from_spec(spec_id, g.user)
+    processor = WorkflowProcessor(workflow_model)
+
+    processor.do_engine_steps()
+    processor.save()
+    WorkflowService.update_task_assignments(processor)
+
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
+    return WorkflowApiSchema().dump(workflow_api_model)
+
+
+def standalone_workflow_specs():
+    schema = WorkflowSpecModelSchema(many=True)
+    specs = WorkflowService.get_standalone_workflow_specs()
+    return schema.dump(specs)
+
+
 def get_workflow(workflow_id, do_engine_steps=True):
     """Retrieve workflow based on workflow_id, and return it in the last saved State.
        If do_engine_steps is False, return the workflow without running any engine tasks or logging any events. """
@@ -184,9 +202,6 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     if workflow_model is None:
         raise ApiError("invalid_workflow_id", "The given workflow id is not valid.", status_code=404)
-
-    elif workflow_model.study is None:
-        raise ApiError("invalid_study", "There is no study associated with the given workflow.", status_code=404)
 
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)

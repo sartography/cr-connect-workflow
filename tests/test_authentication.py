@@ -273,7 +273,7 @@ class TestAuthentication(BaseTest):
     def _make_fake_study(self, uid):
         return {
             "title": "blah",
-            "last_updated": datetime.now(tz=timezone.utc),
+            "last_updated": datetime.utcnow(),
             "status": StudyStatus.in_progress,
             "primary_investigator_id": uid,
             "user_uid": uid,

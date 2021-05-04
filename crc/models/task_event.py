@@ -5,12 +5,13 @@ from crc import db, ma
 from crc.models.study import StudyModel, StudySchema, WorkflowMetadataSchema, WorkflowMetadata
 from crc.models.workflow import WorkflowModel
 from crc.services.ldap_service import LdapService
+from sqlalchemy import func
 
 
 class TaskEventModel(db.Model):
     __tablename__ = 'task_event'
     id = db.Column(db.Integer, primary_key=True)
-    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
+    study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     user_uid = db.Column(db.String, nullable=False) # In some cases the unique user id may not exist in the db yet.
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=False)
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
@@ -27,7 +28,7 @@ class TaskEventModel(db.Model):
     mi_count = db.Column(db.Integer)
     mi_index = db.Column(db.Integer)
     process_name = db.Column(db.String)
-    date = db.Column(db.DateTime)
+    date = db.Column(db.DateTime(timezone=True),default=func.now())
 
 
 class TaskEventModelSchema(SQLAlchemyAutoSchema):
