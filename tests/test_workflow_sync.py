@@ -52,7 +52,7 @@ class TestWorkflowSync(BaseTest):
         self.load_example_data()
         othersys = get_all_spec_state()
         rf2pos = get_random_fact_pos(othersys)
-        othersys[rf2pos]['date_created'] = str(datetime.now())
+        othersys[rf2pos]['date_created'] = str(datetime.utcnow())
         othersys[rf2pos]['md5_hash'] = '12345'
         mock_get.return_value = othersys
         response = get_changed_workflows('localhost:0000') #endpoint is not used due to mock
@@ -69,7 +69,7 @@ class TestWorkflowSync(BaseTest):
         self.load_example_data()
         othersys = get_all_spec_state()
         othersys.append({'workflow_spec_id':'my_new_workflow',
-                         'date_created':str(datetime.now()),
+                         'date_created':str(datetime.utcnow()),
                          'md5_hash': '12345'})
         mock_get.return_value = othersys
         response = get_changed_workflows('localhost:0000') #endpoint is not used due to mock
@@ -121,7 +121,7 @@ class TestWorkflowSync(BaseTest):
         self.load_example_data()
         othersys = get_workflow_spec_files('random_fact')
         rf2pos = get_random_fact_2_pos(othersys)
-        othersys[rf2pos]['date_created'] = str(datetime.now())
+        othersys[rf2pos]['date_created'] = str(datetime.utcnow())
         othersys[rf2pos]['md5_hash'] = '12345'
         mock_get.return_value = othersys
         response = get_changed_files('localhost:0000','random_fact',as_df=False) #endpoint is not used due to mock
@@ -145,7 +145,7 @@ class TestWorkflowSync(BaseTest):
         # change the remote file date and hash
         othersys = get_workflow_spec_files('random_fact')
         rf2pos = get_random_fact_2_pos(othersys)
-        othersys[rf2pos]['date_created'] = str(datetime.now())
+        othersys[rf2pos]['date_created'] = str(datetime.utcnow())
         othersys[rf2pos]['md5_hash'] = '12345'
         spec_files_mock.return_value = othersys
         # actually go get a different file
@@ -179,7 +179,7 @@ class TestWorkflowSync(BaseTest):
                    'primary':False,
                    'content_type':'text/text',
                    'primary_process_id':None,
-                   'date_created':str(datetime.now()),
+                   'date_created':str(datetime.utcnow()),
                    'md5_hash':'12345'
         }
         othersys.append(newfile)

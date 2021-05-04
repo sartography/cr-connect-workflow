@@ -70,7 +70,7 @@ class BaseTest(unittest.TestCase):
         {
             'id': 0,
             'title': 'The impact of fried pickles on beer consumption in bipedal software developers.',
-            'last_updated': datetime.datetime.now(),
+            'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Sartography Pharmaceuticals',
@@ -80,7 +80,7 @@ class BaseTest(unittest.TestCase):
         {
             'id': 1,
             'title': 'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
-            'last_updated': datetime.datetime.now(),
+            'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Makerspace & Co.',

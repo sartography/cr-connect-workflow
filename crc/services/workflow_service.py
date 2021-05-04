@@ -63,7 +63,7 @@ class WorkflowService(object):
             db.session.commit()
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        workflow_spec_id=spec_id,
-                                       last_updated=datetime.now(),
+                                       last_updated=datetime.utcnow(),
                                        study=study)
         return workflow_model
 
@@ -724,7 +724,7 @@ class WorkflowService(object):
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
             mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
             process_name=task.process_name,
-            date=datetime.now(),
+            date=datetime.utcnow(),
         )
         db.session.add(task_event)
         db.session.commit()

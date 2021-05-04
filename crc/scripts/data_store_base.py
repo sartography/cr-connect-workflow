@@ -76,7 +76,7 @@ class DataStoreBase(object):
                                    workflow_id=workflow_id,
                                    spec_id=workflow_spec_id)
         study.value = args[1]
-        study.last_updated = datetime.now()
+        study.last_updated = datetime.utcnow()
         overwritten = self.overwritten(study.value, prev_value)
         session.add(study)
         session.commit()

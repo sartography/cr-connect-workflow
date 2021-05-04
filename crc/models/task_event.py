@@ -5,6 +5,7 @@ from crc import db, ma
 from crc.models.study import StudyModel, StudySchema, WorkflowMetadataSchema, WorkflowMetadata
 from crc.models.workflow import WorkflowModel
 from crc.services.ldap_service import LdapService
+from sqlalchemy import func
 
 
 class TaskEventModel(db.Model):
@@ -27,7 +28,7 @@ class TaskEventModel(db.Model):
     mi_count = db.Column(db.Integer)
     mi_index = db.Column(db.Integer)
     process_name = db.Column(db.String)
-    date = db.Column(db.DateTime)
+    date = db.Column(db.DateTime(timezone=True),default=func.now())
 
 
 class TaskEventModelSchema(SQLAlchemyAutoSchema):
