@@ -42,7 +42,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         """
         return self.evaluate_expression(task, expression)
 
-
+    @timeit
     def execute(self, task: SpiffTask, script, data):
 
         study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]

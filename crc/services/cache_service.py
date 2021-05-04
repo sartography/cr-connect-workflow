@@ -10,7 +10,7 @@ def firsttime():
 
 def sincetime(txt,lasttime):
     thistime=firsttime()
-    print('%s runtime was %2f'%(txt,thistime-lasttime))
+    print('%2.4f sec | %s' % (thistime-lasttime, txt))
     return thistime
 
 def timeit(f):
@@ -20,7 +20,7 @@ def timeit(f):
         ts = time.time()
         result = f(*args, **kw)
         te = time.time()
-        print('func:%r args:[%r, %r] took: %2.4f sec' % (f.__name__, args, kw, te-ts))
+        print('%2.4f sec | func:%r args:[%r, %r] ' % (te-ts, f.__name__, args, kw))
         return result
 
     return timed

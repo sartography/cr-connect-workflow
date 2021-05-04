@@ -83,6 +83,8 @@ paths:
           type : integer
     get:
       operationId: crc.api.file.get_document_directory
+      security:
+        - auth_admin: ['secret']
       summary: Returns a directory of all files for study in a nested structure
       tags:
         - Document Categories
@@ -349,6 +351,12 @@ paths:
         schema:
           type: integer
           format: int32
+      - name: update_status
+        in: query
+        required: false
+        description: If set to true, will synch the study with protocol builder and assure the status of all workflows is up to date (expensive).
+        schema:
+          type: boolean
     get:
       operationId: crc.api.study.get_study
       summary: Provides a single study
