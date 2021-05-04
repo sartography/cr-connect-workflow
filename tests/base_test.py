@@ -131,7 +131,7 @@ class BaseTest(unittest.TestCase):
         user = UserService.current_user(allow_admin_impersonate=True)
         self.assertEqual(uid, user.uid, 'Logged in user should match given user uid')
 
-        return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
+        return dict(Authorization='Bearer ' + user_model.encode_auth_token())
 
     def delete_example_data(self, use_crc_data=False, use_rrt_data=False):
         """

@@ -15,7 +15,7 @@ class FakeGithubCreates(Mock):
             def get_repo(var, name):
                 class FakeRepo(Mock):
                     def get_contents(var, filename, ref):
-                        raise UnknownObjectException(status='Failure', data='Failed data')
+                        raise UnknownObjectException(status='Failure', data='Failed data', headers=[])
                     def update_file(var, path, message, content, sha, branch):
                         pass
                 return FakeRepo()

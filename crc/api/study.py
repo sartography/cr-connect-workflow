@@ -33,7 +33,7 @@ def add_study(body):
 
     errors = StudyService._add_all_workflow_specs_to_study(study_model)
     session.commit()
-    study = StudyService().get_study(study_model.id)
+    study = StudyService().get_study(study_model.id, do_status=True)
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
