@@ -3,7 +3,9 @@ import json
 from tests.base_test import BaseTest
 from crc import session
 from crc.models.file import FileModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
+
+from example_data import ExampleDataLoader
 
 
 class TestWorkflowSpec(BaseTest):
@@ -28,7 +30,8 @@ class TestWorkflowSpec(BaseTest):
         category_id = session.query(WorkflowSpecCategoryModel).first().id
         category_count = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
         spec = WorkflowSpecModel(id='make_cookies', name='make_cookies', display_name='Cooooookies',
-                                 description='Om nom nom delicious cookies', category_id=category_id)
+                                 description='Om nom nom delicious cookies', category_id=category_id,
+                                 standalone=False)
         rv = self.app.post('/v1.0/workflow-specification',
                            headers=self.logged_in_headers(),
                            content_type="application/json",
@@ -101,3 +104,60 @@ class TestWorkflowSpec(BaseTest):
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertEqual(num_files_after + num_workflows_after, 0)
 
+    def test_get_standalone_workflow_specs(self):
+        self.load_example_data()
+        category = session.query(WorkflowSpecCategoryModel).first()
+        ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=category.id,
+                                        standalone=True, from_tests=True)
+        rv = self.app.get('/v1.0/workflow-specification/standalone', headers=self.logged_in_headers())
+        self.assertEqual(1, len(rv.json))
+
+        ExampleDataLoader().create_spec('email_script', 'Email Script', category_id=category.id,
+                                        standalone=True, from_tests=True)
+
+        rv = self.app.get('/v1.0/workflow-specification/standalone', headers=self.logged_in_headers())
+        self.assertEqual(2, len(rv.json))
+
+    def test_get_workflow_from_workflow_spec(self):
+        self.load_example_data()
+        spec = ExampleDataLoader().create_spec('hello_world', 'Hello World', standalone=True, from_tests=True)
+        rv = self.app.post(f'/v1.0/workflow-specification/{spec.id}', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        self.assertEqual('hello_world', rv.json['workflow_spec_id'])
+        self.assertEqual('Task_GetName', rv.json['next_task']['name'])
+
+    def test_add_workflow_spec_category(self):
+        self.load_example_data()
+        count = session.query(WorkflowSpecCategoryModel).count()
+        category = WorkflowSpecCategoryModel(
+            id=count,
+            name='another_test_category',
+            display_name='Another Test Category',
+            display_order=0
+        )
+        rv = self.app.post(f'/v1.0/workflow-specification-category',
+                           headers=self.logged_in_headers(),
+                           content_type="application/json",
+                           data=json.dumps(WorkflowSpecCategoryModelSchema().dump(category))
+                           )
+        self.assert_success(rv)
+        result = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name=='another_test_category').first()
+        self.assertEqual('Another Test Category', result.display_name)
+        self.assertEqual(count, result.id)
+
+    def test_update_workflow_spec_category(self):
+        self.load_example_data()
+        category = session.query(WorkflowSpecCategoryModel).first()
+        category_name_before = category.name
+        new_category_name = category_name_before + '_asdf'
+        self.assertNotEqual(category_name_before, new_category_name)
+
+        category.name = new_category_name
+
+        rv = self.app.put(f'/v1.0/workflow-specification-category/{category.id}',
+                          content_type="application/json",
+                          headers=self.logged_in_headers(),
+                          data=json.dumps(WorkflowSpecCategoryModelSchema().dump(category)))
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(new_category_name, json_data['name'])

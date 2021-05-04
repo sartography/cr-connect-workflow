@@ -11,7 +11,7 @@ from sqlalchemy import func
 class TaskEventModel(db.Model):
     __tablename__ = 'task_event'
     id = db.Column(db.Integer, primary_key=True)
-    study_id = db.Column(db.Integer, db.ForeignKey('study.id'), nullable=False)
+    study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     user_uid = db.Column(db.String, nullable=False) # In some cases the unique user id may not exist in the db yet.
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=False)
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))

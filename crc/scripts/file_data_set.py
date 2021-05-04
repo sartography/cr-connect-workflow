@@ -10,7 +10,11 @@ class FileDataSet(Script, DataStoreBase):
         return """Sets data the data store - takes three keyword arguments arguments: 'file_id' and 'key' and 'value'"""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.do_task(task, study_id, workflow_id, *args, **kwargs)
+        if self.validate_kw_args(**kwargs):
+            myargs = [kwargs['key'],kwargs['value']]
+        fileid = kwargs['file_id']
+        del(kwargs['file_id'])
+        return True
 
     def validate_kw_args(self,**kwargs):
         if kwargs.get('key',None) is None:

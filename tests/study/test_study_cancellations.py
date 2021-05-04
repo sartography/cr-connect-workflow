@@ -72,7 +72,7 @@ class TestStudyCancellations(BaseTest):
         workflow, study_id = self.load_workflow()
         workflow_api, first_task = self.get_first_task(workflow)
 
-        self.complete_form(workflow_api, first_task, {})
+        self.complete_form(workflow, first_task, {})
 
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('New Title', study_result.title)
@@ -82,10 +82,10 @@ class TestStudyCancellations(BaseTest):
         workflow, study_id = self.load_workflow()
         workflow_api, first_task = self.get_first_task(workflow)
 
-        self.complete_form(workflow_api, first_task, {})
+        self.complete_form(workflow, first_task, {})
 
         workflow_api, next_task = self.get_second_task(workflow)
-        self.complete_form(workflow_api, next_task, {'how_many': 3})
+        self.complete_form(workflow, next_task, {'how_many': 3})
 
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('Second Title', study_result.title)
@@ -95,13 +95,13 @@ class TestStudyCancellations(BaseTest):
         workflow, study_id = self.load_workflow()
         workflow_api, first_task = self.get_first_task(workflow)
 
-        self.complete_form(workflow_api, first_task, {})
+        self.complete_form(workflow, first_task, {})
 
         workflow_api, second_task = self.get_second_task(workflow)
-        self.complete_form(workflow_api, second_task, {'how_many': 3})
+        self.complete_form(workflow, second_task, {'how_many': 3})
 
         workflow_api, third_task = self.get_third_task(workflow)
-        self.complete_form(workflow_api, third_task, {})
+        self.complete_form(workflow, third_task, {})
 
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('Beer consumption in the bipedal software engineer', study_result.title)
