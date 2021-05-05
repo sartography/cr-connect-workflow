@@ -705,6 +705,41 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+  /file/{file_id}/download :
+    parameters :
+      - name : file_id
+        in : path
+        required : true
+        description : The id of the File requested
+        schema :
+          type : integer
+      - name : auth_token
+        in : query
+        required : true
+        description : User Auth Toeken
+        schema :
+          type : string
+      - name : version
+        in : query
+        required : false
+        description : The version of the file, or none for latest version
+        schema :
+          type : integer
+    get :
+      operationId : crc.api.file.get_file_data_link
+      summary : Returns only the file contents
+      security: []
+      tags :
+        - Files
+      responses :
+        '200' :
+          description : Returns the actual file
+          content :
+            application/octet-stream :
+              schema :
+                type : string
+                format : binary
+                example : '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
   /file/{file_id}/data:
     parameters:
       - name: file_id

@@ -18,6 +18,10 @@
 
 fileid = documents['UVACompl_PRCAppr'].files[0]['file_id']
 
+fileurl = documents['UVACompl_PRCAppr'].files[0]['url']
+
+filename = documents['UVACompl_PRCAppr'].files[0]['name']
+
 file_data_set(file_id=fileid,key='test',value='me')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="Event_1pdyoyv">

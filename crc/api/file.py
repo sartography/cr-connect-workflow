@@ -6,6 +6,7 @@ from flask import send_file
 
 from crc import session
 from crc.api.common import ApiError
+from crc.api.user import verify_token
 from crc.models.api_models import DocumentDirectory, DocumentDirectorySchema
 from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel, FileType
 from crc.models.workflow import WorkflowSpecModel
@@ -176,6 +177,22 @@ def get_file_data(file_id, version=None):
         mimetype=file_data.file_model.content_type,
         cache_timeout=-1,  # Don't cache these files on the browser.
         last_modified=file_data.date_created
+    )
+
+
+def get_file_data_link(file_id, auth_token, version=None):
+    if not verify_token(auth_token):
+        raise ApiError('not_authenticated', 'You need to include an authorization token in the URL with this')
+    file_data = FileService.get_file_data(file_id, version)
+    if file_data is None:
+        raise ApiError('no_such_file', 'The file id you provided does not exist')
+    return send_file(
+        io.BytesIO(file_data.data),
+        attachment_filename=file_data.file_model.name,
+        mimetype=file_data.file_model.content_type,
+        cache_timeout=-1,  # Don't cache these files on the browser.
+        last_modified=file_data.date_created,
+        as_attachment = True
     )
 
 
