@@ -184,9 +184,12 @@ def update_or_create_current_file(remote,workflow_spec_id,updatefile):
     currentfile.content_type = updatefile['content_type']
     currentfile.primary_process_id = updatefile['primary_process_id']
     session.add(currentfile)
-    content = WorkflowSyncService.get_remote_file_by_hash(remote, updatefile['md5_hash'])
-    FileService.update_file(currentfile, content, updatefile['type'])
-
+    try:
+        content = WorkflowSyncService.get_remote_file_by_hash(remote, updatefile['md5_hash'])
+        FileService.update_file(currentfile, content, updatefile['type'])
+    except ApiError:
+        # Remote files doesn't exist, don't update it.
+        print("Remote file " + currentfile.name + " does not exist, so not syncing.")
 
 def sync_changed_files(remote,workflow_spec_id):
     """
