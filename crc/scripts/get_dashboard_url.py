@@ -13,4 +13,4 @@ class GetDashboardURL(Script):
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         frontend = app.config['FRONTEND']
-        return f'http://{frontend}'
+        return f'https://{frontend}'
