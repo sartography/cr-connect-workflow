@@ -1574,6 +1574,7 @@ components:
         standalone:
           type: boolean
           example: false
+          default: false
         workflow_spec_category:
           $ref: "#/components/schemas/WorkflowSpecCategory"
         is_status:
