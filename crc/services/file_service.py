@@ -14,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 
 from crc import session, app
 from crc.api.common import ApiError
+from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
 from crc.services.cache_service import cache
@@ -392,6 +393,7 @@ class FileService(object):
                     session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
                     session.query(LookupFileModel).filter_by(id=lf.id).delete()
             session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
+            session.query(DataStoreModel).filter_by(file_id=file_id).delete()
             session.query(FileModel).filter_by(id=file_id).delete()
             session.commit()
         except IntegrityError as ie:
