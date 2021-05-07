@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_5e40639" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_ReadOnlyField" name="Test Read Only Field" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0to8etb</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0to8etb" sourceRef="StartEvent_1" targetRef="Activity_SetData" />
+    <bpmn:sequenceFlow id="Flow_04r75ca" sourceRef="Activity_SetData" targetRef="Activity_DisplayOnlyField" />
+    <bpmn:sequenceFlow id="Flow_0g25v76" sourceRef="Activity_DisplayOnlyField" targetRef="Activity_CheckData" />
+    <bpmn:endEvent id="Event_0cfckhy">
+      <bpmn:incoming>Flow_0a95kns</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0a95kns" sourceRef="Activity_CheckData" targetRef="Event_0cfckhy" />
+    <bpmn:scriptTask id="Activity_SetData" name="Set Data">
+      <bpmn:incoming>Flow_0to8etb</bpmn:incoming>
+      <bpmn:outgoing>Flow_04r75ca</bpmn:outgoing>
+      <bpmn:script>string_value = 'asdf'</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="Activity_DisplayOnlyField" name="Display Only Field&#10;" camunda:formKey="ReadOnlyFormField">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="read_only_field" label="Read Only" type="string">
+            <camunda:properties>
+              <camunda:property id="read_only" value="True" />
+              <camunda:property id="value_expression" value="string_value" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_04r75ca</bpmn:incoming>
+      <bpmn:outgoing>Flow_0g25v76</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Activity_CheckData" name="Check Data Persistence">
+      <bpmn:documentation>Read only is {{ read_only_field }}</bpmn:documentation>
+      <bpmn:incoming>Flow_0g25v76</bpmn:incoming>
+      <bpmn:outgoing>Flow_0a95kns</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_ReadOnlyField">
+      <bpmndi:BPMNEdge id="Flow_0a95kns_di" bpmnElement="Flow_0a95kns">
+        <di:waypoint x="690" y="177" />
+        <di:waypoint x="752" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0g25v76_di" bpmnElement="Flow_0g25v76">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="590" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04r75ca_di" bpmnElement="Flow_04r75ca">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0to8etb_di" bpmnElement="Flow_0to8etb">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0cfckhy_di" bpmnElement="Event_0cfckhy">
+        <dc:Bounds x="752" y="159" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="733" y="202" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10544ek_di" bpmnElement="Activity_SetData">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ho1wsm_di" bpmnElement="Activity_DisplayOnlyField">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10ds6m4_di" bpmnElement="Activity_CheckData">
+        <dc:Bounds x="590" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
