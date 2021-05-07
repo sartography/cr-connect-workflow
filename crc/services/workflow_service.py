@@ -739,10 +739,7 @@ class WorkflowService(object):
 
         if hasattr(task.task_spec, 'form'):
             for field in task.task_spec.form.fields:
-                if field.has_property(Task.FIELD_PROP_READ_ONLY) and \
-                        field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
-                    continue  # Don't add read-only data
-                elif field.has_property(Task.FIELD_PROP_REPEAT):
+                if field.has_property(Task.FIELD_PROP_REPEAT):
                     group = field.get_property(Task.FIELD_PROP_REPEAT)
                     if group in latest_data:
                         data[group] = latest_data[group]
