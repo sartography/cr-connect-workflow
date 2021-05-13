@@ -344,16 +344,6 @@ class StudyService(object):
             return {}
 
     @staticmethod
-    def get_protocol(study_id):
-        """Returns the study protocol, if it has been uploaded."""
-        file = db.session.query(FileModel) \
-            .filter_by(study_id=study_id) \
-            .filter_by(form_field_key='Study_Protocol_Document') \
-            .first()
-
-        return FileModelSchema().dump(file)
-
-    @staticmethod
     def synch_with_protocol_builder_if_enabled(user):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
