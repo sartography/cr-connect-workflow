@@ -53,7 +53,10 @@ def get_document_directory(study_id, workflow_id=None):
     file_models = FileService.get_files_for_study(study_id=study_id)
     files = (to_file_api(model) for model in file_models)
     for file in files:
-        doc_code = doc_dict[file.irb_doc_code]
+        if file.irb_doc_code in doc_dict:
+            doc_code = doc_dict[file.irb_doc_code]
+        else:
+            doc_code = {'category1': "Unknown", 'category2': None, 'category3': None}
         if workflow_id:
             expand = file.workflow_id == int(workflow_id)
         else:
