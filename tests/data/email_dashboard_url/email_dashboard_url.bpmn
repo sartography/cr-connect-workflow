@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_024561a" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_1796d29" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0c51a4b</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0c51a4b" sourceRef="StartEvent_1" targetRef="Activity_GetURL" />
+    <bpmn:sequenceFlow id="Flow_1ker6ik" sourceRef="Activity_GetURL" targetRef="Activity_EmailURL" />
+    <bpmn:endEvent id="Event_17hmyob">
+      <bpmn:incoming>Flow_1rfvzi5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1rfvzi5" sourceRef="Activity_EmailURL" targetRef="Event_17hmyob" />
+    <bpmn:scriptTask id="Activity_GetURL" name="Get Dashboard URL&#10;">
+      <bpmn:incoming>Flow_0c51a4b</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ker6ik</bpmn:outgoing>
+      <bpmn:script>dashboard_url = get_dashboard_url()</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_EmailURL" name="Email Dashboard URL">
+      <bpmn:documentation>&lt;a href="{{dashboard_url}}"&gt;{{dashboard_url}}&lt;/a&gt;</bpmn:documentation>
+      <bpmn:incoming>Flow_1ker6ik</bpmn:incoming>
+      <bpmn:outgoing>Flow_1rfvzi5</bpmn:outgoing>
+      <bpmn:script>email(subject='My Email Subject', recipients="test@example.com")</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1796d29">
+      <bpmndi:BPMNEdge id="Flow_1rfvzi5_di" bpmnElement="Flow_1rfvzi5">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="592" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ker6ik_di" bpmnElement="Flow_1ker6ik">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0c51a4b_di" bpmnElement="Flow_0c51a4b">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_17hmyob_di" bpmnElement="Event_17hmyob">
+        <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1n7b49v_di" bpmnElement="Activity_GetURL">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1dn6kw2_di" bpmnElement="Activity_EmailURL">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
