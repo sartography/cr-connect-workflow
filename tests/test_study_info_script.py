@@ -45,9 +45,9 @@ class TestStudyInfoScript(BaseTest):
             s = second_task.data['info'][response[i]['INVESTIGATORTYPE']]
             self.assertEqual(r['INVESTIGATORTYPEFULL'], s['label'])
 
-    def test_info_script_roles(self):
-        study_info, second_task = self.do_work(info_type='roles')
-        self.assertEqual(study_info, second_task.data['info'])
+    # def test_info_script_roles(self):
+    #     study_info, second_task = self.do_work(info_type='roles')
+    #     self.assertEqual(study_info, second_task.data['info'])
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_info_script_details(self, mock_get):
@@ -62,9 +62,9 @@ class TestStudyInfoScript(BaseTest):
         self.assertEqual(response['IND_2'], second_task.data['info']['IND_2'])
         self.assertEqual(response['IND_3'], second_task.data['info']['IND_3'])
 
-    def test_info_script_documents(self):
-        study_info, second_task = self.do_work(info_type='documents')
-        self.assertEqual(study_info, second_task.data['info'])
+    # def test_info_script_documents(self):
+    #     study_info, second_task = self.do_work(info_type='documents')
+    #     self.assertEqual(study_info, second_task.data['info'])
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_info_script_sponsors(self, mock_get):
