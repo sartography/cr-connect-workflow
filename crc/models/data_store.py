@@ -10,7 +10,7 @@ from crc import db, ma
 class DataStoreModel(db.Model):
     __tablename__ = 'data_store'
     id = db.Column(db.Integer, primary_key=True)
-    last_updated = db.Column(db.DateTime(timezone=True), default=func.now())
+    last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     key = db.Column(db.String, nullable=False)
     workflow_id = db.Column(db.Integer)
     study_id = db.Column(db.Integer, nullable=True)

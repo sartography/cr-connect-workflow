@@ -89,7 +89,7 @@ class WorkflowModel(db.Model):
     workflow_spec = db.relationship("WorkflowSpecModel")
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
-    last_updated = db.Column(db.DateTime(timezone=True),default=func.now())
+    last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_id = db.Column(db.String, default=None)
     # Order By is important or generating hashes on reviews.
     dependencies = db.relationship(WorkflowSpecDependencyFile, cascade="all, delete, delete-orphan",

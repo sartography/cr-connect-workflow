@@ -66,7 +66,7 @@ class FileDataModel(db.Model):
     data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
     version = db.Column(db.Integer, default=0)
     size = db.Column(db.Integer, default=0)
-    date_created = db.Column(db.DateTime(timezone=True), default=func.now())
+    date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     file_model = db.relationship("FileModel", foreign_keys=[file_model_id])
 
