@@ -1,12 +1,12 @@
 {
-  "DSMB": null,
-  "DSMB_FREQUENCY": null,
-  "GCRC_NUMBER": null,
-  "IBC_NUMBER": null,
-  "IDE": null,
-  "IND_1": 1234,
-  "IND_2": null,
-  "IND_3": null,
+  "DSMB": 1,
+  "DSMB_FREQUENCY": 2,
+  "GCRC_NUMBER": "9",
+  "IBC_NUMBER": "7",
+  "IDE": "12345",
+  "IND_1": "1234",
+  "IND_2": "2345",
+  "IND_3": "3456",
   "IRBREVIEWERADMIN": null,
   "IS_ADULT_PARTICIPANT": null,
   "IS_APPROVED_DEVICE": null,
@@ -61,6 +61,6 @@
   "NON_UVA_LOCATION": null,
   "OTHER_VULNERABLE_DESC": null,
   "PRC_NUMBER": null,
-  "SPONSORS_PROTOCOL_REVISION_DATE": null,
+  "SPONSORS_PROTOCOL_REVISION_DATE": "2021-04-20",
   "UPLOAD_COMPLETE": null
 }
