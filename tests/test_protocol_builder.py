@@ -47,7 +47,7 @@ class TestProtocolBuilder(BaseTest):
         response = ProtocolBuilderService.get_study_details(self.test_study_id)
         self.assertIsNotNone(response)
         self.assertEqual(64, len(response))
-        self.assertEqual(1234, response['IND_1'])
+        self.assertEqual('1234', response['IND_1'])
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_get_study_sponsors(self, mock_get):
