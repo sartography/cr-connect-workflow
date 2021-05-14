@@ -18,7 +18,7 @@ class StudyInfo(Script):
     """Please see the detailed description that is provided below. """
 
     pb = ProtocolBuilderService()
-    type_options = ['info', 'investigators', 'roles', 'details', 'documents', 'protocol', 'sponsors']
+    type_options = ['info', 'investigators', 'roles', 'details', 'documents', 'sponsors']
 
     # This is used for test/workflow validation, as well as documentation.
     example_data = {
@@ -110,9 +110,6 @@ class StudyInfo(Script):
             },
             "details":
                 {},
-            'protocol': {
-                id: 0,
-            }
         }
     }
 
@@ -392,8 +389,6 @@ Returns information specific to the protocol.
             retval = self.pb.get_sponsors(study_id)
         if cmd == 'documents':
             retval = StudyService().get_documents_status(study_id)
-        if cmd == 'protocol':
-            retval = StudyService().get_protocol(study_id)
 
         return self.box_it(retval, prefix)
 
