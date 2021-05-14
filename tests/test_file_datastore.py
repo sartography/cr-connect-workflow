@@ -27,6 +27,8 @@ class TestFileDatastore(BaseTest):
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
         task_data = processor.bpmn_workflow.last_task.data
+        self.assertTrue(str(task_data['fileid']) in task_data['fileurl'])
+        self.assertEqual(task_data['filename'],'anything.png')
         self.assertEqual(task_data['output'], 'me')
         self.assertEqual(task_data['output2'], 'nope')
 

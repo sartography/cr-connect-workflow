@@ -1,7 +1,9 @@
+import urllib
 from copy import copy
 from datetime import datetime
 from typing import List
 
+import flask
 import requests
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
@@ -288,9 +290,19 @@ class StudyService(object):
             doc_files = FileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
             doc['count'] = len(doc_files)
             doc['files'] = []
+
+            # when we run tests - it doesn't look like the user is available
+            # so we return a bogus token
+            token = 'not_available'
+            if hasattr(flask.g,'user'):
+                token = flask.g.user.encode_auth_token()
             for file in doc_files:
                 doc['files'].append({'file_id': file.id,
                                      'name': file.name,
+                                     'url': app.config['APPLICATION_ROOT']+
+                                            'file/' + str(file.id) +
+                                            '/download?auth_token='+
+                                            urllib.parse.quote_plus(token),
                                      'workflow_id': file.workflow_id})
 
                 # update the document status to match the status of the workflow it is in.

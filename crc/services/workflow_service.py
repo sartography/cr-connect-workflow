@@ -22,7 +22,7 @@ from jinja2 import Template
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
-from crc.models.file import LookupDataModel
+from crc.models.file import LookupDataModel, FileModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
@@ -739,10 +739,7 @@ class WorkflowService(object):
 
         if hasattr(task.task_spec, 'form'):
             for field in task.task_spec.form.fields:
-                if field.has_property(Task.FIELD_PROP_READ_ONLY) and \
-                        field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
-                    continue  # Don't add read-only data
-                elif field.has_property(Task.FIELD_PROP_REPEAT):
+                if field.has_property(Task.FIELD_PROP_REPEAT):
                     group = field.get_property(Task.FIELD_PROP_REPEAT)
                     if group in latest_data:
                         data[group] = latest_data[group]
@@ -811,3 +808,12 @@ class WorkflowService(object):
     def get_standalone_workflow_specs():
         specs = db.session.query(WorkflowSpecModel).filter_by(standalone=True).all()
         return specs
+
+    @staticmethod
+    def get_primary_workflow(workflow_spec_id):
+        # Returns the FileModel of the primary workflow for a workflow_spec
+        primary = None
+        file = db.session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id, FileModel.primary==True).first()
+        if file:
+            primary = file
+        return primary
