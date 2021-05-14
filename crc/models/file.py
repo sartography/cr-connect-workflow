@@ -1,7 +1,7 @@
 import enum
 from typing import cast
 
-from marshmallow import INCLUDE, EXCLUDE
+from marshmallow import INCLUDE, EXCLUDE, fields, Schema
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
@@ -65,9 +65,11 @@ class FileDataModel(db.Model):
     md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
     data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
     version = db.Column(db.Integer, default=0)
-    date_created = db.Column(db.DateTime(timezone=True), default=func.now())
+    size = db.Column(db.Integer, default=0)
+    date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     file_model = db.relationship("FileModel", foreign_keys=[file_model_id])
+
 
 
 class FileModel(db.Model):
@@ -117,10 +119,12 @@ class File(object):
         if data_model:
             instance.last_modified = data_model.date_created
             instance.latest_version = data_model.version
+            instance.size = data_model.size
         else:
             instance.last_modified = None
             instance.latest_version = None
         return instance
+
 
 class FileModelSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -132,15 +136,17 @@ class FileModelSchema(SQLAlchemyAutoSchema):
     type = EnumField(FileType)
 
 
-class FileSchema(ma.Schema):
+class FileSchema(Schema):
     class Meta:
         model = File
         fields = ["id", "name", "is_status", "is_reference", "content_type",
                   "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
                   "irb_doc_code", "last_modified", "latest_version", "type", "categories",
-                  "description", "category", "description", "download_name"]
+                  "description", "category", "description", "download_name", "size"]
+
         unknown = INCLUDE
     type = EnumField(FileType)
+
 
 
 class LookupFileModel(db.Model):

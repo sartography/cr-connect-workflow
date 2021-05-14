@@ -14,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 
 from crc import session, app
 from crc.api.common import ApiError
+from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
 from crc.services.cache_service import cache
@@ -175,6 +176,8 @@ class FileService(object):
             order_by(desc(FileDataModel.date_created)).first()
 
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
+        size = len(binary_data)
+
         if (latest_data_model is not None) and (md5_checksum == latest_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.  If it is arhived,
             # then de-arvhive it.
@@ -210,7 +213,8 @@ class FileService(object):
 
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
-            version=version, md5_hash=md5_checksum, date_created=datetime.now()
+            version=version, md5_hash=md5_checksum, date_created=datetime.utcnow(),
+            size=size
         )
         session.add_all([file_model, new_file_data_model])
         session.commit()
@@ -389,6 +393,7 @@ class FileService(object):
                     session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
                     session.query(LookupFileModel).filter_by(id=lf.id).delete()
             session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
+            session.query(DataStoreModel).filter_by(file_id=file_id).delete()
             session.query(FileModel).filter_by(id=file_id).delete()
             session.commit()
         except IntegrityError as ie:

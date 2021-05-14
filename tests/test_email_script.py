@@ -23,7 +23,6 @@ class TestEmailScript(BaseTest):
 
             first_task = self.get_workflow_api(workflow).next_task
 
-            workflow = self.get_workflow_api(workflow)
             self.complete_form(workflow, first_task, {'subject': 'My Email Subject', 'recipients': 'test@example.com'})
 
             self.assertEqual(1, len(outbox))
@@ -49,7 +48,6 @@ class TestEmailScript(BaseTest):
     def test_bad_email_address_1(self):
         workflow = self.create_workflow('email_script')
         first_task = self.get_workflow_api(workflow).next_task
-        workflow = self.get_workflow_api(workflow)
 
         with self.assertRaises(AssertionError):
             self.complete_form(workflow, first_task, {'recipients': 'test@example'})
@@ -57,7 +55,6 @@ class TestEmailScript(BaseTest):
     def test_bad_email_address_2(self):
         workflow = self.create_workflow('email_script')
         first_task = self.get_workflow_api(workflow).next_task
-        workflow = self.get_workflow_api(workflow)
 
         with self.assertRaises(AssertionError):
             self.complete_form(workflow, first_task, {'recipients': 'test'})

@@ -47,7 +47,7 @@ class TestStudyService(BaseTest):
 
         self.assertIsNotNone(study.id)
         workflow = WorkflowModel(workflow_spec_id="random_fact", study_id=study.id,
-                                 status=WorkflowStatus.not_started, last_updated=datetime.now())
+                                 status=WorkflowStatus.not_started, last_updated=datetime.utcnow())
         db.session.add(workflow)
         db.session.commit()
         # Assure there is a master specification, one standard spec, and lookup tables.

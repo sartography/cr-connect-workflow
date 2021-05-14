@@ -83,6 +83,8 @@ paths:
           type : integer
     get:
       operationId: crc.api.file.get_document_directory
+      security:
+        - auth_admin: ['secret']
       summary: Returns a directory of all files for study in a nested structure
       tags:
         - Document Categories
@@ -349,6 +351,12 @@ paths:
         schema:
           type: integer
           format: int32
+      - name: update_status
+        in: query
+        required: false
+        description: If set to true, will synch the study with protocol builder and assure the status of all workflows is up to date (expensive).
+        schema:
+          type: boolean
     get:
       operationId: crc.api.study.get_study
       summary: Provides a single study
@@ -425,7 +433,7 @@ paths:
       - name: spec_id
         in: path
         required: true
-        description: The unique id of an existing workflow specification to modify.
+        description: The unique id of an existing workflow specification.
         schema:
           type: string
     get:
@@ -440,6 +448,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
+    post:
+      operationId: crc.api.workflow.get_workflow_from_spec
+      summary: Creates a workflow from a workflow spec and returns the workflow
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
     put:
       operationId: crc.api.workflow.update_workflow_specification
       security:
@@ -469,6 +489,21 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
+  /workflow-specification/standalone:
+    get:
+      operationId: crc.api.workflow.standalone_workflow_specs
+      summary: Provides a list of workflow specifications that can be run outside a study.
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: A list of workflow specifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpec"
   /workflow-specification/{spec_id}/validate:
     parameters:
       - name: spec_id
@@ -1571,6 +1606,9 @@ components:
         category_id:
           type: integer
           nullable: true
+        standalone:
+          type: boolean
+          example: false
         workflow_spec_category:
           $ref: "#/components/schemas/WorkflowSpecCategory"
         is_status:
@@ -1642,6 +1680,8 @@ components:
         num_tasks_complete:
           type: integer
         num_tasks_incomplete:
+          type: integer
+        study_id:
           type: integer
 
       example:

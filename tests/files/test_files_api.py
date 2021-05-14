@@ -181,11 +181,11 @@ class TestFilesApi(BaseTest):
         data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
         rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
-        json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
+        file_json = json.loads(rv.get_data(as_text=True))
+        self.assertEquals(80, file_json['size'])
 
         data['file'] = io.BytesIO(self.minimal_bpmn("efghijk")), 'my_new_file.bpmn'
-        rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
+        rv = self.app.put('/v1.0/file/%i/data' % file_json['id'], data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
@@ -193,14 +193,14 @@ class TestFilesApi(BaseTest):
         self.assertEqual(2, file_json['latest_version'])
         self.assertEqual(FileType.bpmn.value, file_json['type'])
         self.assertEqual("application/octet-stream", file_json['content_type'])
-        self.assertEqual(spec.id, file.workflow_spec_id)
+        self.assertEqual(spec.id, file_json['workflow_spec_id'])
 
         # Assure it is updated in the database and properly persisted.
-        file_model = session.query(FileModel).filter(FileModel.id == file.id).first()
+        file_model = session.query(FileModel).filter(FileModel.id == file_json['id']).first()
         file_data = FileService.get_file_data(file_model.id)
         self.assertEqual(2, file_data.version)
 
-        rv = self.app.get('/v1.0/file/%i/data' % file.id, headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/file/%i/data' %  file_json['id'], headers=self.logged_in_headers())
         self.assert_success(rv)
         data = rv.get_data()
         self.assertIsNotNone(data)

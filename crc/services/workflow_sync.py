@@ -47,6 +47,6 @@ class WorkflowSyncService(object):
                 return json.loads(response.text)
         else:
             raise ApiError("workflow_sync_error",
-                           "Received an invalid response from the protocol builder (status %s): %s when calling "
+                           "Received an invalid response from the remote CR-Connect API (status %s): %s when calling "
                            "url '%s'." %
                            (response.status_code, response.text, url))

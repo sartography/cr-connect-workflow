@@ -23,7 +23,7 @@ def add_study(body):
     study_model = StudyModel(user_uid=UserService.current_user().uid,
                              title=body['title'],
                              primary_investigator_id=body['primary_investigator_id'],
-                             last_updated=datetime.now(),
+                             last_updated=datetime.utcnow(),
                              status=StudyStatus.in_progress)
     session.add(study_model)
     StudyService.add_study_update_event(study_model,
@@ -33,7 +33,7 @@ def add_study(body):
 
     errors = StudyService._add_all_workflow_specs_to_study(study_model)
     session.commit()
-    study = StudyService().get_study(study_model.id)
+    study = StudyService().get_study(study_model.id, do_status=True)
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
@@ -51,7 +51,7 @@ def update_study(study_id, body):
     study: Study = StudyForUpdateSchema().load(body)
 
     status = StudyStatus(study.status)
-    study_model.last_updated = datetime.now()
+    study_model.last_updated = datetime.utcnow()
 
     if study_model.status != status:
         study_model.status = status
@@ -74,8 +74,8 @@ def update_study(study_id, body):
     return StudySchema().dump(study)
 
 
-def get_study(study_id):
-    study = StudyService.get_study(study_id)
+def get_study(study_id, update_status=False):
+    study = StudyService.get_study(study_id, do_status=update_status)
     if (study is None):
         raise ApiError("unknown_study",  'The study "' + study_id + '" is not recognized.', status_code=404)
     return StudySchema().dump(study)

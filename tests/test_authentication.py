@@ -33,7 +33,7 @@ class TestAuthentication(BaseTest):
         user_1 = UserModel(uid="dhf8r")
         expected_exp_1 = timegm((datetime.utcnow() + timedelta(hours=new_ttl)).utctimetuple())
         auth_token_1 = user_1.encode_auth_token()
-        self.assertTrue(isinstance(auth_token_1, bytes))
+        self.assertTrue(isinstance(auth_token_1, str))
         self.assertEqual("dhf8r", user_1.decode_auth_token(auth_token_1).get("sub"))
         #actual_exp_1 = user_1.decode_auth_token(auth_token_1).get("exp")
         #self.assertTrue(expected_exp_1 - 1000 <= actual_exp_1 <= expected_exp_1 + 1000)
@@ -131,7 +131,7 @@ class TestAuthentication(BaseTest):
 
         admin_user = self._login_as_admin()
         admin_study = self._make_fake_study(admin_user.uid)
-        admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token().decode())
+        admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token())
 
         rv_add_study = self.app.post(
             '/v1.0/study',
@@ -164,7 +164,7 @@ class TestAuthentication(BaseTest):
 
         # Non-admin user should not be able to delete a study
         non_admin_user = self._login_as_non_admin()
-        non_admin_token_headers = dict(Authorization='Bearer ' + non_admin_user.encode_auth_token().decode())
+        non_admin_token_headers = dict(Authorization='Bearer ' + non_admin_user.encode_auth_token())
         non_admin_study = self._make_fake_study(non_admin_user.uid)
 
         rv_add_study = self.app.post(
@@ -211,7 +211,7 @@ class TestAuthentication(BaseTest):
         self.load_example_data()
 
         admin_user = self._login_as_admin()
-        admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token().decode())
+        admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token())
 
         # User should not be in the system yet.
         non_admin_user = session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
@@ -230,7 +230,7 @@ class TestAuthentication(BaseTest):
         self.logout()
         non_admin_user = self._login_as_non_admin()
         self.assertEqual(non_admin_user.uid, self.non_admin_uid)
-        non_admin_token_headers = dict(Authorization='Bearer ' + non_admin_user.encode_auth_token().decode())
+        non_admin_token_headers = dict(Authorization='Bearer ' + non_admin_user.encode_auth_token())
 
         # Add a study for the non-admin user
         non_admin_study = self._make_fake_study(self.non_admin_uid)
@@ -273,7 +273,7 @@ class TestAuthentication(BaseTest):
     def _make_fake_study(self, uid):
         return {
             "title": "blah",
-            "last_updated": datetime.now(tz=timezone.utc),
+            "last_updated": datetime.utcnow(),
             "status": StudyStatus.in_progress,
             "primary_investigator_id": uid,
             "user_uid": uid,

@@ -1,8 +1,8 @@
 import json
 from profile import Profile
+from tests.base_test import BaseTest
 
 from crc.services.ldap_service import LdapService
-from tests.base_test import BaseTest
 
 from datetime import datetime, timezone
 from unittest.mock import patch
@@ -25,7 +25,7 @@ class TestStudyApi(BaseTest):
     TEST_STUDY = {
         "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
                  "for Interstellar Spacecraft",
-        "last_updated": datetime.now(tz=timezone.utc),
+        "last_updated": datetime.utcnow(),
         "primary_investigator_id": "tmm2x",
         "user_uid": "dhf8r",
     }
@@ -113,10 +113,9 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study["ind_number"], db_study.ind_number)
         self.assertEqual(study["user_uid"], db_study.user_uid)
 
-        workflow_spec_count =session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == False).count()
+        workflow_spec_count =session.query(WorkflowSpecModel).count()
         workflow_count = session.query(WorkflowModel).filter(WorkflowModel.study_id == study['id']).count()
-        error_count = len(study["errors"])
-        self.assertEqual(workflow_spec_count, workflow_count + error_count)
+        self.assertEqual(workflow_spec_count, workflow_count)
 
         study_event = session.query(StudyEvent).first()
         self.assertIsNotNone(study_event)

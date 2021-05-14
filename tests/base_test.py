@@ -70,7 +70,7 @@ class BaseTest(unittest.TestCase):
         {
             'id': 0,
             'title': 'The impact of fried pickles on beer consumption in bipedal software developers.',
-            'last_updated': datetime.datetime.now(),
+            'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Sartography Pharmaceuticals',
@@ -80,7 +80,7 @@ class BaseTest(unittest.TestCase):
         {
             'id': 1,
             'title': 'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
-            'last_updated': datetime.datetime.now(),
+            'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Makerspace & Co.',
@@ -131,7 +131,7 @@ class BaseTest(unittest.TestCase):
         user = UserService.current_user(allow_admin_impersonate=True)
         self.assertEqual(uid, user.uid, 'Logged in user should match given user uid')
 
-        return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
+        return dict(Authorization='Bearer ' + user_model.encode_auth_token())
 
     def delete_example_data(self, use_crc_data=False, use_rrt_data=False):
         """
@@ -174,11 +174,6 @@ class BaseTest(unittest.TestCase):
 
         specs = session.query(WorkflowSpecModel).all()
         self.assertIsNotNone(specs)
-
-        for spec in specs:
-            files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
-            self.assertIsNotNone(files)
-            self.assertGreater(len(files), 0)
 
         for spec in specs:
             files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
@@ -379,6 +374,10 @@ class BaseTest(unittest.TestCase):
 
     def complete_form(self, workflow_in, task_in, dict_data, update_all=False, error_code=None, terminate_loop=None,
                       user_uid="dhf8r"):
+        # workflow_in should be a workflow, not a workflow_api
+        # we were passing in workflow_api in many of our tests, and
+        # this caused problems testing standalone workflows
+        standalone = getattr(workflow_in.workflow_spec, 'standalone', False)
         prev_completed_task_count = workflow_in.completed_tasks
         if isinstance(task_in, dict):
             task_id = task_in["id"]
@@ -421,7 +420,8 @@ class BaseTest(unittest.TestCase):
             .order_by(TaskEventModel.date.desc()).all()
         self.assertGreater(len(task_events), 0)
         event = task_events[0]
-        self.assertIsNotNone(event.study_id)
+        if not standalone:
+            self.assertIsNotNone(event.study_id)
         self.assertEqual(user_uid, event.user_uid)
         self.assertEqual(workflow.id, event.workflow_id)
         self.assertEqual(workflow.workflow_spec_id, event.workflow_spec_id)

@@ -9,7 +9,7 @@ class TestValueExpression(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow)
         first_task = workflow_api.next_task
-        self.complete_form(workflow_api, first_task, {'value_expression_value': ''})
+        self.complete_form(workflow, first_task, {'value_expression_value': ''})
 
         workflow_api = self.get_workflow_api(workflow)
         second_task = workflow_api.next_task
@@ -26,7 +26,7 @@ class TestValueExpression(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow)
         first_task = workflow_api.next_task
-        self.complete_form(workflow_api, first_task, {'value_expression_value': 'black'})
+        self.complete_form(workflow, first_task, {'value_expression_value': 'black'})
 
         workflow_api = self.get_workflow_api(workflow)
         second_task = workflow_api.next_task

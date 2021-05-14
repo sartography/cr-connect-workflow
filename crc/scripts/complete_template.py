@@ -114,7 +114,10 @@ Takes two arguments:
         doc_context = self.rich_text_update(doc_context)
         doc_context = self.append_images(doc, doc_context, image_file_data)
         jinja_env = jinja2.Environment(autoescape=True)
-        doc.render(doc_context, jinja_env)
+        try:
+            doc.render(doc_context, jinja_env)
+        except Exception as e:
+            print (e)
         target_stream = BytesIO()
         doc.save(target_stream)
         target_stream.seek(0)  # move to the beginning of the stream.

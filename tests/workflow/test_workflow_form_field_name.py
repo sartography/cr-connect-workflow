@@ -18,7 +18,7 @@ class TestFormFieldName(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow)
         first_task = workflow_api.next_task
-        self.complete_form(workflow_api, first_task, {})
+        self.complete_form(workflow, first_task, {})
 
         workflow_api = self.get_workflow_api(workflow)
         second_task = workflow_api.next_task

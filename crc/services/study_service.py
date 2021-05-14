@@ -55,7 +55,7 @@ class StudyService(object):
         return studies
 
     @staticmethod
-    def get_study(study_id, study_model: StudyModel = None, do_status=True):
+    def get_study(study_id, study_model: StudyModel = None, do_status=False):
         """Returns a study model that contains all the workflows organized by category.
         IMPORTANT:  This is intended to be a lightweight call, it should never involve
         loading up and executing all the workflows in a study to calculate information."""
@@ -508,8 +508,9 @@ class StudyService(object):
     def _create_workflow_model(study: StudyModel, spec):
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        study=study,
+                                       user_id=None,
                                        workflow_spec_id=spec.id,
-                                       last_updated=datetime.now())
+                                       last_updated=datetime.utcnow())
         session.add(workflow_model)
         session.commit()
         return workflow_model
