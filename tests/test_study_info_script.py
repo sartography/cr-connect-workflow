@@ -33,13 +33,17 @@ class TestStudyInfoScript(BaseTest):
         self.assertEqual(study_info['primary_investigator_id'], second_task.data['info']['primary_investigator_id'])
         self.assertIn(study_info['title'], second_task.documentation)
 
-    def test_info_script_investigators(self):
-        # We don't have a test for this yet
-        # I believe we just need to set up some test data.
-        # study_info, second_task = self.do_work(info_type='investigators')
-        # if study_info:
-        #     # TODO: add investigators with user_ids that are not None
-        pass
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_info_script_investigators(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('investigators.json')
+        response = ProtocolBuilderService.get_investigators(self.test_study_id)
+        study_info, second_task = self.do_work(info_type='investigators')
+        for i in range(len(response)):
+            r = response[i]
+            s = second_task.data['info'][response[i]['INVESTIGATORTYPE']]
+            self.assertEqual(r['INVESTIGATORTYPEFULL'], s['label'])
 
     def test_info_script_roles(self):
         study_info, second_task = self.do_work(info_type='roles')
