@@ -6,11 +6,13 @@ from typing import List
 import flask
 import requests
 from SpiffWorkflow import WorkflowException
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
 from crc.api.common import ApiError
+from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
 from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, LookupFileModel, LookupDataModel
 from crc.models.ldap import LdapSchema
@@ -297,21 +299,27 @@ class StudyService(object):
             if hasattr(flask.g,'user'):
                 token = flask.g.user.encode_auth_token()
             for file in doc_files:
-                doc['files'].append({'file_id': file.id,
-                                     'name': file.name,
-                                     'url': app.config['APPLICATION_ROOT']+
-                                            'file/' + str(file.id) +
-                                            '/download?auth_token='+
-                                            urllib.parse.quote_plus(token),
-                                     'workflow_id': file.workflow_id})
-
+                file_data = {'file_id': file.id,
+                             'name': file.name,
+                             'url': app.config['APPLICATION_ROOT']+
+                                    'file/' + str(file.id) +
+                                    '/download?auth_token='+
+                                    urllib.parse.quote_plus(token),
+                             'workflow_id': file.workflow_id
+                             }
+                data = db.session.query(DataStoreModel).filter(DataStoreModel.file_id==file.id).all()
+                data_store_data = {}
+                for d in data:
+                    data_store_data[d.key] = d.value
+                file_data["data_store"] = data_store_data
+                doc['files'].append(Box(file_data))
                 # update the document status to match the status of the workflow it is in.
                 if 'status' not in doc or doc['status'] is None:
                     workflow: WorkflowModel = session.query(WorkflowModel).filter_by(id=file.workflow_id).first()
                     doc['status'] = workflow.status.value
 
             documents[code] = doc
-        return documents
+        return Box(documents)
 
     @staticmethod
     def get_investigators(study_id, all=False):
