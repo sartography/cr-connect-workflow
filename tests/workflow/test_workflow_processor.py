@@ -290,6 +290,39 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("New Step", processor3.next_task().task_spec.description)
         self.assertEqual("blue", processor3.next_task().data["color"])
 
+    def test_next_task_when_completing_sequential_steps_within_parallel(self):
+        self.load_example_data()
+        # Start the two_forms workflow, and enter some data in the first form.
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("nav_order")
+        processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
+        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
+        ready_tasks = processor.get_ready_user_tasks()
+        task = ready_tasks[2]
+        self.assertEqual("B1", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("B1_0", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("B2", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("B3", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("B4", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("A1", task.task_spec.name)
+
+
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')

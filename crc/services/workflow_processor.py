@@ -397,12 +397,17 @@ class WorkflowProcessor(object):
                     return task
 
         # If there are ready tasks to complete, return the next ready task, but return the one
-        # in the active parallel path if possible.
+        # in the active parallel path if possible.  In some cases the active parallel path may itself be
+        # a parallel gateway with multiple tasks, so prefer ones that share a parent.
         ready_tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
         if len(ready_tasks) > 0:
             for task in ready_tasks:
                 if task.parent == self.bpmn_workflow.last_task:
                     return task
+            for task in ready_tasks:
+                if self.bpmn_workflow.last_task and task.parent == self.bpmn_workflow.last_task.parent:
+                    return task
+
             return ready_tasks[0]
 
         # If there are no ready tasks, but the thing isn't complete yet, find the first non-complete task
