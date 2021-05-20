@@ -17,8 +17,8 @@ API_TOKEN = environ.get('API_TOKEN', default = 'af95596f327c9ecc007b60414fc84b61
 NAME = "CR Connect Workflow"
 DEFAULT_PORT = "5000"
 FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default=DEFAULT_PORT)
-FRONTEND = "localhost:4200"
-BPMN = "localhost:5002"
+FRONTEND = environ.get('FRONTEND', default="localhost:4200")
+BPMN = environ.get('BPMN', default="localhost:5002")
 CORS_DEFAULT = f'{FRONTEND}, {BPMN}'
 CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default=CORS_DEFAULT))
 TESTING = environ.get('TESTING', default="false") == "true"
