@@ -118,7 +118,7 @@ class StudyInfo(Script):
 
     def get_description(self):
         return """
-StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', 'details', 'documents' or 'protocol'.
+StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', 'details', or 'documents'.
 
 Adds details about the current study to the Task Data.  The type of information required should be 
 provided as an argument.  The following arguments are available:
@@ -156,9 +156,6 @@ Please note this is just a few examples, ALL known document types are returned i
 ```
 {documents_example}
 ```
-
-### Protocol ###
-Returns information specific to the protocol. 
 
 
         """.format(info_example=self.example_to_string("info"),
