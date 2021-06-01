@@ -50,11 +50,10 @@ class DataStoreTest(BaseTest):
         self.assert_success(rv)
         return json.loads(rv.get_data(as_text=True))
 
-    def add_test_file_data(self):
+    def add_test_file_data(self, file_id, value):
         file_data = DataStoreSchema().dump(self.TEST_FILE_ITEM)
-        test_file = session.query(FileModel).first()
-        file_data['file_id'] = test_file.id
-        file_data['value'] = 'Some File Data Value'
+        file_data['file_id'] = file_id
+        file_data['value'] = value
         rv = self.app.post('/v1.0/datastore',
                            content_type="application/json",
                            headers=self.logged_in_headers(),
@@ -131,34 +130,61 @@ class DataStoreTest(BaseTest):
         d = json.loads(api_response.get_data(as_text=True))
         self.assertEqual(d[0]['value'],'Some Value')
 
-    def test_datastore_user(self):
-        self.load_example_data()
-        new_user = self.add_test_user_data()
-        api_response = self.app.get(f'/v1.0/datastore/user/{new_user["user_id"]}',
-                                    headers=self.logged_in_headers(), content_type="application/json")
-        self.assert_success(api_response)
-        data = json.loads(api_response.get_data(as_text=True))
-
-        print('test_datastore_user')
-
-    def test_datastore_study(self):
-        self.load_example_data()
-        new_study = self.add_test_study_data()
-        api_response = self.app.get(f'/v1.0/datastore/study/{new_study["study_id"]}',
-                                    headers=self.logged_in_headers(), content_type="application/json")
-        self.assert_success(api_response)
-        data = json.loads(api_response.get_data(as_text=True))
-
-        print('test_datastore_study')
-
     def test_datastore_file(self):
         self.load_example_data()
-        new_file = self.add_test_file_data()
-        api_response = self.app.get(f'/v1.0/datastore/file/{new_file["file_id"]}',
-                                    headers=self.logged_in_headers(), content_type="application/json")
+        test_file = session.query(FileModel).first()
+
+        # make sure we don't already have a datastore
+        api_response = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
+                                    headers=self.logged_in_headers(),
+                                    content_type="application/json")
         self.assert_success(api_response)
         data = json.loads(api_response.get_data(as_text=True))
+        self.assertEqual(0, len(data))
+
+        # add datastore
+        self.add_test_file_data(test_file.id, 'Some File Data Value')
+
+        # make sure we can get the datastore
+        api_response = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
+                                    headers=self.logged_in_headers(),
+                                    content_type="application/json")
+        self.assert_success(api_response)
+        data = json.loads(api_response.get_data(as_text=True))
+
+        self.assertEqual(1, len(data))
         self.assertEqual('MyKey', data[0]['key'])
         self.assertEqual('Some File Data Value', data[0]['value'])
 
-        print('test_datastore_file')
+    def test_datastore_files(self):
+        self.load_example_data()
+        test_file = session.query(FileModel).first()
+
+        # add datastore
+        value_1 = 'Some File Data Value 1'
+        self.add_test_file_data(test_file.id, value_1)
+
+        # make sure we have 1 item in the datastore
+        api_response_1 = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response_1)
+        data_1 = json.loads(api_response_1.get_data(as_text=True))
+
+        self.assertEqual(1, len(data_1))
+        self.assertEqual('MyKey', data_1[0]['key'])
+        self.assertEqual(value_1, data_1[0]['value'])
+
+        # add second datastore
+        value_2 = 'Some File Data Value 2'
+        self.add_test_file_data(test_file.id, value_2)
+
+        # make sure we have 2 items in the datastore
+        api_response_2 = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response_2)
+        data_2 = json.loads(api_response_2.get_data(as_text=True))
+        self.assertEqual(2, len(data_2))
+        self.assertEqual(value_1, data_2[0]['value'])
+        self.assertEqual(value_2, data_2[1]['value'])
+
+        print('test_datastore_files')
