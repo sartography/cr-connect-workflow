@@ -5,7 +5,7 @@ from crc import session
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel, DataStoreSchema
 from crc.scripts.data_store_base import DataStoreBase
-from crc.models.file import FileModel
+
 
 def study_multi_get(study_id):
     """Get all data_store values for a given study_id study"""
