@@ -6,6 +6,7 @@ from tests.base_test import BaseTest
 from datetime import datetime, timezone
 from unittest.mock import patch
 from crc.models.data_store import DataStoreModel, DataStoreSchema
+from crc.models.file import FileModel
 from crc import session, app
 
 
@@ -16,6 +17,13 @@ class DataStoreTest(BaseTest):
         "key": "MyKey",
         "workflow_id": 12,
         "study_id": 42,
+        "task_id": "MyTask",
+        "spec_id": "My Spec Name",
+        "value": "Some Value"
+    }
+    TEST_FILE_ITEM = {
+        "key": "MyKey",
+        "workflow_id": 12,
         "task_id": "MyTask",
         "spec_id": "My Spec Name",
         "value": "Some Value"
@@ -42,7 +50,17 @@ class DataStoreTest(BaseTest):
         self.assert_success(rv)
         return json.loads(rv.get_data(as_text=True))
 
-
+    def add_test_file_data(self):
+        file_data = DataStoreSchema().dump(self.TEST_FILE_ITEM)
+        test_file = session.query(FileModel).first()
+        file_data['file_id'] = test_file.id
+        file_data['value'] = 'Some File Data Value'
+        rv = self.app.post('/v1.0/datastore',
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
+                           data=json.dumps(file_data))
+        self.assert_success(rv)
+        return json.loads(rv.get_data(as_text=True))
 
     def test_get_study_data(self):
         """Generic test, but pretty detailed, in that the study should return a categorized list of workflows
@@ -112,3 +130,35 @@ class DataStoreTest(BaseTest):
         self.assert_success(api_response)
         d = json.loads(api_response.get_data(as_text=True))
         self.assertEqual(d[0]['value'],'Some Value')
+
+    def test_datastore_user(self):
+        self.load_example_data()
+        new_user = self.add_test_user_data()
+        api_response = self.app.get(f'/v1.0/datastore/user/{new_user["user_id"]}',
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response)
+        data = json.loads(api_response.get_data(as_text=True))
+
+        print('test_datastore_user')
+
+    def test_datastore_study(self):
+        self.load_example_data()
+        new_study = self.add_test_study_data()
+        api_response = self.app.get(f'/v1.0/datastore/study/{new_study["study_id"]}',
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response)
+        data = json.loads(api_response.get_data(as_text=True))
+
+        print('test_datastore_study')
+
+    def test_datastore_file(self):
+        self.load_example_data()
+        new_file = self.add_test_file_data()
+        api_response = self.app.get(f'/v1.0/datastore/file/{new_file["file_id"]}',
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response)
+        data = json.loads(api_response.get_data(as_text=True))
+        self.assertEqual('MyKey', data[0]['key'])
+        self.assertEqual('Some File Data Value', data[0]['value'])
+
+        print('test_datastore_file')
