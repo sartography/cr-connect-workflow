@@ -161,3 +161,30 @@ class TestSudySponsorsScript(BaseTest):
         app.config['PB_ENABLED'] = False
         output = user_studies()
         self.assertEqual(len(output),0)
+
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_sponsors_script_ensure_delete(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        flask.g.user = UserModel(uid='dhf8r')
+        app.config['PB_ENABLED'] = True
+
+        self.load_example_data()
+        self.create_reference_document()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("study_sponsors_associates_delete")
+        workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
+        WorkflowService.test_spec("study_sponsors_associates_delete")
+        processor = WorkflowProcessor(workflow_model)
+        processor.do_engine_steps()
+        # change user and make sure we can access the study
+        flask.g.user = UserModel(uid='lb3dp')
+        flask.g.token = 'my spiffy token'
+        app.config['PB_ENABLED'] = False
+        output = user_studies()
+        self.assertEqual(len(output),0)
+        flask.g.token = 'my spiffy token'
+        app.config['PB_ENABLED'] = False
+        output = user_studies()
+        self.assertEqual(len(output),0)
