@@ -1,15 +1,10 @@
-import json
-from profile import Profile
-
 from tests.base_test import BaseTest
 
-from datetime import datetime, timezone
-from unittest.mock import patch
 from crc.models.data_store import DataStoreModel, DataStoreSchema
 from crc.models.file import FileModel
-from crc import session, app
+from crc import session
 
-
+import json
 
 
 class DataStoreTest(BaseTest):
@@ -186,5 +181,3 @@ class DataStoreTest(BaseTest):
         self.assertEqual(2, len(data_2))
         self.assertEqual(value_1, data_2[0]['value'])
         self.assertEqual(value_2, data_2[1]['value'])
-
-        print('test_datastore_files')
