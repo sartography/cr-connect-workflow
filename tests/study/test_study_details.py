@@ -5,7 +5,7 @@ from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from tests.base_test import BaseTest
 from unittest.mock import patch
 
-from crc import db, session
+from crc import app, session
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel
 from crc.models.protocol_builder import ProtocolBuilderRequiredDocumentSchema, ProtocolBuilderStudySchema
@@ -30,6 +30,7 @@ class TestStudyDetailsScript(BaseTest):
         self.task = self.processor.next_task()
 
     def test_study_info_returns_a_box_object_for_all_validations(self):
+        app.config['PB_ENABLED'] = True
         for option in StudyInfo.type_options:
             data = StudyInfo().do_task_validate_only(self.task, self.study.id, self.workflow_model.id, option)
             if isinstance(data, list):

@@ -6,6 +6,7 @@ import json
 class TestWorkflowInfiniteLoop(BaseTest):
 
     def test_workflow_infinite_loop(self):
+        app.config['PB_ENABLED'] = True
         self.load_example_data()
         spec_model = self.load_test_spec('infinite_loop')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
