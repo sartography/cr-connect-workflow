@@ -512,6 +512,12 @@ paths:
         description: The unique id of an existing workflow specification to validate.
         schema:
           type: string
+      - name: validate_study_id
+        in: query
+        required: false
+        description: Optional id of study to test under different scenarios
+        schema:
+          type: string
     get:
       operationId: crc.api.workflow.validate_workflow_specification
       summary: Loads and attempts to execute a Workflow Specification, returning a list of errors encountered
