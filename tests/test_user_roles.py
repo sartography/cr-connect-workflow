@@ -269,3 +269,12 @@ class TestTasksApi(BaseTest):
 
         self.assertEqual(0, len(self.get_assignment_task_events(submitter.uid)))
         self.assertEqual(0, len(self.get_assignment_task_events(supervisor.uid)))
+
+    def test_no_error_when_calling_end_loop_on_non_looping_task(self):
+
+        workflow = self.create_workflow('hello_world')
+        workflow_api = self.get_workflow_api(workflow)
+
+        data = workflow_api.next_task.data
+        data['name'] = "john"
+        workflow_api = self.complete_form(workflow, workflow_api.next_task, data, terminate_loop=True)

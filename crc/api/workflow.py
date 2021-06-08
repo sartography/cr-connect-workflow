@@ -216,7 +216,7 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
 
-    if terminate_loop:
+    if terminate_loop and spiff_task.is_looping():
         spiff_task.terminate_loop()
 
     # Extract the details specific to the form submitted
