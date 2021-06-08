@@ -4,12 +4,10 @@ from crc.services.study_service import StudyService
 
 
 class UpdateStudyAssociates(Script):
-
     argument_error_message = "You must supply at least one argument to the " \
                              "update_study_associates task, an array of objects in the form " \
                              "{'uid':'someid', 'role': 'text', 'send_email: 'boolean', " \
                              "'access':'boolean'} "
-
 
     def get_description(self):
         return """
@@ -26,20 +24,26 @@ associations already in place.
 example : update_study_associates([{'uid':'sbp3ey','role':'Unicorn Herder', 'send_email': False, 'access':True}]) 
 
 """
-    def validate_arg(self,arg):
-        if not isinstance(arg,list):
+
+    def validate_arg(self, arg):
+        if not isinstance(arg, list):
             raise ApiError("invalid parameter", "This function is expecting a list of dictionaries")
-        if not len(arg) > 0 and not isinstance(arg[0],dict):
-            raise ApiError("invalid paramemter","This function is expecting a list of dictionaries")
+        if len(arg[0]) > 0:
+            if not len(arg) > 0 and not isinstance(arg[0], dict):
+                raise ApiError("invalid paramemter", "This function is expecting a list of dictionaries")
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        items = args[0]
-        self.validate_arg(items)
-        return all([x.get('uid',False) for x in items])
-
+        if len(args) == 0:
+            items = []
+        else:
+            items = args[0]
+            self.validate_arg(items)
+        return all([x.get('uid', False) for x in items])
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        access_list = args[0]
-        self.validate_arg(access_list)
-        return StudyService.update_study_associates(study_id,access_list)
-
+        if len(args) == 0:
+            access_list = []
+        else:
+            access_list = args[0]
+            self.validate_arg(access_list)
+        return StudyService.update_study_associates(study_id, access_list)
