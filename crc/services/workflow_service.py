@@ -52,17 +52,27 @@ class WorkflowService(object):
      handles the testing of a workflow specification by completing it with
      random selections, attempting to mimic a front end as much as possible. """
 
+    from crc.services.user_service import UserService
     @staticmethod
-    def make_test_workflow(spec_id):
-        user = db.session.query(UserModel).filter_by(uid="test").first()
+    def make_test_workflow(spec_id, validate_study_id=None):
+        try:
+            user = UserService.current_user()
+        except ApiError as e:
+            user = None
+        if not user:
+            user = db.session.query(UserModel).filter_by(uid="test").first()
         if not user:
             db.session.add(UserModel(uid="test"))
             db.session.commit()
-        study = db.session.query(StudyModel).filter_by(user_uid="test").first()
+            user = db.session.query(UserModel).filter_by(uid="test").first()
+        if validate_study_id:
+            study = db.session.query(StudyModel).filter_by(id=validate_study_id).first()
+        else:
+            study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
         if not study:
-            db.session.add(StudyModel(user_uid="test", title="test"))
+            db.session.add(StudyModel(user_uid=user.uid, title="test"))
             db.session.commit()
-            study = db.session.query(StudyModel).filter_by(user_uid="test").first()
+            study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        workflow_spec_id=spec_id,
                                        last_updated=datetime.utcnow(),
@@ -80,7 +90,7 @@ class WorkflowService(object):
             db.session.delete(user)
 
     @staticmethod
-    def test_spec(spec_id, required_only=False):
+    def test_spec(spec_id, validate_study_id=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
           output form the last task if successful.
@@ -89,7 +99,7 @@ class WorkflowService(object):
           spec, only completing the required fields, rather than everything.
           """
 
-        workflow_model = WorkflowService.make_test_workflow(spec_id)
+        workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
 
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
