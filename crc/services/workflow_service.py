@@ -22,6 +22,7 @@ from jinja2 import Template
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
+from crc.models.data_store import DataStoreModel
 from crc.models.file import LookupDataModel, FileModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
@@ -241,6 +242,25 @@ class WorkflowService(object):
                 raise ApiError.from_task("invalid_field_property",
                                          f'The field {field.id} contains an unsupported '
                                          f'property: {name}', task=task)
+
+
+    @staticmethod
+    def post_process_form(task):
+        """Looks through the fields in a submitted form, acting on any properties."""
+        for field in task.task_spec.form.fields:
+            if field.has_property(Task.FIELD_PROP_DOC_CODE) and \
+                    field.type == Task.FIELD_TYPE_FILE:
+                file_id = task.data[field.id]
+                file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
+                doc_code = WorkflowService.evaluate_property(Task.FIELD_PROP_DOC_CODE, field, task)
+                file.irb_doc_code = doc_code
+                db.session.commit()
+                #  Set the doc code on the file.
+            if field.has_property(Task.FIELD_PROP_FILE_DATA) and \
+                    field.get_property(Task.FIELD_PROP_FILE_DATA) in task.data:
+                file_id = task.data[field.get_property(Task.FIELD_PROP_FILE_DATA)]
+                data_store = DataStoreModel(file_id=file_id, key=field.id, value=task.data[field.id])
+                db.session.add(data_store)
 
     @staticmethod
     def evaluate_property(property_name, field, task):

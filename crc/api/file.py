@@ -57,7 +57,7 @@ def get_document_directory(study_id, workflow_id=None):
         if file.irb_doc_code in doc_dict:
             doc_code = doc_dict[file.irb_doc_code]
         else:
-            doc_code = {'category1': "Unknown", 'category2': None, 'category3': None}
+            doc_code = {'category1': "Unknown", 'category2': '', 'category3': ''}
         if workflow_id:
             expand = file.workflow_id == int(workflow_id)
         else:

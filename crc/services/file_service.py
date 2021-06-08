@@ -100,16 +100,6 @@ class FileService(object):
 
     @staticmethod
     def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
-        """Create a new file and associate it with the workflow
-        Please note that the irb_doc_code MUST be a known file in the irb_documents.xslx reference document."""
-        if not FileService.is_allowed_document(irb_doc_code):
-            raise ApiError("invalid_form_field_key",
-                           "When uploading files, the form field id must match a known document in the "
-                           "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % irb_doc_code)
-
-        """Assure this is unique to the workflow, task, and document code AND the Name
-           Because we will allow users to upload multiple files for the same form field
-            in some cases """
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_id == workflow_id)\
             .filter(FileModel.name == name)\
