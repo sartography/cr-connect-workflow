@@ -1,10 +1,16 @@
+import json
+from unittest.mock import patch
+
 from tests.base_test import BaseTest
 from crc import app
 
 
 class TestGetStudyAssociateValidation(BaseTest):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')
+    def test_get_study_associate_validation(self, mock):
+        response = self.protocol_builder_response('investigators.json')
+        mock.return_value = json.loads(response)
 
-    def test_get_study_associate_validation(self):
         app.config['PB_ENABLED'] = True
         self.load_example_data()
         workflow = self.create_workflow('get_study_associate')
