@@ -1,7 +1,7 @@
 from flask import g
 
 from crc.api.common import ApiError
-from crc.scripts.data_store_base import DataStoreBase
+from crc.services.data_store_service import DataStoreBase
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
 

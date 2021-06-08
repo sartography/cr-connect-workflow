@@ -4,7 +4,7 @@ from datetime import datetime
 from crc import session
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel, DataStoreSchema
-from crc.scripts.data_store_base import DataStoreBase
+from crc.services.data_store_service import DataStoreBase
 
 
 def study_multi_get(study_id):
