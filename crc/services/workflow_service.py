@@ -247,6 +247,7 @@ class WorkflowService(object):
     @staticmethod
     def post_process_form(task):
         """Looks through the fields in a submitted form, acting on any properties."""
+        if not hasattr(task.task_spec, 'form'): return
         for field in task.task_spec.form.fields:
             if field.has_property(Task.FIELD_PROP_DOC_CODE) and \
                     field.type == Task.FIELD_TYPE_FILE:

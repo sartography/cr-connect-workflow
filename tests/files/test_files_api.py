@@ -74,11 +74,6 @@ class TestFilesApi(BaseTest):
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         correct_name = task.task_spec.form.fields[0].id
 
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.id, "not_a_known_file"), data=data, follow_redirects=True,
-                           content_type='multipart/form-data', headers=self.logged_in_headers())
-        self.assert_failure(rv, error_code="invalid_form_field_key")
-
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
                            (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
