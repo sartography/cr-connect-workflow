@@ -90,7 +90,7 @@ class FileModel(db.Model):
     # it instead, hide it in the interface.
     is_review = db.Column(db.Boolean, default=False, nullable=True)
     archived = db.Column(db.Boolean, default=False, nullable=False)
-    tags = relationship("DataStoreModel", cascade="all,delete", backref="file")
+    data_stores = relationship("DataStoreModel", cascade="all,delete", backref="file")
 
 class File(object):
     @classmethod
@@ -123,6 +123,11 @@ class File(object):
         else:
             instance.last_modified = None
             instance.latest_version = None
+
+        instance.data_store = {}
+        for ds in model.data_stores:
+            instance.data_store[ds.key] = ds.value
+
         return instance
 
 
@@ -142,7 +147,7 @@ class FileSchema(Schema):
         fields = ["id", "name", "is_status", "is_reference", "content_type",
                   "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
                   "irb_doc_code", "last_modified", "latest_version", "type", "categories",
-                  "description", "category", "description", "download_name", "size"]
+                  "description", "category", "download_name", "size", "data_store"]
 
         unknown = INCLUDE
     type = EnumField(FileType)

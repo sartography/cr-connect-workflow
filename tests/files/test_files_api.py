@@ -8,6 +8,7 @@ from crc.models.file import FileModel, FileType, FileSchema, FileModelSchema
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.models.data_store import DataStoreModel
 from example_data import ExampleDataLoader
 
 
@@ -72,11 +73,6 @@ class TestFilesApi(BaseTest):
         task = processor.next_task()
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         correct_name = task.task_spec.form.fields[0].id
-
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.id, "not_a_known_file"), data=data, follow_redirects=True,
-                           content_type='multipart/form-data', headers=self.logged_in_headers())
-        self.assert_failure(rv, error_code="invalid_form_field_key")
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
@@ -231,6 +227,17 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         self.assertEqual("text/xml; charset=utf-8", rv.content_type)
         self.assertTrue(rv.content_length > 1)
+
+    def test_get_file_contains_data_store_elements(self):
+        self.load_example_data()
+        spec = session.query(WorkflowSpecModel).first()
+        file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
+        ds = DataStoreModel(key="my_key", value="my_value", file_id=file.id);
+        db.session.add(ds)
+        rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual("my_value", json_data['data_store']['my_key'])
 
     def test_get_files_for_form_field_returns_only_those_files(self):
         self.create_reference_document()
