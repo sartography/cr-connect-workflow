@@ -30,6 +30,16 @@ def user_multi_get(user_id):
     return results
 
 
+def file_multi_get(file_id):
+    """Get all data values in the data store for a file_id"""
+    if file_id is None:
+        raise ApiError(code='unknown_file', message='Please provide a valid file id.')
+    dsb = DataStoreBase()
+    retval = dsb.get_multi_common(None, None, file_id=file_id)
+    results = DataStoreSchema(many=True).dump(retval)
+    return results
+
+
 def datastore_del(id):
     """Delete a data store item for a key"""
     session.query(DataStoreModel).filter_by(id=id).delete()

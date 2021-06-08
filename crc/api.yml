@@ -1372,6 +1372,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataStore"
+  /datastore/file/{file_id}:
+    parameters:
+      - name: file_id
+        in: path
+        required: true
+        description: The file id we are concerned with
+        schema:
+          type: string
+          format: string
+    get:
+      operationId: crc.api.data_store.file_multi_get
+      summary: Gets all datastore items by file_id
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Get all values from the data store for a file_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataStore"
 components:
   securitySchemes:
     jwt:
