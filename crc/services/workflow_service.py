@@ -80,13 +80,15 @@ class WorkflowService(object):
             db.session.delete(user)
 
     @staticmethod
-    def test_spec(spec_id, required_only=False):
+    def test_spec(spec_id, required_only=False, test_until = ""):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
           output form the last task if successful.
 
           required_only can be set to true, in which case this will run the
           spec, only completing the required fields, rather than everything.
+
+          testing_depth
           """
 
         workflow_model = WorkflowService.make_test_workflow(spec_id)
@@ -98,6 +100,7 @@ class WorkflowService(object):
             raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         count = 0
+
         while not processor.bpmn_workflow.is_completed():
             if count < 100:  # check for infinite loop
                 try:
@@ -121,6 +124,11 @@ class WorkflowService(object):
                                            task_name=task.get_name())
                         WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                         processor.complete_task(task)
+                    a = task.get_data()
+                    if test_until == task.name:
+                        test_data = processor.bpmn_workflow.last_task.data
+                        WorkflowService.delete_test_data()
+                        return test_data
                     count += 1
                 except WorkflowException as we:
                     WorkflowService.delete_test_data()
