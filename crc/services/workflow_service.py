@@ -121,7 +121,7 @@ class WorkflowService(object):
                     if (exit_task != None):
                             WorkflowService.delete_test_data()
                             raise ApiError.from_task("validation_break",
-                                        f"This task is in a lane called '{task.task_spec.lane}' "
+                                        f"This task is called '{task.task_spec.name}' and was run using "
                                         , exit_task.parent)
                     tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                     for task in tasks:
@@ -144,7 +144,7 @@ class WorkflowService(object):
                         if test_until == task.task_spec.name:
                             escaped = WorkflowService.delete_test_data()
                             raise ApiError.from_task("validation_break",
-                                        f"This task is in a lane called '{task.task_spec.name}' and was run using "
+                                        f"This task is called '{task.task_spec.name}' and was run using "
                                         , task.parent)
                     count += 1
                 except WorkflowException as we:
