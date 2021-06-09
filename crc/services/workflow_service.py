@@ -121,8 +121,8 @@ class WorkflowService(object):
                     if (exit_task != None):
                             WorkflowService.delete_test_data()
                             raise ApiError.from_task("validation_break",
-                                        f"This task is called '{task.task_spec.name}' and was run using "
-                                        , exit_task.parent)
+                                        f"The validation has been exited early on task '{exit_task.task_spec.name}' and was parented by ", 
+                                        exit_task.parent)
                     tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                     for task in tasks:
                         if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
@@ -142,10 +142,10 @@ class WorkflowService(object):
                         WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                         processor.complete_task(task)
                         if test_until == task.task_spec.name:
-                            escaped = WorkflowService.delete_test_data()
+                            WorkflowService.delete_test_data()
                             raise ApiError.from_task("validation_break",
-                                        f"This task is called '{task.task_spec.name}' and was run using "
-                                        , task.parent)
+                                        f"The validation has been exited early on task '{task.task_spec.name}' and was parented by ",
+                                        task.parent)
                     count += 1
                 except WorkflowException as we:
                     WorkflowService.delete_test_data()
