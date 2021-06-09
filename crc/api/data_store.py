@@ -4,7 +4,7 @@ from datetime import datetime
 from crc import session
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel, DataStoreSchema
-from crc.scripts.data_store_base import DataStoreBase
+from crc.services.data_store_service import DataStoreBase
 
 
 def study_multi_get(study_id):
@@ -26,6 +26,16 @@ def user_multi_get(user_id):
     dsb = DataStoreBase()
     retval = dsb.get_multi_common(None,
                                   user_id)
+    results = DataStoreSchema(many=True).dump(retval)
+    return results
+
+
+def file_multi_get(file_id):
+    """Get all data values in the data store for a file_id"""
+    if file_id is None:
+        raise ApiError(code='unknown_file', message='Please provide a valid file id.')
+    dsb = DataStoreBase()
+    retval = dsb.get_multi_common(None, None, file_id=file_id)
     results = DataStoreSchema(many=True).dump(retval)
     return results
 

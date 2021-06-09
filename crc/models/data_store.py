@@ -25,4 +25,5 @@ class DataStoreSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = DataStoreModel
         load_instance = True
+        include_fk = True
         sqla_session = db.session

@@ -26,7 +26,8 @@ class Task(object):
     PROP_EXTENSIONS_TITLE = "display_name"
 
 
-    # Autocomplete field
+    # Field Types
+    FIELD_TYPE_FILE = "file"
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
     FIELD_PROP_AUTO_COMPLETE_MAX = "autocomplete_num"  # Not used directly, passed in from the front end.
 
@@ -58,6 +59,10 @@ class Task(object):
     FIELD_PROP_REPLEAT = "repeat"
     FIELD_PROP_REPLEAT_TITLE = "repeat_title"
     FIELD_PROP_REPLEAT_BUTTON = "repeat_button_label"
+
+    # File specific field properties
+    FIELD_PROP_DOC_CODE = "doc_code"  # to associate a file upload field with a doc code
+    FIELD_PROP_FILE_DATA = "file_data"  # to associate a bit of data with a specific file upload file.
 
     # Additional properties
     FIELD_PROP_ENUM_TYPE = "enum_type"

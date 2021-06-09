@@ -97,9 +97,8 @@ class FileService(object):
         review = any([f.is_review for f in files])
         return review
 
-
     @staticmethod
-    def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
+    def update_irb_code(file_id, irb_doc_code):
         """Create a new file and associate it with the workflow
         Please note that the irb_doc_code MUST be a known file in the irb_documents.xslx reference document."""
         if not FileService.is_allowed_document(irb_doc_code):
@@ -107,9 +106,21 @@ class FileService(object):
                            "When uploading files, the form field id must match a known document in the "
                            "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % irb_doc_code)
 
-        """Assure this is unique to the workflow, task, and document code AND the Name
-           Because we will allow users to upload multiple files for the same form field
-            in some cases """
+        """ """
+        file_model = session.query(FileModel)\
+            .filter(FileModel.id == file_id).first()
+        if file_model is None:
+            raise ApiError("invalid_file_id",
+                           "When updating the irb_doc_code for a file, that file_id must already exist "
+                           "This file_id is not found in the database '%d'" % file_id)
+
+        file_model.irb_doc_code = irb_doc_code
+        session.commit()
+        return True
+
+
+    @staticmethod
+    def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_id == workflow_id)\
             .filter(FileModel.name == name)\

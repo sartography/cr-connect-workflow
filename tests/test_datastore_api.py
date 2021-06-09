@@ -1,14 +1,10 @@
-import json
-from profile import Profile
-
 from tests.base_test import BaseTest
 
-from datetime import datetime, timezone
-from unittest.mock import patch
 from crc.models.data_store import DataStoreModel, DataStoreSchema
-from crc import session, app
+from crc.models.file import FileModel
+from crc import session
 
-
+import json
 
 
 class DataStoreTest(BaseTest):
@@ -16,6 +12,13 @@ class DataStoreTest(BaseTest):
         "key": "MyKey",
         "workflow_id": 12,
         "study_id": 42,
+        "task_id": "MyTask",
+        "spec_id": "My Spec Name",
+        "value": "Some Value"
+    }
+    TEST_FILE_ITEM = {
+        "key": "MyKey",
+        "workflow_id": 12,
         "task_id": "MyTask",
         "spec_id": "My Spec Name",
         "value": "Some Value"
@@ -42,7 +45,16 @@ class DataStoreTest(BaseTest):
         self.assert_success(rv)
         return json.loads(rv.get_data(as_text=True))
 
-
+    def add_test_file_data(self, file_id, value):
+        file_data = DataStoreSchema().dump(self.TEST_FILE_ITEM)
+        file_data['file_id'] = file_id
+        file_data['value'] = value
+        rv = self.app.post('/v1.0/datastore',
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
+                           data=json.dumps(file_data))
+        self.assert_success(rv)
+        return json.loads(rv.get_data(as_text=True))
 
     def test_get_study_data(self):
         """Generic test, but pretty detailed, in that the study should return a categorized list of workflows
@@ -112,3 +124,60 @@ class DataStoreTest(BaseTest):
         self.assert_success(api_response)
         d = json.loads(api_response.get_data(as_text=True))
         self.assertEqual(d[0]['value'],'Some Value')
+
+    def test_datastore_file(self):
+        self.load_example_data()
+        test_file = session.query(FileModel).first()
+
+        # make sure we don't already have a datastore
+        api_response = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
+                                    headers=self.logged_in_headers(),
+                                    content_type="application/json")
+        self.assert_success(api_response)
+        data = json.loads(api_response.get_data(as_text=True))
+        self.assertEqual(0, len(data))
+
+        # add datastore
+        self.add_test_file_data(test_file.id, 'Some File Data Value')
+
+        # make sure we can get the datastore
+        api_response = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
+                                    headers=self.logged_in_headers(),
+                                    content_type="application/json")
+        self.assert_success(api_response)
+        data = json.loads(api_response.get_data(as_text=True))
+
+        self.assertEqual(1, len(data))
+        self.assertEqual('MyKey', data[0]['key'])
+        self.assertEqual('Some File Data Value', data[0]['value'])
+
+    def test_datastore_files(self):
+        self.load_example_data()
+        test_file = session.query(FileModel).first()
+
+        # add datastore
+        value_1 = 'Some File Data Value 1'
+        self.add_test_file_data(test_file.id, value_1)
+
+        # make sure we have 1 item in the datastore
+        api_response_1 = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response_1)
+        data_1 = json.loads(api_response_1.get_data(as_text=True))
+
+        self.assertEqual(1, len(data_1))
+        self.assertEqual('MyKey', data_1[0]['key'])
+        self.assertEqual(value_1, data_1[0]['value'])
+
+        # add second datastore
+        value_2 = 'Some File Data Value 2'
+        self.add_test_file_data(test_file.id, value_2)
+
+        # make sure we have 2 items in the datastore
+        api_response_2 = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
+                                    headers=self.logged_in_headers(), content_type="application/json")
+        self.assert_success(api_response_2)
+        data_2 = json.loads(api_response_2.get_data(as_text=True))
+        self.assertEqual(2, len(data_2))
+        self.assertEqual(value_1, data_2[0]['value'])
+        self.assertEqual(value_2, data_2[1]['value'])

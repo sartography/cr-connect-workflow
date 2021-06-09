@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_6e97803" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_d8c1062" name="GetValidation" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1aycav1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1aycav1" sourceRef="StartEvent_1" targetRef="Activity_RunScript" />
+    <bpmn:scriptTask id="Activity_RunScript" name="Run Script">
+      <bpmn:incoming>Flow_1aycav1</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wkyatv</bpmn:outgoing>
+      <bpmn:script>pi = study_info('investigators').get('PI', False)
+if pi:
+    try:
+        pi_assc = get_study_associate(pi.user_id)
+    except:
+        pi_assc_chk = False
+    else:
+        if pi_assc['role'] == "Primary Investigator":
+            pi_assc_chk = True
+        else:
+            pi_assc_chk = False</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0wkyatv" sourceRef="Activity_RunScript" targetRef="Activity_DisplayValue" />
+    <bpmn:manualTask id="Activity_DisplayValue" name="Display Value">
+      <bpmn:documentation>pi_assc_chk is {{pi_assc_chk}}</bpmn:documentation>
+      <bpmn:incoming>Flow_0wkyatv</bpmn:incoming>
+      <bpmn:outgoing>Flow_0784fc6</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_0hdelnp">
+      <bpmn:incoming>Flow_0784fc6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0784fc6" sourceRef="Activity_DisplayValue" targetRef="Event_0hdelnp" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_d8c1062">
+      <bpmndi:BPMNEdge id="Flow_0784fc6_di" bpmnElement="Flow_0784fc6">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="592" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wkyatv_di" bpmnElement="Flow_0wkyatv">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1aycav1_di" bpmnElement="Flow_1aycav1">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ah3917_di" bpmnElement="Activity_RunScript">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1sysjzs_di" bpmnElement="Activity_DisplayValue">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0hdelnp_di" bpmnElement="Event_0hdelnp">
+        <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

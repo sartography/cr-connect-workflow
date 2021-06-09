@@ -13,7 +13,12 @@ class TestSudySponsorsScript(BaseTest):
     test_study_id = 1
 
 
-    def test_study_sponsors_script_validation(self):
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_sponsors_script_validation(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        app.config['PB_ENABLED'] = True
+
         self.load_example_data() # study_info script complains if irb_documents.xls is not loaded
                                  # during the validate phase I'm going to assume that we will never
                                  # have a case where irb_documents.xls is not loaded ??

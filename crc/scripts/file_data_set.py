@@ -1,8 +1,9 @@
 from flask import g
 
 from crc.api.common import ApiError
-from crc.scripts.data_store_base import DataStoreBase
+from crc.services.data_store_service import DataStoreBase
 from crc.scripts.script import Script
+from crc.services.file_service import FileService
 
 
 class FileDataSet(Script, DataStoreBase):
@@ -34,8 +35,19 @@ class FileDataSet(Script, DataStoreBase):
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         if self.validate_kw_args(**kwargs):
             myargs = [kwargs['key'],kwargs['value']]
-        fileid = kwargs['file_id']
+
+        try:
+            fileid = int(kwargs['file_id'])
+        except:
+            raise ApiError("invalid_file_id",
+                           "Attempting to update DataStore for an invalid fileid '%s'" % kwargs['file_id'])
+
         del(kwargs['file_id'])
+        if kwargs['key'] == 'irb_code':
+            irb_doc_code = kwargs['value']
+            FileService.update_irb_code(fileid,irb_doc_code)
+
+
         return self.set_data_common(task.id,
                                     None,
                                     None,

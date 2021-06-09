@@ -46,16 +46,16 @@ def get_workflow_specification(spec_id):
     return WorkflowSpecModelSchema().dump(spec)
 
 
-def validate_workflow_specification(spec_id):
+def validate_workflow_specification(spec_id, validate_study_id=None, test_until=None):
     errors = {}
     try:
-        WorkflowService.test_spec(spec_id)
+        WorkflowService.test_spec(spec_id, validate_study_id, test_until)
     except ApiError as ae:
         ae.message = "When populating all fields ... \n" + ae.message
         errors['all'] = ae
     try:
         # Run the validation twice, the second time, just populate the required fields.
-        WorkflowService.test_spec(spec_id, required_only=True)
+        WorkflowService.test_spec(spec_id, validate_study_id, test_until, required_only=True)
     except ApiError as ae:
         ae.message = "When populating only required fields ... \n" + ae.message
         errors['required'] = ae
@@ -206,6 +206,7 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
+    spiff_task.workflow.script_engine = processor.bpmn_workflow.script_engine
     _verify_user_and_role(processor, spiff_task)
     user = UserService.current_user(allow_admin_impersonate=False) # Always log as the real user.
 
@@ -215,7 +216,7 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
 
-    if terminate_loop:
+    if terminate_loop and spiff_task.is_looping():
         spiff_task.terminate_loop()
 
     # Extract the details specific to the form submitted
@@ -244,6 +245,7 @@ def __update_task(processor, task, data, user):
     here because we need to do it multiple times when completing all tasks in
     a multi-instance task"""
     task.update_data(data)
+    WorkflowService.post_process_form(task)  # some properties may update the data store.
     processor.complete_task(task)
     processor.do_engine_steps()
     processor.save()

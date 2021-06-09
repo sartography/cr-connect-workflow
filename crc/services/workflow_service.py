@@ -22,6 +22,7 @@ from jinja2 import Template
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
+from crc.models.data_store import DataStoreModel
 from crc.models.file import LookupDataModel, FileModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
@@ -52,17 +53,27 @@ class WorkflowService(object):
      handles the testing of a workflow specification by completing it with
      random selections, attempting to mimic a front end as much as possible. """
 
+    from crc.services.user_service import UserService
     @staticmethod
-    def make_test_workflow(spec_id):
-        user = db.session.query(UserModel).filter_by(uid="test").first()
+    def make_test_workflow(spec_id, validate_study_id=None):
+        try:
+            user = UserService.current_user()
+        except ApiError as e:
+            user = None
+        if not user:
+            user = db.session.query(UserModel).filter_by(uid="test").first()
         if not user:
             db.session.add(UserModel(uid="test"))
             db.session.commit()
-        study = db.session.query(StudyModel).filter_by(user_uid="test").first()
+            user = db.session.query(UserModel).filter_by(uid="test").first()
+        if validate_study_id:
+            study = db.session.query(StudyModel).filter_by(id=validate_study_id).first()
+        else:
+            study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
         if not study:
-            db.session.add(StudyModel(user_uid="test", title="test"))
+            db.session.add(StudyModel(user_uid=user.uid, title="test"))
             db.session.commit()
-            study = db.session.query(StudyModel).filter_by(user_uid="test").first()
+            study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        workflow_spec_id=spec_id,
                                        last_updated=datetime.utcnow(),
@@ -80,18 +91,18 @@ class WorkflowService(object):
             db.session.delete(user)
 
     @staticmethod
-    def test_spec(spec_id, required_only=False, test_until = ""):
+    def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
           output form the last task if successful.
 
+          test_until
+
           required_only can be set to true, in which case this will run the
           spec, only completing the required fields, rather than everything.
-
-          testing_depth
           """
 
-        workflow_model = WorkflowService.make_test_workflow(spec_id)
+        workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
 
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
@@ -100,12 +111,18 @@ class WorkflowService(object):
             raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
 
         count = 0
+        escaped = False 
 
-        while not processor.bpmn_workflow.is_completed():
+        while not processor.bpmn_workflow.is_completed() and not escaped:
             if count < 100:  # check for infinite loop
                 try:
                     processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
-                    processor.bpmn_workflow.do_engine_steps()
+                    exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until) 
+                    if (exit_task != None):
+                            WorkflowService.delete_test_data()
+                            raise ApiError.from_task("validation_break",
+                                        f"This task is in a lane called '{task.task_spec.lane}' "
+                                        , exit_task.parent)
                     tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                     for task in tasks:
                         if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
@@ -124,11 +141,11 @@ class WorkflowService(object):
                                            task_name=task.get_name())
                         WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                         processor.complete_task(task)
-                    a = task.get_data()
-                    if test_until == task.name:
-                        test_data = processor.bpmn_workflow.last_task.data
-                        WorkflowService.delete_test_data()
-                        return test_data
+                        if test_until == task.task_spec.name:
+                            escaped = WorkflowService.delete_test_data()
+                            raise ApiError.from_task("validation_break",
+                                        f"This task is in a lane called '{task.task_spec.name}' and was run using "
+                                        , task.parent)
                     count += 1
                 except WorkflowException as we:
                     WorkflowService.delete_test_data()
@@ -249,6 +266,26 @@ class WorkflowService(object):
                 raise ApiError.from_task("invalid_field_property",
                                          f'The field {field.id} contains an unsupported '
                                          f'property: {name}', task=task)
+
+
+    @staticmethod
+    def post_process_form(task):
+        """Looks through the fields in a submitted form, acting on any properties."""
+        if not hasattr(task.task_spec, 'form'): return
+        for field in task.task_spec.form.fields:
+            if field.has_property(Task.FIELD_PROP_DOC_CODE) and \
+                    field.type == Task.FIELD_TYPE_FILE:
+                file_id = task.data[field.id]
+                file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
+                doc_code = WorkflowService.evaluate_property(Task.FIELD_PROP_DOC_CODE, field, task)
+                file.irb_doc_code = doc_code
+                db.session.commit()
+                #  Set the doc code on the file.
+            if field.has_property(Task.FIELD_PROP_FILE_DATA) and \
+                    field.get_property(Task.FIELD_PROP_FILE_DATA) in task.data:
+                file_id = task.data[field.get_property(Task.FIELD_PROP_FILE_DATA)]
+                data_store = DataStoreModel(file_id=file_id, key=field.id, value=task.data[field.id])
+                db.session.add(data_store)
 
     @staticmethod
     def evaluate_property(property_name, field, task):

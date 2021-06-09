@@ -5,7 +5,7 @@ from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from tests.base_test import BaseTest
 from unittest.mock import patch
 
-from crc import db, session
+from crc import app, session
 from crc.api.common import ApiError
 from crc.models.file import FileDataModel, FileModel
 from crc.models.protocol_builder import ProtocolBuilderRequiredDocumentSchema, ProtocolBuilderStudySchema
@@ -29,8 +29,23 @@ class TestStudyDetailsScript(BaseTest):
         self.processor = WorkflowProcessor(self.workflow_model)
         self.task = self.processor.next_task()
 
-    def test_study_info_returns_a_box_object_for_all_validations(self):
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_info_returns_a_box_object_for_all_validations(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
         for option in StudyInfo.type_options:
+            if option == 'info':
+                mock_get.return_value.text = self.protocol_builder_response('irb_info.json')
+            elif option == 'investigators':
+                mock_get.return_value.text = self.protocol_builder_response('investigators.json')
+            elif option == 'roles':
+                mock_get.return_value.text = self.protocol_builder_response('investigators.json')
+            elif option == 'details':
+                mock_get.return_value.text = self.protocol_builder_response('study_details.json')
+            elif option == 'documents':
+                mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
+            elif option == 'sponsors':
+                mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
             data = StudyInfo().do_task_validate_only(self.task, self.study.id, self.workflow_model.id, option)
             if isinstance(data, list):
                 for x in data:
