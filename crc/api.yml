@@ -83,8 +83,6 @@ paths:
           type : integer
     get:
       operationId: crc.api.file.get_document_directory
-      security:
-        - auth_admin: ['secret']
       summary: Returns a directory of all files for study in a nested structure
       tags:
         - Document Categories
