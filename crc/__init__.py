@@ -14,6 +14,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 
+
 logging.basicConfig(level=logging.INFO)
 
 connexion_app = connexion.FlaskApp(__name__)
@@ -45,12 +46,18 @@ ma = Marshmallow(app)
 from crc import models
 from crc import api
 from crc.api import admin
-
+from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 
-def setup_scheduler():
-    from crc.services.workflow_service import WorkflowService
-    scheduler.add_job(WorkflowService.do_waiting())
+# needed function to avoid circular import
+
+def process_waiting_tasks():
+    with app.app_context():
+        WorkflowService.do_waiting()
+
+scheduler.add_job(process_waiting_tasks,'interval',minutes=5)
+scheduler.start()
+
 
 # Convert list of allowed origins to list of regexes
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]

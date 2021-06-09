@@ -364,13 +364,6 @@ class WorkflowProcessor(object):
     def get_status(self):
         return self.status_of(self.bpmn_workflow)
 
-    def update_waiting_tasks(self):
-        try:
-            self.bpmn_workflow.refresh_waiting_tasks()
-        except WorkflowTaskExecException as we:
-            raise ApiError.from_task("task_error", str(we), we.task)
-
-
     def do_engine_steps(self):
         try:
             self.bpmn_workflow.do_engine_steps()
