@@ -12,6 +12,7 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sentry_sdk.integrations.flask import FlaskIntegration
+from apscheduler.schedulers.background import BackgroundScheduler
 
 logging.basicConfig(level=logging.INFO)
 
@@ -33,6 +34,7 @@ db = SQLAlchemy(app)
 
 session = db.session
 """:type: sqlalchemy.orm.Session"""
+scheduler = BackgroundScheduler()
 
 # Mail settings
 mail = Mail(app)
@@ -46,6 +48,9 @@ from crc.api import admin
 
 connexion_app.add_api('api.yml', base_path='/v1.0')
 
+def setup_scheduler():
+    from crc.services.workflow_service import WorkflowService
+    scheduler.add_job(WorkflowService.do_waiting())
 
 # Convert list of allowed origins to list of regexes
 origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]

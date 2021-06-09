@@ -91,6 +91,15 @@ class WorkflowService(object):
             db.session.delete(user)
 
     @staticmethod
+    def do_waiting():
+        records = db.session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.waiting).all()
+        for workflow_model in records:
+            processor = WorkflowProcessor(workflow_model)
+            processor.bpmn_workflow.update_waiting_tasks()
+            processor.bpmn_workflow.do_engine_steps()
+
+
+    @staticmethod
     def test_spec(spec_id, validate_study_id=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
