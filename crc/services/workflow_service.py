@@ -288,7 +288,6 @@ class WorkflowService(object):
             data_store = DataStoreModel(file_id=file_id, key=field.id, value=data[field.id])
             db.session.add(data_store)
 
-
     @staticmethod
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
