@@ -48,6 +48,20 @@ class TestStudyApi(BaseTest):
         response = json.loads(rv.get_data(as_text=True))
         self.assertEqual(True, response['result'])
 
+    def test_eval_returns_query(self):
+        """Assures that along with the result, we get the original data and expression.
+        This can be useful if the calling client is caching results and needs to hash the expression and data
+        when it gets returned."""
+        data = '{"expression": "x.y==2", "data": {"x":{"y":2}}}'
+        rv = self.app.put('/v1.0/eval',
+                          data=data, follow_redirects=True,
+                          content_type='application/json',
+                          headers=self.logged_in_headers())
+        self.assert_success(rv)
+        response = json.loads(rv.get_data(as_text=True))
+        self.assertEqual("x.y==2", response['expression'])
+        self.assertEqual({'x': {'y': 2}}, response['data'])
+
 
     def test_eval_expression_with_strings(self):
         """Assures we can use python to process a value expression from the front end"""
