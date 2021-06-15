@@ -1,5 +1,6 @@
 from tests.base_test import BaseTest
 from crc.scripts.reset_workflow import ResetWorkflow
+from crc.api.common import ApiError
 
 
 class TestWorkflowReset(BaseTest):
@@ -20,3 +21,19 @@ class TestWorkflowReset(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
         self.assertEqual('Task_GetName', task.name)
+
+    def test_workflow_reset_missing_name(self):
+        workflow = self.create_workflow('reset_workflow')
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
+
+        with self.assertRaises(ApiError):
+            ResetWorkflow().do_task(first_task, workflow.study_id, workflow.id)
+
+    def test_workflow_reset_bad_name(self):
+        workflow = self.create_workflow('reset_workflow')
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
+
+        with self.assertRaises(ApiError):
+            ResetWorkflow().do_task(first_task, workflow.study_id, workflow.id, workflow_name='bad_workflow_name')
