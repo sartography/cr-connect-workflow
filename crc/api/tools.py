@@ -87,10 +87,7 @@ def evaluate_python_expression(body):
         result = script_engine.eval(body['expression'], body['data'])
         return {"result": result, "expression": body['expression'], "data": body['data']}
     except Exception as e:
-        raise ApiError("expression_error", f"Failed to evaluate the expression '%s'. %s" %
-                       (body['expression'], str(e)),
-                       task_data = body["data"])
-
+        return {"result": False, "expression": body['expression'], "data": body['data'], "error": str(e)}
 
 def send_test_email(subject, address, message, data=None):
     rendered, wrapped = EmailService().get_rendered_content(message, data)

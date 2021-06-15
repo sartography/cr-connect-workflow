@@ -7,6 +7,7 @@ from typing import List
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
@@ -291,8 +292,14 @@ class WorkflowService(object):
     @staticmethod
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
+        data = task.data
+        if field.has_property(Task.FIELD_PROP_REPEAT):
+            # Then you must evaluate the expression based on the data within the group only.
+            group = field.get_property(Task.FIELD_PROP_REPEAT)
+            if group in task.data:
+                data = task.data[group][0]
         try:
-            return task.workflow.script_engine.evaluate_expression(task, expression)
+            return task.workflow.script_engine.eval(expression, data)
         except Exception as e:
             message = f"The field {field.id} contains an invalid expression. {e}"
             raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
@@ -373,7 +380,7 @@ class WorkflowService(object):
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    return {'value': random_choice['id'], 'label': random_choice['name']}
+                    return {'value': random_choice['id'], 'label': random_choice['name'], 'data': random_choice['data']}
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
                     return {'value': random_choice.id, 'label': random_choice.name}
@@ -694,7 +701,7 @@ class WorkflowService(object):
                 raise ApiError.from_task("invalid_enum", f"The label column '{label_column}' does not exist for item {item}",
                                          task=spiff_task)
 
-            options.append({"id": item[value_column], "name": item[label_column], "data": item})
+            options.append(Box({"id": item[value_column], "name": item[label_column], "data": item}))
         return options
 
     @staticmethod
