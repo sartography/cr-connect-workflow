@@ -273,19 +273,34 @@ class WorkflowService(object):
         """Looks through the fields in a submitted form, acting on any properties."""
         if not hasattr(task.task_spec, 'form'): return
         for field in task.task_spec.form.fields:
-            if field.has_property(Task.FIELD_PROP_DOC_CODE) and \
-                    field.type == Task.FIELD_TYPE_FILE:
-                file_id = task.data[field.id]
-                file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
-                doc_code = WorkflowService.evaluate_property(Task.FIELD_PROP_DOC_CODE, field, task)
+            data = task.data
+            if field.has_property(Task.FIELD_PROP_REPEAT):
+                repeat_array = task.data[field.get_property(Task.FIELD_PROP_REPEAT)]
+                for repeat_data in repeat_array:
+                    WorkflowService.__post_process_field(task, field, repeat_data)
+            else:
+                WorkflowService.__post_process_field(task, field, data)
+
+    @staticmethod
+    def __post_process_field(task, field, data):
+        if field.has_property(Task.FIELD_PROP_DOC_CODE) and field.id in data:
+            # This is generally handled by the front end, but it is possible that the file was uploaded BEFORE
+            # the doc_code was correctly set, so this is a stop gap measure to assure we still hit it correctly.
+            file_id = data[field.id]["id"]
+            doc_code = task.workflow.script_engine.eval(field.get_property(Task.FIELD_PROP_DOC_CODE), data)
+            file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
+            if(file):
                 file.irb_doc_code = doc_code
                 db.session.commit()
-                #  Set the doc code on the file.
-            if field.has_property(Task.FIELD_PROP_FILE_DATA) and \
-                    field.get_property(Task.FIELD_PROP_FILE_DATA) in task.data:
-                file_id = task.data[field.get_property(Task.FIELD_PROP_FILE_DATA)]
-                data_store = DataStoreModel(file_id=file_id, key=field.id, value=task.data[field.id])
-                db.session.add(data_store)
+            else:
+                # We have a problem, the file doesn't exist, and was removed, but it is still referenced in the data
+                # At least attempt to clear out the data.
+                data = {}
+        if field.has_property(Task.FIELD_PROP_FILE_DATA) and \
+                field.get_property(Task.FIELD_PROP_FILE_DATA) in data:
+            file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
+            data_store = DataStoreModel(file_id=file_id, key=field.id, value=data[field.id])
+            db.session.add(data_store)
 
     @staticmethod
     def evaluate_property(property_name, field, task):
