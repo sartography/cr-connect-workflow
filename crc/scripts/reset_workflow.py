@@ -25,13 +25,8 @@ class ResetWorkflow(Script):
                     workflow_spec_id=workflow_spec.id,
                     study_id=study_id).first()
                 if workflow_model:
-                    try:
-                        workflow_processor = WorkflowProcessor.reset(workflow_model, clear_data=False, delete_files=False)
-                    except Exception as e:
-                        raise ApiError(code='unknown_error',
-                                       message=f'An unknown error occurred: {e}')
-                    else:
-                        return True
+                    workflow_processor = WorkflowProcessor.reset(workflow_model, clear_data=False, delete_files=False)
+                    return workflow_processor
                 else:
                     raise ApiError(code='missing_workflow_model',
                                    message=f'No WorkflowModel returned. \
