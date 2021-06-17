@@ -2,12 +2,14 @@ import json
 import unittest
 from unittest.mock import patch
 
+from sqlalchemy import func
+
 from tests.base_test import BaseTest
 
 from crc import session, app
 from crc.api.common import ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStudySchema
-from crc.models.workflow import WorkflowSpecModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.workflow_service import WorkflowService
 
 
@@ -15,8 +17,11 @@ class TestWorkflowSpecValidation(BaseTest):
 
     def validate_workflow(self, workflow_name):
         spec_model = self.load_test_spec(workflow_name)
+        total_workflows = session.query(WorkflowModel).count()
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assert_success(rv)
+        total_workflows_after = session.query(WorkflowModel).count()
+        self.assertEqual(total_workflows, total_workflows_after, "No rogue workflow exists after validation.")
         json_data = json.loads(rv.get_data(as_text=True))
         return ApiErrorSchema(many=True).load(json_data)
 
@@ -59,10 +64,7 @@ class TestWorkflowSpecValidation(BaseTest):
         workflows = session.query(WorkflowSpecModel).all()
         errors = []
         for w in workflows:
-            rv = self.app.get('/v1.0/workflow-specification/%s/validate' % w.id,
-                              headers=self.logged_in_headers())
-            self.assert_success(rv)
-            json_data = json.loads(rv.get_data(as_text=True))
+            json_data = self.validate_workflow(w.name)
             errors.extend(ApiErrorSchema(many=True).load(json_data))
         self.assertEqual(0, len(errors), json.dumps(errors))
 
@@ -86,6 +88,7 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("workflow_validation_error", errors[0]['code'])
         self.assertEqual("StartEvent_1", errors[0]['task_id'])
         self.assertEqual("invalid_spec.bpmn", errors[0]['file_name'])
+
 
     def test_invalid_script(self):
         self.load_example_data()

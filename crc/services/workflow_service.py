@@ -7,6 +7,7 @@ from typing import List
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
@@ -81,11 +82,12 @@ class WorkflowService(object):
         return workflow_model
 
     @staticmethod
-    def delete_test_data():
+    def delete_test_data(workflow: WorkflowModel):
+        db.session.delete(workflow)
+        # Also, delete any test study or user models that may have been created.
         for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
             db.session.commit()
-
         user = db.session.query(UserModel).filter_by(uid="test").first()
         if user:
             db.session.delete(user)
@@ -103,60 +105,56 @@ class WorkflowService(object):
           """
 
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
-
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
-        except WorkflowException as we:
+            count = 0
+
+            while not processor.bpmn_workflow.is_completed():
+                if count < 100:  # check for infinite loop
+                    try:
+                        processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
+                        exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until) 
+                        if (exit_task != None):
+                                WorkflowService.delete_test_data()
+                                raise ApiError.from_task("validation_break",
+                                            f"The validation has been exited early on task '{exit_task.task_spec.name}' and was parented by ", 
+                                            exit_task.parent)
+                        tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
+                        for task in tasks:
+                            if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
+                                raise ApiError.from_task("invalid_role",
+                                            f"This task is in a lane called '{task.task_spec.lane}', The "
+                                            f" current task data must have information mapping this role to "
+                                            f" a unique user id.", task)
+                            task_api = WorkflowService.spiff_task_to_api_task(
+                                task,
+                                add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
+                            # make sure forms have a form key
+                            if hasattr(task_api, 'form') and task_api.form is not None and task_api.form.key == '':
+                                raise ApiError(code='missing_form_key',
+                                            message='Forms must include a Form Key.',
+                                            task_id=task.id,
+                                            task_name=task.get_name())
+                            WorkflowService.populate_form_with_random_data(task, task_api, required_only)
+                            processor.complete_task(task)
+                            if test_until == task.task_spec.name:
+                                WorkflowService.delete_test_data()
+                                raise ApiError.from_task("validation_break",
+                                            f"The validation has been exited early on task '{task.task_spec.name}' and was parented by ",
+                                            task.parent)
+                        count += 1
+                    except WorkflowException as we:
+                        WorkflowService.delete_test_data()
+                        raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
+                else:
+                    raise ApiError.from_task(code='validation_loop',
+                                            message=f'There appears to be an infinite loop in the validation. Task is {task.task_spec.description}',
+                                            task=task)
+
             WorkflowService.delete_test_data()
-            raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
-
-        count = 0
-        escaped = False 
-
-        while not processor.bpmn_workflow.is_completed() and not escaped:
-            if count < 100:  # check for infinite loop
-                try:
-                    processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
-                    exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until) 
-                    if (exit_task != None):
-                            WorkflowService.delete_test_data()
-                            raise ApiError.from_task("validation_break",
-                                        f"The validation has been exited early on task '{exit_task.task_spec.name}' and was parented by ", 
-                                        exit_task.parent)
-                    tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
-                    for task in tasks:
-                        if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
-                            raise ApiError.from_task("invalid_role",
-                                           f"This task is in a lane called '{task.task_spec.lane}', The "
-                                           f" current task data must have information mapping this role to "
-                                           f" a unique user id.", task)
-                        task_api = WorkflowService.spiff_task_to_api_task(
-                            task,
-                            add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
-                        # make sure forms have a form key
-                        if hasattr(task_api, 'form') and task_api.form is not None and task_api.form.key == '':
-                            raise ApiError(code='missing_form_key',
-                                           message='Forms must include a Form Key.',
-                                           task_id=task.id,
-                                           task_name=task.get_name())
-                        WorkflowService.populate_form_with_random_data(task, task_api, required_only)
-                        processor.complete_task(task)
-                        if test_until == task.task_spec.name:
-                            WorkflowService.delete_test_data()
-                            raise ApiError.from_task("validation_break",
-                                        f"The validation has been exited early on task '{task.task_spec.name}' and was parented by ",
-                                        task.parent)
-                    count += 1
-                except WorkflowException as we:
-                    WorkflowService.delete_test_data()
-                    raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
-            else:
-                raise ApiError.from_task(code='validation_loop',
-                                         message=f'There appears to be an infinite loop in the validation. Task is {task.task_spec.description}',
-                                         task=task)
-
-        WorkflowService.delete_test_data()
-        WorkflowService._process_documentation(processor.bpmn_workflow.last_task.parent.parent)
+            WorkflowService._process_documentation(processor.bpmn_workflow.last_task.parent.parent)
+        finally:
+            WorkflowService.delete_test_data(workflow_model)
         return processor.bpmn_workflow.last_task.data
 
     @staticmethod
@@ -305,8 +303,14 @@ class WorkflowService(object):
     @staticmethod
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
+        data = task.data
+        if field.has_property(Task.FIELD_PROP_REPEAT):
+            # Then you must evaluate the expression based on the data within the group only.
+            group = field.get_property(Task.FIELD_PROP_REPEAT)
+            if group in task.data:
+                data = task.data[group][0]
         try:
-            return task.workflow.script_engine.evaluate_expression(task, expression)
+            return task.workflow.script_engine.eval(expression, data)
         except Exception as e:
             message = f"The field {field.id} contains an invalid expression. {e}"
             raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
@@ -387,7 +391,7 @@ class WorkflowService(object):
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    return {'value': random_choice['id'], 'label': random_choice['name']}
+                    return {'value': random_choice['id'], 'label': random_choice['name'], 'data': random_choice['data']}
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
                     return {'value': random_choice.id, 'label': random_choice.name}
@@ -708,7 +712,7 @@ class WorkflowService(object):
                 raise ApiError.from_task("invalid_enum", f"The label column '{label_column}' does not exist for item {item}",
                                          task=spiff_task)
 
-            options.append({"id": item[value_column], "name": item[label_column], "data": item})
+            options.append(Box({"id": item[value_column], "name": item[label_column], "data": item}))
         return options
 
     @staticmethod
