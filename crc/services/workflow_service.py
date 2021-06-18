@@ -17,6 +17,7 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask, MultiChoice
 from SpiffWorkflow.util.deep_merge import DeepMerge
+from SpiffWorkflow.util.metrics import timeit
 
 from jinja2 import Template
 
@@ -93,6 +94,7 @@ class WorkflowService(object):
             db.session.delete(user)
 
     @staticmethod
+    @timeit
     def test_spec(spec_id, validate_study_id=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data

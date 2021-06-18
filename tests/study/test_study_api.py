@@ -101,7 +101,6 @@ class TestStudyApi(BaseTest):
 
         # TODO: WRITE A TEST FOR STUDY FILES
 
-
     def test_add_study(self):
         self.load_example_data()
         study = self.add_test_study()
@@ -113,7 +112,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study["ind_number"], db_study.ind_number)
         self.assertEqual(study["user_uid"], db_study.user_uid)
 
-        workflow_spec_count =session.query(WorkflowSpecModel).count()
+        workflow_spec_count = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == False).count()
         workflow_count = session.query(WorkflowModel).filter(WorkflowModel.study_id == study['id']).count()
         self.assertEqual(workflow_spec_count, workflow_count)
 
