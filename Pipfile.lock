@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f9adbddfa5111269c992c664198c1d182f44d73d8552a69bfd0af5d12d839e92"
+            "sha256": "ac8021b2a0adfb019c4bc714c5e9a6c11cc0f2cbd0725228aaf2b8bd71603646"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -30,13 +30,6 @@
             ],
             "index": "pypi",
             "version": "==1.6.5"
-        },
-        "amqp": {
-            "hashes": [
-                "sha256:03e16e94f2b34c31f8bf1206d8ddd3ccaa4c315f7f6a1879b7b1210d229568c2",
-                "sha256:493a2ac6788ce270a2f6a765b017299f60c1998f5a8617908ee9be082f7300fb"
-            ],
-            "version": "==5.0.6"
         },
         "aniso8601": {
             "hashes": [
@@ -79,33 +72,11 @@
             ],
             "version": "==4.9.3"
         },
-        "billiard": {
-            "hashes": [
-                "sha256:299de5a8da28a783d51b197d496bef4f1595dd023a93a4f59dde1886ae905547",
-                "sha256:87103ea78fa6ab4d5c751c4909bcff74617d985de7fa8b672cf8618afd5a875b"
-            ],
-            "version": "==3.6.4.0"
-        },
         "blinker": {
             "hashes": [
                 "sha256:471aee25f3992bd325afa3772f1063dbdbbca947a041b8b89466dc00d606f8b6"
             ],
             "version": "==1.4"
-        },
-        "cached-property": {
-            "hashes": [
-                "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130",
-                "sha256:df4f613cf7ad9a588cc381aaf4a512d26265ecebd5eb9e1ba12f1319eb85a6a0"
-            ],
-            "markers": "python_version < '3.8'",
-            "version": "==1.5.2"
-        },
-        "celery": {
-            "hashes": [
-                "sha256:54436cd97b031bf2e08064223240e2a83d601d9414bcb1b702f94c6c33c29485",
-                "sha256:b5399d76cf70d5cfac3ec993f8796ec1aa90d4cef55972295751f384758a80d7"
-            ],
-            "version": "==5.1.1"
         },
         "certifi": {
             "hashes": [
@@ -177,30 +148,10 @@
         },
         "click": {
             "hashes": [
-                "sha256:d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a",
-                "sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc"
+                "sha256:8c04c11192119b1ef78ea049e0a6f0463e4c48ef00a30160c704337586f3ad7a",
+                "sha256:fba402a4a47334742d782209a7c79bc448911afe1149d07bdabdf480b3e2f4b6"
             ],
-            "version": "==7.1.2"
-        },
-        "click-didyoumean": {
-            "hashes": [
-                "sha256:112229485c9704ff51362fe34b2d4f0b12fc71cc20f6d2b3afabed4b8bfa6aeb"
-            ],
-            "version": "==0.0.3"
-        },
-        "click-plugins": {
-            "hashes": [
-                "sha256:46ab999744a9d831159c3411bb0c79346d94a444df9a3a3742e9ed63645f264b",
-                "sha256:5d262006d3222f5057fd81e1623d4443e41dcda5dc815c06b442aa3c02889fc8"
-            ],
-            "version": "==1.1.1"
-        },
-        "click-repl": {
-            "hashes": [
-                "sha256:94b3fbbc9406a236f176e0506524b2937e4b23b6f4c0c0b2a0a83f8a64e9194b",
-                "sha256:cd12f68d745bf6151210790540b4cb064c7b13e571bc64b6957d98d120dacfd8"
-            ],
-            "version": "==0.2.0"
+            "version": "==8.0.1"
         },
         "clickclick": {
             "hashes": [
@@ -215,13 +166,6 @@
                 "sha256:da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9"
             ],
             "version": "==0.9.1"
-        },
-        "configparser": {
-            "hashes": [
-                "sha256:85d5de102cfe6d14a5172676f09d19c465ce63d6019cf0a4ef13385fc535e828",
-                "sha256:af59f2cdd7efbdd5d111c1976ecd0b82db9066653362f0962d7bf1d3ab89a1fa"
-            ],
-            "version": "==5.0.2"
         },
         "connexion": {
             "extras": [
@@ -397,12 +341,6 @@
             ],
             "version": "==2.5.1"
         },
-        "future": {
-            "hashes": [
-                "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"
-            ],
-            "version": "==0.18.2"
-        },
         "greenlet": {
             "hashes": [
                 "sha256:03f28a5ea20201e70ab70518d151116ce939b412961c33827519ce620957d44c",
@@ -529,13 +467,6 @@
                 "sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a"
             ],
             "version": "==3.2.0"
-        },
-        "kombu": {
-            "hashes": [
-                "sha256:01481d99f4606f6939cdc9b637264ed353ee9e3e4f62cfb582324142c41a572d",
-                "sha256:e2dedd8a86c9077c350555153825a31e456a0dc20c15d5751f00137ec9c75f0a"
-            ],
-            "version": "==5.1.0"
         },
         "ldap3": {
             "hashes": [
@@ -775,13 +706,6 @@
             "index": "pypi",
             "version": "==1.1.5"
         },
-        "prompt-toolkit": {
-            "hashes": [
-                "sha256:08360ee3a3148bdb5163621709ee322ec34fc4375099afa4bbf751e9b7b7fa4f",
-                "sha256:7089d8d2938043508aa9420ec18ce0922885304cddae87fb96eebca942299f88"
-            ],
-            "version": "==3.0.19"
-        },
         "psycopg2-binary": {
             "hashes": [
                 "sha256:0b7dae87f0b729922e06f85f667de7bf16455d411971b2043bbd9577af9d1975",
@@ -889,13 +813,6 @@
                 "sha256:2e636185d9eb976a18a8a8e96efce62f2905fea90041958d8cc2a189756ebf3e"
             ],
             "version": "==0.17.3"
-        },
-        "python-box": {
-            "hashes": [
-                "sha256:4ed4ef5d34de505a65c01e3f1911de8cdb29484fcae0c035141dce535c6c194a",
-                "sha256:f2a531f9f5bbef078c175fad6abb31e9b59d40d121ea79993197e6bb221c6be6"
-            ],
-            "version": "==5.3.0"
         },
         "python-dateutil": {
             "hashes": [
@@ -1067,8 +984,8 @@
             "version": "==1.1.5"
         },
         "spiffworkflow": {
-            "editable": true,
-            "path": "./../SpiffWorkflow"
+            "git": "https://github.com/sartography/SpiffWorkflow.git",
+            "ref": "2e0696bb7d0805b180112d0512e26c51c6fa557f"
         },
         "sqlalchemy": {
             "hashes": [
@@ -1129,26 +1046,12 @@
             ],
             "version": "==1.26.5"
         },
-        "vine": {
-            "hashes": [
-                "sha256:4c9dceab6f76ed92105027c49c823800dd33cacce13bdedc5b914e3514b7fb30",
-                "sha256:7d3b1624a953da82ef63462013bbd271d3eb75751489f9807598e8f340bd637e"
-            ],
-            "version": "==5.0.0"
-        },
         "waitress": {
             "hashes": [
                 "sha256:29af5a53e9fb4e158f525367678b50053808ca6c21ba585754c77d790008c746",
                 "sha256:69e1f242c7f80273490d3403c3976f3ac3b26e289856936d1f620ed48f321897"
             ],
             "version": "==2.0.0"
-        },
-        "wcwidth": {
-            "hashes": [
-                "sha256:beb4802a9cebb9144e99086eff703a642a13d6a0052920003a230f3294bbe784",
-                "sha256:c4d647b99872929fdb7bdcaa4fbe7f01413ed3d98077df798530e5b04f116c83"
-            ],
-            "version": "==0.2.5"
         },
         "webob": {
             "hashes": [
