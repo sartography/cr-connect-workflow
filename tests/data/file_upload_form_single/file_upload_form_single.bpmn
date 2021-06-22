@@ -16,33 +16,23 @@
 OGC will upload the Non-Funded Executed Agreement after it has been negotiated by OSP contract negotiator.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="file_type" type="enum" defaultValue="AD_CoCApp">
-            <camunda:value id="AD_CoCApp" name="Ancillary Documents / Case Report Form" />
-            <camunda:value id="AD_CoCAppr" name="Ancillary Documents / CoC Approval" />
-          </camunda:formField>
-          <camunda:formField id="Some_File" label="Upload File" type="file">
-            <camunda:properties>
-              <camunda:property id="group" value="PCRApproval" />
-              <camunda:property id="doc_code" value="file_type" />
-            </camunda:properties>
-          </camunda:formField>
+          <camunda:formField id="AD_CoCApp" label="Upload File" type="file" />
           <camunda:formField id="Language" label="Language" type="string" defaultValue="Engish">
             <camunda:properties>
               <camunda:property id="group" value="PCRApproval" />
-              <camunda:property id="file_data" value="Some_File" />
+              <camunda:property id="file_data" value="AD_CoCApp" />
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="Date" label="Version Date" type="date">
             <camunda:properties>
               <camunda:property id="group" value="PCRApproval" />
-              <camunda:property id="file_data" value="Some_File" />
+              <camunda:property id="file_data" value="AD_CoCApp" />
             </camunda:properties>
           </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0ea9hvd</bpmn:incoming>
       <bpmn:outgoing>Flow_0t55959</bpmn:outgoing>
-      <bpmn:standardLoopCharacteristics />
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_0t55959" sourceRef="Activity_0neioh9" targetRef="EndEvent_14p904o" />
   </bpmn:process>

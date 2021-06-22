@@ -113,6 +113,7 @@ class File(object):
                                                        doc_dictionary[model.irb_doc_code]['category3']]))
             instance.description = doc_dictionary[model.irb_doc_code]['description']
             instance.download_name = "/".join([instance.category, model.name])
+            instance.document = doc_dictionary[model.irb_doc_code]
         else:
             instance.category = ""
             instance.description = ""
@@ -147,7 +148,8 @@ class FileSchema(Schema):
         fields = ["id", "name", "is_status", "is_reference", "content_type",
                   "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
                   "irb_doc_code", "last_modified", "latest_version", "type", "categories",
-                  "description", "category", "download_name", "size", "data_store"]
+                  "description", "category", "download_name", "size", "data_store",
+                  "document"]
 
         unknown = INCLUDE
     type = EnumField(FileType)

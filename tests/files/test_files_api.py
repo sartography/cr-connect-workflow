@@ -273,6 +273,22 @@ class TestFilesApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(len(json_data), 1)
 
+    def test_add_file_returns_document_metadata(self):
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form_single')
+        processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        correct_name = task.task_spec.form.fields[0].id
+
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual('Ancillary Document', json_data['document']['category1'])
+        self.assertEqual('CRC', json_data['document']['Who Uploads?'])
 
     def test_delete_file(self):
         self.load_example_data()
