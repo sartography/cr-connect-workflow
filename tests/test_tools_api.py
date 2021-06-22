@@ -5,7 +5,7 @@ from tests.base_test import BaseTest
 from crc import app, mail
 
 
-class TestStudyApi(BaseTest):
+class TestToolsApi(BaseTest):
 
     def test_render_markdown(self):
         template = "My name is {{name}}"
@@ -41,7 +41,7 @@ class TestStudyApi(BaseTest):
     def test_eval_hide_expression(self):
         """Assures we can use python to process a hide expression from the front end"""
         rv = self.app.put('/v1.0/eval',
-                          data='{"expression": "x.y==2", "data": {"x":{"y":2}}}', follow_redirects=True,
+                          data='{"expression": "x.y==2", "data": {"x":{"y":2}}, "key": 1234}', follow_redirects=True,
                           content_type='application/json',
                           headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -49,10 +49,10 @@ class TestStudyApi(BaseTest):
         self.assertEqual(True, response['result'])
 
     def test_eval_returns_query(self):
-        """Assures that along with the result, we get the original data and expression.
+        """Assures that along with the result, we get the key and expression.
         This can be useful if the calling client is caching results and needs to hash the expression and data
         when it gets returned."""
-        data = '{"expression": "x.y==2", "data": {"x":{"y":2}}}'
+        data = '{"expression": "x.y==2", "data": {"x":{"y":2}}, "key":1234}'
         rv = self.app.put('/v1.0/eval',
                           data=data, follow_redirects=True,
                           content_type='application/json',
@@ -60,14 +60,15 @@ class TestStudyApi(BaseTest):
         self.assert_success(rv)
         response = json.loads(rv.get_data(as_text=True))
         self.assertEqual("x.y==2", response['expression'])
-        self.assertEqual({'x': {'y': 2}}, response['data'])
+        self.assertEqual(1234, response['key'])
 
 
     def test_eval_expression_with_strings(self):
         """Assures we can use python to process a value expression from the front end"""
         rv = self.app.put('/v1.0/eval',
                           data='{"expression": "\'Hello, \' + user.first_name + \' \' + user.last_name + \'!!!\'", '
-                               '"data": {"user":{"first_name": "Trillian", "last_name": "Astra"}}}',
+                               '"data": {"user":{"first_name": "Trillian", "last_name": "Astra"}},'
+                               '"key":1234}',
                           follow_redirects=True,
                           content_type='application/json',
                           headers=self.logged_in_headers())
@@ -100,7 +101,7 @@ CR Connect
     def test_eval_to_boolean_expression_with_dot_notation(self):
         """Assures we can use python to process a value expression from the front end"""
         rv = self.app.put('/v1.0/eval',
-                          data='{"expression": "test.value", "data": {"test":{"value": true}}}',
+                          data='{"expression": "test.value", "data": {"test":{"value": true}}, "key": 1234}',
                           follow_redirects=True,
                           content_type='application/json',
                           headers=self.logged_in_headers())
