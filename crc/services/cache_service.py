@@ -1,29 +1,10 @@
 import time
 
+from SpiffWorkflow import Task
+
 cache_store = {}
 
 import time
-
-
-def firsttime():
-    return time.time()
-
-def sincetime(txt,lasttime):
-    thistime=firsttime()
-    print('%2.4f sec | %s' % (thistime-lasttime, txt))
-    return thistime
-
-def timeit(f):
-
-    def timed(*args, **kw):
-
-        ts = time.time()
-        result = f(*args, **kw)
-        te = time.time()
-        print('%2.4f sec | func:%r args:[%r, %r] ' % (te-ts, f.__name__, args, kw))
-        return result
-
-    return timed
 
 # first pass - meant to be down and dirty
 def purge_cache(now):

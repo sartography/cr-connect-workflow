@@ -10,7 +10,7 @@
         <camunda:formData>
           <camunda:formField id="empty_select" label="Select One" type="enum">
             <camunda:properties>
-              <camunda:property id="spreadsheet.name" value="empty_spreadsheet.xls" />
+              <camunda:property id="spreadsheet.name" value="empty_spreadsheet.xlsx" />
               <camunda:property id="spreadsheet.value.column" value="COMPANY_ID" />
               <camunda:property id="spreadsheet.label.column" value="COMPANY_NAME" />
             </camunda:properties>

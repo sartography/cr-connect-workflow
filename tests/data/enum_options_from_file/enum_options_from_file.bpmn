@@ -14,7 +14,7 @@
         <camunda:formData>
           <camunda:formField id="AllTheNames" label="Select a value" type="enum">
             <camunda:properties>
-              <camunda:property id="spreadsheet.name" value="customer_list.xls" />
+              <camunda:property id="spreadsheet.name" value="customer_list.xlsx" />
               <camunda:property id="spreadsheet.value.column" value="CUSTOMER_NUMBER" />
               <camunda:property id="spreadsheet.label.column" value="CUSTOMER_NAME" />
             </camunda:properties>

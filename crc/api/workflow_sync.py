@@ -1,5 +1,7 @@
 import hashlib
 import pandas as pd
+from pandas._libs.missing import NA
+
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
@@ -288,7 +290,7 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
     changedfiles['new'] = False
     changedfiles.loc[changedfiles.index.isin(left['filename']), 'new'] = True
     changedfiles.loc[changedfiles.index.isin(right['filename']),'new'] = True
-    changedfiles = changedfiles.replace({pd.np.nan: None})
+    changedfiles = changedfiles.replace({NA: None})
     # return the list as a dict, let swagger convert it to json
     if as_df:
         return changedfiles
