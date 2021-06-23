@@ -88,10 +88,10 @@ class WorkflowService(object):
         # Also, delete any test study or user models that may have been created.
         for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
-            db.session.commit()
         user = db.session.query(UserModel).filter_by(uid="test").first()
         if user:
             db.session.delete(user)
+        db.session.commit()
 
     @staticmethod
     @timeit
