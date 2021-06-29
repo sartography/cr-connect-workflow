@@ -2,6 +2,8 @@ import hashlib
 import json
 import os
 from datetime import datetime
+
+import pandas as pd
 from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
@@ -9,6 +11,7 @@ from lxml import etree
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from lxml.etree import XMLSyntaxError
 from pandas import ExcelFile
+from pandas._libs.missing import NA
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 
@@ -144,6 +147,10 @@ class FileService(object):
         data_model = FileService.get_reference_file_data(reference_file_name)
         xls = ExcelFile(data_model.data, engine='openpyxl')
         df = xls.parse(xls.sheet_names[0])
+        df = df.convert_dtypes()
+        df = pd.DataFrame(df).dropna(how='all')  # Drop null rows
+        df = pd.DataFrame(df).replace({NA: None})  # replace NA with None.
+
         for c in int_columns:
             df[c] = df[c].fillna(0)
             df = df.astype({c: 'Int64'})

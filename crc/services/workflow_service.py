@@ -17,6 +17,7 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask, MultiChoice
 from SpiffWorkflow.util.deep_merge import DeepMerge
+from SpiffWorkflow.util.metrics import timeit
 
 from jinja2 import Template
 
@@ -24,7 +25,7 @@ from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.data_store import DataStoreModel
-from crc.models.file import LookupDataModel, FileModel
+from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
@@ -87,10 +88,10 @@ class WorkflowService(object):
         # Also, delete any test study or user models that may have been created.
         for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
-            db.session.commit()
         user = db.session.query(UserModel).filter_by(uid="test").first()
         if user:
             db.session.delete(user)
+        db.session.commit()
 
     @staticmethod
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
@@ -289,7 +290,8 @@ class WorkflowService(object):
                 # At least attempt to clear out the data.
                 data = {}
         if field.has_property(Task.FIELD_PROP_FILE_DATA) and \
-                field.get_property(Task.FIELD_PROP_FILE_DATA) in data:
+                field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
+                field.id in data:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
             data_store = DataStoreModel(file_id=file_id, key=field.id, value=data[field.id])
             db.session.add(data_store)
@@ -415,9 +417,14 @@ class WorkflowService(object):
         elif field.type == 'boolean':
             return random.choice([True, False])
         elif field.type == 'file':
-            # fixme: produce some something sensible for files.
-            return random.randint(1, 100)
-            # fixme: produce some something sensible for files.
+            doc_code = field.id
+            if field.has_property('doc_code'):
+                doc_code = WorkflowService.evaluate_property('doc_code', field, task)
+            file_model = FileModel(name="test.png",
+                                   irb_doc_code = field.id)
+            doc_dict = FileService.get_doc_dictionary()
+            file = File.from_models(file_model, None, doc_dict)
+            return FileSchema().dump(file)
         elif field.type == 'files':
             return random.randrange(1, 100)
         else:

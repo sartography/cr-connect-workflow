@@ -108,14 +108,9 @@ class File(object):
         instance.irb_doc_code = model.irb_doc_code
         instance.type = model.type
         if model.irb_doc_code  and model.irb_doc_code in doc_dictionary:
-            instance.category = "/".join(filter(None, [doc_dictionary[model.irb_doc_code]['category1'],
-                                                       doc_dictionary[model.irb_doc_code]['category2'],
-                                                       doc_dictionary[model.irb_doc_code]['category3']]))
-            instance.description = doc_dictionary[model.irb_doc_code]['description']
-            instance.download_name = "/".join([instance.category, model.name])
+            instance.document = doc_dictionary[model.irb_doc_code]
         else:
-            instance.category = ""
-            instance.description = ""
+            instance.document = {}
         if data_model:
             instance.last_modified = data_model.date_created
             instance.latest_version = data_model.version
@@ -146,9 +141,8 @@ class FileSchema(Schema):
         model = File
         fields = ["id", "name", "is_status", "is_reference", "content_type",
                   "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
-                  "irb_doc_code", "last_modified", "latest_version", "type", "categories",
-                  "description", "category", "download_name", "size", "data_store"]
-
+                  "irb_doc_code", "last_modified", "latest_version", "type", "size", "data_store",
+                  "document"]
         unknown = INCLUDE
     type = EnumField(FileType)
 

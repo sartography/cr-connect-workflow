@@ -3,7 +3,9 @@ import re
 from collections import OrderedDict
 
 import pandas as pd
-from pandas import ExcelFile, np
+import numpy
+from pandas import ExcelFile
+from pandas._libs.missing import NA
 from sqlalchemy import desc
 from sqlalchemy.sql.functions import GenericFunction
 
@@ -142,9 +144,12 @@ class LookupService(object):
          in a way that can be searched and returned via an api call - rather than sending the full set of
           options along with the form.  It will only open the file and process the options if something has
           changed.  """
-        xls = ExcelFile(data_model.data)
+        xls = ExcelFile(data_model.data, engine='openpyxl')
         df = xls.parse(xls.sheet_names[0])  # Currently we only look at the fist sheet.
-        df = pd.DataFrame(df).replace({np.nan: None})
+        df = df.convert_dtypes()
+        df = pd.DataFrame(df).dropna(how='all')  # Drop null rows
+        df = pd.DataFrame(df).replace({NA: None})
+
         if value_column not in df:
             raise ApiError("invalid_enum",
                            "The file %s does not contain a column named % s" % (data_model.file_model.name,

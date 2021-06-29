@@ -1,6 +1,7 @@
 import re
 
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
+from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
 import shlex
 from datetime import datetime
@@ -28,7 +29,6 @@ from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc import app
 from crc.services.user_service import UserService
-from crc.services.cache_service import timeit, firsttime, sincetime
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.

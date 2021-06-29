@@ -85,9 +85,9 @@ def evaluate_python_expression(body):
     try:
         script_engine = CustomBpmnScriptEngine()
         result = script_engine.eval(body['expression'], body['data'])
-        return {"result": result, "expression": body['expression'], "data": body['data']}
+        return {"result": result, "expression": body['expression'], "key": body['key']}
     except Exception as e:
-        return {"result": False, "expression": body['expression'], "data": body['data'], "error": str(e)}
+        return {"result": False, "expression": body['expression'], "key": body['key'], "error": str(e)}
 
 def send_test_email(subject, address, message, data=None):
     rendered, wrapped = EmailService().get_rendered_content(message, data)

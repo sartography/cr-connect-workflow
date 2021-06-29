@@ -1,11 +1,8 @@
 from flask_marshmallow.sqla import SQLAlchemyAutoSchema
-from marshmallow import EXCLUDE
-from marshmallow_sqlalchemy import ModelSchema
 from sqlalchemy import func
-import marshmallow
-from marshmallow import INCLUDE, fields
 
-from crc import db, ma
+from crc import db
+
 
 class DataStoreModel(db.Model):
     __tablename__ = 'data_store'
