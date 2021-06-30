@@ -366,6 +366,7 @@ class WorkflowProcessor(object):
 
     def do_engine_steps(self, exit_at = None):
         try:
+            self.bpmn_workflow.refresh_waiting_tasks()
             self.bpmn_workflow.do_engine_steps(exit_at = exit_at)
         except WorkflowTaskExecException as we:
             raise ApiError.from_task("task_error", str(we), we.task)

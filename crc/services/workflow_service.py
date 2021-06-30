@@ -94,6 +94,18 @@ class WorkflowService(object):
         db.session.commit()
 
     @staticmethod
+    def do_waiting():
+        records = db.session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.waiting).all()
+        for workflow_model in records:
+            print('processing workflow %d'%workflow_model.id)
+            processor = WorkflowProcessor(workflow_model)
+            processor.bpmn_workflow.refresh_waiting_tasks()
+            processor.bpmn_workflow.do_engine_steps()
+            processor.save()
+
+
+    @staticmethod
+    @timeit
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
