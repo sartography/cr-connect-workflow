@@ -1,7 +1,8 @@
 from flask_marshmallow.sqla import SQLAlchemyAutoSchema
 from sqlalchemy import func
 
-from crc import db, ma
+from crc import db
+
 
 class DataStoreModel(db.Model):
     __tablename__ = 'data_store'

@@ -80,7 +80,7 @@ sphinxcontrib-serializinghtml==1.1.4
 spiffworkflow
 sqlalchemy==1.3.20
 swagger-ui-bundle==0.0.8
-urllib3==1.26.4
+urllib3==1.26.5
 waitress==1.4.4
 webob==1.8.6
 webtest==2.0.35

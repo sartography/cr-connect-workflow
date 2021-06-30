@@ -1,3 +1,4 @@
+import hashlib
 import io
 import json
 
@@ -78,16 +79,15 @@ def send_email(subject, address, body, data=None):
 def evaluate_python_expression(body):
     """Evaluate the given python expression, returning its result.  This is useful if the
     front end application needs to do real-time processing on task data. If for instance
-    there is a hide expression that is based on a previous value in the same form."""
+    there is a hide expression that is based on a previous value in the same form.
+    The response includes both the result, and a hash of the original query, subsequent calls
+    of the same hash are unnecessary. """
     try:
         script_engine = CustomBpmnScriptEngine()
         result = script_engine.eval(body['expression'], body['data'])
-        return {"result": result}
+        return {"result": result, "expression": body['expression'], "key": body['key']}
     except Exception as e:
-        raise ApiError("expression_error", f"Failed to evaluate the expression '%s'. %s" %
-                       (body['expression'], str(e)),
-                       task_data = body["data"])
-
+        return {"result": False, "expression": body['expression'], "key": body['key'], "error": str(e)}
 
 def send_test_email(subject, address, message, data=None):
     rendered, wrapped = EmailService().get_rendered_content(message, data)
