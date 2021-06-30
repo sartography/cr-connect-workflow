@@ -46,7 +46,7 @@ xlrd = "*"
 xlsxwriter = "*"
 pygithub = "*"
 python-levenshtein = "*"
-
+apscheduler = "*"
 
 [requires]
 python_version = "3.8"
