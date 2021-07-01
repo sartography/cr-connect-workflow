@@ -30,6 +30,8 @@ from crc.services.file_service import FileService
 from crc import app
 from crc.services.user_service import UserService
 
+from difflib import SequenceMatcher
+
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.
     It will execute python code read in from the bpmn.  It will also make any scripts in the
@@ -64,9 +66,21 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                            f'please correct the following:'
                            f' {script}, {e.msg}')
         except NameError as e:
-            raise ApiError('name_error',
-                            f'something you are referencing does not exist:'
-                            f' {script}, {e}')
+            def get_most_similar(task_data, name_error):
+                bad_variable = str(name_error)[6:-16]
+                highest_ratio = 0
+                most_similar = None
+                for item in task_data:
+                    ratio = SequenceMatcher(None, item, bad_variable).ratio()
+                    if ratio > highest_ratio:
+                        most_similar = item
+                        highest_ratio = ratio
+                return most_similar, int(highest_ratio*100)
+            most_similar, highest_ratio = get_most_similar(data, e)
+            error_message = f'something you are referencing does not exist: {script}, {e}.'
+            if highest_ratio > 50:
+                error_message += f' Did you mean \'{most_similar}\'?'
+            raise ApiError('name_error', error_message)
 
 
     def evaluate_expression(self, task, expression):
