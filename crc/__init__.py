@@ -55,7 +55,7 @@ def process_waiting_tasks():
     with app.app_context():
         WorkflowService.do_waiting()
 
-scheduler.add_job(process_waiting_tasks,'interval',minutes=1)
+scheduler.add_job(process_waiting_tasks,'interval',minutes=5)
 scheduler.start()
 
 
