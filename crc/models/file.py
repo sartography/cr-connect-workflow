@@ -69,6 +69,7 @@ class FileDataModel(db.Model):
     date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     file_model = db.relationship("FileModel", foreign_keys=[file_model_id])
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
 
