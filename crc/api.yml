@@ -82,7 +82,7 @@ paths:
         schema :
           type : integer
     get:
-      operationId: crc.api.file.get_document_directory
+      operationId: crc.api.document.get_document_directory
       summary: Returns a directory of all files for study in a nested structure
       tags:
         - Document Categories

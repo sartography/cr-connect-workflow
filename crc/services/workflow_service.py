@@ -30,6 +30,7 @@ from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
@@ -97,12 +98,15 @@ class WorkflowService(object):
     def do_waiting():
         records = db.session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.waiting).all()
         for workflow_model in records:
-            print('processing workflow %d'%workflow_model.id)
-            processor = WorkflowProcessor(workflow_model)
-            processor.bpmn_workflow.refresh_waiting_tasks()
-            processor.bpmn_workflow.do_engine_steps()
-            processor.save()
-
+            # fixme:  Try catch with a very explicit error about the study, workflow and task that failed.
+            try:
+                app.logger.info('Processing workflow %s' % workflow_model.id)
+                processor = WorkflowProcessor(workflow_model)
+                processor.bpmn_workflow.refresh_waiting_tasks()
+                processor.bpmn_workflow.do_engine_steps()
+                processor.save()
+            except:
+                app.logger.error('Failed to process workflow')
 
     @staticmethod
     @timeit
@@ -424,7 +428,7 @@ class WorkflowService(object):
                 doc_code = WorkflowService.evaluate_property('doc_code', field, task)
             file_model = FileModel(name="test.png",
                                    irb_doc_code = field.id)
-            doc_dict = FileService.get_doc_dictionary()
+            doc_dict = DocumentService.get_dictionary()
             file = File.from_models(file_model, None, doc_dict)
             return FileSchema().dump(file)
         elif field.type == 'files':

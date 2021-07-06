@@ -10,6 +10,7 @@ from crc.models.protocol_builder import ProtocolBuilderInvestigatorType
 from crc.models.study import StudyModel, StudySchema
 from crc.api import workflow as workflow_api
 from crc.scripts.script import Script
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
@@ -168,8 +169,8 @@ Please note this is just a few examples, ALL known document types are returned i
         """For validation only, pretend no results come back from pb"""
         self.check_args(args, 2)
         # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
-        FileService.get_reference_file_data(FileService.DOCUMENT_LIST)
-        FileService.get_reference_file_data(FileService.INVESTIGATOR_LIST)
+        FileService.get_reference_file_data(DocumentService.DOCUMENT_LIST)
+        FileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
         # we call the real do_task so we can
         # seed workflow validations with settings from studies in PB Mock
         # in order to test multiple paths thru the workflow
