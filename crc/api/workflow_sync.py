@@ -159,6 +159,7 @@ def create_or_update_local_spec(remote,workflow_spec_id):
             localcategory.name = specdict['category']['name']
             localcategory.display_name = specdict['category']['display_name']
             localcategory.display_order = specdict['category']['display_order']
+            localcategory.library = False
             session.add(localcategory)
         localspec.category = localcategory
 

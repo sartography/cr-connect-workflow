@@ -15,6 +15,7 @@ class WorkflowSpecCategoryModel(db.Model):
     name = db.Column(db.String)
     display_name = db.Column(db.String)
     display_order = db.Column(db.Integer)
+    library = db.Column(db.Boolean)
 
 
 class WorkflowSpecCategoryModelSchema(SQLAlchemyAutoSchema):
