@@ -31,8 +31,7 @@ from crc.services.workflow_processor import WorkflowProcessor
 
 class StudyService(object):
     """Provides common tools for working with a Study"""
-    """Provides consistent management and rules for storing, retrieving and processing files."""
-    INVESTIGATOR_LIST = "investigators.xlsx"
+    INVESTIGATOR_LIST = "investigators.xlsx"  # A reference document containing details about what investigators to show, and when.
 
     @staticmethod
     def get_studies_for_user(user):

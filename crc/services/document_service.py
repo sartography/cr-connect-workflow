@@ -5,6 +5,12 @@ from crc.services.lookup_service import LookupService
 
 
 class DocumentService(object):
+    """The document service provides details about the types of documents that can be uploaded to a workflow.
+    This metadata about different document types is managed in an Excel spreadsheet, which can be uploaded at any
+    time to change which documents are accepted, and it allows us to categorize these documents.  At a minimum,
+    the spreadsheet should contain the columns 'code', 'category1', 'category2', 'category3', 'description' and 'id',
+    code is required for all rows in the table, the other fields are optional. """
+
     DOCUMENT_LIST = "irb_documents.xlsx"
 
     @staticmethod
