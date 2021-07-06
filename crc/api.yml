@@ -516,6 +516,12 @@ paths:
         description: Optional id of study to test under different scenarios
         schema:
           type: string
+      - name: test_until
+        in: query
+        required: false
+        description: Optional name of task to stop validating at 
+        schema:
+          type: string
     get:
       operationId: crc.api.workflow.validate_workflow_specification
       summary: Loads and attempts to execute a Workflow Specification, returning a list of errors encountered

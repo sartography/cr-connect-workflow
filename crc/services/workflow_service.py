@@ -110,10 +110,12 @@ class WorkflowService(object):
 
     @staticmethod
     @timeit
-    def test_spec(spec_id, validate_study_id=None, required_only=False):
+    def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
           output form the last task if successful.
+
+          test_until
 
           required_only can be set to true, in which case this will run the
           spec, only completing the required fields, rather than everything.
@@ -122,36 +124,44 @@ class WorkflowService(object):
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
-
             count = 0
+
             while not processor.bpmn_workflow.is_completed():
-                processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
-                processor.bpmn_workflow.do_engine_steps()
-                tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
-                for task in tasks:
-                    if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
-                        raise ApiError.from_task("invalid_role",
-                                       f"This task is in a lane called '{task.task_spec.lane}', The "
-                                       f" current task data must have information mapping this role to "
-                                       f" a unique user id.", task)
-                    task_api = WorkflowService.spiff_task_to_api_task(
-                        task,
-                        add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
-                    # make sure forms have a form key
-                    if hasattr(task_api, 'form') and task_api.form is not None and task_api.form.key == '':
-                        raise ApiError(code='missing_form_key',
-                                       message='Forms must include a Form Key.',
-                                       task_id=task.id,
-                                       task_name=task.get_name())
-                    WorkflowService._process_documentation(task)
-                    WorkflowService.populate_form_with_random_data(task, task_api, required_only)
-                    processor.complete_task(task)
-                count += 1
-                if count >= 100:
-                    raise ApiError.from_task(code='validation_loop',
-                                             message=f'There appears to be an infinite loop in the validation. Task is {task.task_spec.description}',
-                                             task=task)
+                    processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
+                    exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until) 
+                    if (exit_task != None):
+                            raise ApiError.from_task("validation_break",
+                                        f"The validation has been exited early on task '{exit_task.task_spec.name}' and was parented by ", 
+                                        exit_task.parent)
+                    tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
+                    for task in tasks:
+                        if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
+                            raise ApiError.from_task("invalid_role",
+                                        f"This task is in a lane called '{task.task_spec.lane}', The "
+                                        f" current task data must have information mapping this role to "
+                                        f" a unique user id.", task)
+                        task_api = WorkflowService.spiff_task_to_api_task(
+                            task,
+                            add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
+                        # make sure forms have a form key
+                        if hasattr(task_api, 'form') and task_api.form is not None and task_api.form.key == '':
+                            raise ApiError(code='missing_form_key',
+                                        message='Forms must include a Form Key.',
+                                        task_id=task.id,
+                                        task_name=task.get_name())
+                        WorkflowService.populate_form_with_random_data(task, task_api, required_only)
+                        processor.complete_task(task)
+                        if test_until == task.task_spec.name:
+                            raise ApiError.from_task("validation_break",
+                                        f"The validation has been exited early on task '{task.task_spec.name}' and was parented by ",
+                                        task.parent)
+                    count += 1
+                    if count >= 100:
+                        raise ApiError.from_task(code='validation_loop',
+                                                message=f'There appears to be an infinite loop in the validation. Task is {task.task_spec.description}',
+                                                task=task)
             WorkflowService._process_documentation(processor.bpmn_workflow.last_task.parent.parent)
+
         except WorkflowException as we:
             raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
         finally:
