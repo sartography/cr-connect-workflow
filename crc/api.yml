@@ -510,7 +510,7 @@ paths:
         description: The unique id of an existing workflow specification to validate.
         schema:
           type: string
-      - name: validate_study_id
+      - name: study_id
         in: query
         required: false
         description: Optional id of study to test under different scenarios

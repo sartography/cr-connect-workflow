@@ -53,21 +53,15 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
         try:
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
+                augment_methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
-                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
+                augment_methods = Script.generate_augmented_list(task, study_id, workflow_id)
 
-            super().execute(task, script, data, externalMethods=augmentMethods)
-        except SyntaxError as e:
-            raise ApiError('syntax_error',
-                           f'Something is wrong with your python script '
-                           f'please correct the following:'
-                           f' {script}, {e.msg}')
-        except NameError as e:
-            raise ApiError('name_error',
-                            f'something you are referencing does not exist:'
-                            f' {script}, {e}')
-
+            super().execute(task, script, data, external_methods=augment_methods)
+        except WorkflowException as e:
+            raise e
+        except Exception as e:
+            raise WorkflowTaskExecException(task, f' {script}, {e}', e)
 
     def evaluate_expression(self, task, expression):
         """
@@ -86,7 +80,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             else:
                 augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
             exp, valid = self.validateExpression(expression)
-            return self._eval(exp, externalMethods=augmentMethods, **task.data)
+            return self._eval(exp, external_methods=augmentMethods, **task.data)
 
         except Exception as e:
             raise WorkflowTaskExecException(task,
@@ -331,8 +325,8 @@ class WorkflowProcessor(object):
             spec = parser.get_spec(process_id)
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
-                           message="Failed to parse Workflow Specification '%s'. \n" % workflow_spec_id +
-                                   "Error is %s. \n" % str(ve),
+                           message="Failed to parse the Workflow Specification. " +
+                                   "Error is '%s.'" % str(ve),
                            file_name=ve.filename,
                            task_id=ve.id,
                            tag=ve.tag)

@@ -159,8 +159,9 @@ class LookupService(object):
         xls = ExcelFile(data_model.data, engine='openpyxl')
         df = xls.parse(xls.sheet_names[0])  # Currently we only look at the fist sheet.
         df = df.convert_dtypes()
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')] # Drop unnamed columns.
         df = pd.DataFrame(df).dropna(how='all')  # Drop null rows
-        df = pd.DataFrame(df).replace({NA: None})
+        df = pd.DataFrame(df).replace({NA: ''})
 
         if value_column not in df:
             raise ApiError("invalid_enum",
