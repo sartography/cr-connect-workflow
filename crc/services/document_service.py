@@ -11,7 +11,7 @@ class DocumentService(object):
     the spreadsheet should contain the columns 'code', 'category1', 'category2', 'category3', 'description' and 'id',
     code is required for all rows in the table, the other fields are optional. """
 
-    DOCUMENT_LIST = "documents.xlsx"
+    DOCUMENT_LIST = "irb_documents.xlsx"
 
     @staticmethod
     def is_allowed_document(code):
