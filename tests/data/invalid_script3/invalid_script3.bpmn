@@ -8,12 +8,12 @@
     <bpmn:endEvent id="EndEvent_063bpg6">
       <bpmn:incoming>SequenceFlow_12pf6um</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:scriptTask id="Invalid_Script_Task" name="A Syntax Error">
+    <bpmn:scriptTask id="Invalid_Script_Task" name="An Invalid Variable">
       <bpmn:incoming>SequenceFlow_1pnq3kg</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_12pf6um</bpmn:outgoing>
       <bpmn:script>x = 1
 y = 2
-x + y === a</bpmn:script>
+x + a == 3</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="SequenceFlow_12pf6um" sourceRef="Invalid_Script_Task" targetRef="EndEvent_063bpg6" />
   </bpmn:process>

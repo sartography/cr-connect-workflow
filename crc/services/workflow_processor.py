@@ -52,36 +52,16 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         else:
             workflow_id = None
-
         try:
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
+                augment_methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
-                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
-
-            super().execute(task, script, data, externalMethods=augmentMethods)
-        except SyntaxError as e:
-            raise ApiError('syntax_error',
-                           f'Something is wrong with your python script '
-                           f'please correct the following:'
-                           f' {script}, {e.msg}')
-        except NameError as e:
-            def get_most_similar(task_data, name_error):
-                bad_variable = str(name_error)[6:-16]
-                highest_ratio = 0
-                most_similar = None
-                for item in task_data:
-                    ratio = SequenceMatcher(None, item, bad_variable).ratio()
-                    if ratio > highest_ratio:
-                        most_similar = item
-                        highest_ratio = ratio
-                return most_similar, int(highest_ratio*100)
-            most_similar, highest_ratio = get_most_similar(data, e)
-            error_message = f'something you are referencing does not exist: {script}, {e}.'
-            if highest_ratio > 50:
-                error_message += f' Did you mean \'{most_similar}\'?'
-            raise ApiError('name_error', error_message)
-
+                augment_methods = Script.generate_augmented_list(task, study_id, workflow_id)
+            super().execute(task, script, data, external_methods=augment_methods)
+        except WorkflowException as e:
+            raise e
+        except Exception as e:
+            raise WorkflowTaskExecException(task, f' {script}, {e}', e)
 
     def evaluate_expression(self, task, expression):
         """
@@ -100,7 +80,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             else:
                 augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
             exp, valid = self.validateExpression(expression)
-            return self._eval(exp, externalMethods=augmentMethods, **task.data)
+            return self._eval(exp, external_methods=augmentMethods, **task.data)
 
         except Exception as e:
             raise WorkflowTaskExecException(task,
@@ -345,8 +325,8 @@ class WorkflowProcessor(object):
             spec = parser.get_spec(process_id)
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
-                           message="Failed to parse Workflow Specification '%s'. \n" % workflow_spec_id +
-                                   "Error is %s. \n" % str(ve),
+                           message="Failed to parse the Workflow Specification. " +
+                                   "Error is '%s.'" % str(ve),
                            file_name=ve.filename,
                            task_id=ve.id,
                            tag=ve.tag)
@@ -378,10 +358,10 @@ class WorkflowProcessor(object):
     def get_status(self):
         return self.status_of(self.bpmn_workflow)
 
-    def do_engine_steps(self):
+    def do_engine_steps(self, exit_at = None):
         try:
             self.bpmn_workflow.refresh_waiting_tasks()
-            self.bpmn_workflow.do_engine_steps()
+            self.bpmn_workflow.do_engine_steps(exit_at = exit_at)
         except WorkflowTaskExecException as we:
             raise ApiError.from_task("task_error", str(we), we.task)
 

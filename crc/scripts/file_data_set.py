@@ -3,6 +3,7 @@ from flask import g
 from crc.api.common import ApiError
 from crc.services.data_store_service import DataStoreBase
 from crc.scripts.script import Script
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 
 
@@ -17,17 +18,22 @@ class FileDataSet(Script, DataStoreBase):
         del(kwargs['file_id'])
         return True
 
-    def validate_kw_args(self,**kwargs):
-        if kwargs.get('key',None) is None:
+    def validate_kw_args(self, **kwargs):
+        if kwargs.get('key', None) is None:
             raise ApiError(code="missing_argument",
-                            message=f"The 'file_data_get' script requires a keyword argument of 'key'")
+                           message=f"The 'file_data_get' script requires a keyword argument of 'key'")
+        if kwargs.get('file_id', None) is None:
+            raise ApiError(code="missing_argument",
+                           message=f"The 'file_data_get' script requires a keyword argument of 'file_id'")
+        if kwargs.get('value', None) is None:
+            raise ApiError(code="missing_argument",
+                           message=f"The 'file_data_get' script requires a keyword argument of 'value'")
 
-        if kwargs.get('file_id',None) is None:
-            raise ApiError(code="missing_argument",
-                            message=f"The 'file_data_get' script requires a keyword argument of 'file_id'")
-        if kwargs.get('value',None) is None:
-            raise ApiError(code="missing_argument",
-                            message=f"The 'file_data_get' script requires a keyword argument of 'value'")
+        if kwargs['key'] == 'irb_code' and not DocumentService.is_allowed_document(kwargs.get('value')):
+            raise ApiError("invalid_form_field_key",
+                           "When setting an irb_code, the form field id must match a known document in the "
+                           "irb_docunents.xslx reference file.  This code is not found in that file '%s'" %
+                           kwargs.get('value'))
 
         return True
 

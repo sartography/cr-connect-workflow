@@ -126,7 +126,7 @@ class TestStudyService(BaseTest):
         self.assertEqual("CRC", documents["UVACompl_PRCAppr"]['Who Uploads?'])
         self.assertEqual(0, documents["UVACompl_PRCAppr"]['count'])
         self.assertEqual(True, documents["UVACompl_PRCAppr"]['required'])
-        self.assertEqual('6', documents["UVACompl_PRCAppr"]['id'])
+        self.assertEqual(6, documents["UVACompl_PRCAppr"]['id'])
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_get_documents_has_file_details(self, mock_docs):
