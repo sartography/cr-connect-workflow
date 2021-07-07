@@ -68,6 +68,7 @@ class FileDataModel(db.Model):
     date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     file_model = db.relationship("FileModel", foreign_keys=[file_model_id])
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
 class FileModel(db.Model):
@@ -114,6 +115,7 @@ class File(object):
             instance.last_modified = data_model.date_created
             instance.latest_version = data_model.version
             instance.size = data_model.size
+            instance.user_uid = data_model.user_uid
         else:
             instance.last_modified = None
             instance.latest_version = None
@@ -141,7 +143,7 @@ class FileSchema(Schema):
         fields = ["id", "name", "is_status", "is_reference", "content_type",
                   "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
                   "irb_doc_code", "last_modified", "latest_version", "type", "size", "data_store",
-                  "document"]
+                  "document", "user_uid"]
         unknown = INCLUDE
     type = EnumField(FileType)
 

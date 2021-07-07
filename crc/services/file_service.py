@@ -19,6 +19,7 @@ from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
 from crc.services.cache_service import cache
+from crc.services.user_service import UserService
 import re
 
 
@@ -168,10 +169,14 @@ class FileService(object):
             except XMLSyntaxError as xse:
                 raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_model.name)
 
+        try:
+            user_uid = UserService.current_user().uid
+        except ApiError as ae:
+            user_uid = None
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
             version=version, md5_hash=md5_checksum, date_created=datetime.utcnow(),
-            size=size
+            size=size, user_uid=user_uid
         )
         session.add_all([file_model, new_file_data_model])
         session.commit()
