@@ -112,7 +112,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual(0, len(json.loads(rv.get_data(as_text=True))))
 
     def test_set_reference_file(self):
-        file_name = "irb_documents.xlsx"
+        file_name = "documents.xlsx"
         filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         with open(filepath, 'rb') as myfile:
             file_data = myfile.read()
