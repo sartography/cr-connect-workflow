@@ -147,19 +147,19 @@ class BaseTest(unittest.TestCase):
          otherwise it depends on a small setup for running tests."""
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
-        if use_crc_data:
-            ExampleDataLoader().load_all()
-        elif use_rrt_data:
-            ExampleDataLoader().load_rrt()
-        else:
-            ExampleDataLoader().load_test_data()
-
         # If in production mode, only add the first user.
         if app.config['PRODUCTION']:
             session.add(UserModel(**self.users[0]))
         else:
             for user_json in self.users:
                 session.add(UserModel(**user_json))
+
+        if use_crc_data:
+            ExampleDataLoader().load_all()
+        elif use_rrt_data:
+            ExampleDataLoader().load_rrt()
+        else:
+            ExampleDataLoader().load_test_data()
 
         session.commit()
         for study_json in self.studies:
