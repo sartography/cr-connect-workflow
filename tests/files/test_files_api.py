@@ -126,6 +126,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual(FileType.xlsx, file.type)
         self.assertTrue(file.is_reference)
         self.assertEqual("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", file.content_type)
+        self.assertEqual('dhf8r', json_data['user_uid'])
 
     def test_set_reference_file_bad_extension(self):
         file_name = DocumentService.DOCUMENT_LIST

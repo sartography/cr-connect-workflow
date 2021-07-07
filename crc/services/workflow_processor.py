@@ -7,7 +7,7 @@ import shlex
 from datetime import datetime
 from typing import List
 
-from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
@@ -30,6 +30,8 @@ from crc.services.file_service import FileService
 from crc import app
 from crc.services.user_service import UserService
 
+from difflib import SequenceMatcher
+
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.
     It will execute python code read in from the bpmn.  It will also make any scripts in the
@@ -50,13 +52,11 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         else:
             workflow_id = None
-
         try:
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
                 augment_methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
                 augment_methods = Script.generate_augmented_list(task, study_id, workflow_id)
-
             super().execute(task, script, data, external_methods=augment_methods)
         except WorkflowException as e:
             raise e
@@ -337,6 +337,9 @@ class WorkflowProcessor(object):
         if bpmn_workflow.is_completed():
             return WorkflowStatus.complete
         user_tasks = bpmn_workflow.get_ready_user_tasks()
+        waiting_tasks = bpmn_workflow.get_tasks(Task.WAITING)
+        if len(waiting_tasks) > 0:
+            return WorkflowStatus.waiting
         if len(user_tasks) > 0:
             return WorkflowStatus.user_input_required
         else:
