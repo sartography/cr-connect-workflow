@@ -22,13 +22,16 @@ from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowM
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
+from crc.services.lookup_service import LookupService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
 
 class StudyService(object):
     """Provides common tools for working with a Study"""
+    INVESTIGATOR_LIST = "investigators.xlsx"  # A reference document containing details about what investigators to show, and when.
 
     @staticmethod
     def get_studies_for_user(user):
@@ -77,7 +80,7 @@ class StudyService(object):
         workflow_metas = StudyService._get_workflow_metas(study_id)
         files = FileService.get_files_for_study(study.id)
         files = (File.from_models(model, FileService.get_file_data(model.id),
-                                  FileService.get_doc_dictionary()) for model in files)
+                                  DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.  Don't execute this for Abandoned studies, as
@@ -265,14 +268,14 @@ class StudyService(object):
 
         # Loop through all known document types, get the counts for those files,
         # and use pb_docs to mark those as required.
-        doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
+        doc_dictionary = DocumentService.get_dictionary()
 
         documents = {}
         for code, doc in doc_dictionary.items():
 
-            if ProtocolBuilderService.is_enabled():
+            doc['required'] = False
+            if ProtocolBuilderService.is_enabled() and doc['id']:
                 pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
-                doc['required'] = False
                 if pb_data:
                     doc['required'] = True
 
@@ -282,7 +285,7 @@ class StudyService(object):
             # Make a display name out of categories
             name_list = []
             for cat_key in ['category1', 'category2', 'category3']:
-                if doc[cat_key] not in ['', 'NULL']:
+                if doc[cat_key] not in ['', 'NULL', None]:
                     name_list.append(doc[cat_key])
             doc['display_name'] = ' / '.join(name_list)
 
@@ -320,11 +323,21 @@ class StudyService(object):
         return Box(documents)
 
     @staticmethod
+    def get_investigator_dictionary():
+        """Returns a dictionary of document details keyed on the doc_code."""
+        file_data = FileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
+        lookup_model = LookupService.get_lookup_model_for_file_data(file_data, 'code', 'label')
+        doc_dict = {}
+        for lookup_data in lookup_model.dependencies:
+            doc_dict[lookup_data.value] = lookup_data.data
+        return doc_dict
+
+    @staticmethod
     def get_investigators(study_id, all=False):
         """Convert array of investigators from protocol builder into a dictionary keyed on the type. """
 
         # Loop through all known investigator types as set in the reference file
-        inv_dictionary = FileService.get_reference_data(FileService.INVESTIGATOR_LIST, 'code')
+        inv_dictionary = StudyService.get_investigator_dictionary()
 
         # Get PB required docs
         pb_investigators = ProtocolBuilderService.get_investigators(study_id=study_id)

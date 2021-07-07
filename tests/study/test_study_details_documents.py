@@ -1,4 +1,3 @@
-import json
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 
@@ -15,6 +14,7 @@ from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.scripts.file_data_set import FileDataSet
+from crc.services.document_service import DocumentService
 
 
 class TestStudyDetailsDocumentsScript(BaseTest):
@@ -43,8 +43,8 @@ class TestStudyDetailsDocumentsScript(BaseTest):
 
         # Remove the reference file.
         file_model = db.session.query(FileModel). \
-            filter(FileModel.is_reference == True). \
-            filter(FileModel.name == FileService.DOCUMENT_LIST).first()
+            filter(FileModel.is_reference is True). \
+            filter(FileModel.name == DocumentService.DOCUMENT_LIST).first()
         if file_model:
             db.session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model.id).delete()
             db.session.query(FileModel).filter(FileModel.id == file_model.id).delete()
@@ -71,7 +71,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
 
     def test_load_lookup_data(self):
         self.create_reference_document()
-        dict = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
+        dict = DocumentService.get_dictionary()
         self.assertIsNotNone(dict)
 
     def get_required_docs(self):

@@ -10,8 +10,6 @@ from lxml import etree
 
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from lxml.etree import XMLSyntaxError
-from pandas import ExcelFile
-from pandas._libs.missing import NA
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 
@@ -38,34 +36,6 @@ def camel_to_snake(camel):
 
 
 class FileService(object):
-    """Provides consistent management and rules for storing, retrieving and processing files."""
-    DOCUMENT_LIST = "irb_documents.xlsx"
-    INVESTIGATOR_LIST = "investigators.xlsx"
-
-    __doc_dictionary = None
-
-    @staticmethod
-    def verify_doc_dictionary(dd):
-        """
-        We are currently getting structured information from an XLS file, if someone accidentally
-        changes a header we will have problems later, so we will verify we have the headers we need
-        here
-        """
-        required_fields = ['category1','category2','category3','description']
-
-        # we only need to check the first item, as all of the keys should be the same
-        key = list(dd.keys())[0]
-        for field in required_fields:
-            if field not in dd[key].keys():
-                raise ApiError(code="Invalid document list %s"%FileService.DOCUMENT_LIST,
-                               message='Please check the headers in %s'%FileService.DOCUMENT_LIST)
-
-    @staticmethod
-    def get_doc_dictionary():
-        if not FileService.__doc_dictionary:
-            FileService.__doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
-        FileService.verify_doc_dictionary(FileService.__doc_dictionary)
-        return FileService.__doc_dictionary
 
     @staticmethod
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
@@ -88,10 +58,7 @@ class FileService(object):
 
             return FileService.update_file(file_model, binary_data, content_type)
 
-    @staticmethod
-    def is_allowed_document(code):
-        doc_dict = FileService.get_doc_dictionary()
-        return code in doc_dict
+
 
     @staticmethod
     @cache
@@ -104,12 +71,6 @@ class FileService(object):
     def update_irb_code(file_id, irb_doc_code):
         """Create a new file and associate it with the workflow
         Please note that the irb_doc_code MUST be a known file in the irb_documents.xslx reference document."""
-        if not FileService.is_allowed_document(irb_doc_code):
-            raise ApiError("invalid_form_field_key",
-                           "When uploading files, the form field id must match a known document in the "
-                           "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % irb_doc_code)
-
-        """ """
         file_model = session.query(FileModel)\
             .filter(FileModel.id == file_id).first()
         if file_model is None:
@@ -136,28 +97,6 @@ class FileService(object):
                 irb_doc_code=irb_doc_code
             )
         return FileService.update_file(file_model, binary_data, content_type)
-
-    @staticmethod
-    def get_reference_data(reference_file_name, index_column, int_columns=[]):
-        """ Opens a reference file (assumes that it is xls file) and returns the data as a
-        dictionary, each row keyed on the given index_column name. If there are columns
-          that should be represented as integers, pass these as an array of int_columns, lest
-          you get '1.0' rather than '1'
-          fixme: This is stupid stupid slow.  Place it in the database and just check if it is up to date."""
-        data_model = FileService.get_reference_file_data(reference_file_name)
-        xls = ExcelFile(data_model.data, engine='openpyxl')
-        df = xls.parse(xls.sheet_names[0])
-        df = df.convert_dtypes()
-        df = pd.DataFrame(df).dropna(how='all')  # Drop null rows
-        df = pd.DataFrame(df).replace({NA: None})  # replace NA with None.
-
-        for c in int_columns:
-            df[c] = df[c].fillna(0)
-            df = df.astype({c: 'Int64'})
-        df = df.fillna('')
-        df = df.applymap(str)
-        df = df.set_index(index_column)
-        return json.loads(df.to_json(orient='index'))
 
     @staticmethod
     def get_workflow_files(workflow_id):
