@@ -12,7 +12,7 @@ from sqlalchemy.sql.functions import GenericFunction
 from crc import db
 from crc.api.common import ApiError
 from crc.models.api_models import Task
-from crc.models.file import FileDataModel, LookupFileModel, LookupDataModel
+from crc.models.file import FileModel, FileDataModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecDependencyFile
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
@@ -25,11 +25,14 @@ class TSRank(GenericFunction):
 
 
 class LookupService(object):
-    """Provides tools for doing lookups for auto-complete fields.
-    This can currently take two forms:
+    """Provides tools for doing lookups for auto-complete fields, and rapid access to any
+    uploaded spreadsheets.
+    This can currently take three forms:
     1) Lookup from spreadsheet data associated with a workflow specification.
        in which case we store the spreadsheet data in a lookup table with full
        text indexing enabled, and run searches against that table.
+    2) Lookup from spreadsheet data associated with a specific file.  This allows us
+       to get a lookup model for a specific file object, such as a reference file.
     2) Lookup from LDAP records.  In which case we call out to an external service
        to pull back detailed records and return them.
 
@@ -43,6 +46,14 @@ class LookupService(object):
         workflow_id = spiff_task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
         return LookupService.__get_lookup_model(workflow, spiff_task.task_spec.name, field.id)
+
+    @staticmethod
+    def get_lookup_model_for_file_data(file_data: FileDataModel, value_column, label_column):
+        lookup_model = db.session.query(LookupFileModel).filter(LookupFileModel.file_data_model_id == file_data.id).first()
+        if not lookup_model:
+            logging.warning("!!!! Making a very expensive call to update the lookup model.")
+            lookup_model = LookupService.build_lookup_table(file_data, value_column, label_column)
+        return lookup_model
 
     @staticmethod
     def __get_lookup_model(workflow, task_spec_id, field_id):
@@ -139,7 +150,8 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def build_lookup_table(data_model: FileDataModel, value_column, label_column, workflow_spec_id, task_spec_id, field_id):
+    def build_lookup_table(data_model: FileDataModel, value_column, label_column,
+                           workflow_spec_id=None, task_spec_id=None, field_id=None):
         """ In some cases the lookup table can be very large.  This method will add all values to the database
          in a way that can be searched and returned via an api call - rather than sending the full set of
           options along with the form.  It will only open the file and process the options if something has
@@ -147,8 +159,9 @@ class LookupService(object):
         xls = ExcelFile(data_model.data, engine='openpyxl')
         df = xls.parse(xls.sheet_names[0])  # Currently we only look at the fist sheet.
         df = df.convert_dtypes()
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')] # Drop unnamed columns.
         df = pd.DataFrame(df).dropna(how='all')  # Drop null rows
-        df = pd.DataFrame(df).replace({NA: None})
+        df = pd.DataFrame(df).replace({NA: ''})
 
         if value_column not in df:
             raise ApiError("invalid_enum",

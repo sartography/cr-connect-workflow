@@ -10,7 +10,9 @@ import sentry_sdk
 
 class ApiError(Exception):
     def __init__(self, code, message, status_code=400,
-                 file_name="", task_id="", task_name="", tag="", task_data = {}):
+                 file_name="", task_id="", task_name="", tag="", task_data=None, error_type="", line_number=0,  offset=0):
+        if task_data is None:
+            task_data = {}
         self.status_code = status_code
         self.code = code  # a short consistent string describing the error.
         self.message = message  # A detailed message that provides more information.
@@ -18,8 +20,11 @@ class ApiError(Exception):
         self.task_name = task_name or ""  # OPTIONAL: The name of the task in the BPMN Diagram.
         self.file_name = file_name or ""  # OPTIONAL: The file that caused the error.
         self.tag = tag or ""  # OPTIONAL: The XML Tag that caused the issue.
-        self.task_data = task_data or ""  # OPTIONAL: A snapshot of data connected to the task when error ocurred.
-        if hasattr(g,'user'):
+        self.task_data = task_data or ""  # OPTIONAL: A snapshot of data connected to the task when error occurred.
+        self.line_number = line_number
+        self.offset = offset
+        self.error_type = error_type
+        if hasattr(g, 'user'):
             user = g.user.uid
         else:
             user = 'Unknown'
@@ -29,12 +34,16 @@ class ApiError(Exception):
         Exception.__init__(self, self.message)
 
     @classmethod
-    def from_task(cls, code, message, task, status_code=400):
+    def from_task(cls, code, message, task, status_code=400, line_number=0, offset=0, error_type="", error_line=""):
         """Constructs an API Error with details pulled from the current task."""
         instance = cls(code, message, status_code=status_code)
         instance.task_id = task.task_spec.name or ""
         instance.task_name = task.task_spec.description or ""
         instance.file_name = task.workflow.spec.file or ""
+        instance.line_number = line_number
+        instance.offset = offset
+        instance.error_type = error_type
+        instance.error_line = error_line
 
         # Fixme: spiffworkflow is doing something weird where task ends up referenced in the data in some cases.
         if "task" in task.data:
@@ -61,7 +70,11 @@ class ApiError(Exception):
             so consolidating the code, and doing the best things
             we can with the data we have."""
         if isinstance(exp, WorkflowTaskExecException):
-            return ApiError.from_task(code, message, exp.task)
+            return ApiError.from_task(code, message, exp.task, line_number=exp.line_number,
+                                      offset=exp.offset,
+                                      error_type=exp.exception.__class__.__name__,
+                                      error_line=exp.error_line)
+
         else:
             return ApiError.from_task_spec(code, message, exp.sender)
 
@@ -69,7 +82,7 @@ class ApiError(Exception):
 class ApiErrorSchema(ma.Schema):
     class Meta:
         fields = ("code", "message", "workflow_name", "file_name", "task_name", "task_id",
-                  "task_data", "task_user", "hint")
+                  "task_data", "task_user", "hint", "line_number", "offset", "error_type", "error_line")
 
 
 @app.errorhandler(ApiError)

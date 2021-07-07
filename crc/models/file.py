@@ -1,15 +1,14 @@
 import enum
-from typing import cast
 
-from marshmallow import INCLUDE, EXCLUDE, fields, Schema
+from marshmallow import INCLUDE, EXCLUDE, Schema
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import deferred, relationship
-from crc.models.data_store import DataStoreModel # this is needed by the relationship
 
 from crc import db, ma
+from crc.models.data_store import DataStoreModel
 
 
 class FileType(enum.Enum):
@@ -43,7 +42,7 @@ CONTENT_TYPES = {
     "docx":  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "gif": "image/gif",
     "jpg": "image/jpeg",
-    "md" : "text/plain",
+    "md": "text/plain",
     "pdf": "application/pdf",
     "png": "image/png",
     "ppt": "application/vnd.ms-powerpoint",
@@ -72,7 +71,6 @@ class FileDataModel(db.Model):
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
-
 class FileModel(db.Model):
     __tablename__ = 'file'
     id = db.Column(db.Integer, primary_key=True)
@@ -80,18 +78,19 @@ class FileModel(db.Model):
     type = db.Column(db.Enum(FileType))
     is_status = db.Column(db.Boolean)
     content_type = db.Column(db.String)
-    is_reference = db.Column(db.Boolean, nullable=False, default=False) # A global reference file.
-    primary = db.Column(db.Boolean, nullable=False, default=False) # Is this the primary BPMN in a workflow?
-    primary_process_id = db.Column(db.String, nullable=True) # An id in the xml of BPMN documents, critical for primary BPMN.
+    is_reference = db.Column(db.Boolean, nullable=False, default=False)  # A global reference file.
+    primary = db.Column(db.Boolean, nullable=False, default=False)  # Is this the primary BPMN in a workflow?
+    primary_process_id = db.Column(db.String, nullable=True)  # An id in the xml of BPMN documents, for primary BPMN.
     workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
-    irb_doc_code = db.Column(db.String, nullable=True) # Code reference to the irb_documents.xlsx reference file.
+    irb_doc_code = db.Column(db.String, nullable=True)  # Code reference to the irb_documents.xlsx reference file.
     # A request was made to delete the file, but we can't because there are
     # active approvals or running workflows that depend on it.  So we archive
     # it instead, hide it in the interface.
     is_review = db.Column(db.Boolean, default=False, nullable=True)
     archived = db.Column(db.Boolean, default=False, nullable=False)
-    data_stores = relationship("DataStoreModel", cascade="all,delete", backref="file")
+    data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
+
 
 class File(object):
     @classmethod
@@ -108,7 +107,7 @@ class File(object):
         instance.workflow_id = model.workflow_id
         instance.irb_doc_code = model.irb_doc_code
         instance.type = model.type
-        if model.irb_doc_code  and model.irb_doc_code in doc_dictionary:
+        if model.irb_doc_code and model.irb_doc_code in doc_dictionary:
             instance.document = doc_dictionary[model.irb_doc_code]
         else:
             instance.document = {}
@@ -149,7 +148,6 @@ class FileSchema(Schema):
     type = EnumField(FileType)
 
 
-
 class LookupFileModel(db.Model):
     """Gives us a quick way to tell what kind of lookup is set on a form field.
     Connected to the file data model, so that if a new version of the same file is
@@ -161,7 +159,8 @@ class LookupFileModel(db.Model):
     field_id = db.Column(db.String)
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
     file_data_model_id = db.Column(db.Integer, db.ForeignKey('file_data.id'))
-    dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model", cascade="all, delete, delete-orphan")
+    dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model",
+                                   cascade="all, delete, delete-orphan")
 
 
 class LookupDataModel(db.Model):
@@ -171,7 +170,7 @@ class LookupDataModel(db.Model):
     value = db.Column(db.String)
     label = db.Column(db.String)
     # In the future, we might allow adding an additional "search" column if we want to search things not in label.
-    data = db.Column(db.JSON) # all data for the row is stored in a json structure here, but not searched presently.
+    data = db.Column(db.JSON)  # all data for the row is stored in a json structure here, but not searched presently.
 
     # Assure there is a searchable index on the label column, so we can get fast results back.
     # query with:
@@ -194,7 +193,7 @@ class LookupDataSchema(SQLAlchemyAutoSchema):
         load_instance = True
         include_relationships = False
         include_fk = False  # Includes foreign keys
-        exclude = ['id'] # Do not include the id field, it should never be used via the API.
+        exclude = ['id']  # Do not include the id field, it should never be used via the API.
 
 
 class SimpleFileSchema(ma.Schema):

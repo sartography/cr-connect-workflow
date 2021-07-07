@@ -3,9 +3,6 @@ from tests.base_test import BaseTest
 from crc.services.file_service import FileService
 
 
-
-
-
 class TestDocumentDirectories(BaseTest):
 
     def test_directory_list(self):

@@ -2,6 +2,7 @@ from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileModel
 from crc.scripts.script import Script
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 
 
@@ -9,7 +10,7 @@ class DeleteFile(Script):
 
     @staticmethod
     def process_document_deletion(doc_code, workflow_id, task):
-        if FileService.is_allowed_document(doc_code):
+        if DocumentService.is_allowed_document(doc_code):
             result = session.query(FileModel).filter(
                 FileModel.workflow_id == workflow_id, FileModel.irb_doc_code == doc_code).all()
             if isinstance(result, list) and len(result) > 0 and isinstance(result[0], FileModel):
