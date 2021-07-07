@@ -7,7 +7,7 @@ import shlex
 from datetime import datetime
 from typing import List
 
-from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
@@ -337,6 +337,9 @@ class WorkflowProcessor(object):
         if bpmn_workflow.is_completed():
             return WorkflowStatus.complete
         user_tasks = bpmn_workflow.get_ready_user_tasks()
+        waiting_tasks = bpmn_workflow.get_tasks(Task.WAITING)
+        if len(waiting_tasks) > 0:
+            return WorkflowStatus.waiting
         if len(user_tasks) > 0:
             return WorkflowStatus.user_input_required
         else:
