@@ -121,6 +121,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual(FileType.xls, file.type)
         self.assertTrue(file.is_reference)
         self.assertEqual("application/vnd.ms-excel", file.content_type)
+        self.assertEqual('dhf8r', json_data['user_uid'])
 
     def test_set_reference_file_bad_extension(self):
         file_name = FileService.DOCUMENT_LIST
