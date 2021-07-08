@@ -242,7 +242,8 @@ class StudyService(object):
     def get_categories():
         """Returns a list of category objects, in the correct order."""
         cat_models = db.session.query(WorkflowSpecCategoryModel) \
-            .order_by(WorkflowSpecCategoryModel.display_order).all()
+            .order_by(WorkflowSpecCategoryModel.display_order) \
+            .filter((WorkflowSpecCategoryModel.library == None)|(WorkflowSpecCategoryModel.library ==False)).all()
         categories = []
         for cat_model in cat_models:
             categories.append(Category(cat_model))
