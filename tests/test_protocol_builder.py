@@ -46,7 +46,7 @@ class TestProtocolBuilder(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('study_details.json')
         response = ProtocolBuilderService.get_study_details(self.test_study_id)
         self.assertIsNotNone(response)
-        self.assertEqual(64, len(response))
+        self.assertEqual(65, len(response))
         self.assertEqual('1234', response['IND_1'])
 
     @patch('crc.services.protocol_builder.requests.get')
