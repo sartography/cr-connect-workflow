@@ -233,3 +233,23 @@ class TestStudyService(BaseTest):
         # Both Alex and Aaron are SI, and both should be returned.
         self.assertEqual("ajl2j", investigators['SI']['user_id'])
         self.assertEqual("cah3us", investigators['SI_2']['user_id'])
+
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_get_user_studies(self, mock_details):
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
+
+        user = self.create_user_with_study_and_workflow()
+        studies = StudyService().get_studies_for_user(user)
+        # study_details has a valid REVIEW_TYPE, so we should get 1 study back
+        self.assertEqual(1, len(studies))
+
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_get_user_studies_bad_review_type(self, mock_details):
+        details_response = self.protocol_builder_response('study_details_bad_review_type.json')
+        mock_details.return_value = json.loads(details_response)
+
+        user = self.create_user_with_study_and_workflow()
+        studies = StudyService().get_studies_for_user(user)
+        # study_details has an invalid REVIEW_TYPE, so we should get 0 studies back
+        self.assertEqual(0, len(studies))
