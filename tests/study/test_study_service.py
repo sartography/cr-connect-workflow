@@ -54,17 +54,20 @@ class TestStudyService(BaseTest):
         ExampleDataLoader().load_reference_documents()
         return user
 
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
-    def test_total_tasks_updated(self, mock_docs):
+    def test_total_tasks_updated(self, mock_docs, mock_details):
         """Assure that as a users progress is available when getting a list of studies for that user."""
         app.config['PB_ENABLED'] = True
         docs_response = self.protocol_builder_response('required_docs.json')
         mock_docs.return_value = json.loads(docs_response)
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
 
         user = self.create_user_with_study_and_workflow()
 
         # The load example data script should set us up a user and at least one study, one category, and one workflow.
-        studies = StudyService.get_studies_for_user(user)
+        studies = StudyService().get_studies_for_user(user)
         self.assertTrue(len(studies) == 1)
         self.assertTrue(len(studies[0].categories) == 1)
         self.assertTrue(len(studies[0].categories[0].workflows) == 1)
@@ -82,7 +85,7 @@ class TestStudyService(BaseTest):
         processor.do_engine_steps()
 
         # Assure the workflow is now started, and knows the total and completed tasks.
-        studies = StudyService.get_studies_for_user(user)
+        studies = StudyService().get_studies_for_user(user)
         workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
         # self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
         self.assertTrue(workflow.total_tasks > 0)
@@ -95,21 +98,24 @@ class TestStudyService(BaseTest):
         processor.save()
 
         # Assure the workflow has moved on to the next task.
-        studies = StudyService.get_studies_for_user(user)
+        studies = StudyService().get_studies_for_user(user)
         workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
         self.assertEqual(1, workflow.completed_tasks)
 
         # Get approvals
 
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
-    def test_get_required_docs(self, mock_docs):
+    def test_get_required_docs(self, mock_docs, mock_details):
         app.config['PB_ENABLED'] = True
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('required_docs.json')
         mock_docs.return_value = json.loads(docs_response)
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
 
         user = self.create_user_with_study_and_workflow()
-        studies = StudyService.get_studies_for_user(user)
+        studies = StudyService().get_studies_for_user(user)
         study = studies[0]
 
 
