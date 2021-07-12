@@ -138,10 +138,13 @@ class TestSudySponsorsScript(BaseTest):
         # who is allowed access
 
 
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.requests.get')
-    def test_study_sponsors_script_ensure_access(self, mock_get):
+    def test_study_sponsors_script_ensure_access(self, mock_get, mock_details):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 

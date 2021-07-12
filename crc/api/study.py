@@ -94,7 +94,7 @@ def user_studies():
     """Returns all the studies associated with the current user. """
     user = UserService.current_user(allow_admin_impersonate=True)
     StudyService.synch_with_protocol_builder_if_enabled(user)
-    studies = StudyService.get_studies_for_user(user)
+    studies = StudyService().get_studies_for_user(user)
     results = StudySchema(many=True).dump(studies)
     return results
 

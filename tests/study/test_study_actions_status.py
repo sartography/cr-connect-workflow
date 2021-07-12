@@ -2,6 +2,7 @@ from tests.base_test import BaseTest
 from crc import session
 from crc.models.study import StudyModel, StudyStatus, StudySchema
 import json
+from unittest.mock import patch
 
 
 class TestStudyActionsStatus(BaseTest):
@@ -20,8 +21,11 @@ class TestStudyActionsStatus(BaseTest):
         study_result = session.query(StudyModel).filter(StudyModel.id == study.id).first()
         return study_result
 
-    def test_hold_study(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_hold_study(self, mock_details):
         self.load_example_data()
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
 
         study = session.query(StudyModel).first()
         self.assertEqual(study.status, StudyStatus.in_progress)
@@ -33,8 +37,11 @@ class TestStudyActionsStatus(BaseTest):
         study_result = self.update_study_status(study, study_schema)
         self.assertEqual(StudyStatus.hold, study_result.status)
 
-    def test_abandon_study(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_abandon_study(self, mock_details):
         self.load_example_data()
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
 
         study = session.query(StudyModel).first()
         self.assertEqual(study.status, StudyStatus.in_progress)
@@ -46,8 +53,11 @@ class TestStudyActionsStatus(BaseTest):
         study_result = self.update_study_status(study, study_schema)
         self.assertEqual(StudyStatus.abandoned, study_result.status)
 
-    def test_open_enrollment_study(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_open_enrollment_study(self, mock_details):
         self.load_example_data()
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
 
         study = session.query(StudyModel).first()
         self.assertEqual(study.status, StudyStatus.in_progress)

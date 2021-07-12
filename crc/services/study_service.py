@@ -29,12 +29,19 @@ from crc.services.lookup_service import LookupService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
 
+
 class StudyService(object):
     """Provides common tools for working with a Study"""
     INVESTIGATOR_LIST = "investigators.xlsx"  # A reference document containing details about what investigators to show, and when.
 
     @staticmethod
-    def get_studies_for_user(user):
+    def _is_valid_study(study_id):
+        study_info = ProtocolBuilderService().get_study_details(study_id)
+        if 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3, 23, 24]:
+            return True
+        return False
+
+    def get_studies_for_user(self, user):
         """Returns a list of all studies for the given user."""
         associated = session.query(StudyAssociated).filter_by(uid=user.uid,access=True).all()
         associated_studies = [x.study_id for x in associated]
@@ -43,7 +50,8 @@ class StudyService(object):
 
         studies = []
         for study_model in db_studies:
-            studies.append(StudyService.get_study(study_model.id, study_model,do_status=False))
+            if self._is_valid_study(study_model.id):
+                studies.append(StudyService.get_study(study_model.id, study_model,do_status=False))
         return studies
 
     @staticmethod
