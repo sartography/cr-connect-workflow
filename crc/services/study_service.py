@@ -14,12 +14,12 @@ from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
-from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, LookupFileModel, LookupDataModel
+from crc.models.file import FileModel, File
 from crc.models.ldap import LdapSchema
-from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
-from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
-    IrbStatus, StudyAssociated
-from crc.models.task_event import TaskEventModel, TaskEvent
+from crc.models.protocol_builder import ProtocolBuilderStudy
+from crc.models.study import StudyModel, Study, StudyStatus, Category, \
+    WorkflowMetadata, StudyEventType, StudyEvent, IrbStatus, StudyAssociated
+from crc.models.task_event import TaskEventModel
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
 from crc.services.document_service import DocumentService
