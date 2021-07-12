@@ -98,15 +98,18 @@ class WorkflowService(object):
     def do_waiting():
         records = db.session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.waiting).all()
         for workflow_model in records:
-            # fixme:  Try catch with a very explicit error about the study, workflow and task that failed.
             try:
                 app.logger.info('Processing workflow %s' % workflow_model.id)
                 processor = WorkflowProcessor(workflow_model)
                 processor.bpmn_workflow.refresh_waiting_tasks()
                 processor.bpmn_workflow.do_engine_steps()
                 processor.save()
-            except:
-                app.logger.error('Failed to process workflow')
+            except Exception as e:
+                app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
+                                 (workflow_model.id,
+                                  workflow_model.workflow_spec.name,
+                                  workflow_model.study_id,
+                                  str(e)))
 
     @staticmethod
     @timeit
