@@ -810,7 +810,7 @@ class WorkflowService(object):
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
             mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
             process_name=task.process_name,
-            date=datetime.utcnow(),
+            # date=datetime.utcnow(), <=== For future reference, NEVER do this. Let the database set the time.
         )
         db.session.add(task_event)
         db.session.commit()
