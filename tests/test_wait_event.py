@@ -40,7 +40,7 @@ class TestTimerEvent(BaseTest):
         with self.assertLogs('crc', level='ERROR') as cm:
             WorkflowService.do_waiting()
             self.assertEqual(1, len(cm.output))
-            self.assertRegexpMatches(cm.output[0], "workflow #1")
-            self.assertRegexpMatches(cm.output[0], "study #1")
+            self.assertRegexpMatches(cm.output[0], f"workflow #%i" % workflow.id)
+            self.assertRegexpMatches(cm.output[0], f"study #%i" % workflow.study_id)
 
         self.assertTrue(wf.status == WorkflowStatus.waiting)
