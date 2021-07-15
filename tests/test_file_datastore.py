@@ -49,6 +49,8 @@ class TestFileDatastore(BaseTest):
         # process the form that sets the datastore values
         self.complete_form(workflow, task, {'Study_App_Doc': {'id': file_id},
                                                      'IRB_HSR_Application_Type': {'label': 'Expedited Application'}})
+
+        # assert the data_store was set correctly
         data_store = db.session.query(DataStoreModel).filter(DataStoreModel.file_id==file_id).first()
         self.assertEqual('IRB_HSR_Application_Type', data_store.key)
         self.assertEqual('Expedited Application', data_store.value)
