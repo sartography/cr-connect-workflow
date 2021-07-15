@@ -54,4 +54,3 @@ class TestFileDatastore(BaseTest):
         data_store = db.session.query(DataStoreModel).filter(DataStoreModel.file_id==file_id).first()
         self.assertEqual('IRB_HSR_Application_Type', data_store.key)
         self.assertEqual('Expedited Application', data_store.value)
-        print('test_file_data_store_file_data_property')
