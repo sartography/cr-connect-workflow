@@ -394,7 +394,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
-  /study/{study_id}/associates':
+  /study/{study_id}/associates:
     parameters:
       - name: study_id
         in: path
