@@ -1,10 +1,10 @@
+from tests.base_test import BaseTest
 import json
 from unittest.mock import patch
 import flask
 
 from crc.api.common import ApiError
 from crc.services.user_service import UserService
-from tests.base_test import BaseTest
 
 from crc import session, app
 from crc.models.study import StudyModel
@@ -19,7 +19,11 @@ class TestSudySponsorsScript(BaseTest):
     test_study_id = 1
 
 
-    def test_study_sponsors_script_validation(self):
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_sponsors_script_validation(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
         flask.g.user = UserModel(uid='dhf8r')
         self.load_example_data() # study_info script complains if irb_documents.xls is not loaded
                                  # during the validate phase I'm going to assume that we will never
@@ -134,10 +138,13 @@ class TestSudySponsorsScript(BaseTest):
         # who is allowed access
 
 
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.requests.get')
-    def test_study_sponsors_script_ensure_access(self, mock_get):
+    def test_study_sponsors_script_ensure_access(self, mock_get, mock_details):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
@@ -157,6 +164,33 @@ class TestSudySponsorsScript(BaseTest):
         self.assertEqual(output[0]['id'], 0)
         self.assertEqual(output[0]['user_uid'], 'dhf8r')
         flask.g.user = UserModel(uid='lje5u')
+        flask.g.token = 'my spiffy token'
+        app.config['PB_ENABLED'] = False
+        output = user_studies()
+        self.assertEqual(len(output),0)
+
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_study_sponsors_script_ensure_delete(self, mock_get):
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
+        flask.g.user = UserModel(uid='dhf8r')
+        app.config['PB_ENABLED'] = True
+
+        self.load_example_data()
+        self.create_reference_document()
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("study_sponsors_associates_delete")
+        workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
+        WorkflowService.test_spec("study_sponsors_associates_delete")
+        processor = WorkflowProcessor(workflow_model)
+        processor.do_engine_steps()
+        # change user and make sure we can access the study
+        flask.g.user = UserModel(uid='lb3dp')
+        flask.g.token = 'my spiffy token'
+        app.config['PB_ENABLED'] = False
+        output = user_studies()
+        self.assertEqual(len(output),0)
         flask.g.token = 'my spiffy token'
         app.config['PB_ENABLED'] = False
         output = user_studies()

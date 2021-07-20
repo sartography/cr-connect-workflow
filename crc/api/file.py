@@ -6,24 +6,28 @@ from flask import send_file
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel
+from crc.api.user import verify_token
+from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel, FileType
 from crc.models.workflow import WorkflowSpecModel
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
-
 
 def to_file_api(file_model):
     """Converts a FileModel object to something we can return via the api"""
     return File.from_models(file_model, FileService.get_file_data(file_model.id),
-                            FileService.get_doc_dictionary())
+                            DocumentService.get_dictionary())
 
 
-def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None):
-    if all(v is None for v in [workflow_spec_id, workflow_id, form_field_key]):
+def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None,study_id=None):
+    if all(v is None for v in [workflow_spec_id, workflow_id, form_field_key,study_id]):
         raise ApiError('missing_parameter',
                        'Please specify either a workflow_spec_id or a '
                        'workflow_id with an optional form_field_key')
 
-    file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,
+    if study_id is not None:
+        file_models = FileService.get_files_for_study(study_id=study_id, irb_doc_code=form_field_key)
+    else:
+        file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,
                                         workflow_id=workflow_id,
                                         irb_doc_code=form_field_key)
 
@@ -47,9 +51,16 @@ def add_file(workflow_spec_id=None, workflow_id=None, form_field_key=None):
                                                    name=file.filename, content_type=file.content_type,
                                                    binary_data=file.stream.read())
     elif workflow_spec_id:
+        # check if we have a primary already
+        have_primary = FileModel.query.filter(FileModel.workflow_spec_id==workflow_spec_id, FileModel.type==FileType.bpmn, FileModel.primary==True).all()
+        # set this to primary if we don't already have one
+        if not have_primary:
+            primary = True
+        else:
+            primary = False
         workflow_spec = session.query(WorkflowSpecModel).filter_by(id=workflow_spec_id).first()
         file_model = FileService.add_workflow_spec_file(workflow_spec, file.filename, file.content_type,
-                                                        file.stream.read())
+                                                        file.stream.read(), primary=primary)
     else:
         raise ApiError("invalid_file", "You must supply either a workflow spec id or a workflow_id and form_field_key.")
 
@@ -113,6 +124,22 @@ def get_file_data(file_id, version=None):
         mimetype=file_data.file_model.content_type,
         cache_timeout=-1,  # Don't cache these files on the browser.
         last_modified=file_data.date_created
+    )
+
+
+def get_file_data_link(file_id, auth_token, version=None):
+    if not verify_token(auth_token):
+        raise ApiError('not_authenticated', 'You need to include an authorization token in the URL with this')
+    file_data = FileService.get_file_data(file_id, version)
+    if file_data is None:
+        raise ApiError('no_such_file', 'The file id you provided does not exist')
+    return send_file(
+        io.BytesIO(file_data.data),
+        attachment_filename=file_data.file_model.name,
+        mimetype=file_data.file_model.content_type,
+        cache_timeout=-1,  # Don't cache these files on the browser.
+        last_modified=file_data.date_created,
+        as_attachment = True
     )
 
 

@@ -2,34 +2,41 @@ import hashlib
 import json
 import os
 from datetime import datetime
+
+import pandas as pd
 from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from lxml.etree import XMLSyntaxError
-from pandas import ExcelFile
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 
 from crc import session, app
 from crc.api.common import ApiError
+from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
+from crc.services.cache_service import cache
+from crc.services.user_service import UserService
+import re
+
+
+def camel_to_snake(camel):
+    """
+    make a camelcase from a snakecase
+    with a few things thrown in - we had a case where
+    we were parsing a spreadsheet and using the headings as keys in an object
+    one of the headings was "Who Uploads?"
+    """
+    camel = camel.strip()
+    camel = re.sub(' ', '', camel)
+    camel = re.sub('?', '', camel)
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
 
 
 class FileService(object):
-    """Provides consistent management and rules for storing, retrieving and processing files."""
-    DOCUMENT_LIST = "irb_documents.xlsx"
-    INVESTIGATOR_LIST = "investigators.xlsx"
-
-    __doc_dictionary = None
-
-    @staticmethod
-    def get_doc_dictionary():
-        if not FileService.__doc_dictionary:
-            FileService.__doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
-        return FileService.__doc_dictionary
 
     @staticmethod
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
@@ -52,30 +59,33 @@ class FileService(object):
 
             return FileService.update_file(file_model, binary_data, content_type)
 
-    @staticmethod
-    def is_allowed_document(code):
-        doc_dict = FileService.get_doc_dictionary()
-        return code in doc_dict
+
 
     @staticmethod
+    @cache
     def is_workflow_review(workflow_spec_id):
         files = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id).all()
         review = any([f.is_review for f in files])
         return review
 
+    @staticmethod
+    def update_irb_code(file_id, irb_doc_code):
+        """Create a new file and associate it with the workflow
+        Please note that the irb_doc_code MUST be a known file in the irb_documents.xslx reference document."""
+        file_model = session.query(FileModel)\
+            .filter(FileModel.id == file_id).first()
+        if file_model is None:
+            raise ApiError("invalid_file_id",
+                           "When updating the irb_doc_code for a file, that file_id must already exist "
+                           "This file_id is not found in the database '%d'" % file_id)
+
+        file_model.irb_doc_code = irb_doc_code
+        session.commit()
+        return True
+
 
     @staticmethod
     def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
-        """Create a new file and associate it with the workflow
-        Please note that the irb_doc_code MUST be a known file in the irb_documents.xslx reference document."""
-        if not FileService.is_allowed_document(irb_doc_code):
-            raise ApiError("invalid_form_field_key",
-                           "When uploading files, the form field id must match a known document in the "
-                           "irb_docunents.xslx reference file.  This code is not found in that file '%s'" % irb_doc_code)
-
-        """Assure this is unique to the workflow, task, and document code AND the Name
-           Because we will allow users to upload multiple files for the same form field
-            in some cases """
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_id == workflow_id)\
             .filter(FileModel.name == name)\
@@ -88,24 +98,6 @@ class FileService(object):
                 irb_doc_code=irb_doc_code
             )
         return FileService.update_file(file_model, binary_data, content_type)
-
-    @staticmethod
-    def get_reference_data(reference_file_name, index_column, int_columns=[]):
-        """ Opens a reference file (assumes that it is xls file) and returns the data as a
-        dictionary, each row keyed on the given index_column name. If there are columns
-          that should be represented as integers, pass these as an array of int_columns, lest
-          you get '1.0' rather than '1'
-          fixme: This is stupid stupid slow.  Place it in the database and just check if it is up to date."""
-        data_model = FileService.get_reference_file_data(reference_file_name)
-        xls = ExcelFile(data_model.data, engine='openpyxl')
-        df = xls.parse(xls.sheet_names[0])
-        for c in int_columns:
-            df[c] = df[c].fillna(0)
-            df = df.astype({c: 'Int64'})
-        df = df.fillna('')
-        df = df.applymap(str)
-        df = df.set_index(index_column)
-        return json.loads(df.to_json(orient='index'))
 
     @staticmethod
     def get_workflow_files(workflow_id):
@@ -142,6 +134,8 @@ class FileService(object):
             order_by(desc(FileDataModel.date_created)).first()
 
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
+        size = len(binary_data)
+
         if (latest_data_model is not None) and (md5_checksum == latest_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.  If it is arhived,
             # then de-arvhive it.
@@ -175,9 +169,14 @@ class FileService(object):
             except XMLSyntaxError as xse:
                 raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_model.name)
 
+        try:
+            user_uid = UserService.current_user().uid
+        except ApiError as ae:
+            user_uid = None
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
-            version=version, md5_hash=md5_checksum, date_created=datetime.now()
+            version=version, md5_hash=md5_checksum, date_created=datetime.utcnow(),
+            size=size, user_uid=user_uid
         )
         session.add_all([file_model, new_file_data_model])
         session.commit()
@@ -356,6 +355,7 @@ class FileService(object):
                     session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
                     session.query(LookupFileModel).filter_by(id=lf.id).delete()
             session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
+            session.query(DataStoreModel).filter_by(file_id=file_id).delete()
             session.query(FileModel).filter_by(id=file_id).delete()
             session.commit()
         except IntegrityError as ie:

@@ -15,7 +15,7 @@ class TestLookupService(BaseTest):
     def test_lookup_returns_good_error_on_bad_field(self):
         spec = BaseTest.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
-        file_model = session.query(FileModel).filter(FileModel.name == "customer_list.xls").first()
+        file_model = session.query(FileModel).filter(FileModel.name == "customer_list.xlsx").first()
         file_data_model = session.query(FileDataModel).filter(FileDataModel.file_model == file_model).first()
         with self.assertRaises(ApiError):
             LookupService.lookup(workflow, "Task_Enum_Lookup", "not_the_right_field", "sam", limit=10)
@@ -36,7 +36,7 @@ class TestLookupService(BaseTest):
     def test_updates_to_file_cause_lookup_rebuild(self):
         spec = BaseTest.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
-        file_model = session.query(FileModel).filter(FileModel.name == "sponsors.xls").first()
+        file_model = session.query(FileModel).filter(FileModel.name == "sponsors.xlsx").first()
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
@@ -47,9 +47,9 @@ class TestLookupService(BaseTest):
 
         # Update the workflow specification file.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data',
-                                 'enum_options_with_search', 'sponsors_modified.xls')
+                                 'enum_options_with_search', 'sponsors_modified.xlsx')
         file = open(file_path, 'rb')
-        FileService.update_file(file_model, file.read(), CONTENT_TYPES['xls'])
+        FileService.update_file(file_model, file.read(), CONTENT_TYPES['xlsx'])
         file.close()
 
         # restart the workflow, so it can pick up the changes.

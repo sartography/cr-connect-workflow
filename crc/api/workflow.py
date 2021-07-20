@@ -6,7 +6,7 @@ from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModel, LookupDataSchema
-from crc.models.study import StudyModel, WorkflowMetadata
+from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
 from crc.models.user import UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
@@ -46,22 +46,15 @@ def get_workflow_specification(spec_id):
     return WorkflowSpecModelSchema().dump(spec)
 
 
-def validate_workflow_specification(spec_id):
-    errors = {}
+def validate_workflow_specification(spec_id, study_id=None, test_until=None):
     try:
-        WorkflowService.test_spec(spec_id)
+        WorkflowService.test_spec(spec_id, study_id, test_until)
+        WorkflowService.test_spec(spec_id, study_id, test_until, required_only=True)
     except ApiError as ae:
-        ae.message = "When populating all fields ... \n" + ae.message
-        errors['all'] = ae
-    try:
-        # Run the validation twice, the second time, just populate the required fields.
-        WorkflowService.test_spec(spec_id, required_only=True)
-    except ApiError as ae:
-        ae.message = "When populating only required fields ... \n" + ae.message
-        errors['required'] = ae
-    interpreted_errors = ValidationErrorService.interpret_validation_errors(errors)
-    return ApiErrorSchema(many=True).dump(interpreted_errors)
-
+        error = ae
+        error = ValidationErrorService.interpret_validation_error(error)
+        return ApiErrorSchema(many=True).dump([error])
+    return []
 
 def update_workflow_specification(spec_id, body):
     if spec_id is None:
@@ -101,6 +94,24 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
+def get_workflow_from_spec(spec_id):
+    workflow_model = WorkflowService.get_workflow_from_spec(spec_id, g.user)
+    processor = WorkflowProcessor(workflow_model)
+
+    processor.do_engine_steps()
+    processor.save()
+    WorkflowService.update_task_assignments(processor)
+
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
+    return WorkflowApiSchema().dump(workflow_api_model)
+
+
+def standalone_workflow_specs():
+    schema = WorkflowSpecModelSchema(many=True)
+    specs = WorkflowService.get_standalone_workflow_specs()
+    return schema.dump(specs)
+
+
 def get_workflow(workflow_id, do_engine_steps=True):
     """Retrieve workflow based on workflow_id, and return it in the last saved State.
        If do_engine_steps is False, return the workflow without running any engine tasks or logging any events. """
@@ -116,11 +127,11 @@ def get_workflow(workflow_id, do_engine_steps=True):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def restart_workflow(workflow_id, clear_data=False):
+def restart_workflow(workflow_id, clear_data=False, delete_files=False):
     """Restart a workflow with the latest spec.
        Clear data allows user to restart the workflow without previous data."""
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    WorkflowProcessor.reset(workflow_model, clear_data=clear_data)
+    WorkflowProcessor.reset(workflow_model, clear_data=clear_data, delete_files=delete_files)
     return get_workflow(workflow_model.id)
 
 
@@ -145,7 +156,8 @@ def get_task_events(action = None, workflow = None, study = None):
         study = session.query(StudyModel).filter(StudyModel.id == event.study_id).first()
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == event.workflow_id).first()
         workflow_meta = WorkflowMetadata.from_workflow(workflow)
-        task_events.append(TaskEvent(event, study, workflow_meta))
+        if study and study.status in [StudyStatus.open_for_enrollment, StudyStatus.in_progress]:
+            task_events.append(TaskEvent(event, study, workflow_meta))
     return TaskEventSchema(many=True).dump(task_events)
 
 
@@ -184,12 +196,10 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
     if workflow_model is None:
         raise ApiError("invalid_workflow_id", "The given workflow id is not valid.", status_code=404)
 
-    elif workflow_model.study is None:
-        raise ApiError("invalid_study", "There is no study associated with the given workflow.", status_code=404)
-
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
+    spiff_task.workflow.script_engine = processor.bpmn_workflow.script_engine
     _verify_user_and_role(processor, spiff_task)
     user = UserService.current_user(allow_admin_impersonate=False) # Always log as the real user.
 
@@ -199,7 +209,7 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
 
-    if terminate_loop:
+    if terminate_loop and spiff_task.is_looping():
         spiff_task.terminate_loop()
 
     # Extract the details specific to the form submitted
@@ -228,6 +238,7 @@ def __update_task(processor, task, data, user):
     here because we need to do it multiple times when completing all tasks in
     a multi-instance task"""
     task.update_data(data)
+    WorkflowService.post_process_form(task)  # some properties may update the data store.
     processor.complete_task(task)
     processor.do_engine_steps()
     processor.save()

@@ -7,6 +7,7 @@ from typing import List
 
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
@@ -16,17 +17,20 @@ from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask, MultiChoice
 from SpiffWorkflow.util.deep_merge import DeepMerge
-from box import Box
+from SpiffWorkflow.util.metrics import timeit
+
 from jinja2 import Template
 
 from crc import db, app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
-from crc.models.file import LookupDataModel
+from crc.models.data_store import DataStoreModel
+from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
@@ -52,77 +56,119 @@ class WorkflowService(object):
      handles the testing of a workflow specification by completing it with
      random selections, attempting to mimic a front end as much as possible. """
 
+    from crc.services.user_service import UserService
     @staticmethod
-    def make_test_workflow(spec_id):
-        user = db.session.query(UserModel).filter_by(uid="test").first()
+    def make_test_workflow(spec_id, validate_study_id=None):
+        try:
+            user = UserService.current_user()
+        except ApiError as e:
+            user = None
+        if not user:
+            user = db.session.query(UserModel).filter_by(uid="test").first()
         if not user:
             db.session.add(UserModel(uid="test"))
-        study = db.session.query(StudyModel).filter_by(user_uid="test").first()
-        if not study:
-            db.session.add(StudyModel(user_uid="test", title="test"))
             db.session.commit()
+            user = db.session.query(UserModel).filter_by(uid="test").first()
+        if validate_study_id:
+            study = db.session.query(StudyModel).filter_by(id=validate_study_id).first()
+        else:
+            study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
+        if not study:
+            db.session.add(StudyModel(user_uid=user.uid, title="test"))
+            db.session.commit()
+            study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        workflow_spec_id=spec_id,
-                                       last_updated=datetime.now(),
+                                       last_updated=datetime.utcnow(),
                                        study=study)
         return workflow_model
 
     @staticmethod
-    def delete_test_data():
+    def delete_test_data(workflow: WorkflowModel):
+        db.session.delete(workflow)
+        # Also, delete any test study or user models that may have been created.
         for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
-            db.session.commit()
-
         user = db.session.query(UserModel).filter_by(uid="test").first()
         if user:
             db.session.delete(user)
+        db.session.commit()
 
     @staticmethod
-    def test_spec(spec_id, required_only=False):
+    def do_waiting():
+        records = db.session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.waiting).all()
+        for workflow_model in records:
+            try:
+                app.logger.info('Processing workflow %s' % workflow_model.id)
+                processor = WorkflowProcessor(workflow_model)
+                processor.bpmn_workflow.refresh_waiting_tasks()
+                processor.bpmn_workflow.do_engine_steps()
+                processor.save()
+            except Exception as e:
+                app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
+                                 (workflow_model.id,
+                                  workflow_model.workflow_spec.name,
+                                  workflow_model.study_id,
+                                  str(e)))
+
+    @staticmethod
+    @timeit
+    def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
           output form the last task if successful.
+
+          test_until
 
           required_only can be set to true, in which case this will run the
           spec, only completing the required fields, rather than everything.
           """
 
-        workflow_model = WorkflowService.make_test_workflow(spec_id)
-
+        workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
+            count = 0
+
+            while not processor.bpmn_workflow.is_completed():
+                    processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
+                    exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until) 
+                    if (exit_task != None):
+                            raise ApiError.from_task("validation_break",
+                                        f"The validation has been exited early on task '{exit_task.task_spec.name}' and was parented by ", 
+                                        exit_task.parent)
+                    tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
+                    for task in tasks:
+                        if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
+                            raise ApiError.from_task("invalid_role",
+                                        f"This task is in a lane called '{task.task_spec.lane}', The "
+                                        f" current task data must have information mapping this role to "
+                                        f" a unique user id.", task)
+                        task_api = WorkflowService.spiff_task_to_api_task(
+                            task,
+                            add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
+                        # make sure forms have a form key
+                        if hasattr(task_api, 'form') and task_api.form is not None and task_api.form.key == '':
+                            raise ApiError(code='missing_form_key',
+                                        message='Forms must include a Form Key.',
+                                        task_id=task.id,
+                                        task_name=task.get_name())
+                        WorkflowService.populate_form_with_random_data(task, task_api, required_only)
+                        processor.complete_task(task)
+                        if test_until == task.task_spec.name:
+                            raise ApiError.from_task("validation_break",
+                                        f"The validation has been exited early on task '{task.task_spec.name}' and was parented by ",
+                                        task.parent)
+                    count += 1
+                    if count >= 100:
+                        raise ApiError.from_task(code='validation_loop',
+                                                message=f'There appears to be an infinite loop in the validation. Task is {task.task_spec.description}',
+                                                task=task)
+            WorkflowService._process_documentation(processor.bpmn_workflow.last_task.parent.parent)
+
         except WorkflowException as we:
-            WorkflowService.delete_test_data()
             raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
-
-        while not processor.bpmn_workflow.is_completed():
-            try:
-                processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
-                processor.bpmn_workflow.do_engine_steps()
-                tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
-                for task in tasks:
-                    if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
-                        raise ApiError.from_task("invalid_role",
-                                       f"This task is in a lane called '{task.task_spec.lane}', The "
-                                       f" current task data must have information mapping this role to "
-                                       f" a unique user id.", task)
-                    task_api = WorkflowService.spiff_task_to_api_task(
-                        task,
-                        add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
-                    # make sure forms have a form key
-                    if hasattr(task_api, 'form') and task_api.form is not None and task_api.form.key == '':
-                        raise ApiError(code='missing_form_key',
-                                       message='Forms must include a Form Key.',
-                                       task_id=task.id,
-                                       task_name=task.get_name())
-                    WorkflowService.populate_form_with_random_data(task, task_api, required_only)
-                    processor.complete_task(task)
-            except WorkflowException as we:
-                WorkflowService.delete_test_data()
-                raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
-
-        WorkflowService.delete_test_data()
-        WorkflowService._process_documentation(processor.bpmn_workflow.last_task.parent.parent)
+        finally:
+            WorkflowService.delete_test_data(workflow_model)
         return processor.bpmn_workflow.last_task.data
 
     @staticmethod
@@ -233,11 +279,53 @@ class WorkflowService(object):
                                          f'The field {field.id} contains an unsupported '
                                          f'property: {name}', task=task)
 
+
+    @staticmethod
+    def post_process_form(task):
+        """Looks through the fields in a submitted form, acting on any properties."""
+        if not hasattr(task.task_spec, 'form'): return
+        for field in task.task_spec.form.fields:
+            data = task.data
+            if field.has_property(Task.FIELD_PROP_REPEAT):
+                repeat_array = task.data[field.get_property(Task.FIELD_PROP_REPEAT)]
+                for repeat_data in repeat_array:
+                    WorkflowService.__post_process_field(task, field, repeat_data)
+            else:
+                WorkflowService.__post_process_field(task, field, data)
+
+    @staticmethod
+    def __post_process_field(task, field, data):
+        if field.has_property(Task.FIELD_PROP_DOC_CODE) and field.id in data:
+            # This is generally handled by the front end, but it is possible that the file was uploaded BEFORE
+            # the doc_code was correctly set, so this is a stop gap measure to assure we still hit it correctly.
+            file_id = data[field.id]["id"]
+            doc_code = task.workflow.script_engine.eval(field.get_property(Task.FIELD_PROP_DOC_CODE), data)
+            file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
+            if(file):
+                file.irb_doc_code = doc_code
+                db.session.commit()
+            else:
+                # We have a problem, the file doesn't exist, and was removed, but it is still referenced in the data
+                # At least attempt to clear out the data.
+                data = {}
+        if field.has_property(Task.FIELD_PROP_FILE_DATA) and \
+                field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
+                field.id in data:
+            file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
+            data_store = DataStoreModel(file_id=file_id, key=field.id, value=data[field.id])
+            db.session.add(data_store)
+
     @staticmethod
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
+        data = task.data
+        if field.has_property(Task.FIELD_PROP_REPEAT):
+            # Then you must evaluate the expression based on the data within the group only.
+            group = field.get_property(Task.FIELD_PROP_REPEAT)
+            if group in task.data:
+                data = task.data[group][0]
         try:
-            return task.workflow.script_engine.evaluate_expression(task, expression)
+            return task.workflow.script_engine.eval(expression, data)
         except Exception as e:
             message = f"The field {field.id} contains an invalid expression. {e}"
             raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
@@ -266,7 +354,11 @@ class WorkflowService(object):
         # Note: if default is False, we don't want to execute this code
         if default is None or (isinstance(default, str) and default.strip() == ''):
             if field.type == "enum" or field.type == "autocomplete":
-                return {'value': None, 'label': None}
+                # Return empty arrays for multi-select enums, otherwise do a value of None.
+                if field.has_property(Task.FIELD_PROP_ENUM_TYPE) and field.get_property(Task.FIELD_PROP_ENUM_TYPE) == "checkbox":
+                    return []
+                else:
+                    return {'value': None, 'label': None}
             else:
                 return None
 
@@ -314,7 +406,7 @@ class WorkflowService(object):
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    return {'value': random_choice['id'], 'label': random_choice['name']}
+                    return {'value': random_choice['id'], 'label': random_choice['name'], 'data': random_choice['data']}
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
                     return {'value': random_choice.id, 'label': random_choice.name}
@@ -344,9 +436,14 @@ class WorkflowService(object):
         elif field.type == 'boolean':
             return random.choice([True, False])
         elif field.type == 'file':
-            # fixme: produce some something sensible for files.
-            return random.randint(1, 100)
-            # fixme: produce some something sensible for files.
+            doc_code = field.id
+            if field.has_property('doc_code'):
+                doc_code = WorkflowService.evaluate_property('doc_code', field, task)
+            file_model = FileModel(name="test.png",
+                                   irb_doc_code = field.id)
+            doc_dict = DocumentService.get_dictionary()
+            file = File.from_models(file_model, None, doc_dict)
+            return FileSchema().dump(file)
         elif field.type == 'files':
             return random.randrange(1, 100)
         else:
@@ -397,7 +494,8 @@ class WorkflowService(object):
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
             is_review=is_review,
-            title=spec.display_name
+            title=spec.display_name,
+            study_id=processor.workflow_model.study_id or None
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
@@ -634,7 +732,7 @@ class WorkflowService(object):
                 raise ApiError.from_task("invalid_enum", f"The label column '{label_column}' does not exist for item {item}",
                                          task=spiff_task)
 
-            options.append({"id": item[value_column], "name": item[label_column], "data": item})
+            options.append(Box({"id": item[value_column], "name": item[label_column], "data": item}))
         return options
 
     @staticmethod
@@ -656,30 +754,39 @@ class WorkflowService(object):
 
     @staticmethod
     def get_users_assigned_to_task(processor, spiff_task) -> List[str]:
-        if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
-            associated = StudyService.get_study_associates(processor.workflow_model.study.id)
-            return [user['uid'] for user in associated if user['access']]
-        if spiff_task.task_spec.lane not in spiff_task.data:
-            return []  # No users are assignable to the task at this moment
-        lane_users = spiff_task.data[spiff_task.task_spec.lane]
-        if not isinstance(lane_users, list):
-            lane_users = [lane_users]
+        if processor.workflow_model.study_id is None and processor.workflow_model.user_id is None:
+            raise ApiError.from_task(code='invalid_workflow',
+                                     message='A workflow must have either a study_id or a user_id.',
+                                     task=spiff_task)
+        # Standalone workflow - we only care about the current user
+        elif processor.workflow_model.study_id is None and processor.workflow_model.user_id is not None:
+            return [processor.workflow_model.user_id]
+        # Workflow associated with a study - get all the users
+        else:
+            if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
+                associated = StudyService.get_study_associates(processor.workflow_model.study.id)
+                return [user['uid'] for user in associated if user['access']]
+            if spiff_task.task_spec.lane not in spiff_task.data:
+                return []  # No users are assignable to the task at this moment
+            lane_users = spiff_task.data[spiff_task.task_spec.lane]
+            if not isinstance(lane_users, list):
+                lane_users = [lane_users]
 
-        lane_uids = []
-        for user in lane_users:
-            if isinstance(user, dict):
-                if 'value' in user and user['value'] is not None:
-                    lane_uids.append(user['value'])
+            lane_uids = []
+            for user in lane_users:
+                if isinstance(user, dict):
+                    if 'value' in user and user['value'] is not None:
+                        lane_uids.append(user['value'])
+                    else:
+                        raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
+                                                                  spiff_task.task_spec.name, task=spiff_task)
+                elif isinstance(user, str):
+                    lane_uids.append(user)
                 else:
-                    raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
-                                                              spiff_task.task_spec.name, task=spiff_task)
-            elif isinstance(user, str):
-                lane_uids.append(user)
-            else:
-                raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user is not a string or dict" %
-                                                              spiff_task.task_spec.name, task=spiff_task)
+                    raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user is not a string or dict" %
+                                                                  spiff_task.task_spec.name, task=spiff_task)
 
-        return lane_uids
+            return lane_uids
 
     @staticmethod
     def log_task_action(user_uid, processor, spiff_task, action):
@@ -703,7 +810,7 @@ class WorkflowService(object):
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
             mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
             process_name=task.process_name,
-            date=datetime.now(),
+            # date=datetime.utcnow(), <=== For future reference, NEVER do this. Let the database set the time.
         )
         db.session.add(task_event)
         db.session.commit()
@@ -716,10 +823,7 @@ class WorkflowService(object):
 
         if hasattr(task.task_spec, 'form'):
             for field in task.task_spec.form.fields:
-                if field.has_property(Task.FIELD_PROP_READ_ONLY) and \
-                        field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
-                    continue  # Don't add read-only data
-                elif field.has_property(Task.FIELD_PROP_REPEAT):
+                if field.has_property(Task.FIELD_PROP_REPEAT):
                     group = field.get_property(Task.FIELD_PROP_REPEAT)
                     if group in latest_data:
                         data[group] = latest_data[group]
@@ -772,3 +876,28 @@ class WorkflowService(object):
         for workflow in workflows:
             if workflow.status == WorkflowStatus.user_input_required or workflow.status == WorkflowStatus.waiting:
                 WorkflowProcessor.reset(workflow, clear_data=False)
+
+    @staticmethod
+    def get_workflow_from_spec(workflow_spec_id, user):
+        workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
+                                       study=None,
+                                       user_id=user.uid,
+                                       workflow_spec_id=workflow_spec_id,
+                                       last_updated=datetime.now())
+        db.session.add(workflow_model)
+        db.session.commit()
+        return workflow_model
+
+    @staticmethod
+    def get_standalone_workflow_specs():
+        specs = db.session.query(WorkflowSpecModel).filter_by(standalone=True).all()
+        return specs
+
+    @staticmethod
+    def get_primary_workflow(workflow_spec_id):
+        # Returns the FileModel of the primary workflow for a workflow_spec
+        primary = None
+        file = db.session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id, FileModel.primary==True).first()
+        if file:
+            primary = file
+        return primary

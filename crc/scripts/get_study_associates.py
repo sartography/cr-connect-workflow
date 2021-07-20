@@ -19,8 +19,11 @@ example : get_study_associates() => [{'uid':'sbp3ey','role':'Unicorn Herder', 's
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        return True
-
+        study_associates = [
+            {'uid': 'dhf8r', 'role': 'Chief Bee Keeper', 'send_email': True, 'access': True},
+            {'uid': 'lb3dp', 'role': 'Chief Cat Herder', 'send_email': True, 'access': True}
+        ]
+        return study_associates
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 

@@ -22,5 +22,6 @@ class TestCustomerError(BaseTest):
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertIn('hint', rv.json[0])
         json_data = json.loads(rv.get_data(as_text=True))
-        self.assertEqual('You are overriding the title for task `Task_0xbnd5d`, using the `display_name` extension, and it is causing an error.  Look under the extensions tab for the task, and check the value you are setting for the property.',
+        self.assertEqual("You are overriding the title using an extension and it is causing this error. Look under the "
+                         "extensions tab for the task, and check the value you are setting for the property.",
                          json_data[0]['hint'])

@@ -7,7 +7,9 @@ from crc.models.file import CONTENT_TYPES
 from crc.models.ldap import LdapModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
+from crc.services.study_service import StudyService
 
 
 class ExampleDataLoader:
@@ -266,7 +268,7 @@ class ExampleDataLoader:
                          from_tests=True)
 
     def create_spec(self, id, name, display_name="", description="", filepath=None, master_spec=False,
-                    category_id=None, display_order=None, from_tests=False):
+                    category_id=None, display_order=None, from_tests=False, standalone=False):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
@@ -278,7 +280,8 @@ class ExampleDataLoader:
                                  description=description,
                                  is_master_spec=master_spec,
                                  category_id=category_id,
-                                 display_order=display_order)
+                                 display_order=display_order,
+                                 standalone=standalone)
         db.session.add(spec)
         db.session.commit()
         if not filepath and not from_tests:
@@ -314,14 +317,14 @@ class ExampleDataLoader:
     def load_reference_documents(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.DOCUMENT_LIST,
+        FileService.add_reference_file(DocumentService.DOCUMENT_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()
 
         file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.INVESTIGATOR_LIST,
+        FileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()

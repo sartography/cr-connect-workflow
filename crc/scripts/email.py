@@ -1,8 +1,7 @@
 from crc import app
 from crc.api.common import ApiError
-from crc.models.user import UserModel
 from crc.scripts.script import Script
-# from crc.services.ldap_service import LdapService
+from crc.services.ldap_service import LdapService
 from crc.services.email_service import EmailService
 from crc.services.study_service import StudyService
 
@@ -101,13 +100,10 @@ email (subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email], cc='as
 
     @staticmethod
     def get_associated_emails(study_id):
-        associated_uids = []
         associated_emails = []
         associates = StudyService.get_study_associates(study_id)
         for associate in associates:
             if associate['send_email'] is True:
-                associated_uids.append(associate['uid'])
-        returned = UserModel.query.filter(UserModel.uid.in_(associated_uids)).all()
-        for item in returned:
-            associated_emails.append(item.email_address)
+                user_info = LdapService.user_info(associate['uid'])
+                associated_emails.append(user_info.email_address)
         return associated_emails

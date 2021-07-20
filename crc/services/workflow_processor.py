@@ -1,12 +1,13 @@
 import re
 
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
+from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
 import shlex
 from datetime import datetime
 from typing import List
 
-from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
@@ -29,6 +30,7 @@ from crc.services.file_service import FileService
 from crc import app
 from crc.services.user_service import UserService
 
+from difflib import SequenceMatcher
 
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.
@@ -42,7 +44,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
         """
         return self.evaluate_expression(task, expression)
 
-
+    @timeit
     def execute(self, task: SpiffTask, script, data):
 
         study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
@@ -50,24 +52,16 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         else:
             workflow_id = None
-
         try:
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
+                augment_methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
-                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
-
-            super().execute(task, script, data, externalMethods=augmentMethods)
-        except SyntaxError as e:
-            raise ApiError('syntax_error',
-                           f'Something is wrong with your python script '
-                           f'please correct the following:'
-                           f' {script}, {e.msg}')
-        except NameError as e:
-            raise ApiError('name_error',
-                            f'something you are referencing does not exist:'
-                            f' {script}, {e}')
-
+                augment_methods = Script.generate_augmented_list(task, study_id, workflow_id)
+            super().execute(task, script, data, external_methods=augment_methods)
+        except WorkflowException as e:
+            raise e
+        except Exception as e:
+            raise WorkflowTaskExecException(task, f' {script}, {e}', e)
 
     def evaluate_expression(self, task, expression):
         """
@@ -86,7 +80,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             else:
                 augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
             exp, valid = self.validateExpression(expression)
-            return self._eval(exp, externalMethods=augmentMethods, **task.data)
+            return self._eval(exp, external_methods=augmentMethods, **task.data)
 
         except Exception as e:
             raise WorkflowTaskExecException(task,
@@ -98,10 +92,6 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
 
 
 
-    @staticmethod
-    def camel_to_snake(camel):
-        camel = camel.strip()
-        return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
 
 
 class MyCustomParser(BpmnDmnParser):
@@ -174,7 +164,7 @@ class WorkflowProcessor(object):
             self.is_latest_spec = False
 
     @staticmethod
-    def reset(workflow_model, clear_data=False):
+    def reset(workflow_model, clear_data=False, delete_files=False):
         print('WorkflowProcessor: reset: ')
 
         # Try to execute a cancel notify
@@ -194,6 +184,10 @@ class WorkflowProcessor(object):
             for task_event in task_events:
                 task_event.form_data = {}
                 session.add(task_event)
+        if delete_files:
+            files = FileModel.query.filter(FileModel.workflow_id == workflow_model.id).all()
+            for file in files:
+                FileService.delete_file(file.id)
         session.commit()
         return WorkflowProcessor(workflow_model)
 
@@ -219,7 +213,7 @@ class WorkflowProcessor(object):
         self.workflow_model.status = self.get_status()
         self.workflow_model.total_tasks = len(tasks)
         self.workflow_model.completed_tasks = sum(1 for t in tasks if t.state in complete_states)
-        self.workflow_model.last_updated = datetime.now()
+        self.workflow_model.last_updated = datetime.utcnow()
         self.update_dependencies(self.spec_data_files)
         session.add(self.workflow_model)
         session.commit()
@@ -277,16 +271,22 @@ class WorkflowProcessor(object):
             self.workflow_model.dependencies.append(WorkflowSpecDependencyFile(file_data_id=file_data.id))
 
     @staticmethod
+    @timeit
     def run_master_spec(spec_model, study):
         """Executes a BPMN specification for the given study, without recording any information to the database
         Useful for running the master specification, which should not persist. """
+        lasttime = firsttime()
         spec_data_files = FileService.get_spec_data_files(spec_model.id)
+        lasttime = sincetime('load Files', lasttime)
         spec = WorkflowProcessor.get_spec(spec_data_files, spec_model.id)
+        lasttime = sincetime('get spec', lasttime)
         try:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+            lasttime = sincetime('get_workflow', lasttime)
             bpmn_workflow.do_engine_steps()
+            lasttime = sincetime('run steps', lasttime)
         except WorkflowException as we:
             raise ApiError.from_task_spec("error_running_master_spec", str(we), we.sender)
 
@@ -325,8 +325,8 @@ class WorkflowProcessor(object):
             spec = parser.get_spec(process_id)
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
-                           message="Failed to parse Workflow Specification '%s'. \n" % workflow_spec_id +
-                                   "Error is %s. \n" % str(ve),
+                           message="Failed to parse the Workflow Specification. " +
+                                   "Error is '%s.'" % str(ve),
                            file_name=ve.filename,
                            task_id=ve.id,
                            tag=ve.tag)
@@ -337,6 +337,9 @@ class WorkflowProcessor(object):
         if bpmn_workflow.is_completed():
             return WorkflowStatus.complete
         user_tasks = bpmn_workflow.get_ready_user_tasks()
+        waiting_tasks = bpmn_workflow.get_tasks(Task.WAITING)
+        if len(waiting_tasks) > 0:
+            return WorkflowStatus.waiting
         if len(user_tasks) > 0:
             return WorkflowStatus.user_input_required
         else:
@@ -358,9 +361,10 @@ class WorkflowProcessor(object):
     def get_status(self):
         return self.status_of(self.bpmn_workflow)
 
-    def do_engine_steps(self):
+    def do_engine_steps(self, exit_at = None):
         try:
-            self.bpmn_workflow.do_engine_steps()
+            self.bpmn_workflow.refresh_waiting_tasks()
+            self.bpmn_workflow.do_engine_steps(exit_at = exit_at)
         except WorkflowTaskExecException as we:
             raise ApiError.from_task("task_error", str(we), we.task)
 
@@ -391,12 +395,17 @@ class WorkflowProcessor(object):
                     return task
 
         # If there are ready tasks to complete, return the next ready task, but return the one
-        # in the active parallel path if possible.
+        # in the active parallel path if possible.  In some cases the active parallel path may itself be
+        # a parallel gateway with multiple tasks, so prefer ones that share a parent.
         ready_tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
         if len(ready_tasks) > 0:
             for task in ready_tasks:
                 if task.parent == self.bpmn_workflow.last_task:
                     return task
+            for task in ready_tasks:
+                if self.bpmn_workflow.last_task and task.parent == self.bpmn_workflow.last_task.parent:
+                    return task
+
             return ready_tasks[0]
 
         # If there are no ready tasks, but the thing isn't complete yet, find the first non-complete task

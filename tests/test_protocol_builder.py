@@ -1,7 +1,7 @@
+from tests.base_test import BaseTest
 from unittest.mock import patch
 
 from crc import app
-from tests.base_test import BaseTest
 from crc.services.protocol_builder import ProtocolBuilderService
 
 
@@ -46,8 +46,8 @@ class TestProtocolBuilder(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('study_details.json')
         response = ProtocolBuilderService.get_study_details(self.test_study_id)
         self.assertIsNotNone(response)
-        self.assertEqual(64, len(response))
-        self.assertEqual(1234, response['IND_1'])
+        self.assertEqual(65, len(response))
+        self.assertEqual('1234', response['IND_1'])
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_get_study_sponsors(self, mock_get):
@@ -60,3 +60,25 @@ class TestProtocolBuilder(BaseTest):
         self.assertEqual(2, response[0]["SS_STUDY"])
         self.assertEqual(2453, response[0]["SPONSOR_ID"])
         self.assertEqual("Abbott Ltd", response[0]["SP_NAME"])
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_get_irb_info(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('irb_info.json')
+        response = ProtocolBuilderService.get_irb_info(self.test_study_id)
+        self.assertIsNotNone(response)
+        self.assertEqual(3, len(response))
+        self.assertEqual('IRB Event 1', response[0]["IRBEVENT"])
+        self.assertEqual('IRB Event 2', response[1]["IRBEVENT"])
+        self.assertEqual('IRB Event 3', response[2]["IRBEVENT"])
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_check_study(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('check_study.json')
+        response = ProtocolBuilderService.check_study(self.test_study_id)
+        self.assertIsNotNone(response)
+        self.assertIn('DETAIL', response[0].keys())
+        self.assertIn('STATUS', response[0].keys())

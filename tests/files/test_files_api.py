@@ -1,22 +1,20 @@
 import io
 import json
+import os
 
 from tests.base_test import BaseTest
 
-from crc import session, db
+from crc import session, db, app
 from crc.models.file import FileModel, FileType, FileSchema, FileModelSchema
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.models.data_store import DataStoreModel
+from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
 
 
 class TestFilesApi(BaseTest):
-
-    def minimal_bpmn(self, content):
-        """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
-        minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
-        return (minimal_dbpm % content).encode()
 
     def test_list_files_for_workflow_spec(self):
         self.load_example_data(use_crc_data=True)
@@ -78,11 +76,6 @@ class TestFilesApi(BaseTest):
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         correct_name = task.task_spec.form.fields[0].id
 
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.id, "not_a_known_file"), data=data, follow_redirects=True,
-                           content_type='multipart/form-data', headers=self.logged_in_headers())
-        self.assert_failure(rv, error_code="invalid_form_field_key")
-
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
                            (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
@@ -119,20 +112,24 @@ class TestFilesApi(BaseTest):
         self.assertEqual(0, len(json.loads(rv.get_data(as_text=True))))
 
     def test_set_reference_file(self):
-        file_name = "irb_document_types.xls"
-        data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.xls")}
+        file_name = "documents.xlsx"
+        filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        with open(filepath, 'rb') as myfile:
+            file_data = myfile.read()
+        data = {'file': (io.BytesIO(file_data), file_name)}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(FileType.xls, file.type)
+        self.assertEqual(FileType.xlsx, file.type)
         self.assertTrue(file.is_reference)
-        self.assertEqual("application/vnd.ms-excel", file.content_type)
+        self.assertEqual("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", file.content_type)
+        self.assertEqual('dhf8r', json_data['user_uid'])
 
     def test_set_reference_file_bad_extension(self):
-        file_name = FileService.DOCUMENT_LIST
+        file_name = DocumentService.DOCUMENT_LIST
         data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.ppt")}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
@@ -140,22 +137,28 @@ class TestFilesApi(BaseTest):
 
     def test_get_reference_file(self):
         file_name = "irb_document_types.xls"
-        data = {'file': (io.BytesIO(b"abcdef"), "some crazy thing do not care.xls")}
+        filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        with open(filepath, 'rb') as myfile:
+            file_data = myfile.read()
+        data = {'file': (io.BytesIO(file_data), file_name)}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         rv = self.app.get('/v1.0/reference_file/%s' % file_name, headers=self.logged_in_headers())
         self.assert_success(rv)
         data_out = rv.get_data()
-        self.assertEqual(b"abcdef", data_out)
+        self.assertEqual(file_data, data_out)
 
     def test_list_reference_files(self):
         ExampleDataLoader.clean_db()
 
-        file_name = FileService.DOCUMENT_LIST
-        data = {'file': (io.BytesIO(b"abcdef"), file_name)}
+        file_name = DocumentService.DOCUMENT_LIST
+        filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        with open(filepath, 'rb') as myfile:
+            file_data = myfile.read()
+        data = {'file': (io.BytesIO(file_data), file_name)}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
-
+        self.assert_success(rv)
         rv = self.app.get('/v1.0/reference_file',
                           follow_redirects=True,
                           content_type="application/json", headers=self.logged_in_headers())
@@ -168,7 +171,8 @@ class TestFilesApi(BaseTest):
 
     def test_update_file_info(self):
         self.load_example_data()
-        file: FileModel = session.query(FileModel).first()
+        self.create_reference_document()
+        file: FileModel = session.query(FileModel).filter(FileModel.is_reference==False).first()
         file.name = "silly_new_name.bpmn"
 
         rv = self.app.put('/v1.0/file/%i' % file.id,
@@ -186,11 +190,11 @@ class TestFilesApi(BaseTest):
         data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
         rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
-        json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
+        file_json = json.loads(rv.get_data(as_text=True))
+        self.assertEquals(80, file_json['size'])
 
         data['file'] = io.BytesIO(self.minimal_bpmn("efghijk")), 'my_new_file.bpmn'
-        rv = self.app.put('/v1.0/file/%i/data' % file.id, data=data, follow_redirects=True,
+        rv = self.app.put('/v1.0/file/%i/data' % file_json['id'], data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
@@ -198,14 +202,14 @@ class TestFilesApi(BaseTest):
         self.assertEqual(2, file_json['latest_version'])
         self.assertEqual(FileType.bpmn.value, file_json['type'])
         self.assertEqual("application/octet-stream", file_json['content_type'])
-        self.assertEqual(spec.id, file.workflow_spec_id)
+        self.assertEqual(spec.id, file_json['workflow_spec_id'])
 
         # Assure it is updated in the database and properly persisted.
-        file_model = session.query(FileModel).filter(FileModel.id == file.id).first()
+        file_model = session.query(FileModel).filter(FileModel.id == file_json['id']).first()
         file_data = FileService.get_file_data(file_model.id)
         self.assertEqual(2, file_data.version)
 
-        rv = self.app.get('/v1.0/file/%i/data' % file.id, headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/file/%i/data' %  file_json['id'], headers=self.logged_in_headers())
         self.assert_success(rv)
         data = rv.get_data()
         self.assertIsNotNone(data)
@@ -236,6 +240,68 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         self.assertEqual("text/xml; charset=utf-8", rv.content_type)
         self.assertTrue(rv.content_length > 1)
+
+    def test_get_file_contains_data_store_elements(self):
+        self.load_example_data()
+        spec = session.query(WorkflowSpecModel).first()
+        file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
+        ds = DataStoreModel(key="my_key", value="my_value", file_id=file.id);
+        db.session.add(ds)
+        rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual("my_value", json_data['data_store']['my_key'])
+
+    def test_get_files_for_form_field_returns_only_those_files(self):
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form')
+        processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        correct_name = task.task_spec.form.fields[0].id
+
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+
+        # Note:  this call can be made WITHOUT the task id.
+        rv = self.app.get('/v1.0/file?study_id=%i&workflow_id=%s&form_field_key=%s' %
+                          (workflow.study_id, workflow.id, correct_name), follow_redirects=True,
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(len(json_data), 1)
+
+        # Add another file for a different document type
+        FileService().add_workflow_file(workflow.id, 'Study_App_Doc', 'otherdoc.docx',
+                                        'application/xcode', b"asdfasdf")
+
+        # Note:  this call can be made WITHOUT the task id.
+        rv = self.app.get('/v1.0/file?study_id=%i&workflow_id=%s&form_field_key=%s' %
+                          (workflow.study_id, workflow.id, correct_name), follow_redirects=True,
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual(len(json_data), 1)
+
+    def test_add_file_returns_document_metadata(self):
+        self.create_reference_document()
+        workflow = self.create_workflow('file_upload_form_single')
+        processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        correct_name = task.task_spec.form.fields[0].id
+
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%i&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual('Ancillary Document', json_data['document']['category1'])
+        self.assertEqual('CRC', json_data['document']['Who Uploads?'])
 
     def test_delete_file(self):
         self.load_example_data()

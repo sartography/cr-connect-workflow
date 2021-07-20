@@ -1,34 +1,48 @@
+import urllib
 from copy import copy
 from datetime import datetime
 from typing import List
 
+import flask
 import requests
 from SpiffWorkflow import WorkflowException
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
 from crc.api.common import ApiError
+from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
-from crc.models.file import FileDataModel, FileModel, FileModelSchema, File, LookupFileModel, LookupDataModel
+from crc.models.file import FileModel, File
 from crc.models.ldap import LdapSchema
+
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
     IrbStatus, StudyAssociated, StudyAssociatedSchema
 from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
+from crc.services.lookup_service import LookupService
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.workflow_processor import WorkflowProcessor
-from SpiffWorkflow import Task as SpiffTask
+
 
 class StudyService(object):
     """Provides common tools for working with a Study"""
+    INVESTIGATOR_LIST = "investigators.xlsx"  # A reference document containing details about what investigators to show, and when.
 
     @staticmethod
-    def get_studies_for_user(user):
+    def _is_valid_study(study_id):
+        study_info = ProtocolBuilderService().get_study_details(study_id)
+        if 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3, 23, 24]:
+            return True
+        return False
+
+    def get_studies_for_user(self, user):
         """Returns a list of all studies for the given user."""
         associated = session.query(StudyAssociated).filter_by(uid=user.uid,access=True).all()
         associated_studies = [x.study_id for x in associated]
@@ -37,7 +51,8 @@ class StudyService(object):
 
         studies = []
         for study_model in db_studies:
-            studies.append(StudyService.get_study(study_model.id, study_model,do_status=False))
+            if self._is_valid_study(study_model.id):
+                studies.append(StudyService.get_study(study_model.id, study_model,do_status=False))
         return studies
 
     @staticmethod
@@ -52,7 +67,7 @@ class StudyService(object):
         return studies
 
     @staticmethod
-    def get_study(study_id, study_model: StudyModel = None, do_status=True):
+    def get_study(study_id, study_model: StudyModel = None, do_status=False):
         """Returns a study model that contains all the workflows organized by category.
         IMPORTANT:  This is intended to be a lightweight call, it should never involve
         loading up and executing all the workflows in a study to calculate information."""
@@ -71,10 +86,10 @@ class StudyService(object):
             study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
             study.last_activity_date = last_event.date
         study.categories = StudyService.get_categories()
-        workflow_metas = StudyService.__get_workflow_metas(study_id)
+        workflow_metas = StudyService._get_workflow_metas(study_id)
         files = FileService.get_files_for_study(study.id)
         files = (File.from_models(model, FileService.get_file_data(model.id),
-                                  FileService.get_doc_dictionary()) for model in files)
+                                  DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
         # Calling this line repeatedly is very very slow.  It creates the
         # master spec and runs it.  Don't execute this for Abandoned studies, as
@@ -83,8 +98,9 @@ class StudyService(object):
             # this line is taking 99% of the time that is used in get_study.
             # see ticket #196
             if do_status:
-                status = StudyService.__get_study_status(study_model)
-                study.warnings = StudyService.__update_status_of_workflow_meta(workflow_metas, status)
+                # __get_study_status() runs the master workflow to generate the status dictionary
+                status = StudyService._get_study_status(study_model)
+                study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas, status)
 
             # Group the workflows into their categories.
             for category in study.categories:
@@ -128,9 +144,9 @@ class StudyService(object):
             raise ApiError('study_not_found','No study found with id = %d'%study_id)
 
         ownerid = study.user_uid
-        
+
         people = db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id)
-        
+
         people_list = [{'uid':ownerid,'role':'owner','send_email':True,'access':True}]
         people_list += StudyAssociatedSchema().dump(people, many=True)
         return people_list
@@ -254,14 +270,14 @@ class StudyService(object):
 
         # Loop through all known document types, get the counts for those files,
         # and use pb_docs to mark those as required.
-        doc_dictionary = FileService.get_reference_data(FileService.DOCUMENT_LIST, 'code', ['id'])
+        doc_dictionary = DocumentService.get_dictionary()
 
         documents = {}
         for code, doc in doc_dictionary.items():
 
-            if ProtocolBuilderService.is_enabled():
+            doc['required'] = False
+            if ProtocolBuilderService.is_enabled() and doc['id']:
                 pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
-                doc['required'] = False
                 if pb_data:
                     doc['required'] = True
 
@@ -271,7 +287,7 @@ class StudyService(object):
             # Make a display name out of categories
             name_list = []
             for cat_key in ['category1', 'category2', 'category3']:
-                if doc[cat_key] not in ['', 'NULL']:
+                if doc[cat_key] not in ['', 'NULL', None]:
                     name_list.append(doc[cat_key])
             doc['display_name'] = ' / '.join(name_list)
 
@@ -279,24 +295,51 @@ class StudyService(object):
             doc_files = FileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
             doc['count'] = len(doc_files)
             doc['files'] = []
-            for file in doc_files:
-                doc['files'].append({'file_id': file.id,
-                                     'workflow_id': file.workflow_id})
 
+            # when we run tests - it doesn't look like the user is available
+            # so we return a bogus token
+            token = 'not_available'
+            if hasattr(flask.g,'user'):
+                token = flask.g.user.encode_auth_token()
+            for file in doc_files:
+                file_data = {'file_id': file.id,
+                             'name': file.name,
+                             'url': app.config['APPLICATION_ROOT']+
+                                    'file/' + str(file.id) +
+                                    '/download?auth_token='+
+                                    urllib.parse.quote_plus(token),
+                             'workflow_id': file.workflow_id
+                             }
+                data = db.session.query(DataStoreModel).filter(DataStoreModel.file_id==file.id).all()
+                data_store_data = {}
+                for d in data:
+                    data_store_data[d.key] = d.value
+                file_data["data_store"] = data_store_data
+                doc['files'].append(Box(file_data))
                 # update the document status to match the status of the workflow it is in.
                 if 'status' not in doc or doc['status'] is None:
                     workflow: WorkflowModel = session.query(WorkflowModel).filter_by(id=file.workflow_id).first()
                     doc['status'] = workflow.status.value
 
             documents[code] = doc
-        return documents
+        return Box(documents)
+
+    @staticmethod
+    def get_investigator_dictionary():
+        """Returns a dictionary of document details keyed on the doc_code."""
+        file_data = FileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
+        lookup_model = LookupService.get_lookup_model_for_file_data(file_data, 'code', 'label')
+        doc_dict = {}
+        for lookup_data in lookup_model.dependencies:
+            doc_dict[lookup_data.value] = lookup_data.data
+        return doc_dict
 
     @staticmethod
     def get_investigators(study_id, all=False):
         """Convert array of investigators from protocol builder into a dictionary keyed on the type. """
 
         # Loop through all known investigator types as set in the reference file
-        inv_dictionary = FileService.get_reference_data(FileService.INVESTIGATOR_LIST, 'code')
+        inv_dictionary = StudyService.get_investigator_dictionary()
 
         # Get PB required docs
         pb_investigators = ProtocolBuilderService.get_investigators(study_id=study_id)
@@ -332,16 +375,6 @@ class StudyService(object):
         except LDAPSocketOpenError:
             app.logger.info("Failed to connect to LDAP Server.")
             return {}
-
-    @staticmethod
-    def get_protocol(study_id):
-        """Returns the study protocol, if it has been uploaded."""
-        file = db.session.query(FileModel) \
-            .filter_by(study_id=study_id) \
-            .filter_by(form_field_key='Study_Protocol_Document') \
-            .first()
-
-        return FileModelSchema().dump(file)
 
     @staticmethod
     def synch_with_protocol_builder_if_enabled(user):
@@ -409,24 +442,36 @@ class StudyService(object):
         db.session.commit()
 
     @staticmethod
-    def __update_status_of_workflow_meta(workflow_metas, status):
+    def _update_status_of_workflow_meta(workflow_metas, status):
         # Update the status on each workflow
         warnings = []
         for wfm in workflow_metas:
-            if wfm.name in status.keys():
-                if not WorkflowState.has_value(status[wfm.name]):
-                    warnings.append(ApiError("invalid_status",
-                                             "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                                 wfm.name, status[wfm.name], ",".join(WorkflowState.list())
-                                             )))
-                else:
-                    wfm.state = WorkflowState[status[wfm.name]]
-            else:
+            wfm.state_message = ''
+            # do we have a status for you
+            if wfm.name not in status.keys():
                 warnings.append(ApiError("missing_status", "No status specified for workflow %s" % wfm.name))
+                continue
+            if not isinstance(status[wfm.name], dict):
+                warnings.append(ApiError(code='invalid_status',
+                                         message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.name}. Status is {status[wfm.name]}'))
+                continue
+            if 'status' not in status[wfm.name].keys():
+                warnings.append(ApiError("missing_status",
+                                         "Workflow '%s' does not have a status setting" % wfm.name))
+                continue
+            if not WorkflowState.has_value(status[wfm.name]['status']):
+                warnings.append(ApiError("invalid_state",
+                                         "Workflow '%s' can not be set to '%s', should be one of %s" % (
+                                             wfm.name, status[wfm.name]['status'], ",".join(WorkflowState.list())
+                                         )))
+                continue
+            wfm.state = WorkflowState[status[wfm.name]['status']]
+            if 'message' in status[wfm.name].keys():
+                wfm.state_message = status[wfm.name]['message']
         return warnings
 
     @staticmethod
-    def __get_workflow_metas(study_id):
+    def _get_workflow_metas(study_id):
         # Add in the Workflows for each category
         workflow_models = db.session.query(WorkflowModel). \
             join(WorkflowSpecModel). \
@@ -439,7 +484,7 @@ class StudyService(object):
         return workflow_metas
 
     @staticmethod
-    def __get_study_status(study_model):
+    def _get_study_status(study_model):
         """Uses the Top Level Workflow to calculate the status of the study, and it's
         workflow models."""
         master_specs = db.session.query(WorkflowSpecModel). \
@@ -474,8 +519,9 @@ class StudyService(object):
     def _create_workflow_model(study: StudyModel, spec):
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
                                        study=study,
+                                       user_id=None,
                                        workflow_spec_id=spec.id,
-                                       last_updated=datetime.now())
+                                       last_updated=datetime.utcnow())
         session.add(workflow_model)
         session.commit()
         return workflow_model

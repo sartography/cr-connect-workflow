@@ -1,6 +1,6 @@
 from flask import g
 
-from crc.scripts.data_store_base import DataStoreBase
+from crc.services.data_store_service import DataStoreBase
 from crc.scripts.script import Script
 
 
@@ -15,6 +15,7 @@ class UserDataSet(Script,DataStoreBase):
                                  workflow_id,
                                  g.user.uid,
                                  'user_data_set',
+                                 None,
                                  *args)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
@@ -24,6 +25,7 @@ class UserDataSet(Script,DataStoreBase):
                                     workflow_id,
                                     None,
                                     'user_data_set',
+                                    None,
                                     *args,
                                     **kwargs)
 

@@ -1,5 +1,7 @@
 import hashlib
 import pandas as pd
+from pandas._libs.missing import NA
+
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
@@ -184,9 +186,12 @@ def update_or_create_current_file(remote,workflow_spec_id,updatefile):
     currentfile.content_type = updatefile['content_type']
     currentfile.primary_process_id = updatefile['primary_process_id']
     session.add(currentfile)
-    content = WorkflowSyncService.get_remote_file_by_hash(remote, updatefile['md5_hash'])
-    FileService.update_file(currentfile, content, updatefile['type'])
-
+    try:
+        content = WorkflowSyncService.get_remote_file_by_hash(remote, updatefile['md5_hash'])
+        FileService.update_file(currentfile, content, updatefile['type'])
+    except ApiError:
+        # Remote files doesn't exist, don't update it.
+        print("Remote file " + currentfile.name + " does not exist, so not syncing.")
 
 def sync_changed_files(remote,workflow_spec_id):
     """
@@ -285,7 +290,7 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
     changedfiles['new'] = False
     changedfiles.loc[changedfiles.index.isin(left['filename']), 'new'] = True
     changedfiles.loc[changedfiles.index.isin(right['filename']),'new'] = True
-    changedfiles = changedfiles.replace({pd.np.nan: None})
+    changedfiles = changedfiles.replace({NA: None})
     # return the list as a dict, let swagger convert it to json
     if as_df:
         return changedfiles

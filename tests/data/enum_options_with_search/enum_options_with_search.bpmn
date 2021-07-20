@@ -14,7 +14,7 @@
         <camunda:formData>
           <camunda:formField id="sponsor" label="Select a value" type="autocomplete">
             <camunda:properties>
-              <camunda:property id="spreadsheet.name" value="sponsors.xls" />
+              <camunda:property id="spreadsheet.name" value="sponsors.xlsx" />
               <camunda:property id="spreadsheet.value.column" value="CUSTOMER_NUMBER" />
               <camunda:property id="spreadsheet.label.column" value="CUSTOMER_NAME" />
             </camunda:properties>

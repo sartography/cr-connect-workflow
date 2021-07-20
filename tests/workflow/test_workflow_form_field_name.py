@@ -10,7 +10,7 @@ class TestFormFieldName(BaseTest):
 
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(json_data[0]['message'],
-                         'When populating all fields ... \nInvalid Field name: "user-title".  A field ID must begin '
+                         'Invalid Field name: "user-title".  A field ID must begin '
                          'with a letter, and can only contain letters, numbers, and "_"')
 
     def test_form_field_name_with_period(self):
@@ -18,7 +18,7 @@ class TestFormFieldName(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow)
         first_task = workflow_api.next_task
-        self.complete_form(workflow_api, first_task, {})
+        self.complete_form(workflow, first_task, {})
 
         workflow_api = self.get_workflow_api(workflow)
         second_task = workflow_api.next_task

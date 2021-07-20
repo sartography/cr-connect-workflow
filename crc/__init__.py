@@ -12,6 +12,8 @@ from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sentry_sdk.integrations.flask import FlaskIntegration
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -33,6 +35,7 @@ db = SQLAlchemy(app)
 
 session = db.session
 """:type: sqlalchemy.orm.Session"""
+scheduler = BackgroundScheduler()
 
 # Mail settings
 mail = Mail(app)
@@ -43,8 +46,17 @@ ma = Marshmallow(app)
 from crc import models
 from crc import api
 from crc.api import admin
-
+from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
+
+# needed function to avoid circular import
+
+def process_waiting_tasks():
+    with app.app_context():
+        WorkflowService.do_waiting()
+
+scheduler.add_job(process_waiting_tasks,'interval',minutes=5)
+scheduler.start()
 
 
 # Convert list of allowed origins to list of regexes
@@ -112,3 +124,8 @@ def clear_db():
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
 
+@app.cli.command()
+def sync_with_testing():
+    """Load all the workflows currently on testing into this system."""
+    from crc.api import workflow_sync
+    workflow_sync.sync_all_changed_workflows("https://testing.crconnect.uvadcos.io/api")

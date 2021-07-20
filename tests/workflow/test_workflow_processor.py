@@ -253,10 +253,8 @@ class TestWorkflowProcessor(BaseTest):
         processor = self.get_processor(study, workflow_spec_model)
         self.assertTrue(processor.get_version_string().startswith('v2.1.1'))
 
-
     def test_hard_reset(self):
         self.load_example_data()
-
         # Start the two_forms workflow, and enter some data in the first form.
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
@@ -275,6 +273,8 @@ class TestWorkflowProcessor(BaseTest):
 
         # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
         processor.workflow_model.bpmn_workflow_json = processor.serialize()
+        db.session.add(processor.workflow_model)  ## Assure this isn't transient, which was causing some errors.
+        self.assertIsNotNone(processor.workflow_model.bpmn_workflow_json)
         processor2 = WorkflowProcessor(processor.workflow_model)
         self.assertFalse(processor2.is_latest_spec) # Still at version 1.
 
@@ -289,6 +289,39 @@ class TestWorkflowProcessor(BaseTest):
         processor3.complete_task(task)
         self.assertEqual("New Step", processor3.next_task().task_spec.description)
         self.assertEqual("blue", processor3.next_task().data["color"])
+
+    def test_next_task_when_completing_sequential_steps_within_parallel(self):
+        self.load_example_data()
+        # Start the two_forms workflow, and enter some data in the first form.
+        study = session.query(StudyModel).first()
+        workflow_spec_model = self.load_test_spec("nav_order")
+        processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
+        self.assertEqual(processor.workflow_model.workflow_spec_id, workflow_spec_model.id)
+        ready_tasks = processor.get_ready_user_tasks()
+        task = ready_tasks[2]
+        self.assertEqual("B1", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("B1_0", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("B2", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("B3", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("B4", task.task_spec.name)
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertEqual("A1", task.task_spec.name)
+
 
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')

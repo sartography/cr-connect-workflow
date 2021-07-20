@@ -1,4 +1,4 @@
-from crc.scripts.data_store_base import DataStoreBase
+from crc.services.data_store_service import DataStoreBase
 from crc.scripts.script import Script
 
 
@@ -11,6 +11,7 @@ class StudyDataSet(Script,DataStoreBase):
                                  workflow_id,
                                  None,
                                  'study_data_set',
+                                 None,
                                  *args)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
@@ -20,6 +21,7 @@ class StudyDataSet(Script,DataStoreBase):
                                     workflow_id,
                                     None,
                                     'study_data_set',
+                                    None,
                                     *args,
                                     **kwargs)
 

@@ -2,7 +2,8 @@ from tests.base_test import BaseTest
 
 from crc.scripts.update_study import UpdateStudy
 from crc.services.workflow_processor import WorkflowProcessor
-from box import Box
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
+
 
 class TestUpdateStudyScript(BaseTest):
 

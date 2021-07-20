@@ -7,7 +7,7 @@ from marshmallow_enum import EnumField
 
 from crc import ma
 from crc.models.workflow import WorkflowStatus
-
+from crc.models.file import FileSchema
 
 class MultiInstanceType(enum.Enum):
     none = "none"
@@ -26,7 +26,8 @@ class Task(object):
     PROP_EXTENSIONS_TITLE = "display_name"
 
 
-    # Autocomplete field
+    # Field Types
+    FIELD_TYPE_FILE = "file"
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
     FIELD_PROP_AUTO_COMPLETE_MAX = "autocomplete_num"  # Not used directly, passed in from the front end.
 
@@ -58,6 +59,10 @@ class Task(object):
     FIELD_PROP_REPLEAT = "repeat"
     FIELD_PROP_REPLEAT_TITLE = "repeat_title"
     FIELD_PROP_REPLEAT_BUTTON = "repeat_button_label"
+
+    # File specific field properties
+    FIELD_PROP_DOC_CODE = "doc_code"  # to associate a file upload field with a doc code
+    FIELD_PROP_FILE_DATA = "file_data"  # to associate a bit of data with a specific file upload file.
 
     # Additional properties
     FIELD_PROP_ENUM_TYPE = "enum_type"
@@ -167,10 +172,31 @@ class NavigationItemSchema(ma.Schema):
         item.spec_type = spec_type
         return item
 
+class DocumentDirectorySchema(ma.Schema):
+    level = marshmallow.fields.String()
+    file = marshmallow.fields.Nested(FileSchema)
+    filecount = marshmallow.fields.Integer()
+    expanded = marshmallow.fields.Boolean()
+    children = marshmallow.fields.Nested("self",many=True)
+
+
+class DocumentDirectory(object):
+    def __init__(self, level=None, file=None, children=None):
+
+        self.level = level
+        self.file = file
+        self.expanded = False
+        self.filecount = 0
+        if children is None:
+            self.children = list()
+        else:
+            self.children=children
+
+
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,
                  spec_version, is_latest_spec, workflow_spec_id, total_tasks, completed_tasks,
-                 last_updated, is_review, title):
+                 last_updated, is_review, title, study_id):
         self.id = id
         self.status = status
         self.next_task = next_task  # The next task that requires user input.
@@ -183,13 +209,14 @@ class WorkflowApi(object):
         self.last_updated = last_updated
         self.title = title
         self.is_review = is_review
+        self.study_id = study_id or ''
 
 class WorkflowApiSchema(ma.Schema):
     class Meta:
         model = WorkflowApi
         fields = ["id", "status", "next_task", "navigation",
                   "workflow_spec_id", "spec_version", "is_latest_spec", "total_tasks", "completed_tasks",
-                  "last_updated", "is_review", "title"]
+                  "last_updated", "is_review", "title", "study_id"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
@@ -200,7 +227,7 @@ class WorkflowApiSchema(ma.Schema):
     def make_workflow(self, data, **kwargs):
         keys = ['id', 'status', 'next_task', 'navigation',
                 'workflow_spec_id', 'spec_version', 'is_latest_spec', "total_tasks", "completed_tasks",
-                "last_updated", "is_review", "title"]
+                "last_updated", "is_review", "title", "study_id"]
         filtered_fields = {key: data[key] for key in keys}
         filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])
         return WorkflowApi(**filtered_fields)

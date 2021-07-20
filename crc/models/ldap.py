@@ -15,7 +15,7 @@ class LdapModel(db.Model):
     department = db.Column(db.String)
     affiliation = db.Column(db.String)
     sponsor_type = db.Column(db.String)
-    date_cached = db.Column(db.DateTime(timezone=True), default=func.now())
+    date_cached = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
     @classmethod
     def from_entry(cls, entry):

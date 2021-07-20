@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1wrlvk8" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+  <bpmn:process id="Finance" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1p6s47e">
+      <bpmn:outgoing>SequenceFlow_0ea9hvd</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="EndEvent_14p904o">
+      <bpmn:incoming>Flow_0t55959</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0ea9hvd" sourceRef="StartEvent_1p6s47e" targetRef="Activity_0neioh9" />
+    <bpmn:userTask id="Activity_0neioh9" name="Upload Executed Non-Funded" camunda:formKey="FormKey_ExecutedNonFunded">
+      <bpmn:documentation>#### Non-Funded Executed Agreement
+
+
+#### Process: 
+OGC will upload the Non-Funded Executed Agreement after it has been negotiated by OSP contract negotiator.</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="AD_CoCApp" label="Upload File" type="file" />
+          <camunda:formField id="Language" label="Language" type="string" defaultValue="Engish">
+            <camunda:properties>
+              <camunda:property id="group" value="PCRApproval" />
+              <camunda:property id="file_data" value="AD_CoCApp" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="Date" label="Version Date" type="date">
+            <camunda:properties>
+              <camunda:property id="group" value="PCRApproval" />
+              <camunda:property id="file_data" value="AD_CoCApp" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0ea9hvd</bpmn:incoming>
+      <bpmn:outgoing>Flow_0t55959</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0t55959" sourceRef="Activity_0neioh9" targetRef="EndEvent_14p904o" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Finance">
+      <bpmndi:BPMNEdge id="Flow_0t55959_di" bpmnElement="Flow_0t55959">
+        <di:waypoint x="310" y="117" />
+        <di:waypoint x="392" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0ea9hvd_di" bpmnElement="SequenceFlow_0ea9hvd">
+        <di:waypoint x="148" y="117" />
+        <di:waypoint x="210" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="StartEvent_1p6s47e_di" bpmnElement="StartEvent_1p6s47e">
+        <dc:Bounds x="112" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_14p904o_di" bpmnElement="EndEvent_14p904o">
+        <dc:Bounds x="392" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0neioh9_di" bpmnElement="Activity_0neioh9">
+        <dc:Bounds x="210" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

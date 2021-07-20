@@ -65,7 +65,37 @@ paths:
             application/json:
               schema:
                 type: array
-                $ref: "#/components/schemas/User"
+                items:
+                  $ref: "#/components/schemas/User"
+  # /v1.0/document_directory/{study_id}
+  /document_directory/{study_id}:
+    parameters :
+      - name : study_id
+        required : true
+        in : path
+        description : The unique id of a study.
+        schema :
+          type : integer
+      - name : workflow_id
+        in : query
+        required : false
+        schema :
+          type : integer
+    get:
+      operationId: crc.api.document.get_document_directory
+      summary: Returns a directory of all files for study in a nested structure
+      tags:
+        - Document Categories
+      responses:
+        '200':
+          description: All IRB Categories defined in the file document.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DocumentDirectory"
+
   # /v1.0/study
   /study:
     get:
@@ -80,7 +110,8 @@ paths:
             application/json:
               schema:
                 type: array
-                $ref: "#/components/schemas/Study"
+                items:
+                  $ref: "#/components/schemas/Study"
     post:
       operationId: crc.api.study.add_study
       summary: Creates a new study with the given parameters.
@@ -160,7 +191,7 @@ paths:
     parameters:
       - name: workflow_spec_id
         in: path
-        required: false
+        required: true
         description: The unique id of an existing workflow specification to modify.
         schema:
           type: string
@@ -318,6 +349,12 @@ paths:
         schema:
           type: integer
           format: int32
+      - name: update_status
+        in: query
+        required: false
+        description: If set to true, will synch the study with protocol builder and assure the status of all workflows is up to date (expensive).
+        schema:
+          type: boolean
     get:
       operationId: crc.api.study.get_study
       summary: Provides a single study
@@ -415,8 +452,8 @@ paths:
     parameters:
       - name: spec_id
         in: path
-        required: false
-        description: The unique id of an existing workflow specification to modify.
+        required: true
+        description: The unique id of an existing workflow specification.
         schema:
           type: string
     get:
@@ -431,6 +468,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
+    post:
+      operationId: crc.api.workflow.get_workflow_from_spec
+      summary: Creates a workflow from a workflow spec and returns the workflow
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
     put:
       operationId: crc.api.workflow.update_workflow_specification
       security:
@@ -460,12 +509,39 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
+  /workflow-specification/standalone:
+    get:
+      operationId: crc.api.workflow.standalone_workflow_specs
+      summary: Provides a list of workflow specifications that can be run outside a study.
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: A list of workflow specifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpec"
   /workflow-specification/{spec_id}/validate:
     parameters:
       - name: spec_id
         in: path
-        required: false
+        required: true
         description: The unique id of an existing workflow specification to validate.
+        schema:
+          type: string
+      - name: study_id
+        in: query
+        required: false
+        description: Optional id of study to test under different scenarios
+        schema:
+          type: string
+      - name: test_until
+        in: query
+        required: false
+        description: Optional name of task to stop validating at
         schema:
           type: string
     get:
@@ -520,7 +596,7 @@ paths:
     parameters:
       - name: cat_id
         in: path
-        required: false
+        required: true
         description: The unique id of an existing workflow spec category to modify.
         schema:
           type: string
@@ -585,6 +661,12 @@ paths:
         description: The unique key of a workflow task form field.  Make sure this matches a document in the irb_documents.xslx reference sheet.
         schema:
           type: string
+      - name: study_id
+        in: query
+        required: false
+        description: The study that the files are related to
+        schema:
+          type: integer
     get:
       operationId: crc.api.file.get_files
       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
@@ -690,6 +772,41 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+  /file/{file_id}/download :
+    parameters :
+      - name : file_id
+        in : path
+        required : true
+        description : The id of the File requested
+        schema :
+          type : integer
+      - name : auth_token
+        in : query
+        required : true
+        description : User Auth Toeken
+        schema :
+          type : string
+      - name : version
+        in : query
+        required : false
+        description : The version of the file, or none for latest version
+        schema :
+          type : integer
+    get :
+      operationId : crc.api.file.get_file_data_link
+      summary : Returns only the file contents
+      security: []
+      tags :
+        - Files
+      responses :
+        '200' :
+          description : Returns the actual file
+          content :
+            application/octet-stream :
+              schema :
+                type : string
+                format : binary
+                example : '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
   /file/{file_id}/data:
     parameters:
       - name: file_id
@@ -892,6 +1009,12 @@ paths:
           in: query
           required: false
           description: Set this to true to clear data when starting workflow.
+          schema:
+            type: boolean
+        - name: delete_files
+          in: query
+          required: false
+          description: Set this to true to delete associated files when starting workflow.
           schema:
             type: boolean
       tags:
@@ -1281,6 +1404,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataStore"
+  /datastore/file/{file_id}:
+    parameters:
+      - name: file_id
+        in: path
+        required: true
+        description: The file id we are concerned with
+        schema:
+          type: string
+          format: string
+    get:
+      operationId: crc.api.data_store.file_multi_get
+      summary: Gets all datastore items by file_id
+      tags:
+        - DataStore
+      responses:
+        '200':
+          description: Get all values from the data store for a file_id
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataStore"
 components:
   securitySchemes:
     jwt:
@@ -1478,6 +1622,29 @@ components:
           type: string
           x-nullable: true
           example: "27b-6-1212"
+    DocumentDirectory:
+      properties:
+        level:
+          type: string
+          x-nullable: true
+          example: "Ancillary Document"
+        description:
+          type: string
+          x-nullable: true
+          example: "Documents that are ancillary to the study"
+        file:
+          $ref: "#/components/schemas/File"
+          x-nullable: true
+        expanded:
+          type: boolean
+          example: False
+        filecount:
+          type: integer
+          example: 1
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/File"
     DataStore:
       properties:
         id:
@@ -1527,6 +1694,10 @@ components:
         category_id:
           type: integer
           nullable: true
+        standalone:
+          type: boolean
+          example: false
+          default: false
         workflow_spec_category:
           $ref: "#/components/schemas/WorkflowSpecCategory"
         is_status:
@@ -1571,8 +1742,7 @@ components:
           example: "random_fact"
           x-nullable: true
         file:
-          type: file
-          format: binary
+          type: string
     Workflow:
       properties:
         id:
@@ -1580,7 +1750,7 @@ components:
           type: integer
           format: int64
         status:
-          type: enum
+          type: string
           enum: ['new','user_input_required','waiting','complete']
         navigation:
           type: array
@@ -1599,6 +1769,8 @@ components:
         num_tasks_complete:
           type: integer
         num_tasks_incomplete:
+          type: integer
+        study_id:
           type: integer
 
       example:
@@ -1634,7 +1806,7 @@ components:
         data:
           type: object
         multi_instance_type:
-          type: enum
+          type: string
           enum: ['none', 'looping', 'parallel', 'sequential']
         multi_instance_count:
           type: number
@@ -1767,7 +1939,7 @@ components:
           type: string
           readOnly: true
         type:
-          type: enum
+          type: string
           enum: ['string', 'long', 'boolean', 'date', 'enum']
           readOnly: true
         label:
@@ -1843,7 +2015,7 @@ components:
           type: string
           example: "Chuck Norris"
         data:
-          type: any
+          type: string
     NavigationItem:
       properties:
         id:
@@ -1873,7 +2045,7 @@ components:
           type: integer
           example: 4
         state:
-          type: enum
+          type: string
           enum: ['FUTURE', 'WAITING', 'READY', 'CANCELLED', 'COMPLETED','LIKELY','MAYBE']
           readOnly: true
         is_decision:

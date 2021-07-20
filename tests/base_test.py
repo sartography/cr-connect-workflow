@@ -2,6 +2,7 @@
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import os
 
+
 os.environ["TESTING"] = "true"
 
 import json
@@ -23,6 +24,7 @@ from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
+from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
 
 # UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
@@ -70,7 +72,7 @@ class BaseTest(unittest.TestCase):
         {
             'id': 0,
             'title': 'The impact of fried pickles on beer consumption in bipedal software developers.',
-            'last_updated': datetime.datetime.now(),
+            'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Sartography Pharmaceuticals',
@@ -80,7 +82,7 @@ class BaseTest(unittest.TestCase):
         {
             'id': 1,
             'title': 'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
-            'last_updated': datetime.datetime.now(),
+            'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Makerspace & Co.',
@@ -131,15 +133,14 @@ class BaseTest(unittest.TestCase):
         user = UserService.current_user(allow_admin_impersonate=True)
         self.assertEqual(uid, user.uid, 'Logged in user should match given user uid')
 
-        return dict(Authorization='Bearer ' + user_model.encode_auth_token().decode())
+        return dict(Authorization='Bearer ' + user_model.encode_auth_token())
 
     def delete_example_data(self, use_crc_data=False, use_rrt_data=False):
         """
         delete everything that matters in the local database - this is used to
         test ground zero copy of workflow specs.
         """
-        session.execute("delete from workflow; delete from file_data; delete from file; delete from workflow_spec;")
-        session.commit()
+        ExampleDataLoader.clean_db()
 
     def load_example_data(self, use_crc_data=False, use_rrt_data=False):
         """use_crc_data will cause this to load the mammoth collection of documents
@@ -147,13 +148,6 @@ class BaseTest(unittest.TestCase):
          otherwise it depends on a small setup for running tests."""
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
-        if use_crc_data:
-            ExampleDataLoader().load_all()
-        elif use_rrt_data:
-            ExampleDataLoader().load_rrt()
-        else:
-            ExampleDataLoader().load_test_data()
-
         # If in production mode, only add the first user.
         if app.config['PRODUCTION']:
             session.add(UserModel(**self.users[0]))
@@ -161,22 +155,26 @@ class BaseTest(unittest.TestCase):
             for user_json in self.users:
                 session.add(UserModel(**user_json))
 
+        if use_crc_data:
+            ExampleDataLoader().load_all()
+        elif use_rrt_data:
+            ExampleDataLoader().load_rrt()
+        else:
+            ExampleDataLoader().load_test_data()
+
         session.commit()
         for study_json in self.studies:
             study_model = StudyModel(**study_json)
             session.add(study_model)
             StudyService._add_all_workflow_specs_to_study(study_model)
-            session.execute(Sequence(StudyModel.__tablename__ + '_id_seq'))
-        session.commit()
+            session.commit()
+            update_seq = f"ALTER SEQUENCE %s RESTART WITH %s" % (StudyModel.__tablename__ + '_id_seq', study_model.id + 1)
+            print("Update Sequence." + update_seq)
+            session.execute(update_seq)
         session.flush()
 
         specs = session.query(WorkflowSpecModel).all()
         self.assertIsNotNone(specs)
-
-        for spec in specs:
-            files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
-            self.assertIsNotNone(files)
-            self.assertGreater(len(files), 0)
 
         for spec in specs:
             files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
@@ -285,28 +283,6 @@ class BaseTest(unittest.TestCase):
             session.commit()
         return study
 
-    def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses,
-                                         workflow_spec_name="random_fact"):
-        study = self.create_study(uid=user_uid, title=title, primary_investigator_id=primary_investigator_id)
-        workflow = self.create_workflow(workflow_name=workflow_spec_name, study=study)
-        approvals = []
-
-        for i in range(len(approver_uids)):
-            approvals.append(self.create_approval(
-                study=study,
-                workflow=workflow,
-                approver_uid=approver_uids[i],
-                status=statuses[i],
-                version=1
-            ))
-
-        full_study = {
-            'study': study,
-            'workflow': workflow,
-            'approvals': approvals,
-        }
-
-        return full_study
 
     def create_workflow(self, workflow_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
@@ -323,29 +299,10 @@ class BaseTest(unittest.TestCase):
     def create_reference_document(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.DOCUMENT_LIST,
+        FileService.add_reference_file(DocumentService.DOCUMENT_LIST,
                                        binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xls'])
+                                       content_type=CONTENT_TYPES['xlsx'])
         file.close()
-
-    def create_approval(
-            self,
-            study=None,
-            workflow=None,
-            approver_uid=None,
-            status=None,
-            version=None,
-    ):
-        study = study or self.create_study()
-        workflow = workflow or self.create_workflow()
-        approver_uid = approver_uid or self.test_uid
-        status = status or ApprovalStatus.PENDING.value
-        version = version or 1
-        approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status,
-                                 version=version)
-        session.add(approval)
-        session.commit()
-        return approval
 
     def get_workflow_common(self, url, user):
         rv = self.app.get(url,
@@ -365,17 +322,22 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
-    def restart_workflow_api(self, workflow, clear_data=False, user_uid="dhf8r"):
+    def restart_workflow_api(self, workflow, clear_data=False, delete_files=False, user_uid="dhf8r"):
         user = session.query(UserModel).filter_by(uid=user_uid).first()
         self.assertIsNotNone(user)
         url = (f'/v1.0/workflow/{workflow.id}/restart'
-               f'?clear_data={str(clear_data)}')
+               f'?clear_data={str(clear_data)}'
+               f'&delete_files={str(delete_files)}')
         workflow_api = self.get_workflow_common(url, user)
         self.assertEqual(workflow.workflow_spec_id, workflow_api.workflow_spec_id)
         return workflow_api
 
     def complete_form(self, workflow_in, task_in, dict_data, update_all=False, error_code=None, terminate_loop=None,
                       user_uid="dhf8r"):
+        # workflow_in should be a workflow, not a workflow_api
+        # we were passing in workflow_api in many of our tests, and
+        # this caused problems testing standalone workflows
+        standalone = getattr(workflow_in.workflow_spec, 'standalone', False)
         prev_completed_task_count = workflow_in.completed_tasks
         if isinstance(task_in, dict):
             task_id = task_in["id"]
@@ -418,7 +380,8 @@ class BaseTest(unittest.TestCase):
             .order_by(TaskEventModel.date.desc()).all()
         self.assertGreater(len(task_events), 0)
         event = task_events[0]
-        self.assertIsNotNone(event.study_id)
+        if not standalone:
+            self.assertIsNotNone(event.study_id)
         self.assertEqual(user_uid, event.user_uid)
         self.assertEqual(workflow.id, event.workflow_id)
         self.assertEqual(workflow.workflow_spec_id, event.workflow_spec_id)
@@ -454,3 +417,9 @@ class BaseTest(unittest.TestCase):
 
         if 'impersonate_user' in g:
             del g.impersonate_user
+
+    def minimal_bpmn(self, content):
+        """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
+        minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
+        return (minimal_dbpm % content).encode()
+

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0vm4ua3" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+  <bpmn:process id="Process_EnumResults" name="Empty Enum" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_08cjvuw</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_08cjvuw" sourceRef="StartEvent_1" targetRef="Activity_EmptyEnum" />
+    <bpmn:userTask id="Activity_EmptyEnum" name="Empty Results" camunda:formKey="EnumForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="checkbox" label="Select One" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+            </camunda:properties>
+            <camunda:value id="option_one" name="Option One" />
+          </camunda:formField>
+          <camunda:formField id="radio" type="enum">
+            <camunda:value id="option_one" name="Option One" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_08cjvuw</bpmn:incoming>
+      <bpmn:outgoing>Flow_0qm71qa</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0qm71qa" sourceRef="Activity_EmptyEnum" targetRef="Activity_GoodBye" />
+    <bpmn:endEvent id="Event_034utr4">
+      <bpmn:incoming>Flow_0ynk21r</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0ynk21r" sourceRef="Activity_GoodBye" targetRef="Event_034utr4" />
+    <bpmn:manualTask id="Activity_GoodBye" name="Good Bye">
+      <bpmn:documentation>&lt;H1&gt;Good Bye&lt;/H1&gt;</bpmn:documentation>
+      <bpmn:incoming>Flow_0qm71qa</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ynk21r</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_EnumResults">
+      <bpmndi:BPMNEdge id="Flow_0ynk21r_di" bpmnElement="Flow_0ynk21r">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="592" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0qm71qa_di" bpmnElement="Flow_0qm71qa">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08cjvuw_di" bpmnElement="Flow_08cjvuw">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1mqyx7y_di" bpmnElement="Activity_EmptyEnum">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_034utr4_di" bpmnElement="Event_034utr4">
+        <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0obcp1b_di" bpmnElement="Activity_GoodBye">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
