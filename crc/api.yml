@@ -399,22 +399,24 @@ paths:
       - name: study_id
         in: path
         required: true
-        description: The id of the study for which workflows should be returned.
+        description: The id of the study for which associates should be returned.
         schema:
           type: integer
           format: int32
     get:
       operationId: crc.api.study.get_study_associates
-      summary: Provides a single study
+      summary: Provides a list of associates for a particular study
       tags:
         - Studies
       responses:
         '200':
-          description: An Study Associate Object
+          description: list of Study Associate Objects
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/StudyAssociate"
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudyAssociate"
 
   /workflow-specification:
     get:
@@ -1589,39 +1591,15 @@ components:
           example: "27b-6-1212"
     StudyAssociate:
       properties:
-        id:
-          type: integer
-          example: 1234
-        title:
+        uid:
           type: string
-          example: The impact of fried pickles on beer consumption in bipedal software developers.
-        last_updated:
+          example: "dhf8r"
+        access:
+          type: boolean
+          example: False
+        role:
           type: string
-          format: date_time
-          example: "2019-12-25T09:12:33.001Z"
-        primary_investigator_id:
-          type: string
-          x-nullable: true
-          example: dhf8r
-        user_uid:
-          type: string
-          example: dhf8r
-        status:
-          type: string
-          enum: ['in_progress', 'hold', 'open_for_enrollment', 'abandoned']
-          example: done
-        sponsor:
-          type: string
-          x-nullable: true
-          example: "Sartography Pharmaceuticals"
-        ind_number:
-          type: string
-          x-nullable: true
-          example: "27b-6-42"
-        hsr_number:
-          type: string
-          x-nullable: true
-          example: "27b-6-1212"
+          example: "TODO"
     DocumentDirectory:
       properties:
         level:

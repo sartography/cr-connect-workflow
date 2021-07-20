@@ -24,6 +24,7 @@ from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
 from crc.services.document_service import DocumentService
+
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.lookup_service import LookupService
@@ -122,14 +123,18 @@ class StudyService(object):
             raise ApiError('uid not specified','A valid uva uid is required for this function')
 
         if uid == study.user_uid:
-            return {'uid': ownerid, 'role': 'owner', 'send_email': True, 'access': True}
+            return {'uid': uid, 'role': 'owner', 'send_email': True, 'access': True}
 
 
 
         person = db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id)&(
                 StudyAssociated.uid == uid)).first()
         if person:
-            return StudyAssociatedSchema().dump(person)
+            newAssociate = {'uid': person.uid}
+            newAssociate['role'] = person.role
+            newAssociate['send_email'] = person.send_email
+            newAssociate['access'] = person.access
+            return newAssociate
         raise ApiError('uid_not_associated_with_study',"user id %s was not associated with study number %d"%(uid,
                                                                                                             study_id))
 
@@ -148,7 +153,12 @@ class StudyService(object):
         people = db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id)
 
         people_list = [{'uid':ownerid,'role':'owner','send_email':True,'access':True}]
-        people_list += StudyAssociatedSchema().dump(people, many=True)
+        for person in people:
+            newAssociate = {'uid':person.uid}
+            newAssociate['role'] = person.role
+            newAssociate['send_email'] = person.send_email
+            newAssociate['access'] = person.access
+            people_list.append(newAssociate)
         return people_list
 
 
@@ -226,6 +236,7 @@ class StudyService(object):
 
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
             StudyService.delete_workflow(workflow.id)
+        study = session.query(StudyModel).filter_by(id=study_id).first()
         study = session.query(StudyModel).filter_by(id=study_id).first()
         session.delete(study)
         session.commit()
@@ -382,7 +393,6 @@ class StudyService(object):
         in sync with the studies available in protocol builder. """
 
         if ProtocolBuilderService.is_enabled():
-
             app.logger.info("The Protocol Builder is enabled. app.config['PB_ENABLED'] = " +
                             str(app.config['PB_ENABLED']))
 
@@ -398,10 +408,11 @@ class StudyService(object):
             for pb_study in pb_studies:
                 new_status = None
                 db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
-                if not db_study:
+                if not db_study: # Create a Study
                     db_study = StudyModel(id=pb_study.STUDYID)
                     db_study.status = None  # Force a new sa
                     new_status = StudyStatus.in_progress
+
                     session.add(db_study)
                     db_studies.append(db_study)
 
