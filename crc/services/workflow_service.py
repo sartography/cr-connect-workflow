@@ -312,7 +312,7 @@ class WorkflowService(object):
                 field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
                 field.id in data:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
-            data_store = DataStoreModel(file_id=file_id, key=field.id, value=data[field.id])
+            data_store = DataStoreModel(task_id=task.id, file_id=file_id, key=field.id, value=data[field.id])
             db.session.add(data_store)
 
     @staticmethod
