@@ -123,7 +123,7 @@ class StudyService(object):
             raise ApiError('uid not specified','A valid uva uid is required for this function')
 
         if uid == study.user_uid:
-            return {'uid': ownerid, 'role': 'owner', 'send_email': True, 'access': True}
+            return {'uid': uid, 'role': 'owner', 'send_email': True, 'access': True}
 
 
 
