@@ -44,11 +44,11 @@ class WorkflowLibraryModel(db.Model):
    id = db.Column(db.Integer, primary_key=True)
    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
    library_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
-   workflow_side = db.relationship(WorkflowSpecModel,
+   parent = db.relationship(WorkflowSpecModel,
                                    primaryjoin=workflow_spec_id==WorkflowSpecModel.id,
                                   backref='libraries')
    library = db.relationship(WorkflowSpecModel,primaryjoin=library_spec_id==WorkflowSpecModel.id,
-                                  backref='referred_by')
+                                  backref='parents')
 
 
 class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
@@ -64,6 +64,10 @@ class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
                                                           'name':x.library.name,
                                                           'display_name':x.library.display_name} for x in
                                                              obj.libraries] )
+    parents = marshmallow.fields.Function(lambda obj: [{'id':x.parent.id,
+                                                          'name':x.parent.name,
+                                                          'display_name':x.parent.display_name} for x in
+                                                             obj.parents] )
 
 class WorkflowState(enum.Enum):
     hidden = "hidden"
