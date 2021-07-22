@@ -765,7 +765,7 @@ class WorkflowService(object):
         else:
             if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
                 associated = StudyService.get_study_associates(processor.workflow_model.study.id)
-                return [user['uid'] for user in associated if user['access']]
+                return [user['uid'] for user in associated if user.get('access')]
             if spiff_task.task_spec.lane not in spiff_task.data:
                 return []  # No users are assignable to the task at this moment
             lane_users = spiff_task.data[spiff_task.task_spec.lane]
