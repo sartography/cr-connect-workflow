@@ -887,6 +887,11 @@ class WorkflowService(object):
         return specs
 
     @staticmethod
+    def get_library_workflow_specs():
+        specs = db.session.query(WorkflowSpecModel).filter_by(library=True).all()
+        return specs
+
+    @staticmethod
     def get_primary_workflow(workflow_spec_id):
         # Returns the FileModel of the primary workflow for a workflow_spec
         primary = None

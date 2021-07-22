@@ -1,7 +1,7 @@
 import enum
 
 import marshmallow
-from marshmallow import EXCLUDE
+from marshmallow import EXCLUDE,fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func
 
@@ -15,7 +15,6 @@ class WorkflowSpecCategoryModel(db.Model):
     name = db.Column(db.String)
     display_name = db.Column(db.String)
     display_order = db.Column(db.Integer)
-    library = db.Column(db.Boolean)
 
 
 class WorkflowSpecCategoryModelSchema(SQLAlchemyAutoSchema):
@@ -23,6 +22,7 @@ class WorkflowSpecCategoryModelSchema(SQLAlchemyAutoSchema):
         model = WorkflowSpecCategoryModel
         load_instance = True
         include_relationships = True
+
 
 
 class WorkflowSpecModel(db.Model):
@@ -36,6 +36,19 @@ class WorkflowSpecModel(db.Model):
     category = db.relationship("WorkflowSpecCategoryModel")
     is_master_spec = db.Column(db.Boolean, default=False)
     standalone = db.Column(db.Boolean, default=False)
+    library = db.Column(db.Boolean, default=False)
+
+
+class WorkflowLibraryModel(db.Model):
+   __tablename__ = 'workflow_library'
+   id = db.Column(db.Integer, primary_key=True)
+   workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
+   library_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
+   workflow_side = db.relationship(WorkflowSpecModel,
+                                   primaryjoin=workflow_spec_id==WorkflowSpecModel.id,
+                                  backref='libraries')
+   library = db.relationship(WorkflowSpecModel,primaryjoin=library_spec_id==WorkflowSpecModel.id,
+                                  backref='referred_by')
 
 
 class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
@@ -47,7 +60,10 @@ class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
         unknown = EXCLUDE
 
     category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
-
+    libraries = marshmallow.fields.Function(lambda obj: [{'id':x.library.id,
+                                                          'name':x.library.name,
+                                                          'display_name':x.library.display_name} for x in
+                                                             obj.libraries] )
 
 class WorkflowState(enum.Enum):
     hidden = "hidden"
@@ -78,6 +94,15 @@ class WorkflowSpecDependencyFile(db.Model):
 
     file_data = db.relationship(FileDataModel)
 
+
+
+class WorkflowLibraryModelSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = WorkflowLibraryModel
+        load_instance = True
+        include_relationships = True
+
+    library = marshmallow.fields.Nested('WorkflowSpecModelSchema')
 
 class WorkflowModel(db.Model):
     __tablename__ = 'workflow'
