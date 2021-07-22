@@ -58,6 +58,7 @@ class LdapService(object):
 
     @staticmethod
     def user_info(uva_uid):
+        uva_uid = uva_uid.lower()
         user_info = db.session.query(LdapModel).filter(LdapModel.uid == uva_uid).first()
         if not user_info:
             app.logger.info("No cache for " + uva_uid)
