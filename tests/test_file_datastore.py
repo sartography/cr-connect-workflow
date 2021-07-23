@@ -48,9 +48,24 @@ class TestFileDatastore(BaseTest):
 
         # process the form that sets the datastore values
         self.complete_form(workflow, task, {'Study_App_Doc': {'id': file_id},
-                                                     'IRB_HSR_Application_Type': {'label': 'Expedited Application'}})
+                                            'IRB_HSR_Application_Type': {'label': 'Expedited Application'},
+                                            'my_test_field': 'some string',
+                                            'the_number': 8,
+                                            'a_boolean': True,
+                                            'some_date': '2021-07-23'})
 
         # assert the data_store was set correctly
-        data_store = db.session.query(DataStoreModel).filter(DataStoreModel.file_id==file_id).first()
-        self.assertEqual('IRB_HSR_Application_Type', data_store.key)
-        self.assertEqual('Expedited Application', data_store.value)
+        data_store_keys = ['IRB_HSR_Application_Type', 'my_test_field', 'the_number', 'a_boolean', 'some_date']
+        data_store = db.session.query(DataStoreModel).filter(DataStoreModel.file_id==file_id).all()
+        for item in data_store:
+            self.assertIn(item.key, data_store_keys)
+            if item.key == 'IRB_HSR_Application_Type':
+                self.assertEqual('Expedited Application', item.value)
+            if item.key == 'my_test_field':
+                self.assertEqual('some string', item.value)
+            if item.key == 'the_number':
+                self.assertEqual('8', item.value)
+            if item.key == 'a_boolean':
+                self.assertEqual('true', item.value)
+            if item.key == 'some_date':
+                self.assertEqual('2021-07-23', item.value)
