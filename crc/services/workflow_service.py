@@ -314,7 +314,10 @@ class WorkflowService(object):
                 field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
                 field.id in data:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
-            data_args = (field.id, data[field.id]['label'])
+            if field.type == 'enum':
+                data_args = (field.id, data[field.id]['label'])
+            else:
+                data_args = (field.id, data[field.id])
             DataStoreBase().set_data_common(task.id, None, None, None, None, None, file_id, *data_args)
 
     @staticmethod
