@@ -87,6 +87,7 @@ class TestStudyApi(BaseTest):
         task = processor.next_task()
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_workflow_file(workflow_id=workflow.id,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="png",
                                       binary_data=b'1234', irb_doc_code=irb_code)
 
@@ -252,7 +253,7 @@ class TestStudyApi(BaseTest):
     def test_delete_workflow(self):
         self.load_example_data()
         workflow = session.query(WorkflowModel).first()
-        FileService.add_workflow_file(workflow_id=workflow.id,
+        FileService.add_workflow_file(workflow_id=workflow.id, task_spec_name='TaskSpec01',
                                       name="anything.png", content_type="text",
                                       binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr" )
 

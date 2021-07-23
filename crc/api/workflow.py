@@ -238,7 +238,7 @@ def __update_task(processor, task, data, user):
     here because we need to do it multiple times when completing all tasks in
     a multi-instance task"""
     task.update_data(data)
-    WorkflowService.post_process_form(task)  # some properties may update the data store.
+    WorkflowService.post_process_form(processor.workflow_model, task)  # some properties may update the data store.
     processor.complete_task(task)
     processor.do_engine_steps()
     processor.save()

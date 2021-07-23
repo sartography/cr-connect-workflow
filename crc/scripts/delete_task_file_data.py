@@ -1,4 +1,5 @@
 from crc import session
+from crc.models.data_store import DataStoreModel
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.scripts.script import Script
@@ -20,28 +21,26 @@ class DeleteTaskData(Script):
         return False
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
+        # fixme: using task_id is confusing, this is actually the name of the task_spec
         if 'task_id' in kwargs:
-            task_id = kwargs['task_id']
+            task_spec_name = kwargs['task_id']
         elif len(args) == 1:
-            task_id = args[0]
+            task_spec_name = args[0]
 
-        # Build list of files to delete
-        files_to_delete = []
-        task_events = session.query(TaskEventModel).filter(TaskEventModel.workflow_id==workflow_id).filter(TaskEventModel.study_id==study_id).filter(TaskEventModel.task_name==task_id).filter_by(action=WorkflowService.TASK_ACTION_COMPLETE).all()
-        for task_event in task_events:
-            for item in task_event.form_data:
-                if DocumentService.is_allowed_document(item):
-                    irb_doc_code = item
-                    files = session.query(FileModel).filter(FileModel.workflow_id==workflow_id).filter(FileModel.irb_doc_code==irb_doc_code).all()
-                    for file in files:
-                        if file.id not in files_to_delete:
-                            files_to_delete.append(file.id)
-
-        # delete files and data store
+        # delete files
+        files_to_delete = session.query(FileModel). \
+            filter(FileModel.workflow_id == workflow_id). \
+            filter(FileModel.task_spec == task_spec_name).all()
         for file in files_to_delete:
-            FileService().delete_file(file)
+            FileService().delete_file(file.id)
+
+        # delete the data store
+        session.query(DataStoreModel). \
+            filter(DataStoreModel.workflow_id == workflow_id). \
+            filter(DataStoreModel.task_spec == task.get_name()). \
+            delete()
 
         # delete task events
         session.query(TaskEventModel).filter(TaskEventModel.workflow_id == workflow_id).filter(
-            TaskEventModel.study_id == study_id).filter(TaskEventModel.task_name == task_id).filter_by(
+            TaskEventModel.study_id == study_id).filter(TaskEventModel.task_name == task_spec_name).filter_by(
             action=WorkflowService.TASK_ACTION_COMPLETE).delete()

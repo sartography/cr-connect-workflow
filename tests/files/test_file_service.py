@@ -59,10 +59,12 @@ class TestFileService(BaseTest):
         task = processor.next_task()
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_workflow_file(workflow_id=workflow.id,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234', irb_doc_code=irb_code)
         # Add the file again with different data
         FileService.add_workflow_file(workflow_id=workflow.id,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'5678', irb_doc_code=irb_code)
 
@@ -83,11 +85,13 @@ class TestFileService(BaseTest):
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234')
         # Add the file again with different data
         FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'5678')
 
@@ -100,6 +104,7 @@ class TestFileService(BaseTest):
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234')
 
@@ -117,6 +122,7 @@ class TestFileService(BaseTest):
         # Add the file again with different data
         FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'5678')
 
@@ -138,11 +144,13 @@ class TestFileService(BaseTest):
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234')
         # Add the file again with different data
         FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="a_different_thing.png", content_type="text",
                                       binary_data=b'5678')
         file_models = FileService.get_workflow_files(workflow_id=workflow.id)
@@ -160,6 +168,7 @@ class TestFileService(BaseTest):
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file_model = FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234')
         FileService.update_from_github([file_model.id])
@@ -183,6 +192,7 @@ class TestFileService(BaseTest):
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file_model = FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234')
         result = FileService.publish_to_github([file_model.id])
@@ -201,6 +211,7 @@ class TestFileService(BaseTest):
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file_model = FileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234')
         result = FileService.publish_to_github([file_model.id])

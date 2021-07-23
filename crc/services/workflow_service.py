@@ -281,7 +281,7 @@ class WorkflowService(object):
 
 
     @staticmethod
-    def post_process_form(task):
+    def post_process_form(workflow_model, task):
         """Looks through the fields in a submitted form, acting on any properties."""
         if not hasattr(task.task_spec, 'form'): return
         for field in task.task_spec.form.fields:
@@ -289,19 +289,19 @@ class WorkflowService(object):
             if field.has_property(Task.FIELD_PROP_REPEAT):
                 repeat_array = task.data[field.get_property(Task.FIELD_PROP_REPEAT)]
                 for repeat_data in repeat_array:
-                    WorkflowService.__post_process_field(task, field, repeat_data)
+                    WorkflowService.__post_process_field(workflow_model, task, field, repeat_data)
             else:
-                WorkflowService.__post_process_field(task, field, data)
+                WorkflowService.__post_process_field(workflow_model, task, field, data)
 
     @staticmethod
-    def __post_process_field(task, field, data):
+    def __post_process_field(workflow_model, task, field, data):
         if field.has_property(Task.FIELD_PROP_DOC_CODE) and field.id in data:
             # This is generally handled by the front end, but it is possible that the file was uploaded BEFORE
             # the doc_code was correctly set, so this is a stop gap measure to assure we still hit it correctly.
             file_id = data[field.id]["id"]
             doc_code = task.workflow.script_engine.eval(field.get_property(Task.FIELD_PROP_DOC_CODE), data)
             file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
-            if(file):
+            if file:
                 file.irb_doc_code = doc_code
                 db.session.commit()
             else:
@@ -312,7 +312,7 @@ class WorkflowService(object):
                 field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
                 field.id in data:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
-            data_store = DataStoreModel(task_id=task.id, file_id=file_id, key=field.id, value=data[field.id])
+            data_store = DataStoreModel(workflow_id=workflow_model.id, task_spec=task.get_name(), file_id=file_id, key=field.id, value=data[field.id])
             db.session.add(data_store)
 
     @staticmethod

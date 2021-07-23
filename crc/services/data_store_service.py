@@ -43,7 +43,7 @@ class DataStoreBase(object):
         return study
 
     def set_data_common(self,
-                        task_id,
+                        task_spec,
                         study_id,
                         user_id,
                         workflow_id,
@@ -67,7 +67,7 @@ class DataStoreBase(object):
             prev_value = None
             study = DataStoreModel(key=args[0], value=args[1],
                                    study_id=study_id,
-                                   task_id=task_id,
+                                   task_spec=task_spec,
                                    user_id=user_id,  # Make this available to any User
                                    file_id=file_id,
                                    workflow_id=workflow_id,

@@ -16,10 +16,12 @@ class TestDocumentDirectories(BaseTest):
 
         # Add a file
         FileService.add_workflow_file(workflow_id=workflow.id,
+                                      task_spec_name=first_task.name,
                                       name="something.png", content_type="text",
                                       binary_data=b'1234', irb_doc_code=irb_code_1)
         # Add second file
         FileService.add_workflow_file(workflow_id=workflow.id,
+                                      task_spec_name=first_task.name,
                                       name="anything.png", content_type="text",
                                       binary_data=b'5678', irb_doc_code=irb_code_2)
 

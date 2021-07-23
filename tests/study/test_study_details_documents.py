@@ -105,8 +105,9 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+                                             task_spec_name='Acitivity01',
+                                             name="anything.png", content_type="text",
+                                             binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
         FileDataSet().do_task(task, study.id, workflow_model.id, key="ginger", value="doodle", file_id=file.id)
@@ -126,8 +127,9 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+                                             task_spec_name = 'TaskSpec01',
+                                             name="anything.png", content_type="text",
+                                             binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
         FileDataSet().do_task(task, study.id, workflow_model.id, key="irb_code", value="Study_App_Doc", file_id=file.id)
@@ -148,8 +150,9 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+                                             task_spec_name='Activity01',
+                                             name="anything.png", content_type="text",
+                                             binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
         with self.assertRaises(ApiError):

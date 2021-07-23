@@ -14,8 +14,8 @@ class TestDeleteTaskFileData(BaseTest):
 
         correct_name = first_task.form['fields'][0]['id']
         data = {'file': (BytesIO(b"abcdef"), 'test_file.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, first_task.id, correct_name), data=data, follow_redirects=True,
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, first_task.name, correct_name), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_id = rv.json['id']
