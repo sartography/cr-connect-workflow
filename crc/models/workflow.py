@@ -63,11 +63,11 @@ class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
     libraries = marshmallow.fields.Function(lambda obj: [{'id':x.library.id,
                                                           'name':x.library.name,
                                                           'display_name':x.library.display_name} for x in
-                                                             obj.libraries] )
+                                                          obj.libraries] )
     parents = marshmallow.fields.Function(lambda obj: [{'id':x.parent.id,
                                                           'name':x.parent.name,
                                                           'display_name':x.parent.display_name} for x in
-                                                             obj.parents] )
+                                                          obj.parents] )
 
 class WorkflowState(enum.Enum):
     hidden = "hidden"

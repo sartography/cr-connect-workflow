@@ -20,10 +20,22 @@ from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 
 
-def all_specifications():
+def all_specifications(libraries=False,standalone=False):
+    if libraries and standalone:
+        raise ApiError('inconceivable!', 'You should specify libraries or standalone, but not both')
     schema = WorkflowSpecModelSchema(many=True)
-    return schema.dump(session.query(WorkflowSpecModel).filter((WorkflowSpecModel.library==False)|(
-            WorkflowSpecModel.library==None)).all())
+    if libraries:
+        return schema.dump(session.query(WorkflowSpecModel)\
+              .filter(WorkflowSpecModel.library==True).all())
+
+    if standalone:
+        return schema.dump(session.query(WorkflowSpecModel)\
+              .filter(WorkflowSpecModel.standalone==True).all())
+    # this still returns standalone workflow specs as well, but by default
+    # we do not return specs marked as library
+    return schema.dump(session.query(WorkflowSpecModel)\
+              .filter((WorkflowSpecModel.library==False)|(
+              WorkflowSpecModel.library==None)).all())
 
 
 def add_workflow_specification(body):
@@ -158,15 +170,15 @@ def get_workflow_from_spec(spec_id):
     return WorkflowApiSchema().dump(workflow_api_model)
 
 
-def standalone_workflow_specs():
-    schema = WorkflowSpecModelSchema(many=True)
-    specs = WorkflowService.get_standalone_workflow_specs()
-    return schema.dump(specs)
+# def standalone_workflow_specs():
+#     schema = WorkflowSpecModelSchema(many=True)
+#     specs = WorkflowService.get_standalone_workflow_specs()
+#     return schema.dump(specs)
 
-def library_workflow_specs():
-    schema = WorkflowSpecModelSchema(many=True)
-    specs = WorkflowService.get_library_workflow_specs()
-    return schema.dump(specs)
+# def library_workflow_specs():
+#     schema = WorkflowSpecModelSchema(many=True)
+#     specs = WorkflowService.get_library_workflow_specs()
+#     return schema.dump(specs)
 
 def get_workflow(workflow_id, do_engine_steps=True):
     """Retrieve workflow based on workflow_id, and return it in the last saved State.

@@ -400,6 +400,19 @@ paths:
       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
       tags:
         - Workflow Specifications
+      parameters :
+        - name : libraries
+          in : query
+          required : false
+          description : True if we should return just library schemas
+          schema :
+            type : boolean
+        - name : standalone
+          in : query
+          required : false
+          description : True if we should return just standalone schemas
+          schema :
+            type : boolean
       responses:
         '200':
           description: An array of workflow specifications
@@ -551,36 +564,36 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
-  /workflow-specification/standalone:
-    get:
-      operationId: crc.api.workflow.standalone_workflow_specs
-      summary: Provides a list of workflow specifications that can be run outside a study.
-      tags:
-        - Workflow Specifications
-      responses:
-        '200':
-          description: A list of workflow specifications
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpec"
-  /workflow-specification/libraries:
-    get:
-      operationId: crc.api.workflow.library_workflow_specs
-      summary: Provides a list of workflow specifications that are considered libraries.
-      tags:
-        - Workflow Specifications
-      responses:
-        '200':
-          description: A list of workflow specifications
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpec"
+#  /workflow-specification/standalone:
+#    get:
+#      operationId: crc.api.workflow.standalone_workflow_specs
+#      summary: Provides a list of workflow specifications that can be run outside a study.
+#      tags:
+#        - Workflow Specifications
+#      responses:
+#        '200':
+#          description: A list of workflow specifications
+#          content:
+#            application/json:
+#              schema:
+#                type: array
+#                items:
+#                  $ref: "#/components/schemas/WorkflowSpec"
+#  /workflow-specification/libraries:
+#    get:
+#      operationId: crc.api.workflow.library_workflow_specs
+#      summary: Provides a list of workflow specifications that are considered libraries.
+#      tags:
+#        - Workflow Specifications
+#      responses:
+#        '200':
+#          description: A list of workflow specifications
+#          content:
+#            application/json:
+#              schema:
+#                type: array
+#                items:
+#                  $ref: "#/components/schemas/WorkflowSpec"
   /workflow-specification/{spec_id}/validate:
     parameters:
       - name: spec_id
