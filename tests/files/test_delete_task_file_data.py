@@ -6,6 +6,12 @@ from io import BytesIO
 
 class TestDeleteTaskFileData(BaseTest):
 
+    def test_delete_task_file_data_validation(self):
+        self.load_example_data()
+        spec_model = self.load_test_spec('delete_task_file_data')
+        rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
+        self.assertEqual([], rv.json)
+
     def test_delete_task_file_data(self):
         self.load_example_data()
         workflow = self.create_workflow('delete_task_file_data')
