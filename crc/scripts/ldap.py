@@ -48,21 +48,29 @@ supervisor_info = ldap(supervisor_uid)   // Sets the supervisor information to l
                                    "UID for the person we want to look up.")
         if len(args) < 1:
             if UserService.has_user():
-               uid = UserService.current_user().uid
+                uid = UserService.current_user().uid
         else:
             uid = args[0]
-        user_info = LdapService.user_info(uid)
-        user_info_dict = {
-            "display_name": user_info.display_name,
-            "given_name": user_info.given_name,
-            "email_address": user_info.email_address,
-            "telephone_number": user_info.telephone_number,
-            "title": user_info.title,
-            "department": user_info.department,
-            "affiliation": user_info.affiliation,
-            "sponsor_type": user_info.sponsor_type,
-            "uid": user_info.uid,
-            "proper_name": user_info.proper_name()
-        }
 
-        return user_info_dict
+        try:
+            user_info = LdapService.user_info(uid)
+        except ApiError as ae:
+            app.logger.info(ae)
+            return {}
+        except Exception as e:
+            app.logger.info(e)
+            return {}
+        else:
+            user_info_dict = {
+                "display_name": user_info.display_name,
+                "given_name": user_info.given_name,
+                "email_address": user_info.email_address,
+                "telephone_number": user_info.telephone_number,
+                "title": user_info.title,
+                "department": user_info.department,
+                "affiliation": user_info.affiliation,
+                "sponsor_type": user_info.sponsor_type,
+                "uid": user_info.uid,
+                "proper_name": user_info.proper_name()
+            }
+            return user_info_dict

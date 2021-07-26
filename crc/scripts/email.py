@@ -1,3 +1,6 @@
+import sys
+import traceback
+
 from crc import app
 from crc.api.common import ApiError
 from crc.scripts.script import Script
@@ -44,16 +47,24 @@ email (subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email], cc='as
         if recipients:
             message = task.task_spec.documentation
             data = task.data
-            content, content_html = EmailService().get_rendered_content(message, data)
-            EmailService.add_email(
-                subject=subject,
-                sender=app.config['DEFAULT_SENDER'],
-                recipients=recipients,
-                content=content,
-                content_html=content_html,
-                cc=cc,
-                study_id=study_id
-            )
+            try:
+                content, content_html = EmailService().get_rendered_content(message, data)
+                EmailService.add_email(
+                    subject=subject,
+                    sender=app.config['DEFAULT_SENDER'],
+                    recipients=recipients,
+                    content=content,
+                    content_html=content_html,
+                    cc=cc,
+                    study_id=study_id
+                )
+            except Exception as e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                print("*** format_exception:")
+                # exc_type below is ignored on 3.5 and later
+                print(repr(traceback.format_exception(exc_type, exc_value,
+                                                      exc_traceback)))
+                raise e
 
     def get_email_addresses(self, users, study_id):
         emails = []

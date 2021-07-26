@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0b469f0" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_4b7fa29" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1kvuzs1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1kvuzs1" sourceRef="StartEvent_1" targetRef="Activity_0gtrm5e" />
+    <bpmn:userTask id="Activity_0gtrm5e" name="Select Enum" camunda:formKey="Upload Application">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="IRB_HSR_Application_Type" label="IRB-HSR Application Type" type="enum">
+            <camunda:properties>
+              <camunda:property id="file_data" value="Study_App_Doc" />
+              <camunda:property id="spreadsheet.name" value="IRB_HSR_Application_Type.xlsx" />
+              <camunda:property id="spreadsheet.label.column" value="Label" />
+              <camunda:property id="spreadsheet.value.column" value="Value" />
+              <camunda:property id="group" value="Application" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="Study_App_Doc" label="IRB-HSR Application" type="file" />
+          <camunda:formField id="my_test_field" label="Nickname" type="string">
+            <camunda:properties>
+              <camunda:property id="file_data" value="Study_App_Doc" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="some_date" label="Date" type="date">
+            <camunda:properties>
+              <camunda:property id="file_data" value="Study_App_Doc" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="a_boolean" label="A Boolean" type="boolean">
+            <camunda:properties>
+              <camunda:property id="file_data" value="Study_App_Doc" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="the_number" label="The Number" type="long">
+            <camunda:properties>
+              <camunda:property id="file_data" value="Study_App_Doc" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1kvuzs1</bpmn:incoming>
+      <bpmn:outgoing>Flow_0han7ki</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0han7ki" sourceRef="Activity_0gtrm5e" targetRef="Activity_0gpetln" />
+    <bpmn:manualTask id="Activity_0gpetln" name="Print Enum">
+      <bpmn:documentation># Enum</bpmn:documentation>
+      <bpmn:incoming>Flow_0han7ki</bpmn:incoming>
+      <bpmn:outgoing>Flow_0h5cdg9</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_124aupd">
+      <bpmn:incoming>Flow_0h5cdg9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0h5cdg9" sourceRef="Activity_0gpetln" targetRef="Event_124aupd" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_4b7fa29">
+      <bpmndi:BPMNEdge id="Flow_0h5cdg9_di" bpmnElement="Flow_0h5cdg9">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="592" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0han7ki_di" bpmnElement="Flow_0han7ki">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1kvuzs1_di" bpmnElement="Flow_1kvuzs1">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_11t0hqf_di" bpmnElement="Activity_0gtrm5e">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fax1lv_di" bpmnElement="Activity_0gpetln">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_124aupd_di" bpmnElement="Event_124aupd">
+        <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
