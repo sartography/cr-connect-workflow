@@ -30,6 +30,7 @@ from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
+from crc.services.data_store_service import DataStoreBase
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
@@ -312,8 +313,11 @@ class WorkflowService(object):
                 field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
                 field.id in data:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
-            data_store = DataStoreModel(workflow_id=workflow_model.id, task_spec=task.get_name(), file_id=file_id, key=field.id, value=data[field.id])
-            db.session.add(data_store)
+            if field.type == 'enum':
+                data_args = (field.id, data[field.id]['label'])
+            else:
+                data_args = (field.id, data[field.id])
+            DataStoreBase().set_data_common(task.id, None, None, None, None, None, file_id, *data_args)
 
     @staticmethod
     def evaluate_property(property_name, field, task):
