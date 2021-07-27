@@ -389,10 +389,15 @@ class WorkflowProcessor(object):
         """
 
         # If the whole blessed mess is done, return the end_event task in the tree
+        # This was failing in the case of a call activity where we have an intermediate EndEvent
+        # what we really want is the LAST EndEvent
+
+        endtasks = []
         if self.bpmn_workflow.is_completed():
             for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
                 if isinstance(task.task_spec, EndEvent):
-                    return task
+                    endtasks.append(task)
+            return endtasks[-1]
 
         # If there are ready tasks to complete, return the next ready task, but return the one
         # in the active parallel path if possible.  In some cases the active parallel path may itself be

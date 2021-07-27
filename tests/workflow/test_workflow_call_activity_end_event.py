@@ -13,7 +13,7 @@ class TestCallActivityEndEvent(BaseTest):
         # The call activity has 'Call Event'
 
         # This should fail, but it passes
-        self.assertIn('Call Event', first_task.documentation)
+        #self.assertIn('Call Event', first_task.documentation)
 
         # This should pass, but it fails
         self.assertIn('Main Workflow', first_task.documentation)
