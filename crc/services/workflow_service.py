@@ -30,6 +30,9 @@ from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
+from crc.services.data_store_service import DataStoreBase
+
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
@@ -97,12 +100,18 @@ class WorkflowService(object):
     def do_waiting():
         records = db.session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.waiting).all()
         for workflow_model in records:
-            print('processing workflow %d'%workflow_model.id)
-            processor = WorkflowProcessor(workflow_model)
-            processor.bpmn_workflow.refresh_waiting_tasks()
-            processor.bpmn_workflow.do_engine_steps()
-            processor.save()
-
+            try:
+                app.logger.info('Processing workflow %s' % workflow_model.id)
+                processor = WorkflowProcessor(workflow_model)
+                processor.bpmn_workflow.refresh_waiting_tasks()
+                processor.bpmn_workflow.do_engine_steps()
+                processor.save()
+            except Exception as e:
+                app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
+                                 (workflow_model.id,
+                                  workflow_model.workflow_spec.name,
+                                  workflow_model.study_id,
+                                  str(e)))
 
     @staticmethod
     @timeit
@@ -305,8 +314,11 @@ class WorkflowService(object):
                 field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
                 field.id in data:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
-            data_store = DataStoreModel(file_id=file_id, key=field.id, value=data[field.id])
-            db.session.add(data_store)
+            if field.type == 'enum':
+                data_args = (field.id, data[field.id]['label'])
+            else:
+                data_args = (field.id, data[field.id])
+            DataStoreBase().set_data_common(task.id, None, None, None, None, None, file_id, *data_args)
 
     @staticmethod
     def evaluate_property(property_name, field, task):
@@ -434,7 +446,7 @@ class WorkflowService(object):
                 doc_code = WorkflowService.evaluate_property('doc_code', field, task)
             file_model = FileModel(name="test.png",
                                    irb_doc_code = field.id)
-            doc_dict = FileService.get_doc_dictionary()
+            doc_dict = DocumentService.get_dictionary()
             file = File.from_models(file_model, None, doc_dict)
             return FileSchema().dump(file)
         elif field.type == 'files':
@@ -803,7 +815,7 @@ class WorkflowService(object):
             mi_count=task.multi_instance_count,  # This is the number of times the task could repeat.
             mi_index=task.multi_instance_index,  # And the index of the currently repeating task.
             process_name=task.process_name,
-            date=datetime.utcnow(),
+            # date=datetime.utcnow(), <=== For future reference, NEVER do this. Let the database set the time.
         )
         db.session.add(task_event)
         db.session.commit()

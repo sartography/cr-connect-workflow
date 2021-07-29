@@ -42,7 +42,6 @@ werkzeug = "*"
 xlrd = "*"
 xlsxwriter = "*"
 pygithub = "*"
-python-levenshtein = "*"
 apscheduler = "*"
 
 [requires]

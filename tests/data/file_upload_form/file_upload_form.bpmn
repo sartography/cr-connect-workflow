@@ -16,6 +16,12 @@
 OGC will upload the Non-Funded Executed Agreement after it has been negotiated by OSP contract negotiator.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
+          <camunda:formField id="Date" label="Version Date" type="date">
+            <camunda:properties>
+              <camunda:property id="group" value="PCRApproval" />
+              <camunda:property id="file_data" value="Some_File" />
+            </camunda:properties>
+          </camunda:formField>
           <camunda:formField id="file_type" type="enum" defaultValue="AD_CoCApp">
             <camunda:value id="AD_CoCApp" name="Ancillary Documents / Case Report Form" />
             <camunda:value id="AD_CoCAppr" name="Ancillary Documents / CoC Approval" />
@@ -27,12 +33,6 @@ OGC will upload the Non-Funded Executed Agreement after it has been negotiated b
             </camunda:properties>
           </camunda:formField>
           <camunda:formField id="Language" label="Language" type="string" defaultValue="Engish">
-            <camunda:properties>
-              <camunda:property id="group" value="PCRApproval" />
-              <camunda:property id="file_data" value="Some_File" />
-            </camunda:properties>
-          </camunda:formField>
-          <camunda:formField id="Date" label="Version Date" type="date">
             <camunda:properties>
               <camunda:property id="group" value="PCRApproval" />
               <camunda:property id="file_data" value="Some_File" />

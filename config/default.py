@@ -15,6 +15,7 @@ JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values 
 API_TOKEN = environ.get('API_TOKEN', default = 'af95596f327c9ecc007b60414fc84b61')
 
 NAME = "CR Connect Workflow"
+SERVER_NAME = environ.get('SERVER_NAME', default="localhost:5000")
 DEFAULT_PORT = "5000"
 FLASK_PORT = environ.get('PORT0') or environ.get('FLASK_PORT', default=DEFAULT_PORT)
 FRONTEND = environ.get('FRONTEND', default="localhost:4200")
@@ -63,6 +64,7 @@ PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL +
 PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
 PB_SPONSORS_URL = environ.get('PB_SPONSORS_URL', default=PB_BASE_URL + "sponsors?studyid=%i")
 PB_IRB_INFO_URL = environ.get('PB_IRB_INFO_URL', default=PB_BASE_URL + "current_irb_info/%i")
+PB_CHECK_STUDY_URL = environ.get('PB_CHECK_STUDY_URL', default=PB_BASE_URL + "check_study/%i")
 
 # Ldap Configuration
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://

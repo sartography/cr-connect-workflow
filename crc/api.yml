@@ -82,7 +82,7 @@ paths:
         schema :
           type : integer
     get:
-      operationId: crc.api.file.get_document_directory
+      operationId: crc.api.document.get_document_directory
       summary: Returns a directory of all files for study in a nested structure
       tags:
         - Document Categories
@@ -602,7 +602,7 @@ paths:
         description: The unique id of an existing workflow specification to validate.
         schema:
           type: string
-      - name: validate_study_id
+      - name: study_id
         in: query
         required: false
         description: Optional id of study to test under different scenarios

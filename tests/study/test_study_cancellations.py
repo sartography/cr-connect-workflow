@@ -5,6 +5,7 @@ from crc.models.study import StudyModel, StudySchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModel
 
 import json
+from unittest.mock import patch
 
 
 class TestStudyCancellations(BaseTest):
@@ -60,7 +61,10 @@ class TestStudyCancellations(BaseTest):
         self.assertEqual('Activity_Modify', third_task.name)
         return workflow_api, third_task
 
-    def test_before_cancel(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_before_cancel(self, mock_details):
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
 
         workflow, study_id = self.load_workflow()
         self.get_first_task(workflow)
@@ -68,7 +72,10 @@ class TestStudyCancellations(BaseTest):
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('Beer consumption in the bipedal software engineer', study_result.title)
 
-    def test_first_cancel(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_first_cancel(self, mock_details):
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
         workflow, study_id = self.load_workflow()
         workflow_api, first_task = self.get_first_task(workflow)
 
@@ -77,7 +84,10 @@ class TestStudyCancellations(BaseTest):
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('New Title', study_result.title)
 
-    def test_second_cancel(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_second_cancel(self, mock_details):
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
 
         workflow, study_id = self.load_workflow()
         workflow_api, first_task = self.get_first_task(workflow)
@@ -90,7 +100,10 @@ class TestStudyCancellations(BaseTest):
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('Second Title', study_result.title)
 
-    def test_after_cancel(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_after_cancel(self, mock_details):
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
 
         workflow, study_id = self.load_workflow()
         workflow_api, first_task = self.get_first_task(workflow)

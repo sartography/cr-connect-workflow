@@ -2,6 +2,7 @@
 # IMPORTANT - Environment must be loaded before app, models, etc....
 import os
 
+
 os.environ["TESTING"] = "true"
 
 import json
@@ -23,6 +24,7 @@ from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
+from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
 
 # UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
@@ -138,8 +140,7 @@ class BaseTest(unittest.TestCase):
         delete everything that matters in the local database - this is used to
         test ground zero copy of workflow specs.
         """
-        session.execute("delete from workflow; delete from file_data; delete from file; delete from workflow_spec;")
-        session.commit()
+        ExampleDataLoader.clean_db()
 
     def load_example_data(self, use_crc_data=False, use_rrt_data=False):
         """use_crc_data will cause this to load the mammoth collection of documents
@@ -147,19 +148,19 @@ class BaseTest(unittest.TestCase):
          otherwise it depends on a small setup for running tests."""
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
-        if use_crc_data:
-            ExampleDataLoader().load_all()
-        elif use_rrt_data:
-            ExampleDataLoader().load_rrt()
-        else:
-            ExampleDataLoader().load_test_data()
-
         # If in production mode, only add the first user.
         if app.config['PRODUCTION']:
             session.add(UserModel(**self.users[0]))
         else:
             for user_json in self.users:
                 session.add(UserModel(**user_json))
+
+        if use_crc_data:
+            ExampleDataLoader().load_all()
+        elif use_rrt_data:
+            ExampleDataLoader().load_rrt()
+        else:
+            ExampleDataLoader().load_test_data()
 
         session.commit()
         for study_json in self.studies:
@@ -282,28 +283,6 @@ class BaseTest(unittest.TestCase):
             session.commit()
         return study
 
-    def _create_study_workflow_approvals(self, user_uid, title, primary_investigator_id, approver_uids, statuses,
-                                         workflow_spec_name="random_fact"):
-        study = self.create_study(uid=user_uid, title=title, primary_investigator_id=primary_investigator_id)
-        workflow = self.create_workflow(workflow_name=workflow_spec_name, study=study)
-        approvals = []
-
-        for i in range(len(approver_uids)):
-            approvals.append(self.create_approval(
-                study=study,
-                workflow=workflow,
-                approver_uid=approver_uids[i],
-                status=statuses[i],
-                version=1
-            ))
-
-        full_study = {
-            'study': study,
-            'workflow': workflow,
-            'approvals': approvals,
-        }
-
-        return full_study
 
     def create_workflow(self, workflow_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
@@ -320,29 +299,10 @@ class BaseTest(unittest.TestCase):
     def create_reference_document(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.DOCUMENT_LIST,
+        FileService.add_reference_file(DocumentService.DOCUMENT_LIST,
                                        binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xls'])
+                                       content_type=CONTENT_TYPES['xlsx'])
         file.close()
-
-    def create_approval(
-            self,
-            study=None,
-            workflow=None,
-            approver_uid=None,
-            status=None,
-            version=None,
-    ):
-        study = study or self.create_study()
-        workflow = workflow or self.create_workflow()
-        approver_uid = approver_uid or self.test_uid
-        status = status or ApprovalStatus.PENDING.value
-        version = version or 1
-        approval = ApprovalModel(study=study, workflow=workflow, approver_uid=approver_uid, status=status,
-                                 version=version)
-        session.add(approval)
-        session.commit()
-        return approval
 
     def get_workflow_common(self, url, user):
         rv = self.app.get(url,

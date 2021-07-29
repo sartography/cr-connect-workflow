@@ -31,3 +31,8 @@ class TestLdapService(BaseTest):
             self.assertFalse(True, "An API error should be raised.")
         except ApiError as ae:
             self.assertEqual("missing_ldap_record", ae.code)
+
+    def test_get_user_with_caps(self):
+        user_info = LdapService.user_info("LB3DP")
+        self.assertIsNotNone(user_info)
+        self.assertEqual("lb3dp", user_info.uid)

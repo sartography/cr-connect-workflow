@@ -10,5 +10,5 @@ class TestFormFieldType(BaseTest):
 
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(json_data[0]['message'],
-                         'When populating all fields ... \nType is missing for field "name". A field type must be provided.')
+                         'Type is missing for field "name". A field type must be provided.')
         # print('TestFormFieldType: Good Form')

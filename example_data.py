@@ -7,7 +7,9 @@ from crc.models.file import CONTENT_TYPES
 from crc.models.ldap import LdapModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
+from crc.services.study_service import StudyService
 
 
 class ExampleDataLoader:
@@ -315,14 +317,14 @@ class ExampleDataLoader:
     def load_reference_documents(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.DOCUMENT_LIST,
+        FileService.add_reference_file(DocumentService.DOCUMENT_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()
 
         file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.INVESTIGATOR_LIST,
+        FileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()

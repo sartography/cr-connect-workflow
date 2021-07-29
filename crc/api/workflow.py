@@ -103,22 +103,15 @@ def drop_workflow_spec_library(spec_id,library_id):
     libraries: WorkflowLibraryModel = session.query(WorkflowLibraryModel).filter_by(workflow_spec_id=spec_id).all()
     return WorkflowLibraryModelSchema(many=True).dump(libraries)
 
-def validate_workflow_specification(spec_id, validate_study_id=None, test_until=None):
-    errors = {}
+def validate_workflow_specification(spec_id, study_id=None, test_until=None):
     try:
-        WorkflowService.test_spec(spec_id, validate_study_id, test_until)
+        WorkflowService.test_spec(spec_id, study_id, test_until)
+        WorkflowService.test_spec(spec_id, study_id, test_until, required_only=True)
     except ApiError as ae:
-        ae.message = "When populating all fields ... \n" + ae.message
-        errors['all'] = ae
-    try:
-        # Run the validation twice, the second time, just populate the required fields.
-        WorkflowService.test_spec(spec_id, validate_study_id, test_until, required_only=True)
-    except ApiError as ae:
-        ae.message = "When populating only required fields ... \n" + ae.message
-        errors['required'] = ae
-    interpreted_errors = ValidationErrorService.interpret_validation_errors(errors)
-    return ApiErrorSchema(many=True).dump(interpreted_errors)
-
+        error = ae
+        error = ValidationErrorService.interpret_validation_error(error)
+        return ApiErrorSchema(many=True).dump([error])
+    return []
 
 def update_workflow_specification(spec_id, body):
     if spec_id is None:

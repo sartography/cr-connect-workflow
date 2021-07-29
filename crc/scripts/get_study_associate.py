@@ -9,7 +9,7 @@ class GetStudyAssociates(Script):
 
     def get_description(self):
         return """
-Returns person assocated with study or an error if one is not associated.
+Returns people associated with a study or an error if one is not associated.
 example : get_study_associate('sbp3ey') => {'uid':'sbp3ey','role':'Unicorn Herder', 'send_email': False, 
 'access':True}
 

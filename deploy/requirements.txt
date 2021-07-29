@@ -61,7 +61,6 @@ python-box==5.2.0
 python-dateutil==2.8.1
 python-docx==0.8.10
 python-editor==1.0.4
-python-levenshtein==0.12.0
 pytz==2020.4
 pyyaml==5.4
 recommonmark==0.6.0

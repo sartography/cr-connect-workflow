@@ -11,6 +11,8 @@ from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudySchema, StudyModel, StudyStatus
 from crc.models.user import UserModel
 
+from unittest.mock import patch
+
 
 class TestAuthentication(BaseTest):
     admin_uid = 'dhf8r'
@@ -204,7 +206,10 @@ class TestAuthentication(BaseTest):
         user_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(len(user_data), len(all_users))
 
-    def test_admin_can_impersonate_another_user(self):
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
+    def test_admin_can_impersonate_another_user(self, mock_details):
+        details_response = self.protocol_builder_response('study_details.json')
+        mock_details.return_value = json.loads(details_response)
         # Switch production mode on
         app.config['PRODUCTION'] = True
 

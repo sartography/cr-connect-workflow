@@ -7,71 +7,15 @@ from flask import send_file
 from crc import session
 from crc.api.common import ApiError
 from crc.api.user import verify_token
-from crc.models.api_models import DocumentDirectory, DocumentDirectorySchema
 from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel, FileType
 from crc.models.workflow import WorkflowSpecModel
+from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
-
-
-def ensure_exists(output, categories, expanded):
-    """
-    This is a recursive function, it expects a list of
-    levels with a file object at the end (kinda like duck,duck,duck,goose)
-
-    for each level, it makes sure that level is already in the structure and if it is not
-    it will add it
-
-    function terminates upon getting an entry that is a file object ( or really anything but string)
-    """
-    current_item = categories[0]
-    found = False
-    if isinstance(current_item, str):
-        for item in output:
-            if item.level == current_item:
-                found = True
-                item.filecount = item.filecount + 1
-                item.expanded = expanded | item.expanded
-                ensure_exists(item.children, categories[1:], expanded)
-        if not found:
-            new_level = DocumentDirectory(level=current_item)
-            new_level.filecount = 1
-            new_level.expanded = expanded
-            output.append(new_level)
-            ensure_exists(new_level.children, categories[1:], expanded)
-    else:
-        new_level = DocumentDirectory(file=current_item)
-        new_level.expanded = expanded
-        output.append(new_level)
-
-
-def get_document_directory(study_id, workflow_id=None):
-    """
-    return a nested list of files arranged according to the category hirearchy
-    defined in the doc dictionary
-    """
-    output = []
-    doc_dict = FileService.get_doc_dictionary()
-    file_models = FileService.get_files_for_study(study_id=study_id)
-    files = (to_file_api(model) for model in file_models)
-    for file in files:
-        if file.irb_doc_code in doc_dict:
-            doc_code = doc_dict[file.irb_doc_code]
-        else:
-            doc_code = {'category1': "Unknown", 'category2': '', 'category3': ''}
-        if workflow_id:
-            expand = file.workflow_id == int(workflow_id)
-        else:
-            expand = False
-        print(expand)
-        categories = [x for x in [doc_code['category1'],doc_code['category2'],doc_code['category3'],file] if x != '']
-        ensure_exists(output, categories, expanded=expand)
-    return DocumentDirectorySchema(many=True).dump(output)
-
 
 def to_file_api(file_model):
     """Converts a FileModel object to something we can return via the api"""
     return File.from_models(file_model, FileService.get_file_data(file_model.id),
-                            FileService.get_doc_dictionary())
+                            DocumentService.get_dictionary())
 
 
 def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None,study_id=None):

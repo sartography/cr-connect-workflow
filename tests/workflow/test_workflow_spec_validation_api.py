@@ -59,7 +59,6 @@ class TestWorkflowSpecValidation(BaseTest):
         app.config['PB_ENABLED'] = True
         self.validate_all_loaded_workflows()
 
-
     def validate_all_loaded_workflows(self):
         workflows = session.query(WorkflowSpecModel).all()
         errors = []
@@ -71,12 +70,12 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_invalid_expression(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_expression")
-        self.assertEqual(2, len(errors))
+        self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_exception", errors[0]['code'])
         self.assertEqual("ExclusiveGateway_003amsm", errors[0]['task_id'])
         self.assertEqual("Has Bananas Gateway", errors[0]['task_name'])
         self.assertEqual("invalid_expression.bpmn", errors[0]['file_name'])
-        self.assertEqual('When populating all fields ... \nExclusiveGateway_003amsm: Error evaluating expression \'this_value_does_not_exist==true\', '
+        self.assertEqual('ExclusiveGateway_003amsm: Error evaluating expression \'this_value_does_not_exist==true\', '
                          'name \'this_value_does_not_exist\' is not defined', errors[0]["message"])
         self.assertIsNotNone(errors[0]['task_data'])
         self.assertIn("has_bananas", errors[0]['task_data'])
@@ -84,7 +83,7 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_validation_error(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_spec")
-        self.assertEqual(2, len(errors))
+        self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_error", errors[0]['code'])
         self.assertEqual("StartEvent_1", errors[0]['task_id'])
         self.assertEqual("invalid_spec.bpmn", errors[0]['file_name'])
@@ -93,7 +92,7 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_invalid_script(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_script")
-        self.assertEqual(2, len(errors))
+        self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_exception", errors[0]['code'])
         #self.assertTrue("NoSuchScript" in errors[0]['message'])
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
@@ -103,11 +102,22 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_invalid_script2(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_script2")
-        self.assertEqual(2, len(errors))
+        self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_exception", errors[0]['code'])
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
-        self.assertEqual("An Invalid Script Reference", errors[0]['task_name'])
+        self.assertEqual(3, errors[0]['line_number'])
+        self.assertEqual(9, errors[0]['offset'])
+        self.assertEqual("SyntaxError", errors[0]['error_type'])
+        self.assertEqual("A Syntax Error", errors[0]['task_name'])
         self.assertEqual("invalid_script2.bpmn", errors[0]['file_name'])
+
+    def test_invalid_script3(self):
+        self.load_example_data()
+        errors = self.validate_workflow("invalid_script3")
+        self.assertEqual(1, len(errors))
+        self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
+        self.assertEqual(3, errors[0]['line_number'])
+        self.assertEqual("NameError", errors[0]['error_type'])
 
     def test_repeating_sections_correctly_populated(self):
         self.load_example_data()

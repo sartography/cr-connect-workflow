@@ -46,7 +46,7 @@ class TestProtocolBuilder(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('study_details.json')
         response = ProtocolBuilderService.get_study_details(self.test_study_id)
         self.assertIsNotNone(response)
-        self.assertEqual(64, len(response))
+        self.assertEqual(65, len(response))
         self.assertEqual('1234', response['IND_1'])
 
     @patch('crc.services.protocol_builder.requests.get')
@@ -72,3 +72,13 @@ class TestProtocolBuilder(BaseTest):
         self.assertEqual('IRB Event 1', response[0]["IRBEVENT"])
         self.assertEqual('IRB Event 2', response[1]["IRBEVENT"])
         self.assertEqual('IRB Event 3', response[2]["IRBEVENT"])
+
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_check_study(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('check_study.json')
+        response = ProtocolBuilderService.check_study(self.test_study_id)
+        self.assertIsNotNone(response)
+        self.assertIn('DETAIL', response[0].keys())
+        self.assertIn('STATUS', response[0].keys())

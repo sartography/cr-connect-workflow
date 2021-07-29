@@ -7,7 +7,7 @@ import shlex
 from datetime import datetime
 from typing import List
 
-from SpiffWorkflow import Task as SpiffTask, WorkflowException
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
 from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
@@ -30,6 +30,8 @@ from crc.services.file_service import FileService
 from crc import app
 from crc.services.user_service import UserService
 
+from difflib import SequenceMatcher
+
 class CustomBpmnScriptEngine(BpmnScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.
     It will execute python code read in from the bpmn.  It will also make any scripts in the
@@ -50,24 +52,16 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
         else:
             workflow_id = None
-
         try:
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
+                augment_methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
-                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
-
-            super().execute(task, script, data, externalMethods=augmentMethods)
-        except SyntaxError as e:
-            raise ApiError('syntax_error',
-                           f'Something is wrong with your python script '
-                           f'please correct the following:'
-                           f' {script}, {e.msg}')
-        except NameError as e:
-            raise ApiError('name_error',
-                            f'something you are referencing does not exist:'
-                            f' {script}, {e}')
-
+                augment_methods = Script.generate_augmented_list(task, study_id, workflow_id)
+            super().execute(task, script, data, external_methods=augment_methods)
+        except WorkflowException as e:
+            raise e
+        except Exception as e:
+            raise WorkflowTaskExecException(task, f' {script}, {e}', e)
 
     def evaluate_expression(self, task, expression):
         """
@@ -86,7 +80,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
             else:
                 augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
             exp, valid = self.validateExpression(expression)
-            return self._eval(exp, externalMethods=augmentMethods, **task.data)
+            return self._eval(exp, external_methods=augmentMethods, **task.data)
 
         except Exception as e:
             raise WorkflowTaskExecException(task,
@@ -331,8 +325,8 @@ class WorkflowProcessor(object):
             spec = parser.get_spec(process_id)
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
-                           message="Failed to parse Workflow Specification '%s'. \n" % workflow_spec_id +
-                                   "Error is %s. \n" % str(ve),
+                           message="Failed to parse the Workflow Specification. " +
+                                   "Error is '%s.'" % str(ve),
                            file_name=ve.filename,
                            task_id=ve.id,
                            tag=ve.tag)
@@ -343,6 +337,9 @@ class WorkflowProcessor(object):
         if bpmn_workflow.is_completed():
             return WorkflowStatus.complete
         user_tasks = bpmn_workflow.get_ready_user_tasks()
+        waiting_tasks = bpmn_workflow.get_tasks(Task.WAITING)
+        if len(waiting_tasks) > 0:
+            return WorkflowStatus.waiting
         if len(user_tasks) > 0:
             return WorkflowStatus.user_input_required
         else:
@@ -392,10 +389,15 @@ class WorkflowProcessor(object):
         """
 
         # If the whole blessed mess is done, return the end_event task in the tree
+        # This was failing in the case of a call activity where we have an intermediate EndEvent
+        # what we really want is the LAST EndEvent
+
+        endtasks = []
         if self.bpmn_workflow.is_completed():
             for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
                 if isinstance(task.task_spec, EndEvent):
-                    return task
+                    endtasks.append(task)
+            return endtasks[-1]
 
         # If there are ready tasks to complete, return the next ready task, but return the one
         # in the active parallel path if possible.  In some cases the active parallel path may itself be

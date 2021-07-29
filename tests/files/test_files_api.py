@@ -1,14 +1,16 @@
 import io
 import json
+import os
 
 from tests.base_test import BaseTest
 
-from crc import session, db
+from crc import session, db, app
 from crc.models.file import FileModel, FileType, FileSchema, FileModelSchema
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.models.data_store import DataStoreModel
+from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
 
 
@@ -110,20 +112,24 @@ class TestFilesApi(BaseTest):
         self.assertEqual(0, len(json.loads(rv.get_data(as_text=True))))
 
     def test_set_reference_file(self):
-        file_name = "irb_document_types.xls"
-        data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.xls")}
+        file_name = "documents.xlsx"
+        filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        with open(filepath, 'rb') as myfile:
+            file_data = myfile.read()
+        data = {'file': (io.BytesIO(file_data), file_name)}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
         file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(FileType.xls, file.type)
+        self.assertEqual(FileType.xlsx, file.type)
         self.assertTrue(file.is_reference)
-        self.assertEqual("application/vnd.ms-excel", file.content_type)
+        self.assertEqual("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", file.content_type)
+        self.assertEqual('dhf8r', json_data['user_uid'])
 
     def test_set_reference_file_bad_extension(self):
-        file_name = FileService.DOCUMENT_LIST
+        file_name = DocumentService.DOCUMENT_LIST
         data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.ppt")}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
@@ -131,22 +137,28 @@ class TestFilesApi(BaseTest):
 
     def test_get_reference_file(self):
         file_name = "irb_document_types.xls"
-        data = {'file': (io.BytesIO(b"abcdef"), "some crazy thing do not care.xls")}
+        filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        with open(filepath, 'rb') as myfile:
+            file_data = myfile.read()
+        data = {'file': (io.BytesIO(file_data), file_name)}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         rv = self.app.get('/v1.0/reference_file/%s' % file_name, headers=self.logged_in_headers())
         self.assert_success(rv)
         data_out = rv.get_data()
-        self.assertEqual(b"abcdef", data_out)
+        self.assertEqual(file_data, data_out)
 
     def test_list_reference_files(self):
         ExampleDataLoader.clean_db()
 
-        file_name = FileService.DOCUMENT_LIST
-        data = {'file': (io.BytesIO(b"abcdef"), file_name)}
+        file_name = DocumentService.DOCUMENT_LIST
+        filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        with open(filepath, 'rb') as myfile:
+            file_data = myfile.read()
+        data = {'file': (io.BytesIO(file_data), file_name)}
         rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
-
+        self.assert_success(rv)
         rv = self.app.get('/v1.0/reference_file',
                           follow_redirects=True,
                           content_type="application/json", headers=self.logged_in_headers())
@@ -159,7 +171,8 @@ class TestFilesApi(BaseTest):
 
     def test_update_file_info(self):
         self.load_example_data()
-        file: FileModel = session.query(FileModel).first()
+        self.create_reference_document()
+        file: FileModel = session.query(FileModel).filter(FileModel.is_reference==False).first()
         file.name = "silly_new_name.bpmn"
 
         rv = self.app.put('/v1.0/file/%i' % file.id,
