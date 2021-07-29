@@ -319,6 +319,12 @@ class WorkflowService(object):
                 data_args = (field.id, data[field.id])
             DataStoreBase().set_data_common(task.id, None, None, None, None, None, file_id, *data_args)
 
+            # FIXME:
+            # Not sure if we want the workflow id here or not
+            # Need to make sure, so commented out my change and put original back
+            # Committing this while I work on another problem
+            # DataStoreBase().set_data_common(task.id, None, None, workflow_model.id, None, None, file_id, *data_args)
+
     @staticmethod
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
