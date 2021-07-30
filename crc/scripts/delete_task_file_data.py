@@ -54,11 +54,17 @@ class DeleteTaskData(Script):
             # TODO: This doesn't work.
             # It always deletes all task_events related to the task
             # Don't currently have a way to limit to a specific doc code
-            session.query(TaskEventModel). \
+            task_event_models = session.query(TaskEventModel). \
                 filter(TaskEventModel.workflow_id == workflow_id). \
                 filter(TaskEventModel.study_id == study_id). \
                 filter(TaskEventModel.task_name == task_spec_name). \
-                filter_by(action=WorkflowService.TASK_ACTION_COMPLETE).delete()
+                filter_by(action=WorkflowService.TASK_ACTION_COMPLETE).all()
+            # thought about looking into the form_data and deleting parts of it.
+            for model in task_event_models:
+                form_data = model.form_data
+                for item in form_data:
+                    if item.value == doc_code:
+                        pass
 
         else:
             raise ApiError(code='missing_task_id',
