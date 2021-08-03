@@ -58,15 +58,6 @@ def get_workflow_specification(spec_id):
 
     return WorkflowSpecModelSchema().dump(spec)
 
-def get_workflow_specification_libraries(spec_id):
-    if spec_id is None:
-        raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
-    spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
-    libraries: WorkflowLibraryModel = session.query(WorkflowLibraryModel).filter_by(workflow_spec_id=spec_id).all()
-    if spec is None:
-        raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
-    return WorkflowLibraryModelSchema(many=True).dump(libraries)
-
 def validate_spec_and_library(spec_id,library_id):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
@@ -162,16 +153,6 @@ def get_workflow_from_spec(spec_id):
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
-
-# def standalone_workflow_specs():
-#     schema = WorkflowSpecModelSchema(many=True)
-#     specs = WorkflowService.get_standalone_workflow_specs()
-#     return schema.dump(specs)
-
-# def library_workflow_specs():
-#     schema = WorkflowSpecModelSchema(many=True)
-#     specs = WorkflowService.get_library_workflow_specs()
-#     return schema.dump(specs)
 
 def get_workflow(workflow_id, do_engine_steps=True):
     """Retrieve workflow based on workflow_id, and return it in the last saved State.

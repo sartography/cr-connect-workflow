@@ -440,26 +440,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
 
-  /workflow-specification/{spec_id}/libraries:
-    parameters:
-      - name: spec_id
-        in: path
-        required: true
-        description: The unique id of an existing workflow specification.
-        schema:
-          type: string
-    get:
-      operationId: crc.api.workflow.get_workflow_specification_libraries
-      summary: Returns all libraries that are enabled for a workflow spec
-      tags:
-        - Workflow Specifications
-      responses:
-        '200':
-          description: Workflow specification.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WorkflowSpec"
 
   /workflow-specification/{spec_id}/library/{library_id}:
     parameters:
@@ -564,36 +544,6 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
-#  /workflow-specification/standalone:
-#    get:
-#      operationId: crc.api.workflow.standalone_workflow_specs
-#      summary: Provides a list of workflow specifications that can be run outside a study.
-#      tags:
-#        - Workflow Specifications
-#      responses:
-#        '200':
-#          description: A list of workflow specifications
-#          content:
-#            application/json:
-#              schema:
-#                type: array
-#                items:
-#                  $ref: "#/components/schemas/WorkflowSpec"
-#  /workflow-specification/libraries:
-#    get:
-#      operationId: crc.api.workflow.library_workflow_specs
-#      summary: Provides a list of workflow specifications that are considered libraries.
-#      tags:
-#        - Workflow Specifications
-#      responses:
-#        '200':
-#          description: A list of workflow specifications
-#          content:
-#            application/json:
-#              schema:
-#                type: array
-#                items:
-#                  $ref: "#/components/schemas/WorkflowSpec"
   /workflow-specification/{spec_id}/validate:
     parameters:
       - name: spec_id

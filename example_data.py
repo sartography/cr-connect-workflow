@@ -268,7 +268,7 @@ class ExampleDataLoader:
                          from_tests=True)
 
     def create_spec(self, id, name, display_name="", description="", filepath=None, master_spec=False,
-                    category_id=None, display_order=None, from_tests=False, standalone=False):
+                    category_id=None, display_order=None, from_tests=False, standalone=False, library=False):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
@@ -281,7 +281,8 @@ class ExampleDataLoader:
                                  is_master_spec=master_spec,
                                  category_id=category_id,
                                  display_order=display_order,
-                                 standalone=standalone)
+                                 standalone=standalone,
+                                 library=library)
         db.session.add(spec)
         db.session.commit()
         if not filepath and not from_tests:
