@@ -16,8 +16,11 @@ class ExampleDataLoader:
     @staticmethod
     def clean_db():
         session.flush()  # Clear out any transactions before deleting it all to avoid spurious errors.
+        engine = session.bind.engine
+        connection = engine.connect()
         for table in reversed(db.metadata.sorted_tables):
-            session.execute(table.delete())
+            if engine.dialect.has_table(connection, table):
+                session.execute(table.delete())
         session.commit()
         session.flush()
 
