@@ -35,7 +35,8 @@ class DMNFromSpreadSheet(Script):
 
         # ss_file_path = os.path.join(app.root_path, 'static', 'spreadsheet_to_dmn.xlsx')
         # ss_file_path = os.path.join(app.root_path, 'static', 'New_test_budget_spreadsheet.xlsx')
-        ss_file_path = os.path.join(app.root_path, 'static', 'large_test_spreadsheet.xlsx')
+        # ss_file_path = os.path.join(app.root_path, 'static', 'large_test_spreadsheet.xlsx')
+        ss_file_path = os.path.join(app.root_path, 'static', 'DMN_Upload_CRC_Orgs.xlsx')
         df = pd.read_excel(ss_file_path, header=None)
 
         root = etree.Element("definitions",
