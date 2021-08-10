@@ -10,7 +10,6 @@ coverage = "*"
 
 [packages]
 alembic = "*"
-connexion = {extras = ["swagger-ui"],version = "*"}
 coverage = "*"
 docxtpl = "*"
 flask = "*"
@@ -36,11 +35,8 @@ pyjwt = "*"
 python-dateutil = "*"
 recommonmark = "*"
 requests = "*"
-sentry-sdk = {extras = ["flask"],version = "==0.14.4"}
 sphinx = "*"
 swagger-ui-bundle = "*"
-spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow.git"}
-# spiffworkflow = {editable = true, path = "./../SpiffWorkflow"}
 webtest = "*"
 werkzeug = "*"
 xlrd = "*"
@@ -50,3 +46,14 @@ apscheduler = "*"
 
 [requires]
 python_version = "3.8"
+
+[packages.connexion]
+extras = [ "swagger-ui",]
+version = "*"
+
+[packages.sentry-sdk]
+extras = [ "flask",]
+version = "==0.14.4"
+
+[packages.spiffworkflow]
+git = "https://github.com/sartography/SpiffWorkflow.git"

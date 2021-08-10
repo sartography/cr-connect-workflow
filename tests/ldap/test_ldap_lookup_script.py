@@ -45,8 +45,8 @@ class TestLdapLookupScript(BaseTest):
         }
 
         script = Ldap()
-        with(self.assertRaises(ApiError)):
-            user_details = script.do_task(task, workflow.study_id, workflow.id, "PIComputingID")
+        user_details = script.do_task(task, workflow.study_id, workflow.id, "PIComputingID")
+        self.assertEqual({}, user_details)
 
     def test_get_current_user_details(self):
         self.load_example_data()

@@ -424,6 +424,19 @@ paths:
       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
       tags:
         - Workflow Specifications
+      parameters :
+        - name : libraries
+          in : query
+          required : false
+          description : True if we should return just library schemas
+          schema :
+            type : boolean
+        - name : standalone
+          in : query
+          required : false
+          description : True if we should return just standalone schemas
+          schema :
+            type : boolean
       responses:
         '200':
           description: An array of workflow specifications
@@ -450,6 +463,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
+
+
+  /workflow-specification/{spec_id}/library/{library_id}:
+    parameters:
+      - name: spec_id
+        in: path
+        required: true
+        description: The unique id of an existing workflow specification.
+        schema:
+          type: string
+      - name: library_id
+        in: path
+        required: true
+        description: The unique id of an existing library specification.
+        schema:
+          type: string
+
+
+    post:
+      operationId: crc.api.workflow.add_workflow_spec_library
+      summary: Adds a library to a workflow spec
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow specification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+    delete:
+      operationId: crc.api.workflow.drop_workflow_spec_library
+      summary: Delete a library from a workflow
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow specification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+
+
   /workflow-specification/{spec_id}:
     parameters:
       - name: spec_id
@@ -511,21 +568,6 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
-  /workflow-specification/standalone:
-    get:
-      operationId: crc.api.workflow.standalone_workflow_specs
-      summary: Provides a list of workflow specifications that can be run outside a study.
-      tags:
-        - Workflow Specifications
-      responses:
-        '200':
-          description: A list of workflow specifications
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpec"
   /workflow-specification/{spec_id}/validate:
     parameters:
       - name: spec_id
