@@ -114,7 +114,7 @@ email (subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email], cc='as
         associated_emails = []
         associates = StudyService.get_study_associates(study_id)
         for associate in associates:
-            if associate['send_email'] is True:
-                user_info = LdapService.user_info(associate['uid'])
+            if associate.send_email is True:
+                user_info = LdapService.user_info(associate.uid)
                 associated_emails.append(user_info.email_address)
         return associated_emails

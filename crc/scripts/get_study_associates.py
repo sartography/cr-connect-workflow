@@ -1,4 +1,5 @@
 from crc.api.common import ApiError
+from crc.models.study import StudyAssociatedSchema
 from crc.scripts.script import Script
 from crc.services.study_service import StudyService
 
@@ -26,7 +27,6 @@ example : get_study_associates() => [{'uid':'sbp3ey','role':'Unicorn Herder', 's
         return study_associates
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-
-        return StudyService.get_study_associates(study_id)
+        return StudyAssociatedSchema(many=True).dump(StudyService.get_study_associates(study_id))
 
 
