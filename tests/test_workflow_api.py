@@ -36,7 +36,6 @@ class TestWorkflowApi(BaseTest):
                                                from_tests=True)
         user = session.query(UserModel).first()
         self.assertIsNotNone(user)
-        #WorkflowService.get_workflow_from_spec(spec.id, user)
 
         rv = self.app.post(f'/v1.0/workflow-specification/%s/library/%s'%(spec1.id,spec2.id),
                           follow_redirects=True,
