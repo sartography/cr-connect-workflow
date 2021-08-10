@@ -80,8 +80,9 @@ def get_study(study_id, update_status=False):
         raise ApiError("unknown_study",  'The study "' + study_id + '" is not recognized.', status_code=404)
     return StudySchema().dump(study)
 
+
 def get_study_associates(study_id):
-    return StudyService.get_study_associates(study_id)
+    return StudyAssociatedSchema(many=True).dump(StudyService.get_study_associates(study_id))
 
 
 def delete_study(study_id):
