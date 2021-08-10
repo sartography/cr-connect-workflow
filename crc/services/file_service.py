@@ -17,7 +17,7 @@ from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile, WorkflowLibraryModel
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
 import re
@@ -233,10 +233,18 @@ class FileService(object):
 
     @staticmethod
     def get_files(workflow_spec_id=None, workflow_id=None,
-                  name=None, is_reference=False, irb_doc_code=None):
+                  name=None, is_reference=False, irb_doc_code=None, include_libraries=False):
         query = session.query(FileModel).filter_by(is_reference=is_reference)
         if workflow_spec_id:
-            query = query.filter_by(workflow_spec_id=workflow_spec_id)
+            if include_libraries:
+                libraries = session.query(WorkflowLibraryModel).filter(
+                   WorkflowLibraryModel.workflow_spec_id==workflow_spec_id).all()
+                library_workflow_specs = [x.library_spec_id for x in libraries]
+                library_workflow_specs.append(workflow_spec_id)
+                query = query.filter(FileModel.workflow_spec_id.in_(library_workflow_specs))
+            else:
+                query = query.filter(FileModel.workflow_spec_id == workflow_spec_id)
+
         elif workflow_id:
             query = query.filter_by(workflow_id=workflow_id)
             if irb_doc_code:
@@ -255,9 +263,9 @@ class FileService(object):
         return results
 
     @staticmethod
-    def get_spec_data_files(workflow_spec_id, workflow_id=None, name=None):
+    def get_spec_data_files(workflow_spec_id, workflow_id=None, name=None, include_libraries=False):
         """Returns all the FileDataModels related to a workflow specification.
-        If a workflow is specified, returns the version of the spec relatted
+        If a workflow is specified, returns the version of the spec related
         to that workflow, otherwise, returns the lastest files."""
         if workflow_id:
             query = session.query(FileDataModel) \
@@ -269,7 +277,7 @@ class FileService(object):
             return query.all()
         else:
             """Returns all the latest files related to a workflow specification"""
-            file_models = FileService.get_files(workflow_spec_id=workflow_spec_id)
+            file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,include_libraries=include_libraries)
             latest_data_files = []
             for file_model in file_models:
                 if name and file_model.name == name:
