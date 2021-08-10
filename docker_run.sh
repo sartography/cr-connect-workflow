@@ -13,14 +13,10 @@ if [ "$UPGRADE_DB" = "true" ]; then
   pipenv run flask db upgrade
 fi
 
-# This is commented to keep humans from clearing the db accidentally.
-# If you need to reset the db, you can uncomment,
-# then set RESET_DB to true in config, push code, and pray
-
-#if [ "$RESET_DB" = "true" ]; then
-#  echo 'Resetting database and seeding it with example CR Connect data...'
-#  pipenv run flask load-example-data
-#fi
+if [ "$RESET_DB" = "true" ]; then
+  echo 'Resetting database and seeding it with example CR Connect data...'
+  pipenv run flask load-example-data
+fi
 
 if [ "$RESET_DB_RRT" = "true" ]; then
   echo 'Resetting database and seeding it with example RRT data...'

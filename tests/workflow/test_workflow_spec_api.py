@@ -109,13 +109,13 @@ class TestWorkflowSpec(BaseTest):
         category = session.query(WorkflowSpecCategoryModel).first()
         ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=category.id,
                                         standalone=True, from_tests=True)
-        rv = self.app.get('/v1.0/workflow-specification/standalone', headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/workflow-specification?standalone=true', headers=self.logged_in_headers())
         self.assertEqual(1, len(rv.json))
 
         ExampleDataLoader().create_spec('email_script', 'Email Script', category_id=category.id,
                                         standalone=True, from_tests=True)
 
-        rv = self.app.get('/v1.0/workflow-specification/standalone', headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/workflow-specification?standalone=true', headers=self.logged_in_headers())
         self.assertEqual(2, len(rv.json))
 
     def test_get_workflow_from_workflow_spec(self):
