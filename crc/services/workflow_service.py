@@ -312,7 +312,7 @@ class WorkflowService(object):
                 data = {}
         if field.has_property(Task.FIELD_PROP_FILE_DATA) and \
                 field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
-                field.id in data:
+                field.id in data and data[field.id]:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
             if field.type == 'enum':
                 data_args = (field.id, data[field.id]['label'])
