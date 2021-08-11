@@ -1,3 +1,4 @@
+import copy
 import string
 from datetime import datetime
 import random
@@ -328,7 +329,13 @@ class WorkflowService(object):
             # Then you must evaluate the expression based on the data within the group only.
             group = field.get_property(Task.FIELD_PROP_REPEAT)
             if group in task.data:
+                # Here we must make the current group data top level (as it would be in a repeat section) but
+                # make all other top level task data available as well.
+                new_data = copy.deepcopy(task.data)
+                del(new_data[group])
                 data = task.data[group][0]
+                data.update(new_data)
+
         try:
             return task.workflow.script_engine.eval(expression, data)
         except Exception as e:
