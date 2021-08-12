@@ -117,7 +117,7 @@ class WorkflowProcessor(object):
 
         if workflow_model.bpmn_workflow_json is None:  # The workflow was never started.
             self.spec_data_files = FileService.get_spec_data_files(
-                workflow_spec_id=workflow_model.workflow_spec_id)
+                workflow_spec_id=workflow_model.workflow_spec_id,include_libraries=True)
             spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         else:
             self.spec_data_files = FileService.get_spec_data_files(
@@ -312,7 +312,7 @@ class WorkflowProcessor(object):
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: etree.Element = etree.fromstring(file_data.data)
-                if file_data.file_model.primary:
+                if file_data.file_model.primary and file_data.file_model.workflow_spec_id == workflow_spec_id:
                     process_id = FileService.get_process_id(bpmn)
                 parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
             elif file_data.file_model.type == FileType.dmn:
@@ -389,10 +389,15 @@ class WorkflowProcessor(object):
         """
 
         # If the whole blessed mess is done, return the end_event task in the tree
+        # This was failing in the case of a call activity where we have an intermediate EndEvent
+        # what we really want is the LAST EndEvent
+
+        endtasks = []
         if self.bpmn_workflow.is_completed():
             for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
                 if isinstance(task.task_spec, EndEvent):
-                    return task
+                    endtasks.append(task)
+            return endtasks[-1]
 
         # If there are ready tasks to complete, return the next ready task, but return the one
         # in the active parallel path if possible.  In some cases the active parallel path may itself be

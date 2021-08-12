@@ -68,4 +68,5 @@ class EmailService(object):
 
     @staticmethod
     def get_cr_connect_wrapper(email_body):
-        return render_template('mail_content_template.html', email_body=email_body, base_url=request.base_url)
+        base_url = app.config['FRONTEND']  # The frontend url
+        return render_template('mail_content_template.html', email_body=email_body, base_url=base_url)
