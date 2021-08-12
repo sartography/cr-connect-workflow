@@ -42,7 +42,7 @@ class StudyService(object):
             return True
         return False
 
-    def get_studies_for_user(self, user):
+    def get_studies_for_user(self, user, include_invalid=False):
         """Returns a list of all studies for the given user."""
         associated = session.query(StudyAssociated).filter_by(uid=user.uid, access=True).all()
         associated_studies = [x.study_id for x in associated]
@@ -51,7 +51,7 @@ class StudyService(object):
 
         studies = []
         for study_model in db_studies:
-            if self._is_valid_study(study_model.id):
+            if include_invalid or self._is_valid_study(study_model.id):
                 studies.append(StudyService.get_study(study_model.id, study_model, do_status=False))
         return studies
 
@@ -130,7 +130,7 @@ class StudyService(object):
             return people
         else:
             raise ApiError('uid_not_associated_with_study', "user id %s was not associated with study number %d" % (uid,
-                                                                                                                study_id))
+                                                                                                                    study_id))
 
     @staticmethod
     def get_study_associates(study_id):
