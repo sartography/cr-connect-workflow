@@ -53,19 +53,18 @@ class TestSudySponsorsScript(BaseTest):
         self.assertIn('sponsors', data)
         self.assertIn('out', data)
         print(data['out'])
-        self.assertEqual([{'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
-                           {'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True}]
-                           , data['out'])
-        self.assertEqual({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True}
-                          , data['out2'])
-
-        self.assertEqual([{'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
-                           {'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True}]
-                           , data['out3'])
-        self.assertEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True}
-                          , data['out4'])
-
-
+        self.assertDictEqual({'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
+                             data['out'][1])
+        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True},
+                             data['out'][0])
+        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True},
+                             data['out2'])
+        self.assertDictEqual({'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
+                             data['out3'][1])
+        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True},
+                             data['out3'][0])
+        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True},
+                             data['out4'])
         self.assertEqual(3, len(data['sponsors']))
 
 
