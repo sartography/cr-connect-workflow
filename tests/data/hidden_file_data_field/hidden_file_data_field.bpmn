@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_ef382ee" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_eea3627" name="Test Empty Hidden Field" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0eg42kv</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_FileUpload" name="File Upload" camunda:formKey="UploadFile">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="UploadFile" label="Select File" type="file" />
+          <camunda:formField id="Name" label="Enter Name" type="string">
+            <camunda:properties>
+              <camunda:property id="file_data" value="UploadFile" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="ExtraField" label="Could Be Hidden" type="string" defaultValue="Extra Field String">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="hide_field" />
+              <camunda:property id="file_data" value="UploadFile" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_074gk91</bpmn:incoming>
+      <bpmn:outgoing>Flow_1gseke4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0eg42kv" sourceRef="StartEvent_1" targetRef="Activity_AddData" />
+    <bpmn:sequenceFlow id="Flow_074gk91" sourceRef="Activity_AddData" targetRef="Activity_FileUpload" />
+    <bpmn:sequenceFlow id="Flow_1gseke4" sourceRef="Activity_FileUpload" targetRef="Activity_ViewData" />
+    <bpmn:endEvent id="Event_0qcduja">
+      <bpmn:incoming>Flow_04ozqju</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_04ozqju" sourceRef="Activity_ViewData" targetRef="Event_0qcduja" />
+    <bpmn:manualTask id="Activity_ViewData" name="View Data">
+      <bpmn:incoming>Flow_1gseke4</bpmn:incoming>
+      <bpmn:outgoing>Flow_04ozqju</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:userTask id="Activity_AddData" name="Add Data" camunda:formKey="HideData">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="hide_field" label="Hide Field?" type="boolean">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0eg42kv</bpmn:incoming>
+      <bpmn:outgoing>Flow_074gk91</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_eea3627">
+      <bpmndi:BPMNEdge id="Flow_04ozqju_di" bpmnElement="Flow_04ozqju">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1gseke4_di" bpmnElement="Flow_1gseke4">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_074gk91_di" bpmnElement="Flow_074gk91">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0eg42kv_di" bpmnElement="Flow_0eg42kv">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0zui1g5_di" bpmnElement="Activity_FileUpload">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0qcduja_di" bpmnElement="Event_0qcduja">
+        <dc:Bounds x="752" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1fkiik9_di" bpmnElement="Activity_ViewData">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_0wc78yf_di" bpmnElement="Activity_AddData">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
