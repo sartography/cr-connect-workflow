@@ -53,20 +53,20 @@ class TestSudySponsorsScript(BaseTest):
         self.assertIn('sponsors', data)
         self.assertIn('out', data)
         print(data['out'])
-        self.assertEquals([{'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
+        self.assertEqual([{'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
                            {'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True}]
                            , data['out'])
-        self.assertEquals({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True}
+        self.assertEqual({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True}
                           , data['out2'])
 
-        self.assertEquals([{'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
+        self.assertEqual([{'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
                            {'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True}]
                            , data['out3'])
-        self.assertEquals({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True}
+        self.assertEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True}
                           , data['out4'])
 
 
-        self.assertEquals(3, len(data['sponsors']))
+        self.assertEqual(3, len(data['sponsors']))
 
 
     @patch('crc.services.protocol_builder.requests.get')

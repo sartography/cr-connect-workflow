@@ -145,5 +145,5 @@ class TestWorkflowSpecValidation(BaseTest):
         final_data = WorkflowService.test_spec(spec_model.id, required_only=True)
         self.assertIsNotNone(final_data)
         self.assertIn('enum_with_default', final_data)
-        self.assertEquals('maybe', final_data['enum_with_default']['value'])
+        self.assertEqual('maybe', final_data['enum_with_default']['value'])
 
