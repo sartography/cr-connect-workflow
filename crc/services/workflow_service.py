@@ -326,7 +326,8 @@ class WorkflowService(object):
         expression = field.get_property(property_name)
         data = task.data
         if field.has_property(Task.FIELD_PROP_REPEAT):
-            # Then you must evaluate the expression based on the data within the group only.
+            # Then you must evaluate the expression based on the data within the group, if that data exists.
+            # There may not be data available in the group, if no groups where added
             group = field.get_property(Task.FIELD_PROP_REPEAT)
             if group in task.data:
                 # Here we must make the current group data top level (as it would be in a repeat section) but
@@ -335,6 +336,8 @@ class WorkflowService(object):
                 del(new_data[group])
                 data = task.data[group][0]
                 data.update(new_data)
+            else:
+                return None  # We may not have enough information to process this
 
         try:
             return task.workflow.script_engine.eval(expression, data)
