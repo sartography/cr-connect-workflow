@@ -190,8 +190,8 @@ paths:
   /workflow_sync/{workflow_spec_id}/spec:
     parameters:
       - name: workflow_spec_id
-        required: true
         in: path
+        required: true
         description: The unique id of an existing workflow specification to modify.
         schema:
           type: string
@@ -394,12 +394,49 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
+  /study/{study_id}/associates:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which associates should be returned.
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.study.get_study_associates
+      summary: Provides a list of associates for a particular study
+      tags:
+        - Studies
+      responses:
+        '200':
+          description: list of Study Associate Objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudyAssociate"
+
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
       tags:
         - Workflow Specifications
+      parameters :
+        - name : libraries
+          in : query
+          required : false
+          description : True if we should return just library schemas
+          schema :
+            type : boolean
+        - name : standalone
+          in : query
+          required : false
+          description : True if we should return just standalone schemas
+          schema :
+            type : boolean
       responses:
         '200':
           description: An array of workflow specifications
@@ -426,6 +463,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
+
+
+  /workflow-specification/{spec_id}/library/{library_id}:
+    parameters:
+      - name: spec_id
+        in: path
+        required: true
+        description: The unique id of an existing workflow specification.
+        schema:
+          type: string
+      - name: library_id
+        in: path
+        required: true
+        description: The unique id of an existing library specification.
+        schema:
+          type: string
+
+
+    post:
+      operationId: crc.api.workflow.add_workflow_spec_library
+      summary: Adds a library to a workflow spec
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow specification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+    delete:
+      operationId: crc.api.workflow.drop_workflow_spec_library
+      summary: Delete a library from a workflow
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: Workflow specification.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WorkflowSpec"
+
+
   /workflow-specification/{spec_id}:
     parameters:
       - name: spec_id
@@ -487,21 +568,6 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
-  /workflow-specification/standalone:
-    get:
-      operationId: crc.api.workflow.standalone_workflow_specs
-      summary: Provides a list of workflow specifications that can be run outside a study.
-      tags:
-        - Workflow Specifications
-      responses:
-        '200':
-          description: A list of workflow specifications
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpec"
   /workflow-specification/{spec_id}/validate:
     parameters:
       - name: spec_id
@@ -519,7 +585,7 @@ paths:
       - name: test_until
         in: query
         required: false
-        description: Optional name of task to stop validating at 
+        description: Optional name of task to stop validating at
         schema:
           type: string
     get:
@@ -1571,6 +1637,17 @@ components:
           type: string
           x-nullable: true
           example: "27b-6-1212"
+    StudyAssociate:
+      properties:
+        uid:
+          type: string
+          example: "dhf8r"
+        access:
+          type: boolean
+          example: False
+        role:
+          type: string
+          example: "TODO"
     DocumentDirectory:
       properties:
         level:
@@ -1691,7 +1768,7 @@ components:
           example: "random_fact"
           x-nullable: true
         file:
-          type: string 
+          type: string
     Workflow:
       properties:
         id:

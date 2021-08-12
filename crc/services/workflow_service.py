@@ -1,3 +1,4 @@
+import copy
 import string
 from datetime import datetime
 import random
@@ -333,7 +334,13 @@ class WorkflowService(object):
             # Then you must evaluate the expression based on the data within the group only.
             group = field.get_property(Task.FIELD_PROP_REPEAT)
             if group in task.data:
+                # Here we must make the current group data top level (as it would be in a repeat section) but
+                # make all other top level task data available as well.
+                new_data = copy.deepcopy(task.data)
+                del(new_data[group])
                 data = task.data[group][0]
+                data.update(new_data)
+
         try:
             return task.workflow.script_engine.eval(expression, data)
         except Exception as e:
@@ -775,7 +782,7 @@ class WorkflowService(object):
         else:
             if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
                 associated = StudyService.get_study_associates(processor.workflow_model.study.id)
-                return [user['uid'] for user in associated if user['access']]
+                return [user.uid for user in associated if user.access]
             if spiff_task.task_spec.lane not in spiff_task.data:
                 return []  # No users are assignable to the task at this moment
             lane_users = spiff_task.data[spiff_task.task_spec.lane]
@@ -901,6 +908,11 @@ class WorkflowService(object):
     @staticmethod
     def get_standalone_workflow_specs():
         specs = db.session.query(WorkflowSpecModel).filter_by(standalone=True).all()
+        return specs
+
+    @staticmethod
+    def get_library_workflow_specs():
+        specs = db.session.query(WorkflowSpecModel).filter_by(library=True).all()
         return specs
 
     @staticmethod

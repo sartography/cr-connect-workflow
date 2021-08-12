@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0kmksnn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0kmksnn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
   <bpmn:process id="Process_0exnnpv" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_1nfe5m9</bpmn:outgoing>
@@ -32,7 +32,7 @@ out4 = get_study_associate('lb3dp')</bpmn:script>
       <bpmn:outgoing>Flow_1vlh6s0</bpmn:outgoing>
       <bpmn:script>uids = []
 for assoc in out:
-   uids.append(assoc['uid'])
+   uids.append(assoc.uid)
 update_study_associates([{'uid':'lb3dp','role':'SuperGal','send_email':False,'access':True}])</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_1vlh6s0" sourceRef="Activity_0run091" targetRef="Activity_0d8iftx" />
@@ -46,6 +46,22 @@ out2 = get_study_associate('lb3dp')</bpmn:script>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0exnnpv">
+      <bpmndi:BPMNEdge id="Flow_14n3ixy_di" bpmnElement="Flow_14n3ixy">
+        <di:waypoint x="680" y="117" />
+        <di:waypoint x="750" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vlh6s0_di" bpmnElement="Flow_1vlh6s0">
+        <di:waypoint x="850" y="117" />
+        <di:waypoint x="900" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0cttkwp_di" bpmnElement="Flow_0cttkwp">
+        <di:waypoint x="1000" y="117" />
+        <di:waypoint x="1042" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09cika8_di" bpmnElement="Flow_09cika8">
+        <di:waypoint x="540" y="117" />
+        <di:waypoint x="580" y="117" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1bqiin0_di" bpmnElement="SequenceFlow_1bqiin0">
         <di:waypoint x="370" y="117" />
         <di:waypoint x="440" y="117" />
@@ -60,10 +76,6 @@ out2 = get_study_associate('lb3dp')</bpmn:script>
       <bpmndi:BPMNShape id="ScriptTask_1mp6xid_di" bpmnElement="Task_Script_Load_Study_Sponsors">
         <dc:Bounds x="270" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_09cika8_di" bpmnElement="Flow_09cika8">
-        <di:waypoint x="540" y="117" />
-        <di:waypoint x="580" y="117" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Activity_0wnwluq_di" bpmnElement="Activity_0cm6tn2">
         <dc:Bounds x="440" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
@@ -73,24 +85,12 @@ out2 = get_study_associate('lb3dp')</bpmn:script>
       <bpmndi:BPMNShape id="Event_0c8gcuh_di" bpmnElement="Event_0c8gcuh">
         <dc:Bounds x="1042" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_0cttkwp_di" bpmnElement="Flow_0cttkwp">
-        <di:waypoint x="1000" y="117" />
-        <di:waypoint x="1042" y="117" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Activity_0run091_di" bpmnElement="Activity_0run091">
         <dc:Bounds x="750" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_1vlh6s0_di" bpmnElement="Flow_1vlh6s0">
-        <di:waypoint x="850" y="117" />
-        <di:waypoint x="900" y="117" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="Activity_14td33q_di" bpmnElement="Activity_14td33q">
         <dc:Bounds x="580" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Flow_14n3ixy_di" bpmnElement="Flow_14n3ixy">
-        <di:waypoint x="680" y="117" />
-        <di:waypoint x="750" y="117" />
-      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>
