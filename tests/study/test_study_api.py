@@ -200,8 +200,9 @@ class TestStudyApi(BaseTest):
         self.assertEqual(num_open, 0)  # Currently, we don't automatically set studies to open for enrollment
         self.assertEqual(num_in_progress, 2)
         self.assertEqual(len(json_data), num_db_studies_after)
-        # The count is off, since we don't automatically set studies to Open for Enrollment
-        # This will likely change in the future
+        # The sum below is off, since we don't automatically set studies to Open for Enrollment
+        # Leaving the test here because we will need it again
+        # when we implement a new way to set Open for Enrollment
         # self.assertEqual(num_open + num_in_progress + num_abandoned, num_db_studies_after)
 
         # Automatic events check
@@ -212,7 +213,8 @@ class TestStudyApi(BaseTest):
         self.assertEqual(abandoned_events.count(), 1)  # 1 study has been abandoned
 
         # We don't currently set any studies to Open for Enrollment automatically
-        # This will likely change
+        # Leaving the test here because we will need it again
+        # when we implement a new way to set Open for Enrollment
         # open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
         # self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
 
