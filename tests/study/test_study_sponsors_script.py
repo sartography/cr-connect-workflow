@@ -45,4 +45,4 @@ class TestSudySponsorsScript(BaseTest):
         self.assertTrue(processor.bpmn_workflow.is_completed())
         data = processor.next_task().data
         self.assertIn('sponsors', data)
-        self.assertEquals(3, len(data['sponsors']))
+        self.assertEqual(3, len(data['sponsors']))
