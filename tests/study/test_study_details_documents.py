@@ -1,3 +1,4 @@
+
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 
 from tests.base_test import BaseTest
@@ -133,6 +134,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         self.assertTrue(isinstance(docs, Box))
         self.assertEqual(1, len(docs.Study_App_Doc.files))
         self.assertEqual("Study_App_Doc", docs.Study_App_Doc.files[0].data_store.irb_code)
+
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_file_data_set_invalid_irb_code_fails(self, mock_get):
