@@ -57,7 +57,6 @@ class StudyModel(db.Model):
     events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
-        self.hsr_number = pbs.HSRNUMBER
         self.title = pbs.TITLE
         self.user_uid = pbs.NETBADGEID
         self.last_updated = pbs.DATE_MODIFIED
@@ -220,7 +219,6 @@ class StudyForUpdateSchema(ma.Schema):
 
     id = fields.Integer(required=False, allow_none=True)
     status = EnumField(StudyStatus, by_value=True)
-    hsr_number = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
     enrollment_date = fields.DateTime(allow_none=True)
@@ -252,7 +250,6 @@ class StudySchema(ma.Schema):
     warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
     protocol_builder_status = EnumField(StudyStatus, by_value=True)
     status = EnumField(StudyStatus, by_value=True)
-    hsr_number = fields.String(allow_none=True)
     short_title = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)

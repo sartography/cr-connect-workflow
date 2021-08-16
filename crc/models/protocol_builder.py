@@ -19,21 +19,21 @@ class ProtocolBuilderInvestigatorType(enum.Enum):
 
 # Deprecated: Marked for removal
 class ProtocolBuilderStatus(enum.Enum):
-    # • Active: found in PB and no HSR number and not hold
+    # • Active: found in PB and not hold
     # • Hold: store boolean value in CR Connect (add to Study Model)
-    # • Open To Enrollment: has start date and HSR number?
+    # • Open To Enrollment: has start date?
     # • Abandoned: deleted in PB
     incomplete = 'incomplete' # Found in PB but not ready to start (not q_complete)
-    active = 'active'  # found in PB, marked as "q_complete" and no HSR number and not hold
+    active = 'active'  # found in PB, marked as "q_complete" and not hold
     hold = 'hold'  # CR Connect side, if the Study ias marked as "hold".
-    open = 'open'  # Open To Enrollment: has start date and HSR number?
+    open = 'open'  # Open To Enrollment: has start date?
     abandoned = 'abandoned'  # Not found in PB
 
 
     #DRAFT = 'draft',                      # !Q_COMPLETE
-    #IN_PROCESS = 'in_process',            # Q_COMPLETE && !UPLOAD_COMPLETE && !HSRNUMBER
-    #IN_REVIEW = 'in_review',              # Q_COMPLETE && (!UPLOAD_COMPLETE || !HSRNUMBER)
-    #REVIEW_COMPLETE = 'review_complete',  # Q_COMPLETE && UPLOAD_COMPLETE && HSRNUMBER
+    #IN_PROCESS = 'in_process',            # Q_COMPLETE && !UPLOAD_COMPLETE
+    #IN_REVIEW = 'in_review',              # Q_COMPLETE && (!UPLOAD_COMPLETE)
+    #REVIEW_COMPLETE = 'review_complete',  # Q_COMPLETE && UPLOAD_COMPLETE
     #INACTIVE = 'inactive',                # Not found in PB
 
 
@@ -54,7 +54,7 @@ class ProtocolBuilderStudySchema(ma.Schema):
     class Meta:
         model = ProtocolBuilderStudy
         unknown = INCLUDE
-        fields = ["STUDYID", "HSRNUMBER", "TITLE", "NETBADGEID",
+        fields = ["STUDYID", "TITLE", "NETBADGEID",
                   "DATE_MODIFIED"]
 
     @post_load
