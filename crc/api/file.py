@@ -71,9 +71,9 @@ def get_reference_file(name):
     file_data = FileService.get_reference_file_data(name)
     return send_file(
         io.BytesIO(file_data.data),
-        attachment_filename=file_data.file_model.name,
+        download_name=file_data.file_model.name,
         mimetype=file_data.file_model.content_type,
-        cache_timeout=-1  # Don't cache these files on the browser.
+        max_age=-1  # Don't cache these files on the browser.
     )
 
 
@@ -120,9 +120,9 @@ def get_file_data(file_id, version=None):
         raise ApiError('no_such_file', 'The file id you provided does not exist')
     return send_file(
         io.BytesIO(file_data.data),
-        attachment_filename=file_data.file_model.name,
+        download_name=file_data.file_model.name,
         mimetype=file_data.file_model.content_type,
-        cache_timeout=-1,  # Don't cache these files on the browser.
+        max_age=-1,  # Don't cache these files on the browser.
         last_modified=file_data.date_created
     )
 
@@ -135,9 +135,9 @@ def get_file_data_link(file_id, auth_token, version=None):
         raise ApiError('no_such_file', 'The file id you provided does not exist')
     return send_file(
         io.BytesIO(file_data.data),
-        attachment_filename=file_data.file_model.name,
+        download_name=file_data.file_model.name,
         mimetype=file_data.file_model.content_type,
-        cache_timeout=-1,  # Don't cache these files on the browser.
+        max_age=-1,  # Don't cache these files on the browser.
         last_modified=file_data.date_created,
         as_attachment = True
     )

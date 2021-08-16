@@ -16,10 +16,11 @@ from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
 from crc.models.file import FileModel, File
 from crc.models.ldap import LdapSchema
-from crc.models.protocol_builder import ProtocolBuilderStudy
-from crc.models.study import StudyModel, Study, StudyStatus, Category, \
-    WorkflowMetadata, StudyEventType, StudyEvent, IrbStatus, StudyAssociated
-from crc.models.task_event import TaskEventModel
+
+from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
+from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
+    IrbStatus, StudyAssociated, StudyAssociatedSchema
+from crc.models.task_event import TaskEventModel, TaskEvent
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
 from crc.services.document_service import DocumentService
@@ -41,17 +42,17 @@ class StudyService(object):
             return True
         return False
 
-    def get_studies_for_user(self, user):
+    def get_studies_for_user(self, user, include_invalid=False):
         """Returns a list of all studies for the given user."""
-        associated = session.query(StudyAssociated).filter_by(uid=user.uid,access=True).all()
+        associated = session.query(StudyAssociated).filter_by(uid=user.uid, access=True).all()
         associated_studies = [x.study_id for x in associated]
-        db_studies = session.query(StudyModel).filter((StudyModel.user_uid==user.uid)|
+        db_studies = session.query(StudyModel).filter((StudyModel.user_uid == user.uid) |
                                                       (StudyModel.id.in_(associated_studies))).all()
 
         studies = []
         for study_model in db_studies:
-            if self._is_valid_study(study_model.id):
-                studies.append(StudyService.get_study(study_model.id, study_model,do_status=False))
+            if include_invalid or self._is_valid_study(study_model.id):
+                studies.append(StudyService.get_study(study_model.id, study_model, do_status=False))
         return studies
 
     @staticmethod
@@ -75,8 +76,8 @@ class StudyService(object):
 
         study = Study.from_model(study_model)
         study.create_user_display = LdapService.user_info(study.user_uid).display_name
-        last_event: TaskEventModel = session.query(TaskEventModel)\
-            .filter_by(study_id=study_id,action='COMPLETE')\
+        last_event: TaskEventModel = session.query(TaskEventModel) \
+            .filter_by(study_id=study_id, action='COMPLETE') \
             .order_by(TaskEventModel.date.desc()).first()
         if last_event is None:
             study.last_activity_user = 'Not Started'
@@ -108,9 +109,9 @@ class StudyService(object):
         return study
 
     @staticmethod
-    def get_study_associate(study_id = None, uid=None):
+    def get_study_associate(study_id=None, uid=None):
         """
-        gets all associated people for a study from the database
+        gets details on how one uid is related to a study, returns a StudyAssociated model
         """
         study = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
 
@@ -118,23 +119,18 @@ class StudyService(object):
             raise ApiError('study_not_found', 'No study found with id = %d' % study_id)
 
         if uid is None:
-            raise ApiError('uid not specified','A valid uva uid is required for this function')
+            raise ApiError('uid not specified', 'A valid uva uid is required for this function')
 
         if uid == study.user_uid:
-            return {'uid': ownerid, 'role': 'owner', 'send_email': True, 'access': True}
+            return StudyAssociated(uid=uid, role='owner', send_email=True, access=True)
 
-
-
-        person = db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id)&(
-                StudyAssociated.uid == uid)).first()
-        if person:
-            newAssociate = {'uid':person.uid}
-            newAssociate['role'] = person.role
-            newAssociate['send_email'] = person.send_email
-            newAssociate['access'] = person.access
-            return newAssociate
-        raise ApiError('uid_not_associated_with_study',"user id %s was not associated with study number %d"%(uid,
-                                                                                                            study_id))
+        people = db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id) &
+                                                          (StudyAssociated.uid == uid)).first()
+        if people:
+            return people
+        else:
+            raise ApiError('uid_not_associated_with_study', "user id %s was not associated with study number %d" % (uid,
+                                                                                                                    study_id))
 
     @staticmethod
     def get_study_associates(study_id):
@@ -144,22 +140,15 @@ class StudyService(object):
         study = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
 
         if study is None:
-            raise ApiError('study_not_found','No study found with id = %d'%study_id)
+            raise ApiError('study_not_found', 'No study found with id = %d' % study_id)
 
-        ownerid = study.user_uid
-        people_list = [{'uid':ownerid,'role':'owner','send_email':True,'access':True}]
-        people = db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id)
-        for person in people:
-            newAssociate = {'uid':person.uid}
-            newAssociate['role'] = person.role
-            newAssociate['send_email'] = person.send_email
-            newAssociate['access'] = person.access
-            people_list.append(newAssociate)
-        return people_list
-
+        people = db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id).all()
+        owner = StudyAssociated(uid=study.user_uid, role='owner', send_email=True, access=True)
+        people.append(owner)
+        return people
 
     @staticmethod
-    def update_study_associates(study_id,associates):
+    def update_study_associates(study_id, associates):
         """
         updates the list of associates in the database for a study_id and a list
         of dicts that contains associates
@@ -168,20 +157,19 @@ class StudyService(object):
             raise ApiError('study_id not specified', "This function requires the study_id parameter")
 
         for person in associates:
-            if not LdapService.user_exists(person.get('uid','impossible_uid')):
-                if person.get('uid','impossible_uid') == 'impossible_uid':
-                    raise ApiError('associate with no uid','One of the associates passed as a parameter doesnt have '
+            if not LdapService.user_exists(person.get('uid', 'impossible_uid')):
+                if person.get('uid', 'impossible_uid') == 'impossible_uid':
+                    raise ApiError('associate with no uid', 'One of the associates passed as a parameter doesnt have '
                                                             'a uid specified')
-                raise ApiError('trying_to_grant_access_to_user_not_found_in_ldap',"You are trying to grant access to "
-                                                                                  "%s, but that user was not found in "
-                                                                                  "ldap "
-                                                                                  "- please check to ensure it is a "
-                                                                                  "valid uva uid"%person.get('uid'))
+                raise ApiError('trying_to_grant_access_to_user_not_found_in_ldap', "You are trying to grant access to "
+                                                                                   "%s, but that user was not found in "
+                                                                                   "ldap "
+                                                                                   "- please check to ensure it is a "
+                                                                                   "valid uva uid" % person.get('uid'))
 
         study = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
         if study is None:
-            raise ApiError('study_id not found', "A study with id# %d was not found"%study_id)
-
+            raise ApiError('study_id not found', "A study with id# %d was not found" % study_id)
 
         db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id).delete()
         for person in associates:
@@ -190,27 +178,27 @@ class StudyService(object):
             newAssociate.uid = person['uid']
             newAssociate.role = person.get('role', None)
             newAssociate.send_email = person.get('send_email', False)
-            newAssociate.access = person.get('access',False)
+            newAssociate.access = person.get('access', False)
             session.add(newAssociate)
         session.commit()
 
     @staticmethod
-    def update_study_associate(study_id=None,uid=None,role="",send_email=False,access=False):
+    def update_study_associate(study_id=None, uid=None, role="", send_email=False, access=False):
         if study_id is None:
             raise ApiError('study_id not specified', "This function requires the study_id parameter")
         if uid is None:
             raise ApiError('uid not specified', "This function requires a uva uid parameter")
 
         if not LdapService.user_exists(uid):
-            raise ApiError('trying_to_grant_access_to_user_not_found_in_ldap',"You are trying to grant access to "
-                                                                                  "%s but they were not found in ldap "
-                                                                                  "- please check to ensure it is a "
-                                                                                  "valid uva uid"%uid)
+            raise ApiError('trying_to_grant_access_to_user_not_found_in_ldap', "You are trying to grant access to "
+                                                                               "%s but they were not found in ldap "
+                                                                               "- please check to ensure it is a "
+                                                                               "valid uva uid" % uid)
         study = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
         if study is None:
-            raise ApiError('study_id not found', "A study with id# %d was not found"%study_id)
-        db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id)&(StudyAssociated.uid ==
-                                                                                         uid) ).delete()
+            raise ApiError('study_id not found', "A study with id# %d was not found" % study_id)
+        db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id) & (StudyAssociated.uid ==
+                                                                                           uid)).delete()
 
         newAssociate = StudyAssociated()
         newAssociate.study_id = study_id
@@ -221,7 +209,6 @@ class StudyService(object):
         session.add(newAssociate)
         session.commit()
         return True
-
 
     @staticmethod
     def delete_study(study_id):
@@ -305,18 +292,18 @@ class StudyService(object):
             # when we run tests - it doesn't look like the user is available
             # so we return a bogus token
             token = 'not_available'
-            if hasattr(flask.g,'user'):
+            if hasattr(flask.g, 'user'):
                 token = flask.g.user.encode_auth_token()
             for file in doc_files:
                 file_data = {'file_id': file.id,
                              'name': file.name,
-                             'url': app.config['APPLICATION_ROOT']+
+                             'url': app.config['APPLICATION_ROOT'] +
                                     'file/' + str(file.id) +
-                                    '/download?auth_token='+
+                                    '/download?auth_token=' +
                                     urllib.parse.quote_plus(token),
                              'workflow_id': file.workflow_id
                              }
-                data = db.session.query(DataStoreModel).filter(DataStoreModel.file_id==file.id).all()
+                data = db.session.query(DataStoreModel).filter(DataStoreModel.file_id == file.id).all()
                 data_store_data = {}
                 for d in data:
                     data_store_data[d.key] = d.value

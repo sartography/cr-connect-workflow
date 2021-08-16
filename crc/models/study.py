@@ -80,6 +80,13 @@ class StudyAssociated(db.Model):
     send_email = db.Column(db.Boolean, nullable=True)
     access = db.Column(db.Boolean, nullable=True)
 
+
+class StudyAssociatedSchema(ma.Schema):
+    class Meta:
+        fields=['uid', 'role', 'send_email', 'access']
+        model = StudyAssociated
+        unknown = INCLUDE
+
 class StudyEvent(db.Model):
     __tablename__ = 'study_event'
     id = db.Column(db.Integer, primary_key=True)

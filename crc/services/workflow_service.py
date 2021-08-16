@@ -1,3 +1,4 @@
+import copy
 import string
 from datetime import datetime
 import random
@@ -312,7 +313,7 @@ class WorkflowService(object):
                 data = {}
         if field.has_property(Task.FIELD_PROP_FILE_DATA) and \
                 field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
-                field.id in data:
+                field.id in data and data[field.id]:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
             if field.type == 'enum':
                 data_args = (field.id, data[field.id]['label'])
@@ -325,10 +326,19 @@ class WorkflowService(object):
         expression = field.get_property(property_name)
         data = task.data
         if field.has_property(Task.FIELD_PROP_REPEAT):
-            # Then you must evaluate the expression based on the data within the group only.
+            # Then you must evaluate the expression based on the data within the group, if that data exists.
+            # There may not be data available in the group, if no groups where added
             group = field.get_property(Task.FIELD_PROP_REPEAT)
             if group in task.data:
+                # Here we must make the current group data top level (as it would be in a repeat section) but
+                # make all other top level task data available as well.
+                new_data = copy.deepcopy(task.data)
+                del(new_data[group])
                 data = task.data[group][0]
+                data.update(new_data)
+            else:
+                return None  # We may not have enough information to process this
+
         try:
             return task.workflow.script_engine.eval(expression, data)
         except Exception as e:
@@ -770,7 +780,8 @@ class WorkflowService(object):
         else:
             if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
                 associated = StudyService.get_study_associates(processor.workflow_model.study.id)
-                return [user['uid'] for user in associated if user['access']]
+                return [user.uid for user in associated if user.access]
+
             if spiff_task.task_spec.lane not in spiff_task.data:
                 return []  # No users are assignable to the task at this moment
             lane_users = spiff_task.data[spiff_task.task_spec.lane]
@@ -780,7 +791,7 @@ class WorkflowService(object):
             lane_uids = []
             for user in lane_users:
                 if isinstance(user, dict):
-                    if 'value' in user and user['value'] is not None:
+                    if user.get("value"):
                         lane_uids.append(user['value'])
                     else:
                         raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %

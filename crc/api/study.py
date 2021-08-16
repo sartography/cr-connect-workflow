@@ -7,7 +7,7 @@ from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import Study, StudyEvent, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
-    StudyStatus
+    StudyStatus, StudyAssociatedSchema
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
@@ -81,6 +81,10 @@ def get_study(study_id, update_status=False):
     return StudySchema().dump(study)
 
 
+def get_study_associates(study_id):
+    return StudyAssociatedSchema(many=True).dump(StudyService.get_study_associates(study_id))
+
+
 def delete_study(study_id):
     try:
         StudyService.delete_study(study_id)
@@ -95,6 +99,12 @@ def user_studies():
     user = UserService.current_user(allow_admin_impersonate=True)
     StudyService.synch_with_protocol_builder_if_enabled(user)
     studies = StudyService().get_studies_for_user(user)
+    if len(studies) == 0:
+        studies = StudyService().get_studies_for_user(user, include_invalid=True)
+        if len(studies) > 0:
+            message = f"All studies associated with User: {user.display_name} failed study validation"
+            raise ApiError(code="study_integrity_error", message=message)
+
     results = StudySchema(many=True).dump(studies)
     return results
 

@@ -50,6 +50,6 @@ class TestSudySponsorsScript(BaseTest):
         data = processor.next_task().data
         self.assertIn('sponsors', data)
         self.assertIn('out', data)
-        self.assertEquals('empty', data['empty'])
-        self.assertEquals('newval', data['out'])
-        self.assertEquals(3, len(data['sponsors']))
+        self.assertEqual('empty', data['empty'])
+        self.assertEqual('newval', data['out'])
+        self.assertEqual(3, len(data['sponsors']))
