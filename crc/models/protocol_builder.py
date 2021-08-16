@@ -40,11 +40,10 @@ class ProtocolBuilderStatus(enum.Enum):
 
 class ProtocolBuilderStudy(object):
     def __init__(
-            self, STUDYID: int, HSRNUMBER: str, TITLE: str, NETBADGEID: str,
+            self, STUDYID: int, TITLE: str, NETBADGEID: str,
             DATE_MODIFIED: str
     ):
         self.STUDYID = STUDYID
-        self.HSRNUMBER = HSRNUMBER
         self.TITLE = TITLE
         self.NETBADGEID = NETBADGEID
         self.DATE_MODIFIED = DATE_MODIFIED
