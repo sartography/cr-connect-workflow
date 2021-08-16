@@ -117,7 +117,7 @@ class WorkflowProcessor(object):
 
         if workflow_model.bpmn_workflow_json is None:  # The workflow was never started.
             self.spec_data_files = FileService.get_spec_data_files(
-                workflow_spec_id=workflow_model.workflow_spec_id)
+                workflow_spec_id=workflow_model.workflow_spec_id,include_libraries=True)
             spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         else:
             self.spec_data_files = FileService.get_spec_data_files(
@@ -312,7 +312,7 @@ class WorkflowProcessor(object):
         for file_data in file_data_models:
             if file_data.file_model.type == FileType.bpmn:
                 bpmn: etree.Element = etree.fromstring(file_data.data)
-                if file_data.file_model.primary:
+                if file_data.file_model.primary and file_data.file_model.workflow_spec_id == workflow_spec_id:
                     process_id = FileService.get_process_id(bpmn)
                 parser.add_bpmn_xml(bpmn, filename=file_data.file_model.name)
             elif file_data.file_model.type == FileType.dmn:

@@ -190,8 +190,8 @@ paths:
   /workflow_sync/{workflow_spec_id}/spec:
     parameters:
       - name: workflow_spec_id
-        required: true
         in: path
+        required: true
         description: The unique id of an existing workflow specification to modify.
         schema:
           type: string
@@ -394,6 +394,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Study"
+  /study/{study_id}/associates:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which associates should be returned.
+        schema:
+          type: integer
+          format: int32
+    get:
+      operationId: crc.api.study.get_study_associates
+      summary: Provides a list of associates for a particular study
+      tags:
+        - Studies
+      responses:
+        '200':
+          description: list of Study Associate Objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudyAssociate"
+
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -561,7 +585,7 @@ paths:
       - name: test_until
         in: query
         required: false
-        description: Optional name of task to stop validating at 
+        description: Optional name of task to stop validating at
         schema:
           type: string
     get:
@@ -1636,6 +1660,17 @@ components:
           type: string
           x-nullable: true
           example: "27b-6-1212"
+    StudyAssociate:
+      properties:
+        uid:
+          type: string
+          example: "dhf8r"
+        access:
+          type: boolean
+          example: False
+        role:
+          type: string
+          example: "TODO"
     DocumentDirectory:
       properties:
         level:
@@ -1756,7 +1791,7 @@ components:
           example: "random_fact"
           x-nullable: true
         file:
-          type: string 
+          type: string
     Workflow:
       properties:
         id:
