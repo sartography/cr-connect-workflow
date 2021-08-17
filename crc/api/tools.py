@@ -43,9 +43,9 @@ def render_docx():
         return send_file(
             io.BytesIO(target_stream.read()),
             as_attachment=True,
-            download_name="output.docx",
+            attachment_filename="output.docx",
             mimetype="application/octet-stream",
-            max_age=-1  # Don't cache these files on the browser.
+            cache_timeout=-1  # Don't cache these files on the browser.
         )
     except ValueError as e:
         raise ApiError(code="undefined_field", message=str(e))
