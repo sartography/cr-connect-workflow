@@ -66,6 +66,7 @@ class Task(object):
 
     # Additional properties
     FIELD_PROP_ENUM_TYPE = "enum_type"
+    FIELD_PROP_BOOLEAN_TYPE = "boolean_type"
     FIELD_PROP_TEXT_AREA_ROWS = "rows"
     FIELD_PROP_TEXT_AREA_COLS = "cols"
     FIELD_PROP_TEXT_AREA_AUTO = "autosize"
