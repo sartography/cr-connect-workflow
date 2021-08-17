@@ -1,3 +1,5 @@
+import json
+
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from flask import g
@@ -49,7 +51,15 @@ class ApiError(Exception):
         if "task" in task.data:
             task.data.pop("task")
 
+        # In the unlikely event that the API error can't be serialized, try removing the task_data, as it may
+        # contain some invalid data that we can't return, so we can at least get the erro rmessage.
         instance.task_data = task.data
+        try:
+            json.dumps(ApiErrorSchema().dump(instance))
+        except TypeError as te:
+            instance.task_data = {
+                'task_data_hidden': 'We were unable to serialize the task data when reporting this error'}
+
         app.logger.error(message, exc_info=True)
         return instance
 

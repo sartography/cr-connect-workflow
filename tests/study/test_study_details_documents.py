@@ -113,8 +113,8 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         FileDataSet().do_task(task, study.id, workflow_model.id, key="ginger", value="doodle", file_id=file.id)
         docs = StudyInfo().do_task(task, study.id, workflow_model.id, "documents")
         self.assertTrue(isinstance(docs, Box))
-        self.assertEquals(1, len(docs.UVACompl_PRCAppr.files))
-        self.assertEquals("doodle", docs.UVACompl_PRCAppr.files[0].data_store.ginger)
+        self.assertEqual(1, len(docs.UVACompl_PRCAppr.files))
+        self.assertEqual("doodle", docs.UVACompl_PRCAppr.files[0].data_store.ginger)
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_file_data_set_changes_irb_code(self, mock_get):
@@ -135,8 +135,8 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         FileDataSet().do_task(task, study.id, workflow_model.id, key="irb_code", value="Study_App_Doc", file_id=file.id)
         docs = StudyInfo().do_task(task, study.id, workflow_model.id, "documents")
         self.assertTrue(isinstance(docs, Box))
-        self.assertEquals(1, len(docs.Study_App_Doc.files))
-        self.assertEquals("Study_App_Doc", docs.Study_App_Doc.files[0].data_store.irb_code)
+        self.assertEqual(1, len(docs.Study_App_Doc.files))
+        self.assertEqual("Study_App_Doc", docs.Study_App_Doc.files[0].data_store.irb_code)
 
 
     @patch('crc.services.protocol_builder.requests.get')

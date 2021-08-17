@@ -106,6 +106,6 @@ class TestMultiinstanceTasksApi(BaseTest):
         self.assertEqual(WorkflowStatus.complete, workflow.status)
         data = workflow.next_task.data
         for key in data["StudyInfo"]["investigators"]:
-            self.assertEquals("dhf8r@virginia.edu", data["StudyInfo"]["investigators"][key]['email'])
+            self.assertEqual("dhf8r@virginia.edu", data["StudyInfo"]["investigators"][key]['email'])
 
 

@@ -191,7 +191,7 @@ class TestFilesApi(BaseTest):
         rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         file_json = json.loads(rv.get_data(as_text=True))
-        self.assertEquals(80, file_json['size'])
+        self.assertEqual(80, file_json['size'])
 
         data['file'] = io.BytesIO(self.minimal_bpmn("efghijk")), 'my_new_file.bpmn'
         rv = self.app.put('/v1.0/file/%i/data' % file_json['id'], data=data, follow_redirects=True,

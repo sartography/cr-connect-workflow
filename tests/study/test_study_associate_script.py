@@ -65,7 +65,7 @@ class TestSudySponsorsScript(BaseTest):
                              data['out3'][0])
         self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True},
                              data['out4'])
-        self.assertEquals(3, len(data['sponsors']))
+        self.assertEqual(3, len(data['sponsors']))
 
 
     @patch('crc.services.protocol_builder.requests.get')
