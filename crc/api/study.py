@@ -99,6 +99,12 @@ def user_studies():
     user = UserService.current_user(allow_admin_impersonate=True)
     StudyService.synch_with_protocol_builder_if_enabled(user)
     studies = StudyService().get_studies_for_user(user)
+    if len(studies) == 0:
+        studies = StudyService().get_studies_for_user(user, include_invalid=True)
+        if len(studies) > 0:
+            message = f"All studies associated with User: {user.display_name} failed study validation"
+            raise ApiError(code="study_integrity_error", message=message)
+
     results = StudySchema(many=True).dump(studies)
     return results
 

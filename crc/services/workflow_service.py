@@ -781,6 +781,7 @@ class WorkflowService(object):
             if not hasattr(spiff_task.task_spec, 'lane') or spiff_task.task_spec.lane is None:
                 associated = StudyService.get_study_associates(processor.workflow_model.study.id)
                 return [user.uid for user in associated if user.access]
+
             if spiff_task.task_spec.lane not in spiff_task.data:
                 return []  # No users are assignable to the task at this moment
             lane_users = spiff_task.data[spiff_task.task_spec.lane]
@@ -790,7 +791,7 @@ class WorkflowService(object):
             lane_uids = []
             for user in lane_users:
                 if isinstance(user, dict):
-                    if 'value' in user and user['value'] is not None:
+                    if user.get("value"):
                         lane_uids.append(user['value'])
                     else:
                         raise ApiError.from_task(code="task_lane_user_error", message="Spiff Task %s lane user dict must have a key called 'value' with the user's uid in it." %
