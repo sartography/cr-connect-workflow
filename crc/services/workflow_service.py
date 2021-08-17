@@ -329,7 +329,7 @@ class WorkflowService(object):
             # Then you must evaluate the expression based on the data within the group, if that data exists.
             # There may not be data available in the group, if no groups where added
             group = field.get_property(Task.FIELD_PROP_REPEAT)
-            if group in task.data:
+            if group in task.data and len(task.data[group]) > 0:
                 # Here we must make the current group data top level (as it would be in a repeat section) but
                 # make all other top level task data available as well.
                 new_data = copy.deepcopy(task.data)
