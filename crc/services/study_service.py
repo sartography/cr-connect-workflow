@@ -398,11 +398,6 @@ class StudyService(object):
                     session.add(db_study)
                     db_studies.append(db_study)
 
-                if pb_study.HSRNUMBER:
-                    db_study.irb_status = IrbStatus.hsr_assigned
-                    if db_study.status != StudyStatus.open_for_enrollment:
-                        new_status = StudyStatus.open_for_enrollment
-
                 db_study.update_from_protocol_builder(pb_study)
                 StudyService._add_all_workflow_specs_to_study(db_study)
 

@@ -27,7 +27,6 @@ class StudyStatus(enum.Enum):
 class IrbStatus(enum.Enum):
     incomplete_in_protocol_builder = 'incomplete in protocol builder'
     completed_in_protocol_builder = 'completed in protocol builder'
-    hsr_assigned = 'hsr number assigned'
 
 
 class StudyEventType(enum.Enum):
@@ -46,7 +45,6 @@ class StudyModel(db.Model):
     irb_status = db.Column(db.Enum(IrbStatus))
     primary_investigator_id = db.Column(db.String, nullable=True)
     sponsor = db.Column(db.String, nullable=True)
-    hsr_number = db.Column(db.String, nullable=True)
     ind_number = db.Column(db.String, nullable=True)
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=False)
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
@@ -57,7 +55,6 @@ class StudyModel(db.Model):
     events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
-        self.hsr_number = pbs.HSRNUMBER
         self.title = pbs.TITLE
         self.user_uid = pbs.NETBADGEID
         self.last_updated = pbs.DATE_MODIFIED
@@ -172,7 +169,7 @@ class Study(object):
 
     def __init__(self, title, short_title, last_updated, primary_investigator_id, user_uid,
                  id=None, status=None, irb_status=None, comment="",
-                 sponsor="", hsr_number="", ind_number="", categories=[],
+                 sponsor="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, events_history=[],
                  last_activity_user="",last_activity_date =None,create_user_display="", **argsv):
         self.id = id
@@ -188,7 +185,6 @@ class Study(object):
         self.comment = comment
         self.primary_investigator_id = primary_investigator_id
         self.sponsor = sponsor
-        self.hsr_number = hsr_number
         self.ind_number = ind_number
         self.categories = categories
         self.approvals = approvals
@@ -220,7 +216,6 @@ class StudyForUpdateSchema(ma.Schema):
 
     id = fields.Integer(required=False, allow_none=True)
     status = EnumField(StudyStatus, by_value=True)
-    hsr_number = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
     enrollment_date = fields.DateTime(allow_none=True)
@@ -252,7 +247,6 @@ class StudySchema(ma.Schema):
     warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
     protocol_builder_status = EnumField(StudyStatus, by_value=True)
     status = EnumField(StudyStatus, by_value=True)
-    hsr_number = fields.String(allow_none=True)
     short_title = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
