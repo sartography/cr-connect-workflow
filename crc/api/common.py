@@ -55,7 +55,7 @@ class ApiError(Exception):
         # contain some invalid data that we can't return, so we can at least get the erro rmessage.
         instance.task_data = task.data
         try:
-            json.dumps(instance)
+            json.dumps(ApiErrorSchema().dump(instance))
         except TypeError as te:
             instance.task_data = {
                 'task_data_hidden': 'We were unable to serialize the task data when reporting this error'}
