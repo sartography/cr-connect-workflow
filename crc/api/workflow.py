@@ -138,7 +138,9 @@ def delete_workflow_specification(spec_id):
     # Delete all events and workflow models related to this specification
     for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
         StudyService.delete_workflow(workflow.id)
-    session.query(WorkflowSpecModel).filter_by(id=spec_id).delete()
+    # the cascade feature doesn't work if
+    deleteSpec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    session.delete(deleteSpec)
     session.commit()
 
 
