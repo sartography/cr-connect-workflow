@@ -60,11 +60,23 @@ class DeleteTaskData(Script):
                 filter(TaskEventModel.task_name == task_spec_name). \
                 filter_by(action=WorkflowService.TASK_ACTION_COMPLETE).all()
             # thought about looking into the form_data and deleting parts of it.
-            for model in task_event_models:
-                form_data = model.form_data
-                for item in form_data:
-                    if item.value == doc_code:
-                        pass
+            for task_event in task_event_models:
+                if doc_code:
+                    if task_event.form_data:
+                        new_tasks = []
+                        form_data = task_event.form_data
+                        form_data_key = list(form_data.keys())[0]
+                        tasks = form_data[form_data_key]
+                        for task in tasks:
+                            if task['DocCode']['value'] != doc_code:
+                                new_tasks.append(task)
+                        task_event.form_data = {form_data_key: new_tasks}
+                        session.add(task_event)
+                        print('here')
+                else:
+                    session.query(TaskEventModel).filter(TaskEventModel.id == task_event.id).delete()
+            session.commit()
+            print('also here')
 
         else:
             raise ApiError(code='missing_task_id',
