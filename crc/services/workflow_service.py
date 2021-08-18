@@ -244,6 +244,12 @@ class WorkflowService(object):
 
             if field.has_property(Task.FIELD_PROP_REPEAT):
                 group = field.get_property(Task.FIELD_PROP_REPEAT)
+                if group in form_data and not(isinstance(group, list)):
+                    raise ApiError.from_task("invalid_group",
+                                             f'You are grouping form fields inside a variable that is defined '
+                                             f'elsewhere: {group}.  Be sure that you use a unique name for the '
+                                             f'for repeat and group expressions that is not also used for a field name.'
+                                             , task=task)
                 if field.has_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION):
                     result = WorkflowService.evaluate_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION, field, task)
                     if not result:
