@@ -464,6 +464,8 @@ class StudyService(object):
         workflow_models = db.session.query(WorkflowModel). \
             join(WorkflowSpecModel). \
             filter(WorkflowSpecModel.is_master_spec == False). \
+            filter((WorkflowSpecModel.library == False) | \
+                   (WorkflowSpecModel.library == None)). \
             filter(WorkflowModel.study_id == study_id). \
             all()
         workflow_metas = []
