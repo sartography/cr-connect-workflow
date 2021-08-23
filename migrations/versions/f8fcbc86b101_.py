@@ -1,4 +1,4 @@
-"""empty message
+"""Delete file stuff - add task_spec to file and data_store
 
 Revision ID: f8fcbc86b101
 Revises: 3d9ae7cfc231
