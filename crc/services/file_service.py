@@ -177,7 +177,7 @@ class FileService(object):
             user_uid = None
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
-            version=version, md5_hash=md5_checksum, date_created=datetime.utcnow(),
+            version=version, md5_hash=md5_checksum,
             size=size, user_uid=user_uid
         )
         session.add_all([file_model, new_file_data_model])
