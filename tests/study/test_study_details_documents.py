@@ -104,7 +104,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                             # task_spec_name='Acitivity01',
+                                             task_spec_name='Acitivity01',
                                              name="anything.png", content_type="text",
                                              binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
@@ -126,7 +126,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                             # task_spec_name = 'TaskSpec01',
+                                             task_spec_name = 'TaskSpec01',
                                              name="anything.png", content_type="text",
                                              binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
@@ -149,7 +149,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                             # task_spec_name='Activity01',
+                                             task_spec_name='Activity01',
                                              name="anything.png", content_type="text",
                                              binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
