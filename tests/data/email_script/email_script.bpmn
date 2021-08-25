@@ -19,6 +19,13 @@
             </camunda:validation>
           </camunda:formField>
           <camunda:formField id="cc" label="CC" type="string" />
+          <camunda:formField id="bcc" label="Bcc" type="string" />
+          <camunda:formField id="reply_to" label="Reply To" type="string" />
+          <camunda:formField id="doc_code" label="Doc Code" type="string">
+            <camunda:properties>
+              <camunda:property id="repeat" value="doc_codes" />
+            </camunda:properties>
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0scd96e</bpmn:incoming>
@@ -26,9 +33,8 @@
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_0c60gne" sourceRef="Activity_EmailForm" targetRef="Activity_SendEmail" />
     <bpmn:endEvent id="Event_EndEvent">
-      <bpmn:incoming>Flow_19fqvhc</bpmn:incoming>
+      <bpmn:incoming>Flow_0wv0swo</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_19fqvhc" sourceRef="Activity_SendEmail" targetRef="Event_EndEvent" />
     <bpmn:scriptTask id="Activity_SendEmail" name="Send Email">
       <bpmn:documentation>Dear Person,
 
@@ -42,18 +48,29 @@ Yours faithfully,
 
 Dan</bpmn:documentation>
       <bpmn:incoming>Flow_0c60gne</bpmn:incoming>
-      <bpmn:outgoing>Flow_19fqvhc</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0xrm7iw</bpmn:outgoing>
       <bpmn:script>if not 'cc' in globals():
     cc=None
-email(subject=subject, recipients=recipients, cc=cc)</bpmn:script>
+if not 'bcc' in globals():
+    bcc=None
+if not 'reply_to' in globals():
+    reply_to=None
+
+attachments = []
+if 'doc_codes' in globals():
+    for item in globals()['doc_codes']:
+        attachments.append(item['doc_code'])
+email(subject=subject, recipients=recipients, cc=cc, bcc=bcc, reply_to=reply_to, attachments=attachments)</bpmn:script>
     </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0xrm7iw" sourceRef="Activity_SendEmail" targetRef="Activity_1lnjeej" />
+    <bpmn:sequenceFlow id="Flow_0wv0swo" sourceRef="Activity_1lnjeej" targetRef="Event_EndEvent" />
+    <bpmn:manualTask id="Activity_1lnjeej" name="Display Data">
+      <bpmn:incoming>Flow_0xrm7iw</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wv0swo</bpmn:outgoing>
+    </bpmn:manualTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_fe6205f">
-      <bpmndi:BPMNEdge id="Flow_19fqvhc_di" bpmnElement="Flow_19fqvhc">
-        <di:waypoint x="530" y="117" />
-        <di:waypoint x="592" y="117" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0c60gne_di" bpmnElement="Flow_0c60gne">
         <di:waypoint x="374" y="117" />
         <di:waypoint x="430" y="117" />
@@ -62,17 +79,28 @@ email(subject=subject, recipients=recipients, cc=cc)</bpmn:script>
         <di:waypoint x="215" y="117" />
         <di:waypoint x="274" y="117" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xrm7iw_di" bpmnElement="Flow_0xrm7iw">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="580" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wv0swo_di" bpmnElement="Flow_0wv0swo">
+        <di:waypoint x="680" y="117" />
+        <di:waypoint x="722" y="117" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0wqsfcj_di" bpmnElement="Activity_EmailForm">
         <dc:Bounds x="274" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1wh1xsj_di" bpmnElement="Event_EndEvent">
-        <dc:Bounds x="592" y="99" width="36" height="36" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1ajacra_di" bpmnElement="Activity_SendEmail">
         <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1wh1xsj_di" bpmnElement="Event_EndEvent">
+        <dc:Bounds x="722" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0eb7isk_di" bpmnElement="Activity_1lnjeej">
+        <dc:Bounds x="580" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

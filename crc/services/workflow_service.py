@@ -295,7 +295,8 @@ class WorkflowService(object):
         if not hasattr(task.task_spec, 'form'): return
         for field in task.task_spec.form.fields:
             data = task.data
-            if field.has_property(Task.FIELD_PROP_REPEAT):
+            # If we have a repeat field, make sure it is used before processing it
+            if field.has_property(Task.FIELD_PROP_REPEAT) and field.get_property(Task.FIELD_PROP_REPEAT) in task.data.keys():
                 repeat_array = task.data[field.get_property(Task.FIELD_PROP_REPEAT)]
                 for repeat_data in repeat_array:
                     WorkflowService.__post_process_field(task, field, repeat_data)

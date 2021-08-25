@@ -1,25 +1,23 @@
 import markdown
 import re
 
-from datetime import datetime
-from flask import render_template, request
+from flask import render_template
 from flask_mail import Message
 from jinja2 import Template
-from sqlalchemy import desc
 
 from crc import app, db, mail, session
-from crc.api.common import ApiError
 
-from crc.models.study import StudyModel
 from crc.models.email import EmailModel
-
+from crc.models.file import FileDataModel
+from crc.models.study import StudyModel
 
 
 class EmailService(object):
     """Provides common tools for working with an Email"""
 
     @staticmethod
-    def add_email(subject, sender, recipients, content, content_html, cc=None, study_id=None):
+    def add_email(subject, sender, recipients, content, content_html,
+                  cc=None, bcc=None, study_id=None, reply_to=None, attachment_files=None):
         """We will receive all data related to an email and store it"""
 
         # Find corresponding study - if any
@@ -35,11 +33,17 @@ class EmailService(object):
         try:
             msg = Message(subject,
                           sender=sender,
-                          recipients=recipients)
+                          recipients=recipients,
+                          body=content,
+                          html=content_html,
+                          cc=cc,
+                          bcc=bcc,
+                          reply_to=reply_to)
 
-            msg.body = content
-            msg.html = content_html
-            msg.cc = cc
+            if attachment_files is not None:
+                for file in attachment_files:
+                    file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id==file['id']).first()
+                    msg.attach(file['name'], file['type'], file_data.data)
 
             mail.send(msg)
         except Exception as e:

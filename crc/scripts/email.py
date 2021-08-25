@@ -1,29 +1,42 @@
 import sys
 import traceback
 
-from crc import app
+from crc import app, session
 from crc.api.common import ApiError
+from crc.models.file import FileModel, CONTENT_TYPES
+from crc.models.workflow import WorkflowModel
+from crc.services.document_service import DocumentService
 from crc.scripts.script import Script
-from crc.services.ldap_service import LdapService
 from crc.services.email_service import EmailService
+from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
 
 
 class Email(Script):
-    """This Script allows to be introduced as part of a workflow and called from there, specifying
-    recipients and content """
+    """Send an email from a script task, as part of a workflow.
+       You must specify recipients and content.
+       You can also specify cc, bcc, reply_to, and attachments"""
 
     def get_description(self):
         return """
-Creates an email, using the provided `subject`, `recipients`, and `cc` arguments.  
-The recipients and cc arguments can contain an email address or list of email addresses. 
+Creates an email, using the provided `subject` and `recipients` arguments, which are required.
+The `Element Documentation` field in the script task must contain markdown that becomes the body of the email message.
+
+You can also provide `cc`, `bcc`, `reply_to` and `attachments` arguments.  
+The cc, bcc, reply_to, and attachments arguments are not required.
+
+The recipients, cc, and bcc arguments can contain an email address or list of email addresses. 
 In place of an email address, we accept the string 'associated', in which case we
 look up the users associated with the study who have send_email set to True. 
-The cc argument is not required.
-The "documentation" should contain markdown that will become the body of the email message.
+The reply_to argument can contain an email address.
+The attachments arguments can contain a doc_code or list of doc_codes.
+
 Examples:
-email (subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email, 'associated'])
-email (subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email], cc='associated')
+email(subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email, 'associated'])
+email(subject="My Subject", recipients="user@example.com", cc='associated', bcc='test_user@example.com)
+email(subject="My Subject", recipients="user@example.com", reply_to="reply_to@example.com")
+email(subject="My Subject", recipients="user@example.com", attachments='Study_App_Doc')
+email(subject="My Subject", recipients="user@example.com", attachments=['Study_App_Doc','Study_Protocol_Document'])
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
@@ -37,8 +50,17 @@ email (subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email], cc='as
             subject = self.get_subject(kwargs['subject'])
             recipients = self.get_email_addresses(kwargs['recipients'], study_id)
             cc = []
+            bcc = []
+            reply_to = None
+            files = None
             if 'cc' in kwargs and kwargs['cc'] is not None:
                 cc = self.get_email_addresses(kwargs['cc'], study_id)
+            if 'bcc' in kwargs and kwargs['bcc'] is not None:
+                bcc = self.get_email_addresses(kwargs['bcc'], study_id)
+            if 'reply_to' in kwargs:
+                reply_to = kwargs['reply_to']
+            if 'attachments' in kwargs:
+                files = self.get_files(kwargs['attachments'], study_id)
 
         else:
             raise ApiError(code="missing_argument",
@@ -56,7 +78,10 @@ email (subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email], cc='as
                     content=content,
                     content_html=content_html,
                     cc=cc,
-                    study_id=study_id
+                    bcc=bcc,
+                    study_id=study_id,
+                    reply_to=reply_to,
+                    attachment_files=files
                 )
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -118,3 +143,31 @@ email (subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email], cc='as
                 user_info = LdapService.user_info(associate.uid)
                 associated_emails.append(user_info.email_address)
         return associated_emails
+
+    @staticmethod
+    def get_files(attachments, study_id):
+        files = []
+        codes = None
+        if isinstance(attachments, str):
+            codes = [attachments]
+        elif isinstance(attachments, list):
+            codes = attachments
+
+        if codes is not None:
+            for code in codes:
+                if DocumentService.is_allowed_document(code):
+                    workflows = session.query(WorkflowModel).filter(WorkflowModel.study_id==study_id).all()
+                    for workflow in workflows:
+                        workflow_files = session.query(FileModel).\
+                            filter(FileModel.workflow_id == workflow.id).\
+                            filter(FileModel.irb_doc_code == code).all()
+                        for file in workflow_files:
+                            files.append({'id': file.id, 'name': file.name, 'type': CONTENT_TYPES[file.type.value]})
+                else:
+                    raise ApiError(code='bad_doc_code',
+                                   message=f'The doc_code {code} is not valid.')
+        else:
+            raise ApiError(code='bad_argument_type',
+                           message='The attachments argument must be a string or list of strings')
+
+        return files
