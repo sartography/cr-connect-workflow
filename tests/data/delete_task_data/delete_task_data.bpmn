@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_08a4c34" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_08a4c34" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
   <bpmn:process id="Process_DeleteTaskData" name="Delete Task Data" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_12ulmn8</bpmn:outgoing>
@@ -54,22 +54,20 @@
     <bpmn:scriptTask id="Activity_DeleteSingle" name="Delete Single">
       <bpmn:incoming>SequenceFlow_17j00uv</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0oa0av1</bpmn:outgoing>
-      <bpmn:script>delete_task_file_data(task_id='Activity_UploadSingle')</bpmn:script>
+      <bpmn:script>delete_task_data(task_id='Activity_UploadSingle')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_DeleteRepeat" name="Delete Repeat">
       <bpmn:incoming>SequenceFlow_0oa0av1</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_0hxvd1d</bpmn:outgoing>
-      <bpmn:script>delete_task_file_data(task_id='Activity_UploadRepeat')</bpmn:script>
+      <bpmn:script>delete_task_data(task_id='Activity_UploadRepeat')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Activity_FilesUploaded" name="Files Uploaded">
-      <bpmn:documentation>## Files Uploaded
-</bpmn:documentation>
+      <bpmn:documentation>## Files Uploaded</bpmn:documentation>
       <bpmn:incoming>SequenceFlow_0xo2jve</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_17j00uv</bpmn:outgoing>
     </bpmn:manualTask>
     <bpmn:manualTask id="Activity_FilesDeleted" name="Files Deleted">
-      <bpmn:documentation>## Files Deleted
-</bpmn:documentation>
+      <bpmn:documentation>## Files Deleted</bpmn:documentation>
       <bpmn:incoming>SequenceFlow_0hxvd1d</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1fgwvz0</bpmn:outgoing>
     </bpmn:manualTask>
@@ -83,6 +81,36 @@
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_DeleteTaskData">
+      <bpmndi:BPMNEdge id="SequenceFlow_17j00uv_di" bpmnElement="SequenceFlow_17j00uv">
+        <di:waypoint x="661" y="160" />
+        <di:waypoint x="661" y="240" />
+        <di:waypoint x="327" y="240" />
+        <di:waypoint x="327" y="310" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1fgwvz0_di" bpmnElement="SequenceFlow_1fgwvz0">
+        <di:waypoint x="711" y="350" />
+        <di:waypoint x="772" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0hxvd1d_di" bpmnElement="SequenceFlow_0hxvd1d">
+        <di:waypoint x="544" y="350" />
+        <di:waypoint x="611" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0oa0av1_di" bpmnElement="SequenceFlow_0oa0av1">
+        <di:waypoint x="377" y="350" />
+        <di:waypoint x="444" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0xo2jve_di" bpmnElement="SequenceFlow_0xo2jve">
+        <di:waypoint x="544" y="120" />
+        <di:waypoint x="611" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_06786ls_di" bpmnElement="SequenceFlow_06786ls">
+        <di:waypoint x="377" y="120" />
+        <di:waypoint x="444" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12ulmn8_di" bpmnElement="SequenceFlow_12ulmn8">
+        <di:waypoint x="215" y="120" />
+        <di:waypoint x="277" y="120" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -107,36 +135,6 @@
       <bpmndi:BPMNShape id="Activity_07qeio1_di" bpmnElement="Activity_FilesDeleted">
         <dc:Bounds x="611" y="310" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="SequenceFlow_12ulmn8_di" bpmnElement="SequenceFlow_12ulmn8">
-        <di:waypoint x="215" y="120" />
-        <di:waypoint x="277" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_06786ls_di" bpmnElement="SequenceFlow_06786ls">
-        <di:waypoint x="377" y="120" />
-        <di:waypoint x="444" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0xo2jve_di" bpmnElement="SequenceFlow_0xo2jve">
-        <di:waypoint x="544" y="120" />
-        <di:waypoint x="611" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0oa0av1_di" bpmnElement="SequenceFlow_0oa0av1">
-        <di:waypoint x="377" y="350" />
-        <di:waypoint x="444" y="350" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_0hxvd1d_di" bpmnElement="SequenceFlow_0hxvd1d">
-        <di:waypoint x="544" y="350" />
-        <di:waypoint x="611" y="350" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_1fgwvz0_di" bpmnElement="SequenceFlow_1fgwvz0">
-        <di:waypoint x="711" y="350" />
-        <di:waypoint x="772" y="350" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="SequenceFlow_17j00uv_di" bpmnElement="SequenceFlow_17j00uv">
-        <di:waypoint x="661" y="160" />
-        <di:waypoint x="661" y="240" />
-        <di:waypoint x="327" y="240" />
-        <di:waypoint x="327" y="310" />
-      </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
 </bpmn:definitions>

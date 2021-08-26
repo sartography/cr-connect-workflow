@@ -27,9 +27,11 @@ class DeleteTaskData(Script):
         # make sure we have a task_id
         if 'task_id' in kwargs:
             task_spec_name = kwargs['task_id']
+        elif len(args) == 1:
+            task_spec_name = args[0]
         else:
             raise ApiError(code='missing_task_id',
-                           message='The delete_task_file_data requires task_id. This is the ID of the task used to upload the file(s)')
+                           message='The delete_task_data requires task_id. This is the ID of the task used to upload the file(s)')
 
         # delete task events
         session.query(TaskEventModel).filter(TaskEventModel.workflow_id == workflow_id).filter(

@@ -10,23 +10,23 @@ from crc.services.workflow_service import WorkflowService
 from io import BytesIO
 
 
-class TestDeleteTaskFileData(BaseTest):
+class TestDeleteTaskData(BaseTest):
 
-    def test_delete_task_file_data_validation(self):
+    def test_delete_task_data_validation(self):
         self.load_example_data()
-        spec_model = self.load_test_spec('delete_task_file_data')
+        spec_model = self.load_test_spec('delete_task_data')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         # Make sure we don't get json returned. This would indicate an error.
         self.assertEqual([], rv.json)
 
-    def test_delete_task_file_data(self):
+    def test_delete_task_data(self):
 
         self.load_example_data()
 
         doc_code_1 = 'Study_Protocol_Document'
         doc_code_2 = 'Study_App_Doc'
 
-        workflow = self.create_workflow('delete_task_file_data')
+        workflow = self.create_workflow('delete_task_data')
 
         # Make sure there are no files uploaded for workflow yet
         files = session.query(FileModel).filter(FileModel.workflow_id == workflow.id).all()
