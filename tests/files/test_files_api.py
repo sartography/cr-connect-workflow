@@ -301,7 +301,7 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual('Ancillary Document', json_data['document']['category1'])
-        self.assertEqual('CRC', json_data['document']['Who Uploads?'])
+        self.assertEqual('Study Team', json_data['document']['who_uploads?'])
 
     def test_delete_file(self):
         self.load_example_data()

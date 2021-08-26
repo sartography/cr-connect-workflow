@@ -129,7 +129,7 @@ class TestStudyService(BaseTest):
         self.assertEqual("UVA Compliance", documents["UVACompl_PRCAppr"]['category1'])
         self.assertEqual("PRC Approval", documents["UVACompl_PRCAppr"]['category2'])
         self.assertEqual("", documents["UVACompl_PRCAppr"]['category3'])
-        self.assertEqual("CRC", documents["UVACompl_PRCAppr"]['Who Uploads?'])
+        self.assertEqual("Study Team", documents["UVACompl_PRCAppr"]['who_uploads?'])
         self.assertEqual(0, documents["UVACompl_PRCAppr"]['count'])
         self.assertEqual(True, documents["UVACompl_PRCAppr"]['required'])
         self.assertEqual(6, documents["UVACompl_PRCAppr"]['id'])
