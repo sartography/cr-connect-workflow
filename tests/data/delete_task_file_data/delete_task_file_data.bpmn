@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_08a4c34" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+  <bpmn:process id="Process_DeleteTaskData" name="Delete Task Data" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_12ulmn8</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_19ssfc0">
+      <bpmn:incoming>SequenceFlow_1fgwvz0</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_UploadSingle" name="Upload Single" camunda:formKey="SingleFile">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Study_Protocol_Document" label="Select File" type="file" />
+          <camunda:formField id="ShortDesc" label="Short Description" type="textarea">
+            <camunda:properties>
+              <camunda:property id="file_data" value="Study_Protocol_Document" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="VerDate" label="Version Date" type="date">
+            <camunda:properties>
+              <camunda:property id="file_data" value="Study_Protocol_Document" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_12ulmn8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_06786ls</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_UploadRepeat" name="Upload Repeat" camunda:formKey="RepeatFile">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Study_App_Doc" label="Select File" type="file">
+            <camunda:properties>
+              <camunda:property id="repeat" value="StudyAppDoc" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="ShortDesc" label="Short Description" type="textarea">
+            <camunda:properties>
+              <camunda:property id="repeat" value="StudyAppDoc" />
+              <camunda:property id="file_data" value="Study_App_Doc" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="VerDate" label="Version Date" type="date">
+            <camunda:properties>
+              <camunda:property id="repeat" value="StudyAppDoc" />
+              <camunda:property id="file_data" value="Study_App_Doc" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_06786ls</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0xo2jve</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Activity_DeleteSingle" name="Delete Single">
+      <bpmn:incoming>SequenceFlow_17j00uv</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0oa0av1</bpmn:outgoing>
+      <bpmn:script>delete_task_file_data(task_id='Activity_UploadSingle')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_DeleteRepeat" name="Delete Repeat">
+      <bpmn:incoming>SequenceFlow_0oa0av1</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0hxvd1d</bpmn:outgoing>
+      <bpmn:script>delete_task_file_data(task_id='Activity_UploadRepeat')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Activity_FilesUploaded" name="Files Uploaded">
+      <bpmn:documentation>## Files Uploaded
+</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_0xo2jve</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_17j00uv</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Activity_FilesDeleted" name="Files Deleted">
+      <bpmn:documentation>## Files Deleted
+</bpmn:documentation>
+      <bpmn:incoming>SequenceFlow_0hxvd1d</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1fgwvz0</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="SequenceFlow_12ulmn8" sourceRef="StartEvent_1" targetRef="Activity_UploadSingle" />
+    <bpmn:sequenceFlow id="SequenceFlow_06786ls" sourceRef="Activity_UploadSingle" targetRef="Activity_UploadRepeat" />
+    <bpmn:sequenceFlow id="SequenceFlow_0xo2jve" sourceRef="Activity_UploadRepeat" targetRef="Activity_FilesUploaded" />
+    <bpmn:sequenceFlow id="SequenceFlow_0oa0av1" sourceRef="Activity_DeleteSingle" targetRef="Activity_DeleteRepeat" />
+    <bpmn:sequenceFlow id="SequenceFlow_0hxvd1d" sourceRef="Activity_DeleteRepeat" targetRef="Activity_FilesDeleted" />
+    <bpmn:sequenceFlow id="SequenceFlow_1fgwvz0" sourceRef="Activity_FilesDeleted" targetRef="Event_19ssfc0" />
+    <bpmn:sequenceFlow id="SequenceFlow_17j00uv" sourceRef="Activity_FilesUploaded" targetRef="Activity_DeleteSingle" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_DeleteTaskData">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_19ssfc0_di" bpmnElement="Event_19ssfc0">
+        <dc:Bounds x="772" y="332" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1hrox53_di" bpmnElement="Activity_UploadSingle">
+        <dc:Bounds x="277" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_04ypnfq_di" bpmnElement="Activity_UploadRepeat">
+        <dc:Bounds x="444" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1b1g8ix_di" bpmnElement="Activity_DeleteSingle">
+        <dc:Bounds x="277" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_17by4en_di" bpmnElement="Activity_DeleteRepeat">
+        <dc:Bounds x="444" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1pqjcpj_di" bpmnElement="Activity_FilesUploaded">
+        <dc:Bounds x="611" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_07qeio1_di" bpmnElement="Activity_FilesDeleted">
+        <dc:Bounds x="611" y="310" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="SequenceFlow_12ulmn8_di" bpmnElement="SequenceFlow_12ulmn8">
+        <di:waypoint x="215" y="120" />
+        <di:waypoint x="277" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_06786ls_di" bpmnElement="SequenceFlow_06786ls">
+        <di:waypoint x="377" y="120" />
+        <di:waypoint x="444" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0xo2jve_di" bpmnElement="SequenceFlow_0xo2jve">
+        <di:waypoint x="544" y="120" />
+        <di:waypoint x="611" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0oa0av1_di" bpmnElement="SequenceFlow_0oa0av1">
+        <di:waypoint x="377" y="350" />
+        <di:waypoint x="444" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0hxvd1d_di" bpmnElement="SequenceFlow_0hxvd1d">
+        <di:waypoint x="544" y="350" />
+        <di:waypoint x="611" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1fgwvz0_di" bpmnElement="SequenceFlow_1fgwvz0">
+        <di:waypoint x="711" y="350" />
+        <di:waypoint x="772" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_17j00uv_di" bpmnElement="SequenceFlow_17j00uv">
+        <di:waypoint x="661" y="160" />
+        <di:waypoint x="661" y="240" />
+        <di:waypoint x="327" y="240" />
+        <di:waypoint x="327" y="310" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
