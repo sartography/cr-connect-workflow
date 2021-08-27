@@ -41,13 +41,17 @@ def get_reference_files():
     return FileSchema(many=True).dump(files)
 
 
-def add_file(workflow_spec_id=None, workflow_id=None, form_field_key=None):
+def add_file(workflow_spec_id=None, workflow_id=None, task_spec_name=None, form_field_key=None):
     file = connexion.request.files['file']
     if workflow_id:
         if form_field_key is None:
             raise ApiError('invalid_workflow_file',
                            'When adding a workflow related file, you must specify a form_field_key')
+        if task_spec_name is None:
+            raise ApiError('invalid_workflow_file',
+                           'When adding a workflow related file, you must specify a task_spec_name')
         file_model = FileService.add_workflow_file(workflow_id=workflow_id, irb_doc_code=form_field_key,
+                                                   task_spec_name=task_spec_name,
                                                    name=file.filename, content_type=file.content_type,
                                                    binary_data=file.stream.read())
     elif workflow_spec_id:

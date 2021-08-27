@@ -38,6 +38,7 @@ Takes two arguments:
         file_name = args[0]
         irb_doc_code = args[1]
         FileService.add_workflow_file(workflow_id=workflow_id,
+                                      task_spec_name=task.get_name(),
                                       name=file_name,
                                       content_type=CONTENT_TYPES['docx'],
                                       binary_data=final_document_stream.read(),
