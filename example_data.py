@@ -267,6 +267,7 @@ class ExampleDataLoader:
                          display_name="Random Fact",
                          description="The workflow for a Random Fact.",
                          category_id=0,
+                         display_order=0,
                          master_spec=False,
                          from_tests=True)
 
