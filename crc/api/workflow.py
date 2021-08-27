@@ -144,6 +144,10 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
 
+def reorder_workflow_specification(spec_id, direction):
+    pass
+
+
 def get_workflow_from_spec(spec_id):
     workflow_model = WorkflowService.get_workflow_from_spec(spec_id, g.user)
     processor = WorkflowProcessor(workflow_model)
@@ -326,6 +330,10 @@ def update_workflow_spec_category(cat_id, body):
 def delete_workflow_spec_category(cat_id):
     session.query(WorkflowSpecCategoryModel).filter_by(id=cat_id).delete()
     session.commit()
+
+
+def reorder_workflow_spec_category(cat_id, direction):
+    pass
 
 
 def lookup(workflow_id, task_spec_name, field_id, query=None, value=None, limit=10):
