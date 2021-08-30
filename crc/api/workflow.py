@@ -145,24 +145,17 @@ def delete_workflow_specification(spec_id):
 
 
 def reorder_workflow_specification(spec_id, direction):
-    # TODO: Need to return list of specs
-    # TODO: Maybe move some of this code to services.workflow_service
     if direction not in ('up', 'down'):
         raise ApiError(code='bad_direction',
                        message='The direction must be `up` or `down`.')
     spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
-    category_id = spec.category_id
-    if direction == 'up':
-        neighbor = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.category_id == category_id).filter(WorkflowSpecModel.display_order == spec.display_order - 1).first()
-        neighbor.display_order += 1
-        spec.display_order -= 1
-    if direction == 'down':
-        neighbor = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.category_id == category_id).filter(WorkflowSpecModel.display_order == spec.display_order + 1).first()
-        neighbor.display_order -= 1
-        spec.display_order += 1
-    session.add(spec)
-    session.add(neighbor)
-    session.commit()
+    if spec:
+        ordered_specs = WorkflowService.reorder_workflow_spec(spec, direction)
+    else:
+        raise ApiError(code='bad_spec_id',
+                       message=f'The spec_id {spec_id} did not return a specification. Please check that it is valid.')
+    schema = WorkflowSpecModelSchema(many=True)
+    return schema.dump(ordered_specs)
 
 
 def get_workflow_from_spec(spec_id):
