@@ -141,6 +141,7 @@ class TestWorkflowSync(BaseTest):
         self.assertEqual(remote_workflow['display_name'],'Random Fact')
         remote_workflow['description'] = 'This Workflow came from Remote'
         remote_workflow['display_name'] = 'Remote Workflow'
+        remote_workflow['library'] = True
         workflow_mock.return_value = remote_workflow
         # change the remote file date and hash
         othersys = get_workflow_spec_files('random_fact')
@@ -160,6 +161,7 @@ class TestWorkflowSync(BaseTest):
         self.assertEqual('21bb6f9e-0af7-0ab2-0fc7-ec0f94787e58' in md5sums, True)
         new_local_workflow = get_workflow_specification('random_fact')
         self.assertEqual(new_local_workflow['display_name'],'Remote Workflow')
+        self.assertTrue(new_local_workflow['library'])
 
 
 

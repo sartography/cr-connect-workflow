@@ -5,7 +5,8 @@ from pandas._libs.missing import NA
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema, \
+    WorkflowSpecModelSchema, WorkflowLibraryModel, WorkflowLibraryModelSchema
 from crc.services.file_service import FileService
 from crc.services.workflow_sync import WorkflowSyncService
 from crc.api.workflow import get_workflow_specification
@@ -137,37 +138,35 @@ def file_get(workflow_spec_id,filename):
 def create_or_update_local_spec(remote,workflow_spec_id):
     specdict = WorkflowSyncService.get_remote_workflow_spec(remote, workflow_spec_id)
     # if we are updating from a master spec, then we want to make sure it is the only
-    # master spec in our local system.
+    # master spec in our local system, turn all other master_specs off
     if specdict['is_master_spec']:
-        masterspecs = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == True).all()
-        for masterspec in masterspecs:
-            masterspec.is_master_spec = False
-            session.add(masterspec)
+        master_specs = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.is_master_spec == True).all()
+        for master_spec in master_specs:
+            master_spec.is_master_spec = False
+            session.add(master_spec)
 
-    localspec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
-    if localspec is None:
-        localspec = WorkflowSpecModel()
-        localspec.id = workflow_spec_id
-    if specdict['category'] == None:
-        localspec.category = None
-    else:
-        localcategory = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name
+    # Update local_spec, or create a new one if one does not exist.
+    local_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
+    local_spec = WorkflowSpecModelSchema().load(specdict, session=session, instance=local_spec)
+
+    # Set the category
+    if specdict['category'] is not None:
+        local_category = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name
                                                                         == specdict['category']['name']).first()
-        if localcategory == None:
-            # category doesn't exist - lets make it
-            localcategory = WorkflowSpecCategoryModel()
-            localcategory.name = specdict['category']['name']
-            localcategory.display_name = specdict['category']['display_name']
-            localcategory.display_order = specdict['category']['display_order']
-            session.add(localcategory)
-        localspec.category = localcategory
+        local_category = WorkflowSpecCategoryModelSchema().load(specdict['category'], session=session,
+                                                                instance=local_category)
+        session.add(local_category)
+        local_spec.category = local_category
 
-    localspec.display_order = specdict['display_order']
-    localspec.display_name = specdict['display_name']
-    localspec.name = specdict['name']
-    localspec.is_master_spec = specdict['is_master_spec']
-    localspec.description = specdict['description']
-    session.add(localspec)
+    # Set the libraries
+    session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.workflow_spec_id == local_spec.id).delete()
+    for library in specdict['libraries']:
+        # Assure refernced libraries are local, and link them.
+        create_or_update_local_spec(remote, library['id'])
+        local_lib = WorkflowLibraryModel(workflow_spec_id=local_spec.id,
+                                         library_spec_id=library['id'])
+        session.add(local_lib)
+    session.add(local_spec)
 
 def update_or_create_current_file(remote,workflow_spec_id,updatefile):
     currentfile = file_get(workflow_spec_id, updatefile['filename'])
