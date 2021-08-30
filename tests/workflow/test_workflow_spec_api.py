@@ -119,6 +119,7 @@ class TestWorkflowSpec(BaseTest):
         session.add(spec_model_1)
         session.add(spec_model_2)
         session.add(spec_model_3)
+        session.commit()
 
         self.app.delete('/v1.0/workflow-specification/test_spec_2', headers=self.logged_in_headers())
 
@@ -130,8 +131,6 @@ class TestWorkflowSpec(BaseTest):
         for test_spec in specs:
             self.assertEqual(test_order, test_spec.display_order)
             test_order += 1
-
-        print('test_order_after_delete_spec')
 
     def test_get_standalone_workflow_specs(self):
         self.load_example_data()
@@ -190,3 +189,35 @@ class TestWorkflowSpec(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(new_category_name, json_data['name'])
+
+    def test_delete_workflow_spec_category(self):
+        self.load_example_data()
+        category_model_1 = WorkflowSpecCategoryModel(
+            id=1,
+            name='test_category_1',
+            display_name='Test Category 1',
+            display_order=1
+        )
+        category_model_2 = WorkflowSpecCategoryModel(
+            id=2,
+            name='test_category_2',
+            display_name='Test Category 2',
+            display_order=2
+        )
+        category_model_3 = WorkflowSpecCategoryModel(
+            id=3,
+            name='test_category_3',
+            display_name='Test Category 3',
+            display_order=3
+        )
+        session.add(category_model_1)
+        session.add(category_model_2)
+        session.add(category_model_3)
+        session.commit()
+
+        self.app.delete('/v1.0/workflow-spec-category/2', headers=self.logged_in_headers())
+        test_order = 0
+        categories = session.query(WorkflowSpecCategoryModel).order_by(WorkflowSpecCategoryModel.display_order).all()
+        for test_category in categories:
+            self.assertEqual(test_order, test_category.display_order)
+            test_order += 1
