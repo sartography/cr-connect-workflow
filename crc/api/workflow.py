@@ -124,6 +124,7 @@ def delete_workflow_specification(spec_id):
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
 
     spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    category_id = spec.category_id
 
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
@@ -141,6 +142,18 @@ def delete_workflow_specification(spec_id):
     # .delete() doesn't work when we need a cascade. Must grab the record, and explicitly delete
     deleteSpec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
     session.delete(deleteSpec)
+    session.commit()
+
+    # Reorder the remaining specs
+    new_order = 0
+    wf_specs = session.query(WorkflowSpecModel).\
+        filter(WorkflowSpecModel.category_id == category_id).\
+        order_by(WorkflowSpecModel.display_order).\
+        all()
+    for wf_spec_model in wf_specs:
+        wf_spec_model.display_order = new_order
+        session.add(wf_spec_model)
+        new_order += 1
     session.commit()
 
 
