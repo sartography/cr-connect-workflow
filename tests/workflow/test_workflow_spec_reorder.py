@@ -1,9 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc import session
-
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel
-
 
 import json
 
@@ -45,8 +43,7 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assertEqual(3, rv_3.json['display_order'])
         self.assertEqual('test_spec_3', rv_3.json['name'])
 
-
-    def test_workflow_spec_reorder_no_direction(self):
+    def test_workflow_spec_reorder_bad_direction(self):
         self._load_sample_workflow_specs()
         rv = self.app.put(f"/v1.0/workflow-specification/test_spec_2/reorder?direction=asdf",
                           headers=self.logged_in_headers())
