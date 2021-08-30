@@ -104,6 +104,35 @@ class TestWorkflowSpec(BaseTest):
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertEqual(num_files_after + num_workflows_after, 0)
 
+    def test_display_order_after_delete_spec(self):
+        self.load_example_data()
+        workflow_spec_category = session.query(WorkflowSpecCategoryModel).first()
+        spec_model_1 = WorkflowSpecModel(id='test_spec_1', name='test_spec_1', display_name='Test Spec 1',
+                                         description='Test Spec 1 Description', category_id=workflow_spec_category.id,
+                                         display_order=1, standalone=False)
+        spec_model_2 = WorkflowSpecModel(id='test_spec_2', name='test_spec_2', display_name='Test Spec 2',
+                                         description='Test Spec 2 Description', category_id=workflow_spec_category.id,
+                                         display_order=2, standalone=False)
+        spec_model_3 = WorkflowSpecModel(id='test_spec_3', name='test_spec_3', display_name='Test Spec 3',
+                                         description='Test Spec 3 Description', category_id=workflow_spec_category.id,
+                                         display_order=3, standalone=False)
+        session.add(spec_model_1)
+        session.add(spec_model_2)
+        session.add(spec_model_3)
+
+        self.app.delete('/v1.0/workflow-specification/test_spec_2', headers=self.logged_in_headers())
+
+        test_order = 0
+        specs = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == workflow_spec_category.id).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
+        for test_spec in specs:
+            self.assertEqual(test_order, test_spec.display_order)
+            test_order += 1
+
+        print('test_order_after_delete_spec')
+
     def test_get_standalone_workflow_specs(self):
         self.load_example_data()
         category = session.query(WorkflowSpecCategoryModel).first()
