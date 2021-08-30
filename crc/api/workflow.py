@@ -343,7 +343,18 @@ def delete_workflow_spec_category(cat_id):
 
 
 def reorder_workflow_spec_category(cat_id, direction):
-    pass
+    if direction not in ('up', 'down'):
+        raise ApiError(code='bad_direction',
+                       message='The direction must be `up` or `down`.')
+    category = session.query(WorkflowSpecCategoryModel).\
+        filter(WorkflowSpecCategoryModel.id == cat_id).first()
+    if category:
+        ordered_categories = WorkflowService.reorder_workflow_spec_category(category, direction)
+        schema = WorkflowSpecCategoryModelSchema(many=True)
+        return schema.dump(ordered_categories)
+    else:
+        return ApiError(code='bad_category_id',
+                        message=f'The category id {cat_id} did not return a Workflow Spec Category. Make sure it is a valid ID.')
 
 
 def lookup(workflow_id, task_spec_name, field_id, query=None, value=None, limit=10):

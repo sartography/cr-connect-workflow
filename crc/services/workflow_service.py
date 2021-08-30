@@ -30,7 +30,7 @@ from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
-from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel, WorkflowSpecModelSchema
+from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.data_store_service import DataStoreBase
 
 from crc.services.document_service import DocumentService
@@ -933,6 +933,8 @@ class WorkflowService(object):
     @staticmethod
     def reorder_workflow_spec(spec, direction):
         category_id = spec.category_id
+        # Direction is either `up` or `down`
+        # This is checked in api.workflow.reorder_workflow_spec
         if direction == 'up':
             neighbor = session.query(WorkflowSpecModel). \
                 filter(WorkflowSpecModel.category_id == category_id). \
@@ -954,3 +956,26 @@ class WorkflowService(object):
             filter(WorkflowSpecModel.category_id == category_id). \
             order_by(WorkflowSpecModel.display_order).all()
         return ordered_specs
+
+    @staticmethod
+    def reorder_workflow_spec_category(category, direction):
+        # Direction is either `up` or `down`
+        # This is checked in api.workflow.reorder_workflow_spec_category
+        if direction == 'up':
+            neighbor = session.query(WorkflowSpecCategoryModel).\
+                filter(WorkflowSpecCategoryModel.display_order == category.display_order - 1).\
+                first()
+            neighbor.display_order += 1
+            category.display_order -= 1
+        if direction == 'down':
+            neighbor = session.query(WorkflowSpecCategoryModel).\
+                filter(WorkflowSpecCategoryModel.display_order == category.display_order + 1).\
+                first()
+            neighbor.display_order -= 1
+            category.display_order += 1
+        session.add(neighbor)
+        session.add(category)
+        session.commit()
+        ordered_categories = session.query(WorkflowSpecCategoryModel).\
+            order_by(WorkflowSpecCategoryModel.display_order).all()
+        return ordered_categories
