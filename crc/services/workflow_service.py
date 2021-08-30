@@ -940,18 +940,21 @@ class WorkflowService(object):
                 filter(WorkflowSpecModel.category_id == category_id). \
                 filter(WorkflowSpecModel.display_order == spec.display_order - 1). \
                 first()
-            neighbor.display_order += 1
-            spec.display_order -= 1
+            if neighbor:
+                neighbor.display_order += 1
+                spec.display_order -= 1
         if direction == 'down':
             neighbor = session.query(WorkflowSpecModel). \
                 filter(WorkflowSpecModel.category_id == category_id). \
                 filter(WorkflowSpecModel.display_order == spec.display_order + 1). \
                 first()
-            neighbor.display_order -= 1
-            spec.display_order += 1
-        session.add(spec)
-        session.add(neighbor)
-        session.commit()
+            if neighbor:
+                neighbor.display_order -= 1
+                spec.display_order += 1
+        if neighbor:
+            session.add(spec)
+            session.add(neighbor)
+            session.commit()
         ordered_specs = session.query(WorkflowSpecModel). \
             filter(WorkflowSpecModel.category_id == category_id). \
             order_by(WorkflowSpecModel.display_order).all()
@@ -965,17 +968,20 @@ class WorkflowService(object):
             neighbor = session.query(WorkflowSpecCategoryModel).\
                 filter(WorkflowSpecCategoryModel.display_order == category.display_order - 1).\
                 first()
-            neighbor.display_order += 1
-            category.display_order -= 1
+            if neighbor:
+                neighbor.display_order += 1
+                category.display_order -= 1
         if direction == 'down':
             neighbor = session.query(WorkflowSpecCategoryModel).\
                 filter(WorkflowSpecCategoryModel.display_order == category.display_order + 1).\
                 first()
-            neighbor.display_order -= 1
-            category.display_order += 1
-        session.add(neighbor)
-        session.add(category)
-        session.commit()
+            if neighbor:
+                neighbor.display_order -= 1
+                category.display_order += 1
+        if neighbor:
+            session.add(neighbor)
+            session.add(category)
+            session.commit()
         ordered_categories = session.query(WorkflowSpecCategoryModel).\
             order_by(WorkflowSpecCategoryModel.display_order).all()
         return ordered_categories
