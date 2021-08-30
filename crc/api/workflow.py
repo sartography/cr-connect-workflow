@@ -360,6 +360,7 @@ def delete_workflow_spec_category(cat_id):
         category_model.display_order = new_order
         session.add(category_model)
         new_order += 1
+    session.commit()
 
 
 def reorder_workflow_spec_category(cat_id, direction):
