@@ -353,8 +353,8 @@ def reorder_workflow_spec_category(cat_id, direction):
         schema = WorkflowSpecCategoryModelSchema(many=True)
         return schema.dump(ordered_categories)
     else:
-        return ApiError(code='bad_category_id',
-                        message=f'The category id {cat_id} did not return a Workflow Spec Category. Make sure it is a valid ID.')
+        raise ApiError(code='bad_category_id',
+                       message=f'The category id {cat_id} did not return a Workflow Spec Category. Make sure it is a valid ID.')
 
 
 def lookup(workflow_id, task_spec_name, field_id, query=None, value=None, limit=10):
