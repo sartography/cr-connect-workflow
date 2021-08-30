@@ -353,6 +353,13 @@ def update_workflow_spec_category(cat_id, body):
 def delete_workflow_spec_category(cat_id):
     session.query(WorkflowSpecCategoryModel).filter_by(id=cat_id).delete()
     session.commit()
+    # Reorder the remaining categories
+    remaining = session.query(WorkflowSpecCategoryModel).order_by(WorkflowSpecCategoryModel.display_order).all()
+    new_order = 0
+    for category_model in remaining:
+        category_model.display_order = new_order
+        session.add(category_model)
+        new_order += 1
 
 
 def reorder_workflow_spec_category(cat_id, direction):
