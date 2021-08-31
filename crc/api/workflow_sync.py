@@ -135,6 +135,7 @@ def file_get(workflow_spec_id,filename):
                                             FileModel.name == filename).first()
     return currentfile
 
+
 def create_or_update_local_spec(remote,workflow_spec_id):
     specdict = WorkflowSyncService.get_remote_workflow_spec(remote, workflow_spec_id)
     # if we are updating from a master spec, then we want to make sure it is the only
@@ -151,8 +152,8 @@ def create_or_update_local_spec(remote,workflow_spec_id):
 
     # Set the category
     if specdict['category'] is not None:
-        local_category = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name
-                                                                        == specdict['category']['name']).first()
+        local_category = session.query(WorkflowSpecCategoryModel).\
+            filter(WorkflowSpecCategoryModel.name == specdict['category']['name']).first()
         local_category = WorkflowSpecCategoryModelSchema().load(specdict['category'], session=session,
                                                                 instance=local_category)
         session.add(local_category)

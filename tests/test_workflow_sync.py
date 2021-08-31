@@ -1,4 +1,6 @@
+from unittest import mock
 from unittest.mock import patch
+
 from tests.base_test import BaseTest
 
 from crc import db
@@ -11,6 +13,7 @@ from crc.api.workflow_sync import get_all_spec_state, \
 from crc.models.workflow import WorkflowSpecModel
 from datetime import datetime
 from crc.services.file_service import FileService
+from crc.services.workflow_sync import WorkflowSyncService
 
 def get_random_fact_pos(othersys):
     """
@@ -163,6 +166,43 @@ class TestWorkflowSync(BaseTest):
         self.assertEqual(new_local_workflow['display_name'],'Remote Workflow')
         self.assertTrue(new_local_workflow['library'])
 
+    @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_file_by_hash')
+    @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec_files')
+    def test_workflow_sync_with_libraries(self, get_remote_workflow_spec_files_mock, get_remote_file_by_hash_mock):
+        self.load_example_data()
+        # make a remote workflow that is slightly different from local, and add a library to it.
+        remote_workflow = get_workflow_specification('random_fact')
+        remote_library = self.load_test_spec('two_forms')
+        remote_workflow['description'] = 'This Workflow came from Remote'
+        remote_workflow['libraries'] = [{'id': remote_library.id, 'name': 'two_forms', 'display_name': "Two Forms"}]
+
+        random_workflow_remote_files = get_workflow_spec_files('random_fact')
+        rf2pos = get_random_fact_2_pos(random_workflow_remote_files)
+        random_workflow_remote_files[rf2pos]['date_created'] = str(datetime.utcnow())
+        random_workflow_remote_files[rf2pos]['md5_hash'] = '12345'
+        get_remote_workflow_spec_files_mock.return_value = random_workflow_remote_files
+        get_remote_file_by_hash_mock.return_value = self.workflow_sync_response('random_fact2.bpmn')
+
+        # more mock stuff, but we need to return different things depending on what is asked, so we use the side
+        # effect pattern rather than setting a single return_value through a patch.
+        def mock_workflow_spec(*args):
+            if args[1] == 'random_fact':
+                return remote_workflow
+            else:
+                return get_workflow_specification(args[1])
+
+        with mock.patch.object(WorkflowSyncService, 'get_remote_workflow_spec', side_effect=mock_workflow_spec):
+            response = sync_changed_files('localhost:0000','random_fact') # endpoint not used due to mock
+
+        self.assertIsNotNone(response)
+        self.assertEqual(len(response),1)
+        self.assertEqual(response[0], 'random_fact2.bpmn')
+        files = FileService.get_spec_data_files('random_fact')
+        md5sums = [str(f.md5_hash) for f in files]
+        self.assertEqual('21bb6f9e-0af7-0ab2-0fc7-ec0f94787e58' in md5sums, True)
+        new_local_workflow = get_workflow_specification('random_fact')
+        self.assertEqual(new_local_workflow['display_name'],'Random Fact')
+        self.assertEqual(1, len(new_local_workflow['libraries']))
 
 
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_file_by_hash')
