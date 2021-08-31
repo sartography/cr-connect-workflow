@@ -9,7 +9,6 @@ import json
 class TestWorkflowSpecReorder(BaseTest):
 
     def _load_sample_workflow_specs(self):
-        self.load_example_data()
         workflow_spec_category = session.query(WorkflowSpecCategoryModel).first()
         spec_model_1 = WorkflowSpecModel(id='test_spec_1', name='test_spec_1', display_name='Test Spec 1',
                                          description='Test Spec 1 Description', category_id=workflow_spec_category.id,
@@ -35,6 +34,7 @@ class TestWorkflowSpecReorder(BaseTest):
         return rv_1, rv_2, rv_3
 
     def test_load_sample_workflow_specs(self):
+        self.load_example_data()
         rv_1, rv_2, rv_3 = self._load_sample_workflow_specs()
         self.assertEqual(1, rv_1.json['display_order'])
         self.assertEqual('test_spec_1', rv_1.json['name'])
@@ -44,6 +44,7 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assertEqual('test_spec_3', rv_3.json['name'])
 
     def test_workflow_spec_reorder_bad_direction(self):
+        self.load_example_data()
         self._load_sample_workflow_specs()
         rv = self.app.put(f"/v1.0/workflow-specification/test_spec_2/reorder?direction=asdf",
                           headers=self.logged_in_headers())
@@ -51,6 +52,7 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assertEqual("The direction must be `up` or `down`.", rv.json['message'])
 
     def test_workflow_spec_reorder_bad_spec_id(self):
+        self.load_example_data()
         self._load_sample_workflow_specs()
         rv = self.app.put(f"/v1.0/workflow-specification/10/reorder?direction=up",
                           headers=self.logged_in_headers())
@@ -58,10 +60,14 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assertEqual('The spec_id 10 did not return a specification. Please check that it is valid.', rv.json['message'])
 
     def test_workflow_spec_reorder_up(self):
+        self.load_example_data()
         self._load_sample_workflow_specs()
 
         # Check what order is in the DB
-        ordered = session.query(WorkflowSpecModel).order_by(WorkflowSpecModel.display_order).all()
+        ordered = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == 0).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
         self.assertEqual('test_spec_2', ordered[2].id)
 
         # Move test_spec_2 up
@@ -73,15 +79,22 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assertEqual('test_spec_2', rv.json[1]['id'])
 
         # Check what new order is in the DB
-        reordered = session.query(WorkflowSpecModel).order_by(WorkflowSpecModel.display_order).all()
+        reordered = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == 0).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
         self.assertEqual('test_spec_2', reordered[1].id)
         print('test_workflow_spec_reorder_up')
 
     def test_workflow_spec_reorder_down(self):
+        self.load_example_data()
         self._load_sample_workflow_specs()
 
         # Check what order is in the DB
-        ordered = session.query(WorkflowSpecModel).order_by(WorkflowSpecModel.display_order).all()
+        ordered = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == 0).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
         self.assertEqual('test_spec_2', ordered[2].id)
 
         # Move test_spec_2 down
@@ -97,6 +110,7 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assertEqual('test_spec_2', reordered[3].id)
 
     def test_workflow_spec_reorder_down_bad(self):
+        self.load_example_data()
         self._load_sample_workflow_specs()
 
         ordered = session.query(WorkflowSpecModel).order_by(WorkflowSpecModel.display_order).all()
