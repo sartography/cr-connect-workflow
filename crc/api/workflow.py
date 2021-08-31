@@ -39,8 +39,9 @@ def all_specifications(libraries=False,standalone=False):
 
 
 def add_workflow_specification(body):
-    WorkflowService.cleanup_workflow_spec_display_order()
-    count = session.query(WorkflowSpecModel).filter_by(category_id=body['category_id']).count()
+    category_id = body['category_id']
+    WorkflowService.cleanup_workflow_spec_display_order(category_id)
+    count = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
     body['display_order'] = count
     new_spec: WorkflowSpecModel = WorkflowSpecModelSchema().load(body, session=session)
     session.add(new_spec)
@@ -151,7 +152,7 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
     # Reorder the remaining specs
-    WorkflowService.cleanup_workflow_spec_display_order()
+    WorkflowService.cleanup_workflow_spec_display_order(category_id)
 
 
 def reorder_workflow_specification(spec_id, direction):
