@@ -104,6 +104,7 @@ def validate_workflow_specification(spec_id, study_id=None, test_until=None):
         return ApiErrorSchema(many=True).dump([error])
     return []
 
+
 def update_workflow_specification(spec_id, body):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Spec ID.')
@@ -111,6 +112,10 @@ def update_workflow_specification(spec_id, body):
 
     if spec is None:
         raise ApiError('unknown_study', 'The spec "' + spec_id + '" is not recognized.')
+
+    # Make sure they don't try to change the display_order
+    # There is a separate endpoint for this
+    body['display_order'] = spec.display_order
 
     schema = WorkflowSpecModelSchema()
     spec = schema.load(body, session=session, instance=spec, partial=True)
@@ -333,6 +338,10 @@ def update_workflow_spec_category(cat_id, body):
 
     if category is None:
         raise ApiError('unknown_category', 'The category "' + cat_id + '" is not recognized.')
+
+    # Make sure they don't try to change the display_order
+    # There is a separate endpoint for that
+    body['display_order'] = category.display_order
 
     schema = WorkflowSpecCategoryModelSchema()
     category = schema.load(body, session=session, instance=category, partial=True)
