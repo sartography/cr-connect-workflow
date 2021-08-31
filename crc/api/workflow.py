@@ -145,16 +145,7 @@ def delete_workflow_specification(spec_id):
     session.commit()
 
     # Reorder the remaining specs
-    new_order = 0
-    wf_specs = session.query(WorkflowSpecModel).\
-        filter(WorkflowSpecModel.category_id == category_id).\
-        order_by(WorkflowSpecModel.display_order).\
-        all()
-    for wf_spec_model in wf_specs:
-        wf_spec_model.display_order = new_order
-        session.add(wf_spec_model)
-        new_order += 1
-    session.commit()
+    WorkflowService.cleanup_workflow_spec_display_order()
 
 
 def reorder_workflow_specification(spec_id, direction):
@@ -354,13 +345,7 @@ def delete_workflow_spec_category(cat_id):
     session.query(WorkflowSpecCategoryModel).filter_by(id=cat_id).delete()
     session.commit()
     # Reorder the remaining categories
-    remaining = session.query(WorkflowSpecCategoryModel).order_by(WorkflowSpecCategoryModel.display_order).all()
-    new_order = 0
-    for category_model in remaining:
-        category_model.display_order = new_order
-        session.add(category_model)
-        new_order += 1
-    session.commit()
+    WorkflowService.cleanup_workflow_spec_category_display_order()
 
 
 def reorder_workflow_spec_category(cat_id, direction):

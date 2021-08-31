@@ -985,3 +985,27 @@ class WorkflowService(object):
         ordered_categories = session.query(WorkflowSpecCategoryModel).\
             order_by(WorkflowSpecCategoryModel.display_order).all()
         return ordered_categories
+
+    @staticmethod
+    def cleanup_workflow_spec_display_order():
+        # make sure we don't have gaps in display_order
+        new_order = 0
+        specs = session.query(WorkflowSpecModel).\
+            order_by(WorkflowSpecModel.display_order).all()
+        for spec in specs:
+            spec.display_order = new_order
+            session.add(spec)
+            new_order += 1
+        session.commit()
+
+    @staticmethod
+    def cleanup_workflow_spec_category_display_order():
+        # make sure we don't have gaps in display_order
+        new_order = 0
+        categories = session.query(WorkflowSpecCategoryModel).\
+            order_by(WorkflowSpecCategoryModel.display_order).all()
+        for category in categories:
+            category.display_order = new_order
+            session.add(category)
+            new_order += 1
+        session.commit()
