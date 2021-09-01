@@ -20,6 +20,7 @@ class TestFileDatastore(BaseTest):
         workflow = self.create_workflow('file_data_store')
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_workflow_file(workflow_id=workflow.id,
+                                      task_spec_name='task1',
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234', irb_doc_code=irb_code)
 
@@ -40,8 +41,8 @@ class TestFileDatastore(BaseTest):
         # upload the file
         correct_name = task.form['fields'][1]['id']
         data = {'file': (BytesIO(b"abcdef"), 'test_file.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.id, correct_name), data=data, follow_redirects=True,
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.name, correct_name), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_id = json.loads(rv.get_data())['id']

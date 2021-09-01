@@ -87,6 +87,7 @@ class TestStudyApi(BaseTest):
         task = processor.next_task()
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_workflow_file(workflow_id=workflow.id,
+                                      task_spec_name=task.get_name(),
                                       name="anything.png", content_type="png",
                                       binary_data=b'1234', irb_doc_code=irb_code)
 
@@ -190,17 +191,20 @@ class TestStudyApi(BaseTest):
                 num_abandoned += 1
             if study['status'] == 'in_progress': # One study is marked complete without HSR Number
                 num_in_progress += 1
-            if study['status'] == 'open_for_enrollment':  # One study is marked complete and has an HSR Number
+            if study['status'] == 'open_for_enrollment':  # Currently, we don't automatically set studies to open for enrollment
                 num_open += 1
 
         db_studies_after = session.query(StudyModel).all()
         num_db_studies_after = len(db_studies_after)
         self.assertGreater(num_db_studies_after, num_db_studies_before)
         self.assertEqual(num_abandoned, 1)
-        self.assertEqual(num_open, 1)
+        self.assertEqual(num_open, 0)  # Currently, we don't automatically set studies to open for enrollment
         self.assertEqual(num_in_progress, 2)
         self.assertEqual(len(json_data), num_db_studies_after)
-        self.assertEqual(num_open + num_in_progress + num_abandoned, num_db_studies_after)
+        # The sum below is off, since we don't automatically set studies to Open for Enrollment
+        # Leaving the test here because we will need it again
+        # when we implement a new way to set Open for Enrollment
+        # self.assertEqual(num_open + num_in_progress + num_abandoned, num_db_studies_after)
 
         # Automatic events check
         in_progress_events = session.query(StudyEvent).filter_by(status=StudyStatus.in_progress)
@@ -209,8 +213,11 @@ class TestStudyApi(BaseTest):
         abandoned_events = session.query(StudyEvent).filter_by(status=StudyStatus.abandoned)
         self.assertEqual(abandoned_events.count(), 1)  # 1 study has been abandoned
 
-        open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
-        self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
+        # We don't currently set any studies to Open for Enrollment automatically
+        # Leaving the test here because we will need it again
+        # when we implement a new way to set Open for Enrollment
+        # open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
+        # self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -252,7 +259,7 @@ class TestStudyApi(BaseTest):
     def test_delete_workflow(self):
         self.load_example_data()
         workflow = session.query(WorkflowModel).first()
-        FileService.add_workflow_file(workflow_id=workflow.id,
+        FileService.add_workflow_file(workflow_id=workflow.id, task_spec_name='TaskSpec01',
                                       name="anything.png", content_type="text",
                                       binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr" )
 

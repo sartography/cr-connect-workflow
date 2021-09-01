@@ -85,16 +85,18 @@ class FileService(object):
 
 
     @staticmethod
-    def add_workflow_file(workflow_id, irb_doc_code, name, content_type, binary_data):
+    def add_workflow_file(workflow_id, irb_doc_code, task_spec_name, name, content_type, binary_data):
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_id == workflow_id)\
-            .filter(FileModel.name == name)\
+            .filter(FileModel.name == name) \
+            .filter(FileModel.task_spec == task_spec_name) \
             .filter(FileModel.irb_doc_code == irb_doc_code).first()
 
         if not file_model:
             file_model = FileModel(
                 workflow_id=workflow_id,
                 name=name,
+                task_spec=task_spec_name,
                 irb_doc_code=irb_doc_code
             )
         return FileService.update_file(file_model, binary_data, content_type)
@@ -175,7 +177,7 @@ class FileService(object):
             user_uid = None
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
-            version=version, md5_hash=md5_checksum, date_created=datetime.utcnow(),
+            version=version, md5_hash=md5_checksum,
             size=size, user_uid=user_uid
         )
         session.add_all([file_model, new_file_data_model])

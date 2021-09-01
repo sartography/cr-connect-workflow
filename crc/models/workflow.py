@@ -4,6 +4,7 @@ import marshmallow
 from marshmallow import EXCLUDE,fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func
+from sqlalchemy.orm import backref
 
 from crc import db
 from crc.models.file import FileModel, FileDataModel
@@ -46,9 +47,9 @@ class WorkflowLibraryModel(db.Model):
    library_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
    parent = db.relationship(WorkflowSpecModel,
                                    primaryjoin=workflow_spec_id==WorkflowSpecModel.id,
-                                  backref='libraries')
+                                  backref=backref('libraries',cascade='all, delete'))
    library = db.relationship(WorkflowSpecModel,primaryjoin=library_spec_id==WorkflowSpecModel.id,
-                                  backref='parents')
+                                  backref=backref('parents',cascade='all, delete'))
 
 
 class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
