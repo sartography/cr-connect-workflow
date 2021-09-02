@@ -1,12 +1,22 @@
 from tests.base_test import BaseTest
 
+from crc import app
+from crc.api.file import dmn_from_ss
+from crc.services.file_service import FileService
 
-class TestSStoDMN(BaseTest):
+import io
+import os
 
-    def test_ss_to_dmn(self):
-        self.load_example_data()
-        workflow = self.create_workflow('spreadsheet_to_dmn')
-        workflow_api = self.get_workflow_api(workflow)
-        task = workflow_api.next_task
 
-        print(f'test_ss_to_dmn: task: {task}')
+class TestDMNFromSS(BaseTest):
+
+    def test_dmn_from_ss(self):
+
+        filepath = os.path.join(app.root_path, '..', 'tests', 'data',
+                                'dmn_from_spreadsheet', 'large_test_spreadsheet.xlsx')
+        f_handle = open(filepath, 'br')
+        ss_data = f_handle.read()
+
+        result = dmn_from_ss(ss_data)
+
+        print('test_dmn_from_ss')
