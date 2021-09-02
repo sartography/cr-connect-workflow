@@ -1,3 +1,4 @@
+from crc.models.file import FileModel, FileDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
@@ -37,8 +38,12 @@ class DMNFromSpreadSheet(Script):
         # ss_file_path = os.path.join(app.root_path, 'static', 'New_test_budget_spreadsheet.xlsx')
         # ss_file_path = os.path.join(app.root_path, 'static', 'large_test_spreadsheet.xlsx')
         # ss_file_path = os.path.join(app.root_path, 'static', 'DMN_Upload_CRC_Orgs.xlsx')
-        ss_file_path = os.path.join(app.root_path, 'static', 'DMN_Upload_Org_Enums.xlsx')
-        df = pd.read_excel(ss_file_path, header=None)
+        # ss_file_path = os.path.join(app.root_path, 'static', 'DMN_Upload_Org_Enums.xlsx')
+        file_id = kwargs['file_id']
+        dmn_name = kwargs['dmn_name']
+        file_data_model = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_id).first()
+        file_data = file_data_model.data
+        df = pd.read_excel(file_data, header=None)
 
         root = etree.Element("definitions",
                              xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd",
@@ -119,8 +124,11 @@ class DMNFromSpreadSheet(Script):
         file = BytesIO(file_data)
 
         workflow_spec = session.query(WorkflowSpecModel).first()
-        file_model = FileService.add_workflow_spec_file(workflow_spec, filename, content_type,
-                                                        file.read(), primary=primary)
-
+        uploaded = session.query(FileModel).filter(FileModel.workflow_spec_id == workflow_spec.id).filter(FileModel.name == filename).first()
+        if uploaded:
+            file_model = FileService.update_file(uploaded, file.read(), content_type)
+        else:
+            file_model = FileService.add_workflow_spec_file(workflow_spec, filename, content_type,
+                                                            file.read(), primary=primary)
 
         print('dmn from spreadsheet')
