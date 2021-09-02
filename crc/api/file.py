@@ -173,5 +173,7 @@ def delete_file(file_id):
     FileService.delete_file(file_id)
 
 
-def dmn_from_ss(workflow_spec_id):
-    pass
+def dmn_from_ss(ss_data):
+    result = FileService.dmn_from_spreadsheet(ss_data)
+    # TODO: Do we need to return json?
+    return result
