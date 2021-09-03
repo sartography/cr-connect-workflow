@@ -38,6 +38,7 @@ class Task(object):
     FIELD_PROP_REPEAT = "repeat"
     FIELD_PROP_READ_ONLY = "read_only"
     FIELD_PROP_LDAP_LOOKUP = "ldap.lookup"
+    FIELD_PROP_READ_ONLY_EXPRESSION = "read_only_expression"
     FIELD_PROP_HIDE_EXPRESSION = "hide_expression"
     FIELD_PROP_REQUIRED_EXPRESSION = "required_expression"
     FIELD_PROP_LABEL_EXPRESSION = "label_expression"
