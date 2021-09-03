@@ -173,7 +173,7 @@ def delete_file(file_id):
     FileService.delete_file(file_id)
 
 
-def dmn_from_ss(ss_data):
-    result = FileService.dmn_from_spreadsheet(ss_data)
-    # TODO: Do we need to return json?
+def dmn_from_ss():
+    file = connexion.request.files['file']
+    result = FileService.dmn_from_spreadsheet(file)
     return result
