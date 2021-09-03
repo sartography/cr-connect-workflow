@@ -988,7 +988,6 @@ paths:
         content:
           multipart/form-data:
             schema:
-              x-body-name: file_data
               type: object
               properties:
                 file:
@@ -998,9 +997,11 @@ paths:
         '200':
           description: DMN file for workflow spec
           content:
-            application/json:
+            application/octet-stream:
               schema:
-                $ref: "#/components/schemas/File"
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
   /task_events:
     parameters:
       - name: action
