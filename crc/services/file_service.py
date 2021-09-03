@@ -453,7 +453,7 @@ class FileService(object):
                     return True
             return False
 
-        df = pd.read_excel(io.BytesIO(ss_data), header=None)
+        df = pd.read_excel(io.BytesIO(ss_data.read()), header=None)
 
         root = etree.Element("definitions",
                              xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd",
@@ -491,11 +491,11 @@ class FileService(object):
                                                     label=label, name=name, typeRef=type_ref))
                 output_count += 1
             elif item == 'Annotation':
-                column_count = count
                 break
             count += 1
 
         row = 6
+        column_count = count
         while row < df.shape[0]:
             column = 1
             row_values = df.iloc[row].values[1:column_count]
