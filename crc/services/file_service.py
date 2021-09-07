@@ -456,12 +456,6 @@ class FileService(object):
 
         df = pd.read_excel(io.BytesIO(ss_data.read()), header=None)
 
-        # root = etree.Element("definitions",
-        #                      xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd",
-        #                      id='Definitions',
-        #                      name="DRD",
-        #                      namespace="http://camunda.org/schema/1.0/dmn")
-
         xml_ns = "https://www.omg.org/spec/DMN/20191111/MODEL/"
         dmndi_ns = "https://www.omg.org/spec/DMN/20191111/DMNDI/"
         dc_ns = "http://www.omg.org/spec/DMN/20180521/DC/"
