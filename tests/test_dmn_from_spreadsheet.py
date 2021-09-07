@@ -1,10 +1,9 @@
 from tests.base_test import BaseTest
 
 from crc import app
-from crc.api.file import dmn_from_ss
-from crc.services.file_service import FileService
 
 import io
+from lxml import etree
 import os
 
 
@@ -17,6 +16,12 @@ class TestDMNFromSS(BaseTest):
         f_handle = open(filepath, 'br')
         ss_data = f_handle.read()
 
-        result = dmn_from_ss(ss_data)
+        data = {'file': (io.BytesIO(ss_data), 'test.xlsx')}
+        rv = self.app.post('/v1.0/dmn_from_ss', data=data, follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
 
-        print('test_dmn_from_ss')
+        dmn_xml = rv.stream.response.data
+        root = etree.fromstring(dmn_xml)
+        children = root.getchildren()
+        self.assertEqual('{https://www.omg.org/spec/DMN/20191111/MODEL/}decision', children[0].tag)
+        self.assertEqual('{https://www.omg.org/spec/DMN/20191111/DMNDI/}DMNDI', children[1].tag)
