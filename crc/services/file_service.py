@@ -540,6 +540,14 @@ class FileService(object):
 
             row += 1
 
+        dmndi_root = etree.SubElement(root, dmndi + "DMNDI")
+        dmndi_diagram = etree.SubElement(dmndi_root, dmndi + "DMNDiagram")
+        # rando = _get_random_string(7).lower()
+        dmndi_shape = etree.SubElement(dmndi_diagram, dmndi + "DMNShape",
+                                       dmnElementRef=decision_id)
+        bounds = etree.SubElement(dmndi_shape, dc + "Bounds",
+                                  height='80', width='180', x='100', y='100')
+
         prefix = b'<?xml version="1.0" encoding="UTF-8"?>'
         dmn_file = prefix + etree.tostring(root)
 
