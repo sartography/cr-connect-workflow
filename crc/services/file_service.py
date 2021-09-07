@@ -10,7 +10,6 @@ import pandas as pd
 from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
-from lxml.etree import ElementTree
 
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from lxml.etree import XMLSyntaxError
