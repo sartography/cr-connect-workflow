@@ -10,6 +10,7 @@ import pandas as pd
 from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
+from lxml.etree import ElementTree
 
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from lxml.etree import XMLSyntaxError
@@ -455,11 +456,26 @@ class FileService(object):
 
         df = pd.read_excel(io.BytesIO(ss_data.read()), header=None)
 
+        # root = etree.Element("definitions",
+        #                      xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd",
+        #                      id='Definitions',
+        #                      name="DRD",
+        #                      namespace="http://camunda.org/schema/1.0/dmn")
+
+        xml_ns = "https://www.omg.org/spec/DMN/20191111/MODEL/"
+        dmndi_ns = "https://www.omg.org/spec/DMN/20191111/DMNDI/"
+        dc_ns = "http://www.omg.org/spec/DMN/20180521/DC/"
+        dmndi = "{%s}" % dmndi_ns
+        dc = "{%s}" % dc_ns
+        nsmap = {None: xml_ns, 'dmndi': dmndi_ns, 'dc': dc_ns}
+
         root = etree.Element("definitions",
-                             xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd",
-                             id='Definitions',
+                             id="Definitions",
                              name="DRD",
-                             namespace="http://camunda.org/schema/1.0/dmn")
+                             namespace="http://camunda.org/schema/1.0/dmn",
+                             nsmap=nsmap,
+                             )
+
         decision_name = df.iat[0, 1]
         decision_id = df.iat[1, 1]
         decision = etree.SubElement(root, "decision",
