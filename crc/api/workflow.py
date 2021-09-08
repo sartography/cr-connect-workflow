@@ -161,6 +161,7 @@ def reorder_workflow_specification(spec_id, direction):
                        message='The direction must be `up` or `down`.')
     spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
     if spec:
+        WorkflowService.cleanup_workflow_spec_display_order(spec.category_id)
         ordered_specs = WorkflowService.reorder_workflow_spec(spec, direction)
     else:
         raise ApiError(code='bad_spec_id',
@@ -366,6 +367,7 @@ def reorder_workflow_spec_category(cat_id, direction):
     if direction not in ('up', 'down'):
         raise ApiError(code='bad_direction',
                        message='The direction must be `up` or `down`.')
+    WorkflowService.cleanup_workflow_spec_category_display_order()
     category = session.query(WorkflowSpecCategoryModel).\
         filter(WorkflowSpecCategoryModel.id == cat_id).first()
     if category:
