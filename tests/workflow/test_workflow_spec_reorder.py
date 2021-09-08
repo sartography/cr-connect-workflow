@@ -106,14 +106,20 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assertEqual(3, rv.json[3]['display_order'])
 
         # Check what new order is in the DB
-        reordered = session.query(WorkflowSpecModel).order_by(WorkflowSpecModel.display_order).all()
+        reordered = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == 0).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
         self.assertEqual('test_spec_2', reordered[3].id)
 
     def test_workflow_spec_reorder_down_bad(self):
         self.load_example_data()
         self._load_sample_workflow_specs()
 
-        ordered = session.query(WorkflowSpecModel).order_by(WorkflowSpecModel.display_order).all()
+        ordered = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == 0).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
 
         # Try to move test_spec_3 down
         rv = self.app.put(f"/v1.0/workflow-specification/test_spec_3/reorder?direction=down",
@@ -122,5 +128,62 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assert_success(rv)
 
         # Make sure we get the original list back.
-        reordered = session.query(WorkflowSpecModel).order_by(WorkflowSpecModel.display_order).all()
+        reordered = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == 0).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
         self.assertEqual(ordered, reordered)
+
+    def test_workflow_spec_reorder_bad_order(self):
+        self.load_example_data()
+        self._load_sample_workflow_specs()
+        ordered = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == 0).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
+
+        # Set bad display_orders
+        spec_model = ordered[0]
+        spec_model.display_order = 1
+        session.add(spec_model)
+        spec_model = ordered[1]
+        spec_model.display_order = 1
+        session.add(spec_model)
+        spec_model = ordered[2]
+        spec_model.display_order = 1
+        session.add(spec_model)
+        session.commit()
+
+        bad_orders = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == 0).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
+        # Not sure how Postgres chooses an order
+        # when we have multiple specs with display_order == 1
+        # but it is
+        # test_spec_1, random_fact, test_spec_2, test_spec_3
+        self.assertEqual(1, bad_orders[0].display_order)
+        self.assertEqual('test_spec_1', bad_orders[0].name)
+        self.assertEqual(1, bad_orders[1].display_order)
+        self.assertEqual('random_fact', bad_orders[1].name)
+        self.assertEqual(1, bad_orders[2].display_order)
+        self.assertEqual('test_spec_2', bad_orders[2].name)
+        self.assertEqual(3, bad_orders[3].display_order)
+        self.assertEqual('test_spec_3', bad_orders[3].name)
+
+        # Move test_spec_2 up
+        # This should cause a cleanup of the bad display_order numbers
+        rv = self.app.put(f"/v1.0/workflow-specification/test_spec_2/reorder?direction=up",
+                          headers=self.logged_in_headers())
+
+        # After moving 2 up, the order should be
+        # test_spec_1, test_spec_2, random_fact, test_spec_3
+        # Make sure we have good display_order numbers too
+        self.assertEqual('test_spec_1', rv.json[0]['name'])
+        self.assertEqual(0, rv.json[0]['display_order'])
+        self.assertEqual('test_spec_2', rv.json[1]['name'])
+        self.assertEqual(1, rv.json[1]['display_order'])
+        self.assertEqual('random_fact', rv.json[2]['name'])
+        self.assertEqual(2, rv.json[2]['display_order'])
+        self.assertEqual('test_spec_3', rv.json[3]['name'])
+        self.assertEqual(3, rv.json[3]['display_order'])
