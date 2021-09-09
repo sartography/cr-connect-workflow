@@ -111,7 +111,7 @@ def update_file_data(file_id):
     file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     file = connexion.request.files['file']
     if file_model is None:
-        raise ApiError('no_such_file', 'The file id you provided does not exist')
+        raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     file_model = FileService.update_file(file_model, file.stream.read(), file.content_type)
     return FileSchema().dump(to_file_api(file_model))
 
@@ -122,7 +122,7 @@ def get_file_data_by_hash(md5_hash):
 def get_file_data(file_id, version=None):
     file_data = FileService.get_file_data(file_id, version)
     if file_data is None:
-        raise ApiError('no_such_file', 'The file id you provided does not exist')
+        raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     return send_file(
         io.BytesIO(file_data.data),
         attachment_filename=file_data.file_model.name,
@@ -137,7 +137,7 @@ def get_file_data_link(file_id, auth_token, version=None):
         raise ApiError('not_authenticated', 'You need to include an authorization token in the URL with this')
     file_data = FileService.get_file_data(file_id, version)
     if file_data is None:
-        raise ApiError('no_such_file', 'The file id you provided does not exist')
+        raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     return send_file(
         io.BytesIO(file_data.data),
         attachment_filename=file_data.file_model.name,
@@ -151,7 +151,7 @@ def get_file_data_link(file_id, auth_token, version=None):
 def get_file_info(file_id):
     file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
-        raise ApiError('no_such_file', 'The file id you provided does not exist', status_code=404)
+        raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist', status_code=404)
     return FileSchema().dump(to_file_api(file_model))
 
 

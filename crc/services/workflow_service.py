@@ -220,8 +220,9 @@ class WorkflowService(object):
 
             # A task should only have default_value **or** value expression, not both.
             if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) and (hasattr(field, 'default_value') and field.default_value):
-                raise ApiError(code='default value and value_expression',
-                               message='This task has both a default_value and value_expression. Please fix this to only have one or the other.')
+                raise ApiError.from_task(code='default value and value_expression',
+                                         message=f'This task ({task.get_name()}) has both a default_value and value_expression. Please fix this to only have one or the other.',
+                                         task=task)
             # If we have a default_value or value_expression, try to set the default
             if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or (hasattr(field, 'default_value') and field.default_value):
                 form_data[field.id] = WorkflowService.get_default_value(field, task)

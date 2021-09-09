@@ -12,7 +12,7 @@ coverage = "*"
 alembic = "*"
 coverage = "*"
 docxtpl = "*"
-flask = "*"
+flask = "<2"
 flask-admin = "*"
 flask-bcrypt = "*"
 flask-cors = "*"
@@ -43,17 +43,10 @@ xlrd = "*"
 xlsxwriter = "*"
 pygithub = "*"
 apscheduler = "*"
+connexion = {extras = [ "swagger-ui",], version = "*"}
+sentry-sdk = {extras = [ "flask",], version = "==0.14.4"}
+spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow.git"}
+dateparser = "*"
 
 [requires]
 python_version = "3.8"
-
-[packages.connexion]
-extras = [ "swagger-ui",]
-version = "*"
-
-[packages.sentry-sdk]
-extras = [ "flask",]
-version = "==0.14.4"
-
-[packages.spiffworkflow]
-git = "https://github.com/sartography/SpiffWorkflow.git"
