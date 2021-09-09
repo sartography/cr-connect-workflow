@@ -758,6 +758,12 @@ paths:
         description: The unique id of a workflow instance
         schema:
           type: integer
+      - name: task_spec_name
+        in: query
+        required: false
+        description: The name of the task spec
+        schema:
+          type: string
       - name: form_field_key
         in: query
         required: false
