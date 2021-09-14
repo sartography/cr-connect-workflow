@@ -147,6 +147,7 @@ class TestStudyService(BaseTest):
         workflow = self.create_workflow('docx')
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
         FileService.add_workflow_file(workflow_id=workflow.id,
+                                      task_spec_name='t1',
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234', irb_doc_code=irb_code)
 
@@ -169,12 +170,15 @@ class TestStudyService(BaseTest):
 
         # Add files to both workflows.
         FileService.add_workflow_file(workflow_id=workflow1.id,
+                                      task_spec_name="t1",
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
         FileService.add_workflow_file(workflow_id=workflow1.id,
+                                      task_spec_name="t1",
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234', irb_doc_code="AD_Consent_Model")
         FileService.add_workflow_file(workflow_id=workflow2.id,
+                                      task_spec_name="t1",
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
 

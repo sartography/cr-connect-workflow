@@ -17,8 +17,8 @@ class TestHiddenFileDataField(BaseTest):
         task = workflow_api.next_task
 
         data = {'file': (BytesIO(b"abcdef"), 'test_file.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.id, 'Study_App_Doc'), data=data, follow_redirects=True,
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.name, 'Study_App_Doc'), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_id = json.loads(rv.get_data())['id']
@@ -43,8 +43,8 @@ class TestHiddenFileDataField(BaseTest):
         task = workflow_api.next_task
 
         data = {'file': (BytesIO(b"abcdef"), 'test_file.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_id=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.id, 'Study_App_Doc'), data=data, follow_redirects=True,
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+                           (workflow.study_id, workflow.id, task.name, 'Study_App_Doc'), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_id = json.loads(rv.get_data())['id']

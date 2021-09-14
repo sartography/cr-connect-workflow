@@ -11,7 +11,7 @@ class DataStoreModel(db.Model):
     key = db.Column(db.String, nullable=False)
     workflow_id = db.Column(db.Integer)
     study_id = db.Column(db.Integer, nullable=True)
-    task_id = db.Column(db.String)
+    task_spec = db.Column(db.String)
     spec_id = db.Column(db.String)
     user_id = db.Column(db.String, nullable=True)
     file_id = db.Column(db.Integer, db.ForeignKey('file.id'), nullable=True)

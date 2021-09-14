@@ -22,7 +22,7 @@ from SpiffWorkflow.util.metrics import timeit
 
 from jinja2 import Template
 
-from crc import db, app
+from crc import db, app, session
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.data_store import DataStoreModel
@@ -30,7 +30,7 @@ from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
-from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
+from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.data_store_service import DataStoreBase
 
 from crc.services.document_service import DocumentService
@@ -220,8 +220,9 @@ class WorkflowService(object):
 
             # A task should only have default_value **or** value expression, not both.
             if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) and (hasattr(field, 'default_value') and field.default_value):
-                raise ApiError(code='default value and value_expression',
-                               message='This task has both a default_value and value_expression. Please fix this to only have one or the other.')
+                raise ApiError.from_task(code='default value and value_expression',
+                                         message=f'This task ({task.get_name()}) has both a default_value and value_expression. Please fix this to only have one or the other.',
+                                         task=task)
             # If we have a default_value or value_expression, try to set the default
             if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or (hasattr(field, 'default_value') and field.default_value):
                 form_data[field.id] = WorkflowService.get_default_value(field, task)
@@ -295,7 +296,8 @@ class WorkflowService(object):
         if not hasattr(task.task_spec, 'form'): return
         for field in task.task_spec.form.fields:
             data = task.data
-            if field.has_property(Task.FIELD_PROP_REPEAT):
+            # If we have a repeat field, make sure it is used before processing it
+            if field.has_property(Task.FIELD_PROP_REPEAT) and field.get_property(Task.FIELD_PROP_REPEAT) in task.data.keys():
                 repeat_array = task.data[field.get_property(Task.FIELD_PROP_REPEAT)]
                 for repeat_data in repeat_array:
                     WorkflowService.__post_process_field(task, field, repeat_data)
@@ -928,3 +930,84 @@ class WorkflowService(object):
         if file:
             primary = file
         return primary
+
+    @staticmethod
+    def reorder_workflow_spec(spec, direction):
+        category_id = spec.category_id
+        # Direction is either `up` or `down`
+        # This is checked in api.workflow.reorder_workflow_spec
+        if direction == 'up':
+            neighbor = session.query(WorkflowSpecModel). \
+                filter(WorkflowSpecModel.category_id == category_id). \
+                filter(WorkflowSpecModel.display_order == spec.display_order - 1). \
+                first()
+            if neighbor:
+                neighbor.display_order += 1
+                spec.display_order -= 1
+        if direction == 'down':
+            neighbor = session.query(WorkflowSpecModel). \
+                filter(WorkflowSpecModel.category_id == category_id). \
+                filter(WorkflowSpecModel.display_order == spec.display_order + 1). \
+                first()
+            if neighbor:
+                neighbor.display_order -= 1
+                spec.display_order += 1
+        if neighbor:
+            session.add(spec)
+            session.add(neighbor)
+            session.commit()
+        ordered_specs = session.query(WorkflowSpecModel). \
+            filter(WorkflowSpecModel.category_id == category_id). \
+            order_by(WorkflowSpecModel.display_order).all()
+        return ordered_specs
+
+    @staticmethod
+    def reorder_workflow_spec_category(category, direction):
+        # Direction is either `up` or `down`
+        # This is checked in api.workflow.reorder_workflow_spec_category
+        if direction == 'up':
+            neighbor = session.query(WorkflowSpecCategoryModel).\
+                filter(WorkflowSpecCategoryModel.display_order == category.display_order - 1).\
+                first()
+            if neighbor:
+                neighbor.display_order += 1
+                category.display_order -= 1
+        if direction == 'down':
+            neighbor = session.query(WorkflowSpecCategoryModel).\
+                filter(WorkflowSpecCategoryModel.display_order == category.display_order + 1).\
+                first()
+            if neighbor:
+                neighbor.display_order -= 1
+                category.display_order += 1
+        if neighbor:
+            session.add(neighbor)
+            session.add(category)
+            session.commit()
+        ordered_categories = session.query(WorkflowSpecCategoryModel).\
+            order_by(WorkflowSpecCategoryModel.display_order).all()
+        return ordered_categories
+
+    @staticmethod
+    def cleanup_workflow_spec_display_order(category_id):
+        # make sure we don't have gaps in display_order
+        new_order = 0
+        specs = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == category_id).\
+            order_by(WorkflowSpecModel.display_order).all()
+        for spec in specs:
+            spec.display_order = new_order
+            session.add(spec)
+            new_order += 1
+        session.commit()
+
+    @staticmethod
+    def cleanup_workflow_spec_category_display_order():
+        # make sure we don't have gaps in display_order
+        new_order = 0
+        categories = session.query(WorkflowSpecCategoryModel).\
+            order_by(WorkflowSpecCategoryModel.display_order).all()
+        for category in categories:
+            category.display_order = new_order
+            session.add(category)
+            new_order += 1
+        session.commit()
