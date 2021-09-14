@@ -31,11 +31,14 @@ def all_specifications(libraries=False,standalone=False):
     if standalone:
         return schema.dump(session.query(WorkflowSpecModel)\
               .filter(WorkflowSpecModel.standalone==True).all())
-    # this still returns standalone workflow specs as well, but by default
-    # we do not return specs marked as library
-    return schema.dump(session.query(WorkflowSpecModel)\
-              .filter((WorkflowSpecModel.library==False)|(
-              WorkflowSpecModel.library==None)).all())
+
+    # return standard workflows (not library, not standalone)
+    return schema.dump(session.query(WorkflowSpecModel)
+                       .filter((WorkflowSpecModel.library==False) | (
+                                WorkflowSpecModel.library==None))
+                       .filter((WorkflowSpecModel.standalone==False) | (
+                                WorkflowSpecModel.standalone==None))
+                       .all())
 
 
 def add_workflow_specification(body):
@@ -43,6 +46,9 @@ def add_workflow_specification(body):
     WorkflowService.cleanup_workflow_spec_display_order(category_id)
     count = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
     body['display_order'] = count
+    # Libraries and standalone workflows don't get a category_id
+    if body['library'] is True or body['standalone'] is True:
+        body['category_id'] = None
     new_spec: WorkflowSpecModel = WorkflowSpecModelSchema().load(body, session=session)
     session.add(new_spec)
     session.commit()
@@ -118,6 +124,10 @@ def update_workflow_specification(spec_id, body):
     # Make sure they don't try to change the display_order
     # There is a separate endpoint for this
     body['display_order'] = spec.display_order
+
+    # Libraries and standalone workflows don't get a category_id
+    if body['library'] is True or body['standalone'] is True:
+        body['category_id'] = None
 
     schema = WorkflowSpecModelSchema()
     spec = schema.load(body, session=session, instance=spec, partial=True)

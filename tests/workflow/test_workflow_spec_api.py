@@ -221,3 +221,18 @@ class TestWorkflowSpec(BaseTest):
         for test_category in categories:
             self.assertEqual(test_order, test_category.display_order)
             test_order += 1
+
+    def test_add_library_with_category_id(self):
+        self.load_example_data()
+        category_id = session.query(WorkflowSpecCategoryModel).first().id
+        spec = WorkflowSpecModel(id='test_spec', name='test_spec', display_name='Test Spec',
+                                 description='Library with a category id', category_id=category_id,
+                                 standalone=False, library=True)
+        rv = self.app.post('/v1.0/workflow-specification',
+                           headers=self.logged_in_headers(),
+                           content_type="application/json",
+                           data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+        self.assert_success(rv)
+        # libraries don't get category_ids
+        # so, the category_id should not get set
+        self.assertIsNone(rv.json['category_id'])
