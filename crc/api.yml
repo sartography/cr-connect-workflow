@@ -1030,6 +1030,37 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+  /dmn_from_ss:
+#    parameters:
+#      - name: workflow_spec_id
+#        in: query
+#        required: true
+#        description: The unique id of a workflow specification
+#        schema:
+#          type: string
+    post:
+      operationId: crc.api.file.dmn_from_ss
+      summary: Create a DMN table from a spreadsheet
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: DMN file for workflow spec
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
   /task_events:
     parameters:
       - name: action

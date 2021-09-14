@@ -1,4 +1,5 @@
 import io
+from datetime import datetime
 from typing import List
 
 import connexion
@@ -171,3 +172,15 @@ def update_file_info(file_id, body):
 
 def delete_file(file_id):
     FileService.delete_file(file_id)
+
+
+def dmn_from_ss():
+    file = connexion.request.files['file']
+    result = FileService.dmn_from_spreadsheet(file)
+    return send_file(
+        io.BytesIO(result),
+        attachment_filename='temp_dmn.dmn',
+        mimetype='text/xml',
+        cache_timeout=-1,  # Don't cache these files on the browser.
+        last_modified=datetime.now()
+    )
