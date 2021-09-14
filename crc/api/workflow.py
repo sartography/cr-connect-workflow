@@ -317,7 +317,7 @@ def __update_task(processor, task, data, user):
 
 def list_workflow_spec_categories():
     schema = WorkflowSpecCategoryModelSchema(many=True)
-    return schema.dump(session.query(WorkflowSpecCategoryModel).all())
+    return schema.dump(session.query(WorkflowSpecCategoryModel).order_by(WorkflowSpecCategoryModel.display_order).all())
 
 
 def get_workflow_spec_category(cat_id):
