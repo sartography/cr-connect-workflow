@@ -32,6 +32,10 @@ class GetZippedFiles(Script):
             else:
                 zip_filename = 'attachments.zip'
 
+            # Delete the temporary zipfile if it already exist
+            if os.path.exists(zip_filename):
+                os.remove(zip_filename)
+
             file_ids = kwargs['file_ids']
             files = session.query(FileModel).filter(FileModel.id.in_(file_ids)).all()
             if files:
