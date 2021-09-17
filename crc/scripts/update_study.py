@@ -44,6 +44,10 @@ update_study(title=PIComputingID.label, short_title="Really Short Name")
                 study.title = kwargs[arg]
             elif arg.lower() == "short_title":
                 study.short_title = kwargs[arg]
+            elif arg.lower() == "short_name":
+                study.short_name = kwargs[arg]
+            elif arg.lower() == "proposal_name":
+                study.proposal_name = kwargs[arg]
             elif arg.lower() == "pi":
                 study.primary_investigator_id = kwargs[arg]
             else:
