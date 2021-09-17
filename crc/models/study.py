@@ -53,6 +53,8 @@ class StudyModel(db.Model):
     enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
     #events = db.relationship("TaskEventModel")
     events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
+    short_name = db.Column(db.String, nullable=True)
+    proposal_name = db.Column(db.String, nullable=True)
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
         self.title = pbs.TITLE
@@ -168,7 +170,7 @@ class CategorySchema(ma.Schema):
 class Study(object):
 
     def __init__(self, title, short_title, last_updated, primary_investigator_id, user_uid,
-                 id=None, status=None, irb_status=None, comment="",
+                 id=None, status=None, irb_status=None, short_name=None, proposal_name=None, comment="",
                  sponsor="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, events_history=[],
                  last_activity_user="",last_activity_date =None,create_user_display="", **argsv):
@@ -192,6 +194,8 @@ class Study(object):
         self.files = files
         self.enrollment_date = enrollment_date
         self.events_history = events_history
+        self.short_name = short_name
+        self.proposal_name = proposal_name
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
@@ -253,13 +257,15 @@ class StudySchema(ma.Schema):
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
     enrollment_date = fields.Date(allow_none=True)
     events_history = fields.List(fields.Nested('StudyEventSchema'), dump_only=True)
+    short_name = fields.String(allow_none=True)
+    proposal_name = fields.String(allow_none=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "short_title", "last_updated", "primary_investigator_id", "user_uid",
                       "sponsor", "ind_number", "files", "enrollment_date",
-                      "create_user_display", "last_activity_date","last_activity_user",
-                      "events_history"]
+                      "create_user_display", "last_activity_date", "last_activity_user",
+                      "events_history", "short_name", "proposal_name"]
         unknown = INCLUDE
 
     @marshmallow.post_load
