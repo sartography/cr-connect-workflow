@@ -1,8 +1,10 @@
+import base64
 import hashlib
 import json
 import os
 from datetime import datetime
-
+import time
+import github
 import pandas as pd
 from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
@@ -17,7 +19,8 @@ from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile, WorkflowLibraryModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile, WorkflowLibraryModel, \
+    WorkflowSpecCategoryModel
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
 import re
@@ -35,6 +38,13 @@ def camel_to_snake(camel):
     camel = re.sub('?', '', camel)
     return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
 
+def github_pause(msg):
+    # Github gets angry if we hit it too fast
+    print(msg)
+    time.sleep(.25)
+
+def github_escape_dir(name):
+    return re.sub("/","\\\\",name)
 
 class FileService(object):
 
@@ -409,30 +419,81 @@ class FileService(object):
                 session.commit()
 
     @staticmethod
-    def publish_to_github(file_ids):
+    def create_category_folder(ws,name,repo):
+        catfolder = []
+        for spec in ws:
+            files = FileModel.query.filter(FileModel.workflow_spec_id == spec.id).all()
+            folder = []
+            for file_data in files:
+                file = FileDataModel.query.filter(FileDataModel.file_model_id == file_data.id).order_by(
+                     FileDataModel.version.desc()).first()
+                element1 = github.InputGitTreeElement(
+                    path=github_escape_dir(file_data.name) ,
+                    mode='100644', type='blob',
+                    sha=file.sha)
+                folder.append(element1)
+            if len(folder) > 0:
+                github_pause('create folder for ' + spec.display_name)
+                tree = repo.create_git_tree(folder)
+                element = github.InputGitTreeElement(
+                    path=github_escape_dir(spec.display_name),
+                    mode='040000', type='tree',
+                    sha=tree.sha)
+                catfolder.append(element)
+        github_pause('create folder for category ' + name)
+        cattree = repo.create_git_tree(catfolder)
+        element = github.InputGitTreeElement(
+            path=github_escape_dir(name),
+            mode='040000', type='tree',
+            sha=cattree.sha)
+        return element
+
+
+    @staticmethod
+    def publish_to_github():
+        # housekeeping - set up for commits
         target_branch = app.config['TARGET_BRANCH'] if app.config['TARGET_BRANCH'] else GithubObject.NotSet
         gh_token = app.config['GITHUB_TOKEN']
         github_repo = app.config['GITHUB_REPO']
         _github = Github(gh_token)
         repo = _github.get_user().get_repo(github_repo)
-        for file_id in file_ids:
-            file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
-            try:
-                repo_file = repo.get_contents(file_data_model.file_model.name, ref=target_branch)
-            except UnknownObjectException:
-                repo.create_file(
-                    path=file_data_model.file_model.name,
-                    message=f'Creating {file_data_model.file_model.name}',
-                    content=file_data_model.data,
-                    branch=target_branch
-                )
-                return {'created': True}
-            else:
-                updated = repo.update_file(
-                    path=repo_file.path,
-                    message=f'Updating {file_data_model.file_model.name}',
-                    content=file_data_model.data + b'brah-model',
-                    sha=repo_file.sha,
-                    branch=target_branch
-                )
-                return {'updated': True}
+
+        # the first thing we do is make blobs for each and every db object that haven't created
+        # a blob yet.
+
+        file_data_models = FileDataModel.query.filter(FileDataModel.sha == None).all()
+        # make sure we have a blob for each file
+        for file_data in file_data_models:
+            data = base64.b64encode(file_data.data).decode('utf-8')
+            github_pause('add file'+file_data.name)
+            blob1 = repo.create_git_blob(data,'base64')
+            file_data.sha = blob1.sha
+            session.add(file_data)
+            session.commit()
+
+
+        mainfolder = []
+        workflow_categories = WorkflowSpecCategoryModel.query.all()
+        wcfolder = []
+        ws = WorkflowSpecModel.query.filter(WorkflowSpecModel.is_master_spec == True).all()
+        element = FileService.create_category_folder(ws, 'Master Spec', repo)
+        mainfolder.append(element)
+        for wc in workflow_categories:
+            ws = WorkflowSpecModel.query.filter(WorkflowSpecModel.category_id == wc.id).all()
+            element = FileService.create_category_folder(ws,wc.display_name,repo)
+            mainfolder.append(element)
+
+
+        wsfolder = []
+        workflow_specs = WorkflowSpecModel.query.all()
+
+        print('do main commit')
+        head_sha = repo.get_branch('main').commit.sha
+        tree = repo.create_git_tree(mainfolder)
+        parent = repo.get_git_commit(sha=head_sha)
+        commit = repo.create_git_commit("another commit", tree, [parent])
+        master_ref = repo.get_git_ref('heads/main')
+        master_ref.edit(sha=commit.sha)
+
+
+

@@ -62,6 +62,7 @@ class FileDataModel(db.Model):
     __tablename__ = 'file_data'
     id = db.Column(db.Integer, primary_key=True)
     md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
+    sha = db.Column(db.String, nullable=True) # this is the sha of the actual data
     data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
     version = db.Column(db.Integer, default=0)
     size = db.Column(db.Integer, default=0)
@@ -76,6 +77,7 @@ class FileModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.Enum(FileType))
+    sha = db.Column(db.String, nullable=True) # only meta file here
     is_status = db.Column(db.Boolean)
     content_type = db.Column(db.String)
     is_reference = db.Column(db.Boolean, nullable=False, default=False)  # A global reference file.

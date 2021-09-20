@@ -59,7 +59,7 @@ class FileView(AdminModelView):
 
     @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
     def action_publish(self, ids):
-        FileService.publish_to_github(ids)
+        FileService.publish_to_github()
 
     @action('update', 'Update', 'Are you sure you want to update this file(s)?')
     def action_update(self, ids):
