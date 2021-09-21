@@ -339,6 +339,7 @@ def get_workflow_spec_files_dataframe(workflowid):
         filelist.append({'file_model_id':file.file_model_id,
                          'workflow_spec_id': file.file_model.workflow_spec_id,
                          'md5_hash':file.md5_hash,
+                         'sha':file.sha,
                          'filename':file.file_model.name,
                          'type':file.file_model.type.name,
                          'primary':file.file_model.primary,
@@ -349,6 +350,7 @@ def get_workflow_spec_files_dataframe(workflowid):
         return pd.DataFrame(columns=['file_model_id',
                                      'workflow_spec_id',
                                      'md5_hash',
+                                     'sha',
                                      'filename',
                                      'type',
                                      'primary',
@@ -375,10 +377,11 @@ def get_all_spec_state_dataframe():
         filelist.append({'file_model_id':file.file_model_id,
                          'workflow_spec_id': file.file_model.workflow_spec_id,
                          'md5_hash':file.md5_hash,
+                         'sha':file.sha,
                          'filename':file.file_model.name,
                          'date_created':file.date_created})
     if len(filelist) == 0:
-        df = pd.DataFrame(columns=['file_model_id','workflow_spec_id','md5_hash','filename','date_created'])
+        df = pd.DataFrame(columns=['file_model_id','workflow_spec_id','md5_hash','sha','filename','date_created'])
     else:
         df = pd.DataFrame(filelist)
 

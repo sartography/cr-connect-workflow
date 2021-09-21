@@ -34,6 +34,13 @@ def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None,study
     files = (to_file_api(model) for model in file_models)
     return FileSchema(many=True).dump(files)
 
+def publish_to_github(body):
+    print(body)
+    if 'message' not in body:
+        commitmsg = 'Commit through api'
+    else:
+        commitmsg = body['message']
+    FileService.publish_to_github(commitmsg)
 
 def get_reference_files():
     results = FileService.get_files(is_reference=True)

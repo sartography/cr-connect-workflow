@@ -753,6 +753,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
+  /file/publish:
+    post:
+      operationId: crc.api.file.publish_to_github
+      summary: Publish current fileset to github
+      tags:
+        - Files
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Study'
+      responses:
+        '200':
+          description: Successfully sent to github
+
   /file/{file_id}:
     parameters:
       - name: file_id

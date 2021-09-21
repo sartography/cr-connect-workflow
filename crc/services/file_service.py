@@ -388,37 +388,6 @@ class FileService(object):
             app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
 
     @staticmethod
-    def get_repo_branches():
-        gh_token = app.config['GITHUB_TOKEN']
-        github_repo = app.config['GITHUB_REPO']
-        _github = Github(gh_token)
-        repo = _github.get_user().get_repo(github_repo)
-        branches = [branch.name for branch in repo.get_branches()]
-        return branches
-
-    @staticmethod
-    def update_from_github(file_ids, source_target=GithubObject.NotSet):
-        gh_token = app.config['GITHUB_TOKEN']
-        github_repo = app.config['GITHUB_REPO']
-        _github = Github(gh_token)
-        repo = _github.get_user().get_repo(github_repo)
-
-        for file_id in file_ids:
-            file_data_model = FileDataModel.query.filter_by(
-                file_model_id=file_id
-            ).order_by(
-                desc(FileDataModel.version)
-            ).first()
-            try:
-                repo_file = repo.get_contents(file_data_model.file_model.name, ref=source_target)
-            except UnknownObjectException:
-                return {'error': 'Attempted to update from repository but file was not present'}
-            else:
-                file_data_model.data = repo_file.decoded_content
-                session.add(file_data_model)
-                session.commit()
-
-    @staticmethod
     def create_category_folder(ws,name,repo):
         catfolder = []
         for spec in ws:
@@ -448,11 +417,43 @@ class FileService(object):
             sha=cattree.sha)
         return element
 
+    @staticmethod
+    def clean_old_files():
+        sql = """
+        -- if a file_data is not the most recent revision
+        -- AND file_data is not currently used by a workflow
+        -- THEN we delete it. 
+        with latest as (
+            -- Get the latest revisions
+            select 1 as latest,file_model_id, max(version)
+            from file_data
+            group by 1,2
+        ),
+        grp as (
+            -- Join all latest files in with all file_data records so we can see
+            -- which ones are latest and which arent. 
+            select coalesce (l.latest, 0) is_latest, fd.id from file_data fd
+            left join latest l
+            on l.file_model_id = fd.file_model_id
+            and l.max = fd.version
+            ),
+        targeted as (
+            -- use the last query and remove any that are currently being used
+            select id from grp
+            where is_latest = 0
+              and id not in (select file_data_id
+              from workflow_spec_dependency_file)
+        )
+        -- delete the final list
+        delete from file_data where id in (select id from targeted)
+        """
+        session.execute(sql)
 
     @staticmethod
-    def publish_to_github():
+    def publish_to_github(commitmsg):
+        FileService.clean_old_files()
         # housekeeping - set up for commits
-        target_branch = app.config['TARGET_BRANCH'] if app.config['TARGET_BRANCH'] else GithubObject.NotSet
+        target_branch = app.config['TARGET_BRANCH'] if app.config['TARGET_BRANCH'] else 'main'
         gh_token = app.config['GITHUB_TOKEN']
         github_repo = app.config['GITHUB_REPO']
         _github = Github(gh_token)
@@ -465,16 +466,13 @@ class FileService(object):
         # make sure we have a blob for each file
         for file_data in file_data_models:
             data = base64.b64encode(file_data.data).decode('utf-8')
-            github_pause('add file'+file_data.name)
+            github_pause('add file'+file_data.file_model.name)
             blob1 = repo.create_git_blob(data,'base64')
             file_data.sha = blob1.sha
             session.add(file_data)
             session.commit()
-
-
         mainfolder = []
         workflow_categories = WorkflowSpecCategoryModel.query.all()
-        wcfolder = []
         ws = WorkflowSpecModel.query.filter(WorkflowSpecModel.is_master_spec == True).all()
         element = FileService.create_category_folder(ws, 'Master Spec', repo)
         mainfolder.append(element)
@@ -482,18 +480,13 @@ class FileService(object):
             ws = WorkflowSpecModel.query.filter(WorkflowSpecModel.category_id == wc.id).all()
             element = FileService.create_category_folder(ws,wc.display_name,repo)
             mainfolder.append(element)
-
-
-        wsfolder = []
-        workflow_specs = WorkflowSpecModel.query.all()
-
-        print('do main commit')
-        head_sha = repo.get_branch('main').commit.sha
-        tree = repo.create_git_tree(mainfolder)
+        try:
+            head_sha = repo.get_branch(target_branch).commit.sha
+        except:
+            head_sha = repo.get_branch('main').commit.sha
+            repo.create_git_ref('refs/heads/'+target_branch,sha=head_sha)
         parent = repo.get_git_commit(sha=head_sha)
-        commit = repo.create_git_commit("another commit", tree, [parent])
-        master_ref = repo.get_git_ref('heads/main')
-        master_ref.edit(sha=commit.sha)
-
-
-
+        tree = repo.create_git_tree(mainfolder)
+        commit = repo.create_git_commit(commitmsg, tree, [parent])
+        main_ref = repo.get_git_ref('heads/'+target_branch)
+        main_ref.edit(sha=commit.sha)
