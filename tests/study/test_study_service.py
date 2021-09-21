@@ -156,7 +156,7 @@ class TestStudyService(BaseTest):
         self.assertEqual("not_started", docs["UVACompl_PRCAppr"]['status'])
         self.assertEqual(1, docs["UVACompl_PRCAppr"]['count'])
         self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0])
-        self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0]['file_id'])
+        self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0]['id'])
         self.assertEqual(workflow.id, docs["UVACompl_PRCAppr"]['files'][0]['workflow_id'])
 
     def test_get_all_studies(self):
