@@ -131,6 +131,30 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Study"
+
+  /workflow_sync/sources:
+    get:
+      operationId: crc.api.workflow_sync.get_sync_sources
+      summary: Gets a list of all sources that are defined on the server
+      tags:
+        - Workflow Sync API
+      responses:
+        '200':
+          description: An array of sources that we can sync from.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      example: http://test.com
+                    name:
+                      type: string
+                      example: A remote server
+
   /workflow_sync/pullall:
     get:
       operationId: crc.api.workflow_sync.sync_all_changed_workflows
@@ -763,7 +787,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Study'
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: 'My commit Message'
+
       responses:
         '200':
           description: Successfully sent to github
@@ -1617,6 +1646,11 @@ components:
         md5_hash:
           type: string
           example: c30fd597f21715018eab12f97f9d4956
+    PublishRequest:
+      properties:
+        message:
+          type: string
+          example: This is my commit message
     Study:
       properties:
         id:

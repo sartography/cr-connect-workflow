@@ -1,4 +1,6 @@
 import hashlib
+import os
+
 import pandas as pd
 from pandas._libs.missing import NA
 
@@ -11,6 +13,28 @@ from crc.services.file_service import FileService
 from crc.services.workflow_sync import WorkflowSyncService
 from crc.api.workflow import get_workflow_specification
 
+def parse_key(key):
+    return key.split("__")[1:]
+
+def get_sync_sources():
+    """Environment variables for sync sources should be in the following format
+    CR_SYNC_SOURCE__0__url=https://my.target.com
+    CR_SYNC_SOURCE__0__name="source name"
+    CR_SYNC_SOURCE__1__url=https://my.target2.com
+    CR_SYNC_SOURCE__1__name="source2 name"
+
+    This function will build a structure based on these environment variables that will look like:
+    [{'url':'https://my.target.com','name':'source name'},
+     {'url':'https://my.target2.com','name':'source2 name'}]
+    """
+    sources = {}
+    mykeys=[key for key in os.environ.keys() if key.startswith('CR_SYNC_SOURCE')]
+    for key in mykeys:
+        loc = parse_key(key)
+        mydict = sources.get(loc[0],dict())
+        mydict[loc[1]] = os.environ.get(key)
+        sources[loc[0]] = mydict
+    return [sources[key] for key in sources.keys()]
 
 def get_sync_workflow_specification(workflow_spec_id):
     return get_workflow_specification(workflow_spec_id)
