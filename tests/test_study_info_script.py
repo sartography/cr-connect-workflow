@@ -1,3 +1,6 @@
+import io
+import json
+
 from tests.base_test import BaseTest
 from crc.scripts.study_info import StudyInfo
 from crc import app
@@ -13,15 +16,15 @@ class TestStudyInfoScript(BaseTest):
     def do_work(self, info_type):
         app.config['PB_ENABLED'] = True
         self.load_example_data()
-        workflow = self.create_workflow('study_info_script')
-        workflow_api = self.get_workflow_api(workflow)
+        self.workflow = self.create_workflow('study_info_script')
+        self.workflow_api = self.get_workflow_api(self.workflow)
         # grab study_info directly from script
-        study_info = StudyInfo().do_task(workflow_api.study_id, workflow.study.id, workflow.id, info_type)
+        study_info = StudyInfo().do_task(self.workflow_api.study_id, self.workflow.study.id, self.workflow.id, info_type)
 
         # grab study info through a workflow
-        first_task = workflow_api.next_task
-        self.complete_form(workflow, first_task, {'which': info_type})
-        workflow_api = self.get_workflow_api(workflow)
+        first_task = self.workflow_api.next_task
+        self.complete_form(self.workflow, first_task, {'which': info_type})
+        workflow_api = self.get_workflow_api(self.workflow)
         second_task = workflow_api.next_task
 
         return study_info, second_task
@@ -81,9 +84,29 @@ class TestStudyInfoScript(BaseTest):
         self.assertEqual(response['IND_2'], second_task.data['info']['IND_2'])
         self.assertEqual(response['IND_3'], second_task.data['info']['IND_3'])
 
-    # def test_info_script_documents(self):
-    #     study_info, second_task = self.do_work(info_type='documents')
-    #     self.assertEqual(study_info, second_task.data['info'])
+    def test_info_script_documents(self):
+        study_info, second_task = self.do_work(info_type='documents')
+        self.assertEqual(study_info, second_task.data['info'])
+        self.assertEqual(0, len(study_info['Grant_App']['files']), "Grant_App has not files yet.")
+        # Add a grant app file
+        data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+                           (self.workflow.study_id, self.workflow.id, second_task.name, 'Grant_App'), data=data, follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        file_data = json.loads(rv.get_data(as_text=True))
+
+        # Now get the study info again.
+        study_info = StudyInfo().do_task(self.workflow_api.study_id, self.workflow.study.id, self.workflow.id,
+                                         'documents')
+        # The data should contain a file.
+        self.assertEqual(1, len(study_info['Grant_App']['files']), "Grant_App has exactly one file.")
+
+        # This file data returned should be the same as what we get back about the file when we uploaded it,
+        # but the details on the document should be removed, because that would be recursive.
+        del file_data['document']
+        self.assertEqual(file_data, study_info['Grant_App']['files'][0])
+
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_info_script_sponsors(self, mock_get):

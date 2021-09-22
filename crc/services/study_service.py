@@ -14,7 +14,7 @@ from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
-from crc.models.file import FileModel, File
+from crc.models.file import FileModel, File, FileSchema
 from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
@@ -294,15 +294,10 @@ class StudyService(object):
             token = 'not_available'
             if hasattr(flask.g, 'user'):
                 token = flask.g.user.encode_auth_token()
-            for file in doc_files:
-                file_data = {'file_id': file.id,
-                             'name': file.name,
-                             'url': app.config['APPLICATION_ROOT'] +
-                                    'file/' + str(file.id) +
-                                    '/download?auth_token=' +
-                                    urllib.parse.quote_plus(token),
-                             'workflow_id': file.workflow_id
-                             }
+            for file_model in doc_files:
+                file = File.from_models(file_model, FileService.get_file_data(file_model.id), [])
+                file_data = FileSchema().dump(file)
+                del file_data['document']
                 data = db.session.query(DataStoreModel).filter(DataStoreModel.file_id == file.id).all()
                 data_store_data = {}
                 for d in data:
