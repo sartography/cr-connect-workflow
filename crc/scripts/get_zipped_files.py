@@ -1,6 +1,7 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel
+from crc.api.file import to_file_api
+from crc.models.file import FileModel, FileDataModel, FileSchema
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
@@ -46,10 +47,10 @@ class GetZippedFiles(Script):
                             zfw.writestr(file_name, file_data.data)
 
                     with open(temp_file.name, mode='rb') as handle:
-                        file_model = FileService().add_workflow_file(workflow_id, None, task.name, zip_filename,
+                        file_model = FileService().add_workflow_file(workflow_id, None, task.get_name(), zip_filename,
                                                                      'application/zip', handle.read())
-                        return file_model
-
+                        # return file_model
+                        return FileSchema().dump(to_file_api(file_model))
         else:
             raise ApiError(code='missing_file_ids',
                            message='You must include a list of file_ids.')
