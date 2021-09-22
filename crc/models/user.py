@@ -6,21 +6,14 @@ from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
 from crc import db, app
 from crc.api.common import ApiError
+from crc.models.ldap import LdapSchema
 
 
 class UserModel(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    uid = db.Column(db.String, unique=True)
-    email_address = db.Column(db.String)
-    display_name = db.Column(db.String)
-    affiliation = db.Column(db.String, nullable=True)
-    eppn = db.Column(db.String, nullable=True)
-    first_name = db.Column(db.String, nullable=True)
-    last_name = db.Column(db.String, nullable=True)
-    title = db.Column(db.String, nullable=True)
-
-    # TODO: Add Department and School
+    uid = db.Column(db.String, db.ForeignKey('ldap_model.uid'), unique=True)
+    ldap_info = db.relationship("LdapModel")
 
     def is_admin(self):
         # Currently admin abilities are set in the configuration, but this
@@ -65,7 +58,9 @@ class UserModelSchema(SQLAlchemyAutoSchema):
         model = UserModel
         load_instance = True
         include_relationships = True
+    uid = fields.String()
     is_admin = fields.Method('get_is_admin', dump_only=True)
+    ldap_info = fields.Nested(LdapSchema)
 
     def get_is_admin(self, obj):
         return obj.is_admin()

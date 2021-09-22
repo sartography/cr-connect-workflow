@@ -10,16 +10,16 @@ import unittest
 import urllib.parse
 import datetime
 from flask import g
-from sqlalchemy import Sequence
 
 from crc import app, db, session
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudyStatus
-from crc.models.data_store import DataStoreModel
+from crc.models.ldap import LdapModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
+from crc.services.ldap_service import LdapService
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
@@ -45,27 +45,14 @@ class BaseTest(unittest.TestCase):
     auths = {}
     test_uid = "dhf8r"
 
+    # These users correspond to the ldap details available in our mock ldap service.
     users = [
         {
             'uid': 'dhf8r',
-            'email_address': 'dhf8r@virginia.EDU',
-            'display_name': 'Daniel Harold Funk',
-            'affiliation': 'staff@virginia.edu;member@virginia.edu',
-            'eppn': 'dhf8r@virginia.edu',
-            'first_name': 'Daniel',
-            'last_name': 'Funk',
-            'title': 'SOFTWARE ENGINEER V'
         },
         {
-            'uid': 'lbd3p',
-            'email_address': 'lbd3p@virginia.EDU',
-            'display_name': 'Laura Barnes',
-            'affiliation': 'staff@virginia.edu;member@virginia.edu',
-            'eppn': 'lbd3p@virginia.edu',
-            'first_name': 'Laura',
-            'last_name': 'Barnes',
-            'title': 'Associate Professor of Systems and Information Engineering'
-        },
+            'uid': 'lb3dp',
+        }
     ]
 
     studies = [
@@ -127,7 +114,7 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(str.startswith(rv.location, redirect_url))
 
         user_model = session.query(UserModel).filter_by(uid=uid).first()
-        self.assertIsNotNone(user_model.display_name)
+        self.assertIsNotNone(user_model.ldap_info.display_name)
         self.assertEqual(user_model.uid, uid)
         self.assertTrue('user' in g, 'User should be in Flask globals')
         user = UserService.current_user(allow_admin_impersonate=True)
@@ -150,10 +137,12 @@ class BaseTest(unittest.TestCase):
         ExampleDataLoader.clean_db()
         # If in production mode, only add the first user.
         if app.config['PRODUCTION']:
-            session.add(UserModel(**self.users[0]))
+            ldap_info = LdapService.user_info(self.users[0]['uid'])
+            session.add(UserModel(uid=self.users[0]['uid'], ldap_info=ldap_info))
         else:
             for user_json in self.users:
-                session.add(UserModel(**user_json))
+                ldap_info = LdapService.user_info(user_json['uid'])
+                session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
 
         if use_crc_data:
             ExampleDataLoader().load_all()
@@ -267,7 +256,8 @@ class BaseTest(unittest.TestCase):
     def create_user(self, uid="dhf8r", email="daniel.h.funk@gmail.com", display_name="Hoopy Frood"):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()
         if user is None:
-            user = UserModel(uid=uid, email_address=email, display_name=display_name)
+            ldap_user = LdapService.user_info(uid)
+            user = UserModel(uid=uid, ldap_info=ldap_user)
             session.add(user)
             session.commit()
         return user

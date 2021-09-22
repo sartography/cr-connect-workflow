@@ -27,6 +27,7 @@ from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.data_store import DataStoreModel
 from crc.models.file import LookupDataModel, FileModel, File, FileSchema
+from crc.models.ldap import LdapModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel, UserModelSchema
@@ -69,6 +70,7 @@ class WorkflowService(object):
         if not user:
             user = db.session.query(UserModel).filter_by(uid="test").first()
         if not user:
+            db.session.add(LdapModel(uid="test"))
             db.session.add(UserModel(uid="test"))
             db.session.commit()
             user = db.session.query(UserModel).filter_by(uid="test").first()
@@ -93,6 +95,9 @@ class WorkflowService(object):
         for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
         user = db.session.query(UserModel).filter_by(uid="test").first()
+        ldap = db.session.query(LdapModel).filter_by(uid="test").first()
+        if ldap:
+            db.session.delete(ldap)
         if user:
             db.session.delete(user)
         db.session.commit()

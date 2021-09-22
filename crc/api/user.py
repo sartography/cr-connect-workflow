@@ -228,20 +228,17 @@ def _handle_login(user_info: LdapModel, redirect_url=None):
         return auth_token
 
 
-def _upsert_user(user_info):
-    user = session.query(UserModel).filter(UserModel.uid == user_info.uid).first()
+def _upsert_user(ldap_info):
+    user = session.query(UserModel).filter(UserModel.uid == ldap_info.uid).first()
 
     if user is None:
         # Add new user
         user = UserModel()
     else:
-        user = session.query(UserModel).filter(UserModel.uid == user_info.uid).with_for_update().first()
+        user = session.query(UserModel).filter(UserModel.uid == ldap_info.uid).with_for_update().first()
 
-    user.uid = user_info.uid
-    user.display_name = user_info.display_name
-    user.email_address = user_info.email_address
-    user.affiliation = user_info.affiliation
-    user.title = user_info.title
+    user.uid = ldap_info.uid
+    user.ldap_info = ldap_info
 
     session.add(user)
     session.commit()
