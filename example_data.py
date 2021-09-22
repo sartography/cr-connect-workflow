@@ -335,10 +335,10 @@ class ExampleDataLoader:
         file.close()
 
     def load_default_user(self):
-        user = UserModel(uid="dhf8r", email_address="dhf8r@virginia.edu", display_name="Development User")
         ldap_info = LdapModel(uid="dhf8r", email_address="dhf8r@virginia.edu", display_name="Development User")
-        db.session.add(user)
+        user = UserModel(uid="dhf8r", ldap_info=ldap_info)
         db.session.add(ldap_info)
+        db.session.add(user)
         db.session.commit()
 
 def ldap(): return "x";

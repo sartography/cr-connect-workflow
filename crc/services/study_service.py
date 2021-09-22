@@ -143,7 +143,9 @@ class StudyService(object):
             raise ApiError('study_not_found', 'No study found with id = %d' % study_id)
 
         people = db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id).all()
-        owner = StudyAssociated(uid=study.user_uid, role='owner', send_email=True, access=True)
+        ldap_info = LdapService.user_info(study.user_uid)
+        owner = StudyAssociated(uid=study.user_uid, role='owner', send_email=True, access=True,
+                                ldap_info=ldap_info)
         people.append(owner)
         return people
 

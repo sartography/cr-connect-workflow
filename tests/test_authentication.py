@@ -9,6 +9,7 @@ from crc import app, session
 from crc.api.common import ApiError
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudySchema, StudyModel, StudyStatus
+from crc.services.ldap_service import LdapService
 from crc.models.user import UserModel
 
 from unittest.mock import patch
@@ -63,7 +64,7 @@ class TestAuthentication(BaseTest):
 
     def test_non_production_auth_creates_user(self):
         new_uid = self.non_admin_uid  ## Assure this user id is in the fake responses from ldap.
-        self.load_example_data()
+#        self.load_example_data()
         user = session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNone(user)
 
@@ -78,8 +79,8 @@ class TestAuthentication(BaseTest):
 
         user = session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNotNone(user)
-        self.assertIsNotNone(user.display_name)
-        self.assertIsNotNone(user.email_address)
+        self.assertIsNotNone(user.ldap_info.display_name)
+        self.assertIsNotNone(user.ldap_info.email_address)
 
         # Hitting the same endpoint again with the same info should not cause an error
         rv_2 = self.app.get(url, follow_redirects=False)
@@ -119,7 +120,7 @@ class TestAuthentication(BaseTest):
         self.assert_success(rv)
 
         # User must exist in the mock ldap responses.
-        user = UserModel(uid="dhf8r", first_name='Dan', last_name='Funk', email_address='dhf8r@virginia.edu')
+        user = UserModel(uid="dhf8r", ldap_info=LdapService.user_info("dhf8r"))
         rv = self.app.get('/v1.0/user', headers=self.logged_in_headers(user, redirect_url='http://omg.edu/lolwut'))
         self.assert_success(rv)
         user_data = json.loads(rv.get_data(as_text=True))
@@ -318,7 +319,7 @@ class TestAuthentication(BaseTest):
         self.assertFalse(user.is_admin())
         self.assertIsNotNone(user)
         self.assertEqual(self.non_admin_uid, user.uid)
-        self.assertEqual("Laura Barnes", user.display_name)
-        self.assertEqual("lb3dp@virginia.edu", user.email_address)
-        self.assertEqual("E0:Associate Professor of Systems and Information Engineering", user.title)
+        self.assertEqual("Laura Barnes", user.ldap_info.display_name)
+        self.assertEqual("lb3dp@virginia.edu", user.ldap_info.email_address)
+        self.assertEqual("E0:Associate Professor of Systems and Information Engineering", user.ldap_info.title)
         return user

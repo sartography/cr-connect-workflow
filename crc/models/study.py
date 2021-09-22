@@ -10,6 +10,7 @@ from sqlalchemy import func
 from crc import db, ma
 from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileModel, SimpleFileSchema, FileSchema
+from crc.models.ldap import LdapModel, LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
     WorkflowModel
@@ -78,13 +79,17 @@ class StudyAssociated(db.Model):
     role = db.Column(db.String, nullable=True)
     send_email = db.Column(db.Boolean, nullable=True)
     access = db.Column(db.Boolean, nullable=True)
+    ldap_info = db.relationship(LdapModel)
 
 
 class StudyAssociatedSchema(ma.Schema):
     class Meta:
-        fields=['uid', 'role', 'send_email', 'access']
+        fields=['uid', 'role', 'send_email', 'access', 'ldap_info']
         model = StudyAssociated
         unknown = INCLUDE
+    ldap_info = fields.Nested(LdapSchema, dump_only=True)
+
+
 
 class StudyEvent(db.Model):
     __tablename__ = 'study_event'
