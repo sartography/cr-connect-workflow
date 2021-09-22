@@ -9,8 +9,7 @@ class GetStudyAssociate(Script):
 
 
     def get_description(self):
-        return """
-Returns how a single person is associated with a study and what access they need,
+        return """Returns how a single person is associated with a study and what access they need,
  or raises an error if the person is not associated with the study.
 example : get_study_associate('sbp3ey') => {'uid':'sbp3ey','role':'Unicorn Herder', 'send_email': False, 
 'access':True}

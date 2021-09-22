@@ -10,8 +10,7 @@ class UpdateStudyAssociates(Script):
                              "'access':'boolean'} "
 
     def get_description(self):
-        return """
-Allows you to associate other users with a study - only 'uid' is required in the 
+        return """Allows you to associate other users with a study - only 'uid' is required in the 
 incoming dictionary, but will be useless without other information - all values will default to 
 false or blank
 

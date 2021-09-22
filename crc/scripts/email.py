@@ -18,8 +18,7 @@ class Email(Script):
        You can also specify cc, bcc, reply_to, and attachments"""
 
     def get_description(self):
-        return """
-Creates an email, using the provided `subject` and `recipients` arguments, which are required.
+        return """Creates an email, using the provided `subject` and `recipients` arguments, which are required.
 The `Element Documentation` field in the script task must contain markdown that becomes the body of the email message.
 
 You can also provide `cc`, `bcc`, `reply_to` and `attachments` arguments.  

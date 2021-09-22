@@ -119,8 +119,7 @@ class StudyInfo(Script):
         return json.dumps(self.example_data['StudyInfo'][key], indent=2, separators=(',', ': '))
 
     def get_description(self):
-        return """
-StudyInfo [TYPE], where TYPE is one of 'info', 'investigators', 'details', or 'documents'.
+        return """study_info(TYPE), where TYPE is one of 'info', 'investigators', 'details', or 'documents'.
 
 Adds details about the current study to the Task Data.  The type of information required should be 
 provided as an argument.  The following arguments are available:

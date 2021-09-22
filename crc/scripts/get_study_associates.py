@@ -13,8 +13,7 @@ class GetStudyAssociates(Script):
 
 
     def get_description(self):
-        return """
-Returns all people associated with the study - Will always return the study owner as assocated
+        return """Returns all people associated with the study - Will always return the study owner as assocated
 example : get_study_associates() => [{'uid':'sbp3ey','role':'Unicorn Herder', 'send_email': False, 'access':True}] 
 
 """
