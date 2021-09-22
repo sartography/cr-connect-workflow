@@ -33,6 +33,25 @@ class TestStudyInfoScript(BaseTest):
         self.assertEqual(study_info['primary_investigator_id'], second_task.data['info']['primary_investigator_id'])
         self.assertIn(study_info['title'], second_task.documentation)
 
+    def test_info_script_updated_study_info(self):
+        self.load_example_data()
+        short_name = "My Short Name"
+        proposal_name = "My Proposal Name"
+        workflow = self.create_workflow('update_study_info')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        workflow_api = self.complete_form(workflow, task, {'short_name': short_name, 'proposal_name': proposal_name})
+        task = workflow_api.next_task
+        # The workflow calls study_info('info') and puts the result in Element Documentation
+        # I create a dictionary of that info with `eval` to make the asserts easier to read
+        study_info = eval(task.documentation)
+
+        self.assertIn('short_name', study_info.keys())
+        self.assertEqual(short_name, study_info['short_name'])
+        self.assertIn('proposal_name', study_info.keys())
+        self.assertIn(proposal_name, study_info['proposal_name'])
+
     @patch('crc.services.protocol_builder.requests.get')
     def test_info_script_investigators(self, mock_get):
         app.config['PB_ENABLED'] = True
