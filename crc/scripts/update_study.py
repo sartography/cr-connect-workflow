@@ -18,8 +18,7 @@ class UpdateStudy(Script):
                              "update_study task, in the form [study_field]=[value]",
 
     def get_description(self):
-        return """
-Allows you to set specific attributes on the Study model by mapping them to 
+        return """Allows you to set specific attributes on the Study model by mapping them to 
 values in the task data.  Should be called with the value to set (either title, short_title, or pi)
 
 Example:

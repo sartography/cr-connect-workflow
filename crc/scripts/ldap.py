@@ -15,8 +15,7 @@ class Ldap(Script):
     If no user id is specified, returns information about the current user."""
 
     def get_description(self):
-        return """
-Attempts to create a dictionary with person details, using the
+        return """Attempts to create a dictionary with person details, using the
 provided argument (a UID) and look it up through LDAP.  If no UID is
 provided, then returns information about the current user.
 

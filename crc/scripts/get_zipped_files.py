@@ -14,7 +14,7 @@ class GetZippedFiles(Script):
     """This script creates a zip document from a list of file ids"""
 
     def get_description(self):
-        """Creates a zip file from a list of file_ids.
+        return """Creates a zip file from a list of file_ids.
            This is meant to use as an attachment to an email message"""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
