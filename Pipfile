@@ -45,8 +45,8 @@ pygithub = "*"
 apscheduler = "*"
 connexion = {extras = [ "swagger-ui",], version = "*"}
 sentry-sdk = {extras = [ "flask",], version = "==0.14.4"}
-spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow.git"}
 dateparser = "*"
+spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow"}
 
 [requires]
 python_version = "3.8"
