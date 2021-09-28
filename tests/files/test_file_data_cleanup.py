@@ -138,5 +138,5 @@ class TestFileDataCleanup(BaseTest):
 
         # assert correct versions are removed
         new_count = session.query(FileDataModel).count()
-        self.assertEqual(set(deleted_models), set(replaced_models))
+        self.assertEqual(set(deleted_models).union(set(saved_models)), set(replaced_models))
         self.assertEqual(file_data_model_count, new_count)
