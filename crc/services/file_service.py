@@ -562,7 +562,7 @@ class FileService(object):
                 file_models = session.query(FileModel)\
                     .filter(FileModel.workflow_spec_id == wf_spec_model.id)\
                     .all()
-                # current_model = file_models[0]
+
                 for file_model in file_models:
                     file_data_models = session.query(FileDataModel)\
                         .filter(FileDataModel.file_model_id == file_model.id)\
@@ -583,7 +583,7 @@ class FileService(object):
                             saved_models.append(fd_model)
                             continue
                         deleted_models.append(fd_model)
-                        # session.delete(fd_model)
+                        session.delete(fd_model)
 
             session.commit()
             return current_models, saved_models, deleted_models
