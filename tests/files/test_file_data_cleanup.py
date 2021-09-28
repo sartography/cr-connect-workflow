@@ -93,7 +93,6 @@ class TestFileDataCleanup(BaseTest):
         session.add(lookup_model)
         session.commit()
 
-
         # Grab first file model
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_spec_id == workflow_spec_model.id)\
@@ -141,5 +140,3 @@ class TestFileDataCleanup(BaseTest):
         new_count = session.query(FileDataModel).count()
         self.assertEqual(set(deleted_models), set(replaced_models))
         self.assertEqual(file_data_model_count, new_count)
-
-        print('test_file_data_cleanup')
