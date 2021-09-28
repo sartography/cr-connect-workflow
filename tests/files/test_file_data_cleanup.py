@@ -78,8 +78,44 @@ class TestFileDataCleanup(BaseTest):
         # Use for comparison after cleanup
         replaced_models = []
 
-        # Get workflow spec
-        workflow_spec_model = session.query(WorkflowSpecModel).first()
+        # Get `empty_workflow` workflow spec
+        workflow_spec_model = session.query(WorkflowSpecModel)\
+            .filter(WorkflowSpecModel.name == 'empty_workflow')\
+            .first()
+
+        # Get file model for empty_workflow spec
+        file_model = session.query(FileModel)\
+            .filter(FileModel.workflow_spec_id == workflow_spec_model.id)\
+            .first()
+
+        # Grab the file data model for empty_workflow file_model
+        original_file_data_model = session.query(FileDataModel)\
+            .filter(FileDataModel.file_model_id == file_model.id)\
+            .order_by(desc(FileDataModel.date_created))\
+            .first()
+
+        # Add file to dependencies
+        # It should not get deleted
+        wf_spec_depend_model = WorkflowSpecDependencyFile(file_data_id=original_file_data_model.id,
+                                                          workflow_id=workflow.id)
+        session.add(wf_spec_depend_model)
+        session.commit()
+
+        # Update first time
+        replaced_models.append(original_file_data_model)
+        data = {'file': (io.BytesIO(self.xml_str_one), file_model.name)}
+        rv = self.app.put('/v1.0/file/%i/data' % file_model.id, data=data, follow_redirects=True,
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        file_json_first = json.loads(rv.get_data(as_text=True))
+
+        # Update second time
+        # replaced_models.append(old_file_data_model)
+        data = {'file': (io.BytesIO(self.xml_str_two), file_model.name)}
+        rv = self.app.put('/v1.0/file/%i/data' % file_model.id, data=data, follow_redirects=True,
+                          content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv)
+        file_json_second = json.loads(rv.get_data(as_text=True))
 
         # Add lookup file
         data = {'file': (io.BytesIO(b'asdf'), 'lookup_1.xlsx')}
@@ -87,56 +123,27 @@ class TestFileDataCleanup(BaseTest):
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_json = json.loads(rv.get_data(as_text=True))
-        file_id = file_json['id']
-        lookup_model = LookupFileModel(file_data_model_id=file_id,
+        lookup_file_id = file_json['id']
+        lookup_data_model = session.query(FileDataModel).filter(FileDataModel.file_model_id == lookup_file_id).first()
+        lookup_model = LookupFileModel(file_data_model_id=lookup_data_model.id,
                                        workflow_spec_id=workflow_spec_model.id)
         session.add(lookup_model)
         session.commit()
 
-        # Grab first file model
-        file_model = session.query(FileModel)\
-            .filter(FileModel.workflow_spec_id == workflow_spec_model.id)\
-            .first()
-
-        # Grab the file data model we want to replace
-        old_file_data_model = session.query(FileDataModel)\
-            .filter(FileDataModel.file_model_id == file_model.id)\
-            .order_by(desc(FileDataModel.date_created))\
-            .first()
-
-        # Update first time
-        replaced_models.append(old_file_data_model)
-        data = {'file': (io.BytesIO(self.xml_str_one), 'test_bpmn_1.bpmn')}
-        rv = self.app.put('/v1.0/file/%i/data' % file_model.id, data=data, follow_redirects=True,
+        # Update lookup file
+        data = {'file': (io.BytesIO(b'1234'), 'lookup_1.xlsx')}
+        rv = self.app.put('/v1.0/file/%i/data' % lookup_file_id, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
-        file_json = json.loads(rv.get_data(as_text=True))
-
-        # Grab the new file data model we want to replace
-        old_file_data_model = session.query(FileDataModel)\
-            .filter(FileDataModel.file_model_id == file_model.id)\
-            .order_by(desc(FileDataModel.date_created))\
-            .first()
-
-        # Update second time
-        replaced_models.append(old_file_data_model)
-        data = {'file': (io.BytesIO(self.xml_str_two), 'test_bpmn_1.bpmn')}
-        rv = self.app.put('/v1.0/file/%i/data' % file_json['id'], data=data, follow_redirects=True,
-                          content_type='multipart/form-data', headers=self.logged_in_headers())
-        self.assert_success(rv)
-        file_json = json.loads(rv.get_data(as_text=True))
-        file_id = file_json['id']
-
-        # Add file to dependencies
-        wf_spec_depend_model = WorkflowSpecDependencyFile(file_data_id=file_id,
-                                                          workflow_id=workflow.id)
-        session.add(wf_spec_depend_model)
-        session.commit()
 
         # Run the cleanup files process
         current_models, saved_models, deleted_models = FileService.cleanup_file_data()
 
         # assert correct versions are removed
         new_count = session.query(FileDataModel).count()
-        self.assertEqual(set(deleted_models).union(set(saved_models)), set(replaced_models))
-        self.assertEqual(file_data_model_count, new_count)
+        self.assertEqual(8, new_count)
+        self.assertEqual(4, len(current_models))
+        self.assertEqual(2, len(saved_models))
+        self.assertEqual(1, len(deleted_models))
+
+        print('test_file_data_cleanup')
