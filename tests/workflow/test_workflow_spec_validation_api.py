@@ -147,3 +147,8 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertIn('enum_with_default', final_data)
         self.assertEqual('maybe', final_data['enum_with_default']['value'])
 
+    def test_invalid_custom_field(self):
+        self.load_example_data()
+        errors = self.validate_workflow("invalid_custom_field")
+        self.assertEqual(1, len(errors))
+        self.assertEqual("invalid_field_type", errors[0]['code'])
