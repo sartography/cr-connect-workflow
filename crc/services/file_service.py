@@ -41,7 +41,7 @@ def camel_to_snake(camel):
 def github_pause(msg):
     # Github gets angry if we hit it too fast
     print(msg)
-    time.sleep(.25)
+    #time.sleep(.25)
 
 def github_escape_dir(name):
     return re.sub("/","\\\\",name)
@@ -208,6 +208,14 @@ class FileService(object):
             if el.get('name'):
                 retval = True
         return retval
+
+    @staticmethod
+    def need_github_update():
+        # if we don't find a filedata with a blank sha, then don't really need to push to github
+        newfile = session.query(FileDataModel).filter_by(sha=None).first()
+        if newfile:
+            return True
+        return False
 
     @staticmethod
     def get_process_id(et_root: etree.Element):
@@ -417,41 +425,10 @@ class FileService(object):
             sha=cattree.sha)
         return element
 
-    @staticmethod
-    def clean_old_files():
-        sql = """
-        -- if a file_data is not the most recent revision
-        -- AND file_data is not currently used by a workflow
-        -- THEN we delete it. 
-        with latest as (
-            -- Get the latest revisions
-            select 1 as latest,file_model_id, max(version)
-            from file_data
-            group by 1,2
-        ),
-        grp as (
-            -- Join all latest files in with all file_data records so we can see
-            -- which ones are latest and which arent. 
-            select coalesce (l.latest, 0) is_latest, fd.id from file_data fd
-            left join latest l
-            on l.file_model_id = fd.file_model_id
-            and l.max = fd.version
-            ),
-        targeted as (
-            -- use the last query and remove any that are currently being used
-            select id from grp
-            where is_latest = 0
-              and id not in (select file_data_id
-              from workflow_spec_dependency_file)
-        )
-        -- delete the final list
-        delete from file_data where id in (select id from targeted)
-        """
-        session.execute(sql)
 
     @staticmethod
     def publish_to_github(commitmsg):
-        FileService.clean_old_files()
+        #FileService.clean_old_files()
         # housekeeping - set up for commits
         target_branch = app.config['TARGET_BRANCH'] if app.config['TARGET_BRANCH'] else 'main'
         gh_token = app.config['GITHUB_TOKEN']

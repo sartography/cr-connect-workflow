@@ -141,6 +141,77 @@ additional edits required.)
 ## Documentation
 Additional Documentation is available on [ReadTheDocs](https://cr-connect-workflow.readthedocs.io/en/latest/#)
 
+## Setting up multiple environments to test Sync
+In some cases (for example when testing syncing) - you might want to run multiple copies of the API at the same time.
+Luckily, PyCharm lets us do this fairly easily 
+
+In most cases, you can use the sartography-utils repository to generate a docker file for all of the required 
+infrastructure such as the Database, PB, frontend, etc. 
+
+I create two different files from the 'generator' there and then use different port bases such as the typical 5000 
+and an alternate 7000 - 
+
+See [here](https://github.com/sartography/sartography-utils/blob/main/stackdeploy-generator/README.md) for the 
+README on how to do this, but the cliffs notes is 
+
+```
+ sudo ./stackdeploy-generator.py -F ./cr_connect/ -c ./docker-compose-c_stack.yml --port-range 9000 -i c_stack
+```
+
+Once this is done, you can start up the entire stack by doing a 
+
+```angular2html
+docker-compose -f doocker-compose-c_stack.yml up
+```
+and it will start an entire stack with the latest docker builds for each component.
+
+When testing, however we will want to run our development version of the backend (for example)
+and we will want to comment out the backend service from the docker-compose file as well as any dependencies found 
+so that we run everything EXCEPT the backend service
+
+We will want to have two such docker-compose files, one starting at port 5000 and one at 7000.
+
+When we start pycharm with the directions above, the default port is :5000 - so we will need to create a second 
+configuration with port 7000 enabled.
+
+To do this we got to the 'edit configuration options' in pycharm
+![Edit Configurations](readme_images/EditConfigurations.png)
+Copy the default 'run' configuration
+![Copy Configuration](readme_images/CopyConfig.png)
+and then edit the environment variables (click on the little page icon to make it easier to edit)
+you will need to add the following :
+- SERVER_NAME=localhost:7000
+- CORS_ALLOW_ORIGINS=localhost:7000,backend:7000,localhost:7002,bpmn:7002,localhost:4200,frontend:4200
+
+and if you want to set up development on a remote box you will want to also define
+- APPLICATION_ROOT=http://192.168.0.60:5000/v1.0
+
+and you would replace the ip address with your actual IP address or url that you have set up. This is useful if you 
+have a remote development box or a cloud instance that you are developing on.
+Pycharm has some really great remote development tools where you can set up a SSH remote endpoint and it will copy 
+over your files as you work and it feels very much like working locally (complete with debug access)
+[Documentation here](https://www.jetbrains.com/help/pycharm/configuring-remote-interpreters-via-ssh.html#ssh)
+
+### Setting up Remote channels 
+At the time of writing this, there are a number of options available for setting up new sync servers and GitHub 
+repositories to sync to - here are some of the main ones
+
+- **GITHUB_TOKEN**	*example* =ghp_q0coD6OV21Z8bIV76momeU2z2Dz7
+  <br/> this is the personal github token that you set up as a developer on the sync repository
+- **GITHUB_REPO**	*example*=TestDump <br/> This is the repository that you want to sync to
+- **TARGET_BRANCH**	*example*=remotebox<br/> This is the branch to sync to - if it is not already out there, it will 
+  be created the first time you sync
+- **CR_SYNC_SOURCE__x__url**	*example*=http://localhost:5000/v1.0 <br/> This is the sync source - newer files will 
+  be pulled from this source - x is a number from 0 to however many sources you want to show in the BPMN server
+- **CR_SYNC_SOURCE__x__name** *example*=	MainBox <br> a name for the source x starts at 0 and corresponds with 
+  the link
+
+
+### Not using Pycharm?
+Setting up multiple environments to work in is still possible even when not using pycharm, you would need to set up 
+a script for each development environment. You need and define all of the proper environment variables first, we just 
+like the pycharm setup because it allows us lots of debugging flexibility across all of these running instances. 
+
 ## Manual Synch
 You can move all the BPMN diagrams from one system to another (upgrading and replacing as needed)  This is how
 we will transfer files from staging to production. 

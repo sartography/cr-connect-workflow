@@ -99,9 +99,11 @@ def get_changed_workflows(remote,as_df=False):
         # this takes the different date_created_x and date-created_y columns and
         # combines them back into one date_created column
         index = different['date_created_x'].isnull()
-        different.loc[index,'date_created_x'] = different[index]['date_created_y']
-        different = different[['workflow_spec_id','date_created_x','location']].copy()
-        different.columns=['workflow_spec_id','date_created','location']
+        different.loc[index, 'date_created_x'] = different[index]['date_created_y']
+        different.loc[index, 'name_x'] = different[index]['name_y']
+
+        different = different[['workflow_spec_id','date_created_x','location','name_x']].copy()
+        different.columns=['workflow_spec_id','date_created','location','name']
 
         # our different list will have multiple entries for a workflow if there is a version on either side
         # we want to grab the most recent one, so we sort and grab the most recent one for each workflow
@@ -141,9 +143,15 @@ def sync_all_changed_workflows(remote):
         return []
     workflows = workflowsdf.reset_index().to_dict(orient='records')
     for workflow in workflows:
-        sync_changed_files(remote,workflow['workflow_spec_id'])
-    sync_changed_files(remote,'REFERENCE_FILES')
-    return [x['workflow_spec_id'] for x in workflows]
+        files = sync_changed_files(remote,workflow['workflow_spec_id'])
+        workflow['changed_files'] = files
+    ref_files = sync_changed_files(remote,'REFERENCE_FILES')
+    info = {}
+    info['reference_files'] = ref_files
+    for wf in workflows:
+        info[wf['workflow_spec_id']] = {'name':wf['name'],
+                                        'files':wf['changed_files']}
+    return info
 
 
 def file_get(workflow_spec_id,filename):
@@ -353,9 +361,11 @@ def get_workflow_spec_files_dataframe(workflowid):
     marked as is_reference
     """
     if workflowid == 'REFERENCE_FILES':
-        x = session.query(FileDataModel).join(FileModel).filter(FileModel.is_reference == True)
+        x = session.query(FileDataModel).join(FileModel).filter((FileModel.is_reference == True) &
+                                                                (FileModel.archived!=True))
     else:
-        x = session.query(FileDataModel).join(FileModel).filter(FileModel.workflow_spec_id == workflowid)
+        x = session.query(FileDataModel).join(FileModel).filter((FileModel.workflow_spec_id == workflowid) &
+                                                                (FileModel.archived!=True))
     # there might be a cleaner way of getting a data frome from some of the
     # fields in the ORM - but this works OK
     filelist = []
@@ -393,19 +403,26 @@ def get_all_spec_state_dataframe():
     thumbprint of all of the files that are used for that workflow_spec
     Return a dataframe
     """
-    x = session.query(FileDataModel).join(FileModel)
-    # there might be a cleaner way of getting a data frome from some of the
+    wfs = session.query(WorkflowSpecModel).all()
+    file_data = session.query(FileDataModel).join(FileModel).filter(FileModel.archived != True)
+    wflookup = {}
+    for workflow_spec in wfs:
+        wflookup[workflow_spec.id] = workflow_spec.display_name
+    # there might be a cleaner way of getting a data from from some of the
     # fields in the ORM - but this works OK
     filelist = []
-    for file in x:
+    for file in file_data:
         filelist.append({'file_model_id':file.file_model_id,
                          'workflow_spec_id': file.file_model.workflow_spec_id,
                          'md5_hash':file.md5_hash,
                          'sha':file.sha,
+                         'name':wflookup.get(file.file_model.workflow_spec_id,'reference'),
                          'filename':file.file_model.name,
                          'date_created':file.date_created})
     if len(filelist) == 0:
-        df = pd.DataFrame(columns=['file_model_id','workflow_spec_id','md5_hash','sha','filename','date_created'])
+        df = pd.DataFrame(columns=['file_model_id','workflow_spec_id','md5_hash',
+                                   'spec_name','sha','filename',
+                                   'date_created'])
     else:
         df = pd.DataFrame(filelist)
 
@@ -420,9 +437,10 @@ def get_all_spec_state_dataframe():
     # and make a consolidated hash of the md5_checksums - this acts as a 'thumbprint' for each
     # workflow spec
     df = df.groupby('workflow_spec_id').agg({'date_created':'max',
+                                             'name': 'max',
                                              'md5_hash':join_uuids}).copy()
     # get only the columns we are really interested in returning
-    df = df[['date_created','md5_hash']].copy()
+    df = df[['date_created','md5_hash','name']].copy()
     # convert dates to string
     df['date_created'] = df['date_created'].astype('str')
     return df

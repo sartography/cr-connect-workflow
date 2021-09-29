@@ -777,6 +777,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
+
+  /file/need_publish:
+    get:
+      operationId: crc.api.file.can_update_github
+      summary: A boolean operation that determines if we have something new that needs to be pulished to github
+      tags:
+        - Files
+
+      responses:
+        '200':
+          description: Successfully sent to github
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+
   /file/publish:
     post:
       operationId: crc.api.file.publish_to_github

@@ -42,6 +42,9 @@ def publish_to_github(body):
         commitmsg = body['message']
     FileService.publish_to_github(commitmsg)
 
+def can_update_github():
+    return FileService.need_github_update()
+
 def get_reference_files():
     results = FileService.get_files(is_reference=True)
     files = (to_file_api(model) for model in results)
