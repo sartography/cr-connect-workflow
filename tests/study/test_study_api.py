@@ -69,6 +69,7 @@ class TestStudyApi(BaseTest):
         category = study.categories[0]
         self.assertEqual("test_category", category['name'])
         self.assertEqual("Test Category", category['display_name'])
+        self.assertEqual(False, category['admin'])
         self.assertEqual(1, len(category["workflows"]))
         workflow = category["workflows"][0]
         self.assertEqual("random_fact", workflow["name"])
