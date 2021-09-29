@@ -1,6 +1,9 @@
 import enum
 import urllib
+
+import connexion
 import flask
+from flask import url_for
 from marshmallow import INCLUDE, EXCLUDE, Schema
 from marshmallow.fields import Method
 from marshmallow_enum import EnumField
@@ -153,10 +156,12 @@ class FileSchema(Schema):
 
     def get_url(self, obj):
         token = 'not_available'
+        base_url = connexion.request.host_url
+        file_url = url_for("/v1_0.crc_api_file_get_file_data_link", file_id=obj.id)
         if hasattr(flask.g, 'user'):
             token = flask.g.user.encode_auth_token()
-        return (app.config['APPLICATION_ROOT'] + 'file/' +
-                str(obj.id) + '/download?auth_token=' + urllib.parse.quote_plus(token))
+        url = base_url + file_url + '?auth_token=' + urllib.parse.quote_plus(token)
+        return url
 
 
 class LookupFileModel(db.Model):
