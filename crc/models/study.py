@@ -162,13 +162,14 @@ class Category(object):
         self.name = model.name
         self.display_name = model.display_name
         self.display_order = model.display_order
+        self.admin = model.admin
 
 
 class CategorySchema(ma.Schema):
     workflows = fields.List(fields.Nested(WorkflowMetadataSchema), dump_only=True)
     class Meta:
         model = Category
-        additional = ["id", "name", "display_name", "display_order"]
+        additional = ["id", "name", "display_name", "display_order", "admin"]
         unknown = INCLUDE
 
 

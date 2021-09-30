@@ -249,7 +249,8 @@ class ExampleDataLoader:
             id=0,
             name='test_category',
             display_name='Test Category',
-            display_order=0
+            display_order=0,
+            admin=False
         )
         db.session.add(category)
         db.session.commit()
