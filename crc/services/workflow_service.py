@@ -137,7 +137,7 @@ class WorkflowService(object):
             study_model = session.query(StudyModel).filter(StudyModel.id == validate_study_id).first()
             spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
             status = StudyService._get_study_status(study_model)
-            if status[spec_model.name]['status'] == 'disabled':
+            if spec_model.name in status and status[spec_model.name]['status'] == 'disabled':
                 raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.name]['message']}")
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:
