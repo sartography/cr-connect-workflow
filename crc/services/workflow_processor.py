@@ -1,5 +1,6 @@
 import re
 
+from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
@@ -8,7 +9,6 @@ from datetime import datetime
 from typing import List
 
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
-from SpiffWorkflow.bpmn.BpmnScriptEngine import BpmnScriptEngine
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
@@ -30,9 +30,8 @@ from crc.services.file_service import FileService
 from crc import app
 from crc.services.user_service import UserService
 
-from difflib import SequenceMatcher
 
-class CustomBpmnScriptEngine(BpmnScriptEngine):
+class CustomBpmnScriptEngine(PythonScriptEngine):
     """This is a custom script processor that can be easily injected into Spiff Workflow.
     It will execute python code read in from the bpmn.  It will also make any scripts in the
      scripts directory available for execution. """
@@ -79,7 +78,7 @@ class CustomBpmnScriptEngine(BpmnScriptEngine):
                 augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
                 augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
-            exp, valid = self.validateExpression(expression)
+            exp, valid = self.validate_expression(expression)
             return self._eval(exp, external_methods=augmentMethods, **task.data)
 
         except Exception as e:

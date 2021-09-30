@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0vabmzb" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_0ubt44i" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1ui50vr</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1ui50vr" sourceRef="StartEvent_1" targetRef="Activity_GetData" />
+    <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="some_field" label="Select" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="checkbox" />
+            </camunda:properties>
+            <camunda:value id="value_1" name="value_1" />
+            <camunda:value id="value_2" name="value_2" />
+            <camunda:value id="value_3" name="value_3" />
+            <camunda:value id="value_4" name="value_4" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1ui50vr</bpmn:incoming>
+      <bpmn:outgoing>Flow_07pr9lr</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_07pr9lr" sourceRef="Activity_GetData" targetRef="Activity_DisplayData" />
+    <bpmn:manualTask id="Activity_DisplayData" name="Display Data">
+      <bpmn:documentation># Enum data
+{% for i in range(some_field | length) %}
+    {{ some_field[i] }}
+{% endfor %}</bpmn:documentation>
+      <bpmn:incoming>Flow_07pr9lr</bpmn:incoming>
+      <bpmn:outgoing>Flow_13oillk</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_0nm59tf">
+      <bpmn:incoming>Flow_13oillk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_13oillk" sourceRef="Activity_DisplayData" targetRef="Event_0nm59tf" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0ubt44i">
+      <bpmndi:BPMNEdge id="Flow_1ui50vr_di" bpmnElement="Flow_1ui50vr">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="271" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_07pr9lr_di" bpmnElement="Flow_07pr9lr">
+        <di:waypoint x="371" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13oillk_di" bpmnElement="Flow_13oillk">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="592" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1aq717a_di" bpmnElement="Activity_DisplayData">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0nm59tf_di" bpmnElement="Event_0nm59tf">
+        <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0krkqig_di" bpmnElement="Activity_GetData">
+        <dc:Bounds x="271" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

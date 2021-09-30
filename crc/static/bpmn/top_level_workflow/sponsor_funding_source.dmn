@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/1.0" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" id="Definitions_1p34ouw" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="4.10.0">
   <decision id="sponsor_funding_source" name="Sponsor Funding Source">
-    <extensionElements>
-      <biodi:bounds x="280" y="90" width="180" height="80" />
-    </extensionElements>
     <decisionTable id="DecisionTable_00zdxg0">
       <input id="InputClause_02n3ccs" label="CoCApplication Required?">
         <inputExpression id="LiteralExpression_1ju4o1o" typeRef="boolean" expressionLanguage="feel">
@@ -13,7 +10,7 @@
       <output id="OutputClause_1ybi1ud" label="sponsor_funding_source" name="sponsor_funding_source" typeRef="string" />
       <rule id="DecisionRule_1t97mw4">
         <inputEntry id="UnaryTests_0ym4ln2">
-          <text>true</text>
+          <text>True</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1pweuqc">
           <text>"required"</text>
@@ -22,7 +19,7 @@
       <rule id="DecisionRule_1q965wz">
         <description>was "disabled"</description>
         <inputEntry id="UnaryTests_1mlhh3t">
-          <text>false</text>
+          <text>False</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_073vd6i">
           <text>"required"</text>
@@ -38,4 +35,11 @@
       </rule>
     </decisionTable>
   </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_1vnvmg2">
+      <dmndi:DMNShape id="DMNShape_04xj0eb" dmnElementRef="sponsor_funding_source">
+        <dc:Bounds height="80" width="180" x="280" y="90" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
 </definitions>

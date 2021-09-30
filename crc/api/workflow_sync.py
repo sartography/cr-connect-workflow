@@ -159,6 +159,9 @@ def create_or_update_local_spec(remote,workflow_spec_id):
         session.add(local_category)
         local_spec.category = local_category
 
+    # Add the local spec to the database, then we can link the libraries.
+    session.add(local_spec)
+
     # Set the libraries
     session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.workflow_spec_id == local_spec.id).delete()
     for library in specdict['libraries']:
@@ -167,7 +170,7 @@ def create_or_update_local_spec(remote,workflow_spec_id):
         local_lib = WorkflowLibraryModel(workflow_spec_id=local_spec.id,
                                          library_spec_id=library['id'])
         session.add(local_lib)
-    session.add(local_spec)
+        session.commit()
 
 def update_or_create_current_file(remote,workflow_spec_id,updatefile):
     currentfile = file_get(workflow_spec_id, updatefile['filename'])

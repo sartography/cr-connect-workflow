@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_08a4c34" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.10.0">
+  <bpmn:process id="Process_DeleteTaskData" name="Delete Task Data" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_12ulmn8</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_19ssfc0">
+      <bpmn:incoming>SequenceFlow_06786ls</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_InvalidField" name="Invalid Custom Field" camunda:formKey="SomeForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="TextBadArea" label="Short Description" type="noSuchType" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_12ulmn8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_06786ls</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_12ulmn8" sourceRef="StartEvent_1" targetRef="Activity_InvalidField" />
+    <bpmn:sequenceFlow id="SequenceFlow_06786ls" sourceRef="Activity_InvalidField" targetRef="Event_19ssfc0" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_DeleteTaskData">
+      <bpmndi:BPMNEdge id="SequenceFlow_06786ls_di" bpmnElement="SequenceFlow_06786ls">
+        <di:waypoint x="390" y="120" />
+        <di:waypoint x="512" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_12ulmn8_di" bpmnElement="SequenceFlow_12ulmn8">
+        <di:waypoint x="215" y="120" />
+        <di:waypoint x="290" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_19ssfc0_di" bpmnElement="Event_19ssfc0">
+        <dc:Bounds x="512" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1hrox53_di" bpmnElement="Activity_InvalidField">
+        <dc:Bounds x="290" y="80" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

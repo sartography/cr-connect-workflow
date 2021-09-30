@@ -145,6 +145,7 @@ paths:
           description: The remote endpoint
           schema:
             type: string
+            example: https://testing.crconnect.uvadcos.io/api
       tags:
         - Workflow Sync API
       responses:

@@ -27,8 +27,19 @@ class Task(object):
 
 
     # Field Types
-    FIELD_TYPE_FILE = "file"
+    FIELD_TYPE_STRING = "string"
+    FIELD_TYPE_LONG = "long"
+    FIELD_TYPE_BOOLEAN = "boolean"
+    FIELD_TYPE_DATE = "date"
+    FIELD_TYPE_ENUM = "enum"
+    FIELD_TYPE_TEXTAREA = "textarea"    # textarea: Multiple lines of text
     FIELD_TYPE_AUTO_COMPLETE = "autocomplete"
+    FIELD_TYPE_FILE = "file"
+    FIELD_TYPE_FILES = "files"  # files: Multiple files
+    FIELD_TYPE_TEL = "tel"  # tel: Phone number
+    FIELD_TYPE_EMAIL = "email"  # email: Email address
+    FIELD_TYPE_URL = "url"   # url: Website address
+
     FIELD_PROP_AUTO_COMPLETE_MAX = "autocomplete_num"  # Not used directly, passed in from the front end.
 
     # Required field
@@ -77,8 +88,6 @@ class Task(object):
     FIELD_PROP_HELP = "help"
 
 
-
-
     ##########################################################################
 
     def __init__(self, id, name, title, type, state, lane, form, documentation, data,
@@ -102,6 +111,11 @@ class Task(object):
     @classmethod
     def valid_property_names(cls):
         return [value for name, value in vars(cls).items() if name.startswith('FIELD_PROP')]
+
+    @classmethod
+    def valid_field_types(cls):
+        return [value for name, value in vars(cls).items() if name.startswith('FIELD_TYPE')]
+
 
 class OptionSchema(ma.Schema):
     class Meta:
