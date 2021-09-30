@@ -450,10 +450,15 @@ class WorkflowService(object):
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    return {'value': random_choice['id'], 'label': random_choice['name'], 'data': random_choice['data']}
+                    random_value = {'value': random_choice['id'], 'label': random_choice['name'], 'data': random_choice['data']}
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
-                    return {'value': random_choice.id, 'label': random_choice.name}
+                    random_value = {'value': random_choice.id, 'label': random_choice.name}
+                if field.has_property(Task.FIELD_PROP_ENUM_TYPE) and field.get_property(Task.FIELD_PROP_ENUM_TYPE) == 'checkbox':
+                    return [random_value]
+                else:
+                    return random_value
+
             else:
                 raise ApiError.from_task("invalid_enum", "You specified an enumeration field (%s),"
                                                          " with no options" % field.id, task)
@@ -462,19 +467,25 @@ class WorkflowService(object):
             # from the lookup model
             lookup_model = LookupService.get_lookup_model(task, field)
             if field.has_property(Task.FIELD_PROP_LDAP_LOOKUP):  # All ldap records get the same person.
-                return WorkflowService._random_ldap_record()
+                random_value = WorkflowService._random_ldap_record()
             elif lookup_model:
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
                 options = [{"value": d.value, "label": d.label, "data": d.data} for d in data]
                 if len(options) > 0:
-                    return random.choice(options)
+                    random_value = random.choice(options)
                 else:
                     raise ApiError.from_task("invalid enum", "You specified an enumeration field (%s),"
                                                              " with no options" % field.id, task)
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
+            if field.has_property(Task.FIELD_PROP_ENUM_TYPE) and field.get_property(Task.FIELD_PROP_ENUM_TYPE) == 'checkbox':
+                return [random_value]
+            else:
+                return random_value
+
+
         elif field.type == "long":
             return random.randint(1, 1000)
         elif field.type == 'boolean':
