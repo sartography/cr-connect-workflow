@@ -132,6 +132,13 @@ class WorkflowService(object):
           spec, only completing the required fields, rather than everything.
           """
 
+        # Get workflow state dictionary, make sure workflow is not disabled.
+        if validate_study_id is not None:
+            study_model = session.query(StudyModel).filter(StudyModel.id == validate_study_id).first()
+            spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
+            status = StudyService._get_study_status(study_model)
+            if status[spec_model.name]['status'] == 'disabled':
+                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.name]['message']}")
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
