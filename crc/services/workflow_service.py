@@ -210,6 +210,7 @@ class WorkflowService(object):
                                task_name = task.get_name())
             # Assure field has valid properties
             WorkflowService.check_field_properties(field, task)
+            WorkflowService.check_field_type(field, task)
 
             # Process the label of the field if it is dynamic.
             if field.has_property(Task.FIELD_PROP_LABEL_EXPRESSION):
@@ -301,6 +302,14 @@ class WorkflowService(object):
                                          f'The field {field.id} contains an unsupported '
                                          f'property: {name}', task=task)
 
+    @staticmethod
+    def check_field_type(field, task):
+        """Assures that the field type is valid."""
+        valid_types = Task.valid_field_types()
+        if field.type not in valid_types:
+            raise ApiError.from_task("invalid_field_type",
+                                     f'The field {field.id} has an unknown field type '
+                                     f'{field.type}, valid types include {valid_types}', task=task)
 
     @staticmethod
     def post_process_form(task):

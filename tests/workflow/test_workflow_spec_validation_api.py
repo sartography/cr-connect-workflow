@@ -148,6 +148,12 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertIn('enum_with_default', final_data)
         self.assertEqual('maybe', final_data['enum_with_default']['value'])
 
+    def test_invalid_custom_field(self):
+        self.load_example_data()
+        errors = self.validate_workflow("invalid_custom_field")
+        self.assertEqual(1, len(errors))
+        self.assertEqual("invalid_field_type", errors[0]['code'])
+
     @patch('crc.services.study_service.StudyService._get_study_status')
     def test_disabled_spec_validation(self, mock_status):
         """A disabled workflow spec should fail validation"""
