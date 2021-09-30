@@ -18,4 +18,5 @@ class TestEnumCheckbox(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
 
-        self.assertEqual("# Enum data\n[{'value': 'value_1', 'label': 'value_1'}, {'value': 'value_3', 'label': 'value_3'}]", task.documentation)
+        self.assertIn("{'value': 'value_1', 'label': 'value_1'}", task.documentation)
+        self.assertIn("{'value': 'value_3', 'label': 'value_3'}", task.documentation)

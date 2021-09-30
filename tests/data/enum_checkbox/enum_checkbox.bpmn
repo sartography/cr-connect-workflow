@@ -25,7 +25,9 @@
     <bpmn:sequenceFlow id="Flow_07pr9lr" sourceRef="Activity_GetData" targetRef="Activity_DisplayData" />
     <bpmn:manualTask id="Activity_DisplayData" name="Display Data">
       <bpmn:documentation># Enum data
-{{ some_field }}</bpmn:documentation>
+{% for i in range(some_field | length) %}
+    {{ some_field[i] }}
+{% endfor %}</bpmn:documentation>
       <bpmn:incoming>Flow_07pr9lr</bpmn:incoming>
       <bpmn:outgoing>Flow_13oillk</bpmn:outgoing>
     </bpmn:manualTask>
@@ -38,10 +40,10 @@
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0ubt44i">
       <bpmndi:BPMNEdge id="Flow_1ui50vr_di" bpmnElement="Flow_1ui50vr">
         <di:waypoint x="215" y="117" />
-        <di:waypoint x="270" y="117" />
+        <di:waypoint x="271" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_07pr9lr_di" bpmnElement="Flow_07pr9lr">
-        <di:waypoint x="370" y="117" />
+        <di:waypoint x="371" y="117" />
         <di:waypoint x="430" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_13oillk_di" bpmnElement="Flow_13oillk">
@@ -51,14 +53,14 @@
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0krkqig_di" bpmnElement="Activity_GetData">
-        <dc:Bounds x="270" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1aq717a_di" bpmnElement="Activity_DisplayData">
         <dc:Bounds x="430" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0nm59tf_di" bpmnElement="Event_0nm59tf">
         <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0krkqig_di" bpmnElement="Activity_GetData">
+        <dc:Bounds x="271" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
