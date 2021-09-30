@@ -1,0 +1,5 @@
+[{
+  "core_info": {"status": "required", "message": "This workflow is always required and recommended that it is completed after your Protocol Builder entries are done and the Personnel workflow completed"},
+  "protocol": {"status": "required", "message": "required"},
+  "data_security_plan": {"status": "disabled", "message": "This is my mocked disable message."}
+}]
