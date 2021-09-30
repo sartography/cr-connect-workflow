@@ -78,7 +78,8 @@ class TestFilesApi(BaseTest):
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data, follow_redirects=True,
+                           (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data,
+                           follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
 
@@ -94,7 +95,8 @@ class TestFilesApi(BaseTest):
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data, follow_redirects=True,
+                           (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data,
+                           follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
 
         self.assert_success(rv)
@@ -176,12 +178,24 @@ class TestFilesApi(BaseTest):
         file.name = "silly_new_name.bpmn"
 
         rv = self.app.put('/v1.0/file/%i' % file.id,
-                           content_type="application/json",
-                           data=json.dumps(FileModelSchema().dump(file)), headers=self.logged_in_headers())
+                          content_type="application/json",
+                          data=json.dumps(FileModelSchema().dump(file)), headers=self.logged_in_headers())
         self.assert_success(rv)
         db_file = session.query(FileModel).filter_by(id=file.id).first()
         self.assertIsNotNone(db_file)
         self.assertEqual(file.name, db_file.name)
+
+    def test_load_valid_url_for_files(self):
+        self.load_example_data()
+        self.create_reference_document()
+        file: FileModel = session.query(FileModel).filter(FileModel.is_reference == False).first()
+        rv = self.app.get('/v1.0/file/%i' % file.id, content_type="application/json", headers=self.logged_in_headers())
+        self.assert_success(rv)
+        file_json = json.loads(rv.get_data(as_text=True))
+        print(file_json)
+        self.assertIsNotNone(file_json['url'])
+        file_data_rv = self.app.get(file_json['url'])
+        self.assert_success(file_data_rv)
 
     def test_update_file_data(self):
         self.load_example_data()
@@ -209,7 +223,7 @@ class TestFilesApi(BaseTest):
         file_data = FileService.get_file_data(file_model.id)
         self.assertEqual(2, file_data.version)
 
-        rv = self.app.get('/v1.0/file/%i/data' %  file_json['id'], headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/file/%i/data' % file_json['id'], headers=self.logged_in_headers())
         self.assert_success(rv)
         data = rv.get_data()
         self.assertIsNotNone(data)
@@ -262,7 +276,8 @@ class TestFilesApi(BaseTest):
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data, follow_redirects=True,
+                           (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data,
+                           follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
 
@@ -296,7 +311,8 @@ class TestFilesApi(BaseTest):
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data, follow_redirects=True,
+                           (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data,
+                           follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
@@ -315,8 +331,6 @@ class TestFilesApi(BaseTest):
         rv = self.app.get('/v1.0/file/%i' % file_id, headers=self.logged_in_headers())
         self.assertEqual(404, rv.status_code)
 
-
-
     def test_change_primary_bpmn(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
@@ -332,19 +346,17 @@ class TestFilesApi(BaseTest):
         file = FileModelSchema().load(json_data, session=session)
 
         # Delete the primary BPMN file for the workflow.
-        orig_model = session.query(FileModel).\
-            filter(FileModel.primary == True).\
+        orig_model = session.query(FileModel). \
+            filter(FileModel.primary == True). \
             filter(FileModel.workflow_spec_id == spec.id).first()
         rv = self.app.delete('/v1.0/file?file_id=%s' % orig_model.id, headers=self.logged_in_headers())
-
 
         # Set that new file to be the primary BPMN, assure it has a primary_process_id
         file.primary = True
         rv = self.app.put('/v1.0/file/%i' % file.id,
-                           content_type="application/json",
-                           data=json.dumps(FileModelSchema().dump(file)), headers=self.logged_in_headers())
+                          content_type="application/json",
+                          data=json.dumps(FileModelSchema().dump(file)), headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertTrue(json_data['primary'])
         self.assertIsNotNone(json_data['primary_process_id'])
-
