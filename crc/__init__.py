@@ -13,13 +13,14 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 logging.basicConfig(level=logging.INFO)
 
 connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)  # respect the X-Forwarded-Proto if behind a proxy.
 app.config.from_object('config.default')
 
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
