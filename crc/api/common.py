@@ -51,17 +51,29 @@ class ApiError(Exception):
         if "task" in task.data:
             task.data.pop("task")
 
-        # In the unlikely event that the API error can't be serialized, try removing the task_data, as it may
-        # contain some invalid data that we can't return, so we can at least get the erro rmessage.
-        instance.task_data = task.data
-        try:
-            json.dumps(ApiErrorSchema().dump(instance))
-        except TypeError as te:
-            instance.task_data = {
-                'task_data_hidden': 'We were unable to serialize the task data when reporting this error'}
+        # Assure that there is nothing in the json data that can't be serialized.
+        instance.task_data = ApiError.remove_unserializeable_from_dict(task.data)
 
         app.logger.error(message, exc_info=True)
         return instance
+
+    @staticmethod
+    def remove_unserializeable_from_dict(my_dict):
+        keys_to_delete = []
+        for key, value in my_dict.items():
+            if not ApiError.is_jsonable(value):
+                keys_to_delete.append(key)
+        for key in keys_to_delete:
+            del my_dict[key]
+        return my_dict
+
+    @staticmethod
+    def is_jsonable(x):
+        try:
+            json.dumps(x)
+            return True
+        except (TypeError, OverflowError):
+            return False
 
     @classmethod
     def from_task_spec(cls, code, message, task_spec, status_code=400):
@@ -87,6 +99,8 @@ class ApiError(Exception):
 
         else:
             return ApiError.from_task_spec(code, message, exp.sender)
+
+
 
 
 class ApiErrorSchema(ma.Schema):

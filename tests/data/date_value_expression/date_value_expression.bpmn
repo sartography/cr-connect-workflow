@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1717350" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.10.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.15.0">
+  <bpmn:process id="Process_1y3o9tq" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0ecke9e</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0ecke9e" sourceRef="StartEvent_1" targetRef="Date_Value_Expression" />
+    <bpmn:userTask id="Date_Value_Expression" name="Date Form" camunda:formKey="My Form">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="my_date" label="my Date" type="date">
+            <camunda:properties>
+              <camunda:property id="value_expression" value="datetime.datetime.now()" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0ecke9e</bpmn:incoming>
+      <bpmn:outgoing>Flow_04yzu4r</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Event_06knzzw">
+      <bpmn:documentation>The Date is {{my_date}}</bpmn:documentation>
+      <bpmn:incoming>Flow_1hz2cs6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_04yzu4r" sourceRef="Date_Value_Expression" targetRef="Activity_0irsthq" />
+    <bpmn:sequenceFlow id="Flow_1hz2cs6" sourceRef="Activity_0irsthq" targetRef="Event_06knzzw" />
+    <bpmn:scriptTask id="Activity_0irsthq" name="Date Script">
+      <bpmn:incoming>Flow_04yzu4r</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hz2cs6</bpmn:outgoing>
+      <bpmn:script>dateparser.parse(my_date)
+</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1y3o9tq">
+      <bpmndi:BPMNEdge id="Flow_0ecke9e_di" bpmnElement="Flow_0ecke9e">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04yzu4r_di" bpmnElement="Flow_04yzu4r">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="420" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hz2cs6_di" bpmnElement="Flow_1hz2cs6">
+        <di:waypoint x="520" y="117" />
+        <di:waypoint x="542" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0myo4ou_di" bpmnElement="Date_Value_Expression">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_06knzzw_di" bpmnElement="Event_06knzzw">
+        <dc:Bounds x="542" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_01ztf01_di" bpmnElement="Activity_0irsthq">
+        <dc:Bounds x="420" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
