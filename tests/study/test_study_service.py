@@ -26,7 +26,7 @@ class TestStudyService(BaseTest):
 
         # Assure some basic models are in place, This is a damn mess.  Our database models need an overhaul to make
         # this easier - better relationship modeling is now critical.
-        cat = WorkflowSpecCategoryModel(name="approvals", display_name="Approvals", display_order=0)
+        cat = WorkflowSpecCategoryModel(id=None, display_name="Approvals", display_order=0)
         db.session.add(cat)
         db.session.commit()
         self.load_test_spec("top_level_workflow", master_spec=True, category_id=cat.id)
@@ -80,7 +80,7 @@ class TestStudyService(BaseTest):
         self.assertEqual(0, workflow.completed_tasks)
 
         # Initialize the Workflow with the workflow processor.
-        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.workflow_spec_id == workflow.id).first()
         processor = WorkflowProcessor(workflow_model)
         processor.do_engine_steps()
 

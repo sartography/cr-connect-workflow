@@ -94,7 +94,7 @@ class TestTasksApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         tasks = TaskEventSchema(many=True).load(json_data)
         self.assertEqual(1, len(tasks))
-        self.assertEqual(workflow.id, tasks[0]['workflow']['id'])
+        self.assertEqual(workflow.workflow_spec_id, tasks[0]['workflow']['id'])
         self.assertEqual(workflow.study.id, tasks[0]['study']['id'])
         self.assertEqual("Test Workflows", tasks[0]['workflow']['category_display_name'])
 
@@ -102,10 +102,10 @@ class TestTasksApi(BaseTest):
         # You have a task called "Approval" to be completed in the "Supervisor Approval" workflow
         # for the study 'Why dogs are stinky' managed by user "Jane Smith (js42x)",
         # please check here to complete the task.
-        # Display name isn't set in the tests, so just checking name, but the full workflow details are included.
+        # Just checking display_name for workflow, but the full workflow details are included.
         # I didn't delve into the full user details to keep things decoupled from ldap, so you just get the
         # uid back, but could query to get the full entry.
-        self.assertEqual("roles", tasks[0]['workflow']['name'])
+        self.assertEqual("Roles", tasks[0]['workflow']['display_name'])
         self.assertEqual("Beer consumption in the bipedal software engineer", tasks[0]['study']['title'])
         self.assertEqual("lje5u", tasks[0]['study']['user_uid'])
 

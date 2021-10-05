@@ -28,7 +28,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual(5, len(json_data))
         files = FileModelSchema(many=True).load(json_data, session=session)
         file_names = [f.name for f in files]
-        self.assertTrue("%s.bpmn" % spec.name in file_names)
+        self.assertTrue("%s.bpmn" % spec.id in file_names)
 
     def test_list_multiple_files_for_workflow_spec(self):
         self.load_example_data()

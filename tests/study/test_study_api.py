@@ -67,12 +67,11 @@ class TestStudyApi(BaseTest):
         # Categories are read only, so switching to sub-scripting here.
         # This assumes there is one test category set up in the example data.
         category = study.categories[0]
-        self.assertEqual("test_category", category['name'])
         self.assertEqual("Test Category", category['display_name'])
         self.assertEqual(False, category['admin'])
         self.assertEqual(1, len(category["workflows"]))
         workflow = category["workflows"][0]
-        self.assertEqual("random_fact", workflow["name"])
+        self.assertEqual("random_fact", workflow["id"])
         self.assertEqual("optional", workflow["state"])
         self.assertEqual("not_started", workflow["status"])
         self.assertEqual(0, workflow["total_tasks"])

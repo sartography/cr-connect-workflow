@@ -163,7 +163,6 @@ class TestWorkflowSpecValidation(BaseTest):
 
         # workflow spec to validate
         spec_model = WorkflowSpecModel(id='data_security_plan',
-                                       name='data_security_plan',
                                        display_name='Data Security Plan',
                                        description='Data Security Plan',
                                        is_master_spec=False,
