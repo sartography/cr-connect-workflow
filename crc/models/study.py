@@ -104,12 +104,11 @@ class StudyEvent(db.Model):
 
 
 class WorkflowMetadata(object):
-    def __init__(self, id, name = None, display_name = None, description = None, spec_version = None,
+    def __init__(self, id, display_name = None, description = None, spec_version = None,
                  category_id  = None, category_display_name  = None, state: WorkflowState  = None,
                  status: WorkflowStatus  = None, total_tasks  = None, completed_tasks  = None,
                  is_review=None,display_order = None, state_message = None):
         self.id = id
-        self.name = name
         self.display_name = display_name
         self.description = description
         self.spec_version = spec_version
@@ -128,8 +127,7 @@ class WorkflowMetadata(object):
     def from_workflow(cls, workflow: WorkflowModel):
         is_review = FileService.is_workflow_review(workflow.workflow_spec_id)
         instance = cls(
-            id=workflow.id,
-            name=workflow.workflow_spec.name,
+            id=workflow.workflow_spec_id,
             display_name=workflow.workflow_spec.display_name,
             description=workflow.workflow_spec.description,
             spec_version=workflow.spec_version(),
@@ -150,7 +148,7 @@ class WorkflowMetadataSchema(ma.Schema):
     status = EnumField(WorkflowStatus)
     class Meta:
         model = WorkflowMetadata
-        additional = ["id", "name", "display_name", "description",
+        additional = ["id", "display_name", "description",
                  "total_tasks", "completed_tasks", "display_order",
                       "category_id", "is_review", "category_display_name", "state_message"]
         unknown = INCLUDE
@@ -159,7 +157,6 @@ class WorkflowMetadataSchema(ma.Schema):
 class Category(object):
     def __init__(self, model: WorkflowSpecCategoryModel):
         self.id = model.id
-        self.name = model.name
         self.display_name = model.display_name
         self.display_order = model.display_order
         self.admin = model.admin
@@ -169,7 +166,7 @@ class CategorySchema(ma.Schema):
     workflows = fields.List(fields.Nested(WorkflowMetadataSchema), dump_only=True)
     class Meta:
         model = Category
-        additional = ["id", "name", "display_name", "display_order", "admin"]
+        additional = ["id", "display_name", "display_order", "admin"]
         unknown = INCLUDE
 
 

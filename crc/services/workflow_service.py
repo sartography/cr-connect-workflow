@@ -115,7 +115,7 @@ class WorkflowService(object):
             except Exception as e:
                 app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
                                  (workflow_model.id,
-                                  workflow_model.workflow_spec.name,
+                                  workflow_model.workflow_spec.id,
                                   workflow_model.study_id,
                                   str(e)))
 
@@ -137,8 +137,8 @@ class WorkflowService(object):
             study_model = session.query(StudyModel).filter(StudyModel.id == validate_study_id).first()
             spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
             status = StudyService._get_study_status(study_model)
-            if spec_model.name in status and status[spec_model.name]['status'] == 'disabled':
-                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.name]['message']}")
+            if spec_model.id in status and status[spec_model.id]['status'] == 'disabled':
+                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.id]['message']}")
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
@@ -149,7 +149,7 @@ class WorkflowService(object):
                     exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until) 
                     if (exit_task != None):
                             raise ApiError.from_task("validation_break",
-                                        f"The validation has been exited early on task '{exit_task.task_spec.name}' and was parented by ", 
+                                        f"The validation has been exited early on task '{exit_task.task_spec.id}' and was parented by ",
                                         exit_task.parent)
                     tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
                     for task in tasks:
