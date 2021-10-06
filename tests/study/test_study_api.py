@@ -71,7 +71,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(False, category['admin'])
         self.assertEqual(1, len(category["workflows"]))
         workflow = category["workflows"][0]
-        self.assertEqual("random_fact", workflow["id"])
+        self.assertEqual("Random Fact", workflow["display_name"])
         self.assertEqual("optional", workflow["state"])
         self.assertEqual("not_started", workflow["status"])
         self.assertEqual(0, workflow["total_tasks"])

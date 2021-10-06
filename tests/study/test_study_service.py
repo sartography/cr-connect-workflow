@@ -80,7 +80,7 @@ class TestStudyService(BaseTest):
         self.assertEqual(0, workflow.completed_tasks)
 
         # Initialize the Workflow with the workflow processor.
-        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.workflow_spec_id == workflow.id).first()
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
         processor = WorkflowProcessor(workflow_model)
         processor.do_engine_steps()
 

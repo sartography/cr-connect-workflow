@@ -94,7 +94,7 @@ class TestTasksApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         tasks = TaskEventSchema(many=True).load(json_data)
         self.assertEqual(1, len(tasks))
-        self.assertEqual(workflow.workflow_spec_id, tasks[0]['workflow']['id'])
+        self.assertEqual(workflow.id, tasks[0]['workflow']['id'])
         self.assertEqual(workflow.study.id, tasks[0]['study']['id'])
         self.assertEqual("Test Workflows", tasks[0]['workflow']['category_display_name'])
 
