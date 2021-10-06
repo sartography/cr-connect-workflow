@@ -127,7 +127,7 @@ class WorkflowMetadata(object):
     def from_workflow(cls, workflow: WorkflowModel):
         is_review = FileService.is_workflow_review(workflow.workflow_spec_id)
         instance = cls(
-            id=workflow.workflow_spec_id,
+            id=workflow.id,
             display_name=workflow.workflow_spec.display_name,
             description=workflow.workflow_spec.description,
             spec_version=workflow.spec_version(),
