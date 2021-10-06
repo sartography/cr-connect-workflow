@@ -185,7 +185,7 @@ paths:
 
   /workflow_sync/master_list:
     get:
-      operationId: crc.api.workflow_sync.get_master_list_html
+      operationId: crc.api.workflow_sync.get_master_list
       summary: Provides a list of workflow that differ from remote and if it is new or not
       security :
         - ApiKeyAuth : []
