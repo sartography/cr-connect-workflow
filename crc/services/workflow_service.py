@@ -336,7 +336,7 @@ class WorkflowService(object):
             # This is generally handled by the front end, but it is possible that the file was uploaded BEFORE
             # the doc_code was correctly set, so this is a stop gap measure to assure we still hit it correctly.
             file_id = data[field.id]["id"]
-            doc_code = task.workflow.script_engine.eval(field.get_property(Task.FIELD_PROP_DOC_CODE), data)
+            doc_code = task.workflow.script_engine._evaluate(field.get_property(Task.FIELD_PROP_DOC_CODE), **data)
             file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
             if(file):
                 file.irb_doc_code = doc_code
@@ -374,7 +374,7 @@ class WorkflowService(object):
                 return None  # We may not have enough information to process this
 
         try:
-            return task.workflow.script_engine.eval(expression, data)
+            return task.workflow.script_engine._evaluate(expression, **data)
         except Exception as e:
             message = f"The field {field.id} contains an invalid expression. {e}"
             raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
@@ -695,7 +695,7 @@ class WorkflowService(object):
         # a BPMN standard, and should not be included in the display.
         if task.properties and "display_name" in task.properties:
             try:
-                task.title = spiff_task.workflow.script_engine.evaluate_expression(spiff_task, task.properties[Task.PROP_EXTENSIONS_TITLE])
+                task.title = spiff_task.workflow.script_engine.evaluate(spiff_task, task.properties[Task.PROP_EXTENSIONS_TITLE])
             except Exception as e:
                 # if the task is ready, we should raise an error, but if it is in the future or the past, we may not
                 # have the information we need to properly set the title, so don't error out, and just use what is
