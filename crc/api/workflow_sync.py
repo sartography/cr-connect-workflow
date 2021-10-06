@@ -1,6 +1,8 @@
 import hashlib
 import os
-
+import re
+from lxml.html import builder as htm
+from lxml import etree
 import pandas as pd
 from pandas._libs.missing import NA
 
@@ -60,7 +62,7 @@ def verify_token(token, required_scopes):
         raise ApiError("permission_denied", "API Token information is not correct")
 
 
-def get_changed_workflows(remote,as_df=False):
+def get_changed_workflows(remote,as_df=False,keep_new_local=False):
     """
     gets a remote endpoint - gets the workflows and then
     determines what workflows are different from the remote endpoint
@@ -119,7 +121,10 @@ def get_changed_workflows(remote,as_df=False):
         # flag files as new that are only on the remote box and remove the files that are only on the local box
         changedfiles['new'] = False
         changedfiles.loc[changedfiles.index.isin(left['workflow_spec_id']), 'new'] = True
-        output = changedfiles[~changedfiles.index.isin(right['workflow_spec_id'])]
+        changedfiles.loc[changedfiles.index.isin(right['workflow_spec_id']), 'new'] = True
+        output = changedfiles
+        if keep_new_local:
+            output = changedfiles[~changedfiles.index.isin(right['workflow_spec_id'])]
 
     else:
         output = different
@@ -131,26 +136,39 @@ def get_changed_workflows(remote,as_df=False):
         return output.reset_index().to_dict(orient='records')
 
 
-def sync_all_changed_workflows(remote):
+def sync_all_changed_workflows(remote,keep_new_local=False):
     """
     Does what it says, gets a list of all workflows that are different between
     two systems and pulls all of the workflows and files that are different on the
     remote system. The idea is that we can make the local system 'look' like the remote
     system for deployment or testing.
     """
-    workflowsdf = get_changed_workflows(remote,as_df=True)
-    if len(workflowsdf) ==0:
-        return []
-    workflows = workflowsdf.reset_index().to_dict(orient='records')
-    for workflow in workflows:
-        files = sync_changed_files(remote,workflow['workflow_spec_id'])
-        workflow['changed_files'] = files
-    ref_files = sync_changed_files(remote,'REFERENCE_FILES')
+    tree = get_master_list(remote,keep_new_local)
     info = {}
+    # first, delete local files that are not in the remote or that will be superseded by remote
+    for category in tree.keys():
+        for workflow in tree[category]:
+            for file in workflow['files']:
+                if file['status'] in ['delete','revert']:
+                    print('delete file',file)
+
+                    file = session.query(FileModel).filter(FileModel.name==file['filename']).first()
+                    FileService.delete_file(file.id)
+                    #file.archived = True
+                    #session.commit()
+            if workflow['status'] in ['delete']:
+                session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow[
+                    'workflow_spec_id']).delete()
+
+                session.commit()
+                print('delete workflow',workflow)
+            else:
+                files = sync_changed_files(remote,workflow['workflow_spec_id'])
+                workflow['changed_files'] = files
+                info[workflow['workflow_spec_id']] = {'name': workflow['name'],
+                                                'files': workflow['changed_files']}
+    ref_files = sync_changed_files(remote,'REFERENCE_FILES')
     info['reference_files'] = ref_files
-    for wf in workflows:
-        info[wf['workflow_spec_id']] = {'name':wf['name'],
-                                        'files':wf['changed_files']}
     return info
 
 
@@ -186,9 +204,10 @@ def create_or_update_local_spec(remote,workflow_spec_id):
     if specdict['category'] is not None:
         local_category = session.query(WorkflowSpecCategoryModel).\
             filter(WorkflowSpecCategoryModel.name == specdict['category']['name']).first()
-        local_category = WorkflowSpecCategoryModelSchema().load(specdict['category'], session=session,
+        if local_category is None:
+            local_category = WorkflowSpecCategoryModelSchema().load(specdict['category'], session=session,
                                                                 instance=local_category)
-        session.add(local_category)
+            session.add(local_category)
         local_spec.category = local_category
 
     # Set the libraries
@@ -271,6 +290,8 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
     """
     remote_file_list = WorkflowSyncService.get_remote_workflow_spec_files(remote,workflow_spec_id)
     remote_files = pd.DataFrame(remote_file_list)
+    if remote_files.empty:
+        remote_files = pd.DataFrame(columns=['filename','md5_hash','date_created','type','primary','content_type','primary_process_id'])
     # get the local thumbprints & make sure that 'workflow_spec_id' is a column, not an index
     local = get_workflow_spec_files_dataframe(workflow_spec_id).reset_index()
     local['md5_hash'] = local['md5_hash'].astype('str')
@@ -444,4 +465,102 @@ def get_all_spec_state_dataframe():
     # convert dates to string
     df['date_created'] = df['date_created'].astype('str')
     return df
+
+spec_lookup_table = {
+    # location new  keep_new_local status
+    'local,True,True':  'keep',
+    'local,True,False': 'delete',
+    'local,False,.+':  'revert',
+    'remote,True,.+':   'copy',
+    'remote,False,.+':  'update',
+}
+
+file_lookup_table = {
+    'local,True,keep': 'keep',
+    'local,True,.+': 'delete',
+    'local,False,.+': 'revert',
+    'remote,True,.+': 'copy',
+    'remote,False,.+': 'update',
+
+}
+
+def lookup_status(item,table):
+    lookup = ','.join([str(x) for x in item])
+    print(lookup)
+    matchers = [x for x in table.keys() if re.match(x,lookup)]
+    if len(matchers) == 0:
+        raise Exception('Expecting at least one match')
+    print(matchers)
+    return table[matchers[0]]
+
+def get_master_list(remote,keep_new_local=False):
+    # first let's just build a local tree
+    changed = get_changed_workflows(remote,keep_new_local=keep_new_local)
+    lcl_specs = get_all_spec_state()
+    categories = {}
+    lcl_spec_ids = [x['workflow_spec_id'] for x in lcl_specs]
+    for wf in changed:
+        if wf['workflow_spec_id'] in lcl_spec_ids:
+            fullspec = get_workflow_specification(wf['workflow_spec_id'])
+        else:
+            fullspec = WorkflowSyncService.get_remote_workflow_spec(remote,wf['workflow_spec_id'])
+        category = fullspec['category']
+        if category is None:
+            category = {'display_name': 'Top Level Workflow'}
+        spec = {}
+        spec.update(wf)
+        spec['status'] = wf['location']
+        spec['new'] = wf['new']
+        spec['status'] = lookup_status([wf['location'], wf['new'], keep_new_local], spec_lookup_table)
+        spec['files'] = get_changed_files(remote, spec['workflow_spec_id'])
+        for file in spec['files']:
+            file['status'] = lookup_status([file['location'], file['new'], spec['status']], file_lookup_table)
+        catlist = categories.get(category['display_name'], [])
+        catlist.append(spec)
+        categories[category['display_name']] = catlist
+    return categories
+
+def spantext(text,color):
+    node = htm.SPAN(text)
+    node.set('style','color: ' +color+";")
+    return node
+
+def get_explain_text(wf):
+    print(wf)
+    if wf['status'] == 'keep':
+        return spantext(' Will be Kept','green')
+    if wf['status'] == 'delete':
+        return spantext(' WILL BE DELETED','red')
+    if wf['status'] == 'revert':
+        return spantext(' WILL BE RESET TO MATCH REMOTE','red')
+    if wf['status'] == 'update':
+        return spantext(' Will be updated to match remote','yellow')
+    if wf['status'] == 'copy':
+        return spantext(' Will be copied from remote','green')
+
+
+def get_master_list_html(remote,keep_new_local=False):
+    categories = get_master_list(remote,keep_new_local)
+    category_list = htm.UL()
+    for cat in categories.keys():
+        currentcat = htm.LI(cat)
+        category_list.extend([currentcat])
+        workflow_list = htm.UL()
+        currentcat.extend([workflow_list])
+        workflows = categories[cat]
+        for wf in workflows:
+            currentwf = htm.LI(wf['name'])
+            wftext = get_explain_text(wf)
+            currentwf.extend([wftext])
+            workflow_list.extend([currentwf])
+            file_list = htm.UL()
+            currentwf.extend([file_list])
+            for file in wf['files']:
+                currentfi = htm.LI(file['filename'])
+                wftext = get_explain_text(file)
+                currentfi.extend([wftext])
+                file_list.extend([currentfi])
+
+    print(etree.tostring(category_list))
+    return(etree.tostring(category_list).decode('utf8'))
 

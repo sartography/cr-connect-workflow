@@ -138,7 +138,7 @@ class FileService(object):
         return file_extension.lower().strip()[1:]
 
     @staticmethod
-    def update_file(file_model, binary_data, content_type):
+    def update_file(file_model, binary_data, content_type, sha=None):
         session.flush()  # Assure the database is up-to-date before running this.
 
         latest_data_model = session.query(FileDataModel). \
@@ -188,6 +188,7 @@ class FileService(object):
         new_file_data_model = FileDataModel(
             data=binary_data, file_model_id=file_model.id, file_model=file_model,
             version=version, md5_hash=md5_checksum,
+            sha=sha,
             size=size, user_uid=user_uid
         )
         session.add_all([file_model, new_file_data_model])
