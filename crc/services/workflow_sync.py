@@ -10,6 +10,7 @@ from lxml import etree
 from pandas._libs.missing import NA
 from crc import app, session
 from crc.api.common import ApiError
+from crc.api.workflow import get_workflow_specification
 from crc.models.file import FileModel, FileDataModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema, WorkflowLibraryModel
@@ -163,7 +164,7 @@ class WorkflowSyncService(object):
         lcl_spec_ids = [x['workflow_spec_id'] for x in lcl_specs]
         for wf in changed:
             if wf['workflow_spec_id'] in lcl_spec_ids:
-                fullspec = WorkflowSyncService.get_workflow_specification(wf['workflow_spec_id'])
+                fullspec = get_workflow_specification(wf['workflow_spec_id'])
             else:
                 fullspec = WorkflowSyncService.get_remote_workflow_spec(remote,wf['workflow_spec_id'])
             category = fullspec['category']

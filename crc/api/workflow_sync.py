@@ -1,7 +1,15 @@
 from crc import app
 from crc.api.common import ApiError
+from crc.api.workflow import get_workflow_specification
 from crc.services.workflow_sync import WorkflowSyncService
 
+def get_sync_workflow_specification(workflow_spec_id):
+    """
+    NB - this is exactly the same as the workflow API, but it uses a different
+         authentication Method. I tried to combine this into ONE api call that used multiple authentication scemes
+         and it didn't work at all - I've added this as ticket #
+    """
+    return get_workflow_specification(workflow_spec_id)
 
 def verify_token(token, required_scopes):
     """
@@ -21,7 +29,7 @@ def get_sync_sources():
     return WorkflowSyncService.get_sync_sources()
 
 def sync_all_changed_workflows(remote,keep_new_local=False):
-    return WorkflowSyncService(remote,keep_new_local)
+    return WorkflowSyncService.sync_all_changed_workflows(remote,keep_new_local)
 
 def get_master_list(remote,keep_new_local=False):
     return WorkflowSyncService.get_master_list(remote,keep_new_local)
@@ -39,6 +47,9 @@ def get_all_spec_state():
     return WorkflowSyncService.get_all_spec_state()
 
 def get_workflow_spec_files(workflow_spec_id):
-    return WorkflowSyncService(workflow_spec_id)
+    return WorkflowSyncService.get_workflow_spec_files(workflow_spec_id)
+
+def get_master_list(remote,keep_new_local=False):
+    return WorkflowSyncService.get_master_list(remote,keep_new_local)
 #=====================================================
 

@@ -216,21 +216,19 @@ paths:
                 items:
                   $ref: "#/components/schemas/WorkflowSpecDiffList"
 
-
-  /workflow_sync/diff:
+  /workflow_sync/{workflow_spec_id}/spec:
+    parameters:
+      - name: workflow_spec_id
+        in: path
+        required: true
+        description: This is the same as the workflow endpoint, but with a different autentication method.
+        schema:
+          type: string
     get:
-      operationId: crc.api.workflow_sync.get_changed_workflows
-      summary: Provides a list of workflow that differ from remote and if it is new or not
-      security :
-        - ApiKeyAuth : []
-      # in the endpoint
-      parameters:
-        - name: remote
-          in: query
-          required: true
-          description: The remote endpoint
-          schema:
-            type: string
+      operationId: crc.api.workflow_sync.get_sync_workflow_specification
+      summary: Returns a single workflow specification
+      security:
+        - ApiKeyAuth: []
       tags:
         - Workflow Sync API
       responses:
