@@ -279,7 +279,6 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
-    spiff_task.workflow.script_engine = processor.bpmn_workflow.script_engine
     _verify_user_and_role(processor, spiff_task)
     user = UserService.current_user(allow_admin_impersonate=False) # Always log as the real user.
 

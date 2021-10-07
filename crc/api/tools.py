@@ -5,7 +5,6 @@ import inspect
 import os
 
 import connexion
-from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
 from flask import send_file
 from jinja2 import Template, UndefinedError
 
@@ -92,7 +91,7 @@ def evaluate_python_expression(body):
     of the same hash are unnecessary. """
     try:
         script_engine = CustomBpmnScriptEngine()
-        result = script_engine.eval(body['expression'], body['data'])
+        result = script_engine._evaluate(body['expression'], **body['data'])
         return {"result": result, "expression": body['expression'], "key": body['key']}
     except Exception as e:
         return {"result": False, "expression": body['expression'], "key": body['key'], "error": str(e)}
