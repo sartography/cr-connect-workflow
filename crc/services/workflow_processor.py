@@ -41,7 +41,25 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
         Evaluate the given expression, within the context of the given task and
         return the result.
         """
-        return self.evaluate_expression(task, expression)
+        study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+        if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
+            workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+        else:
+            workflow_id = None
+
+        try:
+            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
+            else:
+                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
+
+            return self._evaluate(expression, external_methods=augmentMethods, **task.data)
+
+        except Exception as e:
+            raise WorkflowTaskExecException(task,
+                                            "Error evaluating expression "
+                                            "'%s', %s" % (expression, str(e)))
+
 
     @timeit
     def execute(self, task: SpiffTask, script, data):
@@ -62,32 +80,6 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
         except Exception as e:
             raise WorkflowTaskExecException(task, f' {script}, {e}', e)
 
-    def evaluate_expression(self, task, expression):
-        """
-        Evaluate the given expression, within the context of the given task and
-        return the result.
-        """
-        study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-        if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
-            workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-        else:
-            workflow_id = None
-
-        try:
-            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
-            else:
-                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
-            exp, valid = self.validate_expression(expression)
-            return self._eval(exp, external_methods=augmentMethods, **task.data)
-
-        except Exception as e:
-            raise WorkflowTaskExecException(task,
-                                            "Error evaluating expression "
-                                            "'%s', %s" % (expression, str(e)))
-
-    def eval(self, exp, data):
-        return super()._eval(exp, {}, **data)
 
 
 
@@ -463,12 +455,18 @@ class WorkflowProcessor(object):
                 return nav_item
 
     def find_spec_and_field(self, spec_name, field_id):
-        """Tracks down a form field by name in the workflow spec,
-         only looks at ready tasks. Returns a tuple of the task, and form"""
-        for spec in self.bpmn_workflow.spec.task_specs.values():
-            if spec.name == spec_name and hasattr(spec, "form"):
-                for field in spec.form.fields:
-                    if field.id == field_id:
-                        return spec, field
+        """Tracks down a form field by name in the workflow spec(s),
+           Returns a tuple of the task, and form"""
+        workflows = [self.bpmn_workflow]
+        for task in self.bpmn_workflow.get_ready_user_tasks():
+            if task.workflow not in workflows:
+                workflows.append(task.workflow)
+
+        for workflow in workflows:
+            for spec in workflow.spec.task_specs.values():
+                if spec.name == spec_name and hasattr(spec, "form"):
+                    for field in spec.form.fields:
+                        if field.id == field_id:
+                            return spec, field
         raise ApiError("invalid_field",
-                       "Unable to find a task in the workflow with a lookup field called: %s" % field_id)
+                   "Unable to find a task in the workflow with a lookup field called: %s" % field_id)

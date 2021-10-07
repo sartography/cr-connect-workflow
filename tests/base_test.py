@@ -178,7 +178,7 @@ class BaseTest(unittest.TestCase):
     def load_test_spec(dir_name, display_name=None, master_spec=False, category_id=None):
         """Loads a spec into the database based on a directory in /tests/data"""
         if category_id is None:
-            category = WorkflowSpecCategoryModel(name="test", display_name="Test Workflows", display_order=0)
+            category = WorkflowSpecCategoryModel(display_name="Test Workflows", display_order=0)
             session.add(category)
             session.commit()
             category_id = category.id
@@ -188,7 +188,7 @@ class BaseTest(unittest.TestCase):
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
         if display_name is None:
             display_name = dir_name
-        return ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath, master_spec=master_spec,
+        return ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
                                                display_name=display_name, category_id=category_id)
 
     @staticmethod
@@ -274,13 +274,13 @@ class BaseTest(unittest.TestCase):
         return study
 
 
-    def create_workflow(self, workflow_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
+    def create_workflow(self, dir_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
-        spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
+        spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == dir_name).first()
         if spec is None:
             if display_name is None:
-                display_name = workflow_name
-            spec = self.load_test_spec(workflow_name, display_name, category_id=category_id)
+                display_name = dir_name
+            spec = self.load_test_spec(dir_name, display_name, category_id=category_id)
         if study is None:
             study = self.create_study(uid=as_user)
         workflow_model = StudyService._create_workflow_model(study, spec)

@@ -29,5 +29,8 @@ class TestEmailScript(BaseTest):
             self.assertIn(task_data['ApprvlApprvr1'], outbox[0].body)
             self.assertIn(task_data['ApprvlApprvr1'], outbox[0].html)
 
+            # Correct From field
+            self.assertEqual('uvacrconnect@virginia.edu', outbox[0].sender)
+
             db_emails = EmailModel.query.count()
             self.assertEqual(db_emails, 1)

@@ -26,7 +26,7 @@ class TestStudyService(BaseTest):
 
         # Assure some basic models are in place, This is a damn mess.  Our database models need an overhaul to make
         # this easier - better relationship modeling is now critical.
-        cat = WorkflowSpecCategoryModel(name="approvals", display_name="Approvals", display_order=0)
+        cat = WorkflowSpecCategoryModel(id=None, display_name="Approvals", display_order=0)
         db.session.add(cat)
         db.session.commit()
         self.load_test_spec("top_level_workflow", master_spec=True, category_id=cat.id)
