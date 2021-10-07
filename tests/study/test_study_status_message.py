@@ -41,9 +41,12 @@ class TestStudyStatusMessage(BaseTest):
         status = {'bad_name': {'status': 'hidden', 'message': 'This is my status message!'}}
         workflow_metas, warnings = self.run_update_status(status)
 
-        self.assertEqual(1, len(warnings))
+        self.assertEqual(2, len(warnings))
         self.assertEqual('missing_status', warnings[0].code)
-        self.assertEqual('No status specified for workflow random_fact', warnings[0].message)
+        self.assertEqual('No status information provided about workflow random_fact', warnings[0].message)
+        self.assertEqual('unmatched_status', warnings[1].code)
+        self.assertEqual('The master workflow provided a status for \'bad_name\' a workflow that doesn\'t'
+                         ' seem to exist.', warnings[1].message)
 
     def test_study_status_message_not_dict(self):
         # your entry in the status dictionary is not a dictionary

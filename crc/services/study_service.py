@@ -430,19 +430,23 @@ class StudyService(object):
     def _update_status_of_workflow_meta(workflow_metas, status):
         # Update the status on each workflow
         warnings = []
+        unused_statuses = status.copy() # A list of all the statuses that are not used.
         for wfm in workflow_metas:
+            unused_statuses.pop(wfm.workflow_spec_id, None)
             wfm.state_message = ''
             # do we have a status for you
             if wfm.workflow_spec_id not in status.keys():
-                warnings.append(ApiError("missing_status", "No status specified for workflow %s" % wfm.workflow_spec_id))
+                warnings.append(ApiError("missing_status", "No status information provided about workflow %s" % wfm.workflow_spec_id))
                 continue
             if not isinstance(status[wfm.workflow_spec_id], dict):
                 warnings.append(ApiError(code='invalid_status',
                                          message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
                 continue
+            if 'message' in status[wfm.workflow_spec_id].keys():
+                wfm.state_message = status[wfm.workflow_spec_id]['message']
             if 'status' not in status[wfm.workflow_spec_id].keys():
-                warnings.append(ApiError("missing_status",
-                                         "Workflow '%s' does not have a status setting" % wfm.workflow_spec_id))
+                warnings.append(ApiError("missing_status_key",
+                                         "Workflow '%s' is present in master workflow, but doesn't have a status" % wfm.workflow_spec_id))
                 continue
             if not WorkflowState.has_value(status[wfm.workflow_spec_id]['status']):
                 warnings.append(ApiError("invalid_state",
@@ -450,9 +454,15 @@ class StudyService(object):
                                              wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'], ",".join(WorkflowState.list())
                                          )))
                 continue
+
             wfm.state = WorkflowState[status[wfm.workflow_spec_id]['status']]
-            if 'message' in status[wfm.workflow_spec_id].keys():
-                wfm.state_message = status[wfm.workflow_spec_id]['message']
+
+        for status in unused_statuses:
+            if isinstance(unused_statuses[status], dict) and 'status' in unused_statuses[status]:
+                warnings.append(ApiError("unmatched_status", "The master workflow provided a status for '%s' a "
+                                                         "workflow that doesn't seem to exist." %
+                                                         status))
+
         return warnings
 
     @staticmethod
