@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import List
 
 import flask
+from flask import g
+
 import requests
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
@@ -107,6 +109,19 @@ class StudyService(object):
                 category.workflows = {w for w in workflow_metas if w.category_id == category.id}
 
         return study
+
+    @staticmethod
+    def store_study(study_model: StudyModel):
+        session.add(study_model)
+        StudyService.add_study_update_event(study_model,
+                                            status=StudyStatus.in_progress,
+                                            event_type=StudyEventType.user,
+                                            user_uid=g.user.uid)
+
+        errors = StudyService._add_all_workflow_specs_to_study(study_model)
+        session.commit()
+
+        return errors
 
     @staticmethod
     def get_study_associate(study_id=None, uid=None):

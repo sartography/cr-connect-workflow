@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.protocol_builder import ProtocolBuilderStatus
+
 from crc.models.study import Study, StudyEvent, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
     StudyStatus, StudyAssociatedSchema
 from crc.services.study_service import StudyService
@@ -22,18 +22,13 @@ def add_study(body):
 
     study_model = StudyModel(user_uid=UserService.current_user().uid,
                              title=body['title'],
-                             primary_investigator_id=body['primary_investigator_id'],
                              last_updated=datetime.utcnow(),
                              status=StudyStatus.in_progress)
-    session.add(study_model)
-    StudyService.add_study_update_event(study_model,
-                                        status=StudyStatus.in_progress,
-                                        event_type=StudyEventType.user,
-                                        user_uid=g.user.uid)
 
-    errors = StudyService._add_all_workflow_specs_to_study(study_model)
-    session.commit()
+    errors = StudyService.store_study(study_model)
+
     study = StudyService().get_study(study_model.id, do_status=True)
+
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
