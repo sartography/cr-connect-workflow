@@ -17,7 +17,7 @@ class EmailService(object):
 
     @staticmethod
     def add_email(subject, sender, recipients, content, content_html,
-                  cc=None, bcc=None, study_id=None, reply_to=None, attachment_files=None):
+                  cc=None, bcc=None, study_id=None, reply_to=None, attachment_files=None, workflow_id=None):
         """We will receive all data related to an email and store it"""
 
         # Find corresponding study - if any
@@ -27,7 +27,8 @@ class EmailService(object):
 
         # Create EmailModel
         email_model = EmailModel(subject=subject, sender=sender, recipients=str(recipients),
-                                 content=content, content_html=content_html, study=study)
+                                 content=content, content_html=content_html, study=study,
+                                 cc=cc, bcc=bcc, workflow_id=workflow_id)
 
         # Send mail
         try:
@@ -52,6 +53,7 @@ class EmailService(object):
 
         db.session.add(email_model)
         db.session.commit()
+        return email_model
 
     @staticmethod
     def check_valid_email(email):

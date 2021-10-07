@@ -16,7 +16,7 @@ class TestEmailScript(BaseTest):
 
         with mail.record_messages() as outbox:
 
-            self.complete_form(workflow, task, task_data)
+            workflow_api = self.complete_form(workflow, task, task_data)
 
             self.assertEqual(len(outbox), 1)
             self.assertEqual(outbox[0].subject, 'Camunda Email Subject')
