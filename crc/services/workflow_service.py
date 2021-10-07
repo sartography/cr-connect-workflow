@@ -1,4 +1,5 @@
 import copy
+import json
 import string
 from datetime import datetime
 import random
@@ -277,7 +278,11 @@ class WorkflowService(object):
                 form_data[field.id] = WorkflowService.get_random_data_for_field(field, task)
         if task.data is None:
             task.data = {}
-        task.data.update(form_data)
+
+        # jsonify, and de-jsonify the data to mimic how data will be returned from the front end for forms and assures
+        # we aren't generating something that can't be serialized.
+        form_data_string = json.dumps(form_data)
+        task.data.update(json.loads(form_data_string))
 
     @staticmethod
     def check_field_id(id):
@@ -435,6 +440,8 @@ class WorkflowService(object):
             if default == 'true' or default == 't':
                 return True
             return False
+        elif field.type == 'date' and isinstance(default, datetime):
+            return default.isoformat()
         else:
             return default
 
@@ -484,8 +491,6 @@ class WorkflowService(object):
                 return [random_value]
             else:
                 return random_value
-
-
         elif field.type == "long":
             return random.randint(1, 1000)
         elif field.type == 'boolean':
