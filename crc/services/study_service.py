@@ -433,26 +433,26 @@ class StudyService(object):
         for wfm in workflow_metas:
             wfm.state_message = ''
             # do we have a status for you
-            if wfm.name not in status.keys():
-                warnings.append(ApiError("missing_status", "No status specified for workflow %s" % wfm.name))
+            if wfm.workflow_spec_id not in status.keys():
+                warnings.append(ApiError("missing_status", "No status specified for workflow %s" % wfm.workflow_spec_id))
                 continue
-            if not isinstance(status[wfm.name], dict):
+            if not isinstance(status[wfm.workflow_spec_id], dict):
                 warnings.append(ApiError(code='invalid_status',
-                                         message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.name}. Status is {status[wfm.name]}'))
+                                         message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
                 continue
-            if 'status' not in status[wfm.name].keys():
+            if 'status' not in status[wfm.workflow_spec_id].keys():
                 warnings.append(ApiError("missing_status",
-                                         "Workflow '%s' does not have a status setting" % wfm.name))
+                                         "Workflow '%s' does not have a status setting" % wfm.workflow_spec_id))
                 continue
-            if not WorkflowState.has_value(status[wfm.name]['status']):
+            if not WorkflowState.has_value(status[wfm.workflow_spec_id]['status']):
                 warnings.append(ApiError("invalid_state",
                                          "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                             wfm.name, status[wfm.name]['status'], ",".join(WorkflowState.list())
+                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'], ",".join(WorkflowState.list())
                                          )))
                 continue
-            wfm.state = WorkflowState[status[wfm.name]['status']]
-            if 'message' in status[wfm.name].keys():
-                wfm.state_message = status[wfm.name]['message']
+            wfm.state = WorkflowState[status[wfm.workflow_spec_id]['status']]
+            if 'message' in status[wfm.workflow_spec_id].keys():
+                wfm.state_message = status[wfm.workflow_spec_id]['message']
         return warnings
 
     @staticmethod

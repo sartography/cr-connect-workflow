@@ -13,19 +13,16 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
     def _load_test_categories():
         category_model_1 = WorkflowSpecCategoryModel(
             id=1,
-            name='test_category_1',
             display_name='Test Category 1',
             display_order=1
         )
         category_model_2 = WorkflowSpecCategoryModel(
             id=2,
-            name='test_category_2',
             display_name='Test Category 2',
             display_order=2
         )
         category_model_3 = WorkflowSpecCategoryModel(
             id=3,
-            name='test_category_3',
             display_name='Test Category 3',
             display_order=3
         )

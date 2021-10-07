@@ -348,7 +348,7 @@ class TestWorkflowProcessor(BaseTest):
 
         study = session.query(StudyModel).first()
         workflow_spec_model = db.session.query(WorkflowSpecModel).\
-            filter(WorkflowSpecModel.name == "top_level_workflow").first()
+            filter(WorkflowSpecModel.id == "top_level_workflow").first()
         self.assertIsNotNone(workflow_spec_model)
 
         processor = self.get_processor(study, workflow_spec_model)

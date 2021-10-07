@@ -10,21 +10,21 @@ class TestWorkflowSpecReorder(BaseTest):
 
     def _load_sample_workflow_specs(self):
         workflow_spec_category = session.query(WorkflowSpecCategoryModel).first()
-        spec_model_1 = WorkflowSpecModel(id='test_spec_1', name='test_spec_1', display_name='Test Spec 1',
+        spec_model_1 = WorkflowSpecModel(id='test_spec_1', display_name='Test Spec 1',
                                          description='Test Spec 1 Description', category_id=workflow_spec_category.id,
                                          standalone=False)
         rv_1 = self.app.post('/v1.0/workflow-specification',
                              headers=self.logged_in_headers(),
                              content_type="application/json",
                              data=json.dumps(WorkflowSpecModelSchema().dump(spec_model_1)))
-        spec_model_2 = WorkflowSpecModel(id='test_spec_2', name='test_spec_2', display_name='Test Spec 2',
+        spec_model_2 = WorkflowSpecModel(id='test_spec_2', display_name='Test Spec 2',
                                          description='Test Spec 2 Description', category_id=workflow_spec_category.id,
                                          standalone=False)
         rv_2 = self.app.post('/v1.0/workflow-specification',
                              headers=self.logged_in_headers(),
                              content_type="application/json",
                              data=json.dumps(WorkflowSpecModelSchema().dump(spec_model_2)))
-        spec_model_3 = WorkflowSpecModel(id='test_spec_3', name='test_spec_3', display_name='Test Spec 3',
+        spec_model_3 = WorkflowSpecModel(id='test_spec_3', display_name='Test Spec 3',
                                          description='Test Spec 3 Description', category_id=workflow_spec_category.id,
                                          standalone=False)
         rv_3 = self.app.post('/v1.0/workflow-specification',
@@ -37,11 +37,11 @@ class TestWorkflowSpecReorder(BaseTest):
         self.load_example_data()
         rv_1, rv_2, rv_3 = self._load_sample_workflow_specs()
         self.assertEqual(1, rv_1.json['display_order'])
-        self.assertEqual('test_spec_1', rv_1.json['name'])
+        self.assertEqual('test_spec_1', rv_1.json['id'])
         self.assertEqual(2, rv_2.json['display_order'])
-        self.assertEqual('test_spec_2', rv_2.json['name'])
+        self.assertEqual('test_spec_2', rv_2.json['id'])
         self.assertEqual(3, rv_3.json['display_order'])
-        self.assertEqual('test_spec_3', rv_3.json['name'])
+        self.assertEqual('test_spec_3', rv_3.json['id'])
 
     def test_workflow_spec_reorder_bad_direction(self):
         self.load_example_data()
@@ -163,13 +163,13 @@ class TestWorkflowSpecReorder(BaseTest):
         # but it is
         # test_spec_1, random_fact, test_spec_2, test_spec_3
         self.assertEqual(1, bad_orders[0].display_order)
-        self.assertEqual('test_spec_1', bad_orders[0].name)
+        self.assertEqual('test_spec_1', bad_orders[0].id)
         self.assertEqual(1, bad_orders[1].display_order)
-        self.assertEqual('random_fact', bad_orders[1].name)
+        self.assertEqual('random_fact', bad_orders[1].id)
         self.assertEqual(1, bad_orders[2].display_order)
-        self.assertEqual('test_spec_2', bad_orders[2].name)
+        self.assertEqual('test_spec_2', bad_orders[2].id)
         self.assertEqual(3, bad_orders[3].display_order)
-        self.assertEqual('test_spec_3', bad_orders[3].name)
+        self.assertEqual('test_spec_3', bad_orders[3].id)
 
         # Move test_spec_2 up
         # This should cause a cleanup of the bad display_order numbers
@@ -179,11 +179,11 @@ class TestWorkflowSpecReorder(BaseTest):
         # After moving 2 up, the order should be
         # test_spec_1, test_spec_2, random_fact, test_spec_3
         # Make sure we have good display_order numbers too
-        self.assertEqual('test_spec_1', rv.json[0]['name'])
+        self.assertEqual('test_spec_1', rv.json[0]['id'])
         self.assertEqual(0, rv.json[0]['display_order'])
-        self.assertEqual('test_spec_2', rv.json[1]['name'])
+        self.assertEqual('test_spec_2', rv.json[1]['id'])
         self.assertEqual(1, rv.json[1]['display_order'])
-        self.assertEqual('random_fact', rv.json[2]['name'])
+        self.assertEqual('random_fact', rv.json[2]['id'])
         self.assertEqual(2, rv.json[2]['display_order'])
-        self.assertEqual('test_spec_3', rv.json[3]['name'])
+        self.assertEqual('test_spec_3', rv.json[3]['id'])
         self.assertEqual(3, rv.json[3]['display_order'])

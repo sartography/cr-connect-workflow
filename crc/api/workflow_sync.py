@@ -153,7 +153,7 @@ def create_or_update_local_spec(remote,workflow_spec_id):
     # Set the category
     if specdict['category'] is not None:
         local_category = session.query(WorkflowSpecCategoryModel).\
-            filter(WorkflowSpecCategoryModel.name == specdict['category']['name']).first()
+            filter(WorkflowSpecCategoryModel.id == specdict['category']['id']).first()
         local_category = WorkflowSpecCategoryModelSchema().load(specdict['category'], session=session,
                                                                 instance=local_category)
         session.add(local_category)

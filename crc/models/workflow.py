@@ -13,10 +13,10 @@ from crc.models.file import FileModel, FileDataModel
 class WorkflowSpecCategoryModel(db.Model):
     __tablename__ = 'workflow_spec_category'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
     display_name = db.Column(db.String)
     display_order = db.Column(db.Integer)
     admin = db.Column(db.Boolean)
+
 
 class WorkflowSpecCategoryModelSchema(SQLAlchemyAutoSchema):
     class Meta:
@@ -25,11 +25,9 @@ class WorkflowSpecCategoryModelSchema(SQLAlchemyAutoSchema):
         include_relationships = True
 
 
-
 class WorkflowSpecModel(db.Model):
     __tablename__ = 'workflow_spec'
     id = db.Column(db.String, primary_key=True)
-    name = db.Column(db.String)
     display_name = db.Column(db.String)
     display_order = db.Column(db.Integer, nullable=True)
     description = db.Column(db.Text)
@@ -62,11 +60,9 @@ class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
 
     category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
     libraries = marshmallow.fields.Function(lambda obj: [{'id':x.library.id,
-                                                          'name':x.library.name,
                                                           'display_name':x.library.display_name} for x in
                                                           obj.libraries] )
     parents = marshmallow.fields.Function(lambda obj: [{'id':x.parent.id,
-                                                          'name':x.parent.name,
                                                           'display_name':x.parent.display_name} for x in
                                                           obj.parents] )
 
