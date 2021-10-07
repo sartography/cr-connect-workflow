@@ -78,7 +78,7 @@ GITHUB_REPO = environ.get('GITHUB_REPO', None)
 TARGET_BRANCH = environ.get('TARGET_BRANCH', None)
 
 # Email configuration
-DEFAULT_SENDER = 'askresearch@virginia.edu'
+DEFAULT_SENDER = 'uvacrconnect@virginia.edu'
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
 MAIL_DEBUG = environ.get('MAIL_DEBUG', default=True)
 MAIL_SERVER = environ.get('MAIL_SERVER', default='smtp.mailtrap.io')

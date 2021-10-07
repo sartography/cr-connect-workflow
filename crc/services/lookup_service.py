@@ -67,9 +67,13 @@ class LookupService(object):
         # if not, we need to rebuild the lookup table.
         is_current = False
         if lookup_model:
-            is_current = db.session.query(WorkflowSpecDependencyFile). \
-                filter(WorkflowSpecDependencyFile.file_data_id == lookup_model.file_data_model_id).\
-                filter(WorkflowSpecDependencyFile.workflow_id == workflow.id).count()
+            if lookup_model.is_ldap:  # LDAP is always current
+                is_current = True
+            else:
+                is_current = db.session.query(WorkflowSpecDependencyFile). \
+                    filter(WorkflowSpecDependencyFile.file_data_id == lookup_model.file_data_model_id).\
+                    filter(WorkflowSpecDependencyFile.workflow_id == workflow.id).count()
+
 
         if not is_current:
             # Very very very expensive, but we don't know need this till we do.
@@ -138,6 +142,7 @@ class LookupService(object):
         #  Use the results of an LDAP request to populate enum field options
         elif field.has_property(Task.FIELD_PROP_LDAP_LOOKUP):
             lookup_model = LookupFileModel(workflow_spec_id=workflow_model.workflow_spec_id,
+                                           task_spec_id=task_spec_id,
                                            field_id=field_id,
                                            is_ldap=True)
 

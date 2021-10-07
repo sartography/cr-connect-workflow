@@ -185,3 +185,12 @@ class TestWorkflowSpecValidation(BaseTest):
         api_error = json_data[0]
         self.assertEqual('disabled_workflow', api_error['code'])
         self.assertEqual('This workflow is disabled. This is my mocked disable message.', api_error['message'])
+
+
+    def test_date_generation_during_validation(self):
+        # We hit a bug where the date was generated as a part of a value_expression during validation, but
+        # it wasn't converted to an ISO String as it would be if submitted through the API.
+        # subsequent attempts to work with the expected date_string failed, because it was already a date.
+        # This can't happen in the front end code base, but it was breaking validation.
+        errors = self.validate_workflow("date_value_expression")
+        self.assertEqual(0, len(errors))
