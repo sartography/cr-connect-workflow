@@ -70,7 +70,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
             data = task.data
             try:
                 content, content_html = EmailService().get_rendered_content(message, data)
-                EmailService.add_email(
+                email_model = EmailService.add_email(
                     subject=subject,
                     sender=app.config['DEFAULT_SENDER'],
                     recipients=recipients,
@@ -80,7 +80,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                     bcc=bcc,
                     study_id=study_id,
                     reply_to=reply_to,
-                    attachment_files=files
+                    attachment_files=files,
+                    workflow_id=workflow_id
                 )
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -89,6 +90,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
                 raise e
+            return email_model.id
 
     def get_email_addresses(self, users, study_id):
         emails = []
