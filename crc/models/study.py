@@ -107,7 +107,7 @@ class WorkflowMetadata(object):
     def __init__(self, id, display_name = None, description = None, spec_version = None,
                  category_id  = None, category_display_name  = None, state: WorkflowState  = None,
                  status: WorkflowStatus  = None, total_tasks  = None, completed_tasks  = None,
-                 is_review=None,display_order = None, state_message = None):
+                 is_review=None,display_order = None, state_message = None, workflow_spec_id=None):
         self.id = id
         self.display_name = display_name
         self.description = description
@@ -121,6 +121,7 @@ class WorkflowMetadata(object):
         self.completed_tasks = completed_tasks
         self.is_review = is_review
         self.display_order = display_order
+        self.workflow_spec_id = workflow_spec_id
 
 
     @classmethod
@@ -138,7 +139,8 @@ class WorkflowMetadata(object):
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,
             is_review=is_review,
-            display_order=workflow.workflow_spec.display_order
+            display_order=workflow.workflow_spec.display_order,
+            workflow_spec_id=workflow.workflow_spec_id
         )
         return instance
 
