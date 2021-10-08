@@ -29,6 +29,9 @@ class TestEmailScript(BaseTest):
             self.assertIn(task_data['ApprvlApprvr1'], outbox[0].body)
             self.assertIn(task_data['ApprvlApprvr1'], outbox[0].html)
 
+            # Test nl2br formatting
+            self.assertIn('<strong>Test Some Formatting</strong><br />', outbox[0].html)
+
             # Correct From field
             self.assertEqual('uvacrconnect@virginia.edu', outbox[0].sender)
 
