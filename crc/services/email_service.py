@@ -64,11 +64,11 @@ class EmailService(object):
 
     def get_rendered_content(self, message, data):
         template = Template(message)
-        rendered = template.render(data)
-        rendered_markdown = markdown.markdown(rendered)
-        wrapped = self.get_cr_connect_wrapper(rendered_markdown)
+        content = template.render(data)
+        rendered_markdown = markdown.markdown(content, extensions=['nl2br'])
+        content_html = self.get_cr_connect_wrapper(rendered_markdown)
 
-        return rendered, wrapped
+        return content, content_html
 
     @staticmethod
     def get_cr_connect_wrapper(email_body):
