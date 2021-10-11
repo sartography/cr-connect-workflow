@@ -1,6 +1,7 @@
 import re
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
+from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
@@ -393,10 +394,22 @@ class WorkflowProcessor(object):
         # If there are ready tasks to complete, return the next ready task, but return the one
         # in the active parallel path if possible.  In some cases the active parallel path may itself be
         # a parallel gateway with multiple tasks, so prefer ones that share a parent.
+
+        # Get a list of all ready tasks
         ready_tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
+
+        # Get a list of all completed user tasks (Non engine tasks)
+        completed_user_tasks = self.completed_user_tasks()
+
+        # If there are no completed user tasks, return the first ready task
+        if len(completed_user_tasks) == 0:
+            return ready_tasks[0]
+
+        # Take the last completed task, find a child of it, and return that task
+        last_user_task = completed_user_tasks[0]
         if len(ready_tasks) > 0:
             for task in ready_tasks:
-                if task.parent == self.bpmn_workflow.last_task:
+                if task._is_descendant_of(last_user_task):
                     return task
             for task in ready_tasks:
                 if self.bpmn_workflow.last_task and task.parent == self.bpmn_workflow.last_task.parent:
@@ -410,6 +423,13 @@ class WorkflowProcessor(object):
         for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.NOT_FINISHED_MASK):
             next_task = task
         return next_task
+
+    def completed_user_tasks(self):
+        completed_user_tasks = self.bpmn_workflow.get_tasks(SpiffTask.COMPLETED)
+        completed_user_tasks.reverse()
+        completed_user_tasks = list(
+        filter(lambda task: not self.bpmn_workflow._is_engine_task(task.task_spec), completed_user_tasks))
+        return completed_user_tasks
 
     def previous_task(self):
         return None
