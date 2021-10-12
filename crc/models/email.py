@@ -18,7 +18,7 @@ class EmailModel(db.Model):
     content_html = db.Column(db.String)
     study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=True)
     timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
-    workflow_id = db.Column(db.String, nullable=True)
+    workflow_spec_id = db.Column(db.String, nullable=True)
     study = db.relationship(StudyModel)
 
 
