@@ -1,6 +1,5 @@
 from tests.base_test import BaseTest
 from crc import mail, session
-from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
 from crc.services.email_service import EmailService
 
