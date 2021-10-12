@@ -415,8 +415,8 @@ class WorkflowService(object):
             if hasattr(default, "value"):
                 default_option = next((obj for obj in field.options if obj.id == default.value), None)
             else:
-                raise ApiError.from_task("invalid_default", "A default for enums must be a dictionary with a"
-                                                            " value attribute.", task)
+                # Fixme: We should likely error out on this in validation, or remove this value/label alltogether.
+                default_option = next((obj for obj in field.options if obj.id == default), None)
             if not default_option:
                 raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
                                                             "the enum options ", task)
