@@ -1681,7 +1681,6 @@ components:
         new:
           type: boolean
           example : false
-
     WorkflowSpecAll:
       properties:
         workflow_spec_id :
