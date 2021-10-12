@@ -9,7 +9,8 @@ class TestGetEmailData(BaseTest):
 
     def test_get_email_data_by_email_id(self):
         self.load_example_data()
-        study = session.query(StudyModel).first()
+        workflow = self.create_workflow('get_email_data')
+        study = workflow.study
         with mail.record_messages() as outbox:
             # Send an email we can use for get_email_data
             email_model = EmailService.add_email(subject='My Email Subject',
@@ -17,7 +18,6 @@ class TestGetEmailData(BaseTest):
                                                  recipients=['joe@example.com'],
                                                  content='asdf', content_html=None, study_id=study.id)
 
-            workflow = self.create_workflow('get_email_data')
             workflow_api = self.get_workflow_api(workflow)
             task = workflow_api.next_task
 
@@ -34,10 +34,12 @@ class TestGetEmailData(BaseTest):
             self.assertEqual('sender@example.com', email_data[0]['sender'])
             self.assertEqual('[\'joe@example.com\']', email_data[0]['recipients'])
 
-    def test_get_email_data_by_workflow_id(self):
+    def test_get_email_data_by_workflow_spec_id(self):
         self.load_example_data()
-        study = session.query(StudyModel).first()
+        workflow = self.create_workflow('get_email_data_by_workflow')
+        study = workflow.study
         email_workflow = session.query(WorkflowModel).first()
+        email_workflow_spec_id = email_workflow.workflow_spec_id
 
         with mail.record_messages() as outbox:
             # Send an email we can use for get_email_data
@@ -47,21 +49,20 @@ class TestGetEmailData(BaseTest):
                                                      content='asdf',
                                                      content_html=None,
                                                      study_id=study.id,
-                                                     workflow_id=email_workflow.id)
+                                                     workflow_spec_id=email_workflow_spec_id)
             email_model_two = EmailService.add_email(subject='My Other Email Subject',
                                                      sender='sender2@example.com',
                                                      recipients=['joanne@example.com'],
                                                      content='xyzpdq',
                                                      content_html=None,
                                                      study_id=study.id,
-                                                     workflow_id=email_workflow.id)
+                                                     workflow_spec_id=email_workflow_spec_id)
 
-            workflow = self.create_workflow('get_email_data_by_workflow')
             workflow_api = self.get_workflow_api(workflow)
             task = workflow_api.next_task
 
             # Run workflow with get_email_data
-            workflow_api = self.complete_form(workflow, task, {'workflow_id': email_workflow.id})
+            workflow_api = self.complete_form(workflow, task, {'workflow_spec_id': email_workflow_spec_id})
             task = workflow_api.next_task
             data = task.data
 

@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="workflow_id" label="Workflow ID" type="string" />
+          <camunda:formField id="workflow_spec_id" label="Workflow Spec ID" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1erkgz2</bpmn:incoming>
@@ -18,7 +18,7 @@
     <bpmn:scriptTask id="Activity_GetEmailData" name="Get Email Data">
       <bpmn:incoming>Flow_1ira7x5</bpmn:incoming>
       <bpmn:outgoing>Flow_1bt23l3</bpmn:outgoing>
-      <bpmn:script>email_data = get_email_data(email_workflow_id=workflow_id)</bpmn:script>
+      <bpmn:script>email_data = get_email_data(workflow_spec_id=workflow_spec_id)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_1bt23l3" sourceRef="Activity_GetEmailData" targetRef="Activity_DisplayEmailData" />
     <bpmn:manualTask id="Activity_DisplayEmailData" name="Display Email Data">
