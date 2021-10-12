@@ -107,7 +107,7 @@ def set_reference_file(name):
     return FileSchema().dump(to_file_api(file_model))
 
 
-def add_reference_file(workflow_spec_id=None, workflow_id=None, task_spec_name=None, form_field_key=None):
+def add_reference_file():
     file = connexion.request.files['file']
     file_model = FileService.add_reference_file(name=file.filename, content_type=file.content_type,
                                                 binary_data=file.stream.read())

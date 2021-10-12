@@ -984,6 +984,28 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/File"
+    post:
+      operationId: crc.api.file.add_reference_file
+      summary: Add a new reference file.
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Metadata about the new reference file, but not the file content.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+
   /reference_file/{name}:
     parameters:
       - name: name
@@ -1031,6 +1053,8 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+
+
   /dmn_from_ss:
 #    parameters:
 #      - name: workflow_spec_id
