@@ -150,6 +150,22 @@ class TestFilesApi(BaseTest):
         data_out = rv.get_data()
         self.assertEqual(file_data, data_out)
 
+    def test_add_reference_file(self):
+        ExampleDataLoader().load_reference_documents()
+
+        file_name = 'new.xlsx'
+        data = {'file': (io.BytesIO(b"abcdef"), file_name)}
+        rv = self.app.post('/v1.0/reference_file', data=data,
+                           follow_redirects=True,
+                           content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assertIsNotNone(rv.get_data())
+        json_data = json.loads(rv.get_data(as_text=True))
+        file = FileModelSchema().load(json_data, session=session)
+        self.assertEqual(FileType.xlsx, file.type)
+        self.assertFalse(file.primary)
+        self.assertEqual(True, file.is_reference)
+
+
     def test_list_reference_files(self):
         ExampleDataLoader.clean_db()
 
