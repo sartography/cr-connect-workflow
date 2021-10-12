@@ -17,7 +17,11 @@ New request submitted by {{ PIComputingID }}
 
 Email content to be delivered to {{ ApprvlApprvr1 }}
 
----</bpmn:documentation>
+---
+**Test Some Formatting**
+&amp;ensp;_UVA Tracking Number:_ {{ 321 }}
+
+</bpmn:documentation>
       <bpmn:incoming>Flow_08n2npe</bpmn:incoming>
       <bpmn:outgoing>Flow_1xlrgne</bpmn:outgoing>
       <bpmn:script>subject="Camunda Email Subject"
