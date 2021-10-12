@@ -66,6 +66,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                            message="Email script requires a subject and at least one email recipient as arguments")
 
         if recipients:
+            wf_model = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+            workflow_spec_id = wf_model.workflow_spec_id
             message = task.task_spec.documentation
             data = task.data
             try:
@@ -81,7 +83,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                     study_id=study_id,
                     reply_to=reply_to,
                     attachment_files=files,
-                    workflow_id=workflow_id
+                    workflow_spec_id=workflow_spec_id
                 )
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
