@@ -82,7 +82,6 @@ class FileModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.Enum(FileType))
-    sha = db.Column(db.String, nullable=True) # only meta file here
     is_status = db.Column(db.Boolean)
     content_type = db.Column(db.String)
     is_reference = db.Column(db.Boolean, nullable=False, default=False)  # A global reference file.

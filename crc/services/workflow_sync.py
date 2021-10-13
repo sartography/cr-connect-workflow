@@ -489,7 +489,7 @@ class WorkflowSyncService(object):
         else:
             x = session.query(FileDataModel).join(FileModel).filter((FileModel.workflow_spec_id == workflowid) &
                                                                     (FileModel.archived!=True))
-        # there might be a cleaner way of getting a data frome from some of the
+        # there might be a cleaner way of getting a data from from some of the
         # fields in the ORM - but this works OK
         filelist = []
         for file in x:
