@@ -3,6 +3,7 @@ import traceback
 
 from crc import app, session
 from crc.api.common import ApiError
+from crc.models.email import EmailModelSchema
 from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowModel
 from crc.services.document_service import DocumentService
@@ -92,7 +93,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
                 raise e
-            return email_model.id
+            return EmailModelSchema().dump(email_model)
 
     def get_email_addresses(self, users, study_id):
         emails = []
