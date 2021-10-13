@@ -73,16 +73,31 @@ class WorkflowSyncService(object):
         return WorkflowSyncService.__make_request(url)
 
     @staticmethod
+    def publish_remote_repository(remote,message):
+        url = remote + '/v1.0/file/needs_publish'
+        result = WorkflowSyncService.__make_request(url)
+        if result.json == True:
+            url = remote + '/v1.0/file/publish'
+            return WorkflowSyncService.__make_request(url,body={'message':message},post=True)
+        return result
+
+    @staticmethod
     def get_all_remote_workflows(remote):
         url = remote + '/v1.0/workflow_sync/all'
         return WorkflowSyncService.__make_request(url)
 
     @staticmethod
-    def __make_request(url,return_contents=False):
-        try:
-            response = requests.get(url,headers={'X-CR-API-KEY':app.config['API_TOKEN']})
-        except:
-            raise ApiError("workflow_sync_error",url)
+    def __make_request(url,body={},post=False,return_contents=False):
+        if post:
+            try:
+                response = requests.post(url,body, headers={'X-CR-API-KEY': app.config['API_TOKEN']})
+            except:
+                raise ApiError("workflow_sync_error", url)
+        else:
+            try:
+                response = requests.get(url,headers={'X-CR-API-KEY':app.config['API_TOKEN']})
+            except:
+                raise ApiError("workflow_sync_error",url)
         if response.ok and response.text:
             if return_contents:
                 return response.content
@@ -116,16 +131,16 @@ class WorkflowSyncService(object):
         return [sources[key] for key in sources.keys()]
 
 
-
-
-
     @staticmethod
-    def sync_all_changed_workflows(remote,keep_new_local=False):
+    def sync_all_changed_workflows(remote,message="syncing between systems",keep_new_local=False):
         """
         Does what it says, gets a list of all workflows that are different between
         two systems and pulls all of the workflows and files that are different on the
         remote system. The idea is that we can make the local system 'look' like the remote
         system for deployment or testing.
+        I originally thought that we would do a pre/post commit in this function,
+        but . . .  I thought it would be good to show a status on the front end, so you mush
+        do this independently
         """
         tree = WorkflowSyncService.get_master_list(remote,keep_new_local)
         info = {}

@@ -92,9 +92,9 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/DocumentDirectory"
+                type : array
+                items :
+                  $ref : "#/components/schemas/DocumentDirectory"
 
   # /v1.0/study
   /study:
@@ -137,7 +137,7 @@ paths:
       operationId: crc.api.workflow_sync.get_sync_sources
       summary: Gets a list of all sources that are defined on the server
       tags:
-        - Workflow Sync API
+        - Workflow Sync Frontend API
       responses:
         '200':
           description: An array of sources that we can sync from.
@@ -159,9 +159,6 @@ paths:
     get:
       operationId: crc.api.workflow_sync.sync_all_changed_workflows
       summary: Sync all workflows that have changed on the remote side and provide a list of the results
-      security:
-        - ApiKeyAuth : []
-      # in the endpoint
       parameters:
         - name: remote
           in: query
@@ -170,7 +167,7 @@ paths:
           schema:
             type: string
       tags:
-        - Workflow Sync API
+        - Workflow Sync Frontend API
       responses:
         '200':
           description: An array of workflow specs that were synced from remote.
@@ -187,9 +184,6 @@ paths:
     get:
       operationId: crc.api.workflow_sync.get_master_list
       summary: Provides a list of workflow that differ from remote and if it is new or not
-      security :
-        - ApiKeyAuth : []
-      # in the endpoint
       parameters:
         - name: remote
           in: query
@@ -205,17 +199,23 @@ paths:
             type: boolean
 
       tags:
-        - Workflow Sync API
+        - Workflow Sync Frontend API
       responses:
         '200':
           description: An array of workflow specs, with last touched date and which one is most recent.
           content:
             text/html:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpecDiffList"
-
+                type: object
+                properties:
+                   CategoryName1:
+                      type: array
+                      items:
+                         $ref: "#/components/schemas/WorkflowSpecDiffItem"
+                   CategoryName2:
+                      type: array
+                      items:
+                         $ref: "#/components/schemas/WorkflowSpecDiffItem"
   /workflow_sync/{workflow_spec_id}/spec:
     parameters:
       - name: workflow_spec_id
@@ -230,16 +230,15 @@ paths:
       security:
         - ApiKeyAuth: []
       tags:
-        - Workflow Sync API
+        - Workflow Sync Machine API
       responses:
         '200':
           description: An array of workflow specs, with last touched date and which one is most recent.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpecDiffList"
+                $ref : "#/components/schemas/WorkflowSpecDiffItem"
+
 
   /workflow_sync/{workflow_spec_id}/files:
     get:
@@ -256,7 +255,7 @@ paths:
             type: string
 
       tags:
-        - Workflow Sync API
+        - Workflow Sync Machine API
       responses:
         '200':
           description: An array of files for a workflow spec on the local system, with details.
@@ -265,7 +264,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/WorkflowSpecFilesList"
+                  $ref: "#/components/schemas/WorkflowSpecFilesListItem"
 
   /workflow_sync/{workflow_spec_id}/files/sync:
     get:
@@ -288,7 +287,7 @@ paths:
             type: string
 
       tags:
-        - Workflow Sync API
+        - Workflow Sync Machine API
       responses:
         '200':
           description: A list of files that were synced for the workflow.
@@ -323,7 +322,7 @@ paths:
             type: string
 
       tags:
-        - Workflow Sync API
+        - Workflow Sync Machine API
       responses:
         '200':
           description: An array of files that are different from remote, with last touched date and file signature.
@@ -341,9 +340,8 @@ paths:
       summary: Provides a list of workflow specs, last update date and thumbprint
       security:
         - ApiKeyAuth : []
-
       tags:
-        - Workflow Sync API
+        - Workflow Sync Machine API
       responses:
         '200':
           description: An array of workflow specs, with last touched date and file signature.
@@ -784,13 +782,16 @@ paths:
               schema:
                 $ref: "#/components/schemas/File"
 
-  /file/need_publish:
+  /workflow_sync/need_publish:
     get:
       operationId: crc.api.file.can_update_github
-      summary: A boolean operation that determines if we have something new that needs to be pulished to github
+      summary: A boolean operation that determines if we have something new that needs to be pulished to github - can
+       be called from both the frontend and machine-machine
       tags:
-        - Files
-
+        - Workflow Sync Frontend API
+      security:
+           - jwt: ['secret']
+           - ApiKeyAuth: []
       responses:
         '200':
           description: Successfully sent to github
@@ -800,12 +801,15 @@ paths:
                 type: boolean
                 example: true
 
-  /file/publish:
+  /workflow_sync/publish:
     post:
       operationId: crc.api.file.publish_to_github
-      summary: Publish current fileset to github
+      summary: Publish current fileset to github - can be called from the frontend or machine-machine
+      security:
+           - jwt: ['secret']
+           - ApiKeyAuth: []
       tags:
-        - Files
+        - Workflow Sync Frontend API
       requestBody:
         content:
           application/json:
@@ -1583,7 +1587,7 @@ components:
       properties:
         id:
           type: string
-    WorkflowSpecDiffList:
+    WorkflowSpecDiffItem:
       properties:
         workflow_spec_id:
           type: string
@@ -1591,13 +1595,86 @@ components:
         date_created :
           type: string
           example : 2020-12-09 16:55:12.951500+00:00
+        name:
+          type : string
+          example : Top Level Workflow
         location :
           type : string
           example : remote
         new :
           type : boolean
           example : false
-    WorkflowSpecFilesList:
+        status :
+          type : string
+          example : update
+        files :
+          type: array
+          items:
+            $ref : "#/components/schemas/WorkflowSpecFilesListItemSync"
+
+    RemoteWorkflowSpecItemSync:
+      properties:
+        workflow_spec_id:
+          type: string
+          example : top_level_workflow
+        date_created :
+          type: string
+          example : 2020-12-09 16:55:12.951500+00:00
+        name:
+          type : string
+          example : Top Level Workflow
+        location :
+          type : string
+          example : remote
+        new :
+          type : boolean
+          example : false
+        status :
+          type : string
+          example : update
+        files :
+          type: array
+          items:
+            $ref : "#/components/schemas/WorkflowSpecFilesListItem"
+
+    WorkflowSpecFilesListItemSync:
+      properties:
+        workflow_spec_id :
+          type: string
+          example : top_level_workflow
+        filename :
+          type: string
+          example : data_security_plan.dmn
+        date_created :
+          type: string
+          example : 2020-12-01 13:58:12.420333+00:00
+        type:
+          type : string
+          example : dmn
+        primary :
+          type : boolean
+          example : false
+        content_type:
+          type: string
+          example : text/xml
+        primary_process_id:
+          type : string
+          example : null
+        md5_hash:
+          type: string
+          example: f12e2bbd-a20c-673b-ccb8-a8a1ea9c5b7b
+        status :
+          type: string
+          example : update
+        location :
+          type: string
+          example : remote
+        new :
+          type: boolean
+          example : true
+
+
+    WorkflowSpecFilesListItem:
       properties:
         file_model_id:
           type : integer
@@ -1626,7 +1703,6 @@ components:
         md5_hash:
           type: string
           example: f12e2bbd-a20c-673b-ccb8-a8a1ea9c5b7b
-
 
     WorkflowSpecFilesDiff:
       properties:
