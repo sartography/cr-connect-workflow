@@ -1,6 +1,7 @@
 from tests.base_test import BaseTest
 from crc import mail
 from crc.models.email import EmailModel
+import datetime
 
 
 class TestEmailScript(BaseTest):
@@ -35,5 +36,16 @@ class TestEmailScript(BaseTest):
             # Correct From field
             self.assertEqual('uvacrconnect@virginia.edu', outbox[0].sender)
 
-            db_emails = EmailModel.query.count()
-            self.assertEqual(db_emails, 1)
+            # Make sure we log the email
+            # Grab model for comparison below
+            db_emails = EmailModel.query.all()
+            self.assertEqual(len(db_emails), 1)
+
+            # Check whether we get a good email model back from the script
+            self.assertIn('email_model', workflow_api.next_task.data)
+            self.assertEqual(db_emails[0].recipients, workflow_api.next_task.data['email_model']['recipients'])
+            self.assertEqual(db_emails[0].sender, workflow_api.next_task.data['email_model']['sender'])
+            self.assertEqual(db_emails[0].subject, workflow_api.next_task.data['email_model']['subject'])
+
+            # Make sure timestamp is UTC
+            self.assertEqual(db_emails[0].timestamp.tzinfo, datetime.timezone.utc)
