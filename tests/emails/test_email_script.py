@@ -2,6 +2,7 @@ from tests.base_test import BaseTest
 from crc import mail
 from crc.models.email import EmailModel
 import datetime
+from unittest.mock import patch
 
 
 class TestEmailScript(BaseTest):
@@ -49,3 +50,21 @@ class TestEmailScript(BaseTest):
 
             # Make sure timestamp is UTC
             self.assertEqual(db_emails[0].timestamp.tzinfo, datetime.timezone.utc)
+
+    @patch('crc.services.email_service.EmailService.add_email')
+    def test_email_raises_exception(self, mock_response):
+        self.load_example_data()
+        mock_response.return_value.ok = True
+        mock_response.side_effect = Exception("This is my exception!")
+
+        workflow = self.create_workflow('email')
+
+        task_data = {
+          'PIComputingID': 'dhf8r@virginia.edu',
+          'ApprvlApprvr1': 'lb3dp@virginia.edu'
+        }
+        task = self.get_workflow_api(workflow).next_task
+
+        with mail.record_messages() as outbox:
+            with self.assertRaises(Exception) as e:
+                self.complete_form(workflow, task, task_data)
