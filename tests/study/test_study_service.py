@@ -5,15 +5,14 @@ from unittest.mock import patch
 from tests.base_test import BaseTest
 
 from crc import db, app
-from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.study import StudyModel, StudyStatus
+from crc.models.study import StudyModel, StudyStatus, StudyAssociatedSchema
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, \
     WorkflowSpecCategoryModel
 from crc.services.file_service import FileService
+from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
-from example_data import ExampleDataLoader
 
 
 class TestStudyService(BaseTest):
@@ -27,13 +26,14 @@ class TestStudyService(BaseTest):
 
         # Assure some basic models are in place, This is a damn mess.  Our database models need an overhaul to make
         # this easier - better relationship modeling is now critical.
-        cat = WorkflowSpecCategoryModel(name="approvals", display_name="Approvals", display_order=0)
+        cat = WorkflowSpecCategoryModel(id=None, display_name="Approvals", display_order=0)
         db.session.add(cat)
         db.session.commit()
         self.load_test_spec("top_level_workflow", master_spec=True, category_id=cat.id)
         user = db.session.query(UserModel).filter(UserModel.uid == "dhf8r").first()
         if not user:
-            user = UserModel(uid="dhf8r", email_address="whatever@stuff.com", display_name="Stayathome Smellalots")
+            ldap = LdapService.user_info('dhf8r')
+            user = UserModel(uid="dhf8r", ldap_info=ldap)
             db.session.add(user)
             db.session.commit()
         else:
@@ -129,7 +129,7 @@ class TestStudyService(BaseTest):
         self.assertEqual("UVA Compliance", documents["UVACompl_PRCAppr"]['category1'])
         self.assertEqual("PRC Approval", documents["UVACompl_PRCAppr"]['category2'])
         self.assertEqual("", documents["UVACompl_PRCAppr"]['category3'])
-        self.assertEqual("CRC", documents["UVACompl_PRCAppr"]['Who Uploads?'])
+        self.assertEqual("Study Team", documents["UVACompl_PRCAppr"]['who_uploads?'])
         self.assertEqual(0, documents["UVACompl_PRCAppr"]['count'])
         self.assertEqual(True, documents["UVACompl_PRCAppr"]['required'])
         self.assertEqual(6, documents["UVACompl_PRCAppr"]['id'])
@@ -156,7 +156,7 @@ class TestStudyService(BaseTest):
         self.assertEqual("not_started", docs["UVACompl_PRCAppr"]['status'])
         self.assertEqual(1, docs["UVACompl_PRCAppr"]['count'])
         self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0])
-        self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0]['file_id'])
+        self.assertIsNotNone(docs["UVACompl_PRCAppr"]['files'][0]['id'])
         self.assertEqual(workflow.id, docs["UVACompl_PRCAppr"]['files'][0]['workflow_id'])
 
     def test_get_all_studies(self):
@@ -257,3 +257,12 @@ class TestStudyService(BaseTest):
         studies = StudyService().get_studies_for_user(user)
         # study_details has an invalid REVIEW_TYPE, so we should get 0 studies back
         self.assertEqual(0, len(studies))
+
+    def test_study_associates(self):
+        user = self.create_user_with_study_and_workflow()
+        study = db.session.query(StudyModel).first()
+        associates = StudyService.get_study_associates(study.id)
+        self.assertEquals(1, len(associates))
+        assoc_json = StudyAssociatedSchema(many=True).dump(associates)
+        print(assoc_json)
+        self.assertEquals("Dan", assoc_json[0]['ldap_info']['given_name'])

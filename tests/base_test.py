@@ -10,16 +10,16 @@ import unittest
 import urllib.parse
 import datetime
 from flask import g
-from sqlalchemy import Sequence
 
 from crc import app, db, session
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudyStatus
-from crc.models.data_store import DataStoreModel
+from crc.models.ldap import LdapModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
+from crc.services.ldap_service import LdapService
 from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
@@ -45,27 +45,14 @@ class BaseTest(unittest.TestCase):
     auths = {}
     test_uid = "dhf8r"
 
+    # These users correspond to the ldap details available in our mock ldap service.
     users = [
         {
             'uid': 'dhf8r',
-            'email_address': 'dhf8r@virginia.EDU',
-            'display_name': 'Daniel Harold Funk',
-            'affiliation': 'staff@virginia.edu;member@virginia.edu',
-            'eppn': 'dhf8r@virginia.edu',
-            'first_name': 'Daniel',
-            'last_name': 'Funk',
-            'title': 'SOFTWARE ENGINEER V'
         },
         {
-            'uid': 'lbd3p',
-            'email_address': 'lbd3p@virginia.EDU',
-            'display_name': 'Laura Barnes',
-            'affiliation': 'staff@virginia.edu;member@virginia.edu',
-            'eppn': 'lbd3p@virginia.edu',
-            'first_name': 'Laura',
-            'last_name': 'Barnes',
-            'title': 'Associate Professor of Systems and Information Engineering'
-        },
+            'uid': 'lb3dp',
+        }
     ]
 
     studies = [
@@ -127,7 +114,7 @@ class BaseTest(unittest.TestCase):
         self.assertTrue(str.startswith(rv.location, redirect_url))
 
         user_model = session.query(UserModel).filter_by(uid=uid).first()
-        self.assertIsNotNone(user_model.display_name)
+        self.assertIsNotNone(user_model.ldap_info.display_name)
         self.assertEqual(user_model.uid, uid)
         self.assertTrue('user' in g, 'User should be in Flask globals')
         user = UserService.current_user(allow_admin_impersonate=True)
@@ -150,10 +137,12 @@ class BaseTest(unittest.TestCase):
         ExampleDataLoader.clean_db()
         # If in production mode, only add the first user.
         if app.config['PRODUCTION']:
-            session.add(UserModel(**self.users[0]))
+            ldap_info = LdapService.user_info(self.users[0]['uid'])
+            session.add(UserModel(uid=self.users[0]['uid'], ldap_info=ldap_info))
         else:
             for user_json in self.users:
-                session.add(UserModel(**user_json))
+                ldap_info = LdapService.user_info(user_json['uid'])
+                session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
 
         if use_crc_data:
             ExampleDataLoader().load_all()
@@ -189,7 +178,7 @@ class BaseTest(unittest.TestCase):
     def load_test_spec(dir_name, display_name=None, master_spec=False, category_id=None):
         """Loads a spec into the database based on a directory in /tests/data"""
         if category_id is None:
-            category = WorkflowSpecCategoryModel(name="test", display_name="Test Workflows", display_order=0)
+            category = WorkflowSpecCategoryModel(display_name="Test Workflows", display_order=0)
             session.add(category)
             session.commit()
             category_id = category.id
@@ -199,7 +188,7 @@ class BaseTest(unittest.TestCase):
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
         if display_name is None:
             display_name = dir_name
-        return ExampleDataLoader().create_spec(id=dir_name, name=dir_name, filepath=filepath, master_spec=master_spec,
+        return ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
                                                display_name=display_name, category_id=category_id)
 
     @staticmethod
@@ -267,7 +256,8 @@ class BaseTest(unittest.TestCase):
     def create_user(self, uid="dhf8r", email="daniel.h.funk@gmail.com", display_name="Hoopy Frood"):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()
         if user is None:
-            user = UserModel(uid=uid, email_address=email, display_name=display_name)
+            ldap_user = LdapService.user_info(uid)
+            user = UserModel(uid=uid, ldap_info=ldap_user)
             session.add(user)
             session.commit()
         return user
@@ -284,13 +274,13 @@ class BaseTest(unittest.TestCase):
         return study
 
 
-    def create_workflow(self, workflow_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
+    def create_workflow(self, dir_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
-        spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.name == workflow_name).first()
+        spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == dir_name).first()
         if spec is None:
             if display_name is None:
-                display_name = workflow_name
-            spec = self.load_test_spec(workflow_name, display_name, category_id=category_id)
+                display_name = dir_name
+            spec = self.load_test_spec(dir_name, display_name, category_id=category_id)
         if study is None:
             study = self.create_study(uid=as_user)
         workflow_model = StudyService._create_workflow_model(study, spec)

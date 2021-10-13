@@ -14,7 +14,7 @@ from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
-from crc.models.file import FileModel, File
+from crc.models.file import FileModel, File, FileSchema
 from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
@@ -143,7 +143,9 @@ class StudyService(object):
             raise ApiError('study_not_found', 'No study found with id = %d' % study_id)
 
         people = db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id).all()
-        owner = StudyAssociated(uid=study.user_uid, role='owner', send_email=True, access=True)
+        ldap_info = LdapService.user_info(study.user_uid)
+        owner = StudyAssociated(uid=study.user_uid, role='owner', send_email=True, access=True,
+                                ldap_info=ldap_info)
         people.append(owner)
         return people
 
@@ -294,15 +296,10 @@ class StudyService(object):
             token = 'not_available'
             if hasattr(flask.g, 'user'):
                 token = flask.g.user.encode_auth_token()
-            for file in doc_files:
-                file_data = {'file_id': file.id,
-                             'name': file.name,
-                             'url': app.config['APPLICATION_ROOT'] +
-                                    'file/' + str(file.id) +
-                                    '/download?auth_token=' +
-                                    urllib.parse.quote_plus(token),
-                             'workflow_id': file.workflow_id
-                             }
+            for file_model in doc_files:
+                file = File.from_models(file_model, FileService.get_file_data(file_model.id), [])
+                file_data = FileSchema().dump(file)
+                del file_data['document']
                 data = db.session.query(DataStoreModel).filter(DataStoreModel.file_id == file.id).all()
                 data_store_data = {}
                 for d in data:
@@ -433,29 +430,39 @@ class StudyService(object):
     def _update_status_of_workflow_meta(workflow_metas, status):
         # Update the status on each workflow
         warnings = []
+        unused_statuses = status.copy() # A list of all the statuses that are not used.
         for wfm in workflow_metas:
+            unused_statuses.pop(wfm.workflow_spec_id, None)
             wfm.state_message = ''
             # do we have a status for you
-            if wfm.name not in status.keys():
-                warnings.append(ApiError("missing_status", "No status specified for workflow %s" % wfm.name))
+            if wfm.workflow_spec_id not in status.keys():
+                warnings.append(ApiError("missing_status", "No status information provided about workflow %s" % wfm.workflow_spec_id))
                 continue
-            if not isinstance(status[wfm.name], dict):
+            if not isinstance(status[wfm.workflow_spec_id], dict):
                 warnings.append(ApiError(code='invalid_status',
-                                         message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.name}. Status is {status[wfm.name]}'))
+                                         message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
                 continue
-            if 'status' not in status[wfm.name].keys():
-                warnings.append(ApiError("missing_status",
-                                         "Workflow '%s' does not have a status setting" % wfm.name))
+            if 'message' in status[wfm.workflow_spec_id].keys():
+                wfm.state_message = status[wfm.workflow_spec_id]['message']
+            if 'status' not in status[wfm.workflow_spec_id].keys():
+                warnings.append(ApiError("missing_status_key",
+                                         "Workflow '%s' is present in master workflow, but doesn't have a status" % wfm.workflow_spec_id))
                 continue
-            if not WorkflowState.has_value(status[wfm.name]['status']):
+            if not WorkflowState.has_value(status[wfm.workflow_spec_id]['status']):
                 warnings.append(ApiError("invalid_state",
                                          "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                             wfm.name, status[wfm.name]['status'], ",".join(WorkflowState.list())
+                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'], ",".join(WorkflowState.list())
                                          )))
                 continue
-            wfm.state = WorkflowState[status[wfm.name]['status']]
-            if 'message' in status[wfm.name].keys():
-                wfm.state_message = status[wfm.name]['message']
+
+            wfm.state = WorkflowState[status[wfm.workflow_spec_id]['status']]
+
+        for status in unused_statuses:
+            if isinstance(unused_statuses[status], dict) and 'status' in unused_statuses[status]:
+                warnings.append(ApiError("unmatched_status", "The master workflow provided a status for '%s' a "
+                                                         "workflow that doesn't seem to exist." %
+                                                         status))
+
         return warnings
 
     @staticmethod

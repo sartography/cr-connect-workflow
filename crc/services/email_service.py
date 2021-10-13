@@ -17,7 +17,7 @@ class EmailService(object):
 
     @staticmethod
     def add_email(subject, sender, recipients, content, content_html,
-                  cc=None, bcc=None, study_id=None, reply_to=None, attachment_files=None):
+                  cc=None, bcc=None, study_id=None, reply_to=None, attachment_files=None, workflow_spec_id=None):
         """We will receive all data related to an email and store it"""
 
         # Find corresponding study - if any
@@ -27,7 +27,8 @@ class EmailService(object):
 
         # Create EmailModel
         email_model = EmailModel(subject=subject, sender=sender, recipients=str(recipients),
-                                 content=content, content_html=content_html, study=study)
+                                 content=content, content_html=content_html, study=study,
+                                 cc=cc, bcc=bcc, workflow_spec_id=workflow_spec_id)
 
         # Send mail
         try:
@@ -52,6 +53,7 @@ class EmailService(object):
 
         db.session.add(email_model)
         db.session.commit()
+        return email_model
 
     @staticmethod
     def check_valid_email(email):
@@ -64,11 +66,11 @@ class EmailService(object):
 
     def get_rendered_content(self, message, data):
         template = Template(message)
-        rendered = template.render(data)
-        rendered_markdown = markdown.markdown(rendered)
-        wrapped = self.get_cr_connect_wrapper(rendered_markdown)
+        content = template.render(data)
+        rendered_markdown = markdown.markdown(content, extensions=['nl2br'])
+        content_html = self.get_cr_connect_wrapper(rendered_markdown)
 
-        return rendered, wrapped
+        return content, content_html
 
     @staticmethod
     def get_cr_connect_wrapper(email_body):

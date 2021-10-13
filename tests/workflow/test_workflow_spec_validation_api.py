@@ -9,6 +9,7 @@ from tests.base_test import BaseTest
 from crc import session, app
 from crc.api.common import ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStudySchema
+from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.workflow_service import WorkflowService
 
@@ -147,3 +148,49 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertIn('enum_with_default', final_data)
         self.assertEqual('maybe', final_data['enum_with_default']['value'])
 
+    def test_invalid_custom_field(self):
+        self.load_example_data()
+        errors = self.validate_workflow("invalid_custom_field")
+        self.assertEqual(1, len(errors))
+        self.assertEqual("invalid_field_type", errors[0]['code'])
+
+    @patch('crc.services.study_service.StudyService._get_study_status')
+    def test_disabled_spec_validation(self, mock_status):
+        """A disabled workflow spec should fail validation"""
+        app.config['PB_ENABLED'] = True
+        self.load_example_data()
+        study_model = session.query(StudyModel).first()
+
+        # workflow spec to validate
+        spec_model = WorkflowSpecModel(id='data_security_plan',
+                                       display_name='Data Security Plan',
+                                       description='Data Security Plan',
+                                       is_master_spec=False,
+                                       category_id=0,
+                                       display_order=0,
+                                       standalone=False,
+                                       library=False)
+        session.add(spec_model)
+        session.commit()
+
+        # This response sets the status for data_security_plan to disabled
+        status_response = self.protocol_builder_response('_get_study_status.json')
+        mock_status.return_value = json.loads(status_response)[0]
+
+        # This should raise an ApiError which we can see in the json data
+        rv = self.app.get('/v1.0/workflow-specification/%s/validate?study_id=%s' % (spec_model.id, study_model.id), headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data())
+        self.assertEqual(1, len(json_data))
+        api_error = json_data[0]
+        self.assertEqual('disabled_workflow', api_error['code'])
+        self.assertEqual('This workflow is disabled. This is my mocked disable message.', api_error['message'])
+
+
+    def test_date_generation_during_validation(self):
+        # We hit a bug where the date was generated as a part of a value_expression during validation, but
+        # it wasn't converted to an ISO String as it would be if submitted through the API.
+        # subsequent attempts to work with the expected date_string failed, because it was already a date.
+        # This can't happen in the front end code base, but it was breaking validation.
+        errors = self.validate_workflow("date_value_expression")
+        self.assertEqual(0, len(errors))

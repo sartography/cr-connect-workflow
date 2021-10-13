@@ -1,13 +1,18 @@
 import enum
+import urllib
 
+import connexion
+import flask
+from flask import url_for
 from marshmallow import INCLUDE, EXCLUDE, Schema
+from marshmallow.fields import Method
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import deferred, relationship
 
-from crc import db, ma
+from crc import db, ma, app
 from crc.models.data_store import DataStoreModel
 
 
@@ -146,9 +151,20 @@ class FileSchema(Schema):
         fields = ["id", "name", "is_status", "is_reference", "content_type",
                   "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
                   "irb_doc_code", "last_modified", "latest_version", "type", "size", "data_store",
-                  "document", "user_uid"]
+                  "document", "user_uid", "url"]
         unknown = INCLUDE
     type = EnumField(FileType)
+    url = Method("get_url")
+
+    def get_url(self, obj):
+        token = 'not_available'
+        if obj.id is None:
+            return "" # We can't return a url for a file that isn't stored yet.
+        file_url = url_for("/v1_0.crc_api_file_get_file_data_link", file_id=obj.id, _external=True)
+        if hasattr(flask.g, 'user'):
+            token = flask.g.user.encode_auth_token()
+        url = file_url + '?auth_token=' + urllib.parse.quote_plus(token)
+        return url
 
 
 class LookupFileModel(db.Model):

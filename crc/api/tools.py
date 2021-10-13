@@ -1,9 +1,10 @@
 import hashlib
 import io
 import json
+import inspect
+import os
 
 import connexion
-from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
 from flask import send_file
 from jinja2 import Template, UndefinedError
 
@@ -58,11 +59,17 @@ def list_scripts():
     scripts = Script.get_all_subclasses()
     script_meta = []
     for script_class in scripts:
-        script_meta.append(
-            {
-                "name": script_class.__name__,
-                "description": script_class().get_description()
-            })
+        file_path = inspect.getfile(script_class)
+        file_name = os.path.basename(file_path)
+        # This grabs the filename without the suffix,
+        # which is what configurators actually use in a script task.
+        handle = os.path.splitext(file_name)[0]
+        meta_data = {
+            "name": script_class.__name__,
+            "handle": handle,
+            "description": script_class().get_description()
+        }
+        script_meta.append(meta_data)
     return script_meta
 
 
@@ -84,7 +91,7 @@ def evaluate_python_expression(body):
     of the same hash are unnecessary. """
     try:
         script_engine = CustomBpmnScriptEngine()
-        result = script_engine.eval(body['expression'], body['data'])
+        result = script_engine._evaluate(body['expression'], **body['data'])
         return {"result": result, "expression": body['expression'], "key": body['key']}
     except Exception as e:
         return {"result": False, "expression": body['expression'], "key": body['key'], "error": str(e)}

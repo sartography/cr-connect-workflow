@@ -8,6 +8,8 @@ from crc.services.user_service import UserService
 
 from crc import session, app
 from crc.models.study import StudyModel
+from crc.models.ldap import LdapSchema
+from crc.services.ldap_service import LdapService
 from crc.models.user import UserModel
 from crc.api.study import user_studies
 from crc.services.study_service import StudyService
@@ -53,17 +55,20 @@ class TestSudySponsorsScript(BaseTest):
         self.assertIn('sponsors', data)
         self.assertIn('out', data)
         print(data['out'])
-        self.assertDictEqual({'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
+        dhf8r_info = LdapSchema().dump(LdapService.user_info('dhf8r'))
+        lb3dp_info = LdapSchema().dump(LdapService.user_info('lb3dp'))
+
+        self.assertDictEqual({'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True, 'ldap_info': dhf8r_info},
                              data['out'][1])
-        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True},
+        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True, 'ldap_info': lb3dp_info},
                              data['out'][0])
-        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True},
+        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperDude', 'send_email': False, 'access': True, 'ldap_info': lb3dp_info},
                              data['out2'])
-        self.assertDictEqual({'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True},
+        self.assertDictEqual({'uid': 'dhf8r', 'role': 'owner', 'send_email': True, 'access': True, 'ldap_info': dhf8r_info},
                              data['out3'][1])
-        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True},
+        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True, 'ldap_info': lb3dp_info},
                              data['out3'][0])
-        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True},
+        self.assertDictEqual({'uid': 'lb3dp', 'role': 'SuperGal', 'send_email': False, 'access': True, 'ldap_info': lb3dp_info},
                              data['out4'])
         self.assertEqual(3, len(data['sponsors']))
 

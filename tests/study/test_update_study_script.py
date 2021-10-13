@@ -14,9 +14,12 @@ class TestUpdateStudyScript(BaseTest):
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
         details = Box({
-            "label": "My New Title",
-            "short": "My New Short Title",
-            "value": "dhf8r"})
+            "title": "My New Title",
+            "short_title": "My New Short Title",
+            "pi": "dhf8r",
+            "short_name": "My Short Name",
+            "proposal_name": "My Proposal Name"
+        })
 
 
         script = UpdateStudy()
@@ -26,9 +29,14 @@ class TestUpdateStudyScript(BaseTest):
         # evaluated before they are passed to the script -
         # this allows us to do a lot more things like strings, functions, etc.
         # and it makes the arguments less confusing to use.
-        script.do_task(task, workflow.study_id, workflow.id, title = details.label,
-                                                             short_title = details.short,
-                                                             pi = details.value)
-        self.assertEqual("My New Title", workflow.study.title)
-        self.assertEqual("My New Short Title", workflow.study.short_title)
-        self.assertEqual("dhf8r", workflow.study.primary_investigator_id)
+        script.do_task(task, workflow.study_id, workflow.id,
+                       title=details.title,
+                       short_title=details.short_title,
+                       pi=details.pi,
+                       short_name=details.short_name,
+                       proposal_name=details.proposal_name)
+        self.assertEqual(details.title, workflow.study.title)
+        self.assertEqual(details.short_title, workflow.study.short_title)
+        self.assertEqual(details.pi, workflow.study.primary_investigator_id)
+        self.assertEqual(details.short_name, workflow.study.short_name)
+        self.assertEqual(details.proposal_name, workflow.study.proposal_name)

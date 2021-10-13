@@ -13,13 +13,13 @@ class ResetWorkflow(Script):
             I.e., a new PI"""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        return hasattr(kwargs, 'workflow_name')
+        return hasattr(kwargs, 'reset_id')
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
-        if 'workflow_name' in kwargs.keys():
-            workflow_name = kwargs['workflow_name']
-            workflow_spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(name=workflow_name).first()
+        if 'reset_id' in kwargs.keys():
+            reset_id = kwargs['reset_id']
+            workflow_spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=reset_id).first()
             if workflow_spec:
                 workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(
                     workflow_spec_id=workflow_spec.id,
@@ -35,7 +35,7 @@ class ResetWorkflow(Script):
             else:
                 raise ApiError(code='missing_workflow_spec',
                                message=f'No WorkflowSpecModel returned. \
-                                        name: {workflow_name}')
+                                        id: {workflow_id}')
         else:
-            raise ApiError(code='missing_workflow_name',
-                           message='Reset workflow requires a workflow name')
+            raise ApiError(code='missing_workflow_id',
+                           message='Reset workflow requires a workflow id')

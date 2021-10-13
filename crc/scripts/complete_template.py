@@ -18,8 +18,7 @@ from crc.services.workflow_processor import WorkflowProcessor
 class CompleteTemplate(Script):
 
     def get_description(self):
-        return """        
-Using the Jinja template engine, takes data available in the current task, and uses it to populate 
+        return """Using the Jinja template engine, takes data available in the current task, and uses it to populate 
 a word document that contains Jinja markup.  Please see https://docxtpl.readthedocs.io/en/latest/ 
 for more information on exact syntax.
 Takes two arguments:

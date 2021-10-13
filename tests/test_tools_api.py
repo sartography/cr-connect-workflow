@@ -36,6 +36,7 @@ class TestToolsApi(BaseTest):
         scripts = json.loads(rv.get_data(as_text=True))
         self.assertTrue(len(scripts) > 1)
         self.assertIsNotNone(scripts[0]['name'])
+        self.assertIsNotNone(scripts[0]['handle'])
         self.assertIsNotNone(scripts[0]['description'])
 
     def test_eval_hide_expression(self):

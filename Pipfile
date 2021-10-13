@@ -12,7 +12,7 @@ coverage = "*"
 alembic = "*"
 coverage = "*"
 docxtpl = "*"
-flask = "~=1.1.4" # as of 9/2021, Connexion does not het support flask 2.
+flask = "<2"
 flask-admin = "*"
 flask-bcrypt = "*"
 flask-cors = "*"
@@ -45,5 +45,8 @@ pygithub = "*"
 apscheduler = "*"
 connexion = {extras = [ "swagger-ui",], version = "*"}
 sentry-sdk = {extras = [ "flask",], version = "==0.14.4"}
-spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow.git", editable = true}
-importlib-resources = "*"
+dateparser = "*"
+spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow"}
+
+[requires]
+python_version = "3.8"

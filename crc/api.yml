@@ -166,6 +166,7 @@ paths:
           description: The remote endpoint
           schema:
             type: string
+            example: https://testing.crconnect.uvadcos.io/api
       tags:
         - Workflow Sync Frontend API
       responses:
@@ -596,6 +597,36 @@ paths:
       responses:
         '204':
           description: The workflow specification has been removed.
+  /workflow-specification/{spec_id}/reorder:
+    parameters:
+      - name: spec_id
+        in: path
+        required: true
+        description: The unique id of an existing workflow specification to validate.
+        schema:
+          type: string
+      - name: direction
+        in: query
+        required: true
+        description: The direction we want to move the spec - `up` or `down`
+        schema:
+          type: string
+          example: up
+    put:
+      operationId: crc.api.workflow.reorder_workflow_specification
+      summary: Move the workflow spec up or down in the display order
+      tags:
+        - Workflow Specifications
+      responses:
+        '200':
+          description: An array of workflow specifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpec"
+
   /workflow-specification/{spec_id}/validate:
     parameters:
       - name: spec_id
@@ -713,6 +744,35 @@ paths:
       responses:
         '204':
           description: The workflow spec category has been removed.
+  /workflow-specification-category/{cat_id}/reorder:
+    parameters:
+      - name: cat_id
+        in: path
+        required: true
+        description: The unique id of an existing workflow spec category to modify.
+        schema:
+          type: string
+      - name: direction
+        in: query
+        required: true
+        description: The direction you want to move the category - `up` or `down`
+        schema:
+          type: string
+          example: up
+    put:
+      operationId: crc.api.workflow.reorder_workflow_spec_category
+      summary: Move the workflow spec category up or down in the display order
+      tags:
+        - Workflow Specification Category
+      responses:
+        '200':
+          description: An array of workflow spec categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSpecCategory"
   /file:
     parameters:
       - name: workflow_spec_id
@@ -995,6 +1055,27 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/File"
+    post:
+      operationId: crc.api.file.add_reference_file
+      summary: Add a new reference file.
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Metadata about the new reference file, but not the file content.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
   /reference_file/{name}:
     parameters:
       - name: name
@@ -1036,6 +1117,39 @@ paths:
       responses:
         '200':
           description: Returns the actual file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+
+
+  /dmn_from_ss:
+#    parameters:
+#      - name: workflow_spec_id
+#        in: query
+#        required: true
+#        description: The unique id of a workflow specification
+#        schema:
+#          type: string
+    post:
+      operationId: crc.api.file.dmn_from_ss
+      summary: Create a DMN table from a spreadsheet
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: DMN file for workflow spec
           content:
             application/octet-stream:
               schema:
@@ -1733,7 +1847,6 @@ components:
         new:
           type: boolean
           example : false
-
     WorkflowSpecAll:
       properties:
         workflow_spec_id :

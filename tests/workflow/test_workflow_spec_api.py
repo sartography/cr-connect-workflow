@@ -29,7 +29,7 @@ class TestWorkflowSpec(BaseTest):
         num_before = session.query(WorkflowSpecModel).count()
         category_id = session.query(WorkflowSpecCategoryModel).first().id
         category_count = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
-        spec = WorkflowSpecModel(id='make_cookies', name='make_cookies', display_name='Cooooookies',
+        spec = WorkflowSpecModel(id='make_cookies', display_name='Cooooookies',
                                  description='Om nom nom delicious cookies', category_id=category_id,
                                  standalone=False)
         rv = self.app.post('/v1.0/workflow-specification',
@@ -58,7 +58,7 @@ class TestWorkflowSpec(BaseTest):
         self.load_example_data()
 
         category_id = 99
-        category = WorkflowSpecCategoryModel(id=category_id, name='trap', display_name="It's a trap!", display_order=0)
+        category = WorkflowSpecCategoryModel(id=category_id, display_name="It's a trap!", display_order=0)
         session.add(category)
         session.commit()
 
@@ -104,6 +104,34 @@ class TestWorkflowSpec(BaseTest):
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertEqual(num_files_after + num_workflows_after, 0)
 
+    def test_display_order_after_delete_spec(self):
+        self.load_example_data()
+        workflow_spec_category = session.query(WorkflowSpecCategoryModel).first()
+        spec_model_1 = WorkflowSpecModel(id='test_spec_1', display_name='Test Spec 1',
+                                         description='Test Spec 1 Description', category_id=workflow_spec_category.id,
+                                         display_order=1, standalone=False)
+        spec_model_2 = WorkflowSpecModel(id='test_spec_2', display_name='Test Spec 2',
+                                         description='Test Spec 2 Description', category_id=workflow_spec_category.id,
+                                         display_order=2, standalone=False)
+        spec_model_3 = WorkflowSpecModel(id='test_spec_3', display_name='Test Spec 3',
+                                         description='Test Spec 3 Description', category_id=workflow_spec_category.id,
+                                         display_order=3, standalone=False)
+        session.add(spec_model_1)
+        session.add(spec_model_2)
+        session.add(spec_model_3)
+        session.commit()
+
+        self.app.delete('/v1.0/workflow-specification/test_spec_2', headers=self.logged_in_headers())
+
+        test_order = 0
+        specs = session.query(WorkflowSpecModel).\
+            filter(WorkflowSpecModel.category_id == workflow_spec_category.id).\
+            order_by(WorkflowSpecModel.display_order).\
+            all()
+        for test_spec in specs:
+            self.assertEqual(test_order, test_spec.display_order)
+            test_order += 1
+
     def test_get_standalone_workflow_specs(self):
         self.load_example_data()
         category = session.query(WorkflowSpecCategoryModel).first()
@@ -131,7 +159,6 @@ class TestWorkflowSpec(BaseTest):
         count = session.query(WorkflowSpecCategoryModel).count()
         category = WorkflowSpecCategoryModel(
             id=count,
-            name='another_test_category',
             display_name='Another Test Category',
             display_order=0
         )
@@ -141,18 +168,18 @@ class TestWorkflowSpec(BaseTest):
                            data=json.dumps(WorkflowSpecCategoryModelSchema().dump(category))
                            )
         self.assert_success(rv)
-        result = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.name=='another_test_category').first()
+        result = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.id==count).first()
         self.assertEqual('Another Test Category', result.display_name)
         self.assertEqual(count, result.id)
 
     def test_update_workflow_spec_category(self):
         self.load_example_data()
         category = session.query(WorkflowSpecCategoryModel).first()
-        category_name_before = category.name
-        new_category_name = category_name_before + '_asdf'
-        self.assertNotEqual(category_name_before, new_category_name)
+        display_name_before = category.display_name
+        new_display_name = display_name_before + '_asdf'
+        self.assertNotEqual(display_name_before, new_display_name)
 
-        category.name = new_category_name
+        category.display_name = new_display_name
 
         rv = self.app.put(f'/v1.0/workflow-specification-category/{category.id}',
                           content_type="application/json",
@@ -160,4 +187,48 @@ class TestWorkflowSpec(BaseTest):
                           data=json.dumps(WorkflowSpecCategoryModelSchema().dump(category)))
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        self.assertEqual(new_category_name, json_data['name'])
+        self.assertEqual(new_display_name, json_data['display_name'])
+
+    def test_delete_workflow_spec_category(self):
+        self.load_example_data()
+        category_model_1 = WorkflowSpecCategoryModel(
+            id=1,
+            display_name='Test Category 1',
+            display_order=1
+        )
+        category_model_2 = WorkflowSpecCategoryModel(
+            id=2,
+            display_name='Test Category 2',
+            display_order=2
+        )
+        category_model_3 = WorkflowSpecCategoryModel(
+            id=3,
+            display_name='Test Category 3',
+            display_order=3
+        )
+        session.add(category_model_1)
+        session.add(category_model_2)
+        session.add(category_model_3)
+        session.commit()
+
+        self.app.delete('/v1.0/workflow-spec-category/2', headers=self.logged_in_headers())
+        test_order = 0
+        categories = session.query(WorkflowSpecCategoryModel).order_by(WorkflowSpecCategoryModel.display_order).all()
+        for test_category in categories:
+            self.assertEqual(test_order, test_category.display_order)
+            test_order += 1
+
+    def test_add_library_with_category_id(self):
+        self.load_example_data()
+        category_id = session.query(WorkflowSpecCategoryModel).first().id
+        spec = WorkflowSpecModel(id='test_spec', display_name='Test Spec',
+                                 description='Library with a category id', category_id=category_id,
+                                 standalone=False, library=True)
+        rv = self.app.post('/v1.0/workflow-specification',
+                           headers=self.logged_in_headers(),
+                           content_type="application/json",
+                           data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+        self.assert_success(rv)
+        # libraries don't get category_ids
+        # so, the category_id should not get set
+        self.assertIsNone(rv.json['category_id'])

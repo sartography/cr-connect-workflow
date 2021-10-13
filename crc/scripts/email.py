@@ -18,8 +18,7 @@ class Email(Script):
        You can also specify cc, bcc, reply_to, and attachments"""
 
     def get_description(self):
-        return """
-Creates an email, using the provided `subject` and `recipients` arguments, which are required.
+        return """Creates an email, using the provided `subject` and `recipients` arguments, which are required.
 The `Element Documentation` field in the script task must contain markdown that becomes the body of the email message.
 
 You can also provide `cc`, `bcc`, `reply_to` and `attachments` arguments.  
@@ -67,11 +66,13 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                            message="Email script requires a subject and at least one email recipient as arguments")
 
         if recipients:
+            wf_model = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+            workflow_spec_id = wf_model.workflow_spec_id
             message = task.task_spec.documentation
             data = task.data
             try:
                 content, content_html = EmailService().get_rendered_content(message, data)
-                EmailService.add_email(
+                email_model = EmailService.add_email(
                     subject=subject,
                     sender=app.config['DEFAULT_SENDER'],
                     recipients=recipients,
@@ -81,7 +82,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                     bcc=bcc,
                     study_id=study_id,
                     reply_to=reply_to,
-                    attachment_files=files
+                    attachment_files=files,
+                    workflow_spec_id=workflow_spec_id
                 )
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -90,6 +92,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
                 raise e
+            return email_model.id
 
     def get_email_addresses(self, users, study_id):
         emails = []

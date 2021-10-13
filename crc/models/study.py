@@ -10,6 +10,7 @@ from sqlalchemy import func
 from crc import db, ma
 from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileModel, SimpleFileSchema, FileSchema
+from crc.models.ldap import LdapModel, LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
     WorkflowModel
@@ -53,6 +54,8 @@ class StudyModel(db.Model):
     enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
     #events = db.relationship("TaskEventModel")
     events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
+    short_name = db.Column(db.String, nullable=True)
+    proposal_name = db.Column(db.String, nullable=True)
 
     def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
         self.title = pbs.TITLE
@@ -76,13 +79,17 @@ class StudyAssociated(db.Model):
     role = db.Column(db.String, nullable=True)
     send_email = db.Column(db.Boolean, nullable=True)
     access = db.Column(db.Boolean, nullable=True)
+    ldap_info = db.relationship(LdapModel)
 
 
 class StudyAssociatedSchema(ma.Schema):
     class Meta:
-        fields=['uid', 'role', 'send_email', 'access']
+        fields=['uid', 'role', 'send_email', 'access', 'ldap_info']
         model = StudyAssociated
         unknown = INCLUDE
+    ldap_info = fields.Nested(LdapSchema, dump_only=True)
+
+
 
 class StudyEvent(db.Model):
     __tablename__ = 'study_event'
@@ -97,12 +104,11 @@ class StudyEvent(db.Model):
 
 
 class WorkflowMetadata(object):
-    def __init__(self, id, name = None, display_name = None, description = None, spec_version = None,
+    def __init__(self, id, display_name = None, description = None, spec_version = None,
                  category_id  = None, category_display_name  = None, state: WorkflowState  = None,
                  status: WorkflowStatus  = None, total_tasks  = None, completed_tasks  = None,
-                 is_review=None,display_order = None, state_message = None):
+                 is_review=None,display_order = None, state_message = None, workflow_spec_id=None):
         self.id = id
-        self.name = name
         self.display_name = display_name
         self.description = description
         self.spec_version = spec_version
@@ -115,6 +121,7 @@ class WorkflowMetadata(object):
         self.completed_tasks = completed_tasks
         self.is_review = is_review
         self.display_order = display_order
+        self.workflow_spec_id = workflow_spec_id
 
 
     @classmethod
@@ -122,7 +129,6 @@ class WorkflowMetadata(object):
         is_review = FileService.is_workflow_review(workflow.workflow_spec_id)
         instance = cls(
             id=workflow.id,
-            name=workflow.workflow_spec.name,
             display_name=workflow.workflow_spec.display_name,
             description=workflow.workflow_spec.description,
             spec_version=workflow.spec_version(),
@@ -133,7 +139,8 @@ class WorkflowMetadata(object):
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,
             is_review=is_review,
-            display_order=workflow.workflow_spec.display_order
+            display_order=workflow.workflow_spec.display_order,
+            workflow_spec_id=workflow.workflow_spec_id
         )
         return instance
 
@@ -143,7 +150,7 @@ class WorkflowMetadataSchema(ma.Schema):
     status = EnumField(WorkflowStatus)
     class Meta:
         model = WorkflowMetadata
-        additional = ["id", "name", "display_name", "description",
+        additional = ["id", "display_name", "description",
                  "total_tasks", "completed_tasks", "display_order",
                       "category_id", "is_review", "category_display_name", "state_message"]
         unknown = INCLUDE
@@ -152,23 +159,23 @@ class WorkflowMetadataSchema(ma.Schema):
 class Category(object):
     def __init__(self, model: WorkflowSpecCategoryModel):
         self.id = model.id
-        self.name = model.name
         self.display_name = model.display_name
         self.display_order = model.display_order
+        self.admin = model.admin
 
 
 class CategorySchema(ma.Schema):
     workflows = fields.List(fields.Nested(WorkflowMetadataSchema), dump_only=True)
     class Meta:
         model = Category
-        additional = ["id", "name", "display_name", "display_order"]
+        additional = ["id", "display_name", "display_order", "admin"]
         unknown = INCLUDE
 
 
 class Study(object):
 
     def __init__(self, title, short_title, last_updated, primary_investigator_id, user_uid,
-                 id=None, status=None, irb_status=None, comment="",
+                 id=None, status=None, irb_status=None, short_name=None, proposal_name=None, comment="",
                  sponsor="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, events_history=[],
                  last_activity_user="",last_activity_date =None,create_user_display="", **argsv):
@@ -192,6 +199,8 @@ class Study(object):
         self.files = files
         self.enrollment_date = enrollment_date
         self.events_history = events_history
+        self.short_name = short_name
+        self.proposal_name = proposal_name
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
@@ -253,13 +262,15 @@ class StudySchema(ma.Schema):
     files = fields.List(fields.Nested(FileSchema), dump_only=True)
     enrollment_date = fields.Date(allow_none=True)
     events_history = fields.List(fields.Nested('StudyEventSchema'), dump_only=True)
+    short_name = fields.String(allow_none=True)
+    proposal_name = fields.String(allow_none=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "short_title", "last_updated", "primary_investigator_id", "user_uid",
                       "sponsor", "ind_number", "files", "enrollment_date",
-                      "create_user_display", "last_activity_date","last_activity_user",
-                      "events_history"]
+                      "create_user_display", "last_activity_date", "last_activity_user",
+                      "events_history", "short_name", "proposal_name"]
         unknown = INCLUDE
 
     @marshmallow.post_load

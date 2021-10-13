@@ -12,8 +12,7 @@ class UpdateStudyAssociates(Script):
 
 
     def get_description(self):
-        return """
-Allows you to associate other users with a study - only 'uid' is a required keyword argument
+        return """Allows you to associate other users with a study - only 'uid' is a required keyword argument
 
 
 An empty list will delete the existing Associated list (except owner)

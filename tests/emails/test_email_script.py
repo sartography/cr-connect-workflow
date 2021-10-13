@@ -16,7 +16,7 @@ class TestEmailScript(BaseTest):
 
         with mail.record_messages() as outbox:
 
-            self.complete_form(workflow, task, task_data)
+            workflow_api = self.complete_form(workflow, task, task_data)
 
             self.assertEqual(len(outbox), 1)
             self.assertEqual(outbox[0].subject, 'Camunda Email Subject')
@@ -28,6 +28,12 @@ class TestEmailScript(BaseTest):
             # Approver is present
             self.assertIn(task_data['ApprvlApprvr1'], outbox[0].body)
             self.assertIn(task_data['ApprvlApprvr1'], outbox[0].html)
+
+            # Test nl2br formatting
+            self.assertIn('<strong>Test Some Formatting</strong><br />', outbox[0].html)
+
+            # Correct From field
+            self.assertEqual('uvacrconnect@virginia.edu', outbox[0].sender)
 
             db_emails = EmailModel.query.count()
             self.assertEqual(db_emails, 1)

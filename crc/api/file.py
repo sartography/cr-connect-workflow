@@ -1,4 +1,5 @@
 import io
+from datetime import datetime
 from typing import List
 
 import connexion
@@ -116,6 +117,13 @@ def set_reference_file(name):
     return FileSchema().dump(to_file_api(file_model))
 
 
+def add_reference_file():
+    file = connexion.request.files['file']
+    file_model = FileService.add_reference_file(name=file.filename, content_type=file.content_type,
+                                                binary_data=file.stream.read())
+    return FileSchema().dump(to_file_api(file_model))
+
+
 def update_file_data(file_id):
     file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     file = connexion.request.files['file']
@@ -181,3 +189,15 @@ def update_file_info(file_id, body):
 
 def delete_file(file_id):
     FileService.delete_file(file_id)
+
+
+def dmn_from_ss():
+    file = connexion.request.files['file']
+    result = FileService.dmn_from_spreadsheet(file)
+    return send_file(
+        io.BytesIO(result),
+        attachment_filename='temp_dmn.dmn',
+        mimetype='text/xml',
+        cache_timeout=-1,  # Don't cache these files on the browser.
+        last_modified=datetime.now()
+    )
