@@ -412,7 +412,7 @@ class WorkflowProcessor(object):
                 if task._is_descendant_of(last_user_task):
                     return task
             for task in ready_tasks:
-                if self.bpmn_workflow.last_task and task.parent == self.bpmn_workflow.last_task.parent:
+                if self.bpmn_workflow.last_task and task.parent == last_user_task.parent:
                     return task
 
             return ready_tasks[0]
