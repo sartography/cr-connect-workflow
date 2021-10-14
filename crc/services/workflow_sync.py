@@ -304,7 +304,7 @@ class WorkflowSyncService(object):
         # Set the category
         if specdict['category'] is not None:
             local_category = session.query(WorkflowSpecCategoryModel).\
-                filter(WorkflowSpecCategoryModel.name == specdict['category']['name']).first()
+                filter(WorkflowSpecCategoryModel.display_name == specdict['category']['display_name']).first()
             if local_category is None:
                 local_category = WorkflowSpecCategoryModelSchema().load(specdict['category'], session=session,
                                                                     instance=local_category)
