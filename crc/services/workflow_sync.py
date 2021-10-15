@@ -74,10 +74,10 @@ class WorkflowSyncService(object):
 
     @staticmethod
     def publish_remote_repository(remote,message):
-        url = remote + '/v1.0/file/needs_publish'
+        url = remote + '/v1.0/workflow_sync/need_publish'
         result = WorkflowSyncService.__make_request(url)
         if result.json == True:
-            url = remote + '/v1.0/file/publish'
+            url = remote + '/v1.0/workflow_sync/publish'
             return WorkflowSyncService.__make_request(url,body={'message':message},post=True)
         return result
 

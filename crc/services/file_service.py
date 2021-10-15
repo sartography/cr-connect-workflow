@@ -1,15 +1,16 @@
 import base64
 import hashlib
+import io
 import json
 import os
 from datetime import datetime
 import time
-import github
+
 import random
 import string
 
 import pandas as pd
-from github import Github, GithubObject, UnknownObjectException
+from github import Github, InputGitTreeElement, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
@@ -408,7 +409,7 @@ class FileService(object):
             for file_data in files:
                 file = FileDataModel.query.filter(FileDataModel.file_model_id == file_data.id).order_by(
                      FileDataModel.version.desc()).first()
-                element1 = github.InputGitTreeElement(
+                element1 = InputGitTreeElement(
                     path=github_escape_dir(file_data.name) ,
                     mode='100644', type='blob',
                     sha=file.sha)
@@ -416,14 +417,14 @@ class FileService(object):
             if len(folder) > 0:
                 github_pause('create folder for ' + spec.display_name)
                 tree = repo.create_git_tree(folder)
-                element = github.InputGitTreeElement(
+                element = InputGitTreeElement(
                     path=github_escape_dir(spec.display_name),
                     mode='040000', type='tree',
                     sha=tree.sha)
                 catfolder.append(element)
         github_pause('create folder for category ' + name)
         cattree = repo.create_git_tree(catfolder)
-        element = github.InputGitTreeElement(
+        element = InputGitTreeElement(
             path=github_escape_dir(name),
             mode='040000', type='tree',
             sha=cattree.sha)
@@ -432,8 +433,6 @@ class FileService(object):
 
     @staticmethod
     def publish_to_github(commitmsg):
-        #FileService.clean_old_files()
-        # housekeeping - set up for commits
         target_branch = app.config['TARGET_BRANCH'] if app.config['TARGET_BRANCH'] else 'main'
         gh_token = app.config['GITHUB_TOKEN']
         github_repo = app.config['GITHUB_REPO']
@@ -471,6 +470,7 @@ class FileService(object):
         commit = repo.create_git_commit(commitmsg, tree, [parent])
         main_ref = repo.get_git_ref('heads/'+target_branch)
         main_ref.edit(sha=commit.sha)
+        return {'updated':True}
 
     @staticmethod
     def dmn_from_spreadsheet(ss_data):

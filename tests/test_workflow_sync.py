@@ -98,10 +98,10 @@ class TestWorkflowSync(BaseTest):
         wf_spec.display_order = 0
         db.session.add(wf_spec)
         db.session.commit()
-        FileService.add_workflow_spec_file(wf_spec,'dummyfile.txt','text',b'this is a test')
+        FileService.add_workflow_spec_file(wf_spec, 'dummyfile.txt', 'text', b'this is a test')
         # after setting up the test - I realized that this doesn't return anything for
         # a workflow that is new locally - it just returns nothing
-        response = get_changed_workflows('localhost:0000') #endpoint is not used due to mock
+        response = get_changed_workflows('localhost:0000',keep_new_local=True) #endpoint is not used due to mock
         self.assertIsNotNone(response)
         self.assertEqual(response,[])
 
