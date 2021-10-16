@@ -109,6 +109,7 @@ Takes two arguments:
         return image_file_data
 
     def make_template(self, binary_stream, context, image_file_data=None):
+        # TODO: Move this into the jinja_service?
         doc = DocxTemplate(binary_stream)
         doc_context = copy.deepcopy(context)
         doc_context = self.rich_text_update(doc_context)
