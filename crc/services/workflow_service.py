@@ -37,6 +37,7 @@ from crc.services.data_store_service import DataStoreBase
 
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
+from crc.services.jinja_service import JinjaService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
@@ -717,8 +718,9 @@ class WorkflowService(object):
         """Runs all the property values through the Jinja2 processor to inject data."""
         for k, v in props.items():
             try:
-                template = Template(v)
-                props[k] = template.render(**spiff_task.data)
+                # template = Template(v)
+                # props[k] = template.render(**spiff_task.data)
+                props[k] = JinjaService.get_content(v, spiff_task.data)
             except jinja2.exceptions.TemplateError as ue:
                 app.logger.error(f'Failed to process task property {str(ue)}', exc_info=True)
         return props
@@ -742,8 +744,10 @@ class WorkflowService(object):
             return ""
 
         try:
-            template = Template(raw_doc)
-            return template.render(**spiff_task.data)
+            # template = Template(raw_doc)
+            # return template.render(**spiff_task.data)
+            content = JinjaService.get_content(raw_doc, spiff_task.data)
+            # return content
         except jinja2.exceptions.TemplateError as ue:
             raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
                                                           (spiff_task.task_spec.name, str(ue)), task=spiff_task)
@@ -752,6 +756,9 @@ class WorkflowService(object):
                                                           (spiff_task.task_spec.name, str(te)), task=spiff_task)
         except Exception as e:
             app.logger.error(str(e), exc_info=True)
+
+        else:
+            return content
 
     @staticmethod
     def process_options(spiff_task, field):

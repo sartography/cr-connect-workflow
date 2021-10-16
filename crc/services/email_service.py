@@ -11,6 +11,8 @@ from crc.models.email import EmailModel
 from crc.models.file import FileDataModel
 from crc.models.study import StudyModel
 
+from crc.services.jinja_service import JinjaService
+
 
 class EmailService(object):
     """Provides common tools for working with an Email"""
@@ -65,8 +67,9 @@ class EmailService(object):
             return False
 
     def get_rendered_content(self, message, data):
-        template = Template(message)
-        content = template.render(data)
+        content = JinjaService.get_content(message, data)
+        # template = Template(message)
+        # content = template.render(data)
         rendered_markdown = markdown.markdown(content, extensions=['nl2br'])
         content_html = self.get_cr_connect_wrapper(rendered_markdown)
 

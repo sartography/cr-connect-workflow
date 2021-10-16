@@ -14,6 +14,7 @@ from crc.scripts.script import Script
 
 from crc.services.email_service import EmailService
 from config.default import DEFAULT_SENDER
+from crc.services.jinja_service import JinjaService
 from crc.services.workflow_processor import CustomBpmnScriptEngine
 
 
@@ -23,9 +24,10 @@ def render_markdown(data, template):
     data structure.  Useful for folks that are building these markdown templates.
     """
     try:
-        template = Template(template)
+        # template = Template(template)
         data = json.loads(data)
-        return template.render(**data)
+        # return template.render(**data)
+        return JinjaService.get_content(template, data)
     except UndefinedError as ue:
         raise ApiError(code="undefined_field", message=ue.message)
     except Exception as e:
