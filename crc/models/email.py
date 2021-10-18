@@ -23,9 +23,8 @@ class EmailModel(db.Model):
 
 
 class EmailModelSchema(ma.Schema):
-    # TODO: clean this us. Do we need load_instance and unknown?
+
     class Meta:
         model = EmailModel
-        load_instance = True
-        additional = ["id", "subject", "sender", "recipients", "timestamp"]
-        unknown = INCLUDE
+        fields = ["id", "subject", "sender", "recipients", "cc", "bcc", "content", "content_html",
+                  "study_id", "timestamp", "workflow_spec_id"]
