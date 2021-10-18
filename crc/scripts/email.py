@@ -58,7 +58,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 bcc = self.get_email_addresses(kwargs['bcc'], study_id)
             if 'reply_to' in kwargs:
                 reply_to = kwargs['reply_to']
-            if 'attachments' in kwargs:
+            # Don't process if attachments is None or ''
+            if 'attachments' in kwargs and kwargs['attachments'] is not None and kwargs['attachments'] != '':
                 files = self.get_files(kwargs['attachments'], study_id)
 
         else:
