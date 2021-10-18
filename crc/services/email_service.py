@@ -68,8 +68,6 @@ class EmailService(object):
 
     def get_rendered_content(self, message, data):
         content = JinjaService.get_content(message, data)
-        # template = Template(message)
-        # content = template.render(data)
         rendered_markdown = markdown.markdown(content, extensions=['nl2br'])
         content_html = self.get_cr_connect_wrapper(rendered_markdown)
 
