@@ -4,6 +4,8 @@ from crc.services.workflow_service import WorkflowService
 
 from crc import mail
 
+import json
+
 
 class TestJinjaService(BaseTest):
 
@@ -38,7 +40,13 @@ class TestJinjaService(BaseTest):
             print(f'test_jinja_service_email: {workflow_api.next_task.data}')
 
     def test_jinja_service_tools(self):
-        pass
+        template = "This is my template. {% include 'include_me' %} Was something included?"
+        data = {"name": "World",
+                "include_me": "Hello {{name}}!"}
+        rv = self.app.get('/v1.0/render_markdown?template=%s&data=%s' %
+                          (template, json.dumps(data)))
+        self.assert_success(rv)
+        self.assertIn("Hello World", rv.get_data(as_text=True))
 
     def test_jinja_service_documents(self):
         pass

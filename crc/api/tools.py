@@ -24,9 +24,7 @@ def render_markdown(data, template):
     data structure.  Useful for folks that are building these markdown templates.
     """
     try:
-        # template = Template(template)
         data = json.loads(data)
-        # return template.render(**data)
         return JinjaService.get_content(template, data)
     except UndefinedError as ue:
         raise ApiError(code="undefined_field", message=ue.message)
@@ -42,6 +40,12 @@ def render_docx():
     try:
         file = connexion.request.files['file']
         data = connexion.request.form['data']
+        # TODO: This bypasses the Jinja service and uses complete_template script
+        # content = JinjaService().get_word_document_content(file, json.loads(data), image_file_data=None)
+        #
+        # target_stream = io.BytesIO()
+        # content.save(target_stream)
+        # target_stream.seek(0)  # move to the beginning of the stream.
         target_stream = CompleteTemplate().make_template(file, json.loads(data))
         return send_file(
             io.BytesIO(target_stream.read()),
