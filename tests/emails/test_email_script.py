@@ -37,3 +37,48 @@ class TestEmailScript(BaseTest):
 
             db_emails = EmailModel.query.count()
             self.assertEqual(db_emails, 1)
+
+    def test_email_with_none_attachment(self):
+        # This workflow specifically sends `attachments = None` as a parameter
+        # to the email script
+        workflow = self.create_workflow('email_none_attachment')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        with mail.record_messages() as outbox:
+
+            workflow_api = self.complete_form(workflow, task, {'subject': 'My Test Email',
+                                                               'recipients': 'user@example.com'})
+            task = workflow_api.next_task
+            # Make sure 'attachments' is in task.data, and is None
+            self.assertIn('attachments', task.data)
+            self.assertEqual(task.data['attachments'], None)
+
+            # Make sure we still send an email
+            self.assertIn('email_id', task.data)
+
+            self.assertEqual(len(outbox), 1)
+            self.assertEqual(outbox[0].subject, "My Test Email")
+            self.assertEqual(outbox[0].recipients, ['user@example.com'])
+
+    def test_email_attachment_empty_string(self):
+        # This workflow specifically sends `attachments = ''` as a parameter
+        # to the email script
+        workflow = self.create_workflow('email_attachment_empty_string')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        with mail.record_messages() as outbox:
+            workflow_api = self.complete_form(workflow, task, {'subject': 'My Test Email',
+                                                               'recipients': 'user@example.com'})
+            task = workflow_api.next_task
+            # Make sure 'attachments' is in task.data, and is None
+            self.assertIn('attachments', task.data)
+            self.assertEqual(task.data['attachments'], '')
+
+            # Make sure we still send an email
+            self.assertIn('email_id', task.data)
+
+            self.assertEqual(len(outbox), 1)
+            self.assertEqual(outbox[0].subject, "My Test Email")
+            self.assertEqual(outbox[0].recipients, ['user@example.com'])
