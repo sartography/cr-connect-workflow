@@ -39,27 +39,6 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(0, len(self.validate_workflow("two_forms")))
         self.assertEqual(0, len(self.validate_workflow("ldap_lookup")))
 
-    @unittest.skip("Major changes to operators, pushing up with broken crc workflows so we can progress together")
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
-    def test_successful_validation_of_crc_workflows(self, mock_studies, mock_details, mock_docs, mock_investigators):
-
-        # Mock Protocol Builder responses
-        studies_response = self.protocol_builder_response('user_studies.json')
-        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
-        details_response = self.protocol_builder_response('study_details.json')
-        mock_details.return_value = json.loads(details_response)
-        docs_response = self.protocol_builder_response('required_docs.json')
-        mock_docs.return_value = json.loads(docs_response)
-        investigators_response = self.protocol_builder_response('investigators.json')
-        mock_investigators.return_value = json.loads(investigators_response)
-
-        self.load_example_data(use_crc_data=True)
-        app.config['PB_ENABLED'] = True
-        self.validate_all_loaded_workflows()
-
     def validate_all_loaded_workflows(self):
         workflows = session.query(WorkflowSpecModel).all()
         errors = []
@@ -146,7 +125,7 @@ class TestWorkflowSpecValidation(BaseTest):
         final_data = WorkflowService.test_spec(spec_model.id, required_only=True)
         self.assertIsNotNone(final_data)
         self.assertIn('enum_with_default', final_data)
-        self.assertEqual('maybe', final_data['enum_with_default']['value'])
+        self.assertEqual('maybe', final_data['enum_with_default'])
 
     def test_invalid_custom_field(self):
         self.load_example_data()

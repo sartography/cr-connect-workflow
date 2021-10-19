@@ -56,15 +56,16 @@ class Task(object):
     FIELD_PROP_VALUE_EXPRESSION = "value_expression"
     FIELD_PROP_REPEAT_HIDE_EXPRESSION = "repeat_hide_expression"
 
-    # Enum field options values pulled from a spreadsheet
+    # Enum field options
     FIELD_PROP_SPREADSHEET_NAME = "spreadsheet.name"
-    FIELD_PROP_SPREADSHEET_VALUE_COLUMN = "spreadsheet.value.column"
-    FIELD_PROP_SPREADSHEET_LABEL_COLUMN = "spreadsheet.label.column"
+    FIELD_PROP_DATA_NAME = "data.name"
+    FIELD_PROP_VALUE_COLUMN = "value.column"
+    FIELD_PROP_LABEL_COLUMN = "label.column"
+
+    #FIELD_PROP_SPREADSHEET_VALUE_COLUMN = "spreadsheet.value.column"
+    #FIELD_PROP_SPREADSHEET_LABEL_COLUMN = "spreadsheet.label.column"
 
     # Enum field options values pulled from task data
-    FIELD_PROP_DATA_NAME = "data.name"
-    FIELD_PROP_VALUE_COLUMN = "data.value.column"
-    FIELD_PROP_LABEL_COLUMN = "data.label.column"
 
     # Group and Repeat functions
     FIELD_PROP_GROUP = "group"

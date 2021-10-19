@@ -49,7 +49,7 @@ class TestFileDatastore(BaseTest):
 
         # process the form that sets the datastore values
         self.complete_form(workflow, task, {'Study_App_Doc': {'id': file_id},
-                                            'IRB_HSR_Application_Type': {'label': 'Expedited Application'},
+                                            'IRB_HSR_Application_Type': 'Expedited Application',
                                             'my_test_field': 'some string',
                                             'the_number': 8,
                                             'a_boolean': True,

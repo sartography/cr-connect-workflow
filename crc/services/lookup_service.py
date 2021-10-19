@@ -13,6 +13,7 @@ from crc import db
 from crc.api.common import ApiError
 from crc.models.api_models import Task
 from crc.models.file import FileModel, FileDataModel, LookupFileModel, LookupDataModel
+from crc.models.ldap import LdapSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecDependencyFile
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
@@ -88,9 +89,10 @@ class LookupService(object):
         lookup_model = LookupService.__get_lookup_model(workflow, task_spec_id, field_id)
 
         if lookup_model.is_ldap:
-            return LookupService._run_ldap_query(query, limit)
+            return LookupService._run_ldap_query(query, value, limit)
         else:
             return LookupService._run_lookup_query(lookup_model, query, value, limit)
+
 
     @staticmethod
     def create_lookup_model(workflow_model, task_spec_id, field_id):
@@ -115,19 +117,19 @@ class LookupService(object):
 
         #  Use the contents of a file to populate enum field options
         if field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
-            if not (field.has_property(Task.FIELD_PROP_SPREADSHEET_VALUE_COLUMN) or
-                    field.has_property(Task.FIELD_PROP_SPREADSHEET_LABEL_COLUMN)):
+            if not (field.has_property(Task.FIELD_PROP_VALUE_COLUMN) or
+                    field.has_property(Task.FIELD_PROP_LABEL_COLUMN)):
                 raise ApiError.from_task_spec("invalid_enum",
                                          "For enumerations based on an xls file, you must include 3 properties: %s, "
                                          "%s, and %s" % (Task.FIELD_PROP_SPREADSHEET_NAME,
-                                                         Task.FIELD_PROP_SPREADSHEET_VALUE_COLUMN,
-                                                         Task.FIELD_PROP_SPREADSHEET_LABEL_COLUMN),
+                                                         Task.FIELD_PROP_VALUE_COLUMN,
+                                                         Task.FIELD_PROP_LABEL_COLUMN),
                                          task_spec=spec)
 
             # Get the file data from the File Service
             file_name = field.get_property(Task.FIELD_PROP_SPREADSHEET_NAME)
-            value_column = field.get_property(Task.FIELD_PROP_SPREADSHEET_VALUE_COLUMN)
-            label_column = field.get_property(Task.FIELD_PROP_SPREADSHEET_LABEL_COLUMN)
+            value_column = field.get_property(Task.FIELD_PROP_VALUE_COLUMN)
+            label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
             latest_files = FileService.get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id,
                                                            workflow_id=workflow_model.id,
                                                            name=file_name)
@@ -227,20 +229,13 @@ class LookupService(object):
         logging.info(db_query)
         result = db_query.limit(limit).all()
         logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
-        return result
+        result_data = list(map(lambda lookup_item: lookup_item.data, result))
+        return result_data
 
     @staticmethod
-    def _run_ldap_query(query, limit):
-        users = LdapService.search_users(query, limit)
-
-        """Converts the user models into something akin to the
-        LookupModel in models/file.py, so this can be returned in the same way 
-         we return a lookup data model."""
-        user_list = []
-        for user in users:
-            user_list.append({"value": user['uid'],
-                              "label": user['display_name'] + " (" + user['uid'] + ")",
-                              "data": user
-                              })
-        return user_list
-
+    def _run_ldap_query(query, value, limit):
+        if value:
+            return [LdapSchema().dump(LdapService.user_info(value))]
+        else:
+            users = LdapService.search_users(query, limit)
+        return users

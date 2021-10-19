@@ -35,6 +35,16 @@ class ApiError(Exception):
         sentry_sdk.set_context("User", {'user': user})
         Exception.__init__(self, self.message)
 
+    def __str__(self):
+        msg = "ApiError: % s. " % self.message
+        if self.task_name:
+            msg += "Error in task '%s' (%s). " % (self.task_name, self.task_id)
+        if self.line_number:
+            msg += "Error is on line %i. " % self.line_number
+        if self.file_name:
+            msg += "In file %s. " % self.file_name
+        return msg
+
     @classmethod
     def from_task(cls, code, message, task, status_code=400, line_number=0, offset=0, error_type="", error_line=""):
         """Constructs an API Error with details pulled from the current task."""
