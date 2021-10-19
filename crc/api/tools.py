@@ -96,11 +96,12 @@ def evaluate_python_expression(body):
     except Exception as e:
         return {"result": False, "expression": body['expression'], "key": body['key'], "error": str(e)}
 
+
 def send_test_email(subject, address, message, data=None):
-    rendered, wrapped = EmailService().get_rendered_content(message, data)
+    content, content_html = EmailService().get_rendered_content(message, data)
     EmailService.add_email(
         subject=subject,
         sender=DEFAULT_SENDER,
         recipients=[address],
-        content=rendered,
-        content_html=wrapped)
+        content=content,
+        content_html=content_html)
