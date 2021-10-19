@@ -47,9 +47,11 @@ class EmailService(object):
                     msg.attach(file['name'], file['type'], file_data.data)
 
             mail.send(msg)
+
         except Exception as e:
             app.logger.error('An exception happened in EmailService', exc_info=True)
             app.logger.error(str(e))
+            raise e
 
         db.session.add(email_model)
         db.session.commit()

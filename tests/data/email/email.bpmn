@@ -19,15 +19,12 @@ Email content to be delivered to {{ ApprvlApprvr1 }}
 
 ---
 **Test Some Formatting**
-&amp;ensp;_UVA Tracking Number:_ {{ 321 }}
-
-</bpmn:documentation>
+&amp;ensp;_UVA Tracking Number:_ {{ 321 }}</bpmn:documentation>
       <bpmn:incoming>Flow_08n2npe</bpmn:incoming>
       <bpmn:outgoing>Flow_1xlrgne</bpmn:outgoing>
       <bpmn:script>subject="Camunda Email Subject"
 recipients=[ApprvlApprvr1,PIComputingID]
-email_id = email(subject=subject,recipients=recipients)
-</bpmn:script>
+email_model = email(subject=subject,recipients=recipients)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_1synsig" sourceRef="StartEvent_1" targetRef="Activity_1l9vih3" />
     <bpmn:sequenceFlow id="Flow_1xlrgne" sourceRef="Activity_0s5v97n" targetRef="Event_0izrcj4" />
