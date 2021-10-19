@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0y2dq4f" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_0tad5ma" name="Set Recipients" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1synsig</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="Activity_SendEmail" name="Send Email">
+      <bpmn:documentation># Dear Approver
+## you have been requested for approval
+
+
+---
+New request submitted by {{ PIComputingID }}
+
+Email content to be delivered to {{ ApprvlApprvr1 }}
+
+---
+**Test Some Formatting**
+&amp;ensp;_UVA Tracking Number:_ {{ 321 }}</bpmn:documentation>
+      <bpmn:incoming>Flow_08n2npe</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ch3gt4</bpmn:outgoing>
+      <bpmn:script>attachments = None
+email_id = email(subject=subject,recipients=recipients, attachments=attachments)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1synsig" sourceRef="StartEvent_1" targetRef="Activity_GetEmailData" />
+    <bpmn:sequenceFlow id="Flow_08n2npe" sourceRef="Activity_GetEmailData" targetRef="Activity_SendEmail" />
+    <bpmn:userTask id="Activity_GetEmailData" name="Get Email Data" camunda:formKey="MyFormKey">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="subject" label="Subject" type="string" />
+          <camunda:formField id="recipients" label="Recipients" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1synsig</bpmn:incoming>
+      <bpmn:outgoing>Flow_08n2npe</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1ch3gt4" sourceRef="Activity_SendEmail" targetRef="Activity_DisplayEmail" />
+    <bpmn:endEvent id="Event_12vfpx3">
+      <bpmn:incoming>Flow_1gei5cf</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1gei5cf" sourceRef="Activity_DisplayEmail" targetRef="Event_12vfpx3" />
+    <bpmn:manualTask id="Activity_DisplayEmail" name="Display Emai">
+      <bpmn:documentation># Email
+{{ email_id }}</bpmn:documentation>
+      <bpmn:incoming>Flow_1ch3gt4</bpmn:incoming>
+      <bpmn:outgoing>Flow_1gei5cf</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0tad5ma">
+      <bpmndi:BPMNEdge id="Flow_1gei5cf_di" bpmnElement="Flow_1gei5cf">
+        <di:waypoint x="730" y="117" />
+        <di:waypoint x="812" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ch3gt4_di" bpmnElement="Flow_1ch3gt4">
+        <di:waypoint x="550" y="117" />
+        <di:waypoint x="630" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08n2npe_di" bpmnElement="Flow_08n2npe">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="450" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1synsig_di" bpmnElement="Flow_1synsig">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_04imfm6_di" bpmnElement="Activity_SendEmail">
+        <dc:Bounds x="450" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xugr62_di" bpmnElement="Activity_GetEmailData">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_12vfpx3_di" bpmnElement="Event_12vfpx3">
+        <dc:Bounds x="812" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0intlt7_di" bpmnElement="Activity_DisplayEmail">
+        <dc:Bounds x="630" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

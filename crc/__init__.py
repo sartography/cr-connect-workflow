@@ -47,6 +47,7 @@ ma = Marshmallow(app)
 from crc import models
 from crc import api
 from crc.api import admin
+from crc.services.file_service import FileService
 from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 
@@ -57,6 +58,7 @@ def process_waiting_tasks():
         WorkflowService.do_waiting()
 
 scheduler.add_job(process_waiting_tasks,'interval',minutes=1)
+scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
 scheduler.start()
 
 
