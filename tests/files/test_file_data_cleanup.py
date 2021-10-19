@@ -80,7 +80,7 @@ class TestFileDataCleanup(BaseTest):
 
         # Get `empty_workflow` workflow spec
         workflow_spec_model = session.query(WorkflowSpecModel)\
-            .filter(WorkflowSpecModel.name == 'empty_workflow')\
+            .filter(WorkflowSpecModel.id == 'empty_workflow')\
             .first()
 
         # Get file model for empty_workflow spec
