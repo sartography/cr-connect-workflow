@@ -1,5 +1,6 @@
 from tests.base_test import BaseTest
 from crc.scripts.get_localtime import GetLocaltime
+import dateparser
 
 
 class TestGetLocaltime(BaseTest):
@@ -14,4 +15,4 @@ class TestGetLocaltime(BaseTest):
         timestamp = task.data['timestamp']
         localtime = task.data['localtime']
 
-        self.assertEqual(localtime, GetLocaltime().do_task(None, None, None, timestamp=timestamp))
+        self.assertEqual(dateparser.parse(localtime), GetLocaltime().do_task(None, None, None, timestamp=timestamp))
