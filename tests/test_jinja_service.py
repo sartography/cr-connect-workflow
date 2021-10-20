@@ -35,7 +35,9 @@ class TestJinjaService(BaseTest):
             workflow_api = self.complete_form(workflow, task, data)
 
             self.assertIn('Hello World, This is a jinja template too!', outbox[0].body)
-            self.assertIn("# Email Model\n1", workflow_api.next_task.documentation)
+            self.assertIn("# Email Model", workflow_api.next_task.documentation)
+            self.assertIn("My Email Subject", workflow_api.next_task.documentation)
+            self.assertIn("user@example.com", workflow_api.next_task.documentation)
 
             print(f'test_jinja_service_email: {workflow_api.next_task.data}')
 
