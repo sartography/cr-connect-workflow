@@ -9,7 +9,7 @@ import json
 
 class TestJinjaService(BaseTest):
 
-    def test_jinja_service_documentation(self):
+    def test_jinja_service_element_documentation(self):
         self.load_example_data()
         workflow = self.create_workflow('random_fact')
         processor = WorkflowProcessor(workflow)
@@ -41,7 +41,7 @@ class TestJinjaService(BaseTest):
 
             print(f'test_jinja_service_email: {workflow_api.next_task.data}')
 
-    def test_jinja_service_tools(self):
+    def test_jinja_service_tools_markdown(self):
         template = "This is my template. {% include 'include_me' %} Was something included?"
         data = {"name": "World",
                 "include_me": "Hello {{name}}!"}
