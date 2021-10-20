@@ -3,7 +3,7 @@ import traceback
 
 from crc import app, session
 from crc.api.common import ApiError
-from crc.models.email import EmailModelSchema
+from crc.models.email import EmailModel, EmailModelSchema
 from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowModel
 from crc.services.document_service import DocumentService
@@ -40,9 +40,10 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.get_subject(kwargs['subject'])
-        self.get_email_addresses(kwargs['recipients'], study_id)
-        EmailService().get_rendered_content(task.task_spec.documentation, task.data)
+        subject = self.get_subject(kwargs['subject'])
+        recipients = self.get_email_addresses(kwargs['recipients'], study_id)
+        content, content_html = EmailService().get_rendered_content(task.task_spec.documentation, task.data)
+        return EmailModel(subject=subject, recipients=recipients, content=content, content_html=content_html)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
@@ -135,7 +136,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
         if not subject or not isinstance(subject, str):
             raise ApiError(code="invalid_argument",
                            message="The subject you provided could not be parsed. "
-                               "The value is \"%s\" " % subject)
+                           "The value is \"%s\" " % subject)
         return subject
 
     @staticmethod
