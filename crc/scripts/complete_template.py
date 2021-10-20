@@ -111,24 +111,24 @@ Takes two arguments:
 
     def make_template(self, binary_stream, task_data, image_file_data=None):
         # TODO: Move this into the jinja_service?
-        doc = DocxTemplate(binary_stream)
-        doc_context = copy.deepcopy(task_data)
-        doc_context = self.rich_text_update(doc_context)
-        doc_context = self.append_images(doc, doc_context, image_file_data)
-        jinja_env = jinja2.Environment(autoescape=True)
-        try:
-            doc.render(doc_context, jinja_env)
-        except Exception as e:
-            print (e)
+        # doc = DocxTemplate(binary_stream)
+        # doc_context = copy.deepcopy(task_data)
+        # doc_context = self.rich_text_update(doc_context)
+        # doc_context = self.append_images(doc, doc_context, image_file_data)
+        # jinja_env = jinja2.Environment(autoescape=True)
         # try:
-        #     doc = JinjaService.get_word_document_content(binary_stream, task_data, image_file_data)
-        # except jinja2.exceptions.TemplateError as te:
-        #     # raise ApiError.from_task(code="bad_template",
-        #     #                          message="There was a problem compiling your template.",
-        #     #                          task=self.task)
-        #     print(te)
-        # except TypeError as te:
-        #     print(te)
+        #     doc.render(doc_context, jinja_env)
+        # except Exception as e:
+        #     print (e)
+        try:
+            doc = JinjaService.get_word_document_content(binary_stream, task_data, image_file_data)
+        except jinja2.exceptions.TemplateError as te:
+            # raise ApiError.from_task(code="bad_template",
+            #                          message="There was a problem compiling your template.",
+            #                          task=self.task)
+            print(te)
+        except TypeError as te:
+            print(te)
         target_stream = BytesIO()
         doc.save(target_stream)
         target_stream.seek(0)  # move to the beginning of the stream.
