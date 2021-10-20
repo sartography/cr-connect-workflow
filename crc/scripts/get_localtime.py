@@ -1,3 +1,5 @@
+import datetime
+
 from crc.api.common import ApiError
 from crc.scripts.script import Script
 
@@ -13,7 +15,7 @@ class GetLocaltime(Script):
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         if 'timestamp' in kwargs:
-            return True
+            return datetime.datetime.now()
         raise ApiError(code='missing_timestamp',
                        message='You must include a timestamp to convert.')
 
@@ -26,7 +28,7 @@ class GetLocaltime(Script):
                 timezone = 'US/Eastern'
             parsed_timestamp = dateparser.parse(timestamp)
             localtime = parsed_timestamp.astimezone(pytz.timezone(timezone))
-            return str(localtime)
+            return localtime
 
         else:
             raise ApiError(code='missing_timestamp',
