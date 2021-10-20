@@ -8,11 +8,10 @@ from docxtpl import DocxTemplate, Listing, InlineImage
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import CONTENT_TYPES, FileModel, FileDataModel
+from crc.models.file import CONTENT_TYPES, FileModel
 from crc.models.workflow import WorkflowModel
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
-from crc.services.jinja_service import JinjaService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
