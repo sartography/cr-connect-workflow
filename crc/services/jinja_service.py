@@ -1,8 +1,7 @@
-from docxtpl import DocxTemplate, Listing, InlineImage
-from jinja2 import Environment, DictLoader
-
 from docx.shared import Inches
+from docxtpl import DocxTemplate, Listing, InlineImage
 from io import BytesIO
+from jinja2 import Environment, DictLoader
 
 import copy
 
@@ -41,16 +40,17 @@ Cool Right?
     # The rest of this is for using Word documents as Jinja templates
     #
     def make_template(self, binary_stream, context, image_file_data=None):
-        # TODO: Move this into the jinja_service?
+        templates = context
         doc = DocxTemplate(binary_stream)
         doc_context = copy.deepcopy(context)
         doc_context = self.rich_text_update(doc_context)
         doc_context = self.append_images(doc, doc_context, image_file_data)
-        jinja_env = Environment(autoescape=True)
+        jinja_env = Environment(loader=DictLoader(templates), autoescape=True)
+
         try:
             doc.render(doc_context, jinja_env)
         except Exception as e:
-            print (e)
+            print(e)
         target_stream = BytesIO()
         doc.save(target_stream)
         target_stream.seek(0)  # move to the beginning of the stream.
