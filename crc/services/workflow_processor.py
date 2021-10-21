@@ -481,12 +481,21 @@ class WorkflowProcessor(object):
         for task in self.bpmn_workflow.get_ready_user_tasks():
             if task.workflow not in workflows:
                 workflows.append(task.workflow)
-
+        spec_found = False
         for workflow in workflows:
             for spec in workflow.spec.task_specs.values():
-                if spec.name == spec_name and hasattr(spec, "form"):
+                if spec.name == spec_name:
+                    spec_found = True
+                    if not hasattr(spec, "form"):
+                        raise ApiError("invalid_spec",
+                                       "The spec name you provided does not contain a form.")
+
                     for field in spec.form.fields:
                         if field.id == field_id:
                             return spec, field
-        raise ApiError("invalid_field",
-                   "Unable to find a task in the workflow with a lookup field called: %s" % field_id)
+
+                    raise ApiError("invalid_field",
+                                   f"The task '{spec_name}' has no field named '{field_id}'")
+
+        raise ApiError("invalid_spec",
+                   f"Unable to find a task in the workflow called '{spec_name}'")

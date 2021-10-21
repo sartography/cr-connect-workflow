@@ -85,7 +85,7 @@ class LookupService(object):
 
     @staticmethod
     def lookup(workflow, task_spec_id, field_id, query, value=None, limit=10):
-
+        # Returns a list of dictionaries
         lookup_model = LookupService.__get_lookup_model(workflow, task_spec_id, field_id)
 
         if lookup_model.is_ldap:
