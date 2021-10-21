@@ -41,7 +41,7 @@ def render_docx():
         file = connexion.request.files['file']
         data = connexion.request.form['data']
         # TODO: This bypasses the Jinja service and uses complete_template script
-        target_stream = CompleteTemplate().make_template(file, json.loads(data))
+        target_stream = JinjaService().make_template(file, json.loads(data))
         return send_file(
             io.BytesIO(target_stream.read()),
             as_attachment=True,
