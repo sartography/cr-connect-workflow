@@ -39,14 +39,6 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(0, len(self.validate_workflow("two_forms")))
         self.assertEqual(0, len(self.validate_workflow("ldap_lookup")))
 
-    def validate_all_loaded_workflows(self):
-        workflows = session.query(WorkflowSpecModel).all()
-        errors = []
-        for w in workflows:
-            json_data = self.validate_workflow(w.name)
-            errors.extend(ApiErrorSchema(many=True).load(json_data))
-        self.assertEqual(0, len(errors), json.dumps(errors))
-
     def test_invalid_expression(self):
         self.load_example_data()
         errors = self.validate_workflow("invalid_expression")
