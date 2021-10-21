@@ -132,7 +132,7 @@ class WorkflowSyncService(object):
 
 
     @staticmethod
-    def sync_all_changed_workflows(remote,message="syncing between systems",keep_new_local=False):
+    def sync_all_changed_workflows(remote,keep_new_local=False):
         """
         Does what it says, gets a list of all workflows that are different between
         two systems and pulls all of the workflows and files that are different on the
@@ -143,10 +143,12 @@ class WorkflowSyncService(object):
         do this independently
         """
         tree = WorkflowSyncService.get_master_list(remote,keep_new_local)
-        info = {}
+        info = []
         # first, delete local files that are not in the remote or that will be superseded by remote
-        for category in tree.keys():
-            for workflow in tree[category]:
+
+        for item in tree:
+            category = item['category']
+            for workflow in item['workflows']:
                 for file in workflow['files']:
                     if file['status'] in ['delete','revert']:
                         print('delete file',file)
@@ -164,10 +166,14 @@ class WorkflowSyncService(object):
                 else:
                     files = WorkflowSyncService.sync_changed_files(remote,workflow['workflow_spec_id'])
                     workflow['changed_files'] = files
-                    info[workflow['workflow_spec_id']] = {'name': workflow['name'],
-                                                    'files': workflow['changed_files']}
+                    info.append({'workflow':workflow['workflow_spec_id'],
+                                  'name': workflow['name'],
+                                  'files': workflow['changed_files']})
         ref_files = WorkflowSyncService.sync_changed_files(remote,'REFERENCE_FILES')
-        info['reference_files'] = ref_files
+        if len(ref_files) > 0:
+            info.append({'workflow':'REFERENCE_FILES',
+                         'name':'Reference Files',
+                         'files':ref_files})
         return info
 
 
@@ -196,7 +202,11 @@ class WorkflowSyncService(object):
             catlist = categories.get(category['display_name'], [])
             catlist.append(spec)
             categories[category['display_name']] = catlist
-        return categories
+        retlist = []
+        for category in categories.keys():
+            retlist.append({'category':category, 'workflows':categories[category]})
+
+        return retlist
 
     @staticmethod
     def get_changed_workflows(remote,as_df=False,keep_new_local=False):

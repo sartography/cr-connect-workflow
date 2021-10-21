@@ -167,6 +167,14 @@ paths:
           schema:
             type: string
             example: https://testing.crconnect.uvadcos.io/api
+        - name: keep_new_local
+          in: query
+          required: false
+          description: Do we want to keep new local workflow specs or files?
+          schema:
+            type: boolean
+            example: true
+
       tags:
         - Workflow Sync Frontend API
       responses:
@@ -177,8 +185,20 @@ paths:
               schema:
                 type: array
                 items:
-                  type: string
-                example : ['top_level_workflow','3b495037-f7d4-4509-bf58-cee41c0c6b0e']
+                  type: object
+                  properties:
+                     workflow:
+                       type: string
+                       example: workflow_spec_id
+                     name:
+                       type: string
+                       example: Form Documents
+                     files:
+                       type: array
+                       items:
+                         type: string
+                         example: form_docs.bpmn
+
 
 
   /workflow_sync/master_list:
@@ -207,16 +227,17 @@ paths:
           content:
             text/html:
               schema:
-                type: object
-                properties:
-                   CategoryName1:
-                      type: array
-                      items:
-                         $ref: "#/components/schemas/WorkflowSpecDiffItem"
-                   CategoryName2:
-                      type: array
-                      items:
-                         $ref: "#/components/schemas/WorkflowSpecDiffItem"
+                type: array
+                items:
+                  type: object
+                  properties:
+                       category:
+                          type: string
+                          example: CategoryName1
+                       workflows:
+                          type: array
+                          items:
+                             $ref: "#/components/schemas/WorkflowSpecDiffItem"
   /workflow_sync/{workflow_spec_id}/spec:
     parameters:
       - name: workflow_spec_id
@@ -1753,9 +1774,6 @@ components:
 
     WorkflowSpecFilesListItemSync:
       properties:
-        workflow_spec_id :
-          type: string
-          example : top_level_workflow
         filename :
           type: string
           example : data_security_plan.dmn
