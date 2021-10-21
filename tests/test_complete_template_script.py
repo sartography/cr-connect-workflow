@@ -1,13 +1,9 @@
-import json
-import os
 import unittest
 import copy
 
 from docxtpl import Listing
 
-from crc import app
 from crc.scripts.complete_template import CompleteTemplate
-from tests.base_test import BaseTest
 
 
 class TestCompleteTemplate(unittest.TestCase):

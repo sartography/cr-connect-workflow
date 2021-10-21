@@ -14,6 +14,7 @@ from crc.scripts.script import Script
 
 from crc.services.email_service import EmailService
 from config.default import DEFAULT_SENDER
+from crc.services.jinja_service import JinjaService
 from crc.services.workflow_processor import CustomBpmnScriptEngine
 
 
@@ -23,9 +24,8 @@ def render_markdown(data, template):
     data structure.  Useful for folks that are building these markdown templates.
     """
     try:
-        template = Template(template)
         data = json.loads(data)
-        return template.render(**data)
+        return JinjaService.get_content(template, data)
     except UndefinedError as ue:
         raise ApiError(code="undefined_field", message=ue.message)
     except Exception as e:
@@ -40,6 +40,7 @@ def render_docx():
     try:
         file = connexion.request.files['file']
         data = connexion.request.form['data']
+        # TODO: This bypasses the Jinja service and uses complete_template script
         target_stream = CompleteTemplate().make_template(file, json.loads(data))
         return send_file(
             io.BytesIO(target_stream.read()),

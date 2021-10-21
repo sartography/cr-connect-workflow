@@ -8,7 +8,7 @@ from docxtpl import DocxTemplate, Listing, InlineImage
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import CONTENT_TYPES, FileModel, FileDataModel
+from crc.models.file import CONTENT_TYPES, FileModel
 from crc.models.workflow import WorkflowModel
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
@@ -109,6 +109,7 @@ Takes two arguments:
         return image_file_data
 
     def make_template(self, binary_stream, context, image_file_data=None):
+        # TODO: Move this into the jinja_service?
         doc = DocxTemplate(binary_stream)
         doc_context = copy.deepcopy(context)
         doc_context = self.rich_text_update(doc_context)
