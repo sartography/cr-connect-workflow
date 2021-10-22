@@ -282,7 +282,12 @@ class WorkflowService(object):
 
         # jsonify, and de-jsonify the data to mimic how data will be returned from the front end for forms and assures
         # we aren't generating something that can't be serialized.
-        form_data_string = json.dumps(form_data)
+        try:
+            form_data_string = json.dumps(form_data)
+        except TypeError as te:
+            raise ApiError.from_task(code='serialize_error',
+                                     message=f'Something cannot be serialized. Message is: {te}',
+                                     task=task)
         task.data.update(json.loads(form_data_string))
 
     @staticmethod
