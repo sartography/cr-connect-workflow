@@ -12,6 +12,8 @@ from crc.services.email_service import EmailService
 from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
 
+import datetime
+
 
 class Email(Script):
     """Send an email from a script task, as part of a workflow.
@@ -43,7 +45,12 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
         subject = self.get_subject(kwargs['subject'])
         recipients = self.get_email_addresses(kwargs['recipients'], study_id)
         content, content_html = EmailService().get_rendered_content(task.task_spec.documentation, task.data)
-        return EmailModel(subject=subject, recipients=recipients, content=content, content_html=content_html)
+        email_model = EmailModel(subject=subject,
+                                 recipients=recipients,
+                                 content=content,
+                                 content_html=content_html,
+                                 timestamp=datetime.datetime.utcnow())
+        return EmailModelSchema().dump(email_model)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
