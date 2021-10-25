@@ -397,8 +397,8 @@ def lookup(workflow_id, task_spec_name, field_id, query=None, value=None, limit=
     """
     workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
     lookup_data = LookupService.lookup(workflow, task_spec_name, field_id, query, value, limit)
-    return LookupDataSchema(many=True).dump(lookup_data)
-
+    # Just return the data
+    return lookup_data
 
 def _verify_user_and_role(processor, spiff_task):
     """Assures the currently logged in user can access the given workflow and task, or

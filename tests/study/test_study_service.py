@@ -210,7 +210,7 @@ class TestStudyService(BaseTest):
 
         # asd3v is not in ldap, so an error should be returned.
         self.assertEqual("asd3v", investigators['DC']['user_id'])
-        self.assertEqual("Unable to locate a user with id asd3v in LDAP", investigators['DC']['error']) # Data from ldap
+        self.assertEqual("ApiError: Unable to locate a user with id asd3v in LDAP. ", investigators['DC']['error']) # Data from ldap
 
         # No value is provided for Department Chair
         self.assertIsNone(investigators['DEPT_CH']['user_id'])
