@@ -13,6 +13,8 @@ from crc.services.email_service import EmailService
 from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
 
+import datetime
+
 
 class Email(Script):
     """Send an email from a script task, as part of a workflow.
@@ -44,8 +46,11 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
         subject = self.get_subject(kwargs['subject'])
         recipients = self.get_email_addresses(kwargs['recipients'], study_id)
         content, content_html = EmailService().get_rendered_content(task.task_spec.documentation, task.data)
-
-        email_model = EmailModel(subject=subject, recipients=recipients, content=content, content_html=content_html, timestamp=datetime.datetime.utcnow())
+        email_model = EmailModel(subject=subject,
+                                 recipients=recipients,
+                                 content=content,
+                                 content_html=content_html,
+                                 timestamp=datetime.datetime.utcnow())
         return EmailModelSchema().dump(email_model)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
@@ -63,7 +68,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 bcc = self.get_email_addresses(kwargs['bcc'], study_id)
             if 'reply_to' in kwargs:
                 reply_to = kwargs['reply_to']
-            if 'attachments' in kwargs:
+            # Don't process if attachments is None or ''
+            if 'attachments' in kwargs and kwargs['attachments'] is not None and kwargs['attachments'] != '':
                 files = self.get_files(kwargs['attachments'], study_id)
 
         else:
