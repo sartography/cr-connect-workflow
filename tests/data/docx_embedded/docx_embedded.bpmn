@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0jhano7" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_1wdyw8o" name="Test Complete Template Script" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1lthj06</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1lthj06" sourceRef="StartEvent_1" targetRef="Activity_GetData" />
+    <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="file_name" label="File Name" type="string" />
+          <camunda:formField id="irb_doc_code" label="IRB Doc Code" type="enum">
+            <camunda:value id="Study_App_Doc" name="Study_App_Doc" />
+            <camunda:value id="Study_Protocol" name="Study_Protocol" />
+          </camunda:formField>
+          <camunda:formField id="name" label="Name" type="string" defaultValue="World" />
+          <camunda:formField id="include_me" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1lthj06</bpmn:incoming>
+      <bpmn:outgoing>Flow_1bfcgdx</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1bfcgdx" sourceRef="Activity_GetData" targetRef="Activity_CompleteTemplate" />
+    <bpmn:scriptTask id="Activity_CompleteTemplate" name="Complete Template">
+      <bpmn:incoming>Flow_1bfcgdx</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ltznd4</bpmn:outgoing>
+      <bpmn:script>print(f'name is {name}.')
+print(f'include_me is {include_me}')
+result = complete_template(file_name, irb_doc_code)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0ltznd4" sourceRef="Activity_CompleteTemplate" targetRef="Activity_DisplayData" />
+    <bpmn:manualTask id="Activity_DisplayData" name="Display Data">
+      <bpmn:documentation># Result
+{{ result }}</bpmn:documentation>
+      <bpmn:incoming>Flow_0ltznd4</bpmn:incoming>
+      <bpmn:outgoing>Flow_0472uor</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_0edltir">
+      <bpmn:incoming>Flow_0472uor</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0472uor" sourceRef="Activity_DisplayData" targetRef="Event_0edltir" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1wdyw8o">
+      <bpmndi:BPMNEdge id="Flow_0472uor_di" bpmnElement="Flow_0472uor">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ltznd4_di" bpmnElement="Flow_0ltznd4">
+        <di:waypoint x="532" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1bfcgdx_di" bpmnElement="Flow_1bfcgdx">
+        <di:waypoint x="373" y="117" />
+        <di:waypoint x="432" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1lthj06_di" bpmnElement="Flow_1lthj06">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="273" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_14dp1gz_di" bpmnElement="Activity_DisplayData">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0edltir_di" bpmnElement="Event_0edltir">
+        <dc:Bounds x="752" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1u6kbns_di" bpmnElement="Activity_CompleteTemplate">
+        <dc:Bounds x="432" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10trg2t_di" bpmnElement="Activity_GetData">
+        <dc:Bounds x="273" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -1,9 +1,12 @@
 import json
 import logging
 import os
+
+import click
 import sentry_sdk
 
 import connexion
+from SpiffWorkflow import WorkflowException
 from connexion import ProblemException
 from flask import Response
 from flask_cors import CORS
@@ -14,6 +17,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -47,6 +51,7 @@ ma = Marshmallow(app)
 from crc import models
 from crc import api
 from crc.api import admin
+from crc.services.file_service import FileService
 from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 
@@ -57,6 +62,7 @@ def process_waiting_tasks():
         WorkflowService.do_waiting()
 
 scheduler.add_job(process_waiting_tasks,'interval',minutes=1)
+scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
 scheduler.start()
 
 
@@ -130,3 +136,32 @@ def sync_with_testing():
     """Load all the workflows currently on testing into this system."""
     from crc.api import workflow_sync
     workflow_sync.sync_all_changed_workflows("https://testing.crconnect.uvadcos.io/api")
+
+@app.cli.command()
+@click.argument("study_id")
+@click.argument("category")
+@click.argument("spec_id")
+def validate_all(study_id, category=None, spec_id=None):
+    """Step through all the local workflows and validate them, returning any errors. This make take forever.
+    Please provide a real study id to use for validation, an optional category can be specified to only validate
+    that category, and you can further specify a specific spec, if needed."""
+    from crc.models.workflow import WorkflowSpecModel
+    from crc.services.workflow_service import WorkflowService
+    from crc.api.common import ApiError
+
+    specs = session.query(WorkflowSpecModel).all()
+    for spec in specs:
+        if spec_id and spec_id != spec.id:
+            continue
+        if category and (not spec.category or spec.category.display_name != category):
+            continue
+        try:
+            WorkflowService.test_spec(spec.id, validate_study_id=study_id)
+        except ApiError as e:
+            print("Failed to validate workflow " + spec.id)
+            print(e)
+            return
+        except WorkflowException as e:
+            print("Failed to validate workflow " + spec.id)
+            print(e)
+            return
