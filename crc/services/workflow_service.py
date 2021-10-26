@@ -288,7 +288,8 @@ class WorkflowService(object):
             raise ApiError.from_task(code='serialize_error',
                                      message=f'Something cannot be serialized. Message is: {te}',
                                      task=task)
-        task.data.update(json.loads(form_data_string))
+        extracted_form_data = WorkflowService().extract_form_data(json.loads(form_data_string), task)
+        task.update_data(extracted_form_data)
 
     @staticmethod
     def check_field_id(id):
