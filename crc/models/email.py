@@ -26,5 +26,5 @@ class EmailModelSchema(ma.Schema):
 
     class Meta:
         model = EmailModel
-        fields = ["id", "subject", "sender", "recipients", "cc", "bcc", "content", "content_html",
+        fields = ["id", "subject", "sender", "recipients", "cc", "bcc", "content",
                   "study_id", "timestamp", "workflow_spec_id"]
