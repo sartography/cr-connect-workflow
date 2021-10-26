@@ -23,8 +23,8 @@ alternately, you can use named parameters:
 pet_label = enum_label(task='task_pet_form',field='pet',value='1')    // might return 'Dog' which has the value of 1
 """
 
-    def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        return self.do_task(task, study_id, workflow_id, *args, **kwargs)
+    def do_task_validate_only(self, spiff_task, study_id, workflow_id, *args, **kwargs):
+        return self.do_task(spiff_task, study_id, workflow_id, *args, **kwargs)
 
     def do_task(self, spiff_task, study_id, workflow_id, *args, **kwargs):
 
