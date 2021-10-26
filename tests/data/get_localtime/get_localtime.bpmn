@@ -15,7 +15,9 @@
       <bpmn:documentation>This is my email</bpmn:documentation>
       <bpmn:incoming>Flow_0lnc9x0</bpmn:incoming>
       <bpmn:outgoing>Flow_0gtgzcf</bpmn:outgoing>
-      <bpmn:script>email_model = email(subject='My Email Subject', recipients='user@example.com')</bpmn:script>
+      <bpmn:script>email_model = email(subject='My Email Subject', recipients='user@example.com')
+email_data = get_email_data(email_id=email_model['id'])
+</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_1by2ose" name="Get Localtime">
       <bpmn:documentation>timestamp = email_model.timestamp
@@ -23,7 +25,8 @@ localtime = get_localtime(str(timestamp))</bpmn:documentation>
       <bpmn:incoming>Flow_0gtgzcf</bpmn:incoming>
       <bpmn:outgoing>Flow_0k1hbif</bpmn:outgoing>
       <bpmn:script>timestamp=email_model.timestamp
-localtime = get_localtime(timestamp=timestamp)</bpmn:script>
+localtime = get_localtime(timestamp=timestamp)
+</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Activity_0d5fjpa" name="Display Times">
       <bpmn:documentation># Timestamp
@@ -38,21 +41,21 @@ localtime = get_localtime(timestamp=timestamp)</bpmn:script>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1dxw783">
-      <bpmndi:BPMNEdge id="Flow_0lnc9x0_di" bpmnElement="Flow_0lnc9x0">
-        <di:waypoint x="215" y="117" />
-        <di:waypoint x="270" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0gtgzcf_di" bpmnElement="Flow_0gtgzcf">
-        <di:waypoint x="370" y="117" />
-        <di:waypoint x="430" y="117" />
+      <bpmndi:BPMNEdge id="Flow_0kgtoh1_di" bpmnElement="Flow_0kgtoh1">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0k1hbif_di" bpmnElement="Flow_0k1hbif">
         <di:waypoint x="530" y="117" />
         <di:waypoint x="590" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0kgtoh1_di" bpmnElement="Flow_0kgtoh1">
-        <di:waypoint x="690" y="117" />
-        <di:waypoint x="752" y="117" />
+      <bpmndi:BPMNEdge id="Flow_0gtgzcf_di" bpmnElement="Flow_0gtgzcf">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lnc9x0_di" bpmnElement="Flow_0lnc9x0">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
