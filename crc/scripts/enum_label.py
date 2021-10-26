@@ -19,18 +19,16 @@ class EnumLabel(Script):
 
 Example:
 pet_label = enum_label('task_pet_form', 'pet', '1')    // might return 'Dog' which has the value of 1
+alternately, you can use named parameters:
+pet_label = enum_label(task='task_pet_form',field='pet',value='1')    // might return 'Dog' which has the value of 1
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         return self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
-    def do_task(self, task, study_id, workflow_id, *args, **kwargs):
+    def do_task(self, spiff_task, study_id, workflow_id, *args, **kwargs):
 
-        self.validate_arguments(**kwargs)
-
-        task_name = kwargs['task_name']
-        field_name = kwargs['field']
-        value = kwargs['value']
+        task_name, field_name, value = self.validate_arguments(*args, **kwargs)
 
         # get the field information for the provided task_name (NOT the current task)
         workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
@@ -44,7 +42,7 @@ pet_label = enum_label('task_pet_form', 'pet', '1')    // might return 'Dog' whi
         elif field.type == Task.FIELD_TYPE_ENUM and hasattr(field, 'options'):
             return self.enum_with_options_label(field, value)
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):
-            return self.enum_from_task_data_label(task, field, value)
+            return self.enum_from_task_data_label(spiff_task, field, value)
 
     def autocomplete_label(self, workflow_model, task_name, field, value):
         label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
@@ -70,16 +68,21 @@ pet_label = enum_label('task_pet_form', 'pet', '1')    // might return 'Dog' whi
                     return d[label_column]
         return self.UNKNOWN
 
-    def validate_arguments(self, **kwargs):
-        if len(kwargs) != 3:
+    def validate_arguments(self, *args, **kwargs):
+        if len(args) != 3 and len(kwargs) != 3:
             raise ApiError(code="invalid_argument",
                            message="enum_label requires three arguments: Task id, Field id, and the selected value.")
-        if not 'task_name' in kwargs:
-            raise ApiError(code="invalid_argument",
-                           message="you must specify the 'task_name', that is the name of the task with a form and field")
-        if not 'field' in kwargs:
-            raise ApiError(code="invalid_argument",
-                           message="you must specify the 'field', that is the name of the field with an enum.")
-        if not 'value' in kwargs:
-            raise ApiError(code="invalid_argument",
-                           message="you must specify the 'value', that is the value of the enum you wish to get a label for.")
+        elif len(args) == 3:
+            return args
+        else:
+            if not 'task' in kwargs:
+                raise ApiError(code="invalid_argument",
+                               message="you must specify the 'task_name', that is the name of the task with a form and field")
+            if not 'field' in kwargs:
+                raise ApiError(code="invalid_argument",
+                               message="you must specify the 'field', that is the name of the field with an enum.")
+            if not 'value' in kwargs:
+                raise ApiError(code="invalid_argument",
+                               message="you must specify the 'value', that is the value of the enum you wish to get a label for.")
+            return kwargs['task'], kwargs['field'], kwargs['value']
+
