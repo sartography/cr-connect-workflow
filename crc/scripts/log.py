@@ -29,11 +29,11 @@ class MyScript(Script):
             if 'code' in kwargs:
                 code = kwargs['code']
             else:
-                code = args[0]
+                code = args[1]
             if 'message' in kwargs:
                 message = kwargs['message']
             else:
-                message = args[0]
+                message = args[2]
             task_name = task.get_name()
             log_model = TaskLogModel(level=level,
                                      code=code,
@@ -44,7 +44,6 @@ class MyScript(Script):
             session.add(log_model)
             session.commit()
 
-            print('do_task')
             return TaskLogModelSchema().dump(log_model)
 
         else:
