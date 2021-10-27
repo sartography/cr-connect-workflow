@@ -1,5 +1,4 @@
 from crc import session
-from crc.api.common import ApiError
 from crc.models.task_log import TaskLogModel, TaskLogModelSchema
 from crc.scripts.script import Script
 
