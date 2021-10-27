@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0tt6u6r" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_0jo811u" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0bbqksl</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0bbqksl" sourceRef="StartEvent_1" targetRef="Activity_ManualTask" />
+    <bpmn:manualTask id="Activity_ManualTask" name="Manual Task">
+      <bpmn:documentation># Hello
+You may manipulate this in a test, as you see fit</bpmn:documentation>
+      <bpmn:incoming>Flow_0bbqksl</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lh4lq8</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0lh4lq8" sourceRef="Activity_ManualTask" targetRef="Activity_AddLogs" />
+    <bpmn:scriptTask id="Activity_AddLogs" name="Add Logs">
+      <bpmn:incoming>Flow_0lh4lq8</bpmn:incoming>
+      <bpmn:outgoing>Flow_10fc3fk</bpmn:outgoing>
+      <bpmn:script>some_text = 'variable'
+log('info', 'some_code', 'Some longer message')
+log('info', 'some_other_code', 'Another really long message')
+log('debug', 'debug_code', f'This message has a { some_text }!')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_10fc3fk" sourceRef="Activity_AddLogs" targetRef="Activity_GetLogs" />
+    <bpmn:scriptTask id="Activity_GetLogs" name="Get Logs">
+      <bpmn:incoming>Flow_10fc3fk</bpmn:incoming>
+      <bpmn:outgoing>Flow_1dfqchi</bpmn:outgoing>
+      <bpmn:script>workflow_logs = get_logs()
+study_logs = get_logs_for_study()</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1dfqchi" sourceRef="Activity_GetLogs" targetRef="Activity_DisplayInfo" />
+    <bpmn:manualTask id="Activity_DisplayInfo" name="Display Info">
+      <bpmn:documentation># Display Info
+
+## Workflow Logs
+{{ workflow_logs }}
+
+
+## Study Logs
+{{ study_logs }}</bpmn:documentation>
+      <bpmn:incoming>Flow_1dfqchi</bpmn:incoming>
+      <bpmn:outgoing>Flow_0yxmlin</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_1dg0buo">
+      <bpmn:incoming>Flow_0yxmlin</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0yxmlin" sourceRef="Activity_DisplayInfo" targetRef="Event_1dg0buo" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0jo811u">
+      <bpmndi:BPMNEdge id="Flow_0bbqksl_di" bpmnElement="Flow_0bbqksl">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lh4lq8_di" bpmnElement="Flow_0lh4lq8">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10fc3fk_di" bpmnElement="Flow_10fc3fk">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1dfqchi_di" bpmnElement="Flow_1dfqchi">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="750" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yxmlin_di" bpmnElement="Flow_0yxmlin">
+        <di:waypoint x="850" y="117" />
+        <di:waypoint x="912" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0gphpwt_di" bpmnElement="Activity_ManualTask">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0yb5wv4_di" bpmnElement="Activity_AddLogs">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1d90rzn_di" bpmnElement="Activity_GetLogs">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_016wmmv_di" bpmnElement="Activity_DisplayInfo">
+        <dc:Bounds x="750" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1dg0buo_di" bpmnElement="Event_1dg0buo">
+        <dc:Bounds x="912" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
