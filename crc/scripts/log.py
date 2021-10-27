@@ -4,7 +4,7 @@ from crc.models.task_log import TaskLogModel, TaskLogModelSchema
 from crc.scripts.script import Script
 
 
-class MyScript(Script):
+class TaskLog(Script):
 
     def get_description(self):
         return """Script to log events in a Script Task.

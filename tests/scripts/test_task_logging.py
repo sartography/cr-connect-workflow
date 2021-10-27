@@ -4,7 +4,7 @@ from crc import session
 from crc.models.api_models import Task
 from crc.models.task_log import TaskLogModel
 from crc.models.study import StudyModel
-from crc.scripts.log import MyScript
+from crc.scripts.log import TaskLog
 
 import types
 
@@ -73,12 +73,12 @@ class TestTaskLogging(BaseTest):
 
         task_model.get_name = types.MethodType(lambda x: x.name, task_model)
 
-        MyScript().do_task(task_model, study.id, workflow.id,
+        TaskLog().do_task(task_model, study.id, workflow.id,
                            level='critical',
                            code='critical_code',
                            message='This is my critical message.')
 
-        MyScript().do_task(task_model, study.id, workflow.id,
+        TaskLog().do_task(task_model, study.id, workflow.id,
                            level='debug',
                            code='debug_code',
                            message='This is my debug message.')
