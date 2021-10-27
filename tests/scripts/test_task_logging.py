@@ -11,6 +11,12 @@ import types
 
 class TestTaskLogging(BaseTest):
 
+    def test_logging_validation(self):
+        self.load_example_data()
+        spec_model = self.load_test_spec('logging_task')
+        rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
+        self.assertEqual([], rv.json)
+
     def test_add_log(self):
         workflow = self.create_workflow('logging_task')
         workflow_api = self.get_workflow_api(workflow)
@@ -22,6 +28,12 @@ class TestTaskLogging(BaseTest):
         self.assertEqual('test_code', log_model.code)
         self.assertEqual('info', log_model.level)
         self.assertEqual('Activity_LogEvent', log_model.task)
+
+    def test_get_logging_validation(self):
+        self.load_example_data()
+        spec_model = self.load_test_spec('get_logging')
+        rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
+        self.assertEqual([], rv.json)
 
     def test_get_logs(self):
         workflow = self.create_workflow('get_logging')
