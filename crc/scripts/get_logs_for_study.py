@@ -12,12 +12,13 @@ class GetLogsByWorkflow(Script):
         """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        if len(args) == 1 or 'code' in kwargs:
-            pass
-        else:
-            raise ApiError.from_task(code='missing_code',
-                                     message='You must include a `code` to use in the search.',
-                                     task=task)
+        log_model = TaskLogModel(level='info',
+                                 code='mocked_code',
+                                 message='This is my logging message',
+                                 study_id=study_id,
+                                 workflow_id=workflow_id,
+                                 task=task.get_name())
+        return TaskLogModelSchema(many=True).dump([log_model])
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         code = None

@@ -13,12 +13,24 @@ class MyScript(Script):
             log(level='info', code='missing_info', message='You must include the correct info!')
         
         Level must be `debug`, `info`, `warning`, `error` or `critical`.
-        Code is a short string meant for searching the logs.
+        Code is a short string meant for searching the logs. By convention, it is lower case with underscores.
         Message is a more descriptive string, including any info you want to log.
         """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        pass
+        if len(args) == 3 or ('level' in kwargs and 'code' in kwargs and 'message' in kwargs):
+            log_model = TaskLogModel(level='info',
+                                     code='mocked_code',
+                                     message='This is my logging message',
+                                     study_id=study_id,
+                                     workflow_id=workflow_id,
+                                     task=task.get_name())
+            return TaskLogModelSchema().dump(log_model)
+        else:
+            raise ApiError.from_task(code='missing_arguments',
+                                     message='You must include a level, code, and message to log.',
+                                     task=task)
+
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         if len(args) == 3 or ('level' in kwargs and 'code' in kwargs and 'message' in kwargs):
