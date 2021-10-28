@@ -3,9 +3,9 @@ from flask import g, request
 
 from crc import app, session
 from crc.api.common import ApiError
+from crc.services.user_service import UserService
 from crc.models.user import UserModel, UserModelSchema
 from crc.services.ldap_service import LdapService, LdapModel
-from crc.services.user_service import UserService
 
 """
 .. module:: crc.api.user
