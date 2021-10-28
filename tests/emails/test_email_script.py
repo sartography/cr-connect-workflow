@@ -48,9 +48,6 @@ class TestEmailScript(BaseTest):
             self.assertEqual(db_emails[0].sender, workflow_api.next_task.data['email_model']['sender'])
             self.assertEqual(db_emails[0].subject, workflow_api.next_task.data['email_model']['subject'])
 
-            # Make sure timestamp is UTC
-            self.assertEqual(db_emails[0].timestamp.tzinfo, datetime.timezone.utc)
-
     @patch('crc.services.email_service.EmailService.add_email')
     def test_email_raises_exception(self, mock_response):
         self.load_example_data()
