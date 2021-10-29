@@ -45,13 +45,15 @@ class FileService(object):
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
                                name, content_type, binary_data, primary=False, is_status=False):
         """Create a new file and associate it with a workflow spec."""
-        # Raise ApiError if the file already exists
-        if session.query(FileModel)\
+        file_model = session.query(FileModel)\
             .filter(FileModel.workflow_spec_id == workflow_spec.id)\
-            .filter(FileModel.name == name).first():
+            .filter(FileModel.name == name).first()
 
-            raise ApiError(code="Duplicate File",
-                           message='If you want to replace the file, use the update mechanism.')
+        if file_model:
+            if not file_model.archived:
+                # Raise ApiError if the file already exists and is not archived
+                raise ApiError(code="duplicate_file",
+                               message='If you want to replace the file, use the update mechanism.')
         else:
             file_model = FileModel(
                 workflow_spec_id=workflow_spec.id,
@@ -60,7 +62,7 @@ class FileService(object):
                 is_status=is_status,
             )
 
-            return FileService.update_file(file_model, binary_data, content_type)
+        return FileService.update_file(file_model, binary_data, content_type)
 
 
 
