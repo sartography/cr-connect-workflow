@@ -2,7 +2,9 @@ from crc.scripts.script import Script
 from crc.api.common import ApiError
 from crc import session
 from crc.models.email import EmailModel, EmailModelSchema
-import json
+from crc.services.email_service import EmailService
+
+import datetime
 
 
 class EmailData(Script):
@@ -12,11 +14,22 @@ class EmailData(Script):
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         if 'email_id' in kwargs or 'workflow_spec_id' in kwargs:
-            return True
-        else:
-            return False
+            subject = 'My Test Email'
+            recipients = 'user@example.com'
+            content, content_html = EmailService().get_rendered_content(task.task_spec.documentation, task.data)
+            email_model = EmailModel(subject=subject,
+                                     recipients=recipients,
+                                     content=content,
+                                     content_html=content_html,
+                                     timestamp=datetime.datetime.utcnow())
+            return EmailModelSchema(many=True).dump([email_model])
 
-    def do_task(self, task, study_id, workflow_id, **kwargs):
+        else:
+            raise ApiError.from_task(code='missing_email_id',
+                                     message='You must include an email_id or workflow_spec_id with the get_email_data script.',
+                                     task=task)
+
+    def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         email_models = None
         email_data = None
         if 'email_id' in kwargs:
