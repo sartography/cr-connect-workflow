@@ -6,6 +6,12 @@ from crc.services.email_service import EmailService
 
 class TestGetEmailData(BaseTest):
 
+    def test_email_data_validation(self):
+        self.load_example_data()
+        spec_model = self.load_test_spec('get_email_data')
+        rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
+        self.assertEqual([], rv.json)
+
     def test_get_email_data_by_email_id(self):
         self.load_example_data()
         workflow = self.create_workflow('get_email_data')
