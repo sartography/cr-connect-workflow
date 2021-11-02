@@ -59,16 +59,20 @@ SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
 # PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/v2.0/").strip('/') + '/'  # Trailing slash required
 PB_BASE_URL = environ.get('PB_BASE_URL', default="https://vpr-dev01.web.virginia.edu/webservices/crconnect/crconnect.cfc").strip('/')   # Trailing slash required
-# https://vpr-dev01.web.virginia.edu/webservices/crconnect/crconnect.cfc?method=user_studies&uva_id=dhf8r
-# https://vpr-dev01.web.virginia.edu/webservices/crconnect/crconnect.cfc?method=user_studies&uva_id=dhf8r
-PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "?method=user_studies&uva_id=%s")
 # PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "user_studies?uva_id=%s")
-PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "investigators?studyid=%i")
-PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
-PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
-PB_SPONSORS_URL = environ.get('PB_SPONSORS_URL', default=PB_BASE_URL + "sponsors?studyid=%i")
-PB_IRB_INFO_URL = environ.get('PB_IRB_INFO_URL', default=PB_BASE_URL + "current_irb_info/%i")
-PB_CHECK_STUDY_URL = environ.get('PB_CHECK_STUDY_URL', default=PB_BASE_URL + "check_study/%i")
+PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "?method=user_studies&uva_id=%s")
+# PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "investigators?studyid=%i")
+PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "?method=investigators&studyid=%i")
+# PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "required_docs?studyid=%i")
+PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "?method=CheckRequiredDocs&STUDYID=%i")
+# PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "study?studyid=%i")
+PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL + "?method=Study&studyid=%i")
+# PB_SPONSORS_URL = environ.get('PB_SPONSORS_URL', default=PB_BASE_URL + "sponsors?studyid=%i")
+PB_SPONSORS_URL = environ.get('PB_SPONSORS_URL', default=PB_BASE_URL + "?method=StudySponsor&studyid=%i")
+# PB_IRB_INFO_URL = environ.get('PB_IRB_INFO_URL', default=PB_BASE_URL + "current_irb_info/%i")
+PB_IRB_INFO_URL = environ.get('PB_IRB_INFO_URL', default=PB_BASE_URL + "?method=currentIRBInfo&studyid=%i")
+# PB_CHECK_STUDY_URL = environ.get('PB_CHECK_STUDY_URL', default=PB_BASE_URL + "check_study/%i")
+PB_CHECK_STUDY_URL = environ.get('PB_CHECK_STUDY_URL', default=PB_BASE_URL + "?method=CheckStudy&STUDYID=%i")
 
 # Ldap Configuration
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
