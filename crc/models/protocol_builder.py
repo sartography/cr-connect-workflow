@@ -41,20 +41,21 @@ class ProtocolBuilderStatus(enum.Enum):
 class ProtocolBuilderStudy(object):
     def __init__(
             self, STUDYID: int, TITLE: str, NETBADGEID: str,
-            DATE_MODIFIED: str
+            DATE_MODIFIED: str, Q_COMPLETE: str=None, HSRNUMBER: str=None
     ):
         self.STUDYID = STUDYID
         self.TITLE = TITLE
         self.NETBADGEID = NETBADGEID
         self.DATE_MODIFIED = DATE_MODIFIED
-
+        self.Q_COMPLETE = Q_COMPLETE
+        self.HSRNUMBER = HSRNUMBER
 
 class ProtocolBuilderStudySchema(ma.Schema):
     class Meta:
         model = ProtocolBuilderStudy
         unknown = INCLUDE
         fields = ["STUDYID", "TITLE", "NETBADGEID",
-                  "DATE_MODIFIED"]
+                  "DATE_MODIFIED", "Q_COMPLETE", "HSRNUMBER"]
 
     @post_load
     def make_pbs(self, data, **kwargs):
