@@ -30,6 +30,7 @@ class ProtocolBuilderService(object):
         ProtocolBuilderService.__enabled_or_raise()
         if not isinstance(user_id, str):
             raise ApiError("protocol_builder_error", "This user id is invalid: " + str(user_id))
+        user_id = 'cah3us'
         url = ProtocolBuilderService.STUDY_URL % user_id
         logging.info(f'get_studies: url: {url}')
         logging.debug(f'get_studies: url: {url}')
