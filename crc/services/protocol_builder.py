@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import List, Optional
 
 import requests
+import logging
 
 from crc import app
 from crc.api.common import ApiError
@@ -30,10 +31,13 @@ class ProtocolBuilderService(object):
         if not isinstance(user_id, str):
             raise ApiError("protocol_builder_error", "This user id is invalid: " + str(user_id))
         url = ProtocolBuilderService.STUDY_URL % user_id
+        logging.info(f'get_studies: url: {url}')
         response = requests.get(url)
         if response.ok and response.text:
+            logging.info(f'get_studies: response.text: {response.text}')
             try:
                 pb_studies = ProtocolBuilderStudySchema(many=True).loads(response.text)
+                logging.info(f'get_studies: pb_studies: {pb_studies}')
                 return pb_studies
             except JSONDecodeError as err:
                 raise ApiError("protocol_builder_error",
