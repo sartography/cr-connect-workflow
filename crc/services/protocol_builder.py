@@ -32,6 +32,7 @@ class ProtocolBuilderService(object):
             raise ApiError("protocol_builder_error", "This user id is invalid: " + str(user_id))
         url = ProtocolBuilderService.STUDY_URL % user_id
         logging.info(f'get_studies: url: {url}')
+        logging.debug(f'get_studies: url: {url}')
         response = requests.get(url)
         if response.ok and response.text:
             logging.info(f'get_studies: response.text: {response.text}')
