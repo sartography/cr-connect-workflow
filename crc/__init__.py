@@ -1,5 +1,4 @@
-import json
-import logging
+import logging.config
 import os
 
 import click
@@ -18,8 +17,8 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-
-logging.basicConfig(level=logging.INFO)
+from config.logging import logging_config
+logging.config.dictConfig(logging_config)
 
 connexion_app = connexion.FlaskApp(__name__)
 
