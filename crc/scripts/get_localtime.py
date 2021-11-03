@@ -12,16 +12,21 @@ class GetLocaltime(Script):
         Defaults to US/Eastern"""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        if 'timestamp' in kwargs:
+        if len(args) > 0 or 'timestamp' in kwargs:
             return self.do_task(task, study_id, workflow_id, *args, **kwargs)
         raise ApiError(code='missing_timestamp',
                        message='You must include a timestamp to convert.')
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        if 'timestamp' in kwargs:
-            timestamp = kwargs['timestamp']
+        if len(args) > 0 or 'timestamp' in kwargs:
+            if 'timestamp' in kwargs:
+                timestamp = kwargs['timestamp']
+            else:
+                timestamp = args[0]
             if 'timezone' in kwargs:
                 timezone = kwargs['timezone']
+            elif len(args) > 1:
+                timezone = args[1]
             else:
                 timezone = 'US/Eastern'
             parsed_timestamp = dateparser.parse(timestamp)
