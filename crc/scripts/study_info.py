@@ -195,7 +195,11 @@ Please note this is just a few examples, ALL known document types are returned i
         if cmd == 'roles':
             retval = StudyService().get_investigators(study_id, all=True)
         if cmd == 'details':
-            retval = self.pb.get_study_details(study_id)
+            details = self.pb.get_study_details(study_id)
+            if len(details) > 0:
+                retval = details[0]
+            else:
+                retval = None
         if cmd == 'sponsors':
             retval = self.pb.get_sponsors(study_id)
         if cmd == 'documents':
