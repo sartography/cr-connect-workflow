@@ -41,13 +41,14 @@ class ProtocolBuilderStatus(enum.Enum):
 class ProtocolBuilderStudy(object):
     def __init__(
             self, STUDYID: int, TITLE: str, NETBADGEID: str,
-            DATE_MODIFIED: str, Q_COMPLETE: str=None
+            DATE_MODIFIED: str, Q_COMPLETE: str, HSRNUMBER: str
     ):
         self.STUDYID = STUDYID
         self.TITLE = TITLE
         self.NETBADGEID = NETBADGEID
         self.DATE_MODIFIED = DATE_MODIFIED
         self.Q_COMPLETE = Q_COMPLETE
+        self.HSRNUMBER = HSRNUMBER
 
 class ProtocolBuilderStudySchema(ma.Schema):
     class Meta:
