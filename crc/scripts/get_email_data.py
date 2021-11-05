@@ -16,7 +16,8 @@ class EmailData(Script):
         if 'email_id' in kwargs or 'workflow_spec_id' in kwargs:
             subject = 'My Test Email'
             recipients = 'user@example.com'
-            content, content_html = EmailService().get_rendered_content(task.task_spec.documentation, task.data)
+            content = "Hello"
+            content_html = "<!DOCTYPE html><html><head></head><body><div><h2>Hello</h2></div></body></html>"
             email_model = EmailModel(subject=subject,
                                      recipients=recipients,
                                      content=content,

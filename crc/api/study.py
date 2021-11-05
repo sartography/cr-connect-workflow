@@ -102,7 +102,7 @@ def user_studies():
     if len(studies) == 0:
         studies = StudyService().get_studies_for_user(user, include_invalid=True)
         if len(studies) > 0:
-            message = f"All studies associated with User: {user.display_name} failed study validation"
+            message = f"All studies associated with User: {user.uid} failed study validation"
             raise ApiError(code="study_integrity_error", message=message)
 
     results = StudySchema(many=True).dump(studies)
