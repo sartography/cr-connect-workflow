@@ -37,11 +37,10 @@ class StudyService(object):
 
     @staticmethod
     def _is_valid_study(study_id):
+        study_info = None
         study_details = ProtocolBuilderService().get_study_details(study_id)
         if len(study_details) > 0:
             study_info = study_details[0]
-        else:
-            study_info = None
         # The review types 2, 3, 23, 24 correspond to review type names
         # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
         if isinstance(study_info, dict) and 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3, 23, 24]:
