@@ -3,7 +3,6 @@ from json import JSONDecodeError
 from typing import List, Optional
 
 import requests
-import logging
 
 from crc import app
 from crc.api.common import ApiError
