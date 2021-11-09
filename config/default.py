@@ -58,8 +58,8 @@ SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 # %s/%i placeholders expected for uva_id and study_id in various calls.
 PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
 
-real_urls = True
-if real_urls:
+REAL_URLS = environ.get('REAL_URLS', default="false") == "true"
+if REAL_URLS:
     # Real URLs (UVA Development BASE URL)
     PB_BASE_URL = environ.get('PB_BASE_URL', default="https://vpr-dev01.web.virginia.edu/webservices/crconnect/crconnect.cfc").strip('/')
     PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "?method=user_studies&uva_id=%s")
