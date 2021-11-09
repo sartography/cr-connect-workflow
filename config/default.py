@@ -61,7 +61,7 @@ PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
 REAL_URLS = environ.get('REAL_URLS', default="false") == "true"
 if REAL_URLS:
     # Real URLs (UVA Development BASE URL)
-    PB_BASE_URL = environ.get('PB_BASE_URL', default="https://vpr-dev01.web.virginia.edu/webservices/crconnect/crconnect.cfc").strip('/')
+    PB_BASE_URL = environ.get('PB_BASE_URL', default="https://vpr-dev01.web.virginia.edu/webservices/crconnect/crconnect.cfc")
     PB_USER_STUDIES_URL = environ.get('PB_USER_STUDIES_URL', default=PB_BASE_URL + "?method=user_studies&uva_id=%s")
     PB_INVESTIGATORS_URL = environ.get('PB_INVESTIGATORS_URL', default=PB_BASE_URL + "?method=investigators&studyid=%i")
     PB_REQUIRED_DOCS_URL = environ.get('PB_REQUIRED_DOCS_URL', default=PB_BASE_URL + "?method=CheckRequiredDocs&STUDYID=%i")
