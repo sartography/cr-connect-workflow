@@ -7,6 +7,7 @@ import sentry_sdk
 
 import connexion
 from SpiffWorkflow import WorkflowException
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from connexion import ProblemException
 from flask import Response
 from flask_cors import CORS
@@ -139,8 +140,8 @@ def sync_with_testing():
 
 @app.cli.command()
 @click.argument("study_id")
-@click.argument("category")
-@click.argument("spec_id")
+@click.argument("category", required=False)
+@click.argument("spec_id", required=False)
 def validate_all(study_id, category=None, spec_id=None):
     """Step through all the local workflows and validate them, returning any errors. This make take forever.
     Please provide a real study id to use for validation, an optional category can be specified to only validate
@@ -148,7 +149,13 @@ def validate_all(study_id, category=None, spec_id=None):
     from crc.models.workflow import WorkflowSpecModel
     from crc.services.workflow_service import WorkflowService
     from crc.api.common import ApiError
+    from crc.models.study import StudyModel
+    from crc.models.user import UserModel
+    from flask import g
 
+    study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+    g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
+    g.token = "anything_is_fine_just_need_something."
     specs = session.query(WorkflowSpecModel).all()
     for spec in specs:
         if spec_id and spec_id != spec.id:
@@ -158,10 +165,15 @@ def validate_all(study_id, category=None, spec_id=None):
         try:
             WorkflowService.test_spec(spec.id, validate_study_id=study_id)
         except ApiError as e:
-            print("Failed to validate workflow " + spec.id)
-            print(e)
+            if e.code == 'disabled_workflow':
+                print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
+            else:
+                print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}")
+                return
+        except WorkflowTaskExecException as e:
+            print(f"Workflow Error, {e}, in Task {e.task.name} validate workflow {spec.id} in Category {spec.category.display_name}")
             return
-        except WorkflowException as e:
-            print("Failed to validate workflow " + spec.id)
+        except Exception as e:
+            print(f"Unexpected Error, {e} validate workflow {spec.id} in Category {spec.category.display_name}")
             print(e)
             return
