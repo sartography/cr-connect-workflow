@@ -258,6 +258,11 @@ class WorkflowService(object):
             if field.has_property("read_only") and field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
                 continue # Don't mess about with read only fields.
 
+            if field.has_property(Task.FIELD_PROP_REPEAT) and field.has_property(Task.FIELD_PROP_GROUP):
+                raise ApiError.from_task("group_repeat", f'Fields cannot have both group and repeat properties. '
+                                                         f' Please remove one of these properties. ',
+                                         task=task)
+
             if field.has_property(Task.FIELD_PROP_REPEAT):
                 group = field.get_property(Task.FIELD_PROP_REPEAT)
                 if group in form_data and not(isinstance(form_data[group], list)):
