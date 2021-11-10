@@ -96,6 +96,35 @@ paths:
                 items:
                   $ref: "#/components/schemas/DocumentDirectory"
 
+  # Context-less LDAP Lookup
+  /ldap:
+    parameters:
+      - name: query
+        in: query
+        required: false
+        description: The string to search for in the Value column of the lookup table.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        description: The total number of records to return, defaults to 10.
+        schema:
+          type: integer
+
+    get:
+      operationId: crc.api.workflow.lookup_ldap
+      summary: Returns a list of LDAP users, with a given query.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: An array of all LDAP users.
+          content:
+            application/json:
+              schema:
+                type: array
+
   # /v1.0/study
   /study:
     get:
