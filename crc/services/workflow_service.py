@@ -433,7 +433,7 @@ class WorkflowService(object):
             elif lookup_model:
                 data = db.session.query(LookupDataModel).\
                     filter(LookupDataModel.lookup_file_model == lookup_model). \
-                    filter(LookupDataModel.value == default).\
+                    filter(LookupDataModel.value == str(default)).\
                     first()
                 if not data:
                     raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "

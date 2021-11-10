@@ -2,6 +2,7 @@ from tests.base_test import BaseTest
 
 from crc.scripts.enum_label import EnumLabel
 from crc.api.common import ApiError
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class TestGetEnumLabel(BaseTest):
@@ -12,8 +13,10 @@ class TestGetEnumLabel(BaseTest):
         self.workflow_api = self.get_workflow_api(self.workflow)
 
         # Assure the form has been loaded at least once.
-        self.task = self.workflow_api.next_task
-        self.assertEqual(self.task.name, 'myFormTask')
+        processor = WorkflowProcessor(self.workflow)
+        processor.do_engine_steps()
+        self.task = processor.next_task()
+        self.assertEqual(self.task.get_name(), 'myFormTask')
 
         self.labelScript = EnumLabel()
 
