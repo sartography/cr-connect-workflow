@@ -220,17 +220,17 @@ class TestAuthentication(BaseTest):
         admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token())
 
         # User should not be in the system yet.
-        non_admin_user = session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
-        self.assertIsNone(non_admin_user)
+        # non_admin_user = session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
+        # self.assertIsNone(non_admin_user)
 
         # Admin should not be able to impersonate non-existent user
-        rv_1 = self.app.get(
-            '/v1.0/user?admin_impersonate_uid=' + self.non_admin_uid,
-            content_type="application/json",
-            headers=admin_token_headers,
-            follow_redirects=False
-        )
-        self.assert_failure(rv_1, 400)
+        # rv_1 = self.app.get(
+        #    '/v1.0/user?admin_impersonate_uid=' + self.non_admin_uid,
+        #    content_type="application/json",
+        #    headers=admin_token_headers,
+        #    follow_redirects=False
+        #)
+        # self.assert_failure(rv_1, 400)
 
         # Add the non-admin user now
         self.logout()

@@ -400,6 +400,16 @@ def lookup(workflow_id, task_spec_name, field_id, query=None, value=None, limit=
     # Just return the data
     return lookup_data
 
+
+def lookup_ldap(query=None, limit=10):
+    """
+    perform a lookup against the LDAP server without needing a provided workflow.
+    """
+    value = None
+    lookup_data = LookupService._run_ldap_query(query, value, limit)
+    return lookup_data
+
+
 def _verify_user_and_role(processor, spiff_task):
     """Assures the currently logged in user can access the given workflow and task, or
     raises an error.  """

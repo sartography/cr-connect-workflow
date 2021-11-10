@@ -21,6 +21,7 @@ from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderSta
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
     IrbStatus, StudyAssociated, StudyAssociatedSchema
 from crc.models.task_event import TaskEventModel, TaskEvent
+from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
 from crc.services.document_service import DocumentService
@@ -220,6 +221,7 @@ class StudyService(object):
     @staticmethod
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
+        session.query(TaskLogModel).filter_by(study_id=study_id).delete()
         session.query(StudyAssociated).filter_by(study_id=study_id).delete()
         session.query(EmailModel).filter_by(study_id=study_id).delete()
         session.query(StudyEvent).filter_by(study_id=study_id).delete()
