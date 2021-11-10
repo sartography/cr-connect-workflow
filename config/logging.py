@@ -9,22 +9,12 @@ logging_config = {
     },
     'alembic.runtime.migration': {
       'handlers': ['console', 'file'],
-      'level': 'WARN',
+      'level': 'ERROR',
       'propagate': False
     },
     'urllib3.connectionpool': {
       'handlers': ['console', 'file'],
-      'level': 'WARN',
-      'propagate': False
-    },
-    'elasticsearch': {
-      'handlers': ['console', 'file'],
-      'level': 'WARN',
-      'propagate': False
-    },
-    'ElasticIndex': {
-      'handlers': ['console', 'file'],
-      'level': 'WARN',
+      'level': 'ERROR',
       'propagate': False
     },
   },
@@ -48,7 +38,7 @@ logging_config = {
       "level": "DEBUG"
     },
     "file": {
-      "level": "DEBUG",
+      "level": "INFO",
       "formatter": "simple",
       "class": "logging.FileHandler",
       "filename": "cr_connect.log"
