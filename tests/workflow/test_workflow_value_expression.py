@@ -3,6 +3,7 @@ from tests.base_test import BaseTest
 
 class TestValueExpression(BaseTest):
 
+    # If there is no default value, a value of 'None' should be given.
     def test_value_expression_no_default(self):
 
         workflow = self.create_workflow('test_value_expression')
@@ -14,7 +15,7 @@ class TestValueExpression(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         second_task = workflow_api.next_task
         self.assertEqual('', second_task.data['value_expression_value'])
-        self.assertNotIn('color', second_task.data)
+        self.assertIn('color', second_task.data)
 
 
 
