@@ -11,6 +11,8 @@ from crc.models.email import EmailModel
 from crc.models.file import FileDataModel
 from crc.models.study import StudyModel
 
+from crc.services.jinja_service import JinjaService
+
 
 class EmailService(object):
     """Provides common tools for working with an Email"""
@@ -47,9 +49,11 @@ class EmailService(object):
                     msg.attach(file['name'], file['type'], file_data.data)
 
             mail.send(msg)
+
         except Exception as e:
             app.logger.error('An exception happened in EmailService', exc_info=True)
             app.logger.error(str(e))
+            raise e
 
         db.session.add(email_model)
         db.session.commit()
@@ -65,8 +69,7 @@ class EmailService(object):
             return False
 
     def get_rendered_content(self, message, data):
-        template = Template(message)
-        content = template.render(data)
+        content = JinjaService.get_content(message, data)
         rendered_markdown = markdown.markdown(content, extensions=['nl2br'])
         content_html = self.get_cr_connect_wrapper(rendered_markdown)
 

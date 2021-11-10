@@ -5,13 +5,15 @@ import os
 from tests.base_test import BaseTest
 
 from crc import session, db, app
-from crc.models.file import FileModel, FileType, FileSchema, FileModelSchema
+from crc.models.file import FileModel, FileType, FileModelSchema, FileDataModel
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.models.data_store import DataStoreModel
 from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
+
+from sqlalchemy import desc
 
 
 class TestFilesApi(BaseTest):
@@ -376,3 +378,48 @@ class TestFilesApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertTrue(json_data['primary'])
         self.assertIsNotNone(json_data['primary_process_id'])
+
+    def test_file_upload_with_previous_name(self):
+        self.load_example_data()
+        workflow_spec_model = session.query(WorkflowSpecModel).first()
+
+        # Add file
+        data = {'file': (io.BytesIO(b'asdf'), 'test_file.xlsx')}
+        rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % workflow_spec_model.id,
+                           data=data,
+                           follow_redirects=True,
+                           content_type='multipart/form-data',
+                           headers=self.logged_in_headers())
+
+        self.assert_success(rv)
+        file_json = json.loads(rv.get_data(as_text=True))
+        file_id = file_json['id']
+
+        # Set file to archived
+        file_model = session.query(FileModel).filter_by(id=file_id).first()
+        file_model.archived = True
+        session.commit()
+
+        # Assert we have the correct file data and the file is archived
+        file_data_model = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model.id).first()
+        self.assertEqual(b'asdf', file_data_model.data)
+        file_model = session.query(FileModel).filter_by(id=file_model.id).first()
+        self.assertEqual(True, file_model.archived)
+
+        # Upload file with same name
+        data = {'file': (io.BytesIO(b'xyzpdq'), 'test_file.xlsx')}
+        rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % workflow_spec_model.id,
+                           data=data,
+                           follow_redirects=True,
+                           content_type='multipart/form-data',
+                           headers=self.logged_in_headers())
+
+        self.assert_success(rv)
+        file_json = json.loads(rv.get_data(as_text=True))
+        file_id = file_json['id']
+
+        # Assert we have the correct file data and the file is *not* archived
+        file_data_model = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_id).order_by(desc(FileDataModel.version)).first()
+        self.assertEqual(b'xyzpdq', file_data_model.data)
+        file_model = session.query(FileModel).filter_by(id=file_id).first()
+        self.assertEqual(False, file_model.archived)

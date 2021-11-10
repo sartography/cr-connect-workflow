@@ -15,16 +15,10 @@ from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 class TestTasksApi(BaseTest):
 
     def assert_options_populated(self, results, lookup_data_keys):
-        option_keys = ['value', 'label', 'data']
-        self.assertIsInstance(results, list)
         for result in results:
-            for option_key in option_keys:
-                self.assertTrue(option_key in result, 'should have value, label, and data properties populated')
-                self.assertIsNotNone(result[option_key], '%s should not be None' % option_key)
-
-            self.assertIsInstance(result['data'], dict)
+            self.assertIsInstance(result, dict)
             for lookup_data_key in lookup_data_keys:
-                self.assertTrue(lookup_data_key in result['data'], 'should have all lookup data columns populated')
+                self.assertTrue(lookup_data_key in result, 'should have all lookup data columns populated')
 
     def test_get_current_user_tasks(self):
         self.load_example_data()
@@ -287,8 +281,9 @@ class TestTasksApi(BaseTest):
         self.assertEqual(5, len(results))
         self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
 
+        # Use the lookup to find a specific record, rather than running a search.
         rv = self.app.get('/v1.0/workflow/%i/lookup/%s/%s?value=%s' %
-                          (workflow.id, task.name, field_id, results[0]['value']), # All records with a word that starts with 'c'
+                          (workflow.id, task.name, field_id, results[0]['CUSTOMER_NUMBER']),
                           headers=self.logged_in_headers(),
                           content_type="application/json")
         results = json.loads(rv.get_data(as_text=True))
@@ -316,7 +311,7 @@ class TestTasksApi(BaseTest):
         results = json.loads(rv.get_data(as_text=True))
         self.assertEqual(1, len(results))
         self.assert_options_populated(results, ['CUSTOMER_NUMBER', 'CUSTOMER_NAME', 'CUSTOMER_CLASS_MEANING'])
-        self.assertIsInstance(results[0]['data'], dict)
+        self.assertIsInstance(results[0], dict)
 
     def test_enum_from_task_data(self):
         workflow = self.create_workflow('enum_options_from_task_data')

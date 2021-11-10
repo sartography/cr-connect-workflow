@@ -56,13 +56,15 @@ class FileService(object):
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
                                name, content_type, binary_data, primary=False, is_status=False):
         """Create a new file and associate it with a workflow spec."""
-        # Raise ApiError if the file already exists
-        if session.query(FileModel)\
+        file_model = session.query(FileModel)\
             .filter(FileModel.workflow_spec_id == workflow_spec.id)\
-            .filter(FileModel.name == name).first():
+            .filter(FileModel.name == name).first()
 
-            raise ApiError(code="Duplicate File",
-                           message='If you want to replace the file, use the update mechanism.')
+        if file_model:
+            if not file_model.archived:
+                # Raise ApiError if the file already exists and is not archived
+                raise ApiError(code="duplicate_file",
+                               message='If you want to replace the file, use the update mechanism.')
         else:
             file_model = FileModel(
                 workflow_spec_id=workflow_spec.id,
@@ -71,7 +73,7 @@ class FileService(object):
                 is_status=is_status,
             )
 
-            return FileService.update_file(file_model, binary_data, content_type)
+        return FileService.update_file(file_model, binary_data, content_type)
 
 
 
@@ -577,3 +579,49 @@ class FileService(object):
         dmn_file = prefix + etree.tostring(root)
 
         return dmn_file
+
+    @staticmethod
+    def cleanup_file_data(copies_to_keep=1):
+        if isinstance(copies_to_keep, int) and copies_to_keep > 0:
+
+            deleted_models = []
+            saved_models = []
+            current_models = []
+
+            session.flush()
+
+            workflow_spec_models = session.query(WorkflowSpecModel).all()
+
+            for wf_spec_model in workflow_spec_models:
+                file_models = session.query(FileModel)\
+                    .filter(FileModel.workflow_spec_id == wf_spec_model.id)\
+                    .all()
+
+                for file_model in file_models:
+                    file_data_models = session.query(FileDataModel)\
+                        .filter(FileDataModel.file_model_id == file_model.id)\
+                        .order_by(desc(FileDataModel.date_created))\
+                        .all()
+                    current_models.append(file_data_models[:copies_to_keep])
+                    for fd_model in file_data_models[copies_to_keep:]:
+                        dependencies = session.query(WorkflowSpecDependencyFile)\
+                            .filter(WorkflowSpecDependencyFile.file_data_id == fd_model.id)\
+                            .all()
+                        if len(dependencies) > 0:
+                            saved_models.append(fd_model)
+                            continue
+                        lookups = session.query(LookupFileModel)\
+                            .filter(LookupFileModel.file_data_model_id == fd_model.id)\
+                            .all()
+                        if len(lookups) > 0:
+                            saved_models.append(fd_model)
+                            continue
+                        deleted_models.append(fd_model)
+                        session.delete(fd_model)
+
+            session.commit()
+            return current_models, saved_models, deleted_models
+
+        else:
+            raise ApiError(code='bad_keep',
+                           message='You must keep at least 1 version')
