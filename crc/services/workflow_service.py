@@ -293,7 +293,7 @@ class WorkflowService(object):
         # jsonify, and de-jsonify the data to mimic how data will be returned from the front end for forms and assures
         # we aren't generating something that can't be serialized.
         try:
-            form_data_string = app.json_encoder().encode(o=task_api.data)
+            form_data_string = app.json_encoder().encode(o=form_data)
         except TypeError as te:
             raise ApiError.from_task(code='serialize_error',
                                      message=f'Something cannot be serialized. Message is: {te}',
