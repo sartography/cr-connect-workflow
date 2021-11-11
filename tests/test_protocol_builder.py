@@ -35,16 +35,17 @@ class TestProtocolBuilder(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         response = ProtocolBuilderService.get_required_docs(self.test_study_id)
-        self.assertIsNotNone(response)
-        self.assertEqual(5, len(response))
-        self.assertEqual(6, response[0]['AUXDOCID'])
+        auxdocs = response['AUXDOCS']
+        self.assertIsNotNone(auxdocs)
+        self.assertEqual(5, len(auxdocs))
+        self.assertEqual(6, auxdocs[0]['SS_AUXILIARY_DOC_TYPE_ID'])
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_get_details(self, mock_get):
         app.config['PB_ENABLED'] = True
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('study_details.json')
-        response = ProtocolBuilderService.get_study_details(self.test_study_id)
+        response = ProtocolBuilderService.get_study_details(self.test_study_id)[0]
         self.assertIsNotNone(response)
         self.assertEqual(65, len(response))
         self.assertEqual('1234', response['IND_1'])
