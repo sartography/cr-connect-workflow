@@ -1,5 +1,4 @@
-import json
-import logging
+import logging.config
 import os
 
 import click
@@ -19,9 +18,6 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-
-logging.basicConfig(level=logging.INFO)
-
 connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
@@ -31,9 +27,13 @@ app.config.from_object('config.default')
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
     app.config.from_object('config.testing')
     app.config.from_pyfile('../config/testing.py')
+    import logging
+    logging.basicConfig(level=logging.INFO)
 else:
     app.config.root_path = app.instance_path
     app.config.from_pyfile('config.py', silent=True)
+    from config.logging import logging_config
+    logging.config.dictConfig(logging_config)
 
 
 db = SQLAlchemy(app)

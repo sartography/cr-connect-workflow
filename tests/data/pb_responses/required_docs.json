@@ -1,22 +1,26 @@
-[
-  {
-    "AUXDOC": "Cancer Center's PRC Approval Form",
-    "AUXDOCID": 6
+{
+  "AUXDOCS": [  {
+    "AUXILIARY_DOC": "Cancer Center's PRC Approval Form",
+    "SS_AUXILIARY_DOC_TYPE_ID": 6
   },
   {
-    "AUXDOC": "InfoSec Approval",
-    "AUXDOCID": "24"
+    "AUXILIARY_DOC": "InfoSec Approval",
+    "SS_AUXILIARY_DOC_TYPE_ID": "24"
   },
   {
-    "AUXDOC": "Scientific Pre-review Documentation",
-    "AUXDOCID": "25"
+    "AUXILIARY_DOC": "Scientific Pre-review Documentation",
+    "SS_AUXILIARY_DOC_TYPE_ID": "25"
   },
   {
-    "AUXDOC": "GMEC Approval",
-    "AUXDOCID": "45"
+    "AUXILIARY_DOC": "GMEC Approval",
+    "SS_AUXILIARY_DOC_TYPE_ID": "45"
   },
   {
-    "AUXDOC": "Laser Safety Officer Approval",
-    "AUXDOCID": "57"
+    "AUXILIARY_DOC": "Laser Safety Officer Approval",
+    "SS_AUXILIARY_DOC_TYPE_ID": "57"
   }
-]
+],
+  "OTHERDOCS": [],
+  "TEMPLATEDOCS": []
+}
+
