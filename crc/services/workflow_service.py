@@ -23,7 +23,7 @@ from SpiffWorkflow.util.metrics import timeit
 
 from jinja2 import Template
 
-from crc import db, app, session
+from crc import db, app, session, connexion_app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.data_store import DataStoreModel
@@ -194,7 +194,12 @@ class WorkflowService(object):
 
         if not hasattr(task.task_spec, 'form'): return
 
-        form_data = task.data # Just like with the front end, we start with what was already there, and modify it.
+        # Here we serialize and deserialize the task data, just as we would if sending it to the front end.
+        data = json.loads(app.json_encoder().encode(o=task_api.data))
+
+        # Just like with the front end, we start with what was already there, and modify it.
+        form_data = data
+
         hide_groups = []
         for field in task_api.form.fields:
             # Assure we have a field type
@@ -288,7 +293,7 @@ class WorkflowService(object):
         # jsonify, and de-jsonify the data to mimic how data will be returned from the front end for forms and assures
         # we aren't generating something that can't be serialized.
         try:
-            form_data_string = json.dumps(form_data)
+            form_data_string = app.json_encoder().encode(o=task_api.data)
         except TypeError as te:
             raise ApiError.from_task(code='serialize_error',
                                      message=f'Something cannot be serialized. Message is: {te}',
