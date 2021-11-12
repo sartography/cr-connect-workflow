@@ -21,6 +21,7 @@ from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderSta
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
     IrbStatus, StudyAssociated, StudyAssociatedSchema
 from crc.models.task_event import TaskEventModel, TaskEvent
+from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
 from crc.services.document_service import DocumentService
@@ -37,8 +38,13 @@ class StudyService(object):
 
     @staticmethod
     def _is_valid_study(study_id):
-        study_info = ProtocolBuilderService().get_study_details(study_id)
-        if 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3, 23, 24]:
+        study_info = None
+        study_details = ProtocolBuilderService().get_study_details(study_id)
+        if len(study_details) > 0:
+            study_info = study_details[0]
+        # The review types 2, 3, 23, 24 correspond to review type names
+        # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
+        if isinstance(study_info, dict) and 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3, 23, 24]:
             return True
         return False
 
@@ -215,6 +221,7 @@ class StudyService(object):
     @staticmethod
     def delete_study(study_id):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
+        session.query(TaskLogModel).filter_by(study_id=study_id).delete()
         session.query(StudyAssociated).filter_by(study_id=study_id).delete()
         session.query(EmailModel).filter_by(study_id=study_id).delete()
         session.query(StudyEvent).filter_by(study_id=study_id).delete()
@@ -271,8 +278,8 @@ class StudyService(object):
         for code, doc in doc_dictionary.items():
 
             doc['required'] = False
-            if ProtocolBuilderService.is_enabled() and doc['id']:
-                pb_data = next((item for item in pb_docs if int(item['AUXDOCID']) == int(doc['id'])), None)
+            if ProtocolBuilderService.is_enabled() and doc['id'] != '':
+                pb_data = next((item for item in pb_docs['AUXDOCS'] if int(item['SS_AUXILIARY_DOC_TYPE_ID']) == int(doc['id'])), None)
                 if pb_data:
                     doc['required'] = True
 

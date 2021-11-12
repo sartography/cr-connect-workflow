@@ -199,7 +199,7 @@ class LookupService(object):
     def _run_lookup_query(lookup_file_model, query, value, limit):
         db_query = LookupDataModel.query.filter(LookupDataModel.lookup_file_model == lookup_file_model)
         if value is not None:  # Then just find the model with that value
-            db_query = db_query.filter(LookupDataModel.value == value)
+            db_query = db_query.filter(LookupDataModel.value == str(value))
         else:
             # Build a full text query that takes all the terms provided and executes each term as a prefix query, and
             # OR's those queries together.  The order of the results is handled as a standard "Like" on the original

@@ -1,4 +1,4 @@
-{
+[{
   "DSMB": 1,
   "DSMB_FREQUENCY": 2,
   "GCRC_NUMBER": "9",
@@ -64,4 +64,4 @@
   "SPONSORS_PROTOCOL_REVISION_DATE": "2021-04-20",
   "UPLOAD_COMPLETE": null,
   "REVIEW_TYPE": 2
-}
+}]

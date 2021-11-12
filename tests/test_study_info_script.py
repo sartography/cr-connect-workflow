@@ -76,7 +76,7 @@ class TestStudyInfoScript(BaseTest):
         app.config['PB_ENABLED'] = True
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('study_details.json')
-        response = ProtocolBuilderService.get_study_details(self.test_study_id)
+        response = ProtocolBuilderService.get_study_details(self.test_study_id)[0]
         study_info, second_task = self.do_work(info_type='details')
         self.assertEqual(response['IBC_NUMBER'], second_task.data['info']['IBC_NUMBER'])
         self.assertEqual(response['IDE'], second_task.data['info']['IDE'])
@@ -84,7 +84,12 @@ class TestStudyInfoScript(BaseTest):
         self.assertEqual(response['IND_2'], second_task.data['info']['IND_2'])
         self.assertEqual(response['IND_3'], second_task.data['info']['IND_3'])
 
-    def test_info_script_documents(self):
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_info_script_documents(self, mock_get):
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
+        response = ProtocolBuilderService.get_required_docs(self.test_study_id)
         study_info, second_task = self.do_work(info_type='documents')
         self.assertEqual(study_info, second_task.data['info'])
         self.assertEqual(0, len(study_info['Grant_App']['files']), "Grant_App has not files yet.")

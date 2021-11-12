@@ -32,9 +32,7 @@ pet_label = enum_label(task='task_pet_form',field='pet',value='1')    // might r
 
         # get the field information for the provided task_name (NOT the current task)
         workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
-        processor = WorkflowProcessor(workflow_model)
-        spec, field = processor.find_spec_and_field(task_name, field_name)
-        print(spec)
+        field = self.find_field(task_name, field_name, spiff_task.workflow)
         print(field)
 
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
@@ -43,6 +41,18 @@ pet_label = enum_label(task='task_pet_form',field='pet',value='1')    // might r
             return self.enum_with_options_label(field, value)
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):
             return self.enum_from_task_data_label(spiff_task, field, value)
+
+    def find_field(self, task_name, field_name, workflow):
+        for spec in workflow.spec.task_specs.values():
+            if spec.name == task_name:
+                for field in spec.form.fields:
+                    if field.id == field_name:
+                        return field
+                raise ApiError("invalid_field",
+                               f"The task '{task_name}' has no field named '{field_name}'")
+        raise ApiError("invalid_spec",
+                   f"Unable to find a task in the workflow called '{task_name}'")
+
 
     def autocomplete_label(self, workflow_model, task_name, field, value):
         label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
