@@ -205,7 +205,7 @@ class LookupDataModel(db.Model):
         )
 
 
-class LookupDataSchema(SQLAlchemyAutoSchema):
+class LookupDataSchema(ma.Schema):
     class Meta:
         model = LookupDataModel
         load_instance = True

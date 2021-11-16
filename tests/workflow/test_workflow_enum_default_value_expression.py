@@ -19,7 +19,7 @@ class TestWorkflowEnumDefault(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('Activity_PickColor', workflow_api.next_task.name)
-        self.assertEqual({'value': 'black', 'label': 'Black'}, workflow_api.next_task.data['color_select'])
+        self.assertEqual('black', workflow_api.next_task.data['color_select'])
 
         #
         workflow = self.create_workflow('enum_value_expression')
@@ -36,7 +36,7 @@ class TestWorkflowEnumDefault(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('Activity_PickColor', workflow_api.next_task.name)
-        self.assertEqual({'value': 'white', 'label': 'White'}, workflow_api.next_task.data['color_select'])
+        self.assertEqual('white', workflow_api.next_task.data['color_select'])
 
     def test_enum_value_expression_and_default(self):
         spec_model = self.load_test_spec('enum_value_expression_fail')

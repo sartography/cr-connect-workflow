@@ -13,7 +13,7 @@ class TestEmptyEnumList(BaseTest):
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         json_data = json.loads(rv.get_data(as_text=True))
 
-        self.assertEqual(json_data[0]['code'], 'invalid enum')
+        self.assertEqual(json_data[0]['code'], 'invalid_enum')
 
     def test_default_values_for_enum_as_checkbox(self):
         self.load_test_spec('enum_results')
@@ -25,4 +25,4 @@ class TestEmptyEnumList(BaseTest):
         checkbox_enum_field = task.task_spec.form.fields[0]
         radio_enum_field = task.task_spec.form.fields[1]
         self.assertEqual([], service.get_default_value(checkbox_enum_field, task))
-        self.assertEqual({'label': None, 'value': None}, service.get_default_value(radio_enum_field, task))
+        self.assertEqual(None, service.get_default_value(radio_enum_field, task))

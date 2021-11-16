@@ -13,7 +13,7 @@ class TestValidateEndEvent(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('study_details.json')
 
-        error_string = """Error processing template for task EndEvent_1qvyxg7: expected token 'end of statement block', got '='"""
+        error_string = """ApiError: Error processing template for task EndEvent_1qvyxg7: expected token 'end of statement block', got '='. In file verify_end_event.bpmn. """
 
         self.load_example_data()
         spec_model = self.load_test_spec('verify_end_event')

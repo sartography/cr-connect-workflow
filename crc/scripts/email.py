@@ -1,8 +1,10 @@
 import sys
 import traceback
+import datetime
 
 from crc import app, session
 from crc.api.common import ApiError
+from crc.models.email import EmailModel, EmailModelSchema
 from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowModel
 from crc.services.document_service import DocumentService
@@ -10,6 +12,8 @@ from crc.scripts.script import Script
 from crc.services.email_service import EmailService
 from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
+
+import datetime
 
 
 class Email(Script):
@@ -39,9 +43,16 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.get_subject(kwargs['subject'])
-        self.get_email_addresses(kwargs['recipients'], study_id)
-        EmailService().get_rendered_content(task.task_spec.documentation, task.data)
+        subject = self.get_subject(kwargs['subject'])
+        recipients = self.get_email_addresses(kwargs['recipients'], study_id)
+        content, content_html = EmailService().get_rendered_content(task.task_spec.documentation, task.data)
+        email_model = EmailModel(id=1,
+                                 subject=subject,
+                                 recipients=recipients,
+                                 content=content,
+                                 content_html=content_html,
+                                 timestamp=datetime.datetime.utcnow())
+        return EmailModelSchema().dump(email_model)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
@@ -58,7 +69,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 bcc = self.get_email_addresses(kwargs['bcc'], study_id)
             if 'reply_to' in kwargs:
                 reply_to = kwargs['reply_to']
-            if 'attachments' in kwargs:
+            # Don't process if attachments is None or ''
+            if 'attachments' in kwargs and kwargs['attachments'] is not None and kwargs['attachments'] != '':
                 files = self.get_files(kwargs['attachments'], study_id)
 
         else:
@@ -92,7 +104,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 print(repr(traceback.format_exception(exc_type, exc_value,
                                                       exc_traceback)))
                 raise e
-            return email_model.id
+            return EmailModelSchema().dump(email_model)
 
     def get_email_addresses(self, users, study_id):
         emails = []
@@ -134,7 +146,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
         if not subject or not isinstance(subject, str):
             raise ApiError(code="invalid_argument",
                            message="The subject you provided could not be parsed. "
-                               "The value is \"%s\" " % subject)
+                           "The value is \"%s\" " % subject)
         return subject
 
     @staticmethod

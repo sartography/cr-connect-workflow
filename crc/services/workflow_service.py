@@ -23,7 +23,7 @@ from SpiffWorkflow.util.metrics import timeit
 
 from jinja2 import Template
 
-from crc import db, app, session
+from crc import db, app, session, connexion_app
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.data_store import DataStoreModel
@@ -37,6 +37,7 @@ from crc.services.data_store_service import DataStoreBase
 
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
+from crc.services.jinja_service import JinjaService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
@@ -193,7 +194,12 @@ class WorkflowService(object):
 
         if not hasattr(task.task_spec, 'form'): return
 
-        form_data = task.data # Just like with the front end, we start with what was already there, and modify it.
+        # Here we serialize and deserialize the task data, just as we would if sending it to the front end.
+        data = json.loads(app.json_encoder().encode(o=task_api.data))
+
+        # Just like with the front end, we start with what was already there, and modify it.
+        form_data = data
+
         hide_groups = []
         for field in task_api.form.fields:
             # Assure we have a field type
@@ -257,6 +263,11 @@ class WorkflowService(object):
             if field.has_property("read_only") and field.get_property(Task.FIELD_PROP_READ_ONLY).lower().strip() == "true":
                 continue # Don't mess about with read only fields.
 
+            if field.has_property(Task.FIELD_PROP_REPEAT) and field.has_property(Task.FIELD_PROP_GROUP):
+                raise ApiError.from_task("group_repeat", f'Fields cannot have both group and repeat properties. '
+                                                         f' Please remove one of these properties. ',
+                                         task=task)
+
             if field.has_property(Task.FIELD_PROP_REPEAT):
                 group = field.get_property(Task.FIELD_PROP_REPEAT)
                 if group in form_data and not(isinstance(form_data[group], list)):
@@ -281,8 +292,14 @@ class WorkflowService(object):
 
         # jsonify, and de-jsonify the data to mimic how data will be returned from the front end for forms and assures
         # we aren't generating something that can't be serialized.
-        form_data_string = json.dumps(form_data)
-        task.data.update(json.loads(form_data_string))
+        try:
+            form_data_string = app.json_encoder().encode(o=form_data)
+        except TypeError as te:
+            raise ApiError.from_task(code='serialize_error',
+                                     message=f'Something cannot be serialized. Message is: {te}',
+                                     task=task)
+        extracted_form_data = WorkflowService().extract_form_data(json.loads(form_data_string), task)
+        task.update_data(extracted_form_data)
 
     @staticmethod
     def check_field_id(id):
@@ -349,16 +366,17 @@ class WorkflowService(object):
                 field.get_property(Task.FIELD_PROP_FILE_DATA) in data and \
                 field.id in data and data[field.id]:
             file_id = data[field.get_property(Task.FIELD_PROP_FILE_DATA)]["id"]
-            if field.type == 'enum':
-                data_args = (field.id, data[field.id]['label'])
-            else:
-                data_args = (field.id, data[field.id])
+            data_args = (field.id, data[field.id])
             DataStoreBase().set_data_common(task.id, None, None, None, None, None, file_id, *data_args)
 
     @staticmethod
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
         data = task.data
+        # If there's a field key with no initial value, give it one (None)
+        for field in task.task_spec.form.fields:
+            if field.id not in data:
+                data[field.id] = None
         if field.has_property(Task.FIELD_PROP_REPEAT):
             # Then you must evaluate the expression based on the data within the group, if that data exists.
             # There may not be data available in the group, if no groups where added
@@ -403,24 +421,21 @@ class WorkflowService(object):
         # Note: if default is False, we don't want to execute this code
         if default is None or (isinstance(default, str) and default.strip() == ''):
             if field.type == "enum" or field.type == "autocomplete":
-                # Return empty arrays for multi-select enums, otherwise do a value of None.
-                if field.has_property(Task.FIELD_PROP_ENUM_TYPE) and field.get_property(Task.FIELD_PROP_ENUM_TYPE) == "checkbox":
+                # Return empty arrays for multi-select
+                if field.has_property(Task.FIELD_PROP_ENUM_TYPE) and \
+                        field.get_property(Task.FIELD_PROP_ENUM_TYPE) == "checkbox":
                     return []
                 else:
-                    return {'value': None, 'label': None}
+                    return None
             else:
                 return None
 
         if field.type == "enum" and not has_lookup:
-            if hasattr(default, "value"):
-                default_option = next((obj for obj in field.options if obj.id == default.value), None)
-            else:
-                # Fixme: We should likely error out on this in validation, or remove this value/label alltogether.
-                default_option = next((obj for obj in field.options if obj.id == default), None)
+            default_option = next((obj for obj in field.options if obj.id == default), None)
             if not default_option:
                 raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
                                                             "the enum options ", task)
-            return {'value': default_option.id, 'label': default_option.name}
+            return default
         elif field.type == "autocomplete" or field.type == "enum":
             lookup_model = LookupService.get_lookup_model(task, field)
             if field.has_property(Task.FIELD_PROP_LDAP_LOOKUP):  # All ldap records get the same person.
@@ -428,12 +443,12 @@ class WorkflowService(object):
             elif lookup_model:
                 data = db.session.query(LookupDataModel).\
                     filter(LookupDataModel.lookup_file_model == lookup_model). \
-                    filter(LookupDataModel.value == default).\
+                    filter(LookupDataModel.value == str(default)).\
                     first()
                 if not data:
                     raise ApiError.from_task("invalid_default", "You specified a default value that does not exist in "
                                                                 "the enum options ", task)
-                return {"value": data.value, "label": data.label, "data": data.data}
+                return default
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
@@ -461,10 +476,10 @@ class WorkflowService(object):
             if len(field.options) > 0:
                 random_choice = random.choice(field.options)
                 if isinstance(random_choice, dict):
-                    random_value = {'value': random_choice['id'], 'label': random_choice['name'], 'data': random_choice['data']}
+                    random_value = random_choice['id']
                 else:
                     # fixme: why it is sometimes an EnumFormFieldOption, and other times not?
-                    random_value = {'value': random_choice.id, 'label': random_choice.name}
+                    random_value = random_choice.id
                 if field.has_property(Task.FIELD_PROP_ENUM_TYPE) and field.get_property(Task.FIELD_PROP_ENUM_TYPE) == 'checkbox':
                     return [random_value]
                 else:
@@ -484,7 +499,8 @@ class WorkflowService(object):
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
                 options = [{"value": d.value, "label": d.label, "data": d.data} for d in data]
                 if len(options) > 0:
-                    random_value = random.choice(options)
+                    option = random.choice(options)
+                    random_value = option['value']
                 else:
                     raise ApiError.from_task("invalid enum", "You specified an enumeration field (%s),"
                                                              " with no options" % field.id, task)
@@ -717,8 +733,7 @@ class WorkflowService(object):
         """Runs all the property values through the Jinja2 processor to inject data."""
         for k, v in props.items():
             try:
-                template = Template(v)
-                props[k] = template.render(**spiff_task.data)
+                props[k] = JinjaService.get_content(v, spiff_task.data)
             except jinja2.exceptions.TemplateError as ue:
                 app.logger.error(f'Failed to process task property {str(ue)}', exc_info=True)
         return props
@@ -742,8 +757,7 @@ class WorkflowService(object):
             return ""
 
         try:
-            template = Template(raw_doc)
-            return template.render(**spiff_task.data)
+            return JinjaService.get_content(raw_doc, spiff_task.data)
         except jinja2.exceptions.TemplateError as ue:
             raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
                                                           (spiff_task.task_spec.name, str(ue)), task=spiff_task)
@@ -755,11 +769,24 @@ class WorkflowService(object):
 
     @staticmethod
     def process_options(spiff_task, field):
+        if field.type != Task.FIELD_TYPE_ENUM:
+            return field
 
-        # If this is an auto-complete field, do not populate options, a lookup will happen later.
-        if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
-            pass
-        elif field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
+        if hasattr(field, 'options') and len(field.options) > 1:
+            return field
+        elif not (field.has_property(Task.FIELD_PROP_VALUE_COLUMN) or
+                field.has_property(Task.FIELD_PROP_LABEL_COLUMN)):
+            raise ApiError.from_task("invalid_enum",
+                                     f"For enumerations, you must include options, or a way to generate options from"
+                                     f" a spreadsheet or data set. Please set either a spreadsheet name or data name,"
+                                     f" along with the value and label columns to use from these sources.  Valid params"
+                                     f" include: "
+                                     f"{Task.FIELD_PROP_SPREADSHEET_NAME}, "
+                                     f"{Task.FIELD_PROP_DATA_NAME}, "
+                                     f"{Task.FIELD_PROP_VALUE_COLUMN}, "
+                                     f"{Task.FIELD_PROP_LABEL_COLUMN}", task=spiff_task)
+
+        if field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
             lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
             if not hasattr(field, 'options'):
@@ -768,16 +795,12 @@ class WorkflowService(object):
                 field.options.append({"id": d.value, "name": d.label, "data": d.data})
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):
             field.options = WorkflowService.get_options_from_task_data(spiff_task, field)
+
+
         return field
 
     @staticmethod
     def get_options_from_task_data(spiff_task, field):
-        if not (field.has_property(Task.FIELD_PROP_VALUE_COLUMN) or
-                field.has_property(Task.FIELD_PROP_LABEL_COLUMN)):
-            raise ApiError.from_task("invalid_enum",
-                                     f"For enumerations based on task data, you must include 3 properties: "
-                                     f"{Task.FIELD_PROP_DATA_NAME}, {Task.FIELD_PROP_VALUE_COLUMN}, "
-                                     f"{Task.FIELD_PROP_LABEL_COLUMN}", task=spiff_task)
         prop = field.get_property(Task.FIELD_PROP_DATA_NAME)
         if prop not in spiff_task.data:
             raise ApiError.from_task("invalid_enum", f"For enumerations based on task data, task data must have "

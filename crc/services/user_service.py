@@ -1,7 +1,9 @@
 from flask import g
 
+import crc.api.user
 from crc import session
 from crc.api.common import ApiError
+from crc.services.ldap_service import LdapService
 from crc.models.user import UserModel, AdminSessionModel
 
 
@@ -62,8 +64,13 @@ class UserService(object):
         if uid is None:
             raise ApiError("invalid_uid", "Please provide a valid user uid.")
 
-        if  UserService.is_different_user(uid):
+        if UserService.is_different_user(uid):
             # Impersonate the user if the given uid is valid.
+
+            # If the user is not in the User table, add them to it
+            ldap_info = LdapService().user_info(uid)
+            crc.api.user._upsert_user(ldap_info)
+
             impersonate_user = session.query(UserModel).filter(UserModel.uid == uid).first()
 
             if impersonate_user is not None:

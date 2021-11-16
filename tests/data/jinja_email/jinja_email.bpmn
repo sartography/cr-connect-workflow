@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_09wjj2q" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_098hnjo" name="Send email w/ included templage" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0yh2coe</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0yh2coe" sourceRef="StartEvent_1" targetRef="Activity_15btti7" />
+    <bpmn:sequenceFlow id="Flow_0ovknlg" sourceRef="Activity_15btti7" targetRef="Activity_181l58g" />
+    <bpmn:sequenceFlow id="Flow_103ct5a" sourceRef="Activity_181l58g" targetRef="Activity_0170t0m" />
+    <bpmn:endEvent id="Event_0f4v65r">
+      <bpmn:incoming>Flow_1nd1ian</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1nd1ian" sourceRef="Activity_0170t0m" targetRef="Event_0f4v65r" />
+    <bpmn:userTask id="Activity_15btti7" name="Get Email Data" camunda:formKey="DataForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="subject" label="Subject" type="string" />
+          <camunda:formField id="recipients" label="Recipients" type="string" />
+          <camunda:formField id="include_me" label="Included Template" type="string">
+            <camunda:properties>
+              <camunda:property id="Property_01o03tf" value="&#39;My Value&#39;" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="name" label="Name" type="string" />
+        </camunda:formData>
+        <camunda:properties>
+          <camunda:property name="my_extension" value="&#39;My Value&#39;" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0yh2coe</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ovknlg</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Activity_181l58g" name="Send Email">
+      <bpmn:documentation>Hello,
+
+
+Thank you for supporting the cause!
+
+
+{% include 'include_me' %}
+
+
+Did we include the other template?</bpmn:documentation>
+      <bpmn:incoming>Flow_0ovknlg</bpmn:incoming>
+      <bpmn:outgoing>Flow_103ct5a</bpmn:outgoing>
+      <bpmn:script>email_model = email(subject=subject, recipients=recipients)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Activity_0170t0m" name="Display Email">
+      <bpmn:documentation># Email Model
+{{ email_model }}</bpmn:documentation>
+      <bpmn:incoming>Flow_103ct5a</bpmn:incoming>
+      <bpmn:outgoing>Flow_1nd1ian</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_098hnjo">
+      <bpmndi:BPMNEdge id="Flow_1nd1ian_di" bpmnElement="Flow_1nd1ian">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_103ct5a_di" bpmnElement="Flow_103ct5a">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ovknlg_di" bpmnElement="Flow_0ovknlg">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yh2coe_di" bpmnElement="Flow_0yh2coe">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0f4v65r_di" bpmnElement="Event_0f4v65r">
+        <dc:Bounds x="752" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0rtrmp6_di" bpmnElement="Activity_15btti7">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xt518j_di" bpmnElement="Activity_181l58g">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1tcaou0_di" bpmnElement="Activity_0170t0m">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

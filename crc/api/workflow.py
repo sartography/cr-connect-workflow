@@ -397,7 +397,17 @@ def lookup(workflow_id, task_spec_name, field_id, query=None, value=None, limit=
     """
     workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
     lookup_data = LookupService.lookup(workflow, task_spec_name, field_id, query, value, limit)
-    return LookupDataSchema(many=True).dump(lookup_data)
+    # Just return the data
+    return lookup_data
+
+
+def lookup_ldap(query=None, limit=10):
+    """
+    perform a lookup against the LDAP server without needing a provided workflow.
+    """
+    value = None
+    lookup_data = LookupService._run_ldap_query(query, value, limit)
+    return lookup_data
 
 
 def _verify_user_and_role(processor, spiff_task):

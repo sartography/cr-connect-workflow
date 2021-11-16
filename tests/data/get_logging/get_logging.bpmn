@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_e3059e6" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_LoggingTask" name="Logging Task" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0d5wpav</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="Activity_LogEvent" name="Log Event">
+      <bpmn:incoming>Flow_0pc42yp</bpmn:incoming>
+      <bpmn:outgoing>Flow_0n34cdi</bpmn:outgoing>
+      <bpmn:script>log_model_info = log(level='info', code='test_code', message='You forgot to include the correct data.')
+log_model_debug = log(level='degug', code='debug_test_code', message='This is my debugging message')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Activity_DisplayLog" name="DisplayLog">
+      <bpmn:documentation># Logging Models Pre
+{{ logging_models_pre }}
+
+# Log Model
+{{ log_model }}
+
+# Logging Models All Post
+{{ logging_models_all_post }}
+
+
+# Logging Models Info Post
+{{ logging_models_info_post }}
+
+
+# Logging Models Debug Post
+{{ logging_models_debug_post }}</bpmn:documentation>
+      <bpmn:incoming>Flow_07j4f0v</bpmn:incoming>
+      <bpmn:outgoing>Flow_016ui0e</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_06g3ojm">
+      <bpmn:incoming>Flow_016ui0e</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_016ui0e" sourceRef="Activity_DisplayLog" targetRef="Event_06g3ojm" />
+    <bpmn:scriptTask id="Activity_GetLoggingPre" name="Get Logging Pre">
+      <bpmn:incoming>Flow_0d5wpav</bpmn:incoming>
+      <bpmn:outgoing>Flow_0pc42yp</bpmn:outgoing>
+      <bpmn:script>logging_models_pre = get_logs()</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_GetLoggingPost" name="Get Logging Post">
+      <bpmn:incoming>Flow_0n34cdi</bpmn:incoming>
+      <bpmn:outgoing>Flow_07j4f0v</bpmn:outgoing>
+      <bpmn:script>logging_models_all_post = get_logs()
+logging_models_info_post = get_logs('test_code')
+logging_models_debug_post = get_logs('debug_test_code')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0d5wpav" sourceRef="StartEvent_1" targetRef="Activity_GetLoggingPre" />
+    <bpmn:sequenceFlow id="Flow_0pc42yp" sourceRef="Activity_GetLoggingPre" targetRef="Activity_LogEvent" />
+    <bpmn:sequenceFlow id="Flow_0n34cdi" sourceRef="Activity_LogEvent" targetRef="Activity_GetLoggingPost" />
+    <bpmn:sequenceFlow id="Flow_07j4f0v" sourceRef="Activity_GetLoggingPost" targetRef="Activity_DisplayLog" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_LoggingTask">
+      <bpmndi:BPMNEdge id="Flow_07j4f0v_di" bpmnElement="Flow_07j4f0v">
+        <di:waypoint x="650" y="117" />
+        <di:waypoint x="710" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0n34cdi_di" bpmnElement="Flow_0n34cdi">
+        <di:waypoint x="490" y="117" />
+        <di:waypoint x="550" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0pc42yp_di" bpmnElement="Flow_0pc42yp">
+        <di:waypoint x="330" y="117" />
+        <di:waypoint x="390" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d5wpav_di" bpmnElement="Flow_0d5wpav">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="230" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_016ui0e_di" bpmnElement="Flow_016ui0e">
+        <di:waypoint x="810" y="117" />
+        <di:waypoint x="872" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_08z1eq4_di" bpmnElement="Activity_LogEvent">
+        <dc:Bounds x="390" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0amiq7i_di" bpmnElement="Activity_DisplayLog">
+        <dc:Bounds x="710" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_06g3ojm_di" bpmnElement="Event_06g3ojm">
+        <dc:Bounds x="872" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_07mg1d2_di" bpmnElement="Activity_GetLoggingPre">
+        <dc:Bounds x="230" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_167quv8_di" bpmnElement="Activity_GetLoggingPost">
+        <dc:Bounds x="550" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

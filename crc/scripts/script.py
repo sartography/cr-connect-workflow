@@ -13,12 +13,12 @@ class Script(object):
         raise ApiError("invalid_script",
                        "This script does not supply a description.")
 
-    def do_task(self, task, study_id, workflow_id, **kwargs):
+    def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         raise ApiError("invalid_script",
                        "This is an internal error. The script you are trying to execute '%s' " % self.__class__.__name__ +
                        "does not properly implement the do_task function.")
 
-    def do_task_validate_only(self, task, study_id, workflow_id, **kwargs):
+    def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         raise ApiError("invalid_script",
                        "This is an internal error. The script you are trying to execute '%s' " % self.__class__.__name__ +
                        "does must provide a validate_only option that mimics the do_task, " +

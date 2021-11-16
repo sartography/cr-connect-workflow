@@ -1,9 +1,12 @@
-import json
-import logging
+import logging.config
 import os
+
+import click
 import sentry_sdk
 
 import connexion
+from SpiffWorkflow import WorkflowException
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from connexion import ProblemException
 from flask import Response
 from flask_cors import CORS
@@ -15,8 +18,6 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-logging.basicConfig(level=logging.INFO)
-
 connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
@@ -26,9 +27,13 @@ app.config.from_object('config.default')
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
     app.config.from_object('config.testing')
     app.config.from_pyfile('../config/testing.py')
+    import logging
+    logging.basicConfig(level=logging.INFO)
 else:
     app.config.root_path = app.instance_path
     app.config.from_pyfile('config.py', silent=True)
+    from config.logging import logging_config
+    logging.config.dictConfig(logging_config)
 
 
 db = SQLAlchemy(app)
@@ -47,6 +52,7 @@ ma = Marshmallow(app)
 from crc import models
 from crc import api
 from crc.api import admin
+from crc.services.file_service import FileService
 from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 
@@ -57,6 +63,7 @@ def process_waiting_tasks():
         WorkflowService.do_waiting()
 
 scheduler.add_job(process_waiting_tasks,'interval',minutes=1)
+scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
 scheduler.start()
 
 
@@ -130,3 +137,43 @@ def sync_with_testing():
     """Load all the workflows currently on testing into this system."""
     from crc.api import workflow_sync
     workflow_sync.sync_all_changed_workflows("https://testing.crconnect.uvadcos.io/api")
+
+@app.cli.command()
+@click.argument("study_id")
+@click.argument("category", required=False)
+@click.argument("spec_id", required=False)
+def validate_all(study_id, category=None, spec_id=None):
+    """Step through all the local workflows and validate them, returning any errors. This make take forever.
+    Please provide a real study id to use for validation, an optional category can be specified to only validate
+    that category, and you can further specify a specific spec, if needed."""
+    from crc.models.workflow import WorkflowSpecModel
+    from crc.services.workflow_service import WorkflowService
+    from crc.api.common import ApiError
+    from crc.models.study import StudyModel
+    from crc.models.user import UserModel
+    from flask import g
+
+    study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+    g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
+    g.token = "anything_is_fine_just_need_something."
+    specs = session.query(WorkflowSpecModel).all()
+    for spec in specs:
+        if spec_id and spec_id != spec.id:
+            continue
+        if category and (not spec.category or spec.category.display_name != category):
+            continue
+        try:
+            WorkflowService.test_spec(spec.id, validate_study_id=study_id)
+        except ApiError as e:
+            if e.code == 'disabled_workflow':
+                print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
+            else:
+                print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}")
+                return
+        except WorkflowTaskExecException as e:
+            print(f"Workflow Error, {e}, in Task {e.task.name} validate workflow {spec.id} in Category {spec.category.display_name}")
+            return
+        except Exception as e:
+            print(f"Unexpected Error, {e} validate workflow {spec.id} in Category {spec.category.display_name}")
+            print(e)
+            return
