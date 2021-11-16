@@ -19,7 +19,10 @@ known_errors = {'Non-default exclusive outgoing sequence flow  without condition
                 'Could not set task title on task .*':
                 {'hint': 'You are overriding the title using an extension and it is causing this error. '
                          'Look under the extensions tab for the task, and check the value you are setting '
-                         'for the property.'}}
+                         'for the property.'},
+                'Error opening excel file .*, with file_model_id:':
+                {'hint': 'It looks like you are trying to use an older xls file. '
+                         'Try uploading a newer xlsx file.'}}
 
 
 class ValidationErrorService(object):
