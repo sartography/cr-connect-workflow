@@ -3,9 +3,9 @@ import base64
 from github import UnknownObjectException
 from sqlalchemy import desc
 
-from crc.models.workflow import WorkflowSpecModel
 from tests.base_test import BaseTest
 from unittest.mock import patch, Mock
+from crc.models.workflow import WorkflowSpecModel
 
 from crc import db
 from crc.models.file import FileDataModel, FileModel
@@ -61,16 +61,11 @@ class FakeRepo(Mock):
 
 class FakeGithub(Mock):
     """ this mocks out the entire Github object.
-        get_user().get_repo returns a repository object.
+        get_repo returns a repository object.
 
     """
-
-    def get_user(self):
-        print('yep made it')
-        class FakeUser(Mock):
-            def get_repo(self, name):
-                return FakeRepo()
-        return FakeUser()
+    def get_repo(self, name):
+        return FakeRepo()
 
 
 class TestFileService(BaseTest):
@@ -181,11 +176,8 @@ class TestFileService(BaseTest):
         file_models = FileService.get_workflow_files(workflow_id=workflow.id)
         self.assertEqual(2, len(file_models))
 
-
-
     @patch('crc.services.file_service.Github')
     @patch('crc.services.file_service.InputGitTreeElement')
-
     def test_publish_to_github_creates(self, mock_element, mock_github):
         mock_github.return_value = FakeGithub()
         mock_element.return_value = FakeInputGitTreeElement()
