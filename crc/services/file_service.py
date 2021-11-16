@@ -439,7 +439,7 @@ class FileService(object):
         gh_token = app.config['GITHUB_TOKEN']
         github_repo = app.config['GITHUB_REPO']
         _github = Github(gh_token)
-        repo = _github.get_user().get_repo(github_repo)
+        repo = _github.get_repo(github_repo)
 
         # the first thing we do is make blobs for each and every db object that haven't created
         # a blob yet.
