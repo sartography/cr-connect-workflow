@@ -11,10 +11,10 @@
       <bpmn:outgoing>Flow_08kr305</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_0gb1k4g" sourceRef="Gateway_1j2ytgn" targetRef="animals">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">type == 'fruit'</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">type == 'animals'</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:sequenceFlow id="Flow_08kr305" sourceRef="Gateway_1j2ytgn" targetRef="fruits">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">type=="fruit"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">type=="fruits"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:exclusiveGateway id="Gateway_14eyj6z">
       <bpmn:incoming>Flow_09ik0zr</bpmn:incoming>

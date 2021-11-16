@@ -81,7 +81,7 @@ class TestLookupService(BaseTest):
 
         processor.do_engine_steps()
         task = processor.get_ready_user_tasks()[0]
-        task.data = {"type": "animal"}
+        task.data = {"type": "animals"}
         processor.complete_task(task)
         processor.do_engine_steps()
         task = processor.get_ready_user_tasks()[0]
@@ -94,7 +94,7 @@ class TestLookupService(BaseTest):
         processor = WorkflowProcessor.reset(workflow, clear_data=True)
         processor.do_engine_steps()
         task = processor.get_ready_user_tasks()[0]
-        task.data = {"type": "fruit"}
+        task.data = {"type": "fruits"}
         processor.complete_task(task)
         processor.do_engine_steps()
         task = processor.get_ready_user_tasks()[0]

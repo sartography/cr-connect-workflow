@@ -110,10 +110,10 @@ class TestTasksApi(BaseTest):
         self.assertEqual(4, len(nav))
         self.assertEqual("Do You Have Bananas", nav[1].description)
         self.assertEqual("Bananas?", nav[2].description)
-        self.assertEqual("LIKELY", nav[2].state)
+        self.assertEqual("MAYBE", nav[2].state)
 
         self.assertEqual("yes", nav[2].children[0].description)
-        self.assertEqual("LIKELY", nav[2].children[0].state)
+        self.assertEqual("MAYBE", nav[2].children[0].state)
         self.assertEqual("of Bananas", nav[2].children[0].children[0].description)
         self.assertEqual("EndEvent", nav[2].children[0].children[1].spec_type)
 

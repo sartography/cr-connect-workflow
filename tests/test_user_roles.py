@@ -126,7 +126,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual(4, len(nav))
         self.assertEqual('READY', nav[1].state)  # First item is ready, no progress yet.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('LIKELY', nav[3].state)  # Third item is a gateway, which contains things that are also locked.
+        self.assertEqual('MAYBE', nav[3].state)  # Third item is a gateway, which contains things that are also locked.
         self.assertEqual('READY', workflow_api.next_task.state)
 
         # Navigation as Submitter after handoff to supervisor
@@ -136,7 +136,7 @@ class TestTasksApi(BaseTest):
         nav = workflow_api.navigation
         self.assertEqual('COMPLETED', nav[1].state)  # First item is ready, no progress yet.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('LIKELY', nav[3].state)  # third item is a gateway, and belongs to no one
+        self.assertEqual('MAYBE', nav[3].state)  # third item is a gateway, and belongs to no one
         # In the event the next task is locked, we should say something sensible here.
         # It is possible to look at the role of the task, and say The next task "TASK TITLE" will
         # be handled by 'dhf8r', who is full-filling the role of supervisor. the Task Data
@@ -150,7 +150,7 @@ class TestTasksApi(BaseTest):
         nav = workflow_api.navigation
         self.assertEqual('LOCKED', nav[1].state)  # First item belongs to the submitter, and is locked.
         self.assertEqual('READY', nav[2].state)  # Second item is ready, as we are now the supervisor.
-        self.assertEqual('LIKELY', nav[3].state)  # Feedback is locked.
+        self.assertEqual('MAYBE', nav[3].state)  # Feedback is locked.
         self.assertEqual('READY', workflow_api.next_task.state)
 
         data = workflow_api.next_task.data
