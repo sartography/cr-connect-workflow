@@ -167,8 +167,8 @@ class LookupService(object):
         try:
             xlsx = ExcelFile(data_model.data, engine='openpyxl')
         # Pandas--or at least openpyxl, cannot read old xls files.
-        # This comes back as zipfile.BadZipFile because xlsx files are zipped xml files
-        except BadZipFile as bzf:
+        # The error comes back as zipfile.BadZipFile because xlsx files are zipped xml files
+        except BadZipFile:
             raise ApiError(code='excel_error',
                            message=f'Error opening excel file {data_model.file_model.name}. You may have an older .xls spreadsheet. (file_model_id: {data_model.file_model_id} workflow_spec_id: {workflow_spec_id}, task_spec_id: {task_spec_id}, and field_id: {field_id})')
         df = xlsx.parse(xlsx.sheet_names[0])  # Currently we only look at the fist sheet.
