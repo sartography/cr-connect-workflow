@@ -201,9 +201,9 @@ repositories to sync to - here are some of the main ones
 - **GITHUB_REPO**	*example*=TestDump <br/> This is the repository that you want to sync to
 - **TARGET_BRANCH**	*example*=remotebox<br/> This is the branch to sync to - if it is not already out there, it will 
   be created the first time you sync
-- **CR_SYNC_SOURCE__x__url**	*example*=http://localhost:5000/v1.0 <br/> This is the sync source - newer files will 
+- **CR_SYNC_SOURCE__x__URL**	*example*=http://localhost:5000/v1.0 <br/> This is the sync source - newer files will 
   be pulled from this source - x is a number from 0 to however many sources you want to show in the BPMN server
-- **CR_SYNC_SOURCE__x__name** *example*=	MainBox <br> a name for the source x starts at 0 and corresponds with 
+- **CR_SYNC_SOURCE__x__NAME** *example*=	MainBox <br> a name for the source x starts at 0 and corresponds with 
   the link
 
 

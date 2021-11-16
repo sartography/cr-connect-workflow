@@ -17,8 +17,7 @@ from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, Work
 from crc.services.file_service import FileService
 
 
-def parse_key(key):
-    return key.split("__")[1:]
+
 
 def spantext(text,color):
     node = htm.SPAN(text)
@@ -122,11 +121,11 @@ class WorkflowSyncService(object):
          {'url':'https://my.target2.com','name':'source2 name'}]
         """
         sources = {}
-        mykeys=[key for key in os.environ.keys() if key.startswith('CR_SYNC_SOURCE')]
+        mykeys=[key for key in app.config.keys() if key.startswith('CR_SYNC_SOURCE')]
         for key in mykeys:
-            loc = parse_key(key)
-            mydict = sources.get(loc[0],dict())
-            mydict[loc[1]] = os.environ.get(key)
+            loc = key.split("__")[1:]
+            mydict = sources.get(loc[0], dict())
+            mydict[loc[1]] = app.config.get(key)
             sources[loc[0]] = mydict
         return [sources[key] for key in sources.keys()]
 
@@ -626,4 +625,5 @@ class WorkflowSyncService(object):
 
         print(etree.tostring(category_list))
         return(etree.tostring(category_list).decode('utf8'))
+
 
