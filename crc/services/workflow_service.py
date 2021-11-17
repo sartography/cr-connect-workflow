@@ -792,7 +792,7 @@ class WorkflowService(object):
             if not hasattr(field, 'options'):
                 field.options = []
             for d in data:
-                field.options.append({"id": d.value, "name": d.label, "data": d.data})
+                field.add_option(d.value, d.label)
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):
             field.options = WorkflowService.get_options_from_task_data(spiff_task, field)
 
