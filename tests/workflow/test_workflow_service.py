@@ -77,8 +77,8 @@ class TestWorkflowService(BaseTest):
         WorkflowService.process_options(task, task.task_spec.form.fields[0])
         options = task.task_spec.form.fields[0].options
         self.assertEqual(29, len(options))
-        self.assertEqual('0', options[0]['id'])
-        self.assertEqual("Other", options[0]['name'])
+        self.assertEqual('0', options[0].id)
+        self.assertEqual("Other", options[0].name)
 
     def test_random_data_populate_form_on_auto_complete(self):
         self.load_example_data()
