@@ -77,16 +77,17 @@ class WorkflowSyncService(object):
         result = WorkflowSyncService.__make_request(url)
         if result.json == True:
             url = remote + '/v1.0/workflow_sync/publish'
-            return WorkflowSyncService.__make_request(url,body={'message':message},post=True)
+            return WorkflowSyncService.__make_request(url, body={'message':message}, post=True)
         return result
 
     @staticmethod
     def get_all_remote_workflows(remote):
         url = remote + '/v1.0/workflow_sync/all'
-        return WorkflowSyncService.__make_request(url)
+        response = WorkflowSyncService.__make_request(url)
+        return response
 
     @staticmethod
-    def __make_request(url,body={},post=False,return_contents=False):
+    def __make_request(url, body={}, post=False, return_contents=False):
         if post:
             try:
                 response = requests.post(url,body, headers={'X-CR-API-KEY': app.config['API_TOKEN']})
@@ -95,7 +96,7 @@ class WorkflowSyncService(object):
         else:
             try:
                 response = requests.get(url,headers={'X-CR-API-KEY':app.config['API_TOKEN']})
-            except:
+            except Exception as e:
                 raise ApiError("workflow_sync_error",url)
         if response.ok and response.text:
             if return_contents:
@@ -120,8 +121,11 @@ class WorkflowSyncService(object):
         [{'url':'https://my.target.com','name':'source name'},
          {'url':'https://my.target2.com','name':'source2 name'}]
         """
+
+        # TODO: Turn this into a model.
+        #  crc.models.sync.CRSyncSource
         sources = {}
-        mykeys=[key for key in app.config.keys() if key.startswith('CR_SYNC_SOURCE')]
+        mykeys = [key for key in app.config.keys() if key.startswith('CR_SYNC_SOURCE')]
         for key in mykeys:
             loc = key.split("__")[1:]
             mydict = sources.get(loc[0], dict())
@@ -131,7 +135,7 @@ class WorkflowSyncService(object):
 
 
     @staticmethod
-    def sync_all_changed_workflows(remote,keep_new_local=False):
+    def sync_all_changed_workflows(remote, keep_new_local=False):
         """
         Does what it says, gets a list of all workflows that are different between
         two systems and pulls all of the workflows and files that are different on the
@@ -141,7 +145,7 @@ class WorkflowSyncService(object):
         but . . .  I thought it would be good to show a status on the front end, so you mush
         do this independently
         """
-        tree = WorkflowSyncService.get_master_list(remote,keep_new_local)
+        tree = WorkflowSyncService.get_master_list(remote, keep_new_local)
         info = []
         # first, delete local files that are not in the remote or that will be superseded by remote
 
