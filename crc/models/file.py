@@ -77,6 +77,13 @@ class FileDataModel(db.Model):
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
+class FileDataModelSchema(Schema):
+    class Meta:
+        model = FileDataModel
+        fields = ["id", "md5_hash", "sha", "data", "version", "size", "date_created", "file_model_id", "file_model", "user_uid"]
+
+
+
 class FileModel(db.Model):
     __tablename__ = 'file'
     id = db.Column(db.Integer, primary_key=True)
