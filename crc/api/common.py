@@ -82,7 +82,7 @@ class ApiError(Exception):
         try:
             json.dumps(x)
             return True
-        except (TypeError, OverflowError):
+        except (TypeError, OverflowError, ValueError):
             return False
 
     @classmethod

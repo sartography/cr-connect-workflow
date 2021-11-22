@@ -39,10 +39,10 @@ pet_label = enum_label(task='task_pet_form',field='pet',value='1')    // might r
             return self.lookup_label(workflow_model, task_name, field, value)
         elif field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
             return self.lookup_label(workflow_model, task_name, field, value)
-        elif field.type == Task.FIELD_TYPE_ENUM and hasattr(field, 'options'):
-            return self.enum_with_options_label(field, value)
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):
             return self.enum_from_task_data_label(spiff_task, field, value)
+        else:
+            return self.enum_with_options_label(field, value)
 
     def find_field(self, task_name, field_name, workflow):
         for spec in workflow.spec.task_specs.values():
