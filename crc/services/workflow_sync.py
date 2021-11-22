@@ -12,6 +12,7 @@ from crc import app, session
 from crc.api.common import ApiError
 from crc.api.workflow import get_workflow_specification
 from crc.models.file import FileModel, FileDataModel
+from crc.models.sync import SyncWorkflow
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema, WorkflowLibraryModel
 from crc.services.file_service import FileService
@@ -95,7 +96,7 @@ class WorkflowSyncService(object):
                 raise ApiError("workflow_sync_error", url)
         else:
             try:
-                response = requests.get(url,headers={'X-CR-API-KEY':app.config['API_TOKEN']})
+                response = requests.get(url, headers={'X-CR-API-KEY':app.config['API_TOKEN']})
             except Exception as e:
                 raise ApiError("workflow_sync_error",url)
         if response.ok and response.text:
@@ -474,7 +475,13 @@ class WorkflowSyncService(object):
         Convert into a dict list from a dataframe
         """
         df = WorkflowSyncService.get_all_spec_state_dataframe()
-        return df.reset_index().to_dict(orient='records')
+        dict_list = df.reset_index().to_dict(orient='records')
+        # TODO: turn this into list of models crc.models.sync.SyncWorkFlowModel
+        all_spec_state = []
+        for workflow_dict in dict_list:
+            spec_state = SyncWorkflow(**workflow_dict)
+            all_spec_state.append(spec_state)
+        return all_spec_state
 
     @staticmethod
     def get_workflow_spec_files(workflow_spec_id):
@@ -483,11 +490,19 @@ class WorkflowSyncService(object):
         thumbprint of all of the files that are used for that workflow_spec
         Convert into a dict list from a dataframe
         """
+        if workflow_spec_id == 'REFERENCE_FILES':
+            spec_files = session.query(FileDataModel).join(FileModel).\
+                filter((FileModel.is_reference is True) & (FileModel.archived is not True)).all()
+        else:
+            spec_files = session.query(FileDataModel).join(FileModel).\
+                filter((FileModel.workflow_spec_id == workflow_spec_id) & (FileModel.archived is not True)).all()
+        return spec_files
+
         df = WorkflowSyncService.get_workflow_spec_files_dataframe(workflow_spec_id)
         return df.reset_index().to_dict(orient='records')
 
     @staticmethod
-    def get_workflow_spec_files_dataframe(workflowid):
+    def get_workflow_spec_files_dataframe(workflow_spec_id):
         """
         Return a list of all files for a workflow_spec along with last updated date and a
         hash so we can determine file differences for a changed workflow on a box.
@@ -496,14 +511,15 @@ class WorkflowSyncService(object):
         In the special case of "REFERENCE_FILES" we get all of the files that are
         marked as is_reference
         """
-        if workflowid == 'REFERENCE_FILES':
-            x = session.query(FileDataModel).join(FileModel).filter((FileModel.is_reference == True) &
-                                                                    (FileModel.archived!=True))
-        else:
-            x = session.query(FileDataModel).join(FileModel).filter((FileModel.workflow_spec_id == workflowid) &
-                                                                    (FileModel.archived!=True))
+        # if workflowid == 'REFERENCE_FILES':
+        #     x = session.query(FileDataModel).join(FileModel).filter((FileModel.is_reference == True) &
+        #                                                             (FileModel.archived!=True))
+        # else:
+        #     x = session.query(FileDataModel).join(FileModel).filter((FileModel.workflow_spec_id == workflowid) &
+        #                                                             (FileModel.archived!=True))
         # there might be a cleaner way of getting a data from from some of the
         # fields in the ORM - but this works OK
+        x = WorkflowSyncService.get_workflow_spec_files(workflow_spec_id)
         filelist = []
         for file in x:
             filelist.append({'file_model_id':file.file_model_id,
