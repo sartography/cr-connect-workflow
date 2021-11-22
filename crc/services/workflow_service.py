@@ -1,6 +1,8 @@
 import copy
 import json
 import string
+import sys
+import traceback
 from datetime import datetime
 import random
 import string
@@ -758,12 +760,24 @@ class WorkflowService(object):
 
         try:
             return JinjaService.get_content(raw_doc, spiff_task.data)
-        except jinja2.exceptions.TemplateError as ue:
-            raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
-                                                          (spiff_task.task_spec.name, str(ue)), task=spiff_task)
+        except jinja2.exceptions.TemplateSyntaxError as tse:
+            error_line = documentation.splitlines()[tse.lineno - 1]
+            raise ApiError.from_task(code="template_error", message="Jinja Template Error:  %s" % str(tse),
+                                     task=spiff_task, line_number=tse.lineno, error_line=error_line)
+        except jinja2.exceptions.TemplateError as te:
+            # Figure out the line number in the template that caused the error.
+            cl, exc, tb = sys.exc_info()
+            line_number = None
+            error_line = None
+            for frameSummary in traceback.extract_tb(tb):
+                if frameSummary.filename == '<template>':
+                    line_number = frameSummary.lineno
+                    error_line = documentation.splitlines()[line_number - 1]
+            raise ApiError.from_task(code="template_error", message="Jinja Template Error: %s" % str(te),
+                                     task=spiff_task, line_number=line_number, error_line=error_line)
         except TypeError as te:
-            raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
-                                                          (spiff_task.task_spec.name, str(te)), task=spiff_task)
+            raise ApiError.from_task(code="template_error", message="Jinja Template Error: %s" % str(te),
+                                     task=spiff_task)
         except Exception as e:
             app.logger.error(str(e), exc_info=True)
 
