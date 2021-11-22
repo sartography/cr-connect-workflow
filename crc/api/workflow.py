@@ -5,7 +5,7 @@ from flask import g
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApiSchema
-from crc.models.file import FileModel, LookupDataSchema
+from crc.models.file import FileModel
 from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
@@ -101,8 +101,10 @@ def drop_workflow_spec_library(spec_id,library_id):
     libraries: WorkflowLibraryModel = session.query(WorkflowLibraryModel).filter_by(workflow_spec_id=spec_id).all()
     return WorkflowLibraryModelSchema(many=True).dump(libraries)
 
+
 def validate_workflow_specification(spec_id, study_id=None, test_until=None):
     try:
+        WorkflowService.raise_if_disabled(spec_id, study_id)
         WorkflowService.test_spec(spec_id, study_id, test_until)
         WorkflowService.test_spec(spec_id, study_id, test_until, required_only=True)
     except ApiError as ae:

@@ -124,25 +124,28 @@ class WorkflowService(object):
                                   str(e)))
 
     @staticmethod
+    def raise_if_disabled(spec_id, study_id):
+        """Raise an exception of the workflow is not enabled and can not be executed."""
+        if study_id is not None:
+            study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+            spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
+            status = StudyService._get_study_status(study_model)
+            if spec_model.id in status and status[spec_model.id]['status'] == 'disabled':
+                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.id]['message']}")
+
+    @staticmethod
     @timeit
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
           output form the last task if successful.
 
-          test_until
+          test_until - stop running the validation when you reach this task spec.
 
           required_only can be set to true, in which case this will run the
           spec, only completing the required fields, rather than everything.
           """
 
-        # Get workflow state dictionary, make sure workflow is not disabled.
-        if validate_study_id is not None:
-            study_model = session.query(StudyModel).filter(StudyModel.id == validate_study_id).first()
-            spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
-            status = StudyService._get_study_status(study_model)
-            if spec_model.id in status and status[spec_model.id]['status'] == 'disabled':
-                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.id]['message']}")
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)

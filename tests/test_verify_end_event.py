@@ -25,3 +25,6 @@ class TestValidateEndEvent(BaseTest):
             self.assertEqual(8, e.line_number)
             self.assertEqual('{%- if value = 1 -%}', e.error_line)
             self.assertEqual('verify_end_event.bpmn', e.file_name)
+
+
+

@@ -18,7 +18,20 @@ example : get_study_associate('sbp3ey') => {'uid':'sbp3ey','role':'Unicorn Herde
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         if len(args) < 1:
             raise ApiError('no_user_id_specified', 'A uva uid is the sole argument to this function')
-        return {'uid': 'sbp3ey', 'role': 'Unicorn Herder', 'send_email': False, 'access': True}
+        return {'uid': 'sbp3ey',
+                'role': 'Unicorn Herder',
+                'send_email': False,
+                'access': True,
+                'ldap_info': {
+                    'uid': 'sbp3ey',
+                    'display_name': "Simply Delightful",
+                    'email_address': 'sbp3ey@virginia.edu',
+                    'telephone_number': '',
+                    'title': '',
+                    'department': '',
+                    'affiliation': '',
+                    'sponsor_type': '',
+                }}
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         if len(args) < 1:
