@@ -12,6 +12,7 @@ from crc import app, session
 from crc.api.common import ApiError
 from crc.api.workflow import get_workflow_specification
 from crc.models.file import FileModel, FileDataModel
+from crc.models.sync import SyncWorkflow
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema, WorkflowLibraryModel
 from crc.services.file_service import FileService
@@ -153,8 +154,8 @@ class WorkflowSyncService(object):
             category = item['category']
             for workflow in item['workflows']:
                 for file in workflow['files']:
-                    if file['status'] in ['delete','revert']:
-                        print('delete file',file)
+                    if file['status'] in ['delete', 'revert']:
+                        print('delete file', file)
 
                         file = session.query(FileModel).filter(FileModel.name==file['filename']).first()
                         FileService.delete_file(file.id)
@@ -179,26 +180,28 @@ class WorkflowSyncService(object):
                          'files':ref_files})
         return info
 
-
     def get_master_list(remote,keep_new_local=False):
         # first let's just build a local tree
         changed = WorkflowSyncService.get_changed_workflows(remote,keep_new_local=keep_new_local)
         lcl_specs = WorkflowSyncService.get_all_spec_state()
         categories = {}
-        lcl_spec_ids = [x['workflow_spec_id'] for x in lcl_specs]
+        lcl_spec_ids = [x.workflow_spec_id for x in lcl_specs]
         for wf in changed:
-            if wf['workflow_spec_id'] in lcl_spec_ids:
-                fullspec = get_workflow_specification(wf['workflow_spec_id'])
+            if wf.workflow_spec_id in lcl_spec_ids:
+                full_spec = get_workflow_specification(wf.workflow_spec_id)
             else:
-                fullspec = WorkflowSyncService.get_remote_workflow_spec(remote,wf['workflow_spec_id'])
-            category = fullspec['category']
+                full_spec = WorkflowSyncService.get_remote_workflow_spec(remote,wf.workflow_spec_id)
+            category = full_spec['category']
             if category is None:
                 category = {'display_name': 'Top Level Workflow'}
             spec = {}
-            spec.update(wf)
-            spec['status'] = wf['location']
-            spec['new'] = wf['new']
-            spec['status'] = WorkflowSyncService.lookup_status([wf['location'], wf['new'], keep_new_local], spec_lookup_table)
+            # spec_wf = {}
+            spec.update(wf.to_dict())
+            # spec['status'] = wf.location
+            # Isn't this redundant? spec is created from wf
+            # if 'new' in wf.keys():
+            #     spec['new'] = wf.new
+            spec['status'] = WorkflowSyncService.lookup_status([wf.location, wf.new, keep_new_local], spec_lookup_table)
             spec['files'] = WorkflowSyncService.get_changed_files(remote, spec['workflow_spec_id'])
             for file in spec['files']:
                 file['status'] = WorkflowSyncService.lookup_status([file['location'], file['new'], spec['status']], file_lookup_table)
@@ -207,12 +210,13 @@ class WorkflowSyncService(object):
             categories[category['display_name']] = catlist
         retlist = []
         for category in categories.keys():
-            retlist.append({'category':category, 'workflows':categories[category]})
+            retlist.append({'category': category, 'workflows': categories[category]})
 
+        # TODO: Return a list of models, instead of list of dictionaries?
         return retlist
 
     @staticmethod
-    def get_changed_workflows(remote,as_df=False,keep_new_local=False):
+    def get_changed_workflows(remote, as_df=False, keep_new_local=False):
         """
         gets a remote endpoint - gets the workflows and then
         determines what workflows are different from the remote endpoint
@@ -230,7 +234,14 @@ class WorkflowSyncService(object):
             if as_df:
                 return remote_workflows
             else:
-                return remote_workflows.reset_index().to_dict(orient='records')
+                # list of dictionaries
+                # TODO: change to list of models
+                dict_list = remote_workflows.reset_index().to_dict(orient='records')
+                changed_workflows = []
+                for workflow_dict in dict_list:
+                    sync_workflow = SyncWorkflow(**workflow_dict)
+                    changed_workflows.append(sync_workflow)
+                return changed_workflows
 
         # merge these on workflow spec id and hash - this will
         # make two different date columns date_x and date_y
@@ -280,13 +291,19 @@ class WorkflowSyncService(object):
             output = different
 
         # return the list as a dict, let swagger convert it to json
+        # TODO: return a list of models so we can use marshmallow
         if as_df:
             return output
         else:
-            return output.reset_index().to_dict(orient='records')
+            dict_list = output.reset_index().to_dict(orient='records')
+            changed_workflows = []
+            for workflow_dict in dict_list:
+                sync_workflow = SyncWorkflow(**workflow_dict)
+                changed_workflows.append(sync_workflow)
+            return changed_workflows
 
     @staticmethod
-    def file_get(workflow_spec_id,filename):
+    def file_get(workflow_spec_id, filename):
         """
         Helper function to take care of the special case where we
         are looking for files that are marked is_reference
@@ -300,7 +317,7 @@ class WorkflowSyncService(object):
         return currentfile
 
     @staticmethod
-    def create_or_update_local_spec(remote,workflow_spec_id):
+    def create_or_update_local_spec(remote, workflow_spec_id):
         specdict = WorkflowSyncService.get_remote_workflow_spec(remote, workflow_spec_id)
         # if we are updating from a master spec, then we want to make sure it is the only
         # master spec in our local system, turn all other master_specs off
@@ -324,10 +341,12 @@ class WorkflowSyncService(object):
                 session.add(local_category)
             local_spec.category = local_category
 
+        # Make sure the spec exists locally
+
         # Set the libraries
         session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.workflow_spec_id == local_spec.id).delete()
         for library in specdict['libraries']:
-            # Assure refernced libraries are local, and link them.
+            # Assure referenced libraries are local, and link them.
             WorkflowSyncService.create_or_update_local_spec(remote, library['id'])
             local_lib = WorkflowLibraryModel(workflow_spec_id=local_spec.id,
                                              library_spec_id=library['id'])
@@ -371,11 +390,10 @@ class WorkflowSyncService(object):
         """
         # make sure that spec is local before syncing files
         if workflow_spec_id != 'REFERENCE_FILES':
-            WorkflowSyncService.create_or_update_local_spec(remote,workflow_spec_id)
+            WorkflowSyncService.create_or_update_local_spec(remote, workflow_spec_id)
 
-
-        changedfiles = WorkflowSyncService.get_changed_files(remote,workflow_spec_id,as_df=True)
-        if len(changedfiles)==0:
+        changedfiles = WorkflowSyncService.get_changed_files(remote, workflow_spec_id,as_df=True)
+        if len(changedfiles) == 0:
             return []
         updatefiles = changedfiles[~((changedfiles['new']==True) & (changedfiles['location']=='local'))]
         updatefiles = updatefiles.reset_index().to_dict(orient='records')
@@ -474,7 +492,13 @@ class WorkflowSyncService(object):
         Convert into a dict list from a dataframe
         """
         df = WorkflowSyncService.get_all_spec_state_dataframe()
-        return df.reset_index().to_dict(orient='records')
+
+        dict_list = df.reset_index().to_dict(orient='records')
+        changed_workflows = []
+        for workflow_dict in dict_list:
+            sync_workflow = SyncWorkflow(**workflow_dict)
+            changed_workflows.append(sync_workflow)
+        return changed_workflows
 
     @staticmethod
     def get_workflow_spec_files(workflow_spec_id):
@@ -580,16 +604,15 @@ class WorkflowSyncService(object):
         df['date_created'] = df['date_created'].astype('str')
         return df
 
-    def lookup_status(item,table):
+    # @staticmethod
+    def lookup_status(item, table):
         lookup = ','.join([str(x) for x in item])
-        print(lookup)
+        # print(lookup)
         matchers = [x for x in table.keys() if re.match(x,lookup)]
         if len(matchers) == 0:
             raise Exception('Expecting at least one match')
-        print(matchers)
+        # print(matchers)
         return table[matchers[0]]
-
-
 
     def get_explain_text(wf):
         print(wf)
