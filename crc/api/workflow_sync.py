@@ -1,7 +1,11 @@
 from crc import app
 from crc.api.common import ApiError
 from crc.api.workflow import get_workflow_specification
+from crc.models.file import FileDataModelSchema
+from crc.models.sync import SyncWorkflowSchema
 from crc.services.workflow_sync import WorkflowSyncService
+
+from flask import request
 
 
 def get_sync_workflow_specification(workflow_spec_id):
@@ -60,9 +64,11 @@ def get_changed_files(remote,workflow_spec_id,as_df=False):
 
 def get_all_spec_state():
     all_spec_state = WorkflowSyncService.get_all_spec_state()
-    return all_spec_state
+    return SyncWorkflowSchema(many=True).dump(all_spec_state)
+    # return all_spec_state
 
 
 def get_workflow_spec_files(workflow_spec_id):
     workflow_spec_files = WorkflowSyncService.get_workflow_spec_files(workflow_spec_id)
-    return workflow_spec_files
+    return FileDataModelSchema(many=True).dump(workflow_spec_files)
+    # return workflow_spec_files
