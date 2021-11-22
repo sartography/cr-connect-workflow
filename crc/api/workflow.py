@@ -8,7 +8,6 @@ from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModel, LookupDataSchema
 from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
-from crc.models.user import UserModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema, WorkflowLibraryModel, WorkflowLibraryModelSchema
 from crc.services.error_service import ValidationErrorService

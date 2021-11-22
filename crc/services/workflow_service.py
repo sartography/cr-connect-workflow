@@ -789,8 +789,6 @@ class WorkflowService(object):
         if field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
             lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
-            if not hasattr(field, 'options'):
-                field.options = []
             for d in data:
                 field.add_option(d.value, d.label)
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):

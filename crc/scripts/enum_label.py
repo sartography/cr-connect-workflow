@@ -36,7 +36,9 @@ pet_label = enum_label(task='task_pet_form',field='pet',value='1')    // might r
         print(field)
 
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
-            return self.autocomplete_label(workflow_model, task_name, field, value)
+            return self.lookup_label(workflow_model, task_name, field, value)
+        elif field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
+            return self.lookup_label(workflow_model, task_name, field, value)
         elif field.type == Task.FIELD_TYPE_ENUM and hasattr(field, 'options'):
             return self.enum_with_options_label(field, value)
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):
@@ -53,8 +55,7 @@ pet_label = enum_label(task='task_pet_form',field='pet',value='1')    // might r
         raise ApiError("invalid_spec",
                    f"Unable to find a task in the workflow called '{task_name}'")
 
-
-    def autocomplete_label(self, workflow_model, task_name, field, value):
+    def lookup_label(self, workflow_model, task_name, field, value):
         label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
         result = LookupService().lookup(workflow_model, task_name, field.id, '', value=value, limit=1)
         if len(result) > 0:
