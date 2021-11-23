@@ -1,9 +1,15 @@
+import re
+import sys
+import traceback
+
 from docx.shared import Inches
 from docxtpl import DocxTemplate, Listing, InlineImage
 from io import BytesIO
-from jinja2 import Environment, DictLoader
+from jinja2 import Environment, DictLoader, TemplateSyntaxError
 
 import copy
+
+from crc.api.common import ApiError
 
 
 class JinjaService:
@@ -49,8 +55,30 @@ Cool Right?
 
         try:
             doc.render(doc_context, jinja_env)
-        except Exception as e:
-            print(e)
+        except TemplateSyntaxError as tse:
+            line_number = tse.lineno
+
+            # the doc renderer code is trying to give context, returning 3 lines
+            # before and after the error if possible.  The can result in a lot of
+            # garbage, too much to send back.  Sometimes the line itself is too large.
+            # Just trying to get something sensible if possible.
+            context = list(tse.docx_context)
+            if len(context) == 1: # It just sent us the whole damn thing back.  Useless.
+                error_line = "Unable to determine location of error in the word document. Opening and Saving the " \
+                             "template in LibreOffice may fix this problem."
+            elif len(context) == 7:
+                error_line = context[3]
+            else:
+                error_line = ", ".join(context)
+
+            # If the bloodly thing is still stupid long, try grabbing the middle 200
+            # characters.
+            if len(error_line) > 500:
+                offset = int(len(error_line)/2 - 100)
+                error_line = "Error occurred near:  " + error_line[offset: -offset]
+
+            raise ApiError(code="template_error", message="Word Document creation error : %s" % str(tse),
+                           line_number=line_number, error_line=error_line)
         target_stream = BytesIO()
         doc.save(target_stream)
         target_stream.seek(0)  # move to the beginning of the stream.

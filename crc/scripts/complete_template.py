@@ -1,10 +1,7 @@
-import copy
 import re
 from io import BytesIO
 
-import jinja2
-from docx.shared import Inches
-from docxtpl import DocxTemplate, Listing, InlineImage
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 
 from crc import session
 from crc.api.common import ApiError
@@ -78,7 +75,14 @@ Takes two arguments:
         else:
             image_file_data = None
 
-        return JinjaService().make_template(BytesIO(file_data_model.data), task.data, image_file_data)
+        try:
+            return JinjaService().make_template(BytesIO(file_data_model.data), task.data, image_file_data)
+        except ApiError as ae:
+            # In some cases we want to provide a very specific error, that does not get obscured when going
+            # through the python expression engine. We can do that by throwing a WorkflowTaskExecException,
+            # which the expression engine should just pass through.
+            raise WorkflowTaskExecException(task, ae.message, exception=ae, line_number=ae.line_number,
+                                            error_line=ae.error_line)
 
     def get_image_file_data(self, fields_str, task):
         image_file_data = []
