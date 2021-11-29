@@ -12,7 +12,7 @@ from crc import app, session
 from crc.api.common import ApiError
 from crc.api.workflow import get_workflow_specification
 from crc.models.file import FileModel, FileDataModel
-from crc.models.sync import SyncWorkflow
+from crc.models.sync import SyncFile, SyncWorkflow
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema, WorkflowLibraryModel
 from crc.services.file_service import FileService
@@ -431,6 +431,7 @@ class WorkflowSyncService(object):
         local['md5_hash'] = local['md5_hash'].astype('str')
         remote_files['md5_hash'] = remote_files['md5_hash'].astype('str')
         if len(local) == 0:
+            # TODO: return list of models instead of list of dicts
             remote_files['new'] = True
             remote_files['location'] = 'remote'
             if as_df:
@@ -444,6 +445,7 @@ class WorkflowSyncService(object):
                                  how = 'outer' ,
                                  indicator=True).loc[lambda x : x['_merge']!='both']
         if len(different) == 0:
+            # TODO: return list of models instead of list of dicts
             if as_df:
                 return different
             else:
@@ -479,10 +481,17 @@ class WorkflowSyncService(object):
         changedfiles.loc[changedfiles.index.isin(right['filename']),'new'] = True
         changedfiles = changedfiles.replace({NA: None})
         # return the list as a dict, let swagger convert it to json
+        # TODO: return list of models instead of list of dicts
         if as_df:
             return changedfiles
         else:
-            return changedfiles.reset_index().to_dict(orient='records')
+            dict_list = changedfiles.reset_index().to_dict(orient='records')
+            changed_files = []
+            for workflow_dict in dict_list:
+                file_model = SyncFile(**workflow_dict)
+                # spec_state = SyncWorkflow(**workflow_dict)
+                changed_files.append(file_model)
+            return changed_files
 
     @staticmethod
     def get_all_spec_state():
@@ -515,8 +524,8 @@ class WorkflowSyncService(object):
                 filter((FileModel.workflow_spec_id == workflow_spec_id) & (FileModel.archived is not True)).all()
         return spec_files
 
-        df = WorkflowSyncService.get_workflow_spec_files_dataframe(workflow_spec_id)
-        return df.reset_index().to_dict(orient='records')
+        # df = WorkflowSyncService.get_workflow_spec_files_dataframe(workflow_spec_id)
+        # return df.reset_index().to_dict(orient='records')
 
     @staticmethod
     def get_workflow_spec_files_dataframe(workflow_spec_id):
