@@ -298,25 +298,15 @@ class StudyService(object):
             doc['count'] = len(doc_files)
             doc['files'] = []
 
-            # when we run tests - it doesn't look like the user is available
-            # so we return a bogus token
-            token = 'not_available'
-            if hasattr(flask.g, 'user'):
-                token = flask.g.user.encode_auth_token()
             for file_model in doc_files:
                 file = File.from_models(file_model, FileService.get_file_data(file_model.id), [])
                 file_data = FileSchema().dump(file)
                 del file_data['document']
-                data = db.session.query(DataStoreModel).filter(DataStoreModel.file_id == file.id).all()
-                data_store_data = {}
-                for d in data:
-                    data_store_data[d.key] = d.value
-                file_data["data_store"] = data_store_data
                 doc['files'].append(Box(file_data))
                 # update the document status to match the status of the workflow it is in.
                 if 'status' not in doc or doc['status'] is None:
-                    workflow: WorkflowModel = session.query(WorkflowModel).filter_by(id=file.workflow_id).first()
-                    doc['status'] = workflow.status.value
+                    status = session.query(WorkflowModel.status).filter_by(id=file.workflow_id).scalar()
+                    doc['status'] = status.value
 
             documents[code] = doc
         return Box(documents)
@@ -332,6 +322,7 @@ class StudyService(object):
         return doc_dict
 
     @staticmethod
+    
     def get_investigators(study_id, all=False):
         """Convert array of investigators from protocol builder into a dictionary keyed on the type. """
 
