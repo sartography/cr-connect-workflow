@@ -80,6 +80,8 @@ class FileDataModel(db.Model):
 class FileDataModelSchema(Schema):
     class Meta:
         model = FileDataModel
+        load_instance = True
+        include_relationships = True
         fields = ["id", "md5_hash", "sha", "data", "version", "size", "date_created", "file_model_id", "file_model", "user_uid"]
 
 

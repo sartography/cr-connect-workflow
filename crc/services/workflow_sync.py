@@ -11,7 +11,7 @@ from pandas._libs.missing import NA
 from crc import app, session
 from crc.api.common import ApiError
 from crc.api.workflow import get_workflow_specification
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileModel, FileDataModel, FileModelSchema, FileDataModelSchema
 from crc.models.sync import SyncFile, SyncWorkflow
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema, WorkflowLibraryModel
@@ -416,7 +416,7 @@ class WorkflowSyncService(object):
         return [x['filename'] for x in updatefiles]
 
     @staticmethod
-    def get_changed_files(remote,workflow_spec_id,as_df=False):
+    def get_changed_files(remote, workflow_spec_id, as_df=False):
         """
         gets a remote endpoint - gets the files for a workflow_spec on both
         local and remote and determines what files have been change and returns a list of those
@@ -522,6 +522,14 @@ class WorkflowSyncService(object):
         else:
             spec_files = session.query(FileDataModel).join(FileModel).\
                 filter((FileModel.workflow_spec_id == workflow_spec_id) & (FileModel.archived is not True)).all()
+        for file in spec_files:
+            # file.file_model = FileDataModelSchema().dump(file.file_model)
+            try:
+                file_model_schema = FileModelSchema().dump(file.file_model)
+            except Exception as e:
+                print(e)
+            else:
+                file.file_model = file_model_schema
         return spec_files
 
         # df = WorkflowSyncService.get_workflow_spec_files_dataframe(workflow_spec_id)

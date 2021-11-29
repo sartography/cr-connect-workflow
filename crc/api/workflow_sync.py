@@ -1,7 +1,7 @@
 from crc import app
 from crc.api.common import ApiError
 from crc.api.workflow import get_workflow_specification
-from crc.models.file import FileDataModelSchema
+from crc.models.file import FileModelSchema, FileDataModelSchema
 from crc.models.sync import SyncWorkflowSchema
 from crc.services.workflow_sync import WorkflowSyncService
 
@@ -70,5 +70,7 @@ def get_all_spec_state():
 
 def get_workflow_spec_files(workflow_spec_id):
     workflow_spec_files = WorkflowSyncService.get_workflow_spec_files(workflow_spec_id)
-    return FileDataModelSchema(many=True).dump(workflow_spec_files)
-    # return workflow_spec_files
+    file_data_models = FileDataModelSchema(many=True).dump(workflow_spec_files)
+
+    print('get_workflow_spec_files')
+    return file_data_models
