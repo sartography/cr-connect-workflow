@@ -398,6 +398,14 @@ class WorkflowProcessor(object):
         # Get a list of all ready tasks
         ready_tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
 
+        if len(ready_tasks) == 0:
+            # If no ready tasks exist, check for a waiting task.
+            waiting_tasks = self.bpmn_workflow.get_tasks(SpiffTask.WAITING)
+            if len(waiting_tasks) > 0:
+                return waiting_tasks[0]
+            else:
+                return  # We have not tasks to return.
+
         # Get a list of all completed user tasks (Non engine tasks)
         completed_user_tasks = self.completed_user_tasks()
 
