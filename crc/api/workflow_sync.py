@@ -11,7 +11,7 @@ from flask import request
 def get_sync_workflow_specification(workflow_spec_id):
     """
     NB - this is exactly the same as the workflow API, but it uses a different
-         authentication Method. I tried to combine this into ONE api call that used multiple authentication scemes
+         authentication Method. I tried to combine this into ONE api call that used multiple authentication schemes
          and it didn't work at all - I've added this as ticket #
     """
     return get_workflow_specification(workflow_spec_id)
