@@ -2,9 +2,9 @@ from tests.base_test import BaseTest
 
 from crc import app, session
 from crc.api.workflow_sync import get_sync_sources, WorkflowSyncService
-from crc.models.file import FileDataModel
+from crc.models.file import FileDataModel, FileDataModelSchema
 from crc.models.sync import SyncFile, SyncWorkflow
-from crc.models.workflow import WorkflowSpecModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema
 
 
 def setup_test_environ():
@@ -27,18 +27,14 @@ class TestWorkflowSyncService(BaseTest):
                           {'URL': 'https://my.target2.com', 'NAME': 'source2 name'}],
                          parsed)
 
+    def test_sync_all_changed_workflows(self):
+        pass
+
     def test_get_master_list(self):
         self.load_example_data()
-        # setup_test_environ()
-        # TODO: Somehow, this needs to be mocked or local
-        # remote = 'https://testing.crconnect.uvadcos.io'
-        # remote = 'http://localhost:5000'
         master_list = WorkflowSyncService.get_master_list(self.remote)
 
         print(f'test_get_master_list: master_list: {master_list}')
-
-    def test_sync_all_changed_workflows(self):
-        pass
 
     def test_get_changed_workflows(self):
         changed_workflows = WorkflowSyncService.get_changed_workflows(self.remote,
@@ -52,13 +48,21 @@ class TestWorkflowSyncService(BaseTest):
 
     def test_get_changed_files(self):
         self.load_example_data()
-        workflow_spec_model = session.query(WorkflowSpecModel).first()
-        changed_files = WorkflowSyncService.get_changed_files(self.remote, workflow_spec_model.id, as_df=False)
-        self.assertEqual(1, len(changed_files))
+        new_spec = WorkflowSpecModel(id='top_level_workflow',
+                                     display_name='Top Level Workflow',
+                                     description='Top Level Workflow')
+        session.add(new_spec)
+        session.commit()
+
+        changed_files = WorkflowSyncService.get_changed_files(self.remote, new_spec.id, as_df=False)
+        self.assertGreater(len(changed_files), 0)
         self.assertIsInstance(changed_files[0], SyncFile)
 
     def test_get_all_spec_state(self):
-        pass
+        self.load_example_data()
+        all_spec_state = WorkflowSyncService.get_all_spec_state()
+        self.assertGreater(len(all_spec_state), 0)
+        self.assertIsInstance(all_spec_state[0], SyncWorkflow)
 
     def test_get_workflow_spec_files(self):
         self.load_example_data()
