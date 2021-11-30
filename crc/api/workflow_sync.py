@@ -71,6 +71,4 @@ def get_all_spec_state():
 def get_workflow_spec_files(workflow_spec_id):
     workflow_spec_files = WorkflowSyncService.get_workflow_spec_files(workflow_spec_id)
     file_data_models = FileDataModelSchema(many=True).dump(workflow_spec_files)
-
-    print('get_workflow_spec_files')
     return file_data_models
