@@ -61,7 +61,17 @@ class SyncFile(object):
                  primary_process_id=None,
                  md5_hash=None,
                  location=None,
-                 new=None):
+                 new=None,
+                 index=None,
+                 size=None,
+                 file_model=None,
+                 sha=None,
+                 user_uid=None,
+                 file_model_id=None,
+                 data=None,
+                 id=None,
+                 version=None,
+                 status=None):
         self.filename = filename
         self.date_created = date_created
         self.type = type
@@ -71,6 +81,16 @@ class SyncFile(object):
         self.md5_hash = md5_hash
         self.location = location
         self.new = new
+        self.index = index
+        self.size = size
+        self.file_model = file_model
+        self.sha = sha
+        self.user_uid = user_uid
+        self.file_model_id = file_model_id
+        self.data = data
+        self.id = id
+        self.version = version
+        self.status = status
 
 
 class SyncFileSchema(ma.Schema):
@@ -84,4 +104,14 @@ class SyncFileSchema(ma.Schema):
                   "primary_process_id",
                   "md5_hash",
                   "location",
-                  "new"]
+                  "new",
+                  "index",
+                  "size",
+                  "file_model",
+                  "sha",
+                  "user_uid",
+                  "file_model_id",
+                  "data",
+                  "id",
+                  "version",
+                  "status"]
