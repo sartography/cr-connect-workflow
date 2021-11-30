@@ -437,15 +437,19 @@ class WorkflowSyncService(object):
             if as_df:
                 return remote_files
             else:
-                return remote_files.reset_index().to_dict(orient='records')
+                dict_list = remote_files.reset_index().to_dict(orient='records')
+                changed_files = []
+                for file_dict in dict_list:
+                    file_model = SyncFile(**file_dict)
+                    changed_files.append(file_model)
+                return changed_files
 
         different = remote_files.merge(local,
-                                 right_on=['filename','md5_hash'],
-                                 left_on=['filename','md5_hash'],
-                                 how = 'outer' ,
-                                 indicator=True).loc[lambda x : x['_merge']!='both']
+                                       right_on=['filename', 'md5_hash'],
+                                       left_on=['filename', 'md5_hash'],
+                                       how='outer',
+                                       indicator=True).loc[lambda x: x['_merge'] != 'both']
         if len(different) == 0:
-            # TODO: return list of models instead of list of dicts
             if as_df:
                 return different
             else:
