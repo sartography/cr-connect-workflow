@@ -358,13 +358,13 @@ class WorkflowProcessor(object):
             self.bpmn_workflow.refresh_waiting_tasks()
             self.bpmn_workflow.do_engine_steps(exit_at = exit_at)
         except WorkflowTaskExecException as we:
-            raise ApiError.from_task("task_error", str(we), we.task)
+            raise ApiError.from_workflow_exception("task_error", str(we), we)
 
     def cancel_notify(self):
         try:
             self.bpmn_workflow.cancel_notify()
         except WorkflowTaskExecException as we:
-            raise ApiError.from_task("task_error", str(we), we.task)
+            raise ApiError.from_workflow_exception("task_error", str(we), we)
 
     def serialize(self):
         return self._serializer.serialize_workflow(self.bpmn_workflow,include_spec=True)

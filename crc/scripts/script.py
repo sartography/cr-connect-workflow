@@ -9,6 +9,8 @@ class Script(object):
     """ Provides an abstract class that defines how scripts should work, this
     must be extended in all Script Tasks."""
 
+    SUB_CLASSES = []
+
     def get_description(self):
         raise ApiError("invalid_script",
                        "This script does not supply a description.")
@@ -23,8 +25,9 @@ class Script(object):
                        "This is an internal error. The script you are trying to execute '%s' " % self.__class__.__name__ +
                        "does must provide a validate_only option that mimics the do_task, " +
                        "but does not make external calls or database updates." )
+
     @staticmethod
-    def generate_augmented_list(task, study_id,workflow_id):
+    def generate_augmented_list(task, study_id, workflow_id):
         """
         this makes a dictionary of lambda functions that are closed over the class instance that
         They represent. This is passed into PythonScriptParser as a list of helper functions that are
@@ -77,9 +80,12 @@ class Script(object):
                                                                                        workflow_id)
         return execlist
 
-    @staticmethod
-    def get_all_subclasses():
-        return Script._get_all_subclasses(Script)
+    @classmethod
+    def get_all_subclasses(cls):
+        # This is expensive to generate, so reuse it if possible.
+        if not cls.SUB_CLASSES:
+            cls.SUB_CLASSES = Script._get_all_subclasses(Script)
+        return cls.SUB_CLASSES
 
     @staticmethod
     def _get_all_subclasses(cls):

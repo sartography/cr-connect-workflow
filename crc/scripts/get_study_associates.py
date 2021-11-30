@@ -20,8 +20,28 @@ example : get_study_associates() => [{'uid':'sbp3ey','role':'Unicorn Herder', 's
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         study_associates = [
-            {'uid': 'dhf8r', 'role': 'Chief Bee Keeper', 'send_email': True, 'access': True},
-            {'uid': 'lb3dp', 'role': 'Chief Cat Herder', 'send_email': True, 'access': True}
+            {'uid': 'dhf8r', 'role': 'Chief Bee Keeper', 'send_email': True, 'access': True,
+             'ldap_info': {
+                    'uid': 'dhf8r',
+                    'display_name': "Dan Funk",
+                     'email_address': 'dhf8r@virginia.edu',
+                     'telephone_number': '',
+                     'title': '',
+                     'department': '',
+                     'affiliation': '',
+                    'sponsor_type': '',
+             }},
+            {'uid': 'lb3dp', 'role': 'Chief Cat Herder', 'send_email': True, 'access': True,
+             'ldap_info': {
+                 'uid': 'dhf8r',
+                 'display_name': "Dan Funk",
+                 'email_address': 'dhf8r@virginia.edu',
+                 'telephone_number': '',
+                 'title': '',
+                 'department': '',
+                 'affiliation': '',
+                 'sponsor_type': ''
+             }},
         ]
         return study_associates
 
