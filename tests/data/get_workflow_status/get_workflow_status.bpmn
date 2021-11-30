@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_1q0fd5t" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_0k8r3a2" name="Workflow Status" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0wppzk2</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0wppzk2" sourceRef="StartEvent_1" targetRef="Activity_WorkflowID" />
+    <bpmn:scriptTask id="Activity_0y5dzit" name="Get Workflow Status Arg">
+      <bpmn:incoming>Flow_0wp4z9u</bpmn:incoming>
+      <bpmn:outgoing>Flow_0fl7rsj</bpmn:outgoing>
+      <bpmn:script>status_arg = get_workflow_status(search_workflow_id)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0fl7rsj" sourceRef="Activity_0y5dzit" targetRef="Activity_StatusArg" />
+    <bpmn:manualTask id="Activity_StatusArg" name="Display Workflow Status Arg">
+      <bpmn:documentation># Status Arg
+{{ status_arg }}</bpmn:documentation>
+      <bpmn:incoming>Flow_0fl7rsj</bpmn:incoming>
+      <bpmn:outgoing>Flow_00x8h5p</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0lt7dwr" sourceRef="Activity_09p0m5x" targetRef="Activity_StatusKwarg" />
+    <bpmn:scriptTask id="Activity_09p0m5x" name="Get Workflow Status Kwarg">
+      <bpmn:incoming>Flow_00x8h5p</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lt7dwr</bpmn:outgoing>
+      <bpmn:script>status_kwarg = get_workflow_status(search_workflow_id=search_workflow_id)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Activity_StatusKwarg" name="Display Workflow Status Kwarg">
+      <bpmn:documentation># Status Kwarg
+{{ status_kwarg }}</bpmn:documentation>
+      <bpmn:incoming>Flow_0lt7dwr</bpmn:incoming>
+      <bpmn:outgoing>Flow_0eg806h</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_1nvmkni">
+      <bpmn:incoming>Flow_0eg806h</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_00x8h5p" sourceRef="Activity_StatusArg" targetRef="Activity_09p0m5x" />
+    <bpmn:sequenceFlow id="Flow_0eg806h" sourceRef="Activity_StatusKwarg" targetRef="Event_1nvmkni" />
+    <bpmn:sequenceFlow id="Flow_0wp4z9u" sourceRef="Activity_WorkflowID" targetRef="Activity_0y5dzit" />
+    <bpmn:userTask id="Activity_WorkflowID" name="Get Workflow ID" camunda:formKey="WorkflowIDForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="search_workflow_id" label="Workflow ID" type="long" defaultValue="1">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0wppzk2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0wp4z9u</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0k8r3a2">
+      <bpmndi:BPMNEdge id="Flow_0eg806h_di" bpmnElement="Flow_0eg806h">
+        <di:waypoint x="990" y="117" />
+        <di:waypoint x="1052" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00x8h5p_di" bpmnElement="Flow_00x8h5p">
+        <di:waypoint x="670" y="117" />
+        <di:waypoint x="730" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lt7dwr_di" bpmnElement="Flow_0lt7dwr">
+        <di:waypoint x="830" y="117" />
+        <di:waypoint x="890" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0fl7rsj_di" bpmnElement="Flow_0fl7rsj">
+        <di:waypoint x="510" y="117" />
+        <di:waypoint x="570" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wppzk2_di" bpmnElement="Flow_0wppzk2">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="240" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0wp4z9u_di" bpmnElement="Flow_0wp4z9u">
+        <di:waypoint x="340" y="117" />
+        <di:waypoint x="410" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_0bsr1f1_di" bpmnElement="Activity_0y5dzit">
+        <dc:Bounds x="410" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18ywo1x_di" bpmnElement="Activity_StatusArg">
+        <dc:Bounds x="570" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1s8egpj_di" bpmnElement="Activity_WorkflowID">
+        <dc:Bounds x="240" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0lhah9s_di" bpmnElement="Activity_09p0m5x">
+        <dc:Bounds x="730" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_17o4p3b_di" bpmnElement="Activity_StatusKwarg">
+        <dc:Bounds x="890" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1nvmkni_di" bpmnElement="Event_1nvmkni">
+        <dc:Bounds x="1052" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
