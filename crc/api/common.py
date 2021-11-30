@@ -3,6 +3,7 @@ import json
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from flask import g
+from jinja2 import TemplateError
 from werkzeug.exceptions import InternalServerError
 
 from crc import ma, app
@@ -12,7 +13,8 @@ import sentry_sdk
 
 class ApiError(Exception):
     def __init__(self, code, message, status_code=400,
-                 file_name="", task_id="", task_name="", tag="", task_data=None, error_type="", line_number=0,  offset=0):
+                 file_name="", task_id="", task_name="", tag="",
+                 task_data=None, error_type="", error_line="", line_number=0,  offset=0):
         if task_data is None:
             task_data = {}
         self.status_code = status_code
@@ -26,6 +28,7 @@ class ApiError(Exception):
         self.line_number = line_number
         self.offset = offset
         self.error_type = error_type
+        self.error_line = error_line
         if hasattr(g, 'user'):
             user = g.user.uid
         else:
@@ -82,7 +85,7 @@ class ApiError(Exception):
         try:
             json.dumps(x)
             return True
-        except (TypeError, OverflowError):
+        except (TypeError, OverflowError, ValueError):
             return False
 
     @classmethod
@@ -109,8 +112,6 @@ class ApiError(Exception):
 
         else:
             return ApiError.from_task_spec(code, message, exp.sender)
-
-
 
 
 class ApiErrorSchema(ma.Schema):

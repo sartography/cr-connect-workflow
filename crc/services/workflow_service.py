@@ -1,6 +1,8 @@
 import copy
 import json
 import string
+import sys
+import traceback
 from datetime import datetime
 import random
 import string
@@ -122,25 +124,28 @@ class WorkflowService(object):
                                   str(e)))
 
     @staticmethod
+    def raise_if_disabled(spec_id, study_id):
+        """Raise an exception of the workflow is not enabled and can not be executed."""
+        if study_id is not None:
+            study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+            spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
+            status = StudyService._get_study_status(study_model)
+            if spec_model.id in status and status[spec_model.id]['status'] == 'disabled':
+                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.id]['message']}")
+
+    @staticmethod
     @timeit
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
           output form the last task if successful.
 
-          test_until
+          test_until - stop running the validation when you reach this task spec.
 
           required_only can be set to true, in which case this will run the
           spec, only completing the required fields, rather than everything.
           """
 
-        # Get workflow state dictionary, make sure workflow is not disabled.
-        if validate_study_id is not None:
-            study_model = session.query(StudyModel).filter(StudyModel.id == validate_study_id).first()
-            spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
-            status = StudyService._get_study_status(study_model)
-            if spec_model.id in status and status[spec_model.id]['status'] == 'disabled':
-                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.id]['message']}")
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
@@ -758,12 +763,24 @@ class WorkflowService(object):
 
         try:
             return JinjaService.get_content(raw_doc, spiff_task.data)
-        except jinja2.exceptions.TemplateError as ue:
-            raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
-                                                          (spiff_task.task_spec.name, str(ue)), task=spiff_task)
+        except jinja2.exceptions.TemplateSyntaxError as tse:
+            error_line = documentation.splitlines()[tse.lineno - 1]
+            raise ApiError.from_task(code="template_error", message="Jinja Template Error:  %s" % str(tse),
+                                     task=spiff_task, line_number=tse.lineno, error_line=error_line)
+        except jinja2.exceptions.TemplateError as te:
+            # Figure out the line number in the template that caused the error.
+            cl, exc, tb = sys.exc_info()
+            line_number = None
+            error_line = None
+            for frameSummary in traceback.extract_tb(tb):
+                if frameSummary.filename == '<template>':
+                    line_number = frameSummary.lineno
+                    error_line = documentation.splitlines()[line_number - 1]
+            raise ApiError.from_task(code="template_error", message="Jinja Template Error: %s" % str(te),
+                                     task=spiff_task, line_number=line_number, error_line=error_line)
         except TypeError as te:
-            raise ApiError.from_task(code="template_error", message="Error processing template for task %s: %s" %
-                                                          (spiff_task.task_spec.name, str(te)), task=spiff_task)
+            raise ApiError.from_task(code="template_error", message="Jinja Template Error: %s" % str(te),
+                                     task=spiff_task)
         except Exception as e:
             app.logger.error(str(e), exc_info=True)
 
@@ -789,10 +806,8 @@ class WorkflowService(object):
         if field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):
             lookup_model = LookupService.get_lookup_model(spiff_task, field)
             data = db.session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_model).all()
-            if not hasattr(field, 'options'):
-                field.options = []
             for d in data:
-                field.options.append({"id": d.value, "name": d.label, "data": d.data})
+                field.add_option(d.value, d.label)
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):
             field.options = WorkflowService.get_options_from_task_data(spiff_task, field)
 

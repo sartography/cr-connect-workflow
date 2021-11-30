@@ -165,15 +165,10 @@ Please note this is just a few examples, ALL known document types are returned i
                    )
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        """For validation only, pretend no results come back from pb"""
-        self.check_args(args, 2)
-        # Assure the reference file exists (a bit hacky, but we want to raise this error early, and cleanly.)
-        FileService.get_reference_file_data(DocumentService.DOCUMENT_LIST)
-        FileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
         # we call the real do_task so we can
         # seed workflow validations with settings from studies in PB Mock
         # in order to test multiple paths thru the workflow
-        return self.do_task(task, study_id, workflow_id, args[0])
+        return self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
     @timeit
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
