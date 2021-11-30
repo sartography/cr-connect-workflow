@@ -1,13 +1,9 @@
-import logging
 import os
-import ssl
-from os import path
-
-from attr import asdict
 from ldap3.core.exceptions import LDAPExceptionError
+import datetime as dt
 
 from crc import app, db
-from ldap3 import Connection, Server, MOCK_SYNC, RESTARTABLE, SASL, DIGEST_MD5, ALL, Tls, EXTERNAL, SYNC
+from ldap3 import Connection, Server, MOCK_SYNC, RESTARTABLE
 
 from crc.api.common import ApiError
 from crc.models.ldap import LdapModel, LdapSchema
@@ -18,7 +14,8 @@ class LdapService(object):
     attributes = ['uid', 'cn', 'sn', 'displayName', 'givenName', 'mail', 'objectClass', 'UvaDisplayDepartment',
                   'telephoneNumber', 'title', 'uvaPersonIAMAffiliation', 'uvaPersonSponsoredType']
     uid_search_string = "(&(objectclass=person)(uid=%s))"
-    user_or_last_name_search = "(&(objectclass=person)(|(uid=%s*)(sn=%s*)))"
+    # adding a '*' to the end of uid here would match partial uid, but it is too slow on the new ldap server.
+    user_or_last_name_search = "(&(objectclass=person)(|(uid=%s)(sn=%s*)))"
     cn_single_search = '(&(objectclass=person)(cn=%s*))'
     cn_double_search = '(&(objectclass=person)(&(cn=%s*)(cn=*%s*)))'
     temp_cache = {}
@@ -89,10 +86,13 @@ class LdapService(object):
             # Search by user_id or last name
             search_string = LdapService.user_or_last_name_search % (query, query)
         results = []
-        app.logger.info(search_string)
         try:
             conn = LdapService.__get_conn()
+            a = dt.datetime.now()
             conn.search(LdapService.search_base, search_string, attributes=LdapService.attributes)
+            b = dt.datetime.now()
+            app.logger.info('LDAP Search ' + search_string + " -- " + str((b - a).total_seconds()) + " sec.")
+
             # Entries are returned as a generator, accessing entries
             # can make subsequent calls to the ldap service, so limit
             # those here.

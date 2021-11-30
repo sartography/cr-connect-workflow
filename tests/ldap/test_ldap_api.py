@@ -10,7 +10,7 @@ class TestLdapApi(BaseTest):
         Test to make sure that LDAP api returns a real user
         """
         self.load_example_data()
-        rv = self.app.get('/v1.0/ldap?query=dhf',
+        rv = self.app.get('/v1.0/ldap?query=dhf8r',
                           follow_redirects=True,
                           content_type="application/json", headers=self.logged_in_headers())
         self.assertTrue(rv.status_code == 200)
