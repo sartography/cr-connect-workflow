@@ -5,7 +5,7 @@ import connexion
 import flask
 from flask import url_for
 from marshmallow import INCLUDE, EXCLUDE, Schema
-from marshmallow.fields import Method
+from marshmallow.fields import Method, Nested
 from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
@@ -77,15 +77,6 @@ class FileDataModel(db.Model):
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
-class FileDataModelSchema(Schema):
-    class Meta:
-        model = FileDataModel
-        load_instance = True
-        include_relationships = True
-        fields = ["id", "md5_hash", "sha", "data", "version", "size", "date_created", "file_model_id", "file_model", "user_uid"]
-
-
-
 class FileModel(db.Model):
     __tablename__ = 'file'
     id = db.Column(db.Integer, primary_key=True)
@@ -151,6 +142,15 @@ class FileModelSchema(SQLAlchemyAutoSchema):
         include_fk = True  # Includes foreign keys
         unknown = EXCLUDE
     type = EnumField(FileType)
+
+
+class FileDataModelSchema(Schema):
+    class Meta:
+        model = FileDataModel
+        load_instance = True
+        include_relationships = True
+        fields = ["id", "md5_hash", "sha", "data", "version", "size", "date_created", "file_model_id", "file_model", "user_uid"]
+    file_model = Nested(FileModelSchema)
 
 
 class FileSchema(Schema):
