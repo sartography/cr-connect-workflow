@@ -180,9 +180,9 @@ class WorkflowSyncService(object):
                          'files':ref_files})
         return info
 
-    def get_master_list(remote,keep_new_local=False):
+    def get_master_list(remote, keep_new_local=False):
         # first let's just build a local tree
-        changed = WorkflowSyncService.get_changed_workflows(remote,keep_new_local=keep_new_local)
+        changed = WorkflowSyncService.get_changed_workflows(remote, keep_new_local=keep_new_local)
         lcl_specs = WorkflowSyncService.get_all_spec_state()
         categories = {}
         lcl_spec_ids = [x.workflow_spec_id for x in lcl_specs]
@@ -190,7 +190,7 @@ class WorkflowSyncService(object):
             if wf.workflow_spec_id in lcl_spec_ids:
                 full_spec = get_workflow_specification(wf.workflow_spec_id)
             else:
-                full_spec = WorkflowSyncService.get_remote_workflow_spec(remote,wf.workflow_spec_id)
+                full_spec = WorkflowSyncService.get_remote_workflow_spec(remote, wf.workflow_spec_id)
             category = full_spec['category']
             if category is None:
                 category = {'display_name': 'Top Level Workflow'}
@@ -229,13 +229,10 @@ class WorkflowSyncService(object):
         local = WorkflowSyncService.get_all_spec_state_dataframe().reset_index()
 
         if local.empty:
-            # return the list as a dict, let swagger convert it to json
             remote_workflows['new'] = True
             if as_df:
                 return remote_workflows
             else:
-                # list of dictionaries
-                # TODO: change to list of models
                 dict_list = remote_workflows.reset_index().to_dict(orient='records')
                 changed_workflows = []
                 for workflow_dict in dict_list:
@@ -290,8 +287,6 @@ class WorkflowSyncService(object):
         else:
             output = different
 
-        # return the list as a dict, let swagger convert it to json
-        # TODO: return a list of models so we can use marshmallow
         if as_df:
             return output
         else:
@@ -425,7 +420,7 @@ class WorkflowSyncService(object):
         local and remote and determines what files have been change and returns a list of those
         files
         """
-        remote_file_list = WorkflowSyncService.get_remote_workflow_spec_files(remote,workflow_spec_id)
+        remote_file_list = WorkflowSyncService.get_remote_workflow_spec_files(remote, workflow_spec_id)
         remote_files = pd.DataFrame(remote_file_list)
         if remote_files.empty:
             remote_files = pd.DataFrame(columns=['filename','md5_hash','date_created','type','primary','content_type','primary_process_id'])
