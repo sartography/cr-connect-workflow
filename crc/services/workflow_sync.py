@@ -521,17 +521,13 @@ class WorkflowSyncService(object):
         thumbprint of all of the files that are used for that workflow_spec
         Convert into a dict list from a dataframe
         """
-        if workflow_spec_id == 'REFERENCE_FILES':
-            spec_files = session.query(FileDataModel).join(FileModel).\
-                filter((FileModel.is_reference is True) & (FileModel.archived is not True)).all()
-        else:
-            spec_files = session.query(FileDataModel).join(FileModel).\
-                filter((FileModel.workflow_spec_id == workflow_spec_id) & (FileModel.archived is not True)).all()
-
+        df = WorkflowSyncService.get_workflow_spec_files_dataframe(workflow_spec_id)
+        changed_files = df.reset_index().to_dict(orient='records')
+        spec_files = []
+        for changed_file in changed_files:
+            spec_file = SyncFile(**changed_file)
+            spec_files.append(spec_file)
         return spec_files
-
-        # df = WorkflowSyncService.get_workflow_spec_files_dataframe(workflow_spec_id)
-        # return df.reset_index().to_dict(orient='records')
 
     @staticmethod
     def get_workflow_spec_files_dataframe(workflow_spec_id):
@@ -539,21 +535,18 @@ class WorkflowSyncService(object):
         Return a list of all files for a workflow_spec along with last updated date and a
         hash so we can determine file differences for a changed workflow on a box.
         Return a dataframe
-
-        In the special case of "REFERENCE_FILES" we get all of the files that are
-        marked as is_reference
         """
-        # if workflowid == 'REFERENCE_FILES':
-        #     x = session.query(FileDataModel).join(FileModel).filter((FileModel.is_reference == True) &
-        #                                                             (FileModel.archived!=True))
-        # else:
-        #     x = session.query(FileDataModel).join(FileModel).filter((FileModel.workflow_spec_id == workflowid) &
-        #                                                             (FileModel.archived!=True))
         # there might be a cleaner way of getting a data from from some of the
         # fields in the ORM - but this works OK
-        x = WorkflowSyncService.get_workflow_spec_files(workflow_spec_id)
+        if workflow_spec_id == 'REFERENCE_FILES':
+            spec_files = session.query(FileDataModel).join(FileModel).\
+                filter((FileModel.is_reference is True) & (FileModel.archived is not True)).all()
+        else:
+            spec_files = session.query(FileDataModel).join(FileModel).\
+                filter((FileModel.workflow_spec_id == workflow_spec_id) & (FileModel.archived is not True)).all()
+
         filelist = []
-        for file in x:
+        for file in spec_files:
             filelist.append({'file_model_id':file.file_model_id,
                              'workflow_spec_id': file.file_model.workflow_spec_id,
                              'md5_hash':file.md5_hash,
