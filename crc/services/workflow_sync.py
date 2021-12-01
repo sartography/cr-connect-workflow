@@ -59,7 +59,7 @@ class WorkflowSyncService(object):
         return WorkflowSyncService.__make_request(url,return_contents=True)
 
     @staticmethod
-    def get_remote_workflow_spec_files(remote,workflow_spec_id):
+    def get_remote_workflow_spec_files(remote, workflow_spec_id):
         url = remote+'/v1.0/workflow_sync/'+workflow_spec_id+'/files'
         return WorkflowSyncService.__make_request(url)
 
@@ -204,7 +204,7 @@ class WorkflowSyncService(object):
             spec['status'] = WorkflowSyncService.lookup_status([wf.location, wf.new, keep_new_local], spec_lookup_table)
             spec['files'] = WorkflowSyncService.get_changed_files(remote, spec['workflow_spec_id'])
             for file in spec['files']:
-                file['status'] = WorkflowSyncService.lookup_status([file['location'], file['new'], spec['status']], file_lookup_table)
+                file.status = WorkflowSyncService.lookup_status([file.location, file.new, spec['status']], file_lookup_table)
             catlist = categories.get(category['display_name'], [])
             catlist.append(spec)
             categories[category['display_name']] = catlist
@@ -437,15 +437,19 @@ class WorkflowSyncService(object):
             if as_df:
                 return remote_files
             else:
-                return remote_files.reset_index().to_dict(orient='records')
+                dict_list = remote_files.reset_index().to_dict(orient='records')
+                changed_files = []
+                for file_dict in dict_list:
+                    file_model = SyncFile(**file_dict)
+                    changed_files.append(file_model)
+                return changed_files
 
         different = remote_files.merge(local,
-                                 right_on=['filename','md5_hash'],
-                                 left_on=['filename','md5_hash'],
-                                 how = 'outer' ,
-                                 indicator=True).loc[lambda x : x['_merge']!='both']
+                                       right_on=['filename', 'md5_hash'],
+                                       left_on=['filename', 'md5_hash'],
+                                       how='outer',
+                                       indicator=True).loc[lambda x: x['_merge'] != 'both']
         if len(different) == 0:
-            # TODO: return list of models instead of list of dicts
             if as_df:
                 return different
             else:
@@ -480,8 +484,7 @@ class WorkflowSyncService(object):
         changedfiles.loc[changedfiles.index.isin(left['filename']), 'new'] = True
         changedfiles.loc[changedfiles.index.isin(right['filename']),'new'] = True
         changedfiles = changedfiles.replace({NA: None})
-        # return the list as a dict, let swagger convert it to json
-        # TODO: return list of models instead of list of dicts
+
         if as_df:
             return changedfiles
         else:
@@ -489,7 +492,6 @@ class WorkflowSyncService(object):
             changed_files = []
             for workflow_dict in dict_list:
                 file_model = SyncFile(**workflow_dict)
-                # spec_state = SyncWorkflow(**workflow_dict)
                 changed_files.append(file_model)
             return changed_files
 
@@ -502,7 +504,7 @@ class WorkflowSyncService(object):
         """
         df = WorkflowSyncService.get_all_spec_state_dataframe()
         dict_list = df.reset_index().to_dict(orient='records')
-        # TODO: turn this into list of models crc.models.sync.SyncWorkFlowModel
+
         all_spec_state = []
         for workflow_dict in dict_list:
             spec_state = SyncWorkflow(**workflow_dict)
