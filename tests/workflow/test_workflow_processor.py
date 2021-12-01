@@ -164,6 +164,20 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("FactService", task.data)
         self.assertIsInstance(task.task_spec, EndEvent)
 
+    def test_workflow_processor_returns_waiting_task_if_no_ready_tasks_exist(self):
+        self.load_example_data()
+        workflow_spec_model = self.load_test_spec("timer_inline")
+        study = session.query(StudyModel).first()
+        processor = self.get_processor(study, workflow_spec_model)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        task.data = {"type": "buzzword"}
+        processor.complete_task(task)
+        processor.do_engine_steps()
+        task = processor.next_task()
+        self.assertIsNotNone(task)
+        self.assertEqual(task.state, task.WAITING)
+
     def test_workflow_validation_error_is_properly_raised(self):
         self.load_example_data()
         workflow_spec_model = self.load_test_spec("invalid_spec")

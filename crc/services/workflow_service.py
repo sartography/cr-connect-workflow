@@ -177,14 +177,17 @@ class WorkflowService(object):
                         WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                         processor.complete_task(task)
                         if test_until == task.task_spec.name:
-                            raise ApiError.from_task("validation_break",
-                                        f"The validation has been exited early on task '{task.task_spec.name}' and was parented by ",
-                                        task.parent)
+                            raise ApiError.from_task(
+                                "validation_break",
+                                f"The validation has been exited early on task '{task.task_spec.name}' "
+                                f"and was parented by ",
+                                task.parent)
                     count += 1
                     if count >= 100:
-                        raise ApiError.from_task(code='validation_loop',
-                                                message=f'There appears to be an infinite loop in the validation. Task is {task.task_spec.description}',
-                                                task=task)
+                        raise ApiError(code='unending_validation',
+                                       message=f'There appears to be no way to complete this workflow,'
+                                               f' halting validation.')
+
             WorkflowService._process_documentation(processor.bpmn_workflow.last_task.parent.parent)
 
         except WorkflowException as we:
