@@ -44,7 +44,16 @@ class TestWorkflowSyncService(BaseTest):
         self.assertIsInstance(changed_workflows[0], SyncWorkflow)
 
     def test_sync_changed_files(self):
-        pass
+        self.load_example_data()
+        new_spec = WorkflowSpecModel(id='ids_approval',
+                                     display_name='IDS Approval',
+                                     description='Request Investigational Drug Services Approval')
+        session.add(new_spec)
+        session.commit()
+        # workflow_spec_model = session.query(WorkflowSpecModel).first()
+        result = WorkflowSyncService.sync_changed_files(self.remote, new_spec.id)
+
+        print('test_sync_changed_files')
 
     def test_get_changed_files(self):
         self.load_example_data()
