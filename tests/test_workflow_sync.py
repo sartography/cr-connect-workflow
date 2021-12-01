@@ -61,9 +61,9 @@ class TestWorkflowSync(BaseTest):
         response = get_changed_workflows('localhost:0000') #endpoint is not used due to mock
         self.assertIsNotNone(response)
         self.assertEqual(len(response),1)
-        self.assertEqual(response[0]['workflow_spec_id'], 'random_fact')
-        self.assertEqual(response[0]['location'], 'remote')
-        self.assertEqual(response[0]['new'], False)
+        self.assertEqual(response[0].workflow_spec_id, 'random_fact')
+        self.assertEqual(response[0].location, 'remote')
+        self.assertEqual(response[0].new, False)
 
 
 
@@ -77,10 +77,10 @@ class TestWorkflowSync(BaseTest):
         mock_get.return_value = othersys
         response = get_changed_workflows('localhost:0000') #endpoint is not used due to mock
         self.assertIsNotNone(response)
-        self.assertEqual(len(response),1)
-        self.assertEqual(response[0]['workflow_spec_id'],'my_new_workflow')
-        self.assertEqual(response[0]['location'], 'remote')
-        self.assertEqual(response[0]['new'], True)
+        self.assertEqual(len(response), 1)
+        self.assertEqual(response[0].workflow_spec_id, 'my_new_workflow')
+        self.assertEqual(response[0].location, 'remote')
+        self.assertEqual(response[0].new, True)
 
 
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_all_remote_workflows')
@@ -112,11 +112,11 @@ class TestWorkflowSync(BaseTest):
         othersys = get_workflow_spec_files('random_fact')
         mock_get.return_value = othersys
         self.delete_example_data()
-        response = get_changed_files('localhost:0000','random_fact',as_df=False) #endpoint is not used due to mock
+        response = get_changed_files('localhost:0000', 'random_fact', as_df=False)  # endpoint is not used due to mock
         self.assertIsNotNone(response)
-        self.assertEqual(len(response),2)
-        self.assertEqual(response[0]['location'], 'remote')
-        self.assertEqual(response[0]['new'], True)
+        self.assertEqual(len(response), 2)
+        self.assertEqual(response[0].location, 'remote')
+        self.assertEqual(response[0].new, True)
 
 
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec_files')
@@ -130,9 +130,9 @@ class TestWorkflowSync(BaseTest):
         response = get_changed_files('localhost:0000','random_fact',as_df=False) #endpoint is not used due to mock
         self.assertIsNotNone(response)
         self.assertEqual(len(response),1)
-        self.assertEqual(response[0]['filename'], 'random_fact2.bpmn')
-        self.assertEqual(response[0]['location'], 'remote')
-        self.assertEqual(response[0]['new'], False)
+        self.assertEqual(response[0].filename, 'random_fact2.bpmn')
+        self.assertEqual(response[0].location, 'remote')
+        self.assertEqual(response[0].new, False)
 
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_file_by_hash')
     @patch('crc.services.workflow_sync.WorkflowSyncService.get_remote_workflow_spec_files')
