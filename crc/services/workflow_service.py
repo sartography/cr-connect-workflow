@@ -734,6 +734,12 @@ class WorkflowService(object):
                 # Otherwise, just use the curreent title.
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
+
+        if task.properties and "clear_data" in task.properties:
+            if task.form and task.properties['clear_data'] == 'True':
+                for i in range(len(task.form.fields)):
+                    task.data.pop(task.form.fields[i].id, None)
+
         return task
 
     @staticmethod
