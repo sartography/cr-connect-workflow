@@ -333,6 +333,9 @@ class WorkflowSyncService(object):
 
         # Set the category
         if specdict['category'] is not None:
+            # TODO: SQL IntegrityError
+            # Category doesn't exist
+            # This might only be a problem in my test `test_sync_changed_files`
             local_category = session.query(WorkflowSpecCategoryModel).\
                 filter(WorkflowSpecCategoryModel.display_name == specdict['category']['display_name']).first()
             if local_category is None:
