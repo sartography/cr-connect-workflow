@@ -71,7 +71,8 @@ class SyncFile(object):
                  data=None,
                  id=None,
                  version=None,
-                 status=None):
+                 status=None,
+                 workflow_spec_id=None):
         self.filename = filename
         self.date_created = date_created
         self.type = type
@@ -91,6 +92,7 @@ class SyncFile(object):
         self.id = id
         self.version = version
         self.status = status
+        self.workflow_spec_id = workflow_spec_id
 
 
 class SyncFileSchema(ma.Schema):
