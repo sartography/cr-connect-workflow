@@ -28,11 +28,15 @@ class TestWorkflowSyncService(BaseTest):
                          parsed)
 
     def test_sync_all_changed_workflows(self):
-        pass
+        changed_workflows = WorkflowSyncService.sync_all_changed_workflows(self.remote)
+
+        print('test_sync_all_changed_workflows')
 
     def test_get_master_list(self):
         self.load_example_data()
         master_list = WorkflowSyncService.get_master_list(self.remote)
+
+        # TODO: How should master list be structured? As is?
 
         print(f'test_get_master_list: master_list: {master_list}')
 
@@ -78,4 +82,4 @@ class TestWorkflowSyncService(BaseTest):
         workflow_spec_model = session.query(WorkflowSpecModel).first()
         workflow_spec_files = WorkflowSyncService.get_workflow_spec_files(workflow_spec_model.id)
         self.assertEqual(1, len(workflow_spec_files))
-        self.assertIsInstance(workflow_spec_files[0], FileDataModel)
+        self.assertIsInstance(workflow_spec_files[0], SyncFile)
