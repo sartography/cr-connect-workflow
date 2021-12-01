@@ -354,7 +354,7 @@ class WorkflowSyncService(object):
         session.add(local_spec)
 
     @staticmethod
-    def update_or_create_current_file(remote,workflow_spec_id,updatefile):
+    def update_or_create_current_file(remote, workflow_spec_id, updatefile):
         currentfile = WorkflowSyncService.file_get(workflow_spec_id, updatefile['filename'])
         if not currentfile:
             currentfile = FileModel()
@@ -402,7 +402,7 @@ class WorkflowSyncService(object):
         deletefiles = deletefiles.reset_index().to_dict(orient='records')
 
         for delfile in deletefiles:
-            currentfile = WorkflowSyncService.file_get(workflow_spec_id,delfile['filename'])
+            currentfile = WorkflowSyncService.file_get(workflow_spec_id, delfile['filename'])
 
             # it is more appropriate to archive the file than delete
             # due to the fact that we might have workflows that are using the
@@ -411,7 +411,7 @@ class WorkflowSyncService(object):
             session.add(currentfile)
 
         for updatefile in updatefiles:
-            WorkflowSyncService.update_or_create_current_file(remote,workflow_spec_id,updatefile)
+            WorkflowSyncService.update_or_create_current_file(remote, workflow_spec_id, updatefile)
         session.commit()
         return [x['filename'] for x in updatefiles]
 
