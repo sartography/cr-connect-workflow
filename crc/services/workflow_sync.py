@@ -336,9 +336,6 @@ class WorkflowSyncService(object):
 
         # Set the category
         if specdict['category'] is not None:
-            # TODO: SQL IntegrityError
-            # Category doesn't exist
-            # This might only be a problem in my test `test_sync_changed_files`
             local_category = session.query(WorkflowSpecCategoryModel).\
                 filter(WorkflowSpecCategoryModel.display_name == specdict['category']['display_name']).first()
             if local_category is None:
@@ -346,8 +343,6 @@ class WorkflowSyncService(object):
                                                                     instance=local_category)
                 session.add(local_category)
             local_spec.category = local_category
-
-        # TODO: Make sure the spec exists locally
 
         # Set the libraries
         session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.workflow_spec_id == local_spec.id).delete()
@@ -441,7 +436,6 @@ class WorkflowSyncService(object):
         local['md5_hash'] = local['md5_hash'].astype('str')
         remote_files['md5_hash'] = remote_files['md5_hash'].astype('str')
         if len(local) == 0:
-            # TODO: return list of models instead of list of dicts
             remote_files['new'] = True
             remote_files['location'] = 'remote'
             if as_df:
