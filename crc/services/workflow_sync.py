@@ -342,7 +342,7 @@ class WorkflowSyncService(object):
                 session.add(local_category)
             local_spec.category = local_category
 
-        # Make sure the spec exists locally
+        # TODO: Make sure the spec exists locally
 
         # Set the libraries
         session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.workflow_spec_id == local_spec.id).delete()
