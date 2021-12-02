@@ -14,8 +14,7 @@ class LdapService(object):
     attributes = ['uid', 'cn', 'sn', 'displayName', 'givenName', 'mail', 'objectClass', 'UvaDisplayDepartment',
                   'telephoneNumber', 'title', 'uvaPersonIAMAffiliation', 'uvaPersonSponsoredType']
     uid_search_string = "(&(objectclass=person)(uid=%s))"
-    # adding a '*' to the end of uid here would match partial uid, but it is too slow on the new ldap server.
-    user_or_last_name_search = "(&(objectclass=person)(|(uid=%s)(sn=%s*)))"
+    user_or_last_name_search = "(&(objectclass=person)(|(uid=%s*)(sn=%s*)))"
     cn_single_search = '(&(objectclass=person)(cn=%s*))'
     cn_double_search = '(&(objectclass=person)(&(cn=%s*)(cn=*%s*)))'
     temp_cache = {}
