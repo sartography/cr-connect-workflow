@@ -44,6 +44,11 @@ def sync_all_changed_workflows(remote, keep_new_local=False):
 
 def get_master_list(remote, keep_new_local=False):
     master_list = WorkflowSyncService.get_master_list(remote, keep_new_local)
+    for category in master_list:
+        for workflow in category['workflows']:
+            temp = SyncFileSchema(many=True).dump(workflow['files'])
+            workflow['files'] = temp
+
     return master_list
 
 
@@ -53,12 +58,12 @@ def get_changed_workflows(remote, as_df=False, keep_new_local=False):
 
 
 def sync_changed_files(remote, workflow_spec_id):
-    changed_files = WorkflowSyncService.sync_changed_files(remote,workflow_spec_id)
+    changed_files = WorkflowSyncService.sync_changed_files(remote, workflow_spec_id)
     return changed_files
 
 
-def get_changed_files(remote,workflow_spec_id,as_df=False):
-    changed_files = WorkflowSyncService.get_changed_files(remote,workflow_spec_id,as_df)
+def get_changed_files(remote, workflow_spec_id, as_df=False):
+    changed_files = WorkflowSyncService.get_changed_files(remote, workflow_spec_id, as_df)
     return changed_files
 
 
