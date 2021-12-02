@@ -158,29 +158,30 @@ class WorkflowSyncService(object):
                     if file.status in ['delete', 'revert']:
                         print('delete file', file)
 
-                        file = session.query(FileModel).filter(FileModel.name==file['filename']).first()
+                        file = session.query(FileModel).filter(FileModel.name == file.filename).first()
                         FileService.delete_file(file.id)
                         #file.archived = True
                         #session.commit()
                 if workflow['status'] in ['delete']:
-                    session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow[
+                    session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow[
                         'workflow_spec_id']).delete()
 
                     session.commit()
                     print('delete workflow',workflow)
                 else:
-                    files = WorkflowSyncService.sync_changed_files(remote,workflow['workflow_spec_id'])
+                    files = WorkflowSyncService.sync_changed_files(remote, workflow['workflow_spec_id'])
                     workflow['changed_files'] = files
-                    info.append({'workflow':workflow['workflow_spec_id'],
-                                  'name': workflow['name'],
-                                  'files': workflow['changed_files']})
-        ref_files = WorkflowSyncService.sync_changed_files(remote,'REFERENCE_FILES')
+                    info.append({'workflow': workflow['workflow_spec_id'],
+                                 'name': workflow['name'],
+                                 'files': workflow['changed_files']})
+        ref_files = WorkflowSyncService.sync_changed_files(remote, 'REFERENCE_FILES')
         if len(ref_files) > 0:
-            info.append({'workflow':'REFERENCE_FILES',
-                         'name':'Reference Files',
-                         'files':ref_files})
+            info.append({'workflow': 'REFERENCE_FILES',
+                         'name': 'Reference Files',
+                         'files': ref_files})
         return info
 
+    @staticmethod
     def get_master_list(remote, keep_new_local=False):
         # first let's just build a local tree
         changed = WorkflowSyncService.get_changed_workflows(remote, keep_new_local=keep_new_local)
