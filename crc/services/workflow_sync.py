@@ -130,7 +130,8 @@ class WorkflowSyncService(object):
         for key in mykeys:
             loc = key.split("__")[1:]
             mydict = sources.get(loc[0], dict())
-            mydict[loc[1]] = app.config.get(key)
+            # mydict[loc[1]] = app.config.get(key)
+            mydict[loc[1].lower()] = app.config.get(key)
             sources[loc[0]] = mydict
         return [sources[key] for key in sources.keys()]
 
@@ -154,7 +155,7 @@ class WorkflowSyncService(object):
             category = item['category']
             for workflow in item['workflows']:
                 for file in workflow['files']:
-                    if file['status'] in ['delete', 'revert']:
+                    if file.status in ['delete', 'revert']:
                         print('delete file', file)
 
                         file = session.query(FileModel).filter(FileModel.name==file['filename']).first()
@@ -236,6 +237,7 @@ class WorkflowSyncService(object):
                 dict_list = remote_workflows.reset_index().to_dict(orient='records')
                 changed_workflows = []
                 for workflow_dict in dict_list:
+                    workflow_dict['location'] = 'local'
                     sync_workflow = SyncWorkflow(**workflow_dict)
                     changed_workflows.append(sync_workflow)
                 return changed_workflows
@@ -421,6 +423,9 @@ class WorkflowSyncService(object):
         files
         """
         remote_file_list = WorkflowSyncService.get_remote_workflow_spec_files(remote, workflow_spec_id)
+        for file in remote_file_list:
+            if 'level_0' in file.keys() and file['level_0'] is None:
+                del(file['level_0'])
         remote_files = pd.DataFrame(remote_file_list)
         if remote_files.empty:
             remote_files = pd.DataFrame(columns=['filename','md5_hash','date_created','type','primary','content_type','primary_process_id'])
