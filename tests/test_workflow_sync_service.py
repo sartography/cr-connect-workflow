@@ -83,3 +83,25 @@ class TestWorkflowSyncService(BaseTest):
         workflow_spec_files = WorkflowSyncService.get_workflow_spec_files(workflow_spec_model.id)
         self.assertEqual(1, len(workflow_spec_files))
         self.assertIsInstance(workflow_spec_files[0], SyncFile)
+
+
+from crc.api.workflow_sync import get_sync_sources, sync_all_changed_workflows, get_master_list, get_changed_workflows, sync_changed_files, get_changed_files, get_all_spec_state, get_workflow_spec_files
+
+
+class TestWorkflowSyncAPI(BaseTest):
+
+    remote = 'http://localhost:5000'
+    keep_new_local = False
+
+    def test_sync_all_changed_workflows(self):
+        self.load_example_data()
+        result = sync_all_changed_workflows(self.remote, self.keep_new_local)
+
+        print('test_sync_all_changed_workflows')
+
+    def test_sync_changed_files(self):
+        self.load_example_data()
+        workflow_spec_id = ''
+        changed_files = sync_changed_files(self.remote, workflow_spec_id)
+
+        print('test_sync_changed_files')

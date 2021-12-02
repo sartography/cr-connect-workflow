@@ -46,8 +46,10 @@ class SyncWorkflowSchema(ma.Schema):
                   "workflow_spec_id",
                   "date_created",
                   "md5_hash",
+                  "location",
                   "name",
-                  "new"]
+                  "new",
+                  "level_0"]
 
 
 class SyncFile(object):

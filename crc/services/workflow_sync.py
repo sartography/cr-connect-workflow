@@ -225,6 +225,10 @@ class WorkflowSyncService(object):
         """
 
         remote_workflows_list = WorkflowSyncService.get_all_remote_workflows(remote)
+        for workflow in remote_workflows_list:
+            if 'level_0' in workflow.keys() and workflow['level_0'] is None:
+                del(workflow['level_0'])
+
         remote_workflows = pd.DataFrame(remote_workflows_list)
 
         # get the local thumbprints & make sure that 'workflow_spec_id' is a column, not an index
@@ -326,6 +330,7 @@ class WorkflowSyncService(object):
                 session.add(master_spec)
 
         # Update local_spec, or create a new one if one does not exist.
+
         local_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == workflow_spec_id).first()
         local_spec = WorkflowSpecModelSchema().load(specdict, session=session, instance=local_spec)
 
@@ -347,11 +352,12 @@ class WorkflowSyncService(object):
         # Set the libraries
         session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.workflow_spec_id == local_spec.id).delete()
         for library in specdict['libraries']:
-            # Assure referenced libraries are local, and link them.
-            WorkflowSyncService.create_or_update_local_spec(remote, library['id'])
-            local_lib = WorkflowLibraryModel(workflow_spec_id=local_spec.id,
-                                             library_spec_id=library['id'])
-            session.add(local_lib)
+            with session.no_autoflush:
+                # Assure referenced libraries are local, and link them.
+                WorkflowSyncService.create_or_update_local_spec(remote, library['id'])
+                local_lib = WorkflowLibraryModel(workflow_spec_id=local_spec.id,
+                                                 library_spec_id=library['id'])
+                session.add(local_lib)
         session.add(local_spec)
 
     @staticmethod
