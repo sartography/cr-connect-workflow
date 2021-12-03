@@ -9,5 +9,3 @@ class TestGetStudyStatus(BaseTest):
         task = workflow_api.next_task
 
         self.assertEqual(task.data['study_status'], workflow.study.status.value)
-
-        print('test_get_study_status')

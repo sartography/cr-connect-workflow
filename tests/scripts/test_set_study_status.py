@@ -33,5 +33,3 @@ class TestSetStudyStatus(BaseTest):
 
         with self.assertRaises(AssertionError):
             self.complete_form(workflow, task, {'selected_status': 'asdf'})
-
-        print('test_set_study_status_fail')
