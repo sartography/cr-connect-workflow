@@ -12,11 +12,10 @@ class SetStudyStatus(Script):
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
 
-        new_status = None
-        if 'status' in kwargs.keys() or len(args) > 0:
-            if 'status' in kwargs.keys():
-                new_status = kwargs['status']
-            elif len(args) > 0:
+        if 'new_status' in kwargs.keys() or len(args) > 0:
+            if 'new_status' in kwargs.keys():
+                new_status = kwargs['new_status']
+            else:
                 new_status = args[0]
 
             try:
@@ -37,11 +36,10 @@ class SetStudyStatus(Script):
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
         # Get new status
-        new_status = None
-        if 'status' in kwargs.keys() or len(args) > 0:
+        if 'new_status' in kwargs.keys() or len(args) > 0:
             if 'new_status' in kwargs.keys():
                 new_status = kwargs['new_status']
-            elif len(args) > 0:
+            else:
                 new_status = args[0]
 
             # Get StudyStatus object for new_status
