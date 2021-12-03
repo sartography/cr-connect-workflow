@@ -4,7 +4,7 @@ from crc.models.study import StudyModel, StudyStatus
 from crc.scripts.script import Script
 
 
-class MyScript(Script):
+class SetStudyStatus(Script):
 
     def get_description(self):
         return """Set the status of the current study. 
@@ -18,6 +18,7 @@ class MyScript(Script):
                 new_status = kwargs['status']
             elif len(args) > 0:
                 new_status = args[0]
+
             try:
                 study_status = getattr(StudyStatus, new_status)
 
@@ -26,6 +27,7 @@ class MyScript(Script):
                                          message=f"We could not find a status matching `{new_status}`. Original message: {ae}",
                                          task=task)
             return study_status.value
+
         else:
             raise ApiError.from_task(code='missing_argument',
                                      message='You must include the new status when calling `set_study_status` script. '

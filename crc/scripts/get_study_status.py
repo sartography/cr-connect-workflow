@@ -3,7 +3,7 @@ from crc.models.study import StudyModel
 from crc.scripts.script import Script
 
 
-class StudyStatus(Script):
+class GetStudyStatus(Script):
 
     def get_description(self):
         return """Get the status of the current study. 
