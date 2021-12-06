@@ -11,7 +11,7 @@ from crc import db, ma
 from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileModel, SimpleFileSchema, FileSchema
 from crc.models.ldap import LdapModel, LdapSchema
-from crc.models.protocol_builder import ProtocolBuilderStatus, ProtocolBuilderStudy
+from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
     WorkflowModel
 from crc.services.file_service import FileService
@@ -57,10 +57,10 @@ class StudyModel(db.Model):
     short_name = db.Column(db.String, nullable=True)
     proposal_name = db.Column(db.String, nullable=True)
 
-    def update_from_protocol_builder(self, pbs: ProtocolBuilderStudy):
-        self.title = pbs.TITLE
-        self.user_uid = pbs.NETBADGEID
-        self.last_updated = pbs.DATE_MODIFIED
+    def update_from_protocol_builder(self, study: ProtocolBuilderCreatorStudy, user_id):
+        self.title = study.TITLE
+        self.user_uid = user_id
+        self.last_updated = study.DATELASTMODIFIED
 
         self.irb_status = IrbStatus.incomplete_in_protocol_builder
 
