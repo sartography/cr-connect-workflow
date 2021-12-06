@@ -6,7 +6,8 @@ import requests
 
 from crc import app
 from crc.api.common import ApiError
-from crc.models.protocol_builder import ProtocolBuilderStudySchema, ProtocolBuilderRequiredDocument
+from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema, ProtocolBuilderRequiredDocument
+
 
 class ProtocolBuilderService(object):
     STUDY_URL = app.config['PB_USER_STUDIES_URL']
@@ -33,7 +34,7 @@ class ProtocolBuilderService(object):
         response = requests.get(url)
         if response.ok and response.text:
             try:
-                pb_studies = ProtocolBuilderStudySchema(many=True).loads(response.text)
+                pb_studies = ProtocolBuilderCreatorStudySchema(many=True).loads(response.text)
                 return pb_studies
             except JSONDecodeError as err:
                 raise ApiError("protocol_builder_error",
