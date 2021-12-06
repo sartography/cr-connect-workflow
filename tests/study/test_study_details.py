@@ -6,12 +6,8 @@ from tests.base_test import BaseTest
 from unittest.mock import patch
 
 from crc import app, session
-from crc.api.common import ApiError
-from crc.models.file import FileDataModel, FileModel
-from crc.models.protocol_builder import ProtocolBuilderRequiredDocumentSchema, ProtocolBuilderStudySchema
 from crc.models.study import StudyModel
 from crc.scripts.study_info import StudyInfo
-from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 
