@@ -11,8 +11,7 @@ from SpiffWorkflow.camunda.specs.UserTask import FormField
 from crc import session, db, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
-from crc.models.protocol_builder import ProtocolBuilderStudySchema
-from crc.services.protocol_builder import ProtocolBuilderService
+from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
 from crc.services.file_service import FileService
@@ -23,11 +22,13 @@ from crc.services.workflow_service import WorkflowService
 
 class TestWorkflowProcessor(BaseTest):
 
-    def _populate_form_with_random_data(self, task):
+    @staticmethod
+    def _populate_form_with_random_data(task):
         api_task = WorkflowService.spiff_task_to_api_task(task, add_docs_and_forms=True)
         WorkflowService.populate_form_with_random_data(task, api_task, required_only=False)
 
-    def get_processor(self, study_model, spec_model):
+    @staticmethod
+    def get_processor(study_model, spec_model):
         workflow_model = StudyService._create_workflow_model(study_model, spec_model)
         return WorkflowProcessor(workflow_model)
 
@@ -346,7 +347,7 @@ class TestWorkflowProcessor(BaseTest):
 
         # Mock Protocol Builder response
         studies_response = self.protocol_builder_response('user_studies.json')
-        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
+        mock_studies.return_value = ProtocolBuilderCreatorStudySchema(many=True).loads(studies_response)
 
         investigators_response = self.protocol_builder_response('investigators.json')
         mock_investigators.return_value = json.loads(investigators_response)
