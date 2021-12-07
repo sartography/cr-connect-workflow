@@ -590,7 +590,9 @@ class WorkflowService(object):
             next_task = processor.next_task()
         if next_task:
             previous_form_data = WorkflowService.get_previously_submitted_data(processor.workflow_model.id, next_task)
-            DeepMerge.merge(next_task.data, previous_form_data)
+#            DeepMerge.merge(next_task.data, previous_form_data)
+            next_task.data = DeepMerge.merge(previous_form_data, next_task.data)
+
             workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
             # Update the state of the task to locked if the current user does not own the task.
             user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
