@@ -100,6 +100,28 @@ class TestWorkflowService(BaseTest):
         workflow_spec_model = self.load_test_spec("form_expressions")
         WorkflowService.test_spec(workflow_spec_model.id)
 
+    def test_task_properties(self):
+        workflow = self.create_workflow("form_extentsions")
+        workflow_api = self.get_workflow_api(workflow)
+
+        # Start with task 1
+        first_task = workflow_api.next_task
+        self.assertIn('clear_data', first_task.properties)
+        self.complete_form(workflow, first_task, {'field1': 'some data'})
+        workflow_api = self.get_workflow_api(workflow)
+
+        # Move to task 2
+        second_task = workflow_api.next_task
+        self.assertIn('field1', workflow_api.next_task.data )
+        result = self.complete_form(workflow, second_task, {})
+        workflow_api = self.restart_workflow_api(result)
+
+        # Move back to task 1
+        first_task = workflow_api.next_task
+        self.assertNotIn("field1", workflow_api.next_task.data)
+        self.assertNotIn("field1", first_task.data)
+
+
     def test_set_value(self):
         destiation = {}
         path = "a.b.c"
@@ -117,10 +139,10 @@ class TestWorkflowService(BaseTest):
         self.assertEqual("garbage", result2)
 
     def test_get_primary_workflow(self):
-
         workflow = self.create_workflow('hello_world')
         workflow_spec_id = workflow.workflow_spec.id
         primary_workflow = WorkflowService.get_primary_workflow(workflow_spec_id)
         self.assertIsInstance(primary_workflow, FileModel)
         self.assertEqual(workflow_spec_id, primary_workflow.workflow_spec_id)
         self.assertEqual('hello_world.bpmn', primary_workflow.name)
+
