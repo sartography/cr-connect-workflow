@@ -23,6 +23,15 @@ class StudyStatus(enum.Enum):
     hold = 'hold'
     open_for_enrollment = 'open_for_enrollment'
     abandoned = 'abandoned'
+    submitted_for_pre_review = 'submitted_for_pre_review'
+    in_pre_review = 'in_pre_review'
+    returned_from_pre_review = 'returned_from_pre_review'
+    pre_review_complete = 'pre_review_complete'
+    agenda_date_set = 'agenda_date_set'
+    approved = 'approved'
+    approved_with_conditions = 'approved_with_conditions'
+    deferred = 'deferred'
+    disapproved = 'disapproved'
 
 
 class IrbStatus(enum.Enum):
