@@ -43,4 +43,4 @@ class TestTimerEvent(BaseTest):
             self.assertRegex(cm.output[0], f"workflow #%i" % workflow.id)
             self.assertRegex(cm.output[0], f"study #%i" % workflow.study_id)
 
-        self.assertTrue(wf.status == WorkflowStatus.waiting)
+        self.assertTrue(wf.status == WorkflowStatus.erroring)
