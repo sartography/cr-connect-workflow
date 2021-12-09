@@ -12,6 +12,8 @@
             <camunda:value id="hold" name="Hold" />
             <camunda:value id="open_for_enrollment" name="Open For Enrollment" />
             <camunda:value id="abandoned" name="Abandoned" />
+            <camunda:value id="approved" name="Approved" />
+            <camunda:value id="disapproved" name="Disapproved" />
             <camunda:value id="asdf" name="asdf" />
           </camunda:formField>
         </camunda:formData>
