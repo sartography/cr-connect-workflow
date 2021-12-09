@@ -36,3 +36,12 @@ class TestLdapService(BaseTest):
         user_info = LdapService.user_info("LB3DP")
         self.assertIsNotNone(user_info)
         self.assertEqual("lb3dp", user_info.uid)
+
+    def test_get_user_with_spaces(self):
+        user_info = LdapService.user_info("    LB3DP ")
+        # Call this a second time, becuase the error we ran into wasn't that it wasn't possible to find it,
+        # but that it attepts to add it to the database a second time with the same id.
+        user_info = LdapService.user_info("    LB3DP ")
+        self.assertIsNotNone(user_info)
+        self.assertEqual("lb3dp", user_info.uid)
+
