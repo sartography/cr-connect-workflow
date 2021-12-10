@@ -23,6 +23,10 @@ class StudyStatus(enum.Enum):
     hold = 'hold'
     open_for_enrollment = 'open_for_enrollment'
     abandoned = 'abandoned'
+
+
+class ProgressStatus(enum.Enum):
+    in_progress = 'in_progress'
     submitted_for_pre_review = 'submitted_for_pre_review'
     in_pre_review = 'in_pre_review'
     returned_from_pre_review = 'returned_from_pre_review'
@@ -44,7 +48,6 @@ class StudyEventType(enum.Enum):
     automatic = 'automatic'
 
 
-
 class StudyModel(db.Model):
     __tablename__ = 'study'
     id = db.Column(db.Integer, primary_key=True)
@@ -52,6 +55,7 @@ class StudyModel(db.Model):
     short_title = db.Column(db.String, nullable=True)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     status = db.Column(db.Enum(StudyStatus))
+    progress_status = db.Column(db.Enum(ProgressStatus))
     irb_status = db.Column(db.Enum(IrbStatus))
     primary_investigator_id = db.Column(db.String, nullable=True)
     sponsor = db.Column(db.String, nullable=True)
@@ -184,7 +188,7 @@ class CategorySchema(ma.Schema):
 class Study(object):
 
     def __init__(self, title, short_title, last_updated, primary_investigator_id, user_uid,
-                 id=None, status=None, irb_status=None, short_name=None, proposal_name=None, comment="",
+                 id=None, status=None, progress_status=None, irb_status=None, short_name=None, proposal_name=None, comment="",
                  sponsor="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, events_history=[],
                  last_activity_user="",last_activity_date =None,create_user_display="", **argsv):
@@ -197,6 +201,7 @@ class Study(object):
         self.short_title = short_title
         self.last_updated = last_updated
         self.status = status
+        self.progress_status = progress_status
         self.irb_status = irb_status
         self.comment = comment
         self.primary_investigator_id = primary_investigator_id
