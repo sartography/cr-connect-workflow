@@ -15,7 +15,7 @@ class TestValueExpression(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         second_task = workflow_api.next_task
         self.assertEqual('', second_task.data['value_expression_value'])
-        self.assertIn('color', second_task.data)
+        self.assertNotIn('color', second_task.data)
 
 
 
