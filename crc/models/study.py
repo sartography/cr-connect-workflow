@@ -1,6 +1,4 @@
-import datetime
 import enum
-import json
 
 import marshmallow
 from marshmallow import INCLUDE, fields
@@ -9,13 +7,11 @@ from sqlalchemy import func
 
 from crc import db, ma
 from crc.api.common import ApiErrorSchema, ApiError
-from crc.models.file import FileModel, SimpleFileSchema, FileSchema
+from crc.models.file import FileSchema
 from crc.models.ldap import LdapModel, LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
-from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowSpecModel, \
-    WorkflowModel
+from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowModel
 from crc.services.file_service import FileService
-from crc.services.user_service import UserService
 
 
 class StudyStatus(enum.Enum):
