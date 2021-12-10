@@ -381,11 +381,7 @@ class WorkflowService(object):
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
 
-        data = copy.deepcopy(task.data)
-        # If there's a field key with no initial value, give it one (None)
-        for field in task.task_spec.form.fields:
-            if field.id not in data:
-                data[field.id] = None
+        data = task.data
         if field.has_property(Task.FIELD_PROP_REPEAT):
             # Then you must evaluate the expression based on the data within the group, if that data exists.
             # There may not be data available in the group, if no groups where added
