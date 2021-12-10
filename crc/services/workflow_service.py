@@ -380,7 +380,8 @@ class WorkflowService(object):
     @staticmethod
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
-        data = task.data
+
+        data = copy.deepcopy(task.data)
         # If there's a field key with no initial value, give it one (None)
         for field in task.task_spec.form.fields:
             if field.id not in data:
