@@ -238,3 +238,4 @@ postgres/var/
 .coverage
 coverage.xml
 .~lock.*
+cr_connect.log
