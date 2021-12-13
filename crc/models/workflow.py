@@ -1,13 +1,13 @@
 import enum
 
 import marshmallow
-from marshmallow import EXCLUDE,fields
+from marshmallow import EXCLUDE
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func
 from sqlalchemy.orm import backref
 
 from crc import db
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileDataModel
 
 
 class WorkflowSpecCategoryModel(db.Model):
@@ -86,6 +86,7 @@ class WorkflowStatus(enum.Enum):
     user_input_required = "user_input_required"
     waiting = "waiting"
     complete = "complete"
+    erroring = "erroring"
 
 
 class WorkflowSpecDependencyFile(db.Model):

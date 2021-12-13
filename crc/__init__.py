@@ -56,15 +56,18 @@ from crc.services.file_service import FileService
 from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 
-# needed function to avoid circular import
 
+# needed function to avoid circular import
 def process_waiting_tasks():
     with app.app_context():
         WorkflowService.do_waiting()
 
-scheduler.add_job(process_waiting_tasks,'interval',minutes=1)
-scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
-scheduler.start()
+
+@app.before_first_request
+def init_scheduler():
+    scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
+    scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
+    scheduler.start()
 
 
 # Convert list of allowed origins to list of regexes
