@@ -266,6 +266,7 @@ class StudySchema(ma.Schema):
     warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
     protocol_builder_status = EnumField(StudyStatus, by_value=True)
     status = EnumField(StudyStatus, by_value=True)
+    progress_status = EnumField(ProgressStatus, by_value=True)
     short_title = fields.String(allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
