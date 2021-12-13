@@ -86,6 +86,7 @@ class WorkflowStatus(enum.Enum):
     user_input_required = "user_input_required"
     waiting = "waiting"
     complete = "complete"
+    erroring = "erroring"
 
 
 class WorkflowSpecDependencyFile(db.Model):
