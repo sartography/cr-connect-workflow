@@ -15,7 +15,7 @@ from crc import app, db, session
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
-from crc.models.study import StudyModel, StudyStatus
+from crc.models.study import StudyModel, StudyStatus, ProgressStatus
 from crc.models.ldap import LdapModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
@@ -61,6 +61,7 @@ class BaseTest(unittest.TestCase):
             'title': 'The impact of fried pickles on beer consumption in bipedal software developers.',
             'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
+            'progress_status': ProgressStatus.in_progress,
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Sartography Pharmaceuticals',
             'ind_number': '1234',
@@ -71,6 +72,7 @@ class BaseTest(unittest.TestCase):
             'title': 'Requirement of hippocampal neurogenesis for the behavioral effects of soft pretzels',
             'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
+            'progress_status': ProgressStatus.in_progress,
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Makerspace & Co.',
             'ind_number': '5678',

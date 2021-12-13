@@ -1,9 +1,7 @@
 import copy
 import json
-import string
 import sys
 import traceback
-from datetime import datetime
 import random
 import string
 from datetime import datetime
@@ -14,26 +12,22 @@ from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
-from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.StartEvent import StartEvent
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
-from SpiffWorkflow.specs import CancelTask, StartTask, MultiChoice
+from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
 from SpiffWorkflow.util.metrics import timeit
 
-from jinja2 import Template
-
-from crc import db, app, session, connexion_app
+from crc import db, app, session
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
-from crc.models.data_store import DataStoreModel
 from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.ldap import LdapModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
-from crc.models.user import UserModel, UserModelSchema
+from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.data_store_service import DataStoreBase
 

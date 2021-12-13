@@ -16,7 +16,7 @@ from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
-    StudyAssociated
+    StudyAssociated, ProgressStatus
 from crc.models.task_event import TaskEventModel
 from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
@@ -382,11 +382,14 @@ class StudyService(object):
             # has a reference to every available workflow (though some may not have started yet)
             for pb_study in pb_studies:
                 new_status = None
+                new_progress_status = None
                 db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
                 if not db_study:
                     db_study = StudyModel(id=pb_study.STUDYID)
                     db_study.status = None  # Force a new sa
                     new_status = StudyStatus.in_progress
+                    new_progress_status = ProgressStatus.in_progress
+
                     session.add(db_study)
                     db_studies.append(db_study)
 
@@ -396,6 +399,9 @@ class StudyService(object):
                 # If there is a new automatic status change and there isn't a manual change in place, record it.
                 if new_status and db_study.status != StudyStatus.hold:
                     db_study.status = new_status
+                    # make sure status is `in_progress`, before processing new automatic progress_status.
+                    if new_progress_status and db_study.status == StudyStatus.in_progress:
+                        db_study.progress_status = new_progress_status
                     StudyService.add_study_update_event(db_study,
                                                         status=new_status,
                                                         event_type=StudyEventType.automatic)

@@ -9,9 +9,8 @@
         <camunda:formData>
           <camunda:formField id="selected_status" label="Select Study Status" type="enum">
             <camunda:value id="in_progress" name="In Progress" />
-            <camunda:value id="hold" name="Hold" />
-            <camunda:value id="open_for_enrollment" name="Open For Enrollment" />
-            <camunda:value id="abandoned" name="Abandoned" />
+            <camunda:value id="approved" name="Approved" />
+            <camunda:value id="disapproved" name="Disapproved" />
             <camunda:value id="asdf" name="asdf" />
           </camunda:formField>
         </camunda:formData>
@@ -23,7 +22,7 @@
     <bpmn:scriptTask id="Activity_SetSelectedStatus" name="Set Selected Status">
       <bpmn:incoming>Flow_0q0rtvj</bpmn:incoming>
       <bpmn:outgoing>Flow_0ana8xt</bpmn:outgoing>
-      <bpmn:script>returned_status = set_study_status(selected_status)</bpmn:script>
+      <bpmn:script>returned_status = set_study_progress_status(selected_status)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0ana8xt" sourceRef="Activity_SetSelectedStatus" targetRef="Activity_GetNewStatus" />
     <bpmn:manualTask id="Activity_DisplayStatus" name="Display Status">
@@ -53,13 +52,13 @@
     <bpmn:scriptTask id="Activity_GetOriginalStatus" name="Get Original Status">
       <bpmn:incoming>Flow_0c77bdh</bpmn:incoming>
       <bpmn:outgoing>Flow_1e9oiuw</bpmn:outgoing>
-      <bpmn:script>original_status = get_study_status()</bpmn:script>
+      <bpmn:script>original_status = get_study_progress_status()</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0nckhhn" sourceRef="Activity_GetNewStatus" targetRef="Activity_DisplayStatus" />
     <bpmn:scriptTask id="Activity_GetNewStatus" name="Get New Status">
       <bpmn:incoming>Flow_0ana8xt</bpmn:incoming>
       <bpmn:outgoing>Flow_0nckhhn</bpmn:outgoing>
-      <bpmn:script>new_status = get_study_status()</bpmn:script>
+      <bpmn:script>new_status = get_study_progress_status()</bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
