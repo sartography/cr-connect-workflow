@@ -1101,3 +1101,19 @@ class WorkflowService(object):
             session.add(category)
             new_order += 1
         session.commit()
+
+    @staticmethod
+    def delete_workflow_spec_files(spec_id):
+        files = session.query(FileModel).filter_by(workflow_spec_id=spec_id).all()
+        for file in files:
+            FileService.delete_file(file.id)
+
+    @staticmethod
+    def delete_workflow_spec_task_events(spec_id):
+        session.query(TaskEventModel).filter(TaskEventModel.workflow_spec_id == spec_id).delete()
+        session.commit()
+
+    @staticmethod
+    def delete_workflow_spec_workflow_models(spec_id):
+        for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
+            StudyService.delete_workflow(workflow.id)
