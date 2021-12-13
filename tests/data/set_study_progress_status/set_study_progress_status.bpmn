@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_00dbd41" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_SetStudyStatus" name="Set Study Status" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0c77bdh</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_GetSelectedStatus" name="Get Selected Status" camunda:formKey="SelectStudyStatus">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="selected_status" label="Select Study Status" type="enum">
+            <camunda:value id="in_progress" name="In Progress" />
+            <camunda:value id="approved" name="Approved" />
+            <camunda:value id="disapproved" name="Disapproved" />
+            <camunda:value id="asdf" name="asdf" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1e9oiuw</bpmn:incoming>
+      <bpmn:outgoing>Flow_0q0rtvj</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0q0rtvj" sourceRef="Activity_GetSelectedStatus" targetRef="Activity_SetSelectedStatus" />
+    <bpmn:scriptTask id="Activity_SetSelectedStatus" name="Set Selected Status">
+      <bpmn:incoming>Flow_0q0rtvj</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ana8xt</bpmn:outgoing>
+      <bpmn:script>returned_status = set_study_progress_status(selected_status)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0ana8xt" sourceRef="Activity_SetSelectedStatus" targetRef="Activity_GetNewStatus" />
+    <bpmn:manualTask id="Activity_DisplayStatus" name="Display Status">
+      <bpmn:documentation># Study Status
+
+## Original Status
+{{ original_status }}
+
+## Selected Status
+{{ selected_status }}
+
+## Returned Status
+{{ returned_status }}
+
+
+## New Status
+{{ new_status }}</bpmn:documentation>
+      <bpmn:incoming>Flow_0nckhhn</bpmn:incoming>
+      <bpmn:outgoing>Flow_14s6jnt</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_1wm8dmt">
+      <bpmn:incoming>Flow_14s6jnt</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_14s6jnt" sourceRef="Activity_DisplayStatus" targetRef="Event_1wm8dmt" />
+    <bpmn:sequenceFlow id="Flow_0c77bdh" sourceRef="StartEvent_1" targetRef="Activity_GetOriginalStatus" />
+    <bpmn:sequenceFlow id="Flow_1e9oiuw" sourceRef="Activity_GetOriginalStatus" targetRef="Activity_GetSelectedStatus" />
+    <bpmn:scriptTask id="Activity_GetOriginalStatus" name="Get Original Status">
+      <bpmn:incoming>Flow_0c77bdh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1e9oiuw</bpmn:outgoing>
+      <bpmn:script>original_status = get_study_progress_status()</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0nckhhn" sourceRef="Activity_GetNewStatus" targetRef="Activity_DisplayStatus" />
+    <bpmn:scriptTask id="Activity_GetNewStatus" name="Get New Status">
+      <bpmn:incoming>Flow_0ana8xt</bpmn:incoming>
+      <bpmn:outgoing>Flow_0nckhhn</bpmn:outgoing>
+      <bpmn:script>new_status = get_study_progress_status()</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_SetStudyStatus">
+      <bpmndi:BPMNEdge id="Flow_0nckhhn_di" bpmnElement="Flow_0nckhhn">
+        <di:waypoint x="847" y="117" />
+        <di:waypoint x="913" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1e9oiuw_di" bpmnElement="Flow_1e9oiuw">
+        <di:waypoint x="349" y="117" />
+        <di:waypoint x="415" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0c77bdh_di" bpmnElement="Flow_0c77bdh">
+        <di:waypoint x="188" y="117" />
+        <di:waypoint x="249" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14s6jnt_di" bpmnElement="Flow_14s6jnt">
+        <di:waypoint x="1013" y="117" />
+        <di:waypoint x="1072" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ana8xt_di" bpmnElement="Flow_0ana8xt">
+        <di:waypoint x="681" y="117" />
+        <di:waypoint x="747" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0q0rtvj_di" bpmnElement="Flow_0q0rtvj">
+        <di:waypoint x="515" y="117" />
+        <di:waypoint x="581" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0xpoc9f_di" bpmnElement="Activity_GetSelectedStatus">
+        <dc:Bounds x="415" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ef9nv4_di" bpmnElement="Activity_SetSelectedStatus">
+        <dc:Bounds x="581" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0tpv5xw_di" bpmnElement="Activity_DisplayStatus">
+        <dc:Bounds x="913" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1wm8dmt_di" bpmnElement="Event_1wm8dmt">
+        <dc:Bounds x="1072" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18rnj9i_di" bpmnElement="Activity_GetOriginalStatus">
+        <dc:Bounds x="249" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0h090bt_di" bpmnElement="Activity_GetNewStatus">
+        <dc:Bounds x="747" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

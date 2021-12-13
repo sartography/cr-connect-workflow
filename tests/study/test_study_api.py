@@ -1,23 +1,20 @@
 import json
-from profile import Profile
 from tests.base_test import BaseTest
 
 from crc.services.ldap_service import LdapService
 
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import patch
 
 from crc.models.email import EmailModel
 from crc import session, app
-from crc.models.protocol_builder import ProtocolBuilderStatus, \
-    ProtocolBuilderStudySchema
+from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType, StudyAssociated
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
-
 
 
 class TestStudyApi(BaseTest):
@@ -157,67 +154,68 @@ class TestStudyApi(BaseTest):
         # depend on using the PB for data.
         app.config['PB_ENABLED'] = True
         self.load_example_data()
-        s = StudyModel(
-            id=54321,  # This matches one of the ids from the study_details_json data.
-            title='The impact of pandemics on dog owner sanity after 12 days',
-            user_uid='dhf8r',
-        )
-        session.add(s)
-        session.commit()
+        with session.no_autoflush:
+            s = StudyModel(
+                id=54321,  # This matches one of the ids from the study_details_json data.
+                title='The impact of pandemics on dog owner sanity after 12 days',
+                user_uid='dhf8r',
+            )
+            session.add(s)
+            session.commit()
 
-        num_db_studies_before = session.query(StudyModel).count()
+            num_db_studies_before = session.query(StudyModel).count()
 
-        # Mock Protocol Builder responses
-        studies_response = self.protocol_builder_response('user_studies.json')
-        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
-        details_response = self.protocol_builder_response('study_details.json')
-        mock_details.return_value = json.loads(details_response)
-        docs_response = self.protocol_builder_response('required_docs.json')
-        mock_docs.return_value = json.loads(docs_response)
-        investigators_response = self.protocol_builder_response('investigators.json')
-        mock_investigators.return_value = json.loads(investigators_response)
+            # Mock Protocol Builder responses
+            studies_response = self.protocol_builder_response('user_studies.json')
+            mock_studies.return_value = ProtocolBuilderCreatorStudySchema(many=True).loads(studies_response)
+            details_response = self.protocol_builder_response('study_details.json')
+            mock_details.return_value = json.loads(details_response)
+            docs_response = self.protocol_builder_response('required_docs.json')
+            mock_docs.return_value = json.loads(docs_response)
+            investigators_response = self.protocol_builder_response('investigators.json')
+            mock_investigators.return_value = json.loads(investigators_response)
 
-        # Make the api call to get all studies
-        api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
-        self.assert_success(api_response)
-        json_data = json.loads(api_response.get_data(as_text=True))
+            # Make the api call to get all studies
+            api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
+            self.assert_success(api_response)
+            json_data = json.loads(api_response.get_data(as_text=True))
 
-        num_abandoned = 0
-        num_in_progress = 0
-        num_open = 0
+            num_abandoned = 0
+            num_in_progress = 0
+            num_open = 0
 
-        for study in json_data:
-            if study['status'] == 'abandoned': # One study does not exist in user_studies.json
-                num_abandoned += 1
-            if study['status'] == 'in_progress': # One study is marked complete without HSR Number
-                num_in_progress += 1
-            if study['status'] == 'open_for_enrollment':  # Currently, we don't automatically set studies to open for enrollment
-                num_open += 1
+            for study in json_data:
+                if study['status'] == 'abandoned': # One study does not exist in user_studies.json
+                    num_abandoned += 1
+                if study['status'] == 'in_progress': # One study is marked complete without HSR Number
+                    num_in_progress += 1
+                if study['status'] == 'open_for_enrollment':  # Currently, we don't automatically set studies to open for enrollment
+                    num_open += 1
 
-        db_studies_after = session.query(StudyModel).all()
-        num_db_studies_after = len(db_studies_after)
-        self.assertGreater(num_db_studies_after, num_db_studies_before)
-        self.assertEqual(num_abandoned, 1)
-        self.assertEqual(num_open, 0)  # Currently, we don't automatically set studies to open for enrollment
-        self.assertEqual(num_in_progress, 2)
-        self.assertEqual(len(json_data), num_db_studies_after)
-        # The sum below is off, since we don't automatically set studies to Open for Enrollment
-        # Leaving the test here because we will need it again
-        # when we implement a new way to set Open for Enrollment
-        # self.assertEqual(num_open + num_in_progress + num_abandoned, num_db_studies_after)
+            db_studies_after = session.query(StudyModel).all()
+            num_db_studies_after = len(db_studies_after)
+            self.assertGreater(num_db_studies_after, num_db_studies_before)
+            self.assertEqual(num_abandoned, 1)
+            self.assertEqual(num_open, 0)  # Currently, we don't automatically set studies to open for enrollment
+            self.assertEqual(num_in_progress, 2)
+            self.assertEqual(len(json_data), num_db_studies_after)
+            # The sum below is off, since we don't automatically set studies to Open for Enrollment
+            # Leaving the test here because we will need it again
+            # when we implement a new way to set Open for Enrollment
+            # self.assertEqual(num_open + num_in_progress + num_abandoned, num_db_studies_after)
 
-        # Automatic events check
-        in_progress_events = session.query(StudyEvent).filter_by(status=StudyStatus.in_progress)
-        self.assertEqual(in_progress_events.count(), 1)  # 1 study is in progress
+            # Automatic events check
+            in_progress_events = session.query(StudyEvent).filter_by(status=StudyStatus.in_progress)
+            self.assertEqual(in_progress_events.count(), 1)  # 1 study is in progress
 
-        abandoned_events = session.query(StudyEvent).filter_by(status=StudyStatus.abandoned)
-        self.assertEqual(abandoned_events.count(), 1)  # 1 study has been abandoned
+            abandoned_events = session.query(StudyEvent).filter_by(status=StudyStatus.abandoned)
+            self.assertEqual(abandoned_events.count(), 1)  # 1 study has been abandoned
 
-        # We don't currently set any studies to Open for Enrollment automatically
-        # Leaving the test here because we will need it again
-        # when we implement a new way to set Open for Enrollment
-        # open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
-        # self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
+            # We don't currently set any studies to Open for Enrollment automatically
+            # Leaving the test here because we will need it again
+            # when we implement a new way to set Open for Enrollment
+            # open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
+            # self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -227,7 +225,7 @@ class TestStudyApi(BaseTest):
 
         # Mock Protocol Builder responses
         studies_response = self.protocol_builder_response('user_studies.json')
-        mock_studies.return_value = ProtocolBuilderStudySchema(many=True).loads(studies_response)
+        mock_studies.return_value = ProtocolBuilderCreatorStudySchema(many=True).loads(studies_response)
         details_response = self.protocol_builder_response('study_details.json')
         mock_details.return_value = json.loads(details_response)
         docs_response = self.protocol_builder_response('required_docs.json')

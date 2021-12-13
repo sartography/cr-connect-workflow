@@ -14,8 +14,7 @@ class LdapService(object):
     attributes = ['uid', 'cn', 'sn', 'displayName', 'givenName', 'mail', 'objectClass', 'UvaDisplayDepartment',
                   'telephoneNumber', 'title', 'uvaPersonIAMAffiliation', 'uvaPersonSponsoredType']
     uid_search_string = "(&(objectclass=person)(uid=%s))"
-    # adding a '*' to the end of uid here would match partial uid, but it is too slow on the new ldap server.
-    user_or_last_name_search = "(&(objectclass=person)(|(uid=%s)(sn=%s*)))"
+    user_or_last_name_search = "(&(objectclass=person)(|(uid=%s*)(sn=%s*)))"
     cn_single_search = '(&(objectclass=person)(cn=%s*))'
     cn_double_search = '(&(objectclass=person)(&(cn=%s*)(cn=*%s*)))'
     temp_cache = {}
@@ -55,7 +54,7 @@ class LdapService(object):
 
     @staticmethod
     def user_info(uva_uid):
-        uva_uid = uva_uid.lower()
+        uva_uid = uva_uid.strip().lower()
         user_info = db.session.query(LdapModel).filter(LdapModel.uid == uva_uid).first()
         if not user_info:
             app.logger.info("No cache for " + uva_uid)
@@ -65,9 +64,13 @@ class LdapService(object):
             if len(conn.entries) < 1:
                 raise ApiError("missing_ldap_record", "Unable to locate a user with id %s in LDAP" % uva_uid)
             entry = conn.entries[0]
-            user_info = LdapModel.from_entry(entry)
-            db.session.add(user_info)
-            db.session.commit()
+            # Assure it definitely doesn't exist in the db after a search, in some cases the ldap server
+            # may find stuff we don't with just a strip and a lower.
+            user_info = db.session.query(LdapModel).filter(LdapModel.uid == entry.uid.value).first()
+            if not user_info:
+                user_info = LdapModel.from_entry(entry)
+                db.session.add(user_info)
+                db.session.commit()
         return user_info
 
     @staticmethod

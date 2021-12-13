@@ -147,19 +147,18 @@ def delete_workflow_specification(spec_id):
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
 
-    # Delete all items in the database related to the deleted workflow spec.
-    files = session.query(FileModel).filter_by(workflow_spec_id=spec_id).all()
-    for file in files:
-        FileService.delete_file(file.id)
+    # Delete all files related to this specification
+    WorkflowService.delete_workflow_spec_files(spec_id)
 
-    session.query(TaskEventModel).filter(TaskEventModel.workflow_spec_id == spec_id).delete()
+    # Delete all events related to this specification
+    WorkflowService.delete_workflow_spec_task_events(spec_id)
 
-    # Delete all events and workflow models related to this specification
-    for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
-        StudyService.delete_workflow(workflow.id)
+    # Delete all workflow models related to this specification
+    WorkflowService.delete_workflow_spec_workflow_models(spec_id)
+
     # .delete() doesn't work when we need a cascade. Must grab the record, and explicitly delete
-    deleteSpec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
-    session.delete(deleteSpec)
+    workflow_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    session.delete(workflow_spec)
     session.commit()
 
     # Reorder the remaining specs

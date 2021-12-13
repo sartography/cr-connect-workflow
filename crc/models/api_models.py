@@ -24,7 +24,7 @@ class Task(object):
 
     # Custom task title
     PROP_EXTENSIONS_TITLE = "display_name"
-
+    PROP_EXTENSIONS_CLEAR_DATA = "clear_data"
 
     # Field Types
     FIELD_TYPE_STRING = "string"

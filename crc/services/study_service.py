@@ -1,9 +1,7 @@
-import urllib
 from copy import copy
 from datetime import datetime
 from typing import List
 
-import flask
 import requests
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
@@ -12,15 +10,14 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
 from crc.api.common import ApiError
-from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
 from crc.models.file import FileModel, File, FileSchema
 from crc.models.ldap import LdapSchema
 
-from crc.models.protocol_builder import ProtocolBuilderStudy, ProtocolBuilderStatus
+from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
-    IrbStatus, StudyAssociated, StudyAssociatedSchema
-from crc.models.task_event import TaskEventModel, TaskEvent
+    StudyAssociated, ProgressStatus
+from crc.models.task_event import TaskEventModel
 from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus, WorkflowSpecDependencyFile
@@ -375,7 +372,7 @@ class StudyService(object):
                             str(app.config['PB_ENABLED']))
 
             # Get studies matching this user from Protocol Builder
-            pb_studies: List[ProtocolBuilderStudy] = ProtocolBuilderService.get_studies(user.uid)
+            pb_studies: List[ProtocolBuilderCreatorStudy] = ProtocolBuilderService.get_studies(user.uid)
 
             # Get studies from the database
             db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
@@ -385,20 +382,26 @@ class StudyService(object):
             # has a reference to every available workflow (though some may not have started yet)
             for pb_study in pb_studies:
                 new_status = None
+                new_progress_status = None
                 db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
                 if not db_study:
                     db_study = StudyModel(id=pb_study.STUDYID)
                     db_study.status = None  # Force a new sa
                     new_status = StudyStatus.in_progress
+                    new_progress_status = ProgressStatus.in_progress
+
                     session.add(db_study)
                     db_studies.append(db_study)
 
-                db_study.update_from_protocol_builder(pb_study)
+                db_study.update_from_protocol_builder(pb_study, user.uid)
                 StudyService._add_all_workflow_specs_to_study(db_study)
 
                 # If there is a new automatic status change and there isn't a manual change in place, record it.
                 if new_status and db_study.status != StudyStatus.hold:
                     db_study.status = new_status
+                    # make sure status is `in_progress`, before processing new automatic progress_status.
+                    if new_progress_status and db_study.status == StudyStatus.in_progress:
+                        db_study.progress_status = new_progress_status
                     StudyService.add_study_update_event(db_study,
                                                         status=new_status,
                                                         event_type=StudyEventType.automatic)

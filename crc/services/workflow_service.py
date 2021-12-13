@@ -1,9 +1,7 @@
 import copy
 import json
-import string
 import sys
 import traceback
-from datetime import datetime
 import random
 import string
 from datetime import datetime
@@ -14,26 +12,22 @@ from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
-from SpiffWorkflow.bpmn.specs.MultiInstanceTask import MultiInstanceTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.StartEvent import StartEvent
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
-from SpiffWorkflow.specs import CancelTask, StartTask, MultiChoice
+from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
 from SpiffWorkflow.util.metrics import timeit
 
-from jinja2 import Template
-
-from crc import db, app, session, connexion_app
+from crc import db, app, session
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
-from crc.models.data_store import DataStoreModel
 from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.ldap import LdapModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
-from crc.models.user import UserModel, UserModelSchema
+from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.data_store_service import DataStoreBase
 
@@ -117,6 +111,7 @@ class WorkflowService(object):
                 processor.bpmn_workflow.do_engine_steps()
                 processor.save()
             except Exception as e:
+                workflow_model.status = WorkflowStatus.erroring
                 app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
                                  (workflow_model.id,
                                   workflow_model.workflow_spec.id,
@@ -590,7 +585,9 @@ class WorkflowService(object):
             next_task = processor.next_task()
         if next_task:
             previous_form_data = WorkflowService.get_previously_submitted_data(processor.workflow_model.id, next_task)
-            DeepMerge.merge(next_task.data, previous_form_data)
+#            DeepMerge.merge(next_task.data, previous_form_data)
+            next_task.data = DeepMerge.merge(previous_form_data, next_task.data)
+
             workflow_api.next_task = WorkflowService.spiff_task_to_api_task(next_task, add_docs_and_forms=True)
             # Update the state of the task to locked if the current user does not own the task.
             user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
@@ -734,6 +731,12 @@ class WorkflowService(object):
                 # Otherwise, just use the curreent title.
         elif task.title and ' ' in task.title:
             task.title = task.title.partition(' ')[2]
+
+        if task.properties and "clear_data" in task.properties:
+            if task.form and task.properties['clear_data'] == 'True':
+                for i in range(len(task.form.fields)):
+                    task.data.pop(task.form.fields[i].id, None)
+
         return task
 
     @staticmethod
@@ -1093,3 +1096,19 @@ class WorkflowService(object):
             session.add(category)
             new_order += 1
         session.commit()
+
+    @staticmethod
+    def delete_workflow_spec_files(spec_id):
+        files = session.query(FileModel).filter_by(workflow_spec_id=spec_id).all()
+        for file in files:
+            FileService.delete_file(file.id)
+
+    @staticmethod
+    def delete_workflow_spec_task_events(spec_id):
+        session.query(TaskEventModel).filter(TaskEventModel.workflow_spec_id == spec_id).delete()
+        session.commit()
+
+    @staticmethod
+    def delete_workflow_spec_workflow_models(spec_id):
+        for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
+            StudyService.delete_workflow(workflow.id)

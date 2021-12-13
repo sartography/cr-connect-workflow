@@ -1,26 +1,20 @@
 [
   {
-    "DATE_MODIFIED": "2020-02-19T14:26:49.127756",
-    "NETBADGEID": "dhf8r",
+    "DATECREATED": "2020-02-19T14:26:49.127756",
+    "DATELASTMODIFIED": "2020-02-19T14:26:49.127756",
     "STUDYID": 54321,
-    "TITLE": "Another study about the effect of a naked mannequin on software productivity",
-    "Q_COMPLETE": 0,
-    "HSRNUMBER": null
+    "TITLE": "Another study about the effect of a naked mannequin on software productivity"
   },
   {
-    "DATE_MODIFIED": "2020-02-19T14:24:55.101695",
-    "NETBADGEID": "dhf8r",
+    "DATECREATED": "2020-02-19T14:24:55.101695",
+    "DATELASTMODIFIED": "2020-02-19T14:24:55.101695",
     "STUDYID": 65432,
-    "TITLE": "Peanut butter consumption among quiet dogs",
-    "Q_COMPLETE": 0,
-    "HSRNUMBER": null
+    "TITLE": "Peanut butter consumption among quiet dogs"
   },
   {
-    "DATE_MODIFIED": "2020-02-19T14:24:55.101695",
-    "NETBADGEID": "dhf8r",
+    "DATECREATED": "2020-02-19T14:24:55.101695",
+    "DATELASTMODIFIED": "2020-02-19T14:24:55.101695",
     "STUDYID": 1,
-    "TITLE": "Efficacy of xenomorph bio-augmented circuits on dexterity of cybernetic prostheses",
-    "Q_COMPLETE": 0,
-    "HSRNUMBER": null
+    "TITLE": "Efficacy of xenomorph bio-augmented circuits on dexterity of cybernetic prostheses"
   }
 ]

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_6108081" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_6108081" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_14i1985</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_14i1985" sourceRef="StartEvent_1" targetRef="pick_letter" />
+    <bpmn:userTask id="pick_letter" name="Pick Letter" camunda:formKey="Form1">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="template" type="enum">
+            <camunda:validation>
+              <camunda:constraint name="required" config="true" />
+            </camunda:validation>
+            <camunda:value id="a" name="A is for Apple" />
+            <camunda:value id="b" name="B is for Boy" />
+            <camunda:value id="c" name="C is for Cat" />
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_14i1985</bpmn:incoming>
+      <bpmn:outgoing>Flow_04lkxb1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_04lkxb1" sourceRef="pick_letter" targetRef="complete_word" />
+    <bpmn:endEvent id="Event_1ham0g2">
+      <bpmn:documentation>the word {{word}} starts with the letter {{letter}}</bpmn:documentation>
+      <bpmn:incoming>Flow_13ka4e1</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_13ka4e1" sourceRef="complete_word" targetRef="Event_1ham0g2" />
+    <bpmn:userTask id="complete_word" name="Write a word that starts with letter" camunda:formKey="wordForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="template" label="complete the word" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_04lkxb1</bpmn:incoming>
+      <bpmn:outgoing>Flow_13ka4e1</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_6108081">
+      <bpmndi:BPMNEdge id="Flow_13ka4e1_di" bpmnElement="Flow_13ka4e1">
+        <di:waypoint x="630" y="177" />
+        <di:waypoint x="802" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04lkxb1_di" bpmnElement="Flow_04lkxb1">
+        <di:waypoint x="420" y="177" />
+        <di:waypoint x="530" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14i1985_di" bpmnElement="Flow_14i1985">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="320" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0jwhoxz_di" bpmnElement="pick_letter">
+        <dc:Bounds x="320" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ham0g2_di" bpmnElement="Event_1ham0g2">
+        <dc:Bounds x="802" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ourdhe_di" bpmnElement="complete_word">
+        <dc:Bounds x="530" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
