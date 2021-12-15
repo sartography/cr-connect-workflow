@@ -319,9 +319,12 @@ def __update_task(processor, task, data, user):
     task.update_data(data)
     WorkflowService.post_process_form(task)  # some properties may update the data store.
     processor.complete_task(task)
+    # Log the action before doing the engine steps, as doing so could effect the state of the task
+    # the workflow could wrap around in the ngine steps, and the task could jump from being completed to
+    # another state.  What we are logging here is the completion.
+    WorkflowService.log_task_action(user.uid, processor, task, WorkflowService.TASK_ACTION_COMPLETE)
     processor.do_engine_steps()
     processor.save()
-    WorkflowService.log_task_action(user.uid, processor, task, WorkflowService.TASK_ACTION_COMPLETE)
 
 
 def list_workflow_spec_categories():
