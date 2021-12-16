@@ -20,7 +20,7 @@ from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile, WorkflowLibraryModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile, WorkflowLibraryModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
 import re
@@ -593,3 +593,81 @@ class FileService(object):
         else:
             raise ApiError(code='bad_keep',
                            message='You must keep at least 1 version')
+
+    # @staticmethod
+    # def write_file_to_system(file, category):
+    #     file_path = os.path.join(app.root_path, '..', 'files')
+    #
+    #     print(f'write_file_to_system: file_path: {file_path}')
+    @staticmethod
+    def write_file_to_system(file_model):
+        SYNC_FILE_ROOT = os.path.join(app.root_path, '..', 'files')
+
+        def process_category(category):
+            # Make sure a directory exists for the category
+            # Add a json file dumped from the category model
+            category_path = os.path.join(SYNC_FILE_ROOT, category.display_name)
+            os.makedirs(os.path.dirname(category_path), exist_ok=True)
+            json_file_name = f'{category.display_name}.json'
+            json_file_path = os.path.join(SYNC_FILE_ROOT, json_file_name)
+            category_model_schema = WorkflowSpecCategoryModelSchema().dumps(category)
+            with open(json_file_path, 'w') as j_handle:
+                j_handle.write(category_model_schema)
+
+        def process_workflow_spec(workflow_spec, category_name_string):
+            # Make sure a directory exists for the workflow spec
+            # Add a json file dumped from the workflow spec model
+            workflow_spec_path = os.path.join(SYNC_FILE_ROOT, category_name_string, workflow_spec.display_name)
+            os.makedirs(os.path.dirname(workflow_spec_path), exist_ok=True)
+            json_file_name = f'{workflow_spec.display_name}.json'
+            json_file_path = os.path.join(SYNC_FILE_ROOT, category_name_string, json_file_name)
+            workflow_spec_schema = WorkflowSpecModelSchema().dumps(workflow_spec)
+            with open(json_file_path, 'w') as j_handle:
+                j_handle.write(workflow_spec_schema)
+
+        file_path = category_name = None
+
+        if file_model.workflow_spec_id is not None:
+            # we have a workflow spec file
+            workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == file_model.workflow_spec_id).first()
+            if workflow_spec_model:
+                if workflow_spec_model.category_id is not None:
+                    category_model = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.id == workflow_spec_model.category_id).first()
+                    process_category(category_model)
+                    process_workflow_spec(workflow_spec_model, category_model.display_name)
+                    category_name = category_model.display_name
+                elif workflow_spec_model.is_master_spec:
+                    category_name = 'Master Specification'
+                elif workflow_spec_model.library:
+                    category_name = 'Library Specs'
+
+                if category_name is not None:
+                    # ensure_category_folder_exists(category_name)
+                    # ensure_spec_folder_exists(workflow_spec_model.display_name)
+                    file_path = os.path.join(SYNC_FILE_ROOT,
+                                             category_name,
+                                             workflow_spec_model.display_name,
+                                             file_model.name)
+
+        elif file_model.workflow_id is not None:
+            # we have a workflow file
+            pass
+        elif file_model.is_reference:
+            # we have a reference file?
+            print(f'Reference file: {file_model.name}')
+        else:
+            print(f'Not processed: {file_model.name}')
+
+        if file_path is not None:
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+            file_data_model = session.query(FileDataModel). \
+                filter(FileDataModel.file_model_id == file_model.id). \
+                order_by(desc(FileDataModel.version)). \
+                first()
+            with open(file_path, 'wb') as f_handle:
+                f_handle.write(file_data_model.data)
+
+        # print(f'write_file_to_system: file_path: {file_path}')
+
+
