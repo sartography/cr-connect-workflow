@@ -376,10 +376,15 @@ class WorkflowService(object):
     def evaluate_property(property_name, field, task):
         expression = field.get_property(property_name)
 
-        data = task.data
+        data = copy.deepcopy(task.data)
+        # If there's a field key with no initial value, give it one (None)
+        for field in task.task_spec.form.fields:
+            if field.id not in data:
+                data[field.id] = None
+
         if field.has_property(Task.FIELD_PROP_REPEAT):
             # Then you must evaluate the expression based on the data within the group, if that data exists.
-            # There may not be data available in the group, if no groups where added
+            # There may not be data available in the group, if no groups were added
             group = field.get_property(Task.FIELD_PROP_REPEAT)
             if group in task.data and len(task.data[group]) > 0:
                 # Here we must make the current group data top level (as it would be in a repeat section) but
@@ -390,6 +395,9 @@ class WorkflowService(object):
                 data.update(new_data)
             else:
                 return None  # We may not have enough information to process this
+
+        if not field.has_property(Task.FIELD_PROP_REPEAT):
+            new_data = copy.deepcopy(task.data)
 
         try:
             return task.workflow.script_engine._evaluate(expression, **data)
