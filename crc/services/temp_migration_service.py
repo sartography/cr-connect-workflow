@@ -51,7 +51,6 @@ class FromFilesystemService(object):
 
         session.commit()
 
-        print(f'process_workflow_spec: workflow_spec_model: {workflow_spec_model}')
         return workflow_spec_model
 
     @staticmethod
@@ -81,6 +80,7 @@ class FromFilesystemService(object):
                                                                                   binary_data=spec_handle.read())
 
             print(f'process_workflow_spec_directory: data_obj: {data_obj}')
+        return workflow_spec_file_model
 
     @staticmethod
     def process_category(json_file, root):
@@ -114,14 +114,11 @@ class FromFilesystemService(object):
             if file.name.endswith('.json'):
                 file_model = self.process_workflow_spec_file(file, spec_directory)
 
-                # migration version
         # TODO:
         #  If this is a migration, then we are backing out of the migration,
         #  so we need to add an entry to both file and file_data tables.
         #  If this is not a migration, and we are just loading from the filesystem,
         #  then we only need to add an entry to the file table (file_data won't exist)
-
-        print(f'process_workflow_spec_directory: done: ')
 
     def process_category_directory(self, category_directory):
         print(f'process_category_directory: {category_directory}')
@@ -192,8 +189,6 @@ class ToFilesystemService(object):
         with open(json_file_path, 'w') as j_handle:
             j_handle.write(workflow_spec_file_schema)
 
-        print('process_workflow_spec_file: done: ')
-
     def write_file_to_system(self, file_model):
 
         category_name = None
@@ -234,5 +229,3 @@ class ToFilesystemService(object):
 
         else:
             print(f'Not processed: {file_model.name}')
-
-        print(f'write_file_to_system: done: ')
