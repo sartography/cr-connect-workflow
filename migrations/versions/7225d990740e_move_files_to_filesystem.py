@@ -17,7 +17,7 @@ import os
 
 # revision identifiers, used by Alembic.
 revision = '7225d990740e'
-down_revision = '44dd9397c555'
+down_revision = '65b5ed6ae05b'
 branch_labels = None
 depends_on = None
 
