@@ -1,8 +1,6 @@
 import hashlib
 import io
-import json
 import os
-from datetime import datetime
 import random
 import string
 
@@ -19,8 +17,8 @@ from sqlalchemy.exc import IntegrityError
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
-from crc.models.file import FileType, FileDataModel, FileModel, FileModelSchema, LookupFileModel, LookupDataModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile, WorkflowLibraryModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
+from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile, WorkflowLibraryModel
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
 import re
@@ -593,5 +591,3 @@ class FileService(object):
         else:
             raise ApiError(code='bad_keep',
                            message='You must keep at least 1 version')
-
-
