@@ -1,6 +1,7 @@
 from crc import app, session
-from crc.models.file import FileModel, FileModelSchema, FileDataModel
+from crc.models.file import FileModel, FileModelSchema, FileDataModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
+from crc.services.file_service import FileService
 from crc.services.workflow_service import WorkflowService
 from sqlalchemy import desc
 
@@ -53,8 +54,33 @@ class FromFilesystemService(object):
         print(f'process_workflow_spec: workflow_spec_model: {workflow_spec_model}')
         return workflow_spec_model
 
-    def process_workflow_spec_files(self):
-        pass
+    @staticmethod
+    def process_workflow_spec_file(json_file, spec_directory):
+        file_path = os.path.join(spec_directory, json_file)
+
+        with open(file_path, 'r') as json_handle:
+            data = json_handle.read()
+            data_obj = json.loads(data)
+            spec_file_name = '.'.join(json_file.name.split('.')[:-1])
+            spec_file_path = os.path.join(spec_directory, spec_file_name)
+
+            with open(spec_file_path, 'rb') as spec_handle:
+                workflow_spec_file_model = session.query(FileModel).filter(FileModel.id == data_obj['id']).first()
+                if workflow_spec_file_model:
+                    # update workflow_spec_file_model
+                    FileService.update_file(workflow_spec_file_model, spec_handle.read(), CONTENT_TYPES[spec_file_name.split('.')[-1]])
+                else:
+                    # create new model
+                    workflow_spec_name = spec_directory.split('/')[-1]
+                    workflow_spec = session.query(WorkflowSpecModel).filter(
+                        WorkflowSpecModel.display_name == workflow_spec_name).first()
+
+                    workflow_spec_file_model = FileService.add_workflow_spec_file(workflow_spec,
+                                                                                  name=spec_file_name,
+                                                                                  content_type=CONTENT_TYPES[spec_file_name.split('.')[-1]],
+                                                                                  binary_data=spec_handle.read())
+
+            print(f'process_workflow_spec_directory: data_obj: {data_obj}')
 
     @staticmethod
     def process_category(json_file, root):
@@ -85,7 +111,17 @@ class FromFilesystemService(object):
         files, directories = self.process_directory(spec_directory)
 
         for file in files:
-            print(f'process_workflow_spec_directory: file: {file}')
+            if file.name.endswith('.json'):
+                file_model = self.process_workflow_spec_file(file, spec_directory)
+
+                # migration version
+        # TODO:
+        #  If this is a migration, then we are backing out of the migration,
+        #  so we need to add an entry to both file and file_data tables.
+        #  If this is not a migration, and we are just loading from the filesystem,
+        #  then we only need to add an entry to the file table (file_data won't exist)
+
+        print(f'process_workflow_spec_directory: done: ')
 
     def process_category_directory(self, category_directory):
         print(f'process_category_directory: {category_directory}')
