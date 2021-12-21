@@ -262,7 +262,7 @@ def set_current_task(workflow_id, task_id):
 
     # Only reset the token if the task doesn't already have it.
     if spiff_task.state == spiff_task.COMPLETED:
-        spiff_task.reset_token(reset_data=True)  # Don't try to copy the existing data back into this task.
+        spiff_task.reset_token({}, reset_data=True)  # Don't try to copy the existing data back into this task.
 
     processor.save()
     WorkflowService.log_task_action(user_uid, processor, spiff_task, WorkflowService.TASK_ACTION_TOKEN_RESET)

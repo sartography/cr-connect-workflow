@@ -185,7 +185,6 @@ class TestUserRoles(BaseTest):
         nav = workflow_api.navigation
         self.assertEqual('READY', nav[1].state)  # When you loop back the task is again in the ready state.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('COMPLETED', nav[3].state)
         self.assertEqual('READY', workflow_api.next_task.state)
 
         data["favorite_color"] = "blue"
