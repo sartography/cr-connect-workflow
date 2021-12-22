@@ -387,7 +387,8 @@ class WorkflowProcessor(object):
         endtasks = []
         if self.bpmn_workflow.is_completed():
             for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
-                if isinstance(task.task_spec, EndEvent):
+                # Assure that we find the end event for this workflow, and not for any sub-workflows.
+                if isinstance(task.task_spec, EndEvent) and task.workflow == self.bpmn_workflow:
                     endtasks.append(task)
             return endtasks[-1]
 
