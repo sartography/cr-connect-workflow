@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0a9entn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0a9entn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.10.0">
   <bpmn:process id="Process_1dagb7t" name="TestMessage" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="Start">
       <bpmn:outgoing>Flow_0xym55y</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="Flow_16q1uec" name="TestMessageFlow" sourceRef="Event_TokenReset" targetRef="Activity_TestMessage" />
     <bpmn:scriptTask id="Activity_TestMessage" name="Test Message" camunda:resultVariable="test_message">
       <bpmn:incoming>Flow_16q1uec</bpmn:incoming>
       <bpmn:script>update_study(title='New Title')
@@ -47,15 +46,17 @@ printdata = formdata</bpmn:script>
       <bpmn:outgoing>Flow_07i0gvv</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_07i0gvv" sourceRef="Activity_HowMany" targetRef="Activity_PrintData" />
-    <bpmn:boundaryEvent id="Event_TokenReset" name="TokenReset" attachedToRef="Activity_HowMany">
+    <bpmn:boundaryEvent id="Event_TokenReset" name="on Cancel" cancelActivity="false" attachedToRef="Activity_HowMany">
       <bpmn:outgoing>Flow_16q1uec</bpmn:outgoing>
-      <bpmn:cancelEventDefinition id="CancelEventDefinition_1d5hszc" />
+      <bpmn:signalEventDefinition id="SignalEventDefinition_0tdetzl" signalRef="Signal_13optmt" />
     </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_16q1uec" name="TestMessageFlow" sourceRef="Event_TokenReset" targetRef="Activity_TestMessage" />
   </bpmn:process>
   <bpmn:message id="Message_0iyvlbz" name="token_reset" />
   <bpmn:message id="Message_1ow6ruy" name="Message_00ldv4i" />
   <bpmn:signal id="Signal_1fbgshz" name="token_reset" />
   <bpmn:message id="Message_1czi5ye" name="token_reset" />
+  <bpmn:signal id="Signal_13optmt" name="cancel" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1dagb7t">
       <bpmndi:BPMNEdge id="Flow_07i0gvv_di" bpmnElement="Flow_07i0gvv">
@@ -112,10 +113,10 @@ printdata = formdata</bpmn:script>
       <bpmndi:BPMNShape id="Activity_0hkt70o_di" bpmnElement="Activity_HowMany">
         <dc:Bounds x="550" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1yxxtrb_di" bpmnElement="Event_TokenReset">
+      <bpmndi:BPMNShape id="Event_00e89v8_di" bpmnElement="Event_TokenReset">
         <dc:Bounds x="582" y="139" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="610" y="173" width="59" height="14" />
+          <dc:Bounds x="615" y="173" width="50" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>

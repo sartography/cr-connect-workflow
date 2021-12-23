@@ -362,7 +362,8 @@ class WorkflowProcessor(object):
 
     def cancel_notify(self):
         try:
-            self.bpmn_workflow.cancel_notify()
+            self.bpmn_workflow.signal('cancel') # generate a cancel signal.
+            self.bpmn_workflow.cancel_notify() # call cancel_notify in
         except WorkflowTaskExecException as we:
             raise ApiError.from_workflow_exception("task_error", str(we), we)
 
