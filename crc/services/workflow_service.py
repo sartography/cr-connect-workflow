@@ -786,7 +786,10 @@ class WorkflowService(object):
             for frameSummary in traceback.extract_tb(tb):
                 if frameSummary.filename == '<template>':
                     line_number = frameSummary.lineno
-                    error_line = documentation.splitlines()[line_number - 1]
+                    lines = documentation.splitlines()
+                    error_line = ""
+                    if len(lines) > line_number:
+                        error_line = lines[line_number - 1]
             raise ApiError.from_task(code="template_error", message="Jinja Template Error: %s" % str(te),
                                      task=spiff_task, line_number=line_number, error_line=error_line)
         except TypeError as te:
