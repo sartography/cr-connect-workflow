@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0a9entn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0a9entn" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.10.0">
   <bpmn:process id="Process_1dagb7t" name="TestMessage" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1" name="Start">
       <bpmn:outgoing>Flow_0xym55y</bpmn:outgoing>
@@ -18,13 +18,8 @@ print('New Title')</bpmn:script>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1e9j7mj</bpmn:incoming>
-      <bpmn:outgoing>Flow_07i0gvv</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1avyz25</bpmn:outgoing>
     </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_07i0gvv" sourceRef="Activity_HowMany" targetRef="Activity_Modify" />
-    <bpmn:boundaryEvent id="Event_TokenReset" name="TokenReset" attachedToRef="Activity_HowMany">
-      <bpmn:outgoing>Flow_16q1uec</bpmn:outgoing>
-      <bpmn:cancelEventDefinition id="CancelEventDefinition_1d5hszc" />
-    </bpmn:boundaryEvent>
     <bpmn:manualTask id="Activity_Hello" name="Hello">
       <bpmn:documentation>&lt;H1&gt;Hello&lt;/H1&gt;</bpmn:documentation>
       <bpmn:incoming>Flow_0xym55y</bpmn:incoming>
@@ -37,110 +32,137 @@ print('New Title')</bpmn:script>
     <bpmn:sequenceFlow id="Flow_0rus4fi" sourceRef="Activity_GoodBye" targetRef="Event_10cp2vv" />
     <bpmn:manualTask id="Activity_GoodBye" name="Good Bye">
       <bpmn:documentation>&lt;H1&gt;Good Bye&lt;/H1&gt;</bpmn:documentation>
-      <bpmn:incoming>Flow_0f79pbo</bpmn:incoming>
+      <bpmn:incoming>Flow_0zkgcak</bpmn:incoming>
       <bpmn:outgoing>Flow_0rus4fi</bpmn:outgoing>
     </bpmn:manualTask>
-    <bpmn:userTask id="Activity_Modify" name="Modify" camunda:formKey="FormModify">
-      <bpmn:extensionElements>
-        <camunda:formData>
-          <camunda:formField id="modify" label="Modify Data?" type="boolean" defaultValue="True" />
-        </camunda:formData>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_07i0gvv</bpmn:incoming>
-      <bpmn:outgoing>Flow_0f79pbo</bpmn:outgoing>
-    </bpmn:userTask>
-    <bpmn:sequenceFlow id="Flow_0f79pbo" sourceRef="Activity_Modify" targetRef="Activity_GoodBye" />
-    <bpmn:boundaryEvent id="Event_TokenReset2" name="TokenReset" attachedToRef="Activity_Modify">
-      <bpmn:outgoing>Flow_13xidv2</bpmn:outgoing>
-      <bpmn:cancelEventDefinition id="CancelEventDefinition_1r2giko" />
-    </bpmn:boundaryEvent>
-    <bpmn:sequenceFlow id="Flow_13xidv2" name="CancelMessageFlow" sourceRef="Event_TokenReset2" targetRef="Activity_CancelMessage" />
     <bpmn:scriptTask id="Activity_CancelMessage" name="Cancel Message" camunda:resultVariable="cancel_message">
       <bpmn:documentation>&lt;H1&gt;Cancel Message&lt;/H1&gt;</bpmn:documentation>
-      <bpmn:incoming>Flow_13xidv2</bpmn:incoming>
+      <bpmn:incoming>Flow_1qqhbqp</bpmn:incoming>
       <bpmn:script>update_study(title='Second Title')
 print('Second Title')</bpmn:script>
     </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1avyz25" sourceRef="Activity_HowMany" targetRef="Activity_0kb7m1i" />
+    <bpmn:transaction id="Activity_0kb7m1i">
+      <bpmn:incoming>Flow_1avyz25</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zkgcak</bpmn:outgoing>
+      <bpmn:startEvent id="Event_0eajey9">
+        <bpmn:outgoing>Flow_0tbg5qf</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="Activity_Modify" name="Modify" camunda:formKey="FormModify">
+        <bpmn:extensionElements>
+          <camunda:formData>
+            <camunda:formField id="modify" label="Modify Data?" type="boolean" defaultValue="True" />
+          </camunda:formData>
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_0tbg5qf</bpmn:incoming>
+        <bpmn:outgoing>Flow_1vk7gok</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="Event_11vagro">
+        <bpmn:incoming>Flow_1vk7gok</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_0tbg5qf" sourceRef="Event_0eajey9" targetRef="Activity_Modify" />
+      <bpmn:sequenceFlow id="Flow_1vk7gok" sourceRef="Activity_Modify" targetRef="Event_11vagro" />
+    </bpmn:transaction>
+    <bpmn:boundaryEvent id="Event_0dufc7h" attachedToRef="Activity_0kb7m1i">
+      <bpmn:outgoing>Flow_1qqhbqp</bpmn:outgoing>
+      <bpmn:cancelEventDefinition id="CancelEventDefinition_198zuch" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_1qqhbqp" sourceRef="Event_0dufc7h" targetRef="Activity_CancelMessage" />
+    <bpmn:boundaryEvent id="Event_TokenReset" name="TokenReset" attachedToRef="Activity_HowMany">
+      <bpmn:outgoing>Flow_16q1uec</bpmn:outgoing>
+      <bpmn:signalEventDefinition id="SignalEventDefinition_0axomz7" signalRef="Signal_0ymiy61" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_0zkgcak" sourceRef="Activity_0kb7m1i" targetRef="Activity_GoodBye" />
   </bpmn:process>
   <bpmn:message id="Message_0iyvlbz" name="token_reset" />
   <bpmn:message id="Message_1ow6ruy" name="Message_00ldv4i" />
   <bpmn:signal id="Signal_1fbgshz" name="token_reset" />
   <bpmn:message id="Message_1czi5ye" name="token_reset" />
+  <bpmn:signal id="Signal_0ymiy61" name="cancel" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1dagb7t">
-      <bpmndi:BPMNEdge id="Flow_1e9j7mj_di" bpmnElement="Flow_1e9j7mj">
-        <di:waypoint x="370" y="118" />
-        <di:waypoint x="441" y="118" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_07i0gvv_di" bpmnElement="Flow_07i0gvv">
-        <di:waypoint x="541" y="118" />
-        <di:waypoint x="627" y="118" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_16q1uec_di" bpmnElement="Flow_16q1uec">
-        <di:waypoint x="491" y="176" />
-        <di:waypoint x="491" y="223" />
-        <di:waypoint x="490" y="223" />
-        <di:waypoint x="490" y="269" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="496" y="196" width="89" height="14" />
-        </bpmndi:BPMNLabel>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0f79pbo_di" bpmnElement="Flow_0f79pbo">
-        <di:waypoint x="727" y="118" />
-        <di:waypoint x="797" y="118" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0rus4fi_di" bpmnElement="Flow_0rus4fi">
-        <di:waypoint x="897" y="118" />
-        <di:waypoint x="969" y="118" />
+        <di:waypoint x="1190" y="178" />
+        <di:waypoint x="1312" y="178" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_13xidv2_di" bpmnElement="Flow_13xidv2">
-        <di:waypoint x="687" y="176" />
-        <di:waypoint x="687" y="269" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="694" y="226" width="86" height="27" />
-        </bpmndi:BPMNLabel>
+      <bpmndi:BPMNEdge id="Flow_1e9j7mj_di" bpmnElement="Flow_1e9j7mj">
+        <di:waypoint x="370" y="178" />
+        <di:waypoint x="441" y="178" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0xym55y_di" bpmnElement="Flow_0xym55y">
-        <di:waypoint x="189" y="118" />
-        <di:waypoint x="270" y="118" />
+        <di:waypoint x="189" y="178" />
+        <di:waypoint x="270" y="178" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="Activity_0bieozg_di" bpmnElement="Activity_TestMessage">
-        <dc:Bounds x="440" y="269" width="100" height="80" />
+      <bpmndi:BPMNEdge id="Flow_16q1uec_di" bpmnElement="Flow_16q1uec">
+        <di:waypoint x="491" y="236" />
+        <di:waypoint x="491" y="320" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="496" y="256" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1avyz25_di" bpmnElement="Flow_1avyz25">
+        <di:waypoint x="541" y="178" />
+        <di:waypoint x="610" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qqhbqp_di" bpmnElement="Flow_1qqhbqp">
+        <di:waypoint x="800" y="296" />
+        <di:waypoint x="800" y="329" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zkgcak_di" bpmnElement="Flow_0zkgcak">
+        <di:waypoint x="960" y="178" />
+        <di:waypoint x="1090" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="153" y="160" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="159" y="203" width="24" height="14" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0hkt70o_di" bpmnElement="Activity_HowMany">
-        <dc:Bounds x="441" y="78" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_00p1v49_di" bpmnElement="Activity_Modify">
-        <dc:Bounds x="627" y="78" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0n39q5x_di" bpmnElement="Activity_GoodBye">
-        <dc:Bounds x="797" y="78" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_10cp2vv_di" bpmnElement="Event_10cp2vv">
-        <dc:Bounds x="969" y="100" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0a9mhpp_di" bpmnElement="Activity_CancelMessage">
-        <dc:Bounds x="637" y="269" width="100" height="80" />
+        <dc:Bounds x="441" y="138" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1e3uaeb_di" bpmnElement="Activity_Hello">
-        <dc:Bounds x="270" y="78" width="100" height="80" />
+        <dc:Bounds x="270" y="138" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="153" y="100" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="159" y="143" width="24" height="14" />
-        </bpmndi:BPMNLabel>
+      <bpmndi:BPMNShape id="Event_10cp2vv_di" bpmnElement="Event_10cp2vv">
+        <dc:Bounds x="1312" y="160" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1yxxtrb_di" bpmnElement="Event_TokenReset">
-        <dc:Bounds x="473" y="140" width="36" height="36" />
-        <bpmndi:BPMNLabel>
-          <dc:Bounds x="501" y="174" width="59" height="14" />
-        </bpmndi:BPMNLabel>
+      <bpmndi:BPMNShape id="Activity_0n39q5x_di" bpmnElement="Activity_GoodBye">
+        <dc:Bounds x="1090" y="138" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_10t25ob_di" bpmnElement="Event_TokenReset2">
-        <dc:Bounds x="669" y="140" width="36" height="36" />
+      <bpmndi:BPMNShape id="Activity_0a9mhpp_di" bpmnElement="Activity_CancelMessage">
+        <dc:Bounds x="750" y="329" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0bieozg_di" bpmnElement="Activity_TestMessage">
+        <dc:Bounds x="441" y="320" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wggmha_di" bpmnElement="Activity_0kb7m1i" isExpanded="true">
+        <dc:Bounds x="610" y="78" width="350" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0tbg5qf_di" bpmnElement="Flow_0tbg5qf">
+        <di:waypoint x="686" y="178" />
+        <di:waypoint x="730" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vk7gok_di" bpmnElement="Flow_1vk7gok">
+        <di:waypoint x="830" y="178" />
+        <di:waypoint x="882" y="178" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_0eajey9_di" bpmnElement="Event_0eajey9">
+        <dc:Bounds x="650" y="160" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_00p1v49_di" bpmnElement="Activity_Modify">
+        <dc:Bounds x="730" y="138" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_11vagro_di" bpmnElement="Event_11vagro">
+        <dc:Bounds x="882" y="160" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1qq0qh3_di" bpmnElement="Event_0dufc7h">
+        <dc:Bounds x="782" y="260" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1uudkk1_di" bpmnElement="Event_TokenReset">
+        <dc:Bounds x="473" y="200" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="714" y="167" width="59" height="14" />
+          <dc:Bounds x="501" y="234" width="59" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
