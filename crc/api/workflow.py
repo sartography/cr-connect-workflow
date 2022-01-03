@@ -147,14 +147,15 @@ def delete_workflow_specification(spec_id):
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
 
+    # Delete all workflow models related to this specification
+    WorkflowService.delete_workflow_spec_workflow_models(spec_id)
+
     # Delete all files related to this specification
     WorkflowService.delete_workflow_spec_files(spec_id)
 
     # Delete all events related to this specification
     WorkflowService.delete_workflow_spec_task_events(spec_id)
 
-    # Delete all workflow models related to this specification
-    WorkflowService.delete_workflow_spec_workflow_models(spec_id)
 
     # .delete() doesn't work when we need a cascade. Must grab the record, and explicitly delete
     workflow_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
@@ -261,7 +262,7 @@ def set_current_task(workflow_id, task_id):
 
     # Only reset the token if the task doesn't already have it.
     if spiff_task.state == spiff_task.COMPLETED:
-        spiff_task.reset_token(reset_data=True)  # Don't try to copy the existing data back into this task.
+        spiff_task.reset_token({}, reset_data=True)  # Don't try to copy the existing data back into this task.
 
     processor.save()
     WorkflowService.log_task_action(user_uid, processor, spiff_task, WorkflowService.TASK_ACTION_TOKEN_RESET)
@@ -319,9 +320,12 @@ def __update_task(processor, task, data, user):
     task.update_data(data)
     WorkflowService.post_process_form(task)  # some properties may update the data store.
     processor.complete_task(task)
+    # Log the action before doing the engine steps, as doing so could effect the state of the task
+    # the workflow could wrap around in the ngine steps, and the task could jump from being completed to
+    # another state.  What we are logging here is the completion.
+    WorkflowService.log_task_action(user.uid, processor, task, WorkflowService.TASK_ACTION_COMPLETE)
     processor.do_engine_steps()
     processor.save()
-    WorkflowService.log_task_action(user.uid, processor, task, WorkflowService.TASK_ACTION_COMPLETE)
 
 
 def list_workflow_spec_categories():

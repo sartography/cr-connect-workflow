@@ -362,7 +362,8 @@ class WorkflowProcessor(object):
 
     def cancel_notify(self):
         try:
-            self.bpmn_workflow.cancel_notify()
+            self.bpmn_workflow.signal('cancel') # generate a cancel signal.
+            self.bpmn_workflow.cancel_notify() # call cancel_notify in
         except WorkflowTaskExecException as we:
             raise ApiError.from_workflow_exception("task_error", str(we), we)
 
@@ -387,7 +388,8 @@ class WorkflowProcessor(object):
         endtasks = []
         if self.bpmn_workflow.is_completed():
             for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
-                if isinstance(task.task_spec, EndEvent):
+                # Assure that we find the end event for this workflow, and not for any sub-workflows.
+                if isinstance(task.task_spec, EndEvent) and task.workflow == self.bpmn_workflow:
                     endtasks.append(task)
             return endtasks[-1]
 
