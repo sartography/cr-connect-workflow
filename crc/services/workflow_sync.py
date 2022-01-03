@@ -669,6 +669,4 @@ class WorkflowSyncService(object):
                     file_list.extend([currentfi])
 
         print(etree.tostring(category_list))
-        return(etree.tostring(category_list).decode('utf8'))
-
-
+        return etree.tostring(category_list).decode('utf8')
