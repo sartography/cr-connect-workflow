@@ -34,11 +34,14 @@ class FromFilesystemService(object):
         with open(file_path, 'r') as f_open:
             data = f_open.read()
             data_obj = json.loads(data)
-            workflow_spec_model = session.query(WorkflowSpecModel).filter(
-                WorkflowSpecModel.display_name == data_obj['display_name']).first()
+            workflow_spec_model = session.query(WorkflowSpecModel).\
+                filter(WorkflowSpecModel.id == data_obj['id']).\
+                first()
             if not workflow_spec_model:
-                category_id = session.query(WorkflowSpecCategoryModel.id).filter(
-                    WorkflowSpecCategoryModel.display_name == data_obj['display_name']).scalar()
+                category_id = None
+                if data_obj['category'] is not None:
+                    category_id = session.query(WorkflowSpecCategoryModel.id).filter(
+                        WorkflowSpecCategoryModel.display_name == data_obj['category']['display_name']).scalar()
                 workflow_spec_model = WorkflowSpecModel(id=data_obj['id'],
                                                         display_name=data_obj['display_name'],
                                                         description=data_obj['description'],
@@ -48,10 +51,9 @@ class FromFilesystemService(object):
                                                         standalone=data_obj['standalone'],
                                                         library=data_obj['library'])
                 session.add(workflow_spec_model)
+                session.commit()
 
-        session.commit()
-
-        return workflow_spec_model
+            return workflow_spec_model
 
     @staticmethod
     def process_workflow_spec_file(json_file, spec_directory):
@@ -64,16 +66,20 @@ class FromFilesystemService(object):
             spec_file_path = os.path.join(spec_directory, spec_file_name)
 
             with open(spec_file_path, 'rb') as spec_handle:
-                workflow_spec_file_model = session.query(FileModel).filter(FileModel.id == data_obj['id']).first()
+                # workflow_spec_name = spec_directory.split('/')[-1]
+                # workflow_spec = session.query(WorkflowSpecModel).filter(
+                #     WorkflowSpecModel.display_name == workflow_spec_name).first()
+
+                workflow_spec_file_model = session.query(FileModel).\
+                    filter(FileModel.workflow_spec_id == data_obj['workflow_spec_id']).\
+                    filter(FileModel.name == spec_file_name).\
+                    first()
                 if workflow_spec_file_model:
                     # update workflow_spec_file_model
                     FileService.update_file(workflow_spec_file_model, spec_handle.read(), CONTENT_TYPES[spec_file_name.split('.')[-1]])
                 else:
                     # create new model
-                    workflow_spec_name = spec_directory.split('/')[-1]
-                    workflow_spec = session.query(WorkflowSpecModel).filter(
-                        WorkflowSpecModel.display_name == workflow_spec_name).first()
-
+                    workflow_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==data_obj['workflow_spec_id']).first()
                     workflow_spec_file_model = FileService.add_workflow_spec_file(workflow_spec,
                                                                                   name=spec_file_name,
                                                                                   content_type=CONTENT_TYPES[spec_file_name.split('.')[-1]],
@@ -150,29 +156,32 @@ class FromFilesystemService(object):
 
 class ToFilesystemService(object):
 
-    def process_category(self, category):
+    @staticmethod
+    def process_category(location, category):
         # Make sure a directory exists for the category
         # Add a json file dumped from the category model
-        category_path = os.path.join(SYNC_FILE_ROOT, category.display_name)
+        category_path = os.path.join(location, category.display_name)
         os.makedirs(os.path.dirname(category_path), exist_ok=True)
         json_file_name = f'{category.display_name}.json'
-        json_file_path = os.path.join(SYNC_FILE_ROOT, json_file_name)
+        json_file_path = os.path.join(location, json_file_name)
         category_model_schema = WorkflowSpecCategoryModelSchema().dumps(category)
         with open(json_file_path, 'w') as j_handle:
             j_handle.write(category_model_schema)
 
-    def process_workflow_spec(self, workflow_spec, category_name_string):
+    @staticmethod
+    def process_workflow_spec(location, workflow_spec, category_name_string):
         # Make sure a directory exists for the workflow spec
         # Add a json file dumped from the workflow spec model
-        workflow_spec_path = os.path.join(SYNC_FILE_ROOT, category_name_string, workflow_spec.display_name)
+        workflow_spec_path = os.path.join(location, category_name_string, workflow_spec.display_name)
         os.makedirs(os.path.dirname(workflow_spec_path), exist_ok=True)
         json_file_name = f'{workflow_spec.display_name}.json'
-        json_file_path = os.path.join(SYNC_FILE_ROOT, category_name_string, json_file_name)
+        json_file_path = os.path.join(location, category_name_string, json_file_name)
         workflow_spec_schema = WorkflowSpecModelSchema().dumps(workflow_spec)
         with open(json_file_path, 'w') as j_handle:
             j_handle.write(workflow_spec_schema)
 
-    def process_workflow_spec_file(self, workflow_spec_file, workflow_spec_file_path):
+    @staticmethod
+    def process_workflow_spec_file(workflow_spec_file, workflow_spec_file_path):
         # workflow_spec_file_path = os.path.join
         os.makedirs(os.path.dirname(workflow_spec_file_path), exist_ok=True)
 
@@ -192,6 +201,7 @@ class ToFilesystemService(object):
     def write_file_to_system(self, file_model):
 
         category_name = None
+        location = SYNC_FILE_ROOT
 
         if file_model.workflow_spec_id is not None:
             # we have a workflow spec file
@@ -200,7 +210,7 @@ class ToFilesystemService(object):
 
                 if workflow_spec_model.category_id is not None:
                     category_model = session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.id == workflow_spec_model.category_id).first()
-                    self.process_category(category_model)
+                    self.process_category(location, category_model)
                     category_name = category_model.display_name
 
                 elif workflow_spec_model.is_master_spec:
@@ -210,14 +220,19 @@ class ToFilesystemService(object):
                     category_name = 'Library Specs'
 
                 if category_name is not None:
-                    self.process_workflow_spec(workflow_spec_model, category_name)
+                    # Only process if we have a workflow_spec_model and category_name
+                    self.process_workflow_spec(location, workflow_spec_model, category_name)
 
-                    file_path = os.path.join(SYNC_FILE_ROOT,
+                    file_path = os.path.join(location,
                                              category_name,
                                              workflow_spec_model.display_name,
                                              file_model.name)
 
                     self.process_workflow_spec_file(file_model, file_path)
+
+            else:
+                # We didn't get a workflow_spec_model
+                pass
 
         elif file_model.workflow_id is not None:
             # we have a workflow file
