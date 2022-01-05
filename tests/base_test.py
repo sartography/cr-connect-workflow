@@ -361,8 +361,10 @@ class BaseTest(unittest.TestCase):
         # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
         self.assertIsNotNone(workflow.total_tasks)
         # presumably, we also need to deal with sequential items here too . .
-        if not task_in.multi_instance_type == 'looping' and not update_all:
-            self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
+        # You may loop back to a previous task, which would actually reduce the number of
+        # completed tasks.  So this test doesn't seem correct.
+        # if not task_in.multi_instance_type == 'looping' and not update_all:
+        #    self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
 
         # Assure a record exists in the Task Events
         task_events = session.query(TaskEventModel) \

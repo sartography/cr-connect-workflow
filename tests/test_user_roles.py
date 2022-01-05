@@ -10,7 +10,7 @@ from crc.models.task_event import TaskEventModel, TaskEventSchema
 from crc.services.workflow_service import WorkflowService
 
 
-class TestTasksApi(BaseTest):
+class TestUserRoles(BaseTest):
 
     def test_raise_error_if_role_does_not_exist_in_data(self):
         workflow = self.create_workflow('roles', as_user="lje5u")
@@ -185,7 +185,6 @@ class TestTasksApi(BaseTest):
         nav = workflow_api.navigation
         self.assertEqual('READY', nav[1].state)  # When you loop back the task is again in the ready state.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
-        self.assertEqual('COMPLETED', nav[3].state)  # Feedback is completed
         self.assertEqual('READY', workflow_api.next_task.state)
 
         data["favorite_color"] = "blue"
