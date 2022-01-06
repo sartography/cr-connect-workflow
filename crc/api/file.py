@@ -178,7 +178,11 @@ def update_file_info(file_id, body):
 
 
 def delete_file(file_id):
-    FileService.delete_file(file_id)
+    workflow_spec_id = session.query(FileModel.workflow_spec_id).filter(FileModel.id==file_id).scalar()
+    if workflow_spec_id is not None:
+        FileService.delete_spec_file(file_id)
+    else:
+        FileService.delete_file(file_id)
 
 
 def dmn_from_ss():

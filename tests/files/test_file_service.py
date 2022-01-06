@@ -1,12 +1,16 @@
 from github import UnknownObjectException
-from sqlalchemy import desc
+from sqlalchemy import desc, column
 from tests.base_test import BaseTest
 from unittest.mock import patch, Mock
 
-from crc import db
-from crc.models.file import FileDataModel
+from crc import db, session
+from crc.api.common import ApiError
+from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
+from crc.models.workflow import WorkflowModel, WorkflowSpecModel
 from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
+
+from io import BytesIO
 
 
 class FakeGithubCreates(Mock):
@@ -225,3 +229,45 @@ class TestFileService(BaseTest):
         branches = FileService.get_repo_branches()
 
         self.assertIsInstance(branches, list)
+
+    def test_add_workflow_spec_file(self):
+
+        self.load_example_data()
+        spec = db.session.query(WorkflowSpecModel).first()
+
+        file_data = b"abcdef"
+        file_name = 'random_fact.svg'
+        content_type = CONTENT_TYPES[file_name[-3:]]
+
+        # This creates a file on the filesystem
+        file_model = FileService().add_workflow_spec_file(spec, file_name, content_type, file_data)
+
+        # This reads from a file on the filesystem
+        spec_file_data = FileService().get_spec_file_data(file_model.id)
+
+        self.assertEqual(file_data, spec_file_data)
+
+    def test_delete_workflow_spec_file(self):
+        self.load_example_data()
+        file_model = session.query(FileModel).filter(column('workflow_spec_id').isnot(None)).first()
+        file_data_before = FileService().get_spec_file_data(file_model.id)
+        self.assertGreater(len(file_data_before), 0)
+
+        FileService().delete_spec_file(file_model.id)
+
+        with self.assertRaises(ApiError) as ae:
+            FileService().get_spec_file_data(file_model.id)
+
+        self.assertIn('No model found for file with file_id', ae.exception.message)
+        print('test_delete_workflow_spec_file')
+
+    def test_get_spec_files(self):
+        self.load_example_data()
+        spec = session.query(WorkflowSpecModel.id).first()
+        spec_files = FileService().get_spec_data_files(spec.id)
+        workflow = session.query(WorkflowModel).first()
+        processor = WorkflowProcessor(workflow)
+
+        self.assertIsInstance(processor, WorkflowProcessor)
+
+        print('test_get_spec_files')

@@ -9,7 +9,7 @@ import json
 import os
 
 
-SYNC_FILE_ROOT = os.path.join(app.root_path, '..', 'files')
+SYNC_FILE_ROOT = app.config['SYNC_FILE_ROOT']
 
 
 class FromFilesystemService(object):
@@ -85,7 +85,7 @@ class FromFilesystemService(object):
                                                                                   content_type=CONTENT_TYPES[spec_file_name.split('.')[-1]],
                                                                                   binary_data=spec_handle.read())
 
-            print(f'process_workflow_spec_directory: data_obj: {data_obj}')
+            print(f'process_workflow_spec_file: data_obj: {data_obj}')
         return workflow_spec_file_model
 
     @staticmethod
@@ -218,6 +218,9 @@ class ToFilesystemService(object):
 
                 elif workflow_spec_model.library:
                     category_name = 'Library Specs'
+
+                elif workflow_spec_model.standalone:
+                    category_name = 'Standalone'
 
                 if category_name is not None:
                     # Only process if we have a workflow_spec_model and category_name

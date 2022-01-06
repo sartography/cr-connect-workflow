@@ -14,7 +14,7 @@ from crc import app, session
 from crc.models.file import FileModel, FileDataModel, LookupFileModel
 from crc.models.workflow import WorkflowSpecDependencyFile
 from crc.services.file_service import FileService
-from crc.services.temp_migration_service import FromFilesystemService, ToFilesystemService, SYNC_FILE_ROOT
+from crc.services.temp_migration_service import FromFilesystemService, ToFilesystemService
 
 import os
 
@@ -23,6 +23,8 @@ revision = '7225d990740e'
 down_revision = '65b5ed6ae05b'
 branch_labels = None
 depends_on = None
+
+SYNC_FILE_ROOT = app.config['SYNC_FILE_ROOT']
 
 
 def upgrade():

@@ -9,6 +9,7 @@ import json
 import unittest
 import urllib.parse
 import datetime
+import shutil
 from flask import g
 
 from crc import app, db, session
@@ -82,6 +83,7 @@ class BaseTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        print('setUpClass')
         app.config.from_object('config.testing')
         cls.ctx = app.test_request_context()
         cls.app = app.test_client()
@@ -90,17 +92,27 @@ class BaseTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        print('tearDownClass')
         cls.ctx.pop()
         db.drop_all()
         pass
 
     def setUp(self):
+        print('setUp')
         pass
 
     def tearDown(self):
+        print('tearDown')
         ExampleDataLoader.clean_db()
         self.logout()
         self.auths = {}
+        self.clear_test_sync_files()
+
+    @staticmethod
+    def clear_test_sync_files():
+        sync_file_root = FileService().get_sync_file_root()
+        if os.path.exists(sync_file_root):
+            shutil.rmtree(sync_file_root)
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
         if user is None:
@@ -172,7 +184,8 @@ class BaseTest(unittest.TestCase):
             self.assertIsNotNone(files)
             self.assertGreater(len(files), 0)
             for file in files:
-                file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
+                # file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
+                file_data = FileService().get_spec_file_data(file.id)
                 self.assertIsNotNone(file_data)
                 self.assertGreater(len(file_data), 0)
 
@@ -379,7 +392,6 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(user_uid, event.user_uid)
         self.assertEqual(workflow.id, event.workflow_id)
         self.assertEqual(workflow.workflow_spec_id, event.workflow_spec_id)
-        self.assertEqual(workflow.spec_version, event.spec_version)
         self.assertEqual(WorkflowService.TASK_ACTION_COMPLETE, event.action)
         self.assertEqual(task_in.id, task_id)
         self.assertEqual(task_in.name, event.task_name)
@@ -416,4 +428,3 @@ class BaseTest(unittest.TestCase):
         """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
         minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
         return (minimal_dbpm % content).encode()
-
