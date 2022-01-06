@@ -1,6 +1,9 @@
 from tests.base_test import BaseTest
 
-from crc.services.temp_migration_service import FromFilesystemService, SYNC_FILE_ROOT
+from crc import app
+from crc.services.temp_migration_service import FromFilesystemService
+
+SYNC_FILE_ROOT = app.config['SYNC_FILE_ROOT']
 
 
 class TestFilesFromFilesystem(BaseTest):

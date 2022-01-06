@@ -131,15 +131,15 @@ class LookupService(object):
             file_name = field.get_property(Task.FIELD_PROP_SPREADSHEET_NAME)
             value_column = field.get_property(Task.FIELD_PROP_VALUE_COLUMN)
             label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
-            latest_files = FileService.get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id,
+            latest_files = FileService().get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id,
                                                            workflow_id=workflow_model.id,
                                                            name=file_name)
             if len(latest_files) < 1:
                 raise ApiError("invalid_enum", "Unable to locate the lookup data file '%s'" % file_name)
             else:
-                data_model = latest_files[0]
+                data_dict = latest_files[0]
 
-            lookup_model = LookupService.build_lookup_table(data_model, value_column, label_column,
+            lookup_model = LookupService.build_lookup_table(data_dict, value_column, label_column,
                                                             workflow_model.workflow_spec_id, task_spec_id, field_id)
 
         #  Use the results of an LDAP request to populate enum field options
@@ -158,19 +158,23 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def build_lookup_table(data_model: FileDataModel, value_column, label_column,
+    def build_lookup_table(data_dict, value_column, label_column,
                            workflow_spec_id=None, task_spec_id=None, field_id=None):
         """ In some cases the lookup table can be very large.  This method will add all values to the database
          in a way that can be searched and returned via an api call - rather than sending the full set of
           options along with the form.  It will only open the file and process the options if something has
           changed.  """
+        if workflow_spec_id is not None:
+            file_data = data_dict['data']
+        else:
+            file_data = data_dict.data
         try:
-            xlsx = ExcelFile(data_model.data, engine='openpyxl')
+            xlsx = ExcelFile(file_data, engine='openpyxl')
         # Pandas--or at least openpyxl, cannot read old xls files.
         # The error comes back as zipfile.BadZipFile because xlsx files are zipped xml files
         except BadZipFile:
             raise ApiError(code='excel_error',
-                           message=f'Error opening excel file {data_model.file_model.name}. You may have an older .xls spreadsheet. (file_model_id: {data_model.file_model_id} workflow_spec_id: {workflow_spec_id}, task_spec_id: {task_spec_id}, and field_id: {field_id})')
+                           message=f"Error opening excel file {data_dict['meta']['name']}. You may have an older .xls spreadsheet. (file_model_id: {data_dict['meta']['file_model_id']} workflow_spec_id: {workflow_spec_id}, task_spec_id: {task_spec_id}, and field_id: {field_id})")
         df = xlsx.parse(xlsx.sheet_names[0])  # Currently we only look at the fist sheet.
         df = df.convert_dtypes()
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')] # Drop unnamed columns.
@@ -179,17 +183,17 @@ class LookupService(object):
 
         if value_column not in df:
             raise ApiError("invalid_enum",
-                           "The file %s does not contain a column named % s" % (data_model.file_model.name,
+                           "The file %s does not contain a column named % s" % (data_dict['meta']['name'],
                                                                                 value_column))
         if label_column not in df:
             raise ApiError("invalid_enum",
-                           "The file %s does not contain a column named % s" % (data_model.file_model.name,
+                           "The file %s does not contain a column named % s" % (data_dict['meta']['name'],
                                                                                 label_column))
 
         lookup_model = LookupFileModel(workflow_spec_id=workflow_spec_id,
                                        field_id=field_id,
                                        task_spec_id=task_spec_id,
-                                       file_data_model_id=data_model.id,
+                                       file_data_model_id=data_dict['meta']['id'],
                                        is_ldap=False)
 
         db.session.add(lookup_model)

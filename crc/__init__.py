@@ -106,6 +106,15 @@ print('TESTING = ', app.config['TESTING'])
 print('TEST_UID = ', app.config['TEST_UID'])
 print('ADMIN_UIDS = ', app.config['ADMIN_UIDS'])
 
+
+@app.cli.command()
+def load_files_from_filesystem():
+    """Load file data into the database."""
+    from crc.services.temp_migration_service import FromFilesystemService
+    location = app.config['SYNC_FILE_ROOT']
+    FromFilesystemService().update_file_metadata_from_filesystem(location)
+
+
 @app.cli.command()
 def load_example_data():
     """Load example data into the database."""
