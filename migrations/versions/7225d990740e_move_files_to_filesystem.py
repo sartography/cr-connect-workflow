@@ -9,7 +9,8 @@ Create Date: 2021-12-14 10:52:50.785342
 from alembic import op
 import sqlalchemy as sa
 from crc import app, session
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileModel, FileDataModel, LookupFileModel
+from crc.models.workflow import WorkflowSpecDependencyFile
 from crc.services.file_service import FileService
 from crc.services.temp_migration_service import FromFilesystemService, ToFilesystemService
 
@@ -39,12 +40,17 @@ def upgrade():
             ToFilesystemService().write_file_to_system(file)
             processed_files.append(file.id)
 
-    # TODO: delete processed files from file_data table
-    for file_id in processed_files:
-        processed_models = session.query(FileDataModel).filter(FileDataModel.file_model_id==file_id).all()
-        for processed_model in processed_models:
-            session.delete(processed_model)
-        print(f'upgrade: in processed files: file_id: {file_id}')
+    # # TODO: delete processed files from file_data table
+    # for file_id in processed_files:
+    #     processed_models = session.query(FileDataModel).filter(FileDataModel.file_model_id==file_id).all()
+    #     for processed_model in processed_models:
+    #         # delete record in workflow_spec_dependency_table
+    #         session.query(WorkflowSpecDependencyFile).filter(WorkflowSpecDependencyFile.file_data_id==processed_model.id).delete()
+    #         # delete id from lookup_file table
+    #         session.query(LookupFileModel).filter(LookupFileModel.file_data_model_id==processed_model.id).delete()
+    #         # delete file_data entry
+    #         session.delete(processed_model)
+    #     print(f'upgrade: in processed files: file_id: {file_id}')
 
     # session.commit()
     print('upgrade: done: ')
