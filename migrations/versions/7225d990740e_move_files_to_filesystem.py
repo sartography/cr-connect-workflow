@@ -57,6 +57,8 @@ def upgrade():
                 session.delete(dependency)
             lookups = session.query(LookupFileModel).filter(LookupFileModel.file_data_model_id==processed_model.id).all()
             for lookup in lookups:
+                # TODO: do the file_data_model_id -> file_model_id dance
+                #  Add file_model_id column, populate file_model_id column, delete file_data_model_id column
                 lookup.file_data_model_id = None
             session.delete(processed_model)
         print(f'upgrade: in processed files: file_id: {file_id}')
