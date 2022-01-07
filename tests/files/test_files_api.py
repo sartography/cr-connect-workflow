@@ -46,7 +46,6 @@ class TestFilesApi(BaseTest):
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(3, len(json_data))
 
-
     def test_create_file(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()

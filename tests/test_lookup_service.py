@@ -7,6 +7,7 @@ from crc.api.common import ApiError
 from crc import session, app
 from crc.models.file import FileDataModel, FileModel, LookupFileModel, LookupDataModel, CONTENT_TYPES
 from crc.services.lookup_service import LookupService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -182,15 +183,17 @@ class TestLookupService(BaseTest):
 
         # Using an old xls file should raise an error
         file_model_xls = session.query(FileModel).filter(FileModel.name == 'sponsors.xls').first()
-        file_data_model_xls = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xls.id).first()
+        file_data_xls = SpecFileService().get_spec_file_data(file_model_xls.id)
+        # file_data_model_xls = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xls.id).first()
         with self.assertRaises(ApiError) as ae:
-            LookupService.build_lookup_table(file_data_model_xls, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
+            LookupService.build_lookup_table(file_model_xls.id, 'sponsors.xls', file_data_xls, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertIn('Error opening excel file', ae.exception.args[0])
 
         # Using an xlsx file should work
         file_model_xlsx = session.query(FileModel).filter(FileModel.name == 'sponsors.xlsx').first()
-        file_data_model_xlsx = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xlsx.id).first()
-        lookup_model = LookupService.build_lookup_table(file_data_model_xlsx, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
+        file_data_xlsx = SpecFileService().get_spec_file_data(file_model_xlsx.id)
+        # file_data_model_xlsx = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xlsx.id).first()
+        lookup_model = LookupService.build_lookup_table(file_model_xlsx.id, 'sponsors.xlsx', file_data_xlsx, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertEqual(28, len(lookup_model.dependencies))
         self.assertIn('CUSTOMER_NAME', lookup_model.dependencies[0].data.keys())
         self.assertIn('CUSTOMER_NUMBER', lookup_model.dependencies[0].data.keys())

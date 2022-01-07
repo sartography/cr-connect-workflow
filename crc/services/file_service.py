@@ -1,6 +1,5 @@
 import hashlib
 import io
-import json
 import os
 import random
 import string
@@ -10,15 +9,13 @@ from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
-from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
-from lxml.etree import XMLSyntaxError
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
-from crc.models.file import FileType, FileDataModel, FileModel, FileModelSchema, LookupFileModel, LookupDataModel
+from crc.models.file import FileType, FileDataModel, FileModel, FileModelSchema, LookupFileModel, LookupDataModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel, WorkflowSpecDependencyFile, WorkflowLibraryModel, WorkflowSpecCategoryModel
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
@@ -39,31 +36,6 @@ def camel_to_snake(camel):
 
 
 class FileService(object):
-
-    @staticmethod
-    def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
-                               name, content_type, binary_data, primary=False, is_status=False):
-        """Create a new file and associate it with a workflow spec."""
-        file_model = session.query(FileModel)\
-            .filter(FileModel.workflow_spec_id == workflow_spec.id)\
-            .filter(FileModel.name == name).first()
-
-        if file_model:
-            if not file_model.archived:
-                # Raise ApiError if the file already exists and is not archived
-                raise ApiError(code="duplicate_file",
-                               message='If you want to replace the file, use the update mechanism.')
-        else:
-            file_model = FileModel(
-                workflow_spec_id=workflow_spec.id,
-                name=name,
-                primary=primary,
-                is_status=is_status,
-            )
-
-        return FileService.update_workflow_spec_file(workflow_spec, file_model, binary_data, content_type)
-
-
 
     @staticmethod
     @cache
@@ -113,113 +85,9 @@ class FileService(object):
             order_by(FileModel.id).all()
 
     @staticmethod
-    def add_reference_file(name, content_type, binary_data):
-        """Create a file with the given name, but not associated with a spec or workflow.
-           Only one file with the given reference name can exist."""
-        file_model = session.query(FileModel). \
-            filter(FileModel.is_reference == True). \
-            filter(FileModel.name == name).first()
-        if not file_model:
-            file_model = FileModel(
-                name=name,
-                is_reference=True
-            )
-        return FileService().update_reference_file(file_model, binary_data, content_type)
-
-    @staticmethod
     def get_extension(file_name):
         basename, file_extension = os.path.splitext(file_name)
         return file_extension.lower().strip()[1:]
-
-    @staticmethod
-    def get_sync_file_root():
-        dir_name = app.config['SYNC_FILE_ROOT']
-        app_root = app.root_path
-        return os.path.join(app_root, '..', 'tests', dir_name)
-
-    def write_file_to_system(self, workflow_spec_model, file_model, file_data):
-
-        category_name = None
-        sync_file_root = self.get_sync_file_root()
-        # sync_file_root = app.config['SYNC_FILE_ROOT']
-
-        # if file_model.workflow_spec_id is not None:
-        #     # we have a workflow spec file
-        #     workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == file_model.workflow_spec_id).first()
-        #     if workflow_spec_model:
-
-        if workflow_spec_model is not None:
-            category_name = self.get_spec_file_category_name(workflow_spec_model)
-        if category_name is None and file_model.is_reference:
-            category_name = 'Reference'
-
-
-        # if workflow_spec_model.category_id is not None:
-        #     category_name = session.query(WorkflowSpecCategoryModel.display_name).filter(WorkflowSpecCategoryModel.id == workflow_spec_model.category_id).scalar()
-        #
-        # elif workflow_spec_model.is_master_spec:
-        #     category_name = 'Master Specification'
-        #
-        # elif workflow_spec_model.library:
-        #     category_name = 'Library Specs'
-
-        if category_name is not None:
-            if workflow_spec_model is not None:
-                file_path = os.path.join(sync_file_root,
-                                         category_name,
-                                         workflow_spec_model.display_name,
-                                         file_model.name)
-            else:
-                # Reference files all sit in the 'Reference' directory
-                file_path = os.path.join(sync_file_root,
-                                         category_name,
-                                         file_model.name)
-
-            # self.process_workflow_spec_file(file_model, file_path)
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'wb') as f_handle:
-                f_handle.write(file_data)
-            json_file_path = f'{file_path}.json'
-            latest_file_model = session.query(FileModel).filter(FileModel.id==file_model.id).first()
-            file_schema = FileModelSchema().dumps(latest_file_model)
-            with open(json_file_path, 'w') as j_handle:
-                j_handle.write(file_schema)
-
-    @staticmethod
-    def update_workflow_spec_file(workflow_spec, file_model, binary_data, content_type):
-        # Verify the extension
-        file_extension = FileService.get_extension(file_model.name)
-        if file_extension not in FileType._member_names_:
-            raise ApiError('unknown_extension',
-                           'The file you provided does not have an accepted extension:' +
-                           file_extension, status_code=404)
-        else:
-            file_model.type = FileType[file_extension]
-            file_model.content_type = content_type
-            file_model.archived = False  # Unarchive the file if it is archived.
-
-        # If this is a BPMN, extract the process id.
-        if file_model.type == FileType.bpmn:
-            try:
-                bpmn: etree.Element = etree.fromstring(binary_data)
-                file_model.primary_process_id = FileService.get_process_id(bpmn)
-                file_model.is_review = FileService.has_swimlane(bpmn)
-            except XMLSyntaxError as xse:
-                raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_model.name)
-
-        session.add(file_model)
-        session.commit()
-
-        # Write file to filesystem
-        FileService().write_file_to_system(workflow_spec, file_model, binary_data)
-        return file_model
-
-    def update_reference_file(self, file_model, binary_data, content_type):
-        session.add(file_model)
-        session.commit()
-        self.write_file_to_system(None, file_model, binary_data)
-        print('update_reference_file')
-        return file_model
 
     @staticmethod
     def update_file(file_model, binary_data, content_type):
@@ -294,30 +162,6 @@ class FileService(object):
         return retval
 
     @staticmethod
-    def get_process_id(et_root: etree.Element):
-        process_elements = []
-        for child in et_root:
-            if child.tag.endswith('process') and child.attrib.get('isExecutable', False):
-                process_elements.append(child)
-
-        if len(process_elements) == 0:
-            raise ValidationException('No executable process tag found')
-
-        # There are multiple root elements
-        if len(process_elements) > 1:
-
-            # Look for the element that has the startEvent in it
-            for e in process_elements:
-                this_element: etree.Element = e
-                for child_element in list(this_element):
-                    if child_element.tag.endswith('startEvent'):
-                        return this_element.attrib['id']
-
-            raise ValidationException('No start event found in %s' % et_root.attrib['id'])
-
-        return process_elements[0].attrib['id']
-
-    @staticmethod
     def get_files_for_study(study_id, irb_doc_code=None):
         query = session.query(FileModel).\
                 join(WorkflowModel).\
@@ -360,64 +204,6 @@ class FileService(object):
 
 
     @staticmethod
-    def get_workflow_spec_category_name(workflow_spec_id):
-        category_name = None
-        workflow_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow_spec_id).first()
-        category_id = workflow_spec.category_id
-        if category_id is not None:
-            category_name = session.query(WorkflowSpecCategoryModel.display_name).filter(WorkflowSpecCategoryModel.id==category_id).scalar()
-        elif workflow_spec.is_master_spec:
-            category_name = 'Master Specification'
-        elif workflow_spec.library:
-            category_name = 'Library Specs'
-        elif workflow_spec.standalone:
-            category_name = 'Standalone'
-        return category_name
-
-    def get_spec_data_files(self, workflow_spec_id, workflow_id=None, name=None, include_libraries=False):
-        """Returns all the files related to a workflow specification."""
-        spec_data_files = []
-        workflow_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow_spec_id).first()
-        workflow_spec_name = workflow_spec.display_name
-        category_name = self.get_workflow_spec_category_name(workflow_spec_id)
-        sync_file_root = self.get_sync_file_root()
-        spec_path = os.path.join(sync_file_root,
-                                 category_name,
-                                 workflow_spec_name)
-        directory_items = os.scandir(spec_path)
-        for item in directory_items:
-            if item.is_file() and not item.name.endswith('json'):
-                with open(item.path, 'rb') as f_open:
-                    json_path = f'{item.path}.json'
-                    with open(json_path, 'r') as j_open:
-                        json_data = j_open.read()
-                        json_obj = json.loads(json_data)
-                        file_data = f_open.read()
-                        file_dict = {'meta': json_obj,
-                                     'data': file_data}
-                        spec_data_files.append(file_dict)
-        print('get_spec_data_files')
-        return spec_data_files
-        # if workflow_id:
-        #     query = session.query(FileDataModel) \
-        #             .join(WorkflowSpecDependencyFile) \
-        #             .filter(WorkflowSpecDependencyFile.workflow_id == workflow_id) \
-        #             .order_by(FileDataModel.id)
-        #     if name:
-        #         query = query.join(FileModel).filter(FileModel.name == name)
-        #     return query.all()
-        # else:
-        #     """Returns all the latest files related to a workflow specification"""
-        #     file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,include_libraries=include_libraries)
-        #     latest_data_files = []
-        #     for file_model in file_models:
-        #         if name and file_model.name == name:
-        #             latest_data_files.append(FileService.get_file_data(file_model.id))
-        #         elif not name:
-        #             latest_data_files.append(FileService.get_file_data(file_model.id))
-        #     return latest_data_files
-
-    @staticmethod
     def get_workflow_data_files(workflow_id=None):
         """Returns all the FileDataModels related to a running workflow -
         So these are the latest data files that were uploaded or generated
@@ -438,55 +224,6 @@ class FileService(object):
         else:
             query = query.order_by(desc(FileDataModel.date_created))
         return query.first()
-
-    @staticmethod
-    def get_spec_file_category_name(spec_model):
-        category_name = None
-        if hasattr(spec_model, 'category_id') and spec_model.category_id is not None:
-            category_model = session.query(WorkflowSpecCategoryModel).\
-                filter(WorkflowSpecCategoryModel.id == spec_model.category_id).\
-                first()
-            category_name = category_model.display_name
-
-        elif spec_model.is_master_spec:
-            category_name = 'Master Specification'
-
-        elif spec_model.library:
-            category_name = 'Library Specs'
-
-        elif spec_model.standalone:
-            category_name = 'Standalone'
-
-        return category_name
-
-    def get_spec_file_data(self, file_id: int):
-        file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
-        if file_model is not None:
-            spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
-            if spec_model is not None:
-                category_name = self.get_spec_file_category_name(spec_model)
-                sync_file_root = self.get_sync_file_root()
-                file_path = os.path.join(sync_file_root, category_name, spec_model.display_name, file_model.name)
-                with open(file_path, 'rb') as f_handle:
-                    spec_file_data = f_handle.read()
-                    return spec_file_data
-            else:
-                raise ApiError(code='spec_not_found',
-                               message=f'No spec found for file with file_id: {file_id}, and spec_id: {file_model.workflow_spec_id}')
-        else:
-            raise ApiError(code='model_not_found',
-                           message=f'No model found for file with file_id: {file_id}')
-
-    @staticmethod
-    def get_reference_file_data(file_name):
-        sync_file_root = FileService().get_sync_file_root()
-        file_path = os.path.join(sync_file_root, 'Reference', file_name)
-        if os.path.exists(file_path):
-            with open(file_path, 'rb') as f_open:
-                file_data = f_open.read()
-                return file_data
-        else:
-            raise ApiError("file_not_found", "There is no reference file with the name '%s'" % file_name)
 
     @staticmethod
     def get_workflow_file_data(workflow, file_name):
@@ -523,34 +260,6 @@ class FileService(object):
             return FileService.find_spec_model_in_db(workflow.outer_workflow)
 
         return workflow_model
-
-    def delete_spec_file(self, file_id):
-        sync_file_root = self.get_sync_file_root()
-        file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
-        workflow_spec_id = file_model.workflow_spec_id
-        workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow_spec_id).first()
-        category_name = self.get_spec_file_category_name(workflow_spec_model)
-        file_model_name = file_model.name
-        spec_directory_path = os.path.join(sync_file_root,
-                                           category_name,
-                                           workflow_spec_model.display_name)
-        file_path = os.path.join(spec_directory_path,
-                                 file_model_name)
-        json_file_path = os.path.join(spec_directory_path,
-                                      f'{file_model_name}.json')
-
-        try:
-            os.remove(file_path)
-            os.remove(json_file_path)
-            # os.rmdir(spec_directory_path)
-            session.delete(file_model)
-            session.commit()
-        except IntegrityError as ie:
-            session.rollback()
-            file_model = session.query(FileModel).filter_by(id=file_id).first()
-            file_model.archived = True
-            session.commit()
-            app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
 
     @staticmethod
     def delete_file(file_id):
@@ -740,48 +449,49 @@ class FileService(object):
 
         return dmn_file
 
-    @staticmethod
-    def cleanup_file_data(copies_to_keep=1):
-        if isinstance(copies_to_keep, int) and copies_to_keep > 0:
-
-            deleted_models = []
-            saved_models = []
-            current_models = []
-
-            session.flush()
-
-            workflow_spec_models = session.query(WorkflowSpecModel).all()
-
-            for wf_spec_model in workflow_spec_models:
-                file_models = session.query(FileModel)\
-                    .filter(FileModel.workflow_spec_id == wf_spec_model.id)\
-                    .all()
-
-                for file_model in file_models:
-                    file_data_models = session.query(FileDataModel)\
-                        .filter(FileDataModel.file_model_id == file_model.id)\
-                        .order_by(desc(FileDataModel.date_created))\
-                        .all()
-                    current_models.append(file_data_models[:copies_to_keep])
-                    for fd_model in file_data_models[copies_to_keep:]:
-                        dependencies = session.query(WorkflowSpecDependencyFile)\
-                            .filter(WorkflowSpecDependencyFile.file_data_id == fd_model.id)\
-                            .all()
-                        if len(dependencies) > 0:
-                            saved_models.append(fd_model)
-                            continue
-                        lookups = session.query(LookupFileModel)\
-                            .filter(LookupFileModel.file_data_model_id == fd_model.id)\
-                            .all()
-                        if len(lookups) > 0:
-                            saved_models.append(fd_model)
-                            continue
-                        deleted_models.append(fd_model)
-                        session.delete(fd_model)
-
-            session.commit()
-            return current_models, saved_models, deleted_models
-
-        else:
-            raise ApiError(code='bad_keep',
-                           message='You must keep at least 1 version')
+    # TODO: Get rid of this. We don't have versions any more
+    # @staticmethod
+    # def cleanup_file_data(copies_to_keep=1):
+    #     if isinstance(copies_to_keep, int) and copies_to_keep > 0:
+    #
+    #         deleted_models = []
+    #         saved_models = []
+    #         current_models = []
+    #
+    #         session.flush()
+    #
+    #         workflow_spec_models = session.query(WorkflowSpecModel).all()
+    #
+    #         for wf_spec_model in workflow_spec_models:
+    #             file_models = session.query(FileModel)\
+    #                 .filter(FileModel.workflow_spec_id == wf_spec_model.id)\
+    #                 .all()
+    #
+    #             for file_model in file_models:
+    #                 file_data_models = session.query(FileDataModel)\
+    #                     .filter(FileDataModel.file_model_id == file_model.id)\
+    #                     .order_by(desc(FileDataModel.date_created))\
+    #                     .all()
+    #                 current_models.append(file_data_models[:copies_to_keep])
+    #                 for fd_model in file_data_models[copies_to_keep:]:
+    #                     dependencies = session.query(WorkflowSpecDependencyFile)\
+    #                         .filter(WorkflowSpecDependencyFile.file_data_id == fd_model.id)\
+    #                         .all()
+    #                     if len(dependencies) > 0:
+    #                         saved_models.append(fd_model)
+    #                         continue
+    #                     lookups = session.query(LookupFileModel)\
+    #                         .filter(LookupFileModel.file_data_model_id == fd_model.id)\
+    #                         .all()
+    #                     if len(lookups) > 0:
+    #                         saved_models.append(fd_model)
+    #                         continue
+    #                     deleted_models.append(fd_model)
+    #                     session.delete(fd_model)
+    #
+    #         session.commit()
+    #         return current_models, saved_models, deleted_models
+    #
+    #     else:
+    #         raise ApiError(code='bad_keep',
+    #                        message='You must keep at least 1 version')

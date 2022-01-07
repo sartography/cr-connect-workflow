@@ -576,7 +576,6 @@ class WorkflowService(object):
             next_task=None,
             navigation=navigation,
             workflow_spec_id=processor.workflow_spec_id,
-            is_latest_spec=processor.is_latest_spec,
             total_tasks=len(navigation),
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,

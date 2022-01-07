@@ -68,6 +68,7 @@ class TestFileDataCleanup(BaseTest):
     </bpmn:definitions>
     """
 
+    # TODO: Get rid of this? We don't have versions anymore
     def test_file_data_cleanup(self):
         """Update a file twice. Make sure we clean up the correct files"""
 

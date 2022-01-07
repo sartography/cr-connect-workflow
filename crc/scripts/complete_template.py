@@ -10,6 +10,7 @@ from crc.models.workflow import WorkflowModel
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc.services.jinja_service import JinjaService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -59,7 +60,7 @@ Takes two arguments:
         file_data_model = None
         if workflow is not None:
             # Get the workflow specification file with the given name.
-            file_data_models = FileService.get_spec_data_files(
+            file_data_models = SpecFileService().get_spec_data_files(
                 workflow_spec_id=workflow.workflow_spec_id,
                 workflow_id=workflow.id,
                 name=file_name)
@@ -76,7 +77,7 @@ Takes two arguments:
             image_file_data = None
 
         try:
-            return JinjaService().make_template(BytesIO(file_data_model.data), task.data, image_file_data)
+            return JinjaService().make_template(BytesIO(file_data_model['data']), task.data, image_file_data)
         except ApiError as ae:
             # In some cases we want to provide a very specific error, that does not get obscured when going
             # through the python expression engine. We can do that by throwing a WorkflowTaskExecException,

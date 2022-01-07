@@ -29,6 +29,7 @@ from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecDepen
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc import app
+from crc.services.spec_file_service import SpecFileService
 from crc.services.user_service import UserService
 
 
@@ -108,11 +109,11 @@ class WorkflowProcessor(object):
         self.workflow_model = workflow_model
 
         if workflow_model.bpmn_workflow_json is None:  # The workflow was never started.
-            self.spec_data_files = FileService().get_spec_data_files(
+            self.spec_data_files = SpecFileService().get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id,include_libraries=True)
             spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
         else:
-            self.spec_data_files = FileService().get_spec_data_files(
+            self.spec_data_files = SpecFileService().get_spec_data_files(
                 workflow_spec_id=workflow_model.workflow_spec_id,
                 workflow_id=workflow_model.id)
             spec = None
@@ -150,10 +151,11 @@ class WorkflowProcessor(object):
                                    (self.workflow_spec_id, str(ke)))
 
         # set whether this is the latest spec file.
-        if self.spec_data_files == FileService().get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id):
-            self.is_latest_spec = True
-        else:
-            self.is_latest_spec = False
+        # TODO: Get rid of this. Wo only have one version now.
+        # if self.spec_data_files == SpecFileService().get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id):
+        #     self.is_latest_spec = True
+        # else:
+        #     self.is_latest_spec = False
 
     @staticmethod
     def reset(workflow_model, clear_data=False, delete_files=False):
@@ -214,13 +216,13 @@ class WorkflowProcessor(object):
         # this could potentially become expensive to load all the data in the data models.
         # in which case we might consider using a deferred loader for the actual data, but
         # trying not to pre-optimize.
-        file_data_models = FileService().get_spec_data_files(self.workflow_model.workflow_spec_id,
+        file_data_models = SpecFileService().get_spec_data_files(self.workflow_model.workflow_spec_id,
                                                            self.workflow_model.id)
         return WorkflowProcessor.__get_version_string_for_data_models(file_data_models)
 
     @staticmethod
     def get_latest_version_string_for_spec(spec_id):
-        file_data_models = FileService().get_spec_data_files(spec_id)
+        file_data_models = SpecFileService().get_spec_data_files(spec_id)
         return WorkflowProcessor.__get_version_string_for_data_models(file_data_models)
 
     @staticmethod
@@ -249,7 +251,7 @@ class WorkflowProcessor(object):
         return full_version
 
     def update_dependencies(self, spec_data_files):
-        existing_dependencies = FileService().get_spec_data_files(
+        existing_dependencies = SpecFileService().get_spec_data_files(
             workflow_spec_id=self.workflow_model.workflow_spec_id,
             workflow_id=self.workflow_model.id)
 
@@ -268,7 +270,7 @@ class WorkflowProcessor(object):
         """Executes a BPMN specification for the given study, without recording any information to the database
         Useful for running the master specification, which should not persist. """
         lasttime = firsttime()
-        spec_data_files = FileService().get_spec_data_files(spec_model.id)
+        spec_data_files = SpecFileService().get_spec_data_files(spec_model.id)
         lasttime = sincetime('load Files', lasttime)
         spec = WorkflowProcessor.get_spec(spec_data_files, spec_model.id)
         lasttime = sincetime('get spec', lasttime)
@@ -305,7 +307,7 @@ class WorkflowProcessor(object):
             if file['meta']['name'][-4:] == FileType.bpmn.value:
                 bpmn: etree.Element = etree.fromstring(file['data'])
                 if file['meta']['primary'] and file['meta']['workflow_spec_id'] == workflow_spec_id:
-                    process_id = FileService.get_process_id(bpmn)
+                    process_id = SpecFileService.get_process_id(bpmn)
                 parser.add_bpmn_xml(bpmn, filename=file['meta']['name'])
             elif file['meta']['name'][-3:] == FileType.dmn.value:
                 dmn: etree.Element = etree.fromstring(file['data'])

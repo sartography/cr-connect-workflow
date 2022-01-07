@@ -175,6 +175,7 @@ class LookupFileModel(db.Model):
     task_spec_id = db.Column(db.String)
     field_id = db.Column(db.String)
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
+    file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     file_data_model_id = db.Column(db.Integer, db.ForeignKey('file_data.id'))
     dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model",
                                    cascade="all, delete, delete-orphan")

@@ -13,6 +13,7 @@ from crc.api.workflow_sync import get_all_spec_state, \
 from crc.models.workflow import WorkflowSpecModel
 from datetime import datetime
 from crc.services.file_service import FileService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_sync import WorkflowSyncService
 
 def get_random_fact_pos(othersys):
@@ -98,7 +99,7 @@ class TestWorkflowSync(BaseTest):
         wf_spec.display_order = 0
         db.session.add(wf_spec)
         db.session.commit()
-        FileService.add_workflow_spec_file(wf_spec,'dummyfile.txt','text',b'this is a test')
+        SpecFileService.add_workflow_spec_file(wf_spec,'dummyfile.txt','text',b'this is a test')
         # after setting up the test - I realized that this doesn't return anything for
         # a workflow that is new locally - it just returns nothing
         response = get_changed_workflows('localhost:0000') #endpoint is not used due to mock
@@ -159,7 +160,7 @@ class TestWorkflowSync(BaseTest):
         self.assertIsNotNone(response)
         self.assertEqual(len(response),1)
         self.assertEqual(response[0], 'random_fact2.bpmn')
-        files = FileService.get_spec_data_files('random_fact')
+        files = SpecFileService().get_spec_data_files('random_fact')
         md5sums = [str(f.md5_hash) for f in files]
         self.assertEqual('21bb6f9e-0af7-0ab2-0fc7-ec0f94787e58' in md5sums, True)
         new_local_workflow = get_workflow_specification('random_fact')
@@ -197,7 +198,7 @@ class TestWorkflowSync(BaseTest):
         self.assertIsNotNone(response)
         self.assertEqual(len(response),1)
         self.assertEqual(response[0], 'random_fact2.bpmn')
-        files = FileService.get_spec_data_files('random_fact')
+        files = SpecFileService().get_spec_data_files('random_fact')
         md5sums = [str(f.md5_hash) for f in files]
         self.assertEqual('21bb6f9e-0af7-0ab2-0fc7-ec0f94787e58' in md5sums, True)
         new_local_workflow = get_workflow_specification('random_fact')
@@ -233,7 +234,7 @@ class TestWorkflowSync(BaseTest):
         self.assertIsNotNone(response)
         self.assertEqual(len(response),1)
         self.assertEqual(response[0], 'test.txt')
-        ref_file = FileService.get_reference_file_data('test.txt')
+        ref_file = SpecFileService.get_reference_file_data('test.txt')
         self.assertEqual('24a2ab0d-1138-a80a-0b98-ed38894f5a04',str(ref_file.md5_hash))
 
 
@@ -253,6 +254,6 @@ class TestWorkflowSync(BaseTest):
         # when we delete a local file, we do not return that it was deleted - just
         # a list of updated files. We may want to change this in the future.
         self.assertEqual(len(response),0)
-        files = FileService.get_spec_data_files('random_fact')
+        files = SpecFileService().get_spec_data_files('random_fact')
         self.assertEqual(len(files),1)
 

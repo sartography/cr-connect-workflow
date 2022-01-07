@@ -22,6 +22,7 @@ from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.ldap_service import LdapService
 from crc.services.file_service import FileService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
@@ -84,6 +85,7 @@ class BaseTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         print('setUpClass')
+        cls.clear_test_sync_files()
         app.config.from_object('config.testing')
         cls.ctx = app.test_request_context()
         cls.app = app.test_client()
@@ -110,7 +112,7 @@ class BaseTest(unittest.TestCase):
 
     @staticmethod
     def clear_test_sync_files():
-        sync_file_root = FileService().get_sync_file_root()
+        sync_file_root = SpecFileService().get_sync_file_root()
         if os.path.exists(sync_file_root):
             shutil.rmtree(sync_file_root)
 
@@ -185,7 +187,7 @@ class BaseTest(unittest.TestCase):
             self.assertGreater(len(files), 0)
             for file in files:
                 # file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
-                file_data = FileService().get_spec_file_data(file.id)
+                file_data = SpecFileService().get_spec_file_data(file.id)
                 self.assertIsNotNone(file_data)
                 self.assertGreater(len(file_data), 0)
 
@@ -303,11 +305,10 @@ class BaseTest(unittest.TestCase):
 
     def create_reference_document(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
-        file = open(file_path, "rb")
-        FileService.add_reference_file(DocumentService.DOCUMENT_LIST,
-                                       binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xlsx'])
-        file.close()
+        with open(file_path, "rb") as file:
+            SpecFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
+                                           binary_data=file.read(),
+                                           content_type=CONTENT_TYPES['xlsx'])
 
     def get_workflow_common(self, url, user):
         rv = self.app.get(url,

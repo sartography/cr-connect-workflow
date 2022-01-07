@@ -28,15 +28,15 @@ class TestMultiinstanceTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance')
 
         # get the first form in the two form workflow.
-        workflow = self.get_workflow_api(workflow)
-        navigation = self.get_workflow_api(workflow).navigation
+        workflow_api = self.get_workflow_api(workflow)
+        navigation = self.get_workflow_api(workflow_api).navigation
         self.assertEqual(5, len(navigation)) # Start task, form_task, multi_task, end task
-        self.assertEqual("UserTask", workflow.next_task.type)
-        self.assertEqual(MultiInstanceType.sequential.value, workflow.next_task.multi_instance_type)
-        self.assertEqual(5, workflow.next_task.multi_instance_count)
+        self.assertEqual("UserTask", workflow_api.next_task.type)
+        self.assertEqual(MultiInstanceType.sequential.value, workflow_api.next_task.multi_instance_type)
+        self.assertEqual(5, workflow_api.next_task.multi_instance_count)
 
         # Assure that the names for each task are properly updated, so they aren't all the same.
-        self.assertEqual("Primary Investigator", workflow.next_task.title)
+        self.assertEqual("Primary Investigator", workflow_api.next_task.title)
 
 
     @patch('crc.services.protocol_builder.requests.get')

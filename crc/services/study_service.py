@@ -311,8 +311,12 @@ class StudyService(object):
     @staticmethod
     def get_investigator_dictionary():
         """Returns a dictionary of document details keyed on the doc_code."""
-        file_data = FileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
-        lookup_model = LookupService.get_lookup_model_for_file_data(file_data, 'code', 'label')
+        file_id = session.query(FileModel.id). \
+            filter(FileModel.name == StudyService.INVESTIGATOR_LIST). \
+            filter(FileModel.is_reference == True). \
+            scalar()
+        # file_data = SpecFileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
+        lookup_model = LookupService.get_lookup_model_for_file_data(file_id, StudyService.INVESTIGATOR_LIST, 'code', 'label')
         doc_dict = {}
         for lookup_data in lookup_model.dependencies:
             doc_dict[lookup_data.value] = lookup_data.data
