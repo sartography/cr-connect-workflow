@@ -1,5 +1,6 @@
 import hashlib
 import json
+import datetime
 import os
 
 from crc import app, session
@@ -212,7 +213,7 @@ class SpecFileService(object):
                 category_name = self.get_spec_file_category_name(spec_model)
                 sync_file_root = self.get_sync_file_root()
                 file_path = os.path.join(sync_file_root, category_name, spec_model.display_name, file_model.name)
-                stats = os.stat(file_path)
+                mtime = os.path.getmtime(file_path)
                 with open(file_path, 'rb') as f_handle:
                     spec_file_data = f_handle.read()
                     size = len(spec_file_data)
@@ -221,7 +222,7 @@ class SpecFileService(object):
                     file_data_model = FileDataModel(data=spec_file_data,
                                                     md5_hash=md5_checksum,
                                                     size=size,
-                                                    date_created=stats.st_mtime,
+                                                    date_created=datetime.datetime.fromtimestamp(mtime),
                                                     file_model_id=file_id)
                     return file_data_model
             else:

@@ -19,7 +19,7 @@ def to_file_api(file_model):
     if file_model.workflow_spec_id is not None:
         file_data_model = SpecFileService().get_spec_file_data(file_model.id)
     else:
-        file_data_model = FileService.get_file_data(file_model.id).data
+        file_data_model = FileService.get_file_data(file_model.id)
     return File.from_models(file_model, file_data_model,
                             DocumentService.get_dictionary())
 
@@ -137,13 +137,13 @@ def get_file_data_by_hash(md5_hash):
 def get_file_data(file_id, version=None):
     file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
     if file_model.workflow_spec_id is not None:
-        file_data = SpecFileService().get_spec_file_data(file_id)
+        file_data_model = SpecFileService().get_spec_file_data(file_id)
     else:
-        file_data = FileService.get_file_data(file_id, version).data
-    if file_data is None:
+        file_data_model = FileService.get_file_data(file_id, version)
+    if file_data_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     return send_file(
-        io.BytesIO(file_data),
+        io.BytesIO(file_data_model.data),
         attachment_filename=file_model.name,
         mimetype=file_model.content_type,
         cache_timeout=-1  # Don't cache these files on the browser.

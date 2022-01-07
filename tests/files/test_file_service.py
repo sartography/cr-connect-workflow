@@ -244,14 +244,14 @@ class TestFileService(BaseTest):
         file_model = SpecFileService().add_workflow_spec_file(spec, file_name, content_type, file_data)
 
         # This reads from a file on the filesystem
-        spec_file_data = SpecFileService().get_spec_file_data(file_model.id)
+        spec_file_data = SpecFileService().get_spec_file_data(file_model.id).data
 
         self.assertEqual(file_data, spec_file_data)
 
     def test_delete_workflow_spec_file(self):
         self.load_example_data()
         file_model = session.query(FileModel).filter(column('workflow_spec_id').isnot(None)).first()
-        file_data_before = SpecFileService().get_spec_file_data(file_model.id)
+        file_data_before = SpecFileService().get_spec_file_data(file_model.id).data
         self.assertGreater(len(file_data_before), 0)
 
         SpecFileService().delete_spec_file(file_model.id)

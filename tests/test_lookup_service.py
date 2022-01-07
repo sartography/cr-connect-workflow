@@ -183,7 +183,7 @@ class TestLookupService(BaseTest):
 
         # Using an old xls file should raise an error
         file_model_xls = session.query(FileModel).filter(FileModel.name == 'sponsors.xls').first()
-        file_data_xls = SpecFileService().get_spec_file_data(file_model_xls.id)
+        file_data_xls = SpecFileService().get_spec_file_data(file_model_xls.id).data
         # file_data_model_xls = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xls.id).first()
         with self.assertRaises(ApiError) as ae:
             LookupService.build_lookup_table(file_model_xls.id, 'sponsors.xls', file_data_xls, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')

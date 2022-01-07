@@ -187,7 +187,7 @@ class BaseTest(unittest.TestCase):
             self.assertGreater(len(files), 0)
             for file in files:
                 # file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
-                file_data = SpecFileService().get_spec_file_data(file.id)
+                file_data = SpecFileService().get_spec_file_data(file.id).data
                 self.assertIsNotNone(file_data)
                 self.assertGreater(len(file_data), 0)
 
