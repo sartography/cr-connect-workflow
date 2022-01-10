@@ -67,6 +67,6 @@ class TaskLogQuery:
 class TaskLogQuerySchema(ma.Schema):
     class Meta:
         model = TaskLogModel
-        fields = ["code", "page", "per_page", "sort_column", "reverse_sort", "items", "pages",
+        fields = ["code", "page", "per_page", "sort_column", "sort_reverse", "items", "pages",
                   "has_next", "has_previous"]
     items = marshmallow.fields.List(marshmallow.fields.Nested(TaskLogModelSchema))
