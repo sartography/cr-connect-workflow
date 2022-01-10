@@ -248,3 +248,4 @@ class WorkflowApiSchema(ma.Schema):
         filtered_fields = {key: data[key] for key in keys}
         filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])
         return WorkflowApi(**filtered_fields)
+
