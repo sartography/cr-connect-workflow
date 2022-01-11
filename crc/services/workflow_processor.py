@@ -150,13 +150,6 @@ class WorkflowProcessor(object):
                                    " '%s'  due to a mis-placed or missing task '%s'" %
                                    (self.workflow_spec_id, str(ke)))
 
-        # set whether this is the latest spec file.
-        # TODO: Get rid of this. Wo only have one version now.
-        # if self.spec_data_files == SpecFileService().get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id):
-        #     self.is_latest_spec = True
-        # else:
-        #     self.is_latest_spec = False
-
     @staticmethod
     def reset(workflow_model, clear_data=False, delete_files=False):
         print('WorkflowProcessor: reset: ')

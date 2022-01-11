@@ -168,10 +168,6 @@ class LookupService(object):
          in a way that can be searched and returned via an api call - rather than sending the full set of
           options along with the form.  It will only open the file and process the options if something has
           changed.  """
-        # if workflow_spec_id is not None:
-        #     file_data = data_dict['data']
-        # else:
-        #     file_data = data_dict.data
         try:
             xlsx = ExcelFile(file_data, engine='openpyxl')
         # Pandas--or at least openpyxl, cannot read old xls files.

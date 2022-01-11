@@ -315,7 +315,6 @@ class StudyService(object):
             filter(FileModel.name == StudyService.INVESTIGATOR_LIST). \
             filter(FileModel.is_reference == True). \
             scalar()
-        # file_data = SpecFileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
         lookup_model = LookupService.get_lookup_model_for_file_data(file_id, StudyService.INVESTIGATOR_LIST, 'code', 'label')
         doc_dict = {}
         for lookup_data in lookup_model.dependencies:

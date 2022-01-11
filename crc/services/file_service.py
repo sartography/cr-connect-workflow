@@ -124,15 +124,6 @@ class FileService(object):
         else:
             version = latest_data_model.version + 1
 
-        # # If this is a BPMN, extract the process id.
-        # if file_model.type == FileType.bpmn:
-        #     try:
-        #         bpmn: etree.Element = etree.fromstring(binary_data)
-        #         file_model.primary_process_id = FileService.get_process_id(bpmn)
-        #         file_model.is_review = FileService.has_swimlane(bpmn)
-        #     except XMLSyntaxError as xse:
-        #         raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_model.name)
-        #
         try:
             user_uid = UserService.current_user().uid
         except ApiError as ae:
