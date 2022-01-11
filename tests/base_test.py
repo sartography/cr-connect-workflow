@@ -84,7 +84,6 @@ class BaseTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        print('setUpClass')
         cls.clear_test_sync_files()
         app.config.from_object('config.testing')
         cls.ctx = app.test_request_context()
@@ -94,17 +93,13 @@ class BaseTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        print('tearDownClass')
         cls.ctx.pop()
         db.drop_all()
-        pass
 
     def setUp(self):
-        print('setUp')
         pass
 
     def tearDown(self):
-        print('tearDown')
         ExampleDataLoader.clean_db()
         self.logout()
         self.auths = {}
