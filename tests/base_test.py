@@ -261,14 +261,14 @@ class BaseTest(unittest.TestCase):
 
     def replace_file(self, name, file_path):
         """Replaces a stored file with the given name with the contents of the file at the given path."""
-        file_service = FileService()
         file = open(file_path, "rb")
         data = file.read()
 
         file_model = session.query(FileModel).filter(FileModel.name == name).first()
+        workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
         noise, file_extension = os.path.splitext(file_path)
         content_type = CONTENT_TYPES[file_extension[1:]]
-        file_service.update_file(file_model, data, content_type)
+        SpecFileService.update_workflow_spec_file(workflow_spec_model, file_model, data, content_type)
 
     def create_user(self, uid="dhf8r", email="daniel.h.funk@gmail.com", display_name="Hoopy Frood"):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()
@@ -307,8 +307,8 @@ class BaseTest(unittest.TestCase):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         with open(file_path, "rb") as file:
             SpecFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
-                                           binary_data=file.read(),
-                                           content_type=CONTENT_TYPES['xlsx'])
+                                               content_type=CONTENT_TYPES['xlsx'],
+                                               binary_data=file.read())
 
     def get_workflow_common(self, url, user):
         rv = self.app.get(url,

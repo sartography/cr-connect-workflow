@@ -58,7 +58,7 @@ class TestFileService(BaseTest):
 
     def test_add_file_from_task_increments_version_and_replaces_on_subsequent_add(self):
         self.load_example_data()
-        self.create_reference_document()
+        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -83,7 +83,7 @@ class TestFileService(BaseTest):
 
     def test_add_file_from_form_increments_version_and_replaces_on_subsequent_add_with_same_name(self):
         self.load_example_data()
-        self.create_reference_document()
+        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -102,7 +102,7 @@ class TestFileService(BaseTest):
 
     def test_replace_archive_file_unarchives_the_file_and_updates(self):
         self.load_example_data()
-        self.create_reference_document()
+        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -142,7 +142,7 @@ class TestFileService(BaseTest):
 
     def test_add_file_from_form_allows_multiple_files_with_different_names(self):
         self.load_example_data()
-        self.create_reference_document()
+        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -166,7 +166,7 @@ class TestFileService(BaseTest):
         mock_github.return_value = FakeGithub()
 
         self.load_example_data()
-        self.create_reference_document()
+        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -190,7 +190,7 @@ class TestFileService(BaseTest):
         mock_github.return_value = FakeGithubCreates()
 
         self.load_example_data()
-        self.create_reference_document()
+        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -209,7 +209,7 @@ class TestFileService(BaseTest):
         mock_github.return_value = FakeGithub()
 
         self.load_example_data()
-        self.create_reference_document()
+        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()

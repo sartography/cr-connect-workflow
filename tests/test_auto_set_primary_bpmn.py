@@ -30,7 +30,7 @@ class TestAutoSetPrimaryBPMN(BaseTest):
         data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
 
         # Add a new BPMN file to the specification
-        rv = self.app.post('/v1.0/file?workflow_spec_id=%s' % db_spec.id, data=data, follow_redirects=True,
+        rv = self.app.post('/v1.0/spec_file?workflow_spec_id=%s' % db_spec.id, data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_id = rv.json['id']

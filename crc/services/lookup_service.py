@@ -56,7 +56,7 @@ class LookupService(object):
         lookup_model = db.session.query(LookupFileModel).filter(LookupFileModel.file_model_id == file_id).first()
         if not lookup_model:
             logging.warning("!!!! Making a very expensive call to update the lookup model.")
-            lookup_model = LookupService.build_lookup_table(file_id, file_name, file_data, value_column, label_column)
+            lookup_model = LookupService.build_lookup_table(file_id, file_name, file_data.data, value_column, label_column)
         return lookup_model
 
     @staticmethod

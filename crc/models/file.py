@@ -100,7 +100,7 @@ class FileModel(db.Model):
 
 class File(object):
     @classmethod
-    def from_models(cls, model: FileModel, data_model: FileDataModel, doc_dictionary):
+    def from_models(cls, model: FileModel, data_model, doc_dictionary):
         instance = cls()
         instance.id = model.id
         instance.name = model.name

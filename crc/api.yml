@@ -30,6 +30,7 @@ paths:
       responses:
         '304':
           description: Redirection to the hosted frontend with an auth_token header.
+
   /user:
     parameters:
       - name: admin_impersonate_uid
@@ -50,6 +51,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+
   /list_users:
     get:
       operationId: crc.api.user.get_all_users
@@ -160,6 +162,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Study"
+
+
   /workflow_sync/pullall:
     get:
       operationId: crc.api.workflow_sync.sync_all_changed_workflows
@@ -187,9 +191,6 @@ paths:
                 items:
                   type: string
                 example : ['top_level_workflow','3b495037-f7d4-4509-bf58-cee41c0c6b0e']
-
-
-
 
   /workflow_sync/diff:
     get:
@@ -239,7 +240,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
-
 
   /workflow_sync/{workflow_spec_id}/files:
     get:
@@ -300,7 +300,6 @@ paths:
                   type : string
                 example : ["data_security_plan.dmn",'some_other_file.xml']
 
-
   /workflow_sync/{workflow_spec_id}/files/diff:
     get:
       operationId: crc.api.workflow_sync.get_changed_files
@@ -333,7 +332,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowSpecFilesDiff"
-
 
   /workflow_sync/all:
     get:
@@ -494,7 +492,6 @@ paths:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
 
-
   /workflow-specification/{spec_id}/library/{library_id}:
     parameters:
       - name: spec_id
@@ -535,7 +532,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WorkflowSpec"
-
 
   /workflow-specification/{spec_id}:
     parameters:
@@ -774,14 +770,9 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WorkflowSpecCategory"
+
   /file:
     parameters:
-      - name: workflow_spec_id
-        in: query
-        required: false
-        description: The unique id of a workflow specification
-        schema:
-          type: string
       - name: workflow_id
         in: query
         required: false
@@ -998,6 +989,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
+
   /reference_file:
     get:
       operationId: crc.api.file.get_reference_files
@@ -1057,7 +1049,7 @@ paths:
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
     put:
-      operationId: crc.api.file.set_reference_file
+      operationId: crc.api.file.update_reference_file_data
       security:
         - auth_admin: ['secret']
       summary: Update the contents of a named reference file.
@@ -1081,16 +1073,150 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+    delete:
+      operationId: crc.api.file.delete_reference_file
+      summary: Remove an existing reference file.
+      tags:
+        - Files
+      responses:
+        '204':
+          description: The reference file was removed.
 
+  /spec_file:
+    parameters:
+      - name: workflow_spec_id
+        in: query
+        required: true
+        description: The unique id of a workflow specification
+        schema:
+          type: string
+    get:
+      operationId: crc.api.file.get_spec_files
+      summary: Provide a list of workflow spec files for the given workflow_spec_id. IMPORTANT, only includes metadata, not the file content.
+      tags:
+        - Files
+      responses:
+        '200':
+          description: An array of file descriptions (not the file content)
+          content:
+            application/json:
+             schema:
+               type: array
+               items:
+                 $ref: "#/components/schemas/File"
+    post:
+      operationId: crc.api.file.add_spec_file
+      summary: Add a new workflow spec file
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Metadata about the uploaded file, but not the file content.
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/File"
+  /spec_file/{file_id}:
+    parameters:
+      - name: file_id
+        in: path
+        required: true
+        description: The id of the file
+        schema:
+          type: integer
+    get:
+      operationId: crc.api.file.get_spec_file_info
+      summary: Returns metadata about the file
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the file information requested.
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/File"
+    put:
+      operationId: crc.api.file.update_spec_file_info
+      summary: Update existing spec file with the given parameters.
+      tags:
+        - Files
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/File"
+      responses:
+        '200':
+          description: File info updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+    delete:
+      operationId: crc.api.file.delete_spec_file
+      summary: Removes an existing workflow spec file.
+      tags:
+        - Files
+      responses:
+        '204':
+          description: The file was removed.
+  /spec_file/{file_id}/data:
+    parameters:
+      - name: file_id
+        in: path
+        required: true
+        description: The id of the requested file
+        schema:
+          type: integer
+    get:
+      operationId: crc.api.file.get_spec_file_data
+      summary: Returns only the spec file content
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the actual spec file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+    put:
+      operationId: crc.api.file.update_spec_file_data
+      summary: Update the contents of a spec file
+      tags:
+        - Files
+      requestBody:
+        content:
+          mulitpart/form-data:
+            schema:
+              x-body-name: file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        '200':
+          description: Returns the updated file model
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
 
   /dmn_from_ss:
-#    parameters:
-#      - name: workflow_spec_id
-#        in: query
-#        required: true
-#        description: The unique id of a workflow specification
-#        schema:
-#          type: string
     post:
       operationId: crc.api.file.dmn_from_ss
       summary: Create a DMN table from a spreadsheet
@@ -1481,6 +1607,7 @@ paths:
             text/plain:
               schema:
                 type: string
+
   /datastore:
     post:
       operationId: crc.api.data_store.add_datastore
@@ -1499,7 +1626,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataStore"
-
   /datastore/{id}:
     parameters:
       - name: id
@@ -1553,8 +1679,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataStore"
-
-
   /datastore/study/{study_id}:
     parameters:
       - name: study_id
@@ -1618,6 +1742,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DataStore"
+
 components:
   securitySchemes:
     jwt:

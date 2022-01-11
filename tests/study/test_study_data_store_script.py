@@ -39,7 +39,7 @@ class TestSudySponsorsScript(BaseTest):
         app.config['PB_ENABLED'] = True
 
         self.load_example_data()
-        self.create_reference_document()
+        # self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_data_store")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)

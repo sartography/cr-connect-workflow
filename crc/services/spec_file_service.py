@@ -18,6 +18,32 @@ from uuid import UUID
 
 class SpecFileService(object):
 
+    #
+    # Shared Methods
+    #
+    @staticmethod
+    def get_sync_file_root():
+        dir_name = app.config['SYNC_FILE_ROOT']
+        app_root = app.root_path
+        return os.path.join(app_root, '..', 'tests', dir_name)
+
+    @staticmethod
+    def write_file_data_to_system(file_path, file_data):
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'wb') as f_handle:
+            f_handle.write(file_data)
+
+    @staticmethod
+    def write_file_info_to_system(file_path, file_model):
+        json_file_path = f'{file_path}.json'
+        latest_file_model = session.query(FileModel).filter(FileModel.id == file_model.id).first()
+        file_schema = FileModelSchema().dumps(latest_file_model)
+        with open(json_file_path, 'w') as j_handle:
+            j_handle.write(file_schema)
+
+    #
+    # Workflow Spec Methods
+    #
     @staticmethod
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
                                name, content_type, binary_data, primary=False, is_status=False):
@@ -41,62 +67,8 @@ class SpecFileService(object):
 
         return SpecFileService.update_workflow_spec_file(workflow_spec, file_model, binary_data, content_type)
 
-
     @staticmethod
-    def get_sync_file_root():
-        dir_name = app.config['SYNC_FILE_ROOT']
-        app_root = app.root_path
-        return os.path.join(app_root, '..', 'tests', dir_name)
-
-    def write_file_to_system(self, workflow_spec_model, file_model, file_data):
-
-        category_name = None
-        sync_file_root = self.get_sync_file_root()
-
-        # if file_model.workflow_spec_id is not None:
-        #     # we have a workflow spec file
-        #     workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == file_model.workflow_spec_id).first()
-        #     if workflow_spec_model:
-
-        if workflow_spec_model is not None:
-            category_name = self.get_spec_file_category_name(workflow_spec_model)
-        if category_name is None and file_model.is_reference:
-            category_name = 'Reference'
-
-
-        # if workflow_spec_model.category_id is not None:
-        #     category_name = session.query(WorkflowSpecCategoryModel.display_name).filter(WorkflowSpecCategoryModel.id == workflow_spec_model.category_id).scalar()
-        #
-        # elif workflow_spec_model.is_master_spec:
-        #     category_name = 'Master Specification'
-        #
-        # elif workflow_spec_model.library:
-        #     category_name = 'Library Specs'
-
-        if category_name is not None:
-            if workflow_spec_model is not None:
-                file_path = os.path.join(sync_file_root,
-                                         category_name,
-                                         workflow_spec_model.display_name,
-                                         file_model.name)
-            else:
-                # Reference files all sit in the 'Reference' directory
-                file_path = os.path.join(sync_file_root,
-                                         category_name,
-                                         file_model.name)
-
-            # self.process_workflow_spec_file(file_model, file_path)
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, 'wb') as f_handle:
-                f_handle.write(file_data)
-            json_file_path = f'{file_path}.json'
-            latest_file_model = session.query(FileModel).filter(FileModel.id==file_model.id).first()
-            file_schema = FileModelSchema().dumps(latest_file_model)
-            with open(json_file_path, 'w') as j_handle:
-                j_handle.write(file_schema)
-
-    @staticmethod
-    def update_workflow_spec_file(workflow_spec, file_model, binary_data, content_type):
+    def update_workflow_spec_file(workflow_spec: WorkflowSpecModel, file_model: FileModel, binary_data, content_type):
         # Verify the extension
         file_extension = FileService.get_extension(file_model.name)
         if file_extension not in FileType._member_names_:
@@ -121,23 +93,61 @@ class SpecFileService(object):
         session.commit()
 
         # Write file to filesystem
-        SpecFileService().write_file_to_system(workflow_spec, file_model, binary_data)
+        SpecFileService().write_spec_file_to_system(workflow_spec, file_model, binary_data)
         return file_model
 
     @staticmethod
-    def get_workflow_spec_category_name(workflow_spec_id):
-        category_name = None
-        workflow_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow_spec_id).first()
-        category_id = workflow_spec.category_id
-        if category_id is not None:
-            category_name = session.query(WorkflowSpecCategoryModel.display_name).filter(WorkflowSpecCategoryModel.id==category_id).scalar()
-        elif workflow_spec.is_master_spec:
-            category_name = 'Master Specification'
-        elif workflow_spec.library:
-            category_name = 'Library Specs'
-        elif workflow_spec.standalone:
-            category_name = 'Standalone'
-        return category_name
+    def delete_spec_file(file_id):
+        sync_file_root = SpecFileService.get_sync_file_root()
+        file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
+        workflow_spec_id = file_model.workflow_spec_id
+        workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow_spec_id).first()
+        category_name = SpecFileService.get_spec_file_category_name(workflow_spec_model)
+        file_model_name = file_model.name
+        spec_directory_path = os.path.join(sync_file_root,
+                                           category_name,
+                                           workflow_spec_model.display_name)
+        file_path = os.path.join(spec_directory_path,
+                                 file_model_name)
+        json_file_path = os.path.join(spec_directory_path,
+                                      f'{file_model_name}.json')
+
+        try:
+            os.remove(file_path)
+            os.remove(json_file_path)
+            # os.rmdir(spec_directory_path)
+            session.delete(file_model)
+            session.commit()
+        except IntegrityError as ie:
+            session.rollback()
+            file_model = session.query(FileModel).filter_by(id=file_id).first()
+            file_model.archived = True
+            session.commit()
+            app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
+
+    def write_spec_file_data_to_system(self, workflow_spec_model, file_model, file_data):
+        if workflow_spec_model is not None:
+            category_name = self.get_spec_file_category_name(workflow_spec_model)
+            if category_name is not None:
+                sync_file_root = self.get_sync_file_root()
+                file_path = os.path.join(sync_file_root,
+                                         category_name,
+                                         workflow_spec_model.display_name,
+                                         file_model.name)
+                self.write_file_data_to_system(file_path, file_data)
+                return file_path
+
+    def write_spec_file_info_to_system(self, file_path, file_model):
+        self.write_file_info_to_system(file_path, file_model)
+        # json_file_path = f'{file_path}.json'
+        # latest_file_model = session.query(FileModel).filter(FileModel.id == file_model.id).first()
+        # file_schema = FileModelSchema().dumps(latest_file_model)
+        # with open(json_file_path, 'w') as j_handle:
+        #     j_handle.write(file_schema)
+
+    def write_spec_file_to_system(self, workflow_spec_model, file_model, file_data):
+        file_path = self.write_spec_file_data_to_system(workflow_spec_model, file_model, file_data)
+        self.write_spec_file_info_to_system(file_path, file_model)
 
     def get_spec_data_files(self, workflow_spec_id, workflow_id=None, name=None, include_libraries=False):
         """Returns all the files related to a workflow specification.
@@ -145,7 +155,7 @@ class SpecFileService(object):
         spec_data_files = []
         workflow_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow_spec_id).first()
         workflow_spec_name = workflow_spec.display_name
-        category_name = self.get_workflow_spec_category_name(workflow_spec_id)
+        category_name = self.get_spec_file_category_name(workflow_spec)
         sync_file_root = self.get_sync_file_root()
         spec_path = os.path.join(sync_file_root,
                                  category_name,
@@ -233,35 +243,6 @@ class SpecFileService(object):
                            message=f'No model found for file with file_id: {file_id}')
 
     @staticmethod
-    def delete_spec_file(file_id):
-        sync_file_root = SpecFileService.get_sync_file_root()
-        file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
-        workflow_spec_id = file_model.workflow_spec_id
-        workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow_spec_id).first()
-        category_name = SpecFileService.get_spec_file_category_name(workflow_spec_model)
-        file_model_name = file_model.name
-        spec_directory_path = os.path.join(sync_file_root,
-                                           category_name,
-                                           workflow_spec_model.display_name)
-        file_path = os.path.join(spec_directory_path,
-                                 file_model_name)
-        json_file_path = os.path.join(spec_directory_path,
-                                      f'{file_model_name}.json')
-
-        try:
-            os.remove(file_path)
-            os.remove(json_file_path)
-            # os.rmdir(spec_directory_path)
-            session.delete(file_model)
-            session.commit()
-        except IntegrityError as ie:
-            session.rollback()
-            file_model = session.query(FileModel).filter_by(id=file_id).first()
-            file_model.archived = True
-            session.commit()
-            app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
-
-    @staticmethod
     def get_process_id(et_root: etree.Element):
         process_elements = []
         for child in et_root:
@@ -306,23 +287,54 @@ class SpecFileService(object):
                 type=file_type,
                 content_type=content_type
             )
-        return SpecFileService().update_reference_file(file_model, binary_data, content_type)
+            session.add(file_model)
+            session.commit()
+        else:
+            raise ApiError(code='file_already_exists',
+                           message=f"The reference file {name} already exists.")
+        return SpecFileService().update_reference_file(file_model, binary_data)
 
-    def update_reference_file(self, file_model, binary_data, content_type):
-        session.add(file_model)
-        session.commit()
-        self.write_file_to_system(None, file_model, binary_data)
+    def update_reference_file(self, file_model, binary_data):
+        self.write_reference_file_to_system(file_model, binary_data)
         print('update_reference_file')
         return file_model
 
     @staticmethod
     def get_reference_file_data(file_name):
-        sync_file_root = SpecFileService().get_sync_file_root()
-        file_path = os.path.join(sync_file_root, 'Reference', file_name)
-        if os.path.exists(file_path):
-            with open(file_path, 'rb') as f_open:
-                file_data = f_open.read()
-                return file_data
+        file_model = session.query(FileModel).filter(FileModel.name==file_name).filter(FileModel.is_reference==True).first()
+        if file_model is not None:
+            sync_file_root = SpecFileService().get_sync_file_root()
+            file_path = os.path.join(sync_file_root, 'Reference', file_name)
+            if os.path.exists(file_path):
+                mtime = os.path.getmtime(file_path)
+                with open(file_path, 'rb') as f_open:
+                    reference_file_data = f_open.read()
+                    size = len(reference_file_data)
+                    md5_checksum = UUID(hashlib.md5(reference_file_data).hexdigest())
+
+                    reference_file_data_model = FileDataModel(data=reference_file_data,
+                                                              md5_hash=md5_checksum,
+                                                              size=size,
+                                                              date_created=datetime.datetime.fromtimestamp(mtime),
+                                                              file_model_id=file_model.id
+                                                              )
+                    return reference_file_data_model
         else:
             raise ApiError("file_not_found", "There is no reference file with the name '%s'" % file_name)
+
+    def write_reference_file_to_system(self, file_model, file_data):
+        file_path = self.write_reference_file_data_to_system(file_model, file_data)
+        self.write_reference_file_info_to_system(file_path, file_model)
+
+    def write_reference_file_data_to_system(self, file_model, file_data):
+        category_name = 'Reference'
+        sync_file_root = self.get_sync_file_root()
+        file_path = os.path.join(sync_file_root,
+                                 category_name,
+                                 file_model.name)
+        self.write_file_data_to_system(file_path, file_data)
+        return file_path
+
+    def write_reference_file_info_to_system(self, file_path, file_model):
+        self.write_file_info_to_system(file_path, file_model)
 

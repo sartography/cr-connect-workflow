@@ -1,4 +1,5 @@
 import io
+import os
 from datetime import datetime
 from typing import List
 
@@ -14,10 +15,13 @@ from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.spec_file_service import SpecFileService
 
+
 def to_file_api(file_model):
     """Converts a FileModel object to something we can return via the api"""
     if file_model.workflow_spec_id is not None:
         file_data_model = SpecFileService().get_spec_file_data(file_model.id)
+    elif file_model.is_reference:
+        file_data_model = SpecFileService().get_reference_file_data(file_model.name)
     else:
         file_data_model = FileService.get_file_data(file_model.id)
     return File.from_models(file_model, file_data_model,
@@ -41,13 +45,17 @@ def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None,study
     return FileSchema(many=True).dump(files)
 
 
+def get_spec_files(workflow_spec_id):
+    pass
+
+
 def get_reference_files():
     results = FileService.get_files(is_reference=True)
     files = (to_file_api(model) for model in results)
     return FileSchema(many=True).dump(files)
 
 
-def add_file(workflow_spec_id=None, workflow_id=None, task_spec_name=None, form_field_key=None):
+def add_file(workflow_id=None, task_spec_name=None, form_field_key=None):
     file = connexion.request.files['file']
     if workflow_id:
         if form_field_key is None:
@@ -60,7 +68,15 @@ def add_file(workflow_spec_id=None, workflow_id=None, task_spec_name=None, form_
                                                    task_spec_name=task_spec_name,
                                                    name=file.filename, content_type=file.content_type,
                                                    binary_data=file.stream.read())
-    elif workflow_spec_id:
+    else:
+        raise ApiError("invalid_file", "You must supply either a workflow spec id or a workflow_id and form_field_key.")
+
+    return FileSchema().dump(to_file_api(file_model))
+
+
+def add_spec_file(workflow_spec_id):
+    if workflow_spec_id:
+        file = connexion.request.files['file']
         # check if we have a primary already
         have_primary = FileModel.query.filter(FileModel.workflow_spec_id==workflow_spec_id, FileModel.type==FileType.bpmn, FileModel.primary==True).all()
         # set this to primary if we don't already have one
@@ -71,10 +87,10 @@ def add_file(workflow_spec_id=None, workflow_id=None, task_spec_name=None, form_
         workflow_spec = session.query(WorkflowSpecModel).filter_by(id=workflow_spec_id).first()
         file_model = SpecFileService.add_workflow_spec_file(workflow_spec, file.filename, file.content_type,
                                                             file.stream.read(), primary=primary)
+        return FileSchema().dump(to_file_api(file_model))
     else:
-        raise ApiError("invalid_file", "You must supply either a workflow spec id or a workflow_id and form_field_key.")
-
-    return FileSchema().dump(to_file_api(file_model))
+        raise ApiError(code='missing_workflow_spec_id',
+                       message="You must include a workflow_spec_id")
 
 
 def get_reference_file(name):
@@ -82,14 +98,14 @@ def get_reference_file(name):
     content_type = CONTENT_TYPES[file_extension]
     file_data = SpecFileService.get_reference_file_data(name)
     return send_file(
-        io.BytesIO(file_data),
+        io.BytesIO(file_data.data),
         attachment_filename=name,
         mimetype=content_type,
         cache_timeout=-1  # Don't cache these files on the browser.
     )
 
 
-def set_reference_file(name):
+def update_reference_file_data(name):
     """Uses the file service to manage reference-files. They will be used in script tasks to compute values."""
     if 'file' not in connexion.request.files:
         raise ApiError('invalid_file',
@@ -104,20 +120,21 @@ def set_reference_file(name):
                        "The file you uploaded has an extension '%s', but it should have an extension of '%s' " %
                        (file_extension, name_extension))
 
-    file_models = FileService.get_files(name=name, is_reference=True)
-    if len(file_models) == 0:
-        file_model = SpecFileService.add_reference_file(name, file.content_type, file.stream.read())
+    file_model = session.query(FileModel).filter(FileModel.name==name).first()
+    if not file_model:
+        raise ApiError(code='file_does_not_exist',
+                       message=f"The reference file {name} does not exist.")
     else:
-        file_model = file_models[0]
-        FileService.update_file(file_models[0], file.stream.read(), file.content_type)
+        SpecFileService().update_reference_file(file_model, file.stream.read())
 
     return FileSchema().dump(to_file_api(file_model))
 
 
 def add_reference_file():
     file = connexion.request.files['file']
-    file_model = SpecFileService.add_reference_file(name=file.filename, content_type=file.content_type,
-                                                binary_data=file.stream.read())
+    file_model = SpecFileService.add_reference_file(name=file.filename,
+                                                    content_type=file.content_type,
+                                                    binary_data=file.stream.read())
     return FileSchema().dump(to_file_api(file_model))
 
 
@@ -129,40 +146,84 @@ def update_file_data(file_id):
     file_model = FileService.update_file(file_model, file.stream.read(), file.content_type)
     return FileSchema().dump(to_file_api(file_model))
 
+
+def update_spec_file_data(file_id):
+    file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
+    if file_model is None:
+        raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
+    if file_model.workflow_spec_id is None:
+        raise ApiError(code='no_spec_id',
+                       message=f'There is no workflow_spec_id for file {file_id}.')
+    workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
+    if workflow_spec_model is None:
+        raise ApiError(code='missing_spec',
+                       message=f'The workflow spec for id {file_model.workflow_spec_id} does not exist.')
+
+    file = connexion.request.files['file']
+    file_model = SpecFileService.update_workflow_spec_file(workflow_spec_model, file_model, file.stream.read(), file.content_type)
+    return FileSchema().dump(to_file_api(file_model))
+
+
 def get_file_data_by_hash(md5_hash):
     filedatamodel = session.query(FileDataModel).filter(FileDataModel.md5_hash == md5_hash).first()
-    return get_file_data(filedatamodel.file_model_id,version=filedatamodel.version)
+    return get_file_data(filedatamodel.file_model_id, version=filedatamodel.version)
 
 
 def get_file_data(file_id, version=None):
     file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
-    if file_model.workflow_spec_id is not None:
-        file_data_model = SpecFileService().get_spec_file_data(file_id)
-    else:
+    if file_model is not None:
         file_data_model = FileService.get_file_data(file_id, version)
-    if file_data_model is None:
-        raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
-    return send_file(
-        io.BytesIO(file_data_model.data),
-        attachment_filename=file_model.name,
-        mimetype=file_model.content_type,
-        cache_timeout=-1  # Don't cache these files on the browser.
-    )
+        if file_data_model is not None:
+            return send_file(
+                io.BytesIO(file_data_model.data),
+                attachment_filename=file_model.name,
+                mimetype=file_model.content_type,
+                cache_timeout=-1  # Don't cache these files on the browser.
+            )
+        else:
+            raise ApiError('missing_data_model', f'The data model for file ({file_id}) does not exist')
+    else:
+        raise ApiError('missing_file_model', f'The file id you provided ({file_id}) does not exist')
+
+
+def get_spec_file_data(file_id):
+    file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
+    if file_model is not None:
+        file_data_model = SpecFileService().get_spec_file_data(file_id)
+        if file_data_model is not None:
+            return send_file(
+                io.BytesIO(file_data_model.data),
+                attachment_filename=file_model.name,
+                mimetype=file_model.content_type,
+                cache_timeout=-1  # Don't cache these files on the browser.
+            )
+        else:
+            raise ApiError(code='missing_data_model',
+                           message=f'The data model for file {file_id} does not exist.')
+    else:
+        raise ApiError(code='missing_file_model',
+                       message=f'The file model for file_id {file_id} does not exist.')
 
 
 def get_file_data_link(file_id, auth_token, version=None):
     if not verify_token(auth_token):
         raise ApiError('not_authenticated', 'You need to include an authorization token in the URL with this')
-    file_data = FileService.get_file_data(file_id, version)
+    file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
+    if file_model.workflow_spec_id is not None:
+        file_data = SpecFileService().get_spec_file_data(file_id)
+    elif file_model.is_reference:
+        file_data = SpecFileService().get_reference_file_data(file_id)
+    else:
+        file_data = FileService.get_file_data(file_id, version)
     if file_data is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     return send_file(
         io.BytesIO(file_data.data),
-        attachment_filename=file_data.file_model.name,
-        mimetype=file_data.file_model.content_type,
+        attachment_filename=file_model.name,
+        mimetype=file_model.content_type,
         cache_timeout=-1,  # Don't cache these files on the browser.
         last_modified=file_data.date_created,
-        as_attachment = True
+        as_attachment=True
     )
 
 
@@ -171,6 +232,10 @@ def get_file_info(file_id):
     if file_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist', status_code=404)
     return FileSchema().dump(to_file_api(file_model))
+
+
+def get_spec_file_info(file_id):
+    pass
 
 
 def update_file_info(file_id, body):
@@ -188,12 +253,43 @@ def update_file_info(file_id, body):
     return FileSchema().dump(to_file_api(file_model))
 
 
+def update_spec_file_info(file_id, body):
+    # schema = update_file_info(file_id, body)
+    if file_id is None:
+        raise ApiError('no_such_file', 'Please provide a valid File ID.')
+    file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
+    if file_model is None:
+        raise ApiError('unknown_file_model', 'The file_model "' + file_id + '" is not recognized.')
+
+    new_file_model = FileModelSchema().load(body, session=session)
+    session.add(new_file_model)
+    session.commit()
+    workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
+    category_name = SpecFileService.get_spec_file_category_name(workflow_spec_model)
+    if category_name is not None:
+        sync_file_root = SpecFileService.get_sync_file_root()
+        file_path = os.path.join(sync_file_root,
+                                 category_name,
+                                 workflow_spec_model.display_name,
+                                 file_model.name)
+        SpecFileService.write_file_info_to_system(file_path, file_model)
+    return FileSchema().dump(to_file_api(new_file_model))
+
+
 def delete_file(file_id):
     workflow_spec_id = session.query(FileModel.workflow_spec_id).filter(FileModel.id==file_id).scalar()
     if workflow_spec_id is not None:
         SpecFileService.delete_spec_file(file_id)
     else:
         FileService.delete_file(file_id)
+
+
+def delete_spec_file(file_id):
+    pass
+
+
+def delete_reference_file(file_id):
+    pass
 
 
 def dmn_from_ss():

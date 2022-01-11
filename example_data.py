@@ -292,14 +292,14 @@ class ExampleDataLoader:
         file = open(file_path, "rb")
         SpecFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
                                        binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xls'])
+                                       content_type=CONTENT_TYPES['xlsx'])
         file.close()
 
         file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
         file = open(file_path, "rb")
         SpecFileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
                                        binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xls'])
+                                       content_type=CONTENT_TYPES['xlsx'])
         file.close()
 
     def load_default_user(self):
