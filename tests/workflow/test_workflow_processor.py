@@ -246,27 +246,6 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("last_updated", task.data["StudyInfo"]["info"])
         self.assertIn("sponsor", task.data["StudyInfo"]["info"])
 
-    # def test_spec_versioning(self):
-    #     self.load_example_data()
-    #     study = session.query(StudyModel).first()
-    #     workflow_spec_model = self.load_test_spec("decision_table")
-    #     processor = self.get_processor(study, workflow_spec_model)
-    #     self.assertTrue(processor.get_version_string().startswith('v1.1'))
-    #     file_service = FileService()
-    #
-    #     file_service.add_workflow_spec_file(workflow_spec_model, "new_file.txt", "txt", b'blahblah')
-    #     processor = self.get_processor(study, workflow_spec_model)
-    #     self.assertTrue(processor.get_version_string().startswith('v1.1.1'))
-    #
-    #     file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'docx', 'docx.bpmn')
-    #     file = open(file_path, "rb")
-    #     data = file.read()
-    #
-    #     file_model = db.session.query(FileModel).filter(FileModel.name == "decision_table.bpmn").first()
-    #     file_service.update_file(file_model, data, "txt")
-    #     processor = self.get_processor(study, workflow_spec_model)
-    #     self.assertTrue(processor.get_version_string().startswith('v2.1.1'))
-
     def test_hard_reset(self):
         self.load_example_data()
         # Start the two_forms workflow, and enter some data in the first form.
