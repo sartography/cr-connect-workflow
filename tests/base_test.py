@@ -22,6 +22,7 @@ from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.ldap_service import LdapService
 from crc.services.file_service import FileService
+from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
@@ -301,7 +302,7 @@ class BaseTest(unittest.TestCase):
     def create_reference_document(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         with open(file_path, "rb") as file:
-            SpecFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
+            ReferenceFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
                                                content_type=CONTENT_TYPES['xlsx'],
                                                binary_data=file.read())
 

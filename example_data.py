@@ -9,6 +9,7 @@ from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
+from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 
@@ -188,7 +189,7 @@ class ExampleDataLoader:
     def load_rrt(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'rrt_documents.xlsx')
         file = open(file_path, "rb")
-        SpecFileService.add_reference_file(FileService.DOCUMENT_LIST,
+        ReferenceFileService.add_reference_file(FileService.DOCUMENT_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()
@@ -290,14 +291,14 @@ class ExampleDataLoader:
     def load_reference_documents(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
-        SpecFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
+        ReferenceFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xlsx'])
         file.close()
 
         file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
         file = open(file_path, "rb")
-        SpecFileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
+        ReferenceFileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xlsx'])
         file.close()

@@ -13,6 +13,7 @@ from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDa
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
+from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
 
 
@@ -21,7 +22,7 @@ def to_file_api(file_model):
     if file_model.workflow_spec_id is not None:
         file_data_model = SpecFileService().get_spec_file_data(file_model.id)
     elif file_model.is_reference:
-        file_data_model = SpecFileService().get_reference_file_data(file_model.name)
+        file_data_model = ReferenceFileService().get_reference_file_data(file_model.name)
     else:
         file_data_model = FileService.get_file_data(file_model.id)
     return File.from_models(file_model, file_data_model,
@@ -54,7 +55,7 @@ def get_spec_files(workflow_spec_id, include_libraries=False):
 
 
 def get_reference_files():
-    results = SpecFileService.get_reference_files()
+    results = ReferenceFileService.get_reference_files()
     files = (to_file_api(model) for model in results)
     return FileSchema(many=True).dump(files)
 
@@ -100,7 +101,7 @@ def add_spec_file(workflow_spec_id):
 def get_reference_file(name):
     file_extension = FileService.get_extension(name)
     content_type = CONTENT_TYPES[file_extension]
-    file_data = SpecFileService.get_reference_file_data(name)
+    file_data = ReferenceFileService.get_reference_file_data(name)
     return send_file(
         io.BytesIO(file_data.data),
         attachment_filename=name,
@@ -129,14 +130,14 @@ def update_reference_file_data(name):
         raise ApiError(code='file_does_not_exist',
                        message=f"The reference file {name} does not exist.")
     else:
-        SpecFileService().update_reference_file(file_model, file.stream.read())
+        ReferenceFileService().update_reference_file(file_model, file.stream.read())
 
     return FileSchema().dump(to_file_api(file_model))
 
 
 def add_reference_file():
     file = connexion.request.files['file']
-    file_model = SpecFileService.add_reference_file(name=file.filename,
+    file_model = ReferenceFileService.add_reference_file(name=file.filename,
                                                     content_type=file.content_type,
                                                     binary_data=file.stream.read())
     return FileSchema().dump(to_file_api(file_model))
@@ -216,7 +217,7 @@ def get_file_data_link(file_id, auth_token, version=None):
     if file_model.workflow_spec_id is not None:
         file_data = SpecFileService().get_spec_file_data(file_id)
     elif file_model.is_reference:
-        file_data = SpecFileService().get_reference_file_data(file_id)
+        file_data = ReferenceFileService().get_reference_file_data(file_id)
     else:
         file_data = FileService.get_file_data(file_id, version)
     if file_data is None:
@@ -292,6 +293,7 @@ def delete_spec_file(file_id):
     pass
 
 
+# TODO: Finish this
 def delete_reference_file(file_id):
     pass
 
