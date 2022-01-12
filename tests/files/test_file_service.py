@@ -11,8 +11,6 @@ from crc.services.file_service import FileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
 
-from io import BytesIO
-
 
 class FakeGithubCreates(Mock):
     def get_user(var):

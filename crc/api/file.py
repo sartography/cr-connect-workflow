@@ -1,7 +1,6 @@
 import io
 import os
 from datetime import datetime
-from typing import List
 
 import connexion
 from flask import send_file

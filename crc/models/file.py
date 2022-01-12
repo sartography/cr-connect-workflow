@@ -1,7 +1,6 @@
 import enum
 import urllib
 
-import connexion
 import flask
 from flask import url_for
 from marshmallow import INCLUDE, EXCLUDE, Schema
@@ -12,7 +11,7 @@ from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import deferred, relationship
 
-from crc import db, ma, app
+from crc import db, ma
 from crc.models.data_store import DataStoreModel
 
 

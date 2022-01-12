@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from tests.base_test import BaseTest
 
-from crc import session, app
+from crc import app
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.workflow import WorkflowStatus
 from example_data import ExampleDataLoader

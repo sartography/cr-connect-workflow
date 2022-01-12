@@ -7,7 +7,6 @@ from crc.services.workflow_service import WorkflowService
 from crc.models.user import UserModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.scripts.ldap import Ldap
-from crc.api.common import ApiError
 
 
 class TestLdapLookupScript(BaseTest):

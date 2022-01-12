@@ -1,13 +1,8 @@
-import re
-
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
-from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
-import shlex
 from datetime import datetime
-from typing import List
 
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
@@ -19,10 +14,9 @@ from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import WorkflowSpec
 
-import crc
-from crc import session, app
+from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileDataModel, FileModel, FileType
+from crc.models.file import FileModel, FileType
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModelSchema
 from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecDependencyFile

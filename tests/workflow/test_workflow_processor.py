@@ -14,7 +14,6 @@ from crc.models.file import FileModel, FileDataModel
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
-from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService

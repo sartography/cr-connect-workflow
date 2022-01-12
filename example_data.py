@@ -1,5 +1,4 @@
 import glob
-import glob
 import os
 
 from crc import app, db, session

@@ -1,16 +1,14 @@
 import json
 import os
-import random
-from unittest.mock import patch
 
 from tests.base_test import BaseTest
 
 from crc import session, app
-from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
+from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModelSchema
 from crc.models.workflow import WorkflowStatus
 from crc.models.task_event import TaskEventModel
-from SpiffWorkflow.bpmn.PythonScriptEngine import Box
+
 
 class TestTasksApi(BaseTest):
 
