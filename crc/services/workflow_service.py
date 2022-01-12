@@ -35,6 +35,7 @@ from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.jinja_service import JinjaService
 from crc.services.lookup_service import LookupService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -762,7 +763,7 @@ class WorkflowService(object):
 
         try:
             doc_file_name = spiff_task.task_spec.name + ".md"
-            data_model = FileService.get_workflow_file_data(spiff_task.workflow, doc_file_name)
+            data_model = SpecFileService.get_workflow_file_data(spiff_task.workflow, doc_file_name)
             raw_doc = data_model.data.decode("utf-8")
         except ApiError:
             raw_doc = documentation

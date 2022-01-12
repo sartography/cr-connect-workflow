@@ -163,35 +163,20 @@ class FileService(object):
         return query.all()
 
     @staticmethod
-    def get_files(workflow_spec_id=None, workflow_id=None,
-                  name=None, is_reference=False, irb_doc_code=None, include_libraries=False):
-        query = session.query(FileModel).filter_by(is_reference=is_reference)
-        if workflow_spec_id:
-            if include_libraries:
-                libraries = session.query(WorkflowLibraryModel).filter(
-                   WorkflowLibraryModel.workflow_spec_id==workflow_spec_id).all()
-                library_workflow_specs = [x.library_spec_id for x in libraries]
-                library_workflow_specs.append(workflow_spec_id)
-                query = query.filter(FileModel.workflow_spec_id.in_(library_workflow_specs))
-            else:
-                query = query.filter(FileModel.workflow_spec_id == workflow_spec_id)
-
-        elif workflow_id:
-            query = query.filter_by(workflow_id=workflow_id)
+    def get_files(workflow_id=None, name=None, irb_doc_code=None):
+        if workflow_id is not None:
+            query = session.query(FileModel).filter_by(workflow_id=workflow_id)
             if irb_doc_code:
                 query = query.filter_by(irb_doc_code=irb_doc_code)
-        elif is_reference:
-            query = query.filter_by(is_reference=True)
 
-        if name:
-            query = query.filter_by(name=name)
+            if name:
+                query = query.filter_by(name=name)
 
-        query = query.filter(FileModel.archived == False)
+            query = query.filter(FileModel.archived == False)
+            query = query.order_by(FileModel.id)
 
-        query = query.order_by(FileModel.id)
-
-        results = query.all()
-        return results
+            results = query.all()
+            return results
 
 
     @staticmethod
@@ -215,42 +200,6 @@ class FileService(object):
         else:
             query = query.order_by(desc(FileDataModel.date_created))
         return query.first()
-
-    @staticmethod
-    def get_workflow_file_data(workflow, file_name):
-        """This method should be deleted, find where it is used, and remove this method.
-        Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns its data"""
-        workflow_spec_model = FileService.find_spec_model_in_db(workflow)
-
-        if workflow_spec_model is None:
-            raise ApiError(code="unknown_workflow",
-                           message="Something is wrong.  I can't find the workflow you are using.")
-
-        file_data_model = session.query(FileDataModel) \
-            .join(FileModel) \
-            .filter(FileModel.name == file_name) \
-            .filter(FileModel.workflow_spec_id == workflow_spec_model.id).first()
-
-        if file_data_model is None:
-            raise ApiError(code="file_missing",
-                           message="Can not find a file called '%s' within workflow specification '%s'"
-                                   % (file_name, workflow_spec_model.id))
-
-        return file_data_model
-
-    @staticmethod
-    def find_spec_model_in_db(workflow):
-        """ Search for the workflow """
-        # When the workflow spec model is created, we record the primary process id,
-        # then we can look it up.  As there is the potential for sub-workflows, we
-        # may need to travel up to locate the primary process.
-        spec = workflow.spec
-        workflow_model = session.query(WorkflowSpecModel).join(FileModel). \
-            filter(FileModel.primary_process_id == spec.name).first()
-        if workflow_model is None and workflow != workflow.outer_workflow:
-            return FileService.find_spec_model_in_db(workflow.outer_workflow)
-
-        return workflow_model
 
     @staticmethod
     def delete_file(file_id):
@@ -439,50 +388,3 @@ class FileService(object):
         dmn_file = prefix + etree.tostring(root)
 
         return dmn_file
-
-    # TODO: Get rid of this. We don't have versions any more
-    # @staticmethod
-    # def cleanup_file_data(copies_to_keep=1):
-    #     if isinstance(copies_to_keep, int) and copies_to_keep > 0:
-    #
-    #         deleted_models = []
-    #         saved_models = []
-    #         current_models = []
-    #
-    #         session.flush()
-    #
-    #         workflow_spec_models = session.query(WorkflowSpecModel).all()
-    #
-    #         for wf_spec_model in workflow_spec_models:
-    #             file_models = session.query(FileModel)\
-    #                 .filter(FileModel.workflow_spec_id == wf_spec_model.id)\
-    #                 .all()
-    #
-    #             for file_model in file_models:
-    #                 file_data_models = session.query(FileDataModel)\
-    #                     .filter(FileDataModel.file_model_id == file_model.id)\
-    #                     .order_by(desc(FileDataModel.date_created))\
-    #                     .all()
-    #                 current_models.append(file_data_models[:copies_to_keep])
-    #                 for fd_model in file_data_models[copies_to_keep:]:
-    #                     dependencies = session.query(WorkflowSpecDependencyFile)\
-    #                         .filter(WorkflowSpecDependencyFile.file_data_id == fd_model.id)\
-    #                         .all()
-    #                     if len(dependencies) > 0:
-    #                         saved_models.append(fd_model)
-    #                         continue
-    #                     lookups = session.query(LookupFileModel)\
-    #                         .filter(LookupFileModel.file_data_model_id == fd_model.id)\
-    #                         .all()
-    #                     if len(lookups) > 0:
-    #                         saved_models.append(fd_model)
-    #                         continue
-    #                     deleted_models.append(fd_model)
-    #                     session.delete(fd_model)
-    #
-    #         session.commit()
-    #         return current_models, saved_models, deleted_models
-    #
-    #     else:
-    #         raise ApiError(code='bad_keep',
-    #                        message='You must keep at least 1 version')

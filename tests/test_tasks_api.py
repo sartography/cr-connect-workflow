@@ -182,34 +182,29 @@ class TestTasksApi(BaseTest):
         self.assertIsNotNone(workflow_api.next_task.documentation)
         self.assertTrue("norris" in workflow_api.next_task.documentation)
 
-    # TODO: Decide what to do about this test because we don't have versions any more
     def test_load_workflow_from_outdated_spec(self):
         # Start the basic two_forms workflow and complete a task.
         workflow = self.create_workflow('two_forms')
-        workflow_api = self.get_workflow_api(workflow)
-        self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
-        # self.assertTrue(workflow_api.is_latest_spec)
+        workflow_api_1 = self.get_workflow_api(workflow)
+        self.complete_form(workflow, workflow_api_1.next_task, {"color": "blue"})
 
         # Modify the specification, with a major change that alters the flow and can't be deserialized
         # effectively, if it uses the latest spec files.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
         self.replace_file("two_forms.bpmn", file_path)
 
-        workflow_api = self.get_workflow_api(workflow)
-        # TODO: Decide what to do about this test because we don't have versions any more
-        # self.assertTrue(workflow_api.spec_version.startswith("v1 "))
-        # self.assertFalse(workflow_api.is_latest_spec)
+        # This should use the original workflow spec, and just move to the next task
+        workflow_api_2 = self.get_workflow_api(workflow)
+        self.assertEqual('StepTwo', workflow_api_2.next_task.name)
 
-        workflow_api = self.restart_workflow_api(workflow_api, clear_data=True)
-        # TODO: Decide what to do about this test because we don't have versions any more
-        # self.assertTrue(workflow_api.spec_version.startswith("v2 "))
-        # self.assertTrue(workflow_api.is_latest_spec)
+        workflow_api_3 = self.restart_workflow_api(workflow_api_2, clear_data=True)
+        # This should restart the workflow and we should be back on StepOne
+        self.assertEqual('StepOne', workflow_api_3.next_task.name)
 
         # Assure this hard_reset sticks (added this after a bug was found)
-        workflow_api = self.get_workflow_api(workflow)
-        # TODO: Decide what to do about this test because we don't have versions any more
-        # self.assertTrue(workflow_api.spec_version.startswith("v2 "))
-        # self.assertTrue(workflow_api.is_latest_spec)
+        # Again, we should be on StepOne
+        workflow_api_4 = self.get_workflow_api(workflow)
+        self.assertEqual('StepOne', workflow_api_4.next_task.name)
 
     def test_reset_workflow_from_broken_spec(self):
         # Start the basic two_forms workflow and complete a task.
@@ -234,18 +229,15 @@ class TestTasksApi(BaseTest):
     def test_manual_task_with_external_documentation(self):
         workflow = self.create_workflow('manual_task_with_external_documentation')
 
-        # get the first form in the two form workflow.
+        # Complete the form in the workflow.
         task = self.get_workflow_api(workflow).next_task
         workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
 
         workflow = self.get_workflow_api(workflow)
         self.assertEqual('Task_Manual_One', workflow.next_task.name)
         self.assertEqual('ManualTask', workflow_api.next_task.type)
-        # TODO: Not sure what to do here. The following assertion fails.
-        #  The documentation field in this workflow doesn't have anything in it.
-        #  I'm not sure where 'Markdown' and 'Dan' come from.
-        # self.assertTrue('Markdown' in workflow_api.next_task.documentation)
-        # self.assertTrue('Dan' in workflow_api.next_task.documentation)
+        self.assertTrue('Markdown' in workflow_api.next_task.documentation)
+        self.assertTrue('Dan' in workflow_api.next_task.documentation)
 
     def test_bpmn_extension_properties_are_populated(self):
         workflow = self.create_workflow('manual_task_with_external_documentation')

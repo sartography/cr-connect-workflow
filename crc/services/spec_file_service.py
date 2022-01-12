@@ -6,7 +6,7 @@ import os
 from crc import app, session
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileModelSchema, FileDataModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel, WorkflowLibraryModel
 from crc.services.file_service import FileService, FileType
 
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
@@ -47,7 +47,8 @@ class SpecFileService(object):
     @staticmethod
     def add_workflow_spec_file(workflow_spec: WorkflowSpecModel,
                                name, content_type, binary_data, primary=False, is_status=False):
-        """Create a new file and associate it with a workflow spec."""
+        """Create a new file and associate it with a workflow spec.
+        3 steps; create file model, write file data to filesystem, write file info to file system"""
         file_model = session.query(FileModel)\
             .filter(FileModel.workflow_spec_id == workflow_spec.id)\
             .filter(FileModel.name == name).first()
@@ -266,6 +267,57 @@ class SpecFileService(object):
 
         return process_elements[0].attrib['id']
 
+    @staticmethod
+    def get_spec_files(workflow_spec_id, include_libraries=False):
+        if workflow_spec_id:
+            if include_libraries:
+                libraries = session.query(WorkflowLibraryModel).filter(
+                   WorkflowLibraryModel.workflow_spec_id==workflow_spec_id).all()
+                library_workflow_specs = [x.library_spec_id for x in libraries]
+                library_workflow_specs.append(workflow_spec_id)
+                query = session.query(FileModel).filter(FileModel.workflow_spec_id.in_(library_workflow_specs))
+            else:
+                query = session.query(FileModel).filter(FileModel.workflow_spec_id == workflow_spec_id)
+
+            query = query.filter(FileModel.archived == False)
+            query = query.order_by(FileModel.id)
+
+            results = query.all()
+            return results
+
+    @staticmethod
+    def get_workflow_file_data(workflow, file_name):
+        """This method should be deleted, find where it is used, and remove this method.
+        Given a SPIFF Workflow Model, tracks down a file with the given name in the database and returns its data"""
+        workflow_spec_model = SpecFileService.find_spec_model_in_db(workflow)
+
+        if workflow_spec_model is None:
+            raise ApiError(code="unknown_workflow",
+                           message="Something is wrong.  I can't find the workflow you are using.")
+        file_id = session.query(FileModel.id).filter(FileModel.workflow_spec_id==workflow_spec_model.id).filter(FileModel.name==file_name).scalar()
+        file_data_model = SpecFileService().get_spec_file_data(file_id)
+
+        if file_data_model is None:
+            raise ApiError(code="file_missing",
+                           message="Can not find a file called '%s' within workflow specification '%s'"
+                                   % (file_name, workflow_spec_model.id))
+
+        return file_data_model
+
+    @staticmethod
+    def find_spec_model_in_db(workflow):
+        """ Search for the workflow """
+        # When the workflow spec model is created, we record the primary process id,
+        # then we can look it up.  As there is the potential for sub-workflows, we
+        # may need to travel up to locate the primary process.
+        spec = workflow.spec
+        workflow_model = session.query(WorkflowSpecModel).join(FileModel). \
+            filter(FileModel.primary_process_id == spec.name).first()
+        if workflow_model is None and workflow != workflow.outer_workflow:
+            return SpecFileService.find_spec_model_in_db(workflow.outer_workflow)
+
+        return workflow_model
+
     #
     # Reference File Methods
     #
@@ -338,3 +390,10 @@ class SpecFileService(object):
     def write_reference_file_info_to_system(self, file_path, file_model):
         self.write_file_info_to_system(file_path, file_model)
 
+    @staticmethod
+    def get_reference_files():
+        reference_files = session.query(FileModel).\
+            filter_by(is_reference=True).\
+            filter(FileModel.archived == False).\
+            all()
+        return reference_files

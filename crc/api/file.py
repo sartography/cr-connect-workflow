@@ -28,29 +28,33 @@ def to_file_api(file_model):
                             DocumentService.get_dictionary())
 
 
-def get_files(workflow_spec_id=None, workflow_id=None, form_field_key=None,study_id=None):
-    if all(v is None for v in [workflow_spec_id, workflow_id, form_field_key,study_id]):
+def get_files(workflow_id=None, form_field_key=None,study_id=None):
+    if workflow_id is None:
         raise ApiError('missing_parameter',
-                       'Please specify either a workflow_spec_id or a '
-                       'workflow_id with an optional form_field_key')
+                       'Please specify a workflow_id with an optional form_field_key')
 
     if study_id is not None:
         file_models = FileService.get_files_for_study(study_id=study_id, irb_doc_code=form_field_key)
     else:
-        file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,
-                                        workflow_id=workflow_id,
-                                        irb_doc_code=form_field_key)
+        file_models = FileService.get_files(workflow_id=workflow_id,
+                                            irb_doc_code=form_field_key)
 
     files = (to_file_api(model) for model in file_models)
     return FileSchema(many=True).dump(files)
 
 
-def get_spec_files(workflow_spec_id):
-    pass
+def get_spec_files(workflow_spec_id, include_libraries=False):
+    if workflow_spec_id is None:
+        raise ApiError(code='missing_spec_id',
+                       message='Please specify the workflow_spec_id.')
+    file_models = SpecFileService.get_spec_files(workflow_spec_id=workflow_spec_id,
+                                                 include_libraries=include_libraries)
+    files = [to_file_api(model) for model in file_models]
+    return FileSchema(many=True).dump(files)
 
 
 def get_reference_files():
-    results = FileService.get_files(is_reference=True)
+    results = SpecFileService.get_reference_files()
     files = (to_file_api(model) for model in results)
     return FileSchema(many=True).dump(files)
 

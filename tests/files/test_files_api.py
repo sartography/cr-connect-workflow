@@ -23,7 +23,7 @@ class TestFilesApi(BaseTest):
         self.load_example_data(use_crc_data=True)
         spec_id = 'core_info'
         spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
-        rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec_id,
+        rv = self.app.get('/v1.0/spec_file?workflow_spec_id=%s' % spec_id,
                           follow_redirects=True,
                           content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -36,11 +36,10 @@ class TestFilesApi(BaseTest):
     def test_list_multiple_files_for_workflow_spec(self):
         self.load_example_data()
         spec = self.load_test_spec("random_fact")
-        svgFile = FileModel(name="test.svg", type=FileType.svg,
-                            primary=False, workflow_spec_id=spec.id)
-        session.add(svgFile)
-        session.flush()
-        rv = self.app.get('/v1.0/file?workflow_spec_id=%s' % spec.id,
+        data = {'file': (io.BytesIO(b"abcdef"), 'test.svg')}
+        self.app.post('/v1.0/spec_file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
+                      content_type='multipart/form-data', headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/spec_file?workflow_spec_id=%s' % spec.id,
                           follow_redirects=True,
                           content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -224,53 +223,31 @@ class TestFilesApi(BaseTest):
         spec = session.query(WorkflowSpecModel).first()
         data = {}
         data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
-        rv = self.app.post('/v1.0/spec_file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
-                           content_type='multipart/form-data', headers=self.logged_in_headers())
-        file_json = json.loads(rv.get_data(as_text=True))
-        self.assertEqual(80, file_json['size'])
+        rv_1 = self.app.post('/v1.0/spec_file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
+                             content_type='multipart/form-data', headers=self.logged_in_headers())
+        file_json_1 = json.loads(rv_1.get_data(as_text=True))
+        self.assertEqual(80, file_json_1['size'])
 
         data['file'] = io.BytesIO(self.minimal_bpmn("efghijk")), 'my_new_file.bpmn'
-        rv = self.app.put('/v1.0/spec_file/%i/data' % file_json['id'], data=data, follow_redirects=True,
-                          content_type='multipart/form-data', headers=self.logged_in_headers())
-        self.assert_success(rv)
-        self.assertIsNotNone(rv.get_data())
-        file_json = json.loads(rv.get_data(as_text=True))
-        # self.assertEqual(2, file_json['latest_version'])
-        self.assertEqual(FileType.bpmn.value, file_json['type'])
-        self.assertEqual("application/octet-stream", file_json['content_type'])
-        self.assertEqual(spec.id, file_json['workflow_spec_id'])
+        rv_2 = self.app.put('/v1.0/spec_file/%i/data' % file_json_1['id'], data=data, follow_redirects=True,
+                            content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv_2)
+        self.assertIsNotNone(rv_2.get_data())
+        file_json_2 = json.loads(rv_2.get_data(as_text=True))
+        self.assertEqual(FileType.bpmn.value, file_json_2['type'])
+        self.assertEqual("application/octet-stream", file_json_2['content_type'])
+        self.assertEqual(spec.id, file_json_2['workflow_spec_id'])
 
         # Assure it is updated in the database and properly persisted.
-        file_model = session.query(FileModel).filter(FileModel.id == file_json['id']).first()
+        file_model = session.query(FileModel).filter(FileModel.id == file_json_2['id']).first()
         file_data = SpecFileService().get_spec_file_data(file_model.id)
-        # TODO: Not sure what to do here. We don't have versions any more.
-        # self.assertEqual(2, file_data.version)
+        self.assertEqual(81, len(file_data.data))
 
-        rv = self.app.get('/v1.0/spec_file/%i/data' % file_json['id'], headers=self.logged_in_headers())
-        self.assert_success(rv)
-        data = rv.get_data()
+        rv_3 = self.app.get('/v1.0/spec_file/%i/data' % file_json_2['id'], headers=self.logged_in_headers())
+        self.assert_success(rv_3)
+        data = rv_3.get_data()
         self.assertIsNotNone(data)
         self.assertEqual(self.minimal_bpmn("efghijk"), data)
-
-    # TODO: Not sure what to test. We don't have versions any more.
-    def test_update_with_same_exact_data_does_not_increment_version(self):
-        self.load_example_data()
-        spec = session.query(WorkflowSpecModel).first()
-        data = {}
-        data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
-        rv = self.app.post('/v1.0/spec_file?workflow_spec_id=%s' % spec.id, data=data, follow_redirects=True,
-                           content_type='multipart/form-data', headers=self.logged_in_headers())
-        self.assertIsNotNone(rv.get_data())
-        json_data = json.loads(rv.get_data(as_text=True))
-        # TODO: Not sure what to test. We don't have versions any more.
-        # self.assertEqual(1, json_data['latest_version'])
-        data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
-        rv = self.app.put('/v1.0/spec_file/%i/data' % json_data['id'], data=data, follow_redirects=True,
-                          content_type='multipart/form-data', headers=self.logged_in_headers())
-        self.assertIsNotNone(rv.get_data())
-        json_data = json.loads(rv.get_data(as_text=True))
-        # TODO: Not sure what to test. We don't have versions any more.
-        # self.assertEqual(1, json_data['latest_version'])
 
     def test_get_file(self):
         self.load_example_data()
