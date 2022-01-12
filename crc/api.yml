@@ -441,6 +441,12 @@ paths:
       responses:
         '200':
           description: list of Study Associate Objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudyAssociate"
   /study/{study_id}/log:
     parameters:
       - name: study_id
