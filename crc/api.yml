@@ -447,7 +447,36 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/StudyAssociate"
-
+  /study/{study_id}/log:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which logs should be returned.
+        schema:
+          type: integer
+          format: int32
+    put:
+      operationId: crc.api.study.get_logs_for_study
+      summary: Provides a list of logged events that occured within a study
+      tags:
+        - Studies
+      requestBody:
+        description: Log Pagination Request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaginatedTaskLog"
+      responses:
+        '200':
+          description: list of Study logs - events that have occured within a study.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TaskLog"
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -1219,7 +1248,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
-
+  /workflow/{workflow_id}/log:
+    parameters:
+      - name: workflow_id
+        in: path
+        required: true
+        description: The id of the workflow for which logs should be returned.
+        schema:
+          type: integer
+          format: int32
+    put:
+      operationId: crc.api.workflow.get_logs_for_workflow
+      summary: Provides a paginated list of logged events that occured within a study,
+      tags:
+        - Workflows and Tasks
+      requestBody:
+        description: Log Pagination Request
+        required: true
+        content:
+          application/json:
+            schema:
+                $ref: "#/components/schemas/PaginatedTaskLog"
+      responses:
+        '200':
+          description: list of logs - events that have occured within a specific workflow.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedTaskLog"
   /workflow/{workflow_id}/task/{task_id}/data:
     parameters:
       - name: workflow_id
@@ -2023,6 +2079,63 @@ components:
                   value: "model.my_boolean_field_id && model.my_enum_field_value !== 'something'"
                 - id: "hide_expression"
                   value: "model.my_enum_field_value === 'something'"
+    PaginatedTaskLog:
+      properties:
+          code:
+            example: "email_sent"
+            type: string
+          level:
+            example: "warning"
+            type: string
+          user:
+            example: "email_sent"
+            type: string
+          page:
+            type: integer
+            example: 0
+          per_page:
+            type: integer
+            example: 10
+          sort_column:
+            type: string
+            example: "timestamp"
+          sort_reverse:
+            type: boolean
+            example: false
+          items:
+            type: array
+            items:
+              $ref: "#/components/schemas/TaskLog"
+          has_next:
+            type: boolean
+            example: true
+          has_previous:
+            type: boolean
+            example: false
+    TaskLog:
+      properties:
+          level:
+            type: string
+            example: "info"
+          code:
+            example: "email_sent"
+            type: string
+          message:
+            example: "Approval email set to Jake in Accounting"
+            type: string
+          workflow_id:
+            example: 42
+            type: integer
+          study_id:
+            example: 187
+            type: integer
+          user_uid:
+            example: "dhf8r"
+            type: string
+          timestamp:
+            type: string
+            format: date_time
+            example: "2021-01-07T11:36:40.001Z"
     TaskEvent:
       properties:
           workflow:

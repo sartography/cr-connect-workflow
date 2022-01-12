@@ -8,12 +8,14 @@ from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModel
 from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
+from crc.models.task_log import TaskLogModelSchema, TaskLogQuery, TaskLogQuerySchema
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema, WorkflowLibraryModel, WorkflowLibraryModelSchema
 from crc.services.error_service import ValidationErrorService
 from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
 from crc.services.study_service import StudyService
+from crc.services.task_logging_service import TaskLoggingService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
@@ -424,3 +426,9 @@ def _verify_user_and_role(processor, spiff_task):
         raise ApiError.from_task("permission_denied",
                                  f"This task must be completed by '{allowed_users}', "
                                  f"but you are {user.uid}", spiff_task)
+
+
+def get_logs_for_workflow(workflow_id, body):
+    task_log_query = TaskLogQuery(**body)
+    return TaskLogQuerySchema().dump(
+        TaskLoggingService.get_logs_for_workflow(workflow_id, task_log_query))

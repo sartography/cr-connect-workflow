@@ -8,7 +8,7 @@
       <bpmn:incoming>Flow_0pc42yp</bpmn:incoming>
       <bpmn:outgoing>Flow_0n34cdi</bpmn:outgoing>
       <bpmn:script>log_model_info = log(level='info', code='test_code', message='You forgot to include the correct data.')
-log_model_debug = log(level='degug', code='debug_test_code', message='This is my debugging message')</bpmn:script>
+log_model_debug = log(level='debug', code='debug_test_code', message='This is my debugging message')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Activity_DisplayLog" name="DisplayLog">
       <bpmn:documentation># Logging Models Pre
