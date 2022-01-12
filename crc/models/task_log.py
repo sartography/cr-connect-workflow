@@ -31,7 +31,7 @@ class TaskLogModel(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
     workflow_id = db.Column(db.Integer, db.ForeignKey(WorkflowModel.id), nullable=False)
     task = db.Column(db.String)
-    timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
+    timestamp = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
 
 class TaskLogModelSchema(ma.Schema):
