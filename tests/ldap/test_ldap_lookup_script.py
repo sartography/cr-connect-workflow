@@ -13,7 +13,6 @@ class TestLdapLookupScript(BaseTest):
 
     def test_get_existing_user_details(self):
         self.load_example_data()
-        # self.create_reference_document()
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -34,7 +33,6 @@ class TestLdapLookupScript(BaseTest):
 
     def test_get_invalid_user_details(self):
         self.load_example_data()
-        # self.create_reference_document()
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -49,7 +47,6 @@ class TestLdapLookupScript(BaseTest):
 
     def test_get_current_user_details(self):
         self.load_example_data()
-        # self.create_reference_document()
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()

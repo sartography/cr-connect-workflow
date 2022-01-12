@@ -78,7 +78,6 @@ class TestStudyApi(BaseTest):
 
         # Set up the study and attach a file to it.
         self.load_example_data()
-        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()

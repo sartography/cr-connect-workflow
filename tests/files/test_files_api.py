@@ -84,7 +84,6 @@ class TestFilesApi(BaseTest):
 
     def test_archive_file_no_longer_shows_up(self):
         self.load_example_data()
-        # self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -170,7 +169,6 @@ class TestFilesApi(BaseTest):
 
     def test_list_reference_files(self):
         ExampleDataLoader.clean_db()
-        # self.create_reference_document()
 
         file_name = DocumentService.DOCUMENT_LIST
         filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
@@ -192,7 +190,6 @@ class TestFilesApi(BaseTest):
 
     def test_update_file_info(self):
         self.load_example_data()
-        # self.create_reference_document()
         file: FileModel = session.query(FileModel).filter(FileModel.is_reference==False).first()
         file.name = "silly_new_name.bpmn"
 
@@ -206,7 +203,6 @@ class TestFilesApi(BaseTest):
 
     def test_load_valid_url_for_files(self):
         self.load_example_data()
-        # self.create_reference_document()
         file: FileModel = session.query(FileModel).filter(FileModel.is_reference == False).first()
         rv = self.app.get('/v1.0/file/%i' % file.id, content_type="application/json", headers=self.logged_in_headers())
         self.assert_success(rv)

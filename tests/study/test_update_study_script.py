@@ -9,7 +9,6 @@ class TestUpdateStudyScript(BaseTest):
 
     def test_do_task(self):
         self.load_example_data()
-        # self.create_reference_document()
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
