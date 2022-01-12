@@ -2078,6 +2078,12 @@ components:
           code:
             example: "email_sent"
             type: string
+          level:
+            example: "warning"
+            type: string
+          user:
+            example: "email_sent"
+            type: string
           page:
             type: integer
             example: 0
@@ -2094,6 +2100,12 @@ components:
             type: array
             items:
               $ref: "#/components/schemas/TaskLog"
+          has_next:
+            type: boolean
+            example: true
+          has_previous:
+            type: boolean
+            example: false
     TaskLog:
       properties:
           level:

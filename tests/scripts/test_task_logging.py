@@ -134,6 +134,7 @@ class TestTaskLogging(BaseTest):
         self.assertEqual(40, len(results.items), "There should be 40 logs total")
 
         logs = TaskLoggingService.get_logs_for_study(study.id, TaskLogQuery(per_page=5))
+        self.assertEqual(40, logs.total)
         self.assertEqual(5, len(logs.items), "I can limit results to 5")
         self.assertEqual(1, logs.page)
         self.assertEqual(8, logs.pages)

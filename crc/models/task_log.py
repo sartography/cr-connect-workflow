@@ -43,14 +43,19 @@ class TaskLogModelSchema(ma.Schema):
 class TaskLogQuery:
     """Encapsulates the paginated queries and results when retrieving and filtering task logs over the
     API"""
-    def __init__(self, code=None, page=1, per_page=10, sort_column=None, sort_reverse=False, items=None):
-        self.code = code  # Filter down to just this code.
+    def __init__(self, code="", level="", user="", page=1, per_page=10,
+                 sort_column=None, sort_reverse=False, items=None,
+                 pages=0, total=0, has_next=False, has_prev=False):
+        self.code = code  # Filter on code.
+        self.level = level  # Filter on level.
+        self.user = user  # Filter on user.
         self.page = page
         self.per_page = per_page
         self.sort_column = sort_column
         self.sort_reverse = sort_reverse
         self.items = items
-        self.pages = 0
+        self.total = total
+        self.pages = pages
         self.has_next = False
         self.has_prev = False
 
@@ -62,11 +67,12 @@ class TaskLogQuery:
         self.pages = paginator.pages
         self.has_next = paginator.has_next
         self.has_prev = paginator.has_prev
-
+        self.total = paginator.total
 
 class TaskLogQuerySchema(ma.Schema):
     class Meta:
         model = TaskLogModel
-        fields = ["code", "page", "per_page", "sort_column", "sort_reverse", "items", "pages",
-                  "has_next", "has_previous"]
+        fields = ["code", "level", "user",
+                  "page", "per_page", "sort_column", "sort_reverse", "items", "pages", "total",
+                  "has_next", "has_prev"]
     items = marshmallow.fields.List(marshmallow.fields.Nested(TaskLogModelSchema))

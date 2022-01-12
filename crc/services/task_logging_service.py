@@ -68,8 +68,12 @@ class TaskLoggingService(object):
         if task_log_query.sort_column is None:
             task_log_query.sort_column = "timestamp"
             task_log_query.sort_reverse = True
-        if task_log_query.code is not None:
-            sql_query = sql_query.filter(TaskLogModel.code == task_log_query.code)
+        if task_log_query.code:
+            sql_query = sql_query.filter(TaskLogModel.code.like(task_log_query.code + "%"))
+        if task_log_query.level:
+            sql_query = sql_query.filter(TaskLogModel.level.like(task_log_query.level + "%"))
+        if task_log_query.user:
+            sql_query = sql_query.filter(TaskLogModel.user_uid.like(task_log_query.user + "%"))
         if task_log_query.sort_reverse:
             sort_column = desc(task_log_query.sort_column)
         else:
