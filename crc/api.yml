@@ -1130,7 +1130,7 @@ paths:
       - name: file_id
         in: path
         required: true
-        description: The id of the file
+        description: The id of the spec file
         schema:
           type: integer
     get:

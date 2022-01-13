@@ -8,6 +8,7 @@ from crc import session, app
 from crc.models.file import FileDataModel, FileModel, LookupFileModel, LookupDataModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel
 from crc.services.lookup_service import LookupService
+from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
 
@@ -53,9 +54,9 @@ class TestLookupService(BaseTest):
         file = open(file_path, 'rb')
         if file_model.workflow_spec_id is not None:
             workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
-            SpecFileService.update_workflow_spec_file(workflow_spec_model, file_model, file.read(), CONTENT_TYPES['xlsx'])
+            SpecFileService().update_spec_file_data(workflow_spec_model, file_model.name, file.read())
         elif file_model.is_reference:
-            SpecFileService().update_reference_file(file_model, file.read())
+            ReferenceFileService().update_reference_file(file_model, file.read())
         else:
             FileService.update_file(file_model, file.read(), CONTENT_TYPES['xlsx'])
         file.close()

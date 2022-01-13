@@ -164,7 +164,7 @@ def update_spec_file_data(file_id):
                        message=f'The workflow spec for id {file_model.workflow_spec_id} does not exist.')
 
     file = connexion.request.files['file']
-    file_model = SpecFileService.update_workflow_spec_file(workflow_spec_model, file_model, file.stream.read(), file.content_type)
+    SpecFileService().update_spec_file_data(workflow_spec_model, file_model.name, file.stream.read())
     return FileSchema().dump(to_file_api(file_model))
 
 
@@ -258,38 +258,23 @@ def update_file_info(file_id, body):
 
 
 def update_spec_file_info(file_id, body):
-    # schema = update_file_info(file_id, body)
     if file_id is None:
         raise ApiError('no_such_file', 'Please provide a valid File ID.')
     file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
     if file_model is None:
         raise ApiError('unknown_file_model', 'The file_model "' + file_id + '" is not recognized.')
 
-    new_file_model = FileModelSchema().load(body, session=session)
-    session.add(new_file_model)
-    session.commit()
-    workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
-    category_name = SpecFileService.get_spec_file_category_name(workflow_spec_model)
-    if category_name is not None:
-        sync_file_root = SpecFileService.get_sync_file_root()
-        file_path = os.path.join(sync_file_root,
-                                 category_name,
-                                 workflow_spec_model.display_name,
-                                 file_model.name)
-        SpecFileService.write_file_info_to_system(file_path, file_model)
+    new_file_model = SpecFileService().update_spec_file_info(file_model, body)
     return FileSchema().dump(to_file_api(new_file_model))
 
 
 def delete_file(file_id):
-    workflow_spec_id = session.query(FileModel.workflow_spec_id).filter(FileModel.id==file_id).scalar()
-    if workflow_spec_id is not None:
-        SpecFileService.delete_spec_file(file_id)
-    else:
-        FileService.delete_file(file_id)
+    FileService.delete_file(file_id)
 
 
 def delete_spec_file(file_id):
-    pass
+    SpecFileService.delete_spec_file(file_id)
+    print('crc.api.file: delete_spec_file')
 
 
 # TODO: Finish this

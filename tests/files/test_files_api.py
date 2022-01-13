@@ -14,6 +14,8 @@ from crc.models.data_store import DataStoreModel
 from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
 
+from sqlalchemy import column
+
 
 class TestFilesApi(BaseTest):
 
@@ -166,7 +168,6 @@ class TestFilesApi(BaseTest):
         self.assertFalse(file.primary)
         self.assertEqual(True, file.is_reference)
 
-
     def test_list_reference_files(self):
         ExampleDataLoader.clean_db()
 
@@ -190,16 +191,26 @@ class TestFilesApi(BaseTest):
 
     def test_update_file_info(self):
         self.load_example_data()
-        file: FileModel = session.query(FileModel).filter(FileModel.is_reference==False).first()
-        file.name = "silly_new_name.bpmn"
+        file: FileModel = session.query(FileModel).filter(column('workflow_spec_id').isnot(None)).first()
+        file_model = FileModel(id=file.id,
+                               name="silly_new_name.bpmn",
+                               type=file.type,
+                               content_type=file.content_type,
+                               is_reference=file.is_reference,
+                               primary=file.primary,
+                               primary_process_id=file.primary_process_id,
+                               workflow_id=file.workflow_id,
+                               workflow_spec_id=file.workflow_spec_id,
+                               archived=file.archived)
+        # file.name = "silly_new_name.bpmn"
 
         rv = self.app.put('/v1.0/spec_file/%i' % file.id,
                           content_type="application/json",
-                          data=json.dumps(FileModelSchema().dump(file)), headers=self.logged_in_headers())
+                          data=json.dumps(FileModelSchema().dump(file_model)), headers=self.logged_in_headers())
         self.assert_success(rv)
         db_file = session.query(FileModel).filter_by(id=file.id).first()
         self.assertIsNotNone(db_file)
-        self.assertEqual(file.name, db_file.name)
+        self.assertEqual("silly_new_name.bpmn", db_file.name)
 
     def test_load_valid_url_for_files(self):
         self.load_example_data()
@@ -222,24 +233,31 @@ class TestFilesApi(BaseTest):
         file_json_1 = json.loads(rv_1.get_data(as_text=True))
         self.assertEqual(80, file_json_1['size'])
 
-        data['file'] = io.BytesIO(self.minimal_bpmn("efghijk")), 'my_new_file.bpmn'
-        rv_2 = self.app.put('/v1.0/spec_file/%i/data' % file_json_1['id'], data=data, follow_redirects=True,
-                            content_type='multipart/form-data', headers=self.logged_in_headers())
+        file_id = file_json_1['id']
+        rv_2 = self.app.get('/v1.0/spec_file/%i/data' % file_id, headers=self.logged_in_headers())
         self.assert_success(rv_2)
-        self.assertIsNotNone(rv_2.get_data())
-        file_json_2 = json.loads(rv_2.get_data(as_text=True))
-        self.assertEqual(FileType.bpmn.value, file_json_2['type'])
-        self.assertEqual("application/octet-stream", file_json_2['content_type'])
-        self.assertEqual(spec.id, file_json_2['workflow_spec_id'])
+        rv_data_2 = rv_2.get_data()
+        self.assertIsNotNone(rv_data_2)
+        self.assertEqual(self.minimal_bpmn("abcdef"), rv_data_2)
+
+        data['file'] = io.BytesIO(self.minimal_bpmn("efghijk")), 'my_new_file.bpmn'
+        rv_3 = self.app.put('/v1.0/spec_file/%i/data' % file_id, data=data, follow_redirects=True,
+                            content_type='multipart/form-data', headers=self.logged_in_headers())
+        self.assert_success(rv_3)
+        self.assertIsNotNone(rv_3.get_data())
+        file_json_3 = json.loads(rv_3.get_data(as_text=True))
+        self.assertEqual(FileType.bpmn.value, file_json_3['type'])
+        self.assertEqual("application/octet-stream", file_json_3['content_type'])
+        self.assertEqual(spec.id, file_json_3['workflow_spec_id'])
 
         # Assure it is updated in the database and properly persisted.
-        file_model = session.query(FileModel).filter(FileModel.id == file_json_2['id']).first()
+        file_model = session.query(FileModel).filter(FileModel.id == file_id).first()
         file_data = SpecFileService().get_spec_file_data(file_model.id)
         self.assertEqual(81, len(file_data.data))
 
-        rv_3 = self.app.get('/v1.0/spec_file/%i/data' % file_json_2['id'], headers=self.logged_in_headers())
-        self.assert_success(rv_3)
-        data = rv_3.get_data()
+        rv_4 = self.app.get('/v1.0/spec_file/%i/data' % file_id, headers=self.logged_in_headers())
+        self.assert_success(rv_4)
+        data = rv_4.get_data()
         self.assertIsNotNone(data)
         self.assertEqual(self.minimal_bpmn("efghijk"), data)
 

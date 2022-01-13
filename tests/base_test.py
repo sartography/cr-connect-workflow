@@ -262,7 +262,7 @@ class BaseTest(unittest.TestCase):
         workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
         noise, file_extension = os.path.splitext(file_path)
         content_type = CONTENT_TYPES[file_extension[1:]]
-        SpecFileService.update_workflow_spec_file(workflow_spec_model, file_model, data, content_type)
+        SpecFileService().update_spec_file_data(workflow_spec_model, file_model.name, data)
 
     def create_user(self, uid="dhf8r", email="daniel.h.funk@gmail.com", display_name="Hoopy Frood"):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()

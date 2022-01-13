@@ -18,6 +18,19 @@ from uuid import UUID
 
 class SpecFileService(object):
 
+    """We store spec files on the file system. This allows us to take advantage of Git for
+       syncing and versioning.
+
+        We keep a record in the File table, but do not have a record in the FileData table.
+
+        For syncing purposes, we keep a copy of the File table info in a json file
+
+        This means there are 3 pieces we have to maintain; File table record, file on the file system,
+        and json file on the file system.
+
+        The files are stored in a directory whose path is determined by the category and spec names.
+    """
+
     #
     # Shared Methods
     #
@@ -26,6 +39,19 @@ class SpecFileService(object):
         dir_name = app.config['SYNC_FILE_ROOT']
         app_root = app.root_path
         return os.path.join(app_root, '..', 'tests', dir_name)
+
+    @staticmethod
+    def get_path_from_spec_file_model(spec_file_model):
+        workflow_spec_model = session.query(WorkflowSpecModel).filter(
+            WorkflowSpecModel.id == spec_file_model.workflow_spec_id).first()
+        category_name = SpecFileService.get_spec_file_category_name(workflow_spec_model)
+        if category_name is not None:
+            sync_file_root = SpecFileService.get_sync_file_root()
+            file_path = os.path.join(sync_file_root,
+                                     category_name,
+                                     workflow_spec_model.display_name,
+                                     spec_file_model.name)
+            return file_path
 
     @staticmethod
     def write_file_data_to_system(file_path, file_data):
@@ -66,10 +92,19 @@ class SpecFileService(object):
                 is_status=is_status,
             )
 
-        return SpecFileService.update_workflow_spec_file(workflow_spec, file_model, binary_data, content_type)
+        file_model = SpecFileService.update_workflow_spec_file_model(workflow_spec, file_model, binary_data, content_type)
+        file_path = SpecFileService().write_spec_file_data_to_system(workflow_spec, file_model.name, binary_data)
+        SpecFileService().write_spec_file_info_to_system(file_path, file_model)
+
+        return file_model
+
+    def update_workflow_spec_file(self, workflow_spec_model, file_model, file_data, content_type):
+        self.update_workflow_spec_file_model(workflow_spec_model, file_model, file_data, content_type)
+        self.update_spec_file_data(workflow_spec_model, file_model.name, file_data)
+        self.update_spec_file_info()
 
     @staticmethod
-    def update_workflow_spec_file(workflow_spec: WorkflowSpecModel, file_model: FileModel, binary_data, content_type):
+    def update_workflow_spec_file_model(workflow_spec: WorkflowSpecModel, file_model: FileModel, binary_data, content_type):
         # Verify the extension
         file_extension = FileService.get_extension(file_model.name)
         if file_extension not in FileType._member_names_:
@@ -93,12 +128,45 @@ class SpecFileService(object):
         session.add(file_model)
         session.commit()
 
-        # Write file to filesystem
-        SpecFileService().write_spec_file_to_system(workflow_spec, file_model, binary_data)
         return file_model
 
     @staticmethod
+    def update_spec_file_data(workflow_spec, file_name, binary_data):
+        file_path = SpecFileService().write_spec_file_data_to_system(workflow_spec, file_name, binary_data)
+        return file_path
+
+    def update_spec_file_info(self, old_file_model, body):
+
+        file_data = self.get_spec_file_data(old_file_model.id)
+
+        old_file_path = self.get_path_from_spec_file_model(old_file_model)
+        self.delete_spec_file_data(old_file_path)
+        self.delete_spec_file_info(old_file_path)
+
+        new_file_model = FileModelSchema().load(body, session=session)
+        new_file_path = self.get_path_from_spec_file_model(new_file_model)
+        self.write_file_data_to_system(new_file_path, file_data.data)
+        self.write_file_info_to_system(new_file_path, new_file_model)
+        print('update_spec_file_info')
+        return new_file_model
+
+    @staticmethod
+    def delete_spec_file_data(file_path):
+        os.remove(file_path)
+
+    @staticmethod
+    def delete_spec_file_info(file_path):
+        json_file_path = f'{file_path}.json'
+        os.remove(json_file_path)
+
+    # Placeholder. Not sure if we need this.
+    # Might do this work in delete_spec_file
+    def delete_spec_file_model(self):
+        pass
+
+    @staticmethod
     def delete_spec_file(file_id):
+        """This should remove the record in the file table, and both files on the filesystem."""
         sync_file_root = SpecFileService.get_sync_file_root()
         file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
         workflow_spec_id = file_model.workflow_spec_id
@@ -116,7 +184,6 @@ class SpecFileService(object):
         try:
             os.remove(file_path)
             os.remove(json_file_path)
-            # os.rmdir(spec_directory_path)
             session.delete(file_model)
             session.commit()
         except IntegrityError as ie:
@@ -126,7 +193,7 @@ class SpecFileService(object):
             session.commit()
             app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
 
-    def write_spec_file_data_to_system(self, workflow_spec_model, file_model, file_data):
+    def write_spec_file_data_to_system(self, workflow_spec_model, file_name, file_data):
         if workflow_spec_model is not None:
             category_name = self.get_spec_file_category_name(workflow_spec_model)
             if category_name is not None:
@@ -134,7 +201,7 @@ class SpecFileService(object):
                 file_path = os.path.join(sync_file_root,
                                          category_name,
                                          workflow_spec_model.display_name,
-                                         file_model.name)
+                                         file_name)
                 self.write_file_data_to_system(file_path, file_data)
                 return file_path
 
