@@ -48,7 +48,8 @@ def upgrade():
     # TODO:
     #  delete processed files from file_data table
     #  delete workflow_spec_dependency_file table
-    #  delete file_data_model_id from lookup_file table
+    #  delete file_data_model_id from lookup_file table  <-- This is wrong! We should change to file_id,
+    #  see migration 4980cb3dea77
     for file_id in processed_files:
         processed_models = session.query(FileDataModel).filter(FileDataModel.file_model_id==file_id).all()
         for processed_model in processed_models:

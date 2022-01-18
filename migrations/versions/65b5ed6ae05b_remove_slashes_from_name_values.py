@@ -12,6 +12,7 @@ import sqlalchemy as sa
 # revision identifiers, used by Alembic.
 revision = '65b5ed6ae05b'
 down_revision = '44dd9397c555'
+# down_revision = '1fb36d682c7f'
 branch_labels = None
 depends_on = None
 
@@ -24,6 +25,6 @@ def upgrade():
 
 def downgrade():
     # There are already valid uses of '-' in these tables.
-    # We probably don't want to change them to '/'
+    # We probably don't want to change all of them to '/'
     # So, we pass here. No downgrade.
     pass
