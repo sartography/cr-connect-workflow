@@ -1,7 +1,8 @@
-from crc import app, session
+# from crc import app, session
 from crc.models.file import FileModel, FileModelSchema, FileDataModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
 from crc.services.file_service import FileService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_service import WorkflowService
 from sqlalchemy import desc
 
@@ -9,7 +10,7 @@ import json
 import os
 
 
-SYNC_FILE_ROOT = app.config['SYNC_FILE_ROOT']
+# SYNC_FILE_ROOT = SpecFileService.get_sync_file_root()
 
 
 class FromFilesystemService(object):
@@ -181,7 +182,7 @@ class ToFilesystemService(object):
             j_handle.write(workflow_spec_schema)
 
     @staticmethod
-    def process_workflow_spec_file(workflow_spec_file, workflow_spec_file_path):
+    def process_workflow_spec_file(session, workflow_spec_file, workflow_spec_file_path):
         # workflow_spec_file_path = os.path.join
         os.makedirs(os.path.dirname(workflow_spec_file_path), exist_ok=True)
 
@@ -198,10 +199,10 @@ class ToFilesystemService(object):
         with open(json_file_path, 'w') as j_handle:
             j_handle.write(workflow_spec_file_schema)
 
-    def write_file_to_system(self, file_model):
+    def write_file_to_system(self, session, file_model, location):
 
         category_name = None
-        location = SYNC_FILE_ROOT
+        # location = SpecFileService.get_sync_file_root()
 
         if file_model.workflow_spec_id is not None:
             # we have a workflow spec file
@@ -222,28 +223,40 @@ class ToFilesystemService(object):
                 elif workflow_spec_model.standalone:
                     category_name = 'Standalone'
 
-                if category_name is not None:
-                    # Only process if we have a workflow_spec_model and category_name
-                    self.process_workflow_spec(location, workflow_spec_model, category_name)
+            if category_name is not None:
+                # Only process if we have a workflow_spec_model and category_name
+                self.process_workflow_spec(location, workflow_spec_model, category_name)
 
-                    file_path = os.path.join(location,
-                                             category_name,
-                                             workflow_spec_model.display_name,
-                                             file_model.name)
-
-                    self.process_workflow_spec_file(file_model, file_path)
-
-            else:
-                # We didn't get a workflow_spec_model
-                pass
-
-        elif file_model.workflow_id is not None:
-            # we have a workflow file
-            pass
+                file_path = os.path.join(location,
+                                         category_name,
+                                         workflow_spec_model.display_name,
+                                         file_model.name)
+                self.process_workflow_spec_file(session, file_model, file_path)
 
         elif file_model.is_reference:
-            # we have a reference file?
-            print(f'Reference file: {file_model.name}')
+            # we have a reference file
+            category_name = 'Reference'
 
-        else:
-            print(f'Not processed: {file_model.name}')
+            # self.process_workflow_spec(location, workflow_spec_model, category_name)
+
+            file_path = os.path.join(location,
+                                     category_name,
+                                     file_model.name)
+
+            self.process_workflow_spec_file(session, file_model, file_path)
+
+        #     else:
+        #         # We didn't get a workflow_spec_model
+        #         pass
+        #
+        # elif file_model.workflow_id is not None:
+        #     # we have a workflow file
+        #     pass
+
+        # elif file_model.is_reference:
+        #     # we have a reference file?
+        #     print(f'Reference file: {file_model.name}')
+        #
+
+        # else:
+        #     print(f'Not processed: {file_model.name}')

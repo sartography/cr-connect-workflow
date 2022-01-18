@@ -38,7 +38,7 @@ class SpecFileService(object):
     def get_sync_file_root():
         dir_name = app.config['SYNC_FILE_ROOT']
         app_root = app.root_path
-        return os.path.join(app_root, '..', 'tests', dir_name)
+        return os.path.join(app_root, '..', dir_name)
 
     @staticmethod
     def get_path_from_spec_file_model(spec_file_model):
