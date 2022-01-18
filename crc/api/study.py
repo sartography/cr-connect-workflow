@@ -8,7 +8,9 @@ from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import Study, StudyEvent, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
     StudyStatus, StudyAssociatedSchema
+from crc.models.task_log import TaskLogModelSchema, TaskLogQuery, TaskLogQuerySchema
 from crc.services.study_service import StudyService
+from crc.services.task_logging_service import TaskLoggingService
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
 
@@ -83,6 +85,12 @@ def get_study(study_id, update_status=False):
 
 def get_study_associates(study_id):
     return StudyAssociatedSchema(many=True).dump(StudyService.get_study_associates(study_id))
+
+
+def get_logs_for_study(study_id, body):
+    task_log_query = TaskLogQuery(**body)
+    return TaskLogQuerySchema().dump(
+        TaskLoggingService.get_logs_for_study(study_id, task_log_query))
 
 
 def delete_study(study_id):
