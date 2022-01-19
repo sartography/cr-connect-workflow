@@ -138,8 +138,7 @@ class TestFilesApi(BaseTest):
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_failure(rv, error_code="invalid_file_type")
 
-    def test_get_reference_file(self):
-        # self.load_example_data()
+    def test_get_reference_file_data(self):
         ExampleDataLoader().load_reference_documents()
         file_name = "irb_document_types.xls"
         filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
@@ -152,6 +151,19 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         data_out = rv.get_data()
         self.assertEqual(file_data, data_out)
+
+    def test_get_reference_file_info(self):
+        self.load_example_data()
+        reference_file_model = session.query(FileModel).filter(FileModel.is_reference==True).first()
+        name = reference_file_model.name
+        rv = self.app.get('/v1.0/reference_file/%s' % name, headers=self.logged_in_headers())
+        self.assert_success(rv)
+        self.assertIsNotNone(rv.get_data())
+        json_data = json.loads(rv.get_data(as_text=True))
+
+        self.assertEqual(reference_file_model.name, json_data['name'])
+        self.assertEqual(reference_file_model.type.value, json_data['type'])
+        self.assertEqual(reference_file_model.id, json_data['id'])
 
     def test_add_reference_file(self):
         ExampleDataLoader().load_reference_documents()
@@ -176,7 +188,10 @@ class TestFilesApi(BaseTest):
         self.app.delete('/v1.0/reference_file/%s' % reference_file.name, headers=self.logged_in_headers())
         db.session.flush()
         rv = self.app.get('/v1.0/reference_file/%s' % reference_file.name, headers=self.logged_in_headers())
-        self.assertEqual(204, rv.status_code)
+        self.assertEqual(404, rv.status_code)
+        self.assertIsNotNone(rv.get_data())
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertIn('The reference file name you provided', json_data['message'])
 
     def test_list_reference_files(self):
         ExampleDataLoader.clean_db()

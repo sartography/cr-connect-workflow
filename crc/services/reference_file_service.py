@@ -88,10 +88,6 @@ class ReferenceFileService(object):
         else:
             raise ApiError("file_not_found", "There is no reference file with the name '%s'" % file_name)
 
-    # TODO: finish this
-    def get_reference_file_info(self, file_name):
-        pass
-
     def write_reference_file_to_system(self, file_model, file_data):
         file_path = self.write_reference_file_data_to_system(file_model.name, file_data)
         self.write_reference_file_info_to_system(file_path, file_model)
@@ -131,7 +127,7 @@ class ReferenceFileService(object):
             session.commit()
         except IntegrityError as ie:
             session.rollback()
-            file_model = session.query(FileModel).filter_by(FileModel.name==file_name).first()
+            file_model = session.query(FileModel).filter(FileModel.name==file_name).first()
             file_model.archived = True
             session.commit()
             app.logger.info("Failed to delete file: %s, so archiving it instead. Due to %s" % (file_name, str(ie)))

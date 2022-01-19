@@ -110,10 +110,16 @@ def get_reference_file_data(name):
     )
 
 
-# TODO: need a test for this?
 def get_reference_file_info(name):
     """Return metadata for a reference file"""
-    return ReferenceFileService().get_reference_file_info(name)
+    file_model = session.query(FileModel).\
+        filter_by(name=name).with_for_update().\
+        filter_by(archived=False).with_for_update().\
+        first()
+    if file_model is None:
+        # TODO: Should this be 204 or 404?
+        raise ApiError('no_such_file', f'The reference file name you provided ({name}) does not exist', status_code=404)
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def update_reference_file_data(name):
