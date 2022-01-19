@@ -14,7 +14,7 @@ from crc.api.common import ApiError
 from crc.models.api_models import Task
 from crc.models.file import LookupFileModel, LookupDataModel
 from crc.models.ldap import LdapSchema
-from crc.models.workflow import WorkflowModel, WorkflowSpecDependencyFile
+from crc.models.workflow import WorkflowModel
 from crc.services.spec_file_service import SpecFileService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.ldap_service import LdapService

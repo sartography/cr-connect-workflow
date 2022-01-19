@@ -19,7 +19,7 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileType
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModelSchema
-from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecDependencyFile
+from crc.models.workflow import WorkflowStatus, WorkflowModel
 from crc.scripts.script import Script
 from crc.services.file_service import FileService
 from crc import app
@@ -195,7 +195,6 @@ class WorkflowProcessor(object):
         self.workflow_model.total_tasks = len(tasks)
         self.workflow_model.completed_tasks = sum(1 for t in tasks if t.state in complete_states)
         self.workflow_model.last_updated = datetime.utcnow()
-        self.update_dependencies(self.spec_data_files)
         session.add(self.workflow_model)
         session.commit()
 
@@ -236,20 +235,6 @@ class WorkflowProcessor(object):
         files = ".".join(str(x) for x in file_ids)
         full_version = "v%s (%s)" % (version, files)
         return full_version
-
-    def update_dependencies(self, spec_data_files):
-        existing_dependencies = SpecFileService().get_spec_data_files(
-            workflow_spec_id=self.workflow_model.workflow_spec_id,
-            workflow_id=self.workflow_model.id)
-
-        # Don't save the dependencies if they haven't changed.
-        if existing_dependencies == spec_data_files:
-            return
-
-        # Remove all existing dependencies, and replace them.
-        self.workflow_model.dependencies = []
-        for file_data in spec_data_files:
-            self.workflow_model.dependencies.append(WorkflowSpecDependencyFile(file_data_id=file_data.id))
 
     @staticmethod
     @timeit

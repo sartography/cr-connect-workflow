@@ -89,15 +89,6 @@ class WorkflowStatus(enum.Enum):
     erroring = "erroring"
 
 
-class WorkflowSpecDependencyFile(db.Model):
-    """Connects to a workflow to test the version of the specification files it depends on to execute"""
-    file_data_id = db.Column(db.Integer, db.ForeignKey(FileDataModel.id), primary_key=True)
-    workflow_id = db.Column(db.Integer, db.ForeignKey("workflow.id"), primary_key=True)
-
-    file_data = db.relationship(FileDataModel)
-
-
-
 class WorkflowLibraryModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = WorkflowLibraryModel
@@ -105,6 +96,7 @@ class WorkflowLibraryModelSchema(SQLAlchemyAutoSchema):
         include_relationships = True
 
     library = marshmallow.fields.Nested('WorkflowSpecModelSchema')
+
 
 class WorkflowModel(db.Model):
     __tablename__ = 'workflow'
@@ -119,10 +111,3 @@ class WorkflowModel(db.Model):
     completed_tasks = db.Column(db.Integer, default=0)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_id = db.Column(db.String, default=None)
-    # Order By is important or generating hashes on reviews.
-    dependencies = db.relationship(WorkflowSpecDependencyFile, cascade="all, delete, delete-orphan",
-                                   order_by="WorkflowSpecDependencyFile.file_data_id")
-
-    def spec_version(self):
-        dep_ids = list(dep.file_data_id for dep in self.dependencies)
-        return "-".join(str(dep_ids))

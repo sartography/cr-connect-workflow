@@ -20,7 +20,7 @@ from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowM
 from crc.models.task_event import TaskEventModel
 from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
-    WorkflowStatus, WorkflowSpecDependencyFile
+    WorkflowStatus
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
@@ -236,7 +236,6 @@ class StudyService(object):
             return
 
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
-        session.query(WorkflowSpecDependencyFile).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
         session.query(FileModel).filter_by(workflow_id=workflow_id).update({'archived': True, 'workflow_id': None})
 
         session.delete(workflow)

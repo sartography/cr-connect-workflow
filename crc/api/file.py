@@ -147,7 +147,7 @@ def update_reference_file_data(name):
     return FileSchema().dump(to_file_api(file_model))
 
 
-# TODO: need a test for this
+# TODO: do we need a test for this?
 def update_reference_file_info(name, body):
     if name is None:
         raise ApiError(code='missing_parameter',
