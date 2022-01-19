@@ -54,6 +54,7 @@ def get_spec_files(workflow_spec_id, include_libraries=False):
 
 
 def get_reference_files():
+    """Gets a list of all reference files"""
     results = ReferenceFileService.get_reference_files()
     files = (to_file_api(model) for model in results)
     return FileSchema(many=True).dump(files)
@@ -97,16 +98,22 @@ def add_spec_file(workflow_spec_id):
                        message="You must include a workflow_spec_id")
 
 
-def get_reference_file(name):
+def get_reference_file_data(name):
     file_extension = FileService.get_extension(name)
     content_type = CONTENT_TYPES[file_extension]
-    file_data = ReferenceFileService.get_reference_file_data(name)
+    file_data = ReferenceFileService().get_reference_file_data(name)
     return send_file(
         io.BytesIO(file_data.data),
         attachment_filename=name,
         mimetype=content_type,
         cache_timeout=-1  # Don't cache these files on the browser.
     )
+
+
+# TODO: need a test for this?
+def get_reference_file_info(name):
+    """Return metadata for a reference file"""
+    return ReferenceFileService().get_reference_file_info(name)
 
 
 def update_reference_file_data(name):
@@ -132,6 +139,19 @@ def update_reference_file_data(name):
         ReferenceFileService().update_reference_file(file_model, file.stream.read())
 
     return FileSchema().dump(to_file_api(file_model))
+
+
+# TODO: need a test for this
+def update_reference_file_info(name, body):
+    if name is None:
+        raise ApiError(code='missing_parameter',
+                       message='Please provide a reference file name')
+    file_model = session.query(FileModel).filter(FileModel.name==name).first()
+    if file_model is None:
+        raise ApiError(code='no_such_file',
+                       message=f"No reference file was found with name: {name}")
+    new_file_model = ReferenceFileService.update_reference_file_info(file_model, body)
+    return FileSchema().dump(to_file_api(new_file_model))
 
 
 def add_reference_file():
@@ -239,7 +259,7 @@ def get_file_info(file_id):
 
 
 def get_spec_file_info(file_id):
-    pass
+    return get_file_info(file_id)
 
 
 def update_file_info(file_id, body):
@@ -274,12 +294,10 @@ def delete_file(file_id):
 
 def delete_spec_file(file_id):
     SpecFileService.delete_spec_file(file_id)
-    print('crc.api.file: delete_spec_file')
 
 
-# TODO: Finish this
-def delete_reference_file(file_id):
-    pass
+def delete_reference_file(name):
+    ReferenceFileService().delete_reference_file(name)
 
 
 def dmn_from_ss():

@@ -51,7 +51,7 @@ class LookupService(object):
 
     @staticmethod
     def get_lookup_model_for_file_data(file_id, file_name, value_column, label_column):
-        file_data = ReferenceFileService.get_reference_file_data(file_name)
+        file_data = ReferenceFileService().get_reference_file_data(file_name)
         lookup_model = db.session.query(LookupFileModel).filter(LookupFileModel.file_model_id == file_id).first()
         if not lookup_model:
             logging.warning("!!!! Making a very expensive call to update the lookup model.")

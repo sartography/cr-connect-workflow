@@ -120,7 +120,7 @@ class TestFilesApi(BaseTest):
         with open(filepath, 'rb') as myfile:
             file_data = myfile.read()
         data = {'file': (io.BytesIO(file_data), file_name)}
-        rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
+        rv = self.app.put('/v1.0/reference_file/%s/data' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
@@ -134,7 +134,7 @@ class TestFilesApi(BaseTest):
     def test_set_reference_file_bad_extension(self):
         file_name = DocumentService.DOCUMENT_LIST
         data = {'file': (io.BytesIO(b"abcdef"), "does_not_matter.ppt")}
-        rv = self.app.put('/v1.0/reference_file/%s' % file_name, data=data, follow_redirects=True,
+        rv = self.app.put('/v1.0/reference_file/%s/data' % file_name, data=data, follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_failure(rv, error_code="invalid_file_type")
 
@@ -143,12 +143,12 @@ class TestFilesApi(BaseTest):
         ExampleDataLoader().load_reference_documents()
         file_name = "irb_document_types.xls"
         filepath = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
-        with open(filepath, 'rb') as myfile:
-            file_data = myfile.read()
+        with open(filepath, 'rb') as f_open:
+            file_data = f_open.read()
         data = {'file': (io.BytesIO(file_data), file_name)}
-        rv = self.app.post('/v1.0/reference_file', data=data, follow_redirects=True,
-                           content_type='multipart/form-data', headers=self.logged_in_headers())
-        rv = self.app.get('/v1.0/reference_file/%s' % file_name, headers=self.logged_in_headers())
+        self.app.post('/v1.0/reference_file', data=data, follow_redirects=True,
+                      content_type='multipart/form-data', headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/reference_file/%s/data' % file_name, headers=self.logged_in_headers())
         self.assert_success(rv)
         data_out = rv.get_data()
         self.assertEqual(file_data, data_out)
@@ -167,6 +167,16 @@ class TestFilesApi(BaseTest):
         self.assertEqual(FileType.xlsx, file.type)
         self.assertFalse(file.primary)
         self.assertEqual(True, file.is_reference)
+
+    def test_delete_reference_file(self):
+        ExampleDataLoader().load_reference_documents()
+        reference_file = session.query(FileModel).filter(FileModel.is_reference == True).first()
+        rv = self.app.get('/v1.0/reference_file/%s' % reference_file.name, headers=self.logged_in_headers())
+        self.assert_success(rv)
+        self.app.delete('/v1.0/reference_file/%s' % reference_file.name, headers=self.logged_in_headers())
+        db.session.flush()
+        rv = self.app.get('/v1.0/reference_file/%s' % reference_file.name, headers=self.logged_in_headers())
+        self.assertEqual(204, rv.status_code)
 
     def test_list_reference_files(self):
         ExampleDataLoader.clean_db()
@@ -334,16 +344,16 @@ class TestFilesApi(BaseTest):
         self.assertEqual('Ancillary Document', json_data['document']['category1'])
         self.assertEqual('Study Team', json_data['document']['who_uploads?'])
 
-    def test_delete_file(self):
+    def test_delete_spec_file(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel).first()
         file = session.query(FileModel).filter_by(workflow_spec_id=spec.id).first()
         file_id = file.id
-        rv = self.app.get('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/spec_file/%i' % file.id, headers=self.logged_in_headers())
         self.assert_success(rv)
-        rv = self.app.delete('/v1.0/file/%i' % file.id, headers=self.logged_in_headers())
+        self.app.delete('/v1.0/spec_file/%i' % file.id, headers=self.logged_in_headers())
         db.session.flush()
-        rv = self.app.get('/v1.0/file/%i' % file_id, headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/spec_file/%i' % file_id, headers=self.logged_in_headers())
         self.assertEqual(404, rv.status_code)
 
     def test_change_primary_bpmn(self):

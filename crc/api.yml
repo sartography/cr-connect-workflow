@@ -1064,13 +1064,13 @@ paths:
         schema:
           type: string
     get:
-      operationId: crc.api.file.get_reference_file
-      summary: Reference files are called by name rather than by id.
+      operationId: crc.api.file.get_reference_file_info
+      summary: Returns the file info for a reference file
       tags:
         - Files
       responses:
         '200':
-          description: Returns the actual file
+          description: Returns the info for a reference file
           content:
             application/octet-stream:
               schema:
@@ -1078,30 +1078,22 @@ paths:
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
     put:
-      operationId: crc.api.file.update_reference_file_data
-      security:
-        - auth_admin: ['secret']
-      summary: Update the contents of a named reference file.
+      operationId: crc.api.file.update_reference_file_info
+      summary: Update the file_info of a named reference file.
       tags:
         - Files
       requestBody:
         content:
-          multipart/form-data:
+          application/json:
             schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
+              $ref: "#/components/schemas/File"
       responses:
         '200':
-          description: Returns the actual file
+          description: File info updated successfully
           content:
-            application/octet-stream:
+            application/json:
               schema:
-                type: string
-                format: binary
-                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+                $ref: "#/components/schemas/File"
     delete:
       operationId: crc.api.file.delete_reference_file
       summary: Remove an existing reference file.
@@ -1110,6 +1102,51 @@ paths:
       responses:
         '204':
           description: The reference file was removed.
+  /reference_file/{name}/data:
+    parameters:
+      - name: name
+        in: path
+        required: true
+        description: The special name of the reference file.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.file.get_reference_file_data
+      summary: Returns only the reference file content
+      tags:
+        - Files
+      responses:
+        '200':
+          description: Returns the actual reference file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+    put:
+      operationId: crc.api.file.update_reference_file_data
+      summary: Update the contents of a reference file
+      tags:
+        - Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              x-body-name: file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        '200':
+          description: Returns the updated file model
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
 
   /spec_file:
     parameters:
@@ -1227,7 +1264,7 @@ paths:
         - Files
       requestBody:
         content:
-          mulitpart/form-data:
+          multipart/form-data:
             schema:
               x-body-name: file
               type: object
