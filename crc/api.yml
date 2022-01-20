@@ -802,12 +802,6 @@ paths:
 
   /file:
     parameters:
-      - name: workflow_spec_id
-        in: query
-        required: false
-        description: The unique id of a workflow specification
-        schema:
-          type: string
       - name: workflow_id
         in: query
         required: false
