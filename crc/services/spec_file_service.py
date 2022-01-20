@@ -283,32 +283,53 @@ class SpecFileService(object):
 
         return category_name
 
-    def get_spec_file_data(self, file_id: int):
-        file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
-        if file_model is not None:
-            spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
-            if spec_model is not None:
-                category_name = self.get_spec_file_category_name(spec_model)
-                sync_file_root = self.get_sync_file_root()
-                file_path = os.path.join(sync_file_root, category_name, spec_model.display_name, file_model.name)
-                mtime = os.path.getmtime(file_path)
-                with open(file_path, 'rb') as f_handle:
-                    spec_file_data = f_handle.read()
-                    size = len(spec_file_data)
-                    md5_checksum = UUID(hashlib.md5(spec_file_data).hexdigest())
+    def get_path(self, file_id: int):
+        # Returns the path on the file system for the given File id
 
-                    file_data_model = FileDataModel(data=spec_file_data,
-                                                    md5_hash=md5_checksum,
-                                                    size=size,
-                                                    date_created=datetime.datetime.fromtimestamp(mtime),
-                                                    file_model_id=file_id)
-                    return file_data_model
-            else:
-                raise ApiError(code='spec_not_found',
-                               message=f'No spec found for file with file_id: {file_id}, and spec_id: {file_model.workflow_spec_id}')
-        else:
+        # Assure we have a file.
+        file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
+        if not file_model:
             raise ApiError(code='model_not_found',
                            message=f'No model found for file with file_id: {file_id}')
+
+        # Assure we have a spec.
+        spec_model = session.query(WorkflowSpecModel).filter(
+            WorkflowSpecModel.id == file_model.workflow_spec_id).first()
+        if not spec_model:
+            raise ApiError(code='spec_not_found',
+                       message=f'No spec found for file with file_id: '
+                               f'{file_model.id}, and spec_id: {file_model.workflow_spec_id}')
+
+        # Calculate the path.
+        sync_file_root = self.get_sync_file_root()
+        category_name = self.get_spec_file_category_name(spec_model)
+        return os.path.join(sync_file_root, category_name, spec_model.display_name, file_model.name)
+
+
+    def last_modified(self, file_id: int):
+        path = self.get_path(file_id)
+        return self.__last_modified(path)
+
+    def __last_modified(self, file_path: str):
+        # Returns the last modified date of the given file.
+        timestamp = os.path.getmtime(file_path)
+        return datetime.datetime.fromtimestamp(timestamp)
+
+    def get_spec_file_data(self, file_id: int):
+        file_path = self.get_path(file_id)
+        date = self.last_modified(file_id)
+        with open(file_path, 'rb') as f_handle:
+            spec_file_data = f_handle.read()
+            size = len(spec_file_data)
+            md5_checksum = UUID(hashlib.md5(spec_file_data).hexdigest())
+            last_modified = self.__last_modified(file_path)
+            file_data_model = FileDataModel(data=spec_file_data,
+                                            md5_hash=md5_checksum,
+                                            size=size,
+                                            date_created=last_modified,
+                                            file_model_id=file_id)
+            return file_data_model
+
 
     @staticmethod
     def get_process_id(et_root: etree.Element):

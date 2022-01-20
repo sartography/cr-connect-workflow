@@ -218,12 +218,10 @@ class FileService(object):
     @staticmethod
     def delete_file(file_id):
         try:
-            data_models = session.query(FileDataModel).filter_by(file_model_id=file_id).all()
-            for dm in data_models:
-                lookup_files = session.query(LookupFileModel).filter_by(file_data_model_id=dm.id).all()
-                for lf in lookup_files:
-                    session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
-                    session.query(LookupFileModel).filter_by(id=lf.id).delete()
+            lookup_files = session.query(LookupFileModel).filter_by(file_model_id=file_id).all()
+            for lf in lookup_files:
+                session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
+                session.query(LookupFileModel).filter_by(id=lf.id).delete()
             session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
             session.query(DataStoreModel).filter_by(file_id=file_id).delete()
             session.query(FileModel).filter_by(id=file_id).delete()

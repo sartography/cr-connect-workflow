@@ -66,16 +66,15 @@ class LookupService(object):
             .filter(LookupFileModel.task_spec_id == task_spec_id) \
             .order_by(desc(LookupFileModel.id)).first()
 
-        # one more quick query, to see if the lookup file is still related to this workflow.
-        # if not, we need to rebuild the lookup table.
+        # The above may return a model, if it does, it might still be out of date.
+        # We need to check the file date to assure we have the most recent file.
         is_current = False
         if lookup_model:
             if lookup_model.is_ldap:  # LDAP is always current
                 is_current = True
             else:
-                is_current = db.session.query(WorkflowSpecDependencyFile). \
-                    filter(WorkflowSpecDependencyFile.file_data_id == lookup_model.file_data_model_id).\
-                    filter(WorkflowSpecDependencyFile.workflow_id == workflow.id).count()
+                current_date = SpecFileService().last_modified(lookup_model.file_model.id)
+                is_current = current_date == lookup_model.last_updated
 
         if not is_current:
             # Very very very expensive, but we don't know need this till we do.
@@ -132,8 +131,8 @@ class LookupService(object):
             value_column = field.get_property(Task.FIELD_PROP_VALUE_COLUMN)
             label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
             latest_files = SpecFileService().get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id,
-                                                           workflow_id=workflow_model.id,
-                                                           name=file_name)
+                                                                 workflow_id=workflow_model.id,
+                                                                 name=file_name)
             if len(latest_files) < 1:
                 raise ApiError("invalid_enum", "Unable to locate the lookup data file '%s'" % file_name)
             else:
@@ -142,6 +141,7 @@ class LookupService(object):
             file_id = data_dict['meta']['id']
             file_name = data_dict['meta']['name']
             file_data = data_dict['data']
+
             lookup_model = LookupService.build_lookup_table(file_id, file_name, file_data, value_column, label_column,
                                                             workflow_model.workflow_spec_id, task_spec_id, field_id)
 

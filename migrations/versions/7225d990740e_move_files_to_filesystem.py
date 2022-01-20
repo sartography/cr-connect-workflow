@@ -12,7 +12,6 @@ import sqlalchemy as sa
 # import crc
 from crc import app
 from crc.models.file import FileModel, FileDataModel, LookupFileModel
-from crc.models.workflow import WorkflowSpecDependencyFile
 from crc.services.file_service import FileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.reference_file_service import ReferenceFileService
@@ -39,6 +38,7 @@ def upgrade():
     op.drop_table('workflow_spec_dependency_file')
     # op.drop_constraint('lookup_file_file_data_model_id_fkey', 'lookup_file', type_='foreignkey')
     op.add_column('lookup_file', sa.Column('file_model_id', sa.Integer(), nullable=True))
+    op.add_column('lookup_file', sa.Column('last_updated', sa.DateTime(), nullable=True))
     op.create_foreign_key(None, 'lookup_file', 'file', ['file_model_id'], ['id'])
 
     processed_files = []
