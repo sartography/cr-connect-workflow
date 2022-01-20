@@ -16,7 +16,7 @@ from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
-from crc.models.workflow import WorkflowModel
+from crc.models.workflow import WorkflowModel, WorkflowLibraryModel
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
 import re
@@ -163,21 +163,35 @@ class FileService(object):
         return query.all()
 
     @staticmethod
-    def get_files(workflow_id=None, name=None, irb_doc_code=None):
-        if workflow_id is not None:
-            query = session.query(FileModel).filter_by(workflow_id=workflow_id)
+    def get_files(workflow_spec_id=None, workflow_id=None,
+                  name=None, is_reference=False, irb_doc_code=None, include_libraries=False):
+        query = session.query(FileModel).filter_by(is_reference=is_reference)
+        if workflow_spec_id:
+            if include_libraries:
+                libraries = session.query(WorkflowLibraryModel).filter(
+                   WorkflowLibraryModel.workflow_spec_id==workflow_spec_id).all()
+                library_workflow_specs = [x.library_spec_id for x in libraries]
+                library_workflow_specs.append(workflow_spec_id)
+                query = query.filter(FileModel.workflow_spec_id.in_(library_workflow_specs))
+            else:
+                query = query.filter(FileModel.workflow_spec_id == workflow_spec_id)
+
+        elif workflow_id:
+            query = query.filter_by(workflow_id=workflow_id)
             if irb_doc_code:
                 query = query.filter_by(irb_doc_code=irb_doc_code)
+        elif is_reference:
+            query = query.filter_by(is_reference=True)
 
-            if name:
-                query = query.filter_by(name=name)
+        if name:
+            query = query.filter_by(name=name)
 
-            query = query.filter(FileModel.archived == False)
-            query = query.order_by(FileModel.id)
+        query = query.filter(FileModel.archived == False)
 
-            results = query.all()
-            return results
+        query = query.order_by(FileModel.id)
 
+        results = query.all()
+        return results
 
     @staticmethod
     def get_workflow_data_files(workflow_id=None):
