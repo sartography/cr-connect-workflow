@@ -1024,7 +1024,7 @@ paths:
       operationId: crc.api.reference_file.get_reference_files
       summary: Provides a list of existing reference files that are available in the system.
       tags:
-        - Files
+        - Reference Files
       responses:
         '200':
           description: An array of file descriptions (not the file content)
@@ -1040,7 +1040,7 @@ paths:
         - auth_admin: [ 'secret' ]
       summary: Add a new reference file.
       tags:
-        - Files
+        - Reference Files
       requestBody:
         content:
           multipart/form-data:
@@ -1069,7 +1069,7 @@ paths:
       operationId: crc.api.reference_file.get_reference_file_info
       summary: Returns the file info for a reference file
       tags:
-        - Files
+        - Reference Files
       responses:
         '200':
           description: Returns the info for a reference file
@@ -1085,7 +1085,7 @@ paths:
         - auth_admin: ['secret']
       summary: Update the file_info of a named reference file.
       tags:
-        - Files
+        - Reference Files
       requestBody:
         content:
           application/json:
@@ -1102,7 +1102,7 @@ paths:
       operationId: crc.api.reference_file.delete_reference_file
       summary: Remove an existing reference file.
       tags:
-        - Files
+        - Reference Files
       responses:
         '204':
           description: The reference file was removed.
@@ -1118,7 +1118,7 @@ paths:
       operationId: crc.api.reference_file.get_reference_file_data
       summary: Returns only the reference file content
       tags:
-        - Files
+        - Reference Files
       responses:
         '200':
           description: Returns the actual reference file
@@ -1133,7 +1133,7 @@ paths:
         - auth_admin: ['secret']
       summary: Update the contents of a reference file
       tags:
-        - Files
+        - Reference Files
       requestBody:
         content:
           multipart/form-data:
@@ -1166,7 +1166,7 @@ paths:
       operationId: crc.api.spec_file.get_spec_files
       summary: Provide a list of workflow spec files for the given workflow_spec_id. IMPORTANT, only includes metadata, not the file content.
       tags:
-        - Files
+        - Spec Files
       responses:
         '200':
           description: An array of file descriptions (not the file content)
@@ -1180,7 +1180,7 @@ paths:
       operationId: crc.api.spec_file.add_spec_file
       summary: Add a new workflow spec file
       tags:
-        - Files
+        - Spec Files
       requestBody:
         content:
           multipart/form-data:
@@ -1209,7 +1209,7 @@ paths:
       operationId: crc.api.spec_file.get_spec_file_info
       summary: Returns metadata about the file
       tags:
-        - Files
+        - Spec Files
       responses:
         '200':
           description: Returns the file information requested.
@@ -1221,7 +1221,7 @@ paths:
       operationId: crc.api.spec_file.update_spec_file_info
       summary: Update existing spec file with the given parameters.
       tags:
-        - Files
+        - Spec Files
       requestBody:
         content:
           application/json:
@@ -1238,7 +1238,7 @@ paths:
       operationId: crc.api.spec_file.delete_spec_file
       summary: Removes an existing workflow spec file.
       tags:
-        - Files
+        - Spec Files
       responses:
         '204':
           description: The file was removed.
@@ -1254,7 +1254,7 @@ paths:
       operationId: crc.api.spec_file.get_spec_file_data
       summary: Returns only the spec file content
       tags:
-        - Files
+        - Spec Files
       responses:
         '200':
           description: Returns the actual spec file
@@ -1267,7 +1267,7 @@ paths:
       operationId: crc.api.spec_file.update_spec_file_data
       summary: Update the contents of a spec file
       tags:
-        - Files
+        - Spec Files
       requestBody:
         content:
           multipart/form-data:
