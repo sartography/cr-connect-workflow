@@ -1021,7 +1021,7 @@ paths:
 
   /reference_file:
     get:
-      operationId: crc.api.file.get_reference_files
+      operationId: crc.api.reference_file.get_reference_files
       summary: Provides a list of existing reference files that are available in the system.
       tags:
         - Files
@@ -1035,7 +1035,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/File"
     post:
-      operationId: crc.api.file.add_reference_file
+      operationId: crc.api.reference_file.add_reference_file
       summary: Add a new reference file.
       tags:
         - Files
@@ -1064,7 +1064,7 @@ paths:
         schema:
           type: string
     get:
-      operationId: crc.api.file.get_reference_file_info
+      operationId: crc.api.reference_file.get_reference_file_info
       summary: Returns the file info for a reference file
       tags:
         - Files
@@ -1078,7 +1078,7 @@ paths:
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
     put:
-      operationId: crc.api.file.update_reference_file_info
+      operationId: crc.api.reference_file.update_reference_file_info
       summary: Update the file_info of a named reference file.
       tags:
         - Files
@@ -1095,7 +1095,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/File"
     delete:
-      operationId: crc.api.file.delete_reference_file
+      operationId: crc.api.reference_file.delete_reference_file
       summary: Remove an existing reference file.
       tags:
         - Files
@@ -1111,7 +1111,7 @@ paths:
         schema:
           type: string
     get:
-      operationId: crc.api.file.get_reference_file_data
+      operationId: crc.api.reference_file.get_reference_file_data
       summary: Returns only the reference file content
       tags:
         - Files
@@ -1124,7 +1124,7 @@ paths:
                 type: string
                 format: binary
     put:
-      operationId: crc.api.file.update_reference_file_data
+      operationId: crc.api.reference_file.update_reference_file_data
       summary: Update the contents of a reference file
       tags:
         - Files
@@ -1157,7 +1157,7 @@ paths:
         schema:
           type: string
     get:
-      operationId: crc.api.file.get_spec_files
+      operationId: crc.api.spec_file.get_spec_files
       summary: Provide a list of workflow spec files for the given workflow_spec_id. IMPORTANT, only includes metadata, not the file content.
       tags:
         - Files
@@ -1171,7 +1171,7 @@ paths:
                items:
                  $ref: "#/components/schemas/File"
     post:
-      operationId: crc.api.file.add_spec_file
+      operationId: crc.api.spec_file.add_spec_file
       summary: Add a new workflow spec file
       tags:
         - Files
@@ -1200,7 +1200,7 @@ paths:
         schema:
           type: integer
     get:
-      operationId: crc.api.file.get_spec_file_info
+      operationId: crc.api.spec_file.get_spec_file_info
       summary: Returns metadata about the file
       tags:
         - Files
@@ -1212,7 +1212,7 @@ paths:
               schema:
                 $ref: "#components/schemas/File"
     put:
-      operationId: crc.api.file.update_spec_file_info
+      operationId: crc.api.spec_file.update_spec_file_info
       summary: Update existing spec file with the given parameters.
       tags:
         - Files
@@ -1229,7 +1229,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/File"
     delete:
-      operationId: crc.api.file.delete_spec_file
+      operationId: crc.api.spec_file.delete_spec_file
       summary: Removes an existing workflow spec file.
       tags:
         - Files
@@ -1245,7 +1245,7 @@ paths:
         schema:
           type: integer
     get:
-      operationId: crc.api.file.get_spec_file_data
+      operationId: crc.api.spec_file.get_spec_file_data
       summary: Returns only the spec file content
       tags:
         - Files
@@ -1258,7 +1258,7 @@ paths:
                 type: string
                 format: binary
     put:
-      operationId: crc.api.file.update_spec_file_data
+      operationId: crc.api.spec_file.update_spec_file_data
       summary: Update the contents of a spec file
       tags:
         - Files

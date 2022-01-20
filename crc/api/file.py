@@ -1,5 +1,4 @@
 import io
-import os
 from datetime import datetime
 
 import connexion
@@ -8,8 +7,7 @@ from flask import send_file
 from crc import session
 from crc.api.common import ApiError
 from crc.api.user import verify_token
-from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel, FileType, CONTENT_TYPES
-from crc.models.workflow import WorkflowSpecModel
+from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.reference_file_service import ReferenceFileService
@@ -43,23 +41,6 @@ def get_files(workflow_id=None, form_field_key=None,study_id=None):
     return FileSchema(many=True).dump(files)
 
 
-def get_spec_files(workflow_spec_id, include_libraries=False):
-    if workflow_spec_id is None:
-        raise ApiError(code='missing_spec_id',
-                       message='Please specify the workflow_spec_id.')
-    file_models = SpecFileService.get_spec_files(workflow_spec_id=workflow_spec_id,
-                                                 include_libraries=include_libraries)
-    files = [to_file_api(model) for model in file_models]
-    return FileSchema(many=True).dump(files)
-
-
-def get_reference_files():
-    """Gets a list of all reference files"""
-    results = ReferenceFileService.get_reference_files()
-    files = (to_file_api(model) for model in results)
-    return FileSchema(many=True).dump(files)
-
-
 def add_file(workflow_id=None, task_spec_name=None, form_field_key=None):
     file = connexion.request.files['file']
     if workflow_id:
@@ -79,118 +60,12 @@ def add_file(workflow_id=None, task_spec_name=None, form_field_key=None):
     return FileSchema().dump(to_file_api(file_model))
 
 
-def add_spec_file(workflow_spec_id):
-    if workflow_spec_id:
-        file = connexion.request.files['file']
-        # check if we have a primary already
-        have_primary = FileModel.query.filter(FileModel.workflow_spec_id==workflow_spec_id, FileModel.type==FileType.bpmn, FileModel.primary==True).all()
-        # set this to primary if we don't already have one
-        if not have_primary:
-            primary = True
-        else:
-            primary = False
-        workflow_spec = session.query(WorkflowSpecModel).filter_by(id=workflow_spec_id).first()
-        file_model = SpecFileService.add_workflow_spec_file(workflow_spec, file.filename, file.content_type,
-                                                            file.stream.read(), primary=primary)
-        return FileSchema().dump(to_file_api(file_model))
-    else:
-        raise ApiError(code='missing_workflow_spec_id',
-                       message="You must include a workflow_spec_id")
-
-
-def get_reference_file_data(name):
-    file_extension = FileService.get_extension(name)
-    content_type = CONTENT_TYPES[file_extension]
-    file_data = ReferenceFileService().get_reference_file_data(name)
-    return send_file(
-        io.BytesIO(file_data.data),
-        attachment_filename=name,
-        mimetype=content_type,
-        cache_timeout=-1  # Don't cache these files on the browser.
-    )
-
-
-def get_reference_file_info(name):
-    """Return metadata for a reference file"""
-    file_model = session.query(FileModel).\
-        filter_by(name=name).with_for_update().\
-        filter_by(archived=False).with_for_update().\
-        first()
-    if file_model is None:
-        # TODO: Should this be 204 or 404?
-        raise ApiError('no_such_file', f'The reference file name you provided ({name}) does not exist', status_code=404)
-    return FileSchema().dump(to_file_api(file_model))
-
-
-def update_reference_file_data(name):
-    """Uses the file service to manage reference-files. They will be used in script tasks to compute values."""
-    if 'file' not in connexion.request.files:
-        raise ApiError('invalid_file',
-                       'Expected a file named "file" in the multipart form request', status_code=400)
-
-    file = connexion.request.files['file']
-
-    name_extension = FileService.get_extension(name)
-    file_extension = FileService.get_extension(file.filename)
-    if name_extension != file_extension:
-        raise ApiError('invalid_file_type',
-                       "The file you uploaded has an extension '%s', but it should have an extension of '%s' " %
-                       (file_extension, name_extension))
-
-    file_model = session.query(FileModel).filter(FileModel.name==name).first()
-    if not file_model:
-        raise ApiError(code='file_does_not_exist',
-                       message=f"The reference file {name} does not exist.")
-    else:
-        ReferenceFileService().update_reference_file(file_model, file.stream.read())
-
-    return FileSchema().dump(to_file_api(file_model))
-
-
-# TODO: do we need a test for this?
-def update_reference_file_info(name, body):
-    if name is None:
-        raise ApiError(code='missing_parameter',
-                       message='Please provide a reference file name')
-    file_model = session.query(FileModel).filter(FileModel.name==name).first()
-    if file_model is None:
-        raise ApiError(code='no_such_file',
-                       message=f"No reference file was found with name: {name}")
-    new_file_model = ReferenceFileService.update_reference_file_info(file_model, body)
-    return FileSchema().dump(to_file_api(new_file_model))
-
-
-def add_reference_file():
-    file = connexion.request.files['file']
-    file_model = ReferenceFileService.add_reference_file(name=file.filename,
-                                                    content_type=file.content_type,
-                                                    binary_data=file.stream.read())
-    return FileSchema().dump(to_file_api(file_model))
-
-
 def update_file_data(file_id):
     file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     file = connexion.request.files['file']
     if file_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     file_model = FileService.update_file(file_model, file.stream.read(), file.content_type)
-    return FileSchema().dump(to_file_api(file_model))
-
-
-def update_spec_file_data(file_id):
-    file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
-    if file_model is None:
-        raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
-    if file_model.workflow_spec_id is None:
-        raise ApiError(code='no_spec_id',
-                       message=f'There is no workflow_spec_id for file {file_id}.')
-    workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
-    if workflow_spec_model is None:
-        raise ApiError(code='missing_spec',
-                       message=f'The workflow spec for id {file_model.workflow_spec_id} does not exist.')
-
-    file = connexion.request.files['file']
-    SpecFileService().update_spec_file_data(workflow_spec_model, file_model.name, file.stream.read())
     return FileSchema().dump(to_file_api(file_model))
 
 
@@ -214,25 +89,6 @@ def get_file_data(file_id, version=None):
             raise ApiError('missing_data_model', f'The data model for file ({file_id}) does not exist')
     else:
         raise ApiError('missing_file_model', f'The file id you provided ({file_id}) does not exist')
-
-
-def get_spec_file_data(file_id):
-    file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
-    if file_model is not None:
-        file_data_model = SpecFileService().get_spec_file_data(file_id)
-        if file_data_model is not None:
-            return send_file(
-                io.BytesIO(file_data_model.data),
-                attachment_filename=file_model.name,
-                mimetype=file_model.content_type,
-                cache_timeout=-1  # Don't cache these files on the browser.
-            )
-        else:
-            raise ApiError(code='missing_data_model',
-                           message=f'The data model for file {file_id} does not exist.')
-    else:
-        raise ApiError(code='missing_file_model',
-                       message=f'The file model for file_id {file_id} does not exist.')
 
 
 def get_file_data_link(file_id, auth_token, version=None):
@@ -264,10 +120,6 @@ def get_file_info(file_id):
     return FileSchema().dump(to_file_api(file_model))
 
 
-def get_spec_file_info(file_id):
-    return get_file_info(file_id)
-
-
 def update_file_info(file_id, body):
     if file_id is None:
         raise ApiError('no_such_file', 'Please provide a valid File ID.')
@@ -283,27 +135,8 @@ def update_file_info(file_id, body):
     return FileSchema().dump(to_file_api(file_model))
 
 
-def update_spec_file_info(file_id, body):
-    if file_id is None:
-        raise ApiError('no_such_file', 'Please provide a valid File ID.')
-    file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
-    if file_model is None:
-        raise ApiError('unknown_file_model', 'The file_model "' + file_id + '" is not recognized.')
-
-    new_file_model = SpecFileService().update_spec_file_info(file_model, body)
-    return FileSchema().dump(to_file_api(new_file_model))
-
-
 def delete_file(file_id):
     FileService.delete_file(file_id)
-
-
-def delete_spec_file(file_id):
-    SpecFileService.delete_spec_file(file_id)
-
-
-def delete_reference_file(name):
-    ReferenceFileService().delete_reference_file(name)
 
 
 def dmn_from_ss():
