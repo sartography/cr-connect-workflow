@@ -1036,6 +1036,8 @@ paths:
                   $ref: "#/components/schemas/File"
     post:
       operationId: crc.api.reference_file.add_reference_file
+      security:
+        - auth_admin: [ 'secret' ]
       summary: Add a new reference file.
       tags:
         - Files
@@ -1079,6 +1081,8 @@ paths:
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
     put:
       operationId: crc.api.reference_file.update_reference_file_info
+      security:
+        - auth_admin: ['secret']
       summary: Update the file_info of a named reference file.
       tags:
         - Files
@@ -1125,6 +1129,8 @@ paths:
                 format: binary
     put:
       operationId: crc.api.reference_file.update_reference_file_data
+      security:
+        - auth_admin: ['secret']
       summary: Update the contents of a reference file
       tags:
         - Files
