@@ -171,6 +171,8 @@ def login(
     # If we're in production, override any uid with the uid from the SSO request headers
     if _is_production():
         uid = _get_request_uid(request)
+    else:
+        uid = app.config['DEFAULT_UID']
 
     if uid:
         app.logger.info("SSO_LOGIN: Full URL: " + request.url)
