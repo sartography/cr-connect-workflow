@@ -172,7 +172,8 @@ def login(
     if _is_production():
         uid = _get_request_uid(request)
     else:
-        uid = app.config['DEFAULT_UID']
+        if not app.config['TESTING']:
+            uid = app.config['DEFAULT_UID']
 
     if uid:
         app.logger.info("SSO_LOGIN: Full URL: " + request.url)
