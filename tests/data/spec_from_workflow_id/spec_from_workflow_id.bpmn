@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_40c1849" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_GetSpecFromWorkflowID" name="Get Spec From Workflow ID" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_17kexit</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_17kexit" sourceRef="StartEvent_1" targetRef="Activity_0jto0z6" />
+    <bpmn:sequenceFlow id="Flow_1kk1npy" sourceRef="Activity_0jto0z6" targetRef="Activity_0fvtoy4" />
+    <bpmn:sequenceFlow id="Flow_0lhlo7v" sourceRef="Activity_0fvtoy4" targetRef="Activity_0p13s99" />
+    <bpmn:endEvent id="Event_1syl4vd">
+      <bpmn:incoming>Flow_1xobdxn</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1xobdxn" sourceRef="Activity_0p13s99" targetRef="Event_1syl4vd" />
+    <bpmn:userTask id="Activity_0jto0z6" name="Get Workflow ID" camunda:formKey="IDForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="workflow_id" label="Workflow ID" type="long">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_17kexit</bpmn:incoming>
+      <bpmn:outgoing>Flow_1kk1npy</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Activity_0fvtoy4" name="Get Spec">
+      <bpmn:incoming>Flow_1kk1npy</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lhlo7v</bpmn:outgoing>
+      <bpmn:script>workflow_spec = get_spec_from_workflow_id(workflow_id)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Activity_0p13s99" name="Display Spec">
+      <bpmn:documentation>## Workflow Spec
+
+
+{{ workflow_spec }}
+</bpmn:documentation>
+      <bpmn:incoming>Flow_0lhlo7v</bpmn:incoming>
+      <bpmn:outgoing>Flow_1xobdxn</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_GetSpecFromWorkflowID">
+      <bpmndi:BPMNEdge id="Flow_1xobdxn_di" bpmnElement="Flow_1xobdxn">
+        <di:waypoint x="690" y="177" />
+        <di:waypoint x="752" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lhlo7v_di" bpmnElement="Flow_0lhlo7v">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="590" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1kk1npy_di" bpmnElement="Flow_1kk1npy">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17kexit_di" bpmnElement="Flow_17kexit">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1syl4vd_di" bpmnElement="Event_1syl4vd">
+        <dc:Bounds x="752" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0u0tq1n_di" bpmnElement="Activity_0jto0z6">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0rqe6vq_di" bpmnElement="Activity_0fvtoy4">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fdkgr2_di" bpmnElement="Activity_0p13s99">
+        <dc:Bounds x="590" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
