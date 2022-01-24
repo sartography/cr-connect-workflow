@@ -1,16 +1,18 @@
 from tests.base_test import BaseTest
-from example_data import ExampleDataLoader
+
+import json
 
 
-class TestDuplicateWorkflowSpecFile(BaseTest):
+class TestMissingLibrary(BaseTest):
 
-    def test_duplicate_workflow_spec_file(self):
-        spec1 = ExampleDataLoader().create_spec('missing_library', 'Missing Library', category_id=0, library=False,
-                                               from_tests=True)
+    def test_missing_library(self):
+        """We call a library that does not exist, and
+        test to see if our error service hint is in the error message."""
         workflow = self.create_workflow('missing_library')
-        with self.assertRaises(AssertionError) as ae:
-            workflow_api = self.get_workflow_api(workflow)
-        # task = workflow_api.next_task
-        #     self.complete_form(workflow, task, {'num_1': 4, 'num_2': 5})
-
-        print('test_duplicate_workflow_spec_file')
+        url = f'/v1.0/workflow/{workflow.id}?do_engine_steps=True'
+        rv = self.app.get(url,
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual('workflow_validation_error', json_data['code'])
+        self.assertIn("'Process_Multiply' was not found", json_data['message'])
