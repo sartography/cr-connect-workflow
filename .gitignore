@@ -238,3 +238,6 @@ postgres/var/
 .coverage
 coverage.xml
 .~lock.*
+
+# Specification files
+SPECS

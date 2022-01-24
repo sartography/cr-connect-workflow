@@ -26,7 +26,7 @@ def to_file_api(file_model):
                             DocumentService.get_dictionary())
 
 
-def get_files(workflow_id=None, form_field_key=None,study_id=None):
+def get_files(workflow_id=None, form_field_key=None, study_id=None):
     if workflow_id is None:
         raise ApiError('missing_parameter',
                        'Please specify a workflow_id with an optional form_field_key')
