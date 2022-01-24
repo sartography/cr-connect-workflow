@@ -22,7 +22,10 @@ known_errors = {'Non-default exclusive outgoing sequence flow  without condition
                          'for the property.'},
                 'Error opening excel file .*, with file_model_id:':
                 {'hint': 'It looks like you are trying to use an older xls file. '
-                         'Try uploading a newer xlsx file.'}}
+                         'Try uploading a newer xlsx file.'},
+                'Failed to parse the Workflow Specification. Error is \'The process \'(.+)\' was not found. Did you mean one of the following: .*':
+                    {'hint': 'The workflow spec could not be parsed. If you are loading a library, check whether the name is correct.'}
+                }
 
 
 class ValidationErrorService(object):
