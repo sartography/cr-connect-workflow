@@ -6,8 +6,8 @@ import json
 class TestMissingLibrary(BaseTest):
 
     def test_missing_library(self):
-        """We call a library that does not exist, and
-        test to see if our error service hint is in the error message."""
+        """This workflow calls a library that does not exist,
+        we validate the workflow, and assert that our error service hint is in the error message."""
         workflow = self.create_workflow('missing_library')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % workflow.workflow_spec_id, headers=self.logged_in_headers())
         json_data = json.loads(rv.get_data(as_text=True))
