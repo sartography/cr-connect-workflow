@@ -1,3 +1,5 @@
+from typing import List
+
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
@@ -102,15 +104,11 @@ class WorkflowProcessor(object):
 
         self.workflow_model = workflow_model
 
-        if workflow_model.bpmn_workflow_json is None:  # The workflow was never started.
-            self.spec_data_files = SpecFileService().get_spec_data_files(
-                workflow_spec_id=workflow_model.workflow_spec_id,include_libraries=True)
-            spec = self.get_spec(self.spec_data_files, workflow_model.workflow_spec_id)
-        else:
-            self.spec_data_files = SpecFileService().get_spec_data_files(
-                workflow_spec_id=workflow_model.workflow_spec_id,
-                workflow_id=workflow_model.id)
-            spec = None
+        spec = None
+        if workflow_model.bpmn_workflow_json is None:
+            self.spec_files = SpecFileService().get_spec_files(
+                workflow_spec_id=workflow_model.workflow_spec_id, include_libraries=True)
+            spec = self.get_spec(self.spec_files, workflow_model.workflow_spec_id)
 
         self.workflow_spec_id = workflow_model.workflow_spec_id
 
@@ -180,10 +178,6 @@ class WorkflowProcessor(object):
             bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
-#            try:
-#                bpmn_workflow.do_engine_steps()
-#            except WorkflowException as we:
-#                raise ApiError.from_task_spec("error_loading_workflow", str(we), we.sender)
         return bpmn_workflow
 
     def save(self):
@@ -198,53 +192,15 @@ class WorkflowProcessor(object):
         session.add(self.workflow_model)
         session.commit()
 
-    def get_version_string(self):
-        # this could potentially become expensive to load all the data in the data models.
-        # in which case we might consider using a deferred loader for the actual data, but
-        # trying not to pre-optimize.
-        file_data_models = SpecFileService().get_spec_data_files(self.workflow_model.workflow_spec_id,
-                                                           self.workflow_model.id)
-        return WorkflowProcessor.__get_version_string_for_data_models(file_data_models)
-
-    @staticmethod
-    def get_latest_version_string_for_spec(spec_id):
-        file_data_models = SpecFileService().get_spec_data_files(spec_id)
-        return WorkflowProcessor.__get_version_string_for_data_models(file_data_models)
-
-    @staticmethod
-    def __get_version_string_for_data_models(file_data_models):
-        """Version is in the format v[VERSION] (FILE_ID_LIST)
-         For example, a single bpmn file with only one version would be
-         v1 (12)  Where 12 is the id of the file data model that is used to create the
-         specification.  If multiple files exist, they are added on in
-         dot notation to both the version number and the file list. So
-         a Spec that includes a BPMN, DMN, an a Word file all on the first
-         version would be v1.1.1 (12.45.21)"""
-
-        major_version = 0  # The version of the primary file.
-        minor_version = []  # The versions of the minor files if any.
-        file_ids = []
-        for file_data in file_data_models:
-            file_ids.append(file_data.id)
-            if file_data.file_model.primary:
-                major_version = file_data.version
-            else:
-                minor_version.append(file_data.version)
-        minor_version.insert(0, major_version)  # Add major version to beginning.
-        version = ".".join(str(x) for x in minor_version)
-        files = ".".join(str(x) for x in file_ids)
-        full_version = "v%s (%s)" % (version, files)
-        return full_version
-
     @staticmethod
     @timeit
     def run_master_spec(spec_model, study):
         """Executes a BPMN specification for the given study, without recording any information to the database
         Useful for running the master specification, which should not persist. """
         lasttime = firsttime()
-        spec_data_files = SpecFileService().get_spec_data_files(spec_model.id)
+        spec_files = SpecFileService().get_spec_files(spec_model.id, include_libraries=True)
         lasttime = sincetime('load Files', lasttime)
-        spec = WorkflowProcessor.get_spec(spec_data_files, spec_model.id)
+        spec = WorkflowProcessor.get_spec(spec_files, spec_model.id)
         lasttime = sincetime('get spec', lasttime)
         try:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
@@ -268,7 +224,7 @@ class WorkflowProcessor(object):
         return parser
 
     @staticmethod
-    def get_spec(files, workflow_spec_id):
+    def get_spec(files: List[FileModel], workflow_spec_id):
         """Returns a SpiffWorkflow specification for the given workflow spec,
         using the files provided.  The Workflow_spec_id is only used to generate
         better error messages."""
@@ -276,14 +232,15 @@ class WorkflowProcessor(object):
         process_id = None
 
         for file in files:
-            if file['meta']['name'][-4:] == FileType.bpmn.value:
-                bpmn: etree.Element = etree.fromstring(file['data'])
-                if file['meta']['primary'] and file['meta']['workflow_spec_id'] == workflow_spec_id:
+            data = SpecFileService().get_spec_file_data(file.id).data
+            if file.type == FileType.bpmn:
+                bpmn: etree.Element = etree.fromstring(data)
+                if file.primary and file.workflow_spec_id == workflow_spec_id:
                     process_id = SpecFileService.get_process_id(bpmn)
-                parser.add_bpmn_xml(bpmn, filename=file['meta']['name'])
-            elif file['meta']['name'][-3:] == FileType.dmn.value:
-                dmn: etree.Element = etree.fromstring(file['data'])
-                parser.add_dmn_xml(dmn, filename=file['meta']['name'])
+                parser.add_bpmn_xml(bpmn, filename=file.name)
+            elif file.type == FileType.dmn:
+                dmn: etree.Element = etree.fromstring(data)
+                parser.add_dmn_xml(dmn, filename=file.name)
         if process_id is None:
             raise (ApiError(code="no_primary_bpmn_error",
                             message="There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
@@ -310,19 +267,6 @@ class WorkflowProcessor(object):
             return WorkflowStatus.user_input_required
         else:
             return WorkflowStatus.waiting
-
-    # def hard_reset(self):
-    #     """Recreate this workflow. This will be useful when a workflow specification changes.
-    #      """
-    #     self.spec_data_files = FileService.get_spec_data_files(workflow_spec_id=self.workflow_spec_id)
-    #     new_spec = WorkflowProcessor.get_spec(self.spec_data_files, self.workflow_spec_id)
-    #     new_bpmn_workflow = BpmnWorkflow(new_spec, script_engine=self._script_engine)
-    #     new_bpmn_workflow.data = self.bpmn_workflow.data
-    #     try:
-    #         new_bpmn_workflow.do_engine_steps()
-    #     except WorkflowException as we:
-    #         raise ApiError.from_task_spec("hard_reset_engine_steps_error", str(we), we.sender)
-    #     self.bpmn_workflow = new_bpmn_workflow
 
     def get_status(self):
         return self.status_of(self.bpmn_workflow)

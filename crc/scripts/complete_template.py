@@ -57,18 +57,17 @@ Takes two arguments:
             raise ApiError(code="invalid_argument",
                            message="The given task does not match the given study.")
 
-        file_data_model = None
+        file_data = None
         if workflow is not None:
             # Get the workflow specification file with the given name.
-            file_data_models = SpecFileService().get_spec_data_files(
-                workflow_spec_id=workflow.workflow_spec_id,
-                workflow_id=workflow.id,
-                name=file_name)
-            if len(file_data_models) > 0:
-                file_data_model = file_data_models[0]
+            file_models = SpecFileService().get_spec_files(
+                workflow_spec_id=workflow.workflow_spec_id, file_name=file_name)
+            if len(file_models) > 0:
+                file_model = file_models[0]
             else:
                 raise ApiError(code="invalid_argument",
                                message="Uable to locate a file with the given name.")
+            file_data = SpecFileService().get_spec_file_data(file_model.id).data
 
         # Get images from file/files fields
         if len(args) == 3:
@@ -77,7 +76,7 @@ Takes two arguments:
             image_file_data = None
 
         try:
-            return JinjaService().make_template(BytesIO(file_data_model['data']), task.data, image_file_data)
+            return JinjaService().make_template(BytesIO(file_data), task.data, image_file_data)
         except ApiError as ae:
             # In some cases we want to provide a very specific error, that does not get obscured when going
             # through the python expression engine. We can do that by throwing a WorkflowTaskExecException,

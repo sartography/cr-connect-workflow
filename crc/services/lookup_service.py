@@ -130,19 +130,16 @@ class LookupService(object):
             file_name = field.get_property(Task.FIELD_PROP_SPREADSHEET_NAME)
             value_column = field.get_property(Task.FIELD_PROP_VALUE_COLUMN)
             label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
-            latest_files = SpecFileService().get_spec_data_files(workflow_spec_id=workflow_model.workflow_spec_id,
-                                                                 workflow_id=workflow_model.id,
-                                                                 name=file_name)
+            latest_files = SpecFileService().get_spec_files(workflow_spec_id=workflow_model.workflow_spec_id,
+                                                            file_name=file_name)
             if len(latest_files) < 1:
                 raise ApiError("invalid_enum", "Unable to locate the lookup data file '%s'" % file_name)
             else:
-                data_dict = latest_files[0]
+                file = latest_files[0]
 
-            file_id = data_dict['meta']['id']
-            file_name = data_dict['meta']['name']
-            file_data = data_dict['data']
+            file_data = SpecFileService().get_spec_file_data(file.id).data
 
-            lookup_model = LookupService.build_lookup_table(file_id, file_name, file_data, value_column, label_column,
+            lookup_model = LookupService.build_lookup_table(file.id, file_name, file_data, value_column, label_column,
                                                             workflow_model.workflow_spec_id, task_spec_id, field_id)
 
         #  Use the results of an LDAP request to populate enum field options

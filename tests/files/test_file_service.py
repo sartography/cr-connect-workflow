@@ -256,10 +256,8 @@ class TestFileService(BaseTest):
     def test_get_spec_files(self):
         self.load_example_data()
         spec = session.query(WorkflowSpecModel.id).first()
-        spec_files = SpecFileService().get_spec_data_files(spec.id)
+        spec_files = SpecFileService().get_spec_files(spec.id)
         workflow = session.query(WorkflowModel).first()
         processor = WorkflowProcessor(workflow)
-
         self.assertIsInstance(processor, WorkflowProcessor)
-
         print('test_get_spec_files')

@@ -217,52 +217,6 @@ class SpecFileService(object):
         file_path = self.write_spec_file_data_to_system(workflow_spec_model, file_model, file_data)
         self.write_spec_file_info_to_system(file_path, file_model)
 
-    def get_spec_data_files(self, workflow_spec_id, workflow_id=None, name=None, include_libraries=False):
-        """Returns all the files related to a workflow specification.
-        if `name` is included we only return the file with that name"""
-        spec_data_files = []
-        workflow_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow_spec_id).first()
-        workflow_spec_name = workflow_spec.display_name
-        category_name = self.get_spec_file_category_name(workflow_spec)
-        sync_file_root = self.get_sync_file_root()
-        spec_path = os.path.join(sync_file_root,
-                                 category_name,
-                                 workflow_spec_name)
-        directory_items = os.scandir(spec_path)
-        for item in directory_items:
-            if item.is_file() and not item.name.endswith('json'):
-                if name is not None and item.name != name:
-                    continue
-                with open(item.path, 'rb') as f_open:
-                    json_path = f'{item.path}.json'
-                    with open(json_path, 'r') as j_open:
-                        json_data = j_open.read()
-                        json_obj = json.loads(json_data)
-                        file_data = f_open.read()
-                        file_dict = {'meta': json_obj,
-                                     'data': file_data}
-                        spec_data_files.append(file_dict)
-        print('get_spec_data_files')
-        return spec_data_files
-        # if workflow_id:
-        #     query = session.query(FileDataModel) \
-        #             .join(WorkflowSpecDependencyFile) \
-        #             .filter(WorkflowSpecDependencyFile.workflow_id == workflow_id) \
-        #             .order_by(FileDataModel.id)
-        #     if name:
-        #         query = query.join(FileModel).filter(FileModel.name == name)
-        #     return query.all()
-        # else:
-        #     """Returns all the latest files related to a workflow specification"""
-        #     file_models = FileService.get_files(workflow_spec_id=workflow_spec_id,include_libraries=include_libraries)
-        #     latest_data_files = []
-        #     for file_model in file_models:
-        #         if name and file_model.name == name:
-        #             latest_data_files.append(FileService.get_file_data(file_model.id))
-        #         elif not name:
-        #             latest_data_files.append(FileService.get_file_data(file_model.id))
-        #     return latest_data_files
-
     @staticmethod
     def get_spec_file_category_name(spec_model):
         category_name = None
@@ -356,22 +310,24 @@ class SpecFileService(object):
         return process_elements[0].attrib['id']
 
     @staticmethod
-    def get_spec_files(workflow_spec_id, include_libraries=False):
-        if workflow_spec_id:
-            if include_libraries:
-                libraries = session.query(WorkflowLibraryModel).filter(
-                   WorkflowLibraryModel.workflow_spec_id==workflow_spec_id).all()
-                library_workflow_specs = [x.library_spec_id for x in libraries]
-                library_workflow_specs.append(workflow_spec_id)
-                query = session.query(FileModel).filter(FileModel.workflow_spec_id.in_(library_workflow_specs))
-            else:
-                query = session.query(FileModel).filter(FileModel.workflow_spec_id == workflow_spec_id)
+    def get_spec_files(workflow_spec_id, file_name=None, include_libraries=False):
+        if include_libraries:
+            libraries = session.query(WorkflowLibraryModel).filter(
+               WorkflowLibraryModel.workflow_spec_id==workflow_spec_id).all()
+            library_workflow_specs = [x.library_spec_id for x in libraries]
+            library_workflow_specs.append(workflow_spec_id)
+            query = session.query(FileModel).filter(FileModel.workflow_spec_id.in_(library_workflow_specs))
+        else:
+            query = session.query(FileModel).filter(FileModel.workflow_spec_id == workflow_spec_id)
 
-            query = query.filter(FileModel.archived == False)
-            query = query.order_by(FileModel.id)
+        if file_name:
+            query = query.filter(FileModel.name == file_name)
 
-            results = query.all()
-            return results
+        query = query.filter(FileModel.archived == False)
+        query = query.order_by(FileModel.id)
+
+        results = query.all()
+        return results
 
     @staticmethod
     def get_workflow_file_data(workflow, file_name):
