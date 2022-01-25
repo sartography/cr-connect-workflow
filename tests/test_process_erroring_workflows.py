@@ -8,6 +8,8 @@ from crc.services.workflow_service import WorkflowService
 class TestErrorWorkflows(BaseTest):
 
     def test_error_workflows(self):
+        """We only test whether we have good information in the message.
+        We do not test whether the message was sent by Sentry."""
 
         workflow_1 = self.create_workflow('random_fact')
         workflow_1.status = WorkflowStatus.erroring
