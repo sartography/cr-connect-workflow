@@ -36,7 +36,6 @@ def upgrade():
     session = sa.orm.Session(bind=bind)
 
     op.drop_table('workflow_spec_dependency_file')
-    # op.drop_constraint('lookup_file_file_data_model_id_fkey', 'lookup_file', type_='foreignkey')
     op.add_column('lookup_file', sa.Column('file_model_id', sa.Integer(), nullable=True))
     op.add_column('lookup_file', sa.Column('last_updated', sa.DateTime(), nullable=True))
     op.create_foreign_key(None, 'lookup_file', 'file', ['file_model_id'], ['id'])
@@ -59,37 +58,17 @@ def upgrade():
         ToFilesystemService().write_file_to_system(session, reference_file, location)
         processed_files.append(reference_file.id)
 
-    # TODO:
-    #  delete processed files from file_data table
-    #  delete workflow_spec_dependency_file table
-    #  delete entries from lookup_file table
     session.flush()
     lookups = session.query(LookupFileModel).all()
     for lookup in lookups:
         session.delete(lookup)
     session.commit()
-    # dependencies = session.query(WorkflowSpecDependencyFile).all()
-    # for dependency in dependencies:
-    #     session.delete(dependency)
-    session.commit()
     for file_id in processed_files:
         processed_data_models = session.query(FileDataModel).filter(FileDataModel.file_model_id==file_id).all()
         for processed_data_model in processed_data_models:
-            # dependencies = session.query(WorkflowSpecDependencyFile).filter(WorkflowSpecDependencyFile.file_data_id==processed_data_model.id).all()
-            # for dependency in dependencies:
-            #     session.delete(dependency)
-            # lookups = session.query(LookupFileModel).filter(LookupFileModel.file_data_model_id==processed_data_model.id).all()
-            # for lookup in lookups:
-            #     # lookups are built on the fly, when needed,
-            #     # so we just delete them here
-            #     session.delete(lookup)
-            # we now store the files on the filesystem, so delete the data_model record
             session.delete(processed_data_model)
             session.commit()
         print(f'upgrade: in processed files: file_id: {file_id}')
-
-
-    # op.drop_column('lookup_file', 'file_data_model_id')
     print('upgrade: done: ')
 
 
@@ -102,11 +81,11 @@ def downgrade():
     op.drop_column('lookup_file', 'file_model_id')
 
     op.create_table('workflow_spec_dependency_file',
-    sa.Column('file_data_id', sa.Integer(), nullable=False),
-    sa.Column('workflow_id', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['file_data_id'], ['file_data.id'], ),
-    sa.ForeignKeyConstraint(['workflow_id'], ['workflow.id'], ),
-    sa.PrimaryKeyConstraint('file_data_id', 'workflow_id')
+        sa.Column('file_data_id', sa.Integer(), nullable=False),
+        sa.Column('workflow_id', sa.Integer(), nullable=False),
+        sa.ForeignKeyConstraint(['file_data_id'], ['file_data.id'], ),
+        sa.ForeignKeyConstraint(['workflow_id'], ['workflow.id'], ),
+        sa.PrimaryKeyConstraint('file_data_id', 'workflow_id')
     )
 
     location = SpecFileService.get_sync_file_root()

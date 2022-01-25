@@ -245,18 +245,3 @@ class ToFilesystemService(object):
 
             self.process_workflow_spec_file(session, file_model, file_path)
 
-        #     else:
-        #         # We didn't get a workflow_spec_model
-        #         pass
-        #
-        # elif file_model.workflow_id is not None:
-        #     # we have a workflow file
-        #     pass
-
-        # elif file_model.is_reference:
-        #     # we have a reference file?
-        #     print(f'Reference file: {file_model.name}')
-        #
-
-        # else:
-        #     print(f'Not processed: {file_model.name}')
