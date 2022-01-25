@@ -67,6 +67,7 @@ def process_waiting_tasks():
 def init_scheduler():
     scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
     scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
+    scheduler.add_job(WorkflowService().process_erroring_workflows, 'interval', minutes=1440)
     scheduler.start()
 
 

@@ -39,6 +39,9 @@ from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 
+from flask import request
+from sentry_sdk import capture_message, push_scope
+
 
 class WorkflowService(object):
     TASK_ACTION_COMPLETE = "COMPLETE"
@@ -117,6 +120,43 @@ class WorkflowService(object):
                                   workflow_model.workflow_spec.id,
                                   workflow_model.study_id,
                                   str(e)))
+
+    @staticmethod
+    def get_erroring_workflows():
+        workflows = session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.erroring).all()
+        return workflows
+
+    @staticmethod
+    def get_workflow_url(workflow):
+        base_url = app.config['FRONTEND']
+        workflow_url = f'https://{base_url}/workflow/{workflow.id}'
+        return workflow_url
+
+    def process_erroring_workflows(self):
+        workflows = self.get_erroring_workflows()
+        if len(workflows) > 0:
+            workflow_urls = []
+            if len(workflows) == 1:
+                workflow = workflows[0]
+                workflow_url_link = self.get_workflow_url(workflow)
+                workflow_urls.append(workflow_url_link)
+                message = 'There is one workflow in an error state.'
+                message += f'\n You can restart the workflow at {workflow_url_link}.'
+            else:
+                message = f'There are {len(workflows)} workflows in an error state.'
+                message += '\nYou can restart the workflows at these URLs:'
+                for workflow in workflows:
+                    workflow_url_link = self.get_workflow_url(workflow)
+                    workflow_urls.append(workflow_url_link)
+                    message += f'\n{workflow_url_link}'
+
+            with push_scope() as scope:
+                scope.user = {"urls": workflow_urls}
+                scope.set_extra("workflow_urls", workflow_urls)
+                # this sends a message through sentry
+                capture_message(message)
+            # We return message so we can use it in a test
+            return message
 
     @staticmethod
     def raise_if_disabled(spec_id, study_id):
