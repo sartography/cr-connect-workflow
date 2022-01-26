@@ -4,7 +4,6 @@ from unittest.mock import patch
 import flask
 
 from crc.api.common import ApiError
-from crc.services.user_service import UserService
 
 from crc import session, app
 from crc.models.study import StudyModel
@@ -43,7 +42,6 @@ class TestSudySponsorsScript(BaseTest):
         app.config['PB_ENABLED'] = True
 
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -81,7 +79,6 @@ class TestSudySponsorsScript(BaseTest):
         app.config['PB_ENABLED'] = True
 
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate_fail")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -99,7 +96,6 @@ class TestSudySponsorsScript(BaseTest):
         app.config['PB_ENABLED'] = True
 
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -121,7 +117,6 @@ class TestSudySponsorsScript(BaseTest):
         app.config['PB_ENABLED'] = True
 
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -153,7 +148,6 @@ class TestSudySponsorsScript(BaseTest):
         app.config['PB_ENABLED'] = True
 
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -182,7 +176,6 @@ class TestSudySponsorsScript(BaseTest):
         app.config['PB_ENABLED'] = True
 
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associates_delete")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)

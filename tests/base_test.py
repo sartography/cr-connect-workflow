@@ -9,18 +9,19 @@ import json
 import unittest
 import urllib.parse
 import datetime
+import shutil
 from flask import g
 
 from crc import app, db, session
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
-from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
+from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudyStatus, ProgressStatus
-from crc.models.ldap import LdapModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.ldap_service import LdapService
-from crc.services.file_service import FileService
+from crc.services.reference_file_service import ReferenceFileService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
@@ -82,6 +83,7 @@ class BaseTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.clear_test_sync_files()
         app.config.from_object('config.testing')
         cls.ctx = app.test_request_context()
         cls.app = app.test_client()
@@ -92,7 +94,6 @@ class BaseTest(unittest.TestCase):
     def tearDownClass(cls):
         cls.ctx.pop()
         db.drop_all()
-        pass
 
     def setUp(self):
         pass
@@ -101,6 +102,13 @@ class BaseTest(unittest.TestCase):
         ExampleDataLoader.clean_db()
         self.logout()
         self.auths = {}
+        self.clear_test_sync_files()
+
+    @staticmethod
+    def clear_test_sync_files():
+        sync_file_root = SpecFileService().get_sync_file_root()
+        if os.path.exists(sync_file_root):
+            shutil.rmtree(sync_file_root)
 
     def logged_in_headers(self, user=None, redirect_url='http://some/frontend/url'):
         if user is None:
@@ -172,7 +180,8 @@ class BaseTest(unittest.TestCase):
             self.assertIsNotNone(files)
             self.assertGreater(len(files), 0)
             for file in files:
-                file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
+                # file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
+                file_data = SpecFileService().get_spec_file_data(file.id).data
                 self.assertIsNotNone(file_data)
                 self.assertGreater(len(file_data), 0)
 
@@ -246,14 +255,14 @@ class BaseTest(unittest.TestCase):
 
     def replace_file(self, name, file_path):
         """Replaces a stored file with the given name with the contents of the file at the given path."""
-        file_service = FileService()
         file = open(file_path, "rb")
         data = file.read()
 
         file_model = session.query(FileModel).filter(FileModel.name == name).first()
+        workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
         noise, file_extension = os.path.splitext(file_path)
         content_type = CONTENT_TYPES[file_extension[1:]]
-        file_service.update_file(file_model, data, content_type)
+        SpecFileService().update_spec_file_data(workflow_spec_model, file_model.name, data)
 
     def create_user(self, uid="dhf8r", email="daniel.h.funk@gmail.com", display_name="Hoopy Frood"):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()
@@ -290,11 +299,10 @@ class BaseTest(unittest.TestCase):
 
     def create_reference_document(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
-        file = open(file_path, "rb")
-        FileService.add_reference_file(DocumentService.DOCUMENT_LIST,
-                                       binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xlsx'])
-        file.close()
+        with open(file_path, "rb") as file:
+            ReferenceFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
+                                               content_type=CONTENT_TYPES['xlsx'],
+                                               binary_data=file.read())
 
     def get_workflow_common(self, url, user):
         rv = self.app.get(url,
@@ -379,7 +387,6 @@ class BaseTest(unittest.TestCase):
         self.assertEqual(user_uid, event.user_uid)
         self.assertEqual(workflow.id, event.workflow_id)
         self.assertEqual(workflow.workflow_spec_id, event.workflow_spec_id)
-        self.assertEqual(workflow.spec_version, event.spec_version)
         self.assertEqual(WorkflowService.TASK_ACTION_COMPLETE, event.action)
         self.assertEqual(task_in.id, task_id)
         self.assertEqual(task_in.name, event.task_name)
@@ -416,4 +423,3 @@ class BaseTest(unittest.TestCase):
         """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
         minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
         return (minimal_dbpm % content).encode()
-

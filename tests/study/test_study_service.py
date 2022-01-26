@@ -90,7 +90,6 @@ class TestStudyService(BaseTest):
         # self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
         self.assertTrue(workflow.total_tasks > 0)
         self.assertEqual(0, workflow.completed_tasks)
-        self.assertIsNotNone(workflow.spec_version)
 
         # Complete a task
         task = processor.next_task()

@@ -14,7 +14,6 @@ class TestFileDatastore(BaseTest):
 
     def test_file_datastore_workflow(self):
         self.load_example_data()
-        self.create_reference_document()
         # we need to create a file with an IRB code
         # for this study
         workflow = self.create_workflow('file_data_store')

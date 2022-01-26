@@ -66,7 +66,7 @@ def process_waiting_tasks():
 @app.before_first_request
 def init_scheduler():
     scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
-    scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
+    # scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
     scheduler.start()
 
 
@@ -105,6 +105,15 @@ print('PRODUCTION = ', app.config['PRODUCTION'])
 print('TESTING = ', app.config['TESTING'])
 print('TEST_UID = ', app.config['TEST_UID'])
 print('ADMIN_UIDS = ', app.config['ADMIN_UIDS'])
+
+
+@app.cli.command()
+def load_files_from_filesystem():
+    """Load file data into the database."""
+    from crc.services.temp_migration_service import FromFilesystemService
+    location = app.config['SYNC_FILE_ROOT']
+    FromFilesystemService().update_file_metadata_from_filesystem(location)
+
 
 @app.cli.command()
 def load_example_data():

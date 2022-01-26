@@ -20,7 +20,7 @@ from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowM
 from crc.models.task_event import TaskEventModel
 from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
-    WorkflowStatus, WorkflowSpecDependencyFile
+    WorkflowStatus
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
@@ -236,7 +236,6 @@ class StudyService(object):
             return
 
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
-        session.query(WorkflowSpecDependencyFile).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
         session.query(FileModel).filter_by(workflow_id=workflow_id).update({'archived': True, 'workflow_id': None})
 
         session.delete(workflow)
@@ -311,8 +310,11 @@ class StudyService(object):
     @staticmethod
     def get_investigator_dictionary():
         """Returns a dictionary of document details keyed on the doc_code."""
-        file_data = FileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
-        lookup_model = LookupService.get_lookup_model_for_file_data(file_data, 'code', 'label')
+        file_id = session.query(FileModel.id). \
+            filter(FileModel.name == StudyService.INVESTIGATOR_LIST). \
+            filter(FileModel.is_reference == True). \
+            scalar()
+        lookup_model = LookupService.get_lookup_model_for_file_data(file_id, StudyService.INVESTIGATOR_LIST, 'code', 'label')
         doc_dict = {}
         for lookup_data in lookup_model.dependencies:
             doc_dict[lookup_data.value] = lookup_data.data

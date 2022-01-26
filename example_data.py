@@ -1,5 +1,4 @@
 import glob
-import glob
 import os
 
 from crc import app, db, session
@@ -9,6 +8,8 @@ from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
+from crc.services.reference_file_service import ReferenceFileService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 
 
@@ -187,7 +188,7 @@ class ExampleDataLoader:
     def load_rrt(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'rrt_documents.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(FileService.DOCUMENT_LIST,
+        ReferenceFileService.add_reference_file(FileService.DOCUMENT_LIST,
                                        binary_data=file.read(),
                                        content_type=CONTENT_TYPES['xls'])
         file.close()
@@ -276,7 +277,7 @@ class ExampleDataLoader:
                 file = open(file_path, 'rb')
                 data = file.read()
                 content_type = CONTENT_TYPES[file_extension[1:]]
-                file_service.add_workflow_spec_file(workflow_spec=spec, name=filename, content_type=content_type,
+                SpecFileService.add_workflow_spec_file(workflow_spec=spec, name=filename, content_type=content_type,
                                                     binary_data=data, primary=is_primary, is_status=is_status)
             except IsADirectoryError as de:
                 # Ignore sub directories
@@ -289,16 +290,16 @@ class ExampleDataLoader:
     def load_reference_documents(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(DocumentService.DOCUMENT_LIST,
+        ReferenceFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
                                        binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xls'])
+                                       content_type=CONTENT_TYPES['xlsx'])
         file.close()
 
         file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
         file = open(file_path, "rb")
-        FileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
+        ReferenceFileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
                                        binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xls'])
+                                       content_type=CONTENT_TYPES['xlsx'])
         file.close()
 
     def load_default_user(self):

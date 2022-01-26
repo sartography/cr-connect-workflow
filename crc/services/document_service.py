@@ -1,6 +1,7 @@
+from crc import session
 from crc.api.common import ApiError
 from crc.models.api_models import DocumentDirectory
-from crc.services.file_service import FileService
+from crc.models.file import FileModel
 from crc.services.lookup_service import LookupService
 
 
@@ -37,8 +38,11 @@ class DocumentService(object):
     @staticmethod
     def get_dictionary():
         """Returns a dictionary of document details keyed on the doc_code."""
-        file_data = FileService.get_reference_file_data(DocumentService.DOCUMENT_LIST)
-        lookup_model = LookupService.get_lookup_model_for_file_data(file_data, 'code', 'description')
+        file_id = session.query(FileModel.id). \
+            filter(FileModel.name == DocumentService.DOCUMENT_LIST). \
+            filter(FileModel.is_reference == True). \
+            scalar()
+        lookup_model = LookupService.get_lookup_model_for_file_data(file_id, DocumentService.DOCUMENT_LIST, 'code', 'description')
         doc_dict = {}
         for lookup_data in lookup_model.dependencies:
             doc_dict[lookup_data.value] = lookup_data.data

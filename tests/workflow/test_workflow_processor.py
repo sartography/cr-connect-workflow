@@ -14,7 +14,6 @@ from crc.models.file import FileModel, FileDataModel
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
-from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
@@ -247,27 +246,6 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("last_updated", task.data["StudyInfo"]["info"])
         self.assertIn("sponsor", task.data["StudyInfo"]["info"])
 
-    def test_spec_versioning(self):
-        self.load_example_data()
-        study = session.query(StudyModel).first()
-        workflow_spec_model = self.load_test_spec("decision_table")
-        processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_version_string().startswith('v1.1'))
-        file_service = FileService()
-
-        file_service.add_workflow_spec_file(workflow_spec_model, "new_file.txt", "txt", b'blahblah')
-        processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_version_string().startswith('v1.1.1'))
-
-        file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'docx', 'docx.bpmn')
-        file = open(file_path, "rb")
-        data = file.read()
-
-        file_model = db.session.query(FileModel).filter(FileModel.name == "decision_table.bpmn").first()
-        file_service.update_file(file_model, data, "txt")
-        processor = self.get_processor(study, workflow_spec_model)
-        self.assertTrue(processor.get_version_string().startswith('v2.1.1'))
-
     def test_hard_reset(self):
         self.load_example_data()
         # Start the two_forms workflow, and enter some data in the first form.
@@ -291,14 +269,14 @@ class TestWorkflowProcessor(BaseTest):
         db.session.add(processor.workflow_model)  ## Assure this isn't transient, which was causing some errors.
         self.assertIsNotNone(processor.workflow_model.bpmn_workflow_json)
         processor2 = WorkflowProcessor(processor.workflow_model)
-        self.assertFalse(processor2.is_latest_spec) # Still at version 1.
+        # self.assertFalse(processor2.is_latest_spec) # Still at version 1.
 
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
         processor2 = WorkflowProcessor.reset(processor2.workflow_model)
         processor3 = WorkflowProcessor(processor.workflow_model)
         processor3.do_engine_steps()
         self.assertEqual("Step 1", processor3.next_task().task_spec.description)
-        self.assertTrue(processor3.is_latest_spec) # Now at version 2.
+        # self.assertTrue(processor3.is_latest_spec) # Now at version 2.
         task = processor3.next_task()
         task.data = {"color": "blue"}
         processor3.complete_task(task)

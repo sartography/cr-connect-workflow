@@ -35,6 +35,7 @@ from crc.services.document_service import DocumentService
 from crc.services.file_service import FileService
 from crc.services.jinja_service import JinjaService
 from crc.services.lookup_service import LookupService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -576,8 +577,6 @@ class WorkflowService(object):
             next_task=None,
             navigation=navigation,
             workflow_spec_id=processor.workflow_spec_id,
-            spec_version=processor.get_version_string(),
-            is_latest_spec=processor.is_latest_spec,
             total_tasks=len(navigation),
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
@@ -764,7 +763,7 @@ class WorkflowService(object):
 
         try:
             doc_file_name = spiff_task.task_spec.name + ".md"
-            data_model = FileService.get_workflow_file_data(spiff_task.workflow, doc_file_name)
+            data_model = SpecFileService.get_workflow_file_data(spiff_task.workflow, doc_file_name)
             raw_doc = data_model.data.decode("utf-8")
         except ApiError:
             raw_doc = documentation
@@ -914,7 +913,6 @@ class WorkflowService(object):
             user_uid=user_uid,
             workflow_id=processor.workflow_model.id,
             workflow_spec_id=processor.workflow_model.workflow_spec_id,
-            spec_version=processor.get_version_string(),
             action=action,
             task_id=task.id,
             task_name=task.name,

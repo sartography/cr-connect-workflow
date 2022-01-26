@@ -2,7 +2,7 @@ from tests.base_test import BaseTest
 from crc import session
 from crc.api.common import ApiError
 from crc.models.workflow import WorkflowSpecModel
-from crc.services.file_service import FileService
+from crc.services.spec_file_service import SpecFileService
 
 
 class TestDuplicateWorkflowSpecFile(BaseTest):
@@ -15,7 +15,7 @@ class TestDuplicateWorkflowSpecFile(BaseTest):
         spec = session.query(WorkflowSpecModel).first()
 
         # Add a file
-        file_model = FileService.add_workflow_spec_file(spec,
+        file_model = SpecFileService.add_workflow_spec_file(spec,
                                                         name="something.png",
                                                         content_type="text",
                                                         binary_data=b'1234')
@@ -24,7 +24,7 @@ class TestDuplicateWorkflowSpecFile(BaseTest):
 
         # Try to add it again
         try:
-            FileService.add_workflow_spec_file(spec,
+            SpecFileService.add_workflow_spec_file(spec,
                                                name="something.png",
                                                content_type="text",
                                                binary_data=b'5678')

@@ -34,7 +34,6 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
 
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -60,7 +59,6 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
 
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -82,7 +80,6 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -98,7 +95,6 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -120,7 +116,6 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -143,7 +138,6 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         self.load_example_data()
-        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)

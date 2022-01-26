@@ -30,3 +30,5 @@ print('TESTING = ', TESTING)
 
 #Use the mock ldap.
 LDAP_URL = 'mock'
+
+SYNC_FILE_ROOT = 'tests/test_sync_files'

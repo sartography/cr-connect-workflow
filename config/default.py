@@ -88,3 +88,6 @@ MAIL_USE_SSL = environ.get('MAIL_USE_SSL', default=False)
 MAIL_USE_TLS = environ.get('MAIL_USE_TLS', default=False)
 MAIL_USERNAME = environ.get('MAIL_USERNAME', default='')
 MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='')
+
+# Local file path
+SYNC_FILE_ROOT = './SPECS'

@@ -1,7 +1,6 @@
 import enum
 import urllib
 
-import connexion
 import flask
 from flask import url_for
 from marshmallow import INCLUDE, EXCLUDE, Schema
@@ -12,7 +11,7 @@ from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import deferred, relationship
 
-from crc import db, ma, app
+from crc import db, ma
 from crc.models.data_store import DataStoreModel
 
 
@@ -100,7 +99,7 @@ class FileModel(db.Model):
 
 class File(object):
     @classmethod
-    def from_models(cls, model: FileModel, data_model: FileDataModel, doc_dictionary):
+    def from_models(cls, model: FileModel, data_model, doc_dictionary):
         instance = cls()
         instance.id = model.id
         instance.name = model.name
@@ -175,9 +174,11 @@ class LookupFileModel(db.Model):
     task_spec_id = db.Column(db.String)
     field_id = db.Column(db.String)
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
-    file_data_model_id = db.Column(db.Integer, db.ForeignKey('file_data.id'))
+    file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
+    last_updated = db.Column(db.DateTime(timezone=True))
     dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model",
                                    cascade="all, delete, delete-orphan")
+    file_model = db.relationship("FileModel")
 
 
 class LookupDataModel(db.Model):

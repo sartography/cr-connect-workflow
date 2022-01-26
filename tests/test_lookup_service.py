@@ -6,7 +6,10 @@ from crc.services.file_service import FileService
 from crc.api.common import ApiError
 from crc import session, app
 from crc.models.file import FileDataModel, FileModel, LookupFileModel, LookupDataModel, CONTENT_TYPES
+from crc.models.workflow import WorkflowSpecModel
 from crc.services.lookup_service import LookupService
+from crc.services.reference_file_service import ReferenceFileService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -49,7 +52,13 @@ class TestLookupService(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data',
                                  'enum_options_with_search', 'sponsors_modified.xlsx')
         file = open(file_path, 'rb')
-        FileService.update_file(file_model, file.read(), CONTENT_TYPES['xlsx'])
+        if file_model.workflow_spec_id is not None:
+            workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
+            SpecFileService().update_spec_file_data(workflow_spec_model, file_model.name, file.read())
+        elif file_model.is_reference:
+            ReferenceFileService().update_reference_file(file_model, file.read())
+        else:
+            FileService.update_file(file_model, file.read(), CONTENT_TYPES['xlsx'])
         file.close()
 
         # restart the workflow, so it can pick up the changes.
@@ -182,15 +191,17 @@ class TestLookupService(BaseTest):
 
         # Using an old xls file should raise an error
         file_model_xls = session.query(FileModel).filter(FileModel.name == 'sponsors.xls').first()
-        file_data_model_xls = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xls.id).first()
+        file_data_xls = SpecFileService().get_spec_file_data(file_model_xls.id)
+        # file_data_model_xls = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xls.id).first()
         with self.assertRaises(ApiError) as ae:
-            LookupService.build_lookup_table(file_data_model_xls, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
+            LookupService.build_lookup_table(file_model_xls.id, 'sponsors.xls', file_data_xls.data, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertIn('Error opening excel file', ae.exception.args[0])
 
         # Using an xlsx file should work
         file_model_xlsx = session.query(FileModel).filter(FileModel.name == 'sponsors.xlsx').first()
-        file_data_model_xlsx = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xlsx.id).first()
-        lookup_model = LookupService.build_lookup_table(file_data_model_xlsx, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
+        file_data_xlsx = SpecFileService().get_spec_file_data(file_model_xlsx.id)
+        # file_data_model_xlsx = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xlsx.id).first()
+        lookup_model = LookupService.build_lookup_table(file_model_xlsx.id, 'sponsors.xlsx', file_data_xlsx.data, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertEqual(28, len(lookup_model.dependencies))
         self.assertIn('CUSTOMER_NAME', lookup_model.dependencies[0].data.keys())
         self.assertIn('CUSTOMER_NUMBER', lookup_model.dependencies[0].data.keys())
