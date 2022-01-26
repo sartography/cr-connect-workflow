@@ -158,11 +158,14 @@ def delete_workflow_specification(spec_id):
     # Delete all events related to this specification
     WorkflowService.delete_workflow_spec_task_events(spec_id)
 
-
     # .delete() doesn't work when we need a cascade. Must grab the record, and explicitly delete
     workflow_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
-    session.delete(workflow_spec)
-    session.commit()
+    try:
+        session.delete(workflow_spec)
+        session.commit()
+    except Exception as e:
+        raise ApiError(code='delete_exception',
+                       message=f'There was a problem deleting the workflow spec: {spec_id}. The original error is: {e}.')
 
     # Reorder the remaining specs
     WorkflowService.cleanup_workflow_spec_display_order(category_id)
