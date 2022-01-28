@@ -73,7 +73,7 @@ class LookupService(object):
             if lookup_model.is_ldap:  # LDAP is always current
                 is_current = True
             else:
-                current_date = SpecFileService().last_modified(lookup_model.file_model.id)
+                current_date = SpecFileService.last_modified(lookup_model.file_model.id)
                 is_current = current_date == lookup_model.last_updated
 
         if not is_current:

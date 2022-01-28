@@ -140,19 +140,6 @@ class FileService(object):
         return file_model
 
     @staticmethod
-    def has_swimlane(et_root: etree.Element):
-        """
-        Look through XML and determine if there are any swimlanes present that have a label.
-        """
-        elements = et_root.xpath('//bpmn:lane',
-                                  namespaces={'bpmn':'http://www.omg.org/spec/BPMN/20100524/MODEL'})
-        retval = False
-        for el in elements:
-            if el.get('name'):
-                retval = True
-        return retval
-
-    @staticmethod
     def get_files_for_study(study_id, irb_doc_code=None):
         query = session.query(FileModel).\
                 join(WorkflowModel).\

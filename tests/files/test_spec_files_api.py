@@ -33,7 +33,7 @@ class TestFilesApi(BaseTest):
         file_names = [f.name for f in files]
         self.assertTrue("%s.bpmn" % spec.id in file_names)
 
-    def  btest_list_multiple_files_for_workflow_spec(self):
+    def test_list_multiple_files_for_workflow_spec(self):
         self.load_example_data()
         spec = self.load_test_spec("random_fact")
         data = {'file': (io.BytesIO(b"abcdef"), 'test.svg')}

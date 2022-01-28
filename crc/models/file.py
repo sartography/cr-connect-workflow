@@ -80,35 +80,33 @@ class FileModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.Enum(FileType))
-    is_status = db.Column(db.Boolean)
     content_type = db.Column(db.String)
-    is_reference = db.Column(db.Boolean, nullable=False, default=False)  # A global reference file.
-    primary = db.Column(db.Boolean, nullable=False, default=False)  # Is this the primary BPMN in a workflow?
-    primary_process_id = db.Column(db.String, nullable=True)  # An id in the xml of BPMN documents, for primary BPMN.
-    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     task_spec = db.Column(db.String, nullable=True)
     irb_doc_code = db.Column(db.String, nullable=True)  # Code reference to the irb_documents.xlsx reference file.
-    # A request was made to delete the file, but we can't because there are
-    # active approvals or running workflows that depend on it.  So we archive
-    # it instead, hide it in the interface.
     is_review = db.Column(db.Boolean, default=False, nullable=True)
-    archived = db.Column(db.Boolean, default=False, nullable=False)
     data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
 
 
 class File(object):
+    def __init__(self):
+        self.content_type = None
+        self.name = None
+        self.content_type = None
+        self.workflow_id = None
+        self.irb_doc_code = None
+        self.type = None
+        self.document = {}
+        self.last_modified = None
+        self.size = None
+        self.data_store = {}
+
     @classmethod
     def from_models(cls, model: FileModel, data_model, doc_dictionary):
         instance = cls()
         instance.id = model.id
         instance.name = model.name
-        instance.is_status = model.is_status
-        instance.is_reference = model.is_reference
         instance.content_type = model.content_type
-        instance.primary = model.primary
-        instance.primary_process_id = model.primary_process_id
-        instance.workflow_spec_id = model.workflow_spec_id
         instance.workflow_id = model.workflow_id
         instance.irb_doc_code = model.irb_doc_code
         instance.type = model.type
@@ -118,7 +116,6 @@ class File(object):
             instance.document = {}
         if data_model:
             instance.last_modified = data_model.date_created
-            instance.latest_version = data_model.version
             instance.size = data_model.size
             instance.user_uid = data_model.user_uid
         else:
@@ -129,6 +126,21 @@ class File(object):
         for ds in model.data_stores:
             instance.data_store[ds.key] = ds.value
 
+        return instance
+
+    @classmethod
+    def spec_file(cls, workflow_spec, file_name, file_type, content_type,
+                  last_modified, file_size):
+
+        instance = cls()
+        instance.name = file_name
+        instance.content_type = content_type
+        instance.type = file_type
+        instance.document = {}
+        instance.last_modified = last_modified
+        instance.size = file_size
+        #fixme:  How to track the user id?
+        instance.data_store = {}
         return instance
 
 
@@ -145,8 +157,7 @@ class FileModelSchema(SQLAlchemyAutoSchema):
 class FileSchema(Schema):
     class Meta:
         model = File
-        fields = ["id", "name", "is_status", "is_reference", "content_type",
-                  "primary", "primary_process_id", "workflow_spec_id", "workflow_id",
+        fields = ["id", "name", "content_type", "workflow_spec_id", "workflow_id",
                   "irb_doc_code", "last_modified", "latest_version", "type", "size", "data_store",
                   "document", "user_uid", "url"]
         unknown = INCLUDE

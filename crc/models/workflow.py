@@ -36,7 +36,9 @@ class WorkflowSpecModel(db.Model):
     is_master_spec = db.Column(db.Boolean, default=False)
     standalone = db.Column(db.Boolean, default=False)
     library = db.Column(db.Boolean, default=False)
-
+    primary_file_name = db.Column(db.String)
+    primary_process_id = db.Column(db.String)
+    is_review = db.Column(db.Boolean, default=False)
 
 class WorkflowLibraryModel(db.Model):
    __tablename__ = 'workflow_library'

@@ -106,7 +106,7 @@ class BaseTest(unittest.TestCase):
 
     @staticmethod
     def clear_test_sync_files():
-        sync_file_root = SpecFileService().get_sync_file_root()
+        sync_file_root = SpecFileService().root_path()
         if os.path.exists(sync_file_root):
             shutil.rmtree(sync_file_root)
 
@@ -145,7 +145,8 @@ class BaseTest(unittest.TestCase):
          otherwise it depends on a small setup for running tests."""
         from example_data import ExampleDataLoader
         ExampleDataLoader.clean_db()
-        # If in production mode, only add the first user.
+
+        # # If in production mode, only add the first user.
         if app.config['PRODUCTION']:
             ldap_info = LdapService.user_info(self.users[0]['uid'])
             session.add(UserModel(uid=self.users[0]['uid'], ldap_info=ldap_info))
@@ -153,13 +154,13 @@ class BaseTest(unittest.TestCase):
             for user_json in self.users:
                 ldap_info = LdapService.user_info(user_json['uid'])
                 session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
-
-        if use_crc_data:
-            ExampleDataLoader().load_all()
-        elif use_rrt_data:
-            ExampleDataLoader().load_rrt()
-        else:
-            ExampleDataLoader().load_test_data()
+        #
+        # if use_crc_data:
+        #     ExampleDataLoader().load_all()
+        # elif use_rrt_data:
+        #     ExampleDataLoader().load_rrt()
+        # else:
+        #     ExampleDataLoader().load_test_data()
 
         session.commit()
         for study_json in self.studies:
@@ -172,18 +173,18 @@ class BaseTest(unittest.TestCase):
             session.execute(update_seq)
         session.flush()
 
-        specs = session.query(WorkflowSpecModel).all()
-        self.assertIsNotNone(specs)
-
-        for spec in specs:
-            files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
-            self.assertIsNotNone(files)
-            self.assertGreater(len(files), 0)
-            for file in files:
-                # file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
-                file_data = SpecFileService().get_spec_file_data(file.id).data
-                self.assertIsNotNone(file_data)
-                self.assertGreater(len(file_data), 0)
+        # specs = session.query(WorkflowSpecModel).all()
+        # self.assertIsNotNone(specs)
+        #
+        # for spec in specs:
+        #     files = SpecFileService.get_files(workflow_spec_id=spec.id)
+        #     self.assertIsNotNone(files)
+        #     self.assertGreater(len(files), 0)
+        #     for file in files:
+        #         # file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
+        #         file_data = SpecFileService().get_spec_file_data(file.id).data
+        #         self.assertIsNotNone(file_data)
+        #         self.assertGreater(len(file_data), 0)
 
     @staticmethod
     def load_test_spec(dir_name, display_name=None, master_spec=False, category_id=None):

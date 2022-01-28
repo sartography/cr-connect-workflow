@@ -763,8 +763,10 @@ class WorkflowService(object):
 
         try:
             doc_file_name = spiff_task.task_spec.name + ".md"
-            data_model = SpecFileService.get_workflow_file_data(spiff_task.workflow, doc_file_name)
-            raw_doc = data_model.data.decode("utf-8")
+            workflow_id = spiff_task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+            workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == spiff_task.workflow.data['workflow_spec_id'])
+            data = SpecFileService.get_data(workflow.workflow_spec, doc_file_name)
+            raw_doc = data.decode("utf-8")
         except ApiError:
             raw_doc = documentation
 

@@ -277,8 +277,7 @@ class ExampleDataLoader:
                 file = open(file_path, 'rb')
                 data = file.read()
                 content_type = CONTENT_TYPES[file_extension[1:]]
-                SpecFileService.add_workflow_spec_file(workflow_spec=spec, name=filename, content_type=content_type,
-                                                    binary_data=data, primary=is_primary, is_status=is_status)
+                SpecFileService.add_file(workflow_spec=spec, file_name=filename, binary_data=data, content_type=content_type)
             except IsADirectoryError as de:
                 # Ignore sub directories
                 pass

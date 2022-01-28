@@ -16,7 +16,8 @@ class ReferenceFileService(object):
 
     @staticmethod
     def get_reference_file_path(file_name):
-        sync_file_root = SpecFileService().get_sync_file_root()
+        # Fixme: The services should not talk to each other.
+        sync_file_root = SpecFileService().root_path()
         file_path = os.path.join(sync_file_root, 'Reference', file_name)
         return file_path
 
@@ -25,15 +26,16 @@ class ReferenceFileService(object):
         """Create a file with the given name, but not associated with a spec or workflow.
            Only one file with the given reference name can exist."""
         file_model = session.query(FileModel). \
-            filter(FileModel.is_reference == True). \
             filter(FileModel.name == name).first()
+# fixme: no need for this is_reference filter.
+#        filter(FileModel.is_reference == True). \
         if not file_model:
             file_extension = FileService.get_extension(name)
             file_type = FileType[file_extension].value
 
             file_model = FileModel(
                 name=name,
-                is_reference=True,
+#                is_reference=True,
                 type=file_type,
                 content_type=content_type
             )
@@ -103,7 +105,9 @@ class ReferenceFileService(object):
 
     @staticmethod
     def write_reference_file_info_to_system(file_path, file_model):
-        SpecFileService.write_file_info_to_system(file_path, file_model)
+        pass
+    # fixme: correct this stuff.
+    #    SpecFileService.write_file_info_to_system(file_path, file_model)
 
     @staticmethod
     def get_reference_files():
