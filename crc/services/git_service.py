@@ -1,4 +1,7 @@
+import os
+
 from crc import app
+from crc.api.common import ApiError
 from crc.models.git_models import GitRepo
 from git import Repo, InvalidGitRepositoryError, NoSuchPathError
 
@@ -9,21 +12,32 @@ class GitService(object):
 
     @staticmethod
     def __get_repo():
+        remote = app.config['GIT_REMOTE']
+        git_branch = app.config['GIT_BRANCH']
         directory = app.config['SYNC_FILE_ROOT']
-        repo = None
+        # repo = None
         try:
             repo = Repo(directory)
-        except InvalidGitRepositoryError as ge:
+        except InvalidGitRepositoryError:
             # Thrown if the given repository appears to have an invalid format.
-            # TODO: I believe this means there is no .git directory
-            #  So, git init?
-            print(ge)
-            repo = Repo.init_repo(directory)
-        except NoSuchPathError as pe:
-            # TODO: clone from remote?
-            print(pe)
+            # I believe this means there is no .git directory
+            if os.listdir(directory):
+                # If the directory is not empty, we let them decide how to fix it
+                raise ApiError(code='invalid_git_repo',
+                               message=f'The directory {directory} is not empty, and is not a valid git repository. Please fix this before continuing.')
+            else:
+                # If the directory is empty, we clone
+                repo = Repo.clone_from(remote, directory)
+                repo.git.checkout(git_branch)
+        except NoSuchPathError:
+            # The directory does not exist, so clone
+            repo = Repo.clone_from(remote, directory)
+            repo.git.checkout(git_branch)
         except Exception as e:
+            raise ApiError(code='unknown_exception',
+                           message=f'There was an unknown exception. Original message is: {e}')
             print(e)
+            app.logger.error(e)
         return repo
 
     def _get_repo(self):
@@ -34,7 +48,7 @@ class GitService(object):
         repo_model = GitRepo().from_repo(repo)
         return repo_model
 
-    def push_to_remote(self, comment):
+    def push_to_remote(self, comment=None):
         if comment is None:
             comment = f"Git commit: {datetime.now()}"
         repo = self.__get_repo()
