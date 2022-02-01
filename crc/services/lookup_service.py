@@ -173,10 +173,14 @@ class LookupService(object):
                            message=f"Error opening excel file {file_name}. You may have an older .xls spreadsheet. (file_model_id: {file_id} workflow_spec_id: {workflow_spec_id}, task_spec_id: {task_spec_id}, and field_id: {field_id})")
         df = xlsx.parse(xlsx.sheet_names[0])  # Currently we only look at the fist sheet.
         df = df.convert_dtypes()
-        df = df.loc[:, ~df.columns.str.contains('^Unnamed')] # Drop unnamed columns.
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]  # Drop unnamed columns.
         df = pd.DataFrame(df).dropna(how='all')  # Drop null rows
-        df = pd.DataFrame(df).replace({NA: ''})
-
+        for (column_name, column_data) in df.iteritems():
+            data_type = df.dtypes[column_name].name
+            if data_type == 'string':
+                df[column_name] = df[column_name].fillna('')
+            else:
+                df[column_name] = df[column_name].fillna(0)
         if value_column not in df:
             raise ApiError("invalid_enum",
                            "The file %s does not contain a column named % s" % (file_name,
