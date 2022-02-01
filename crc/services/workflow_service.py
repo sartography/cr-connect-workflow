@@ -419,12 +419,8 @@ class WorkflowService(object):
     @staticmethod
     def get_default_value(field, task):
         has_lookup = WorkflowService.has_lookup(field)
-
-        default = field.default_value
-        # If there is a value expression, use that rather than the default value.
-        if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION):
-            result = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
-            default = result
+        # efault = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
+        default = task.workflow.script_engine._evaluate(field.default_value, copy.deepcopy(task.data))
 
         # If no default exists, return None
         # Note: if default is False, we don't want to execute this code
@@ -461,8 +457,6 @@ class WorkflowService(object):
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
                                                                  "are incorrect: %s " % field.id, task)
-        elif field.type == "long":
-            return int(default)
         elif field.type == 'boolean':
             default = str(default).lower()
             if default == 'true' or default == 't':
@@ -709,8 +703,8 @@ class WorkflowService(object):
                 for i, field in enumerate(task.form.fields):
                     task.form.fields[i] = WorkflowService.process_options(spiff_task, field)
                     # If there is a default value, set it.
-                    if field.id not in task.data and WorkflowService.get_default_value(field, spiff_task) is not None:
-                        task.data[field.id] = WorkflowService.get_default_value(field, spiff_task)
+                    #if field.id not in task.data and WorkflowService.get_default_value(field, spiff_task) is not None:
+                    #    task.data[field.id] = WorkflowService.get_default_value(field, spiff_task)
             task.documentation = WorkflowService._process_documentation(spiff_task)
 
         # All ready tasks should have a valid name, and this can be computed for
