@@ -12,7 +12,8 @@ def pull_from_remote():
 
 
 def push_to_remote(comment=None):
-    return GitService().push_to_remote(comment)
+    repo_model = GitService().push_to_remote(comment)
+    return GitRepoSchema().dump(repo_model)
 
 
 def merge_with_branch(branch):
