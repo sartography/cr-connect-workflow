@@ -1,4 +1,4 @@
-from crc.models.git_models import GitRepoSchema
+from crc.models.git_models import GitRepo, GitRepoSchema
 from crc.services.git_service import GitService
 
 
@@ -8,17 +8,20 @@ def get_repo():
 
 
 def pull_from_remote():
-    repo_model = GitService().pull_from_remote()
+    repo = GitService().pull_from_remote()
+    repo_model = GitRepo.from_repo(repo)
     return GitRepoSchema().dump(repo_model)
 
 
 def push_to_remote(comment=None):
-    repo_model = GitService().push_to_remote(comment)
+    repo = GitService().push_to_remote(comment)
+    repo_model = GitRepo.from_repo(repo)
     return GitRepoSchema().dump(repo_model)
 
 
 def merge_with_branch(branch):
-    repo_model = GitService().merge_with_branch(branch)
+    repo = GitService().merge_with_branch(branch)
+    repo_model = GitRepo.from_repo(repo)
     return GitRepoSchema().dump(repo_model)
 
 
