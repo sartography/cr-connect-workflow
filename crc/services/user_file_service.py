@@ -35,7 +35,7 @@ def camel_to_snake(camel):
     return re.sub(r'(?<!^)(?=[A-Z])', '_', camel).lower()
 
 
-class FileService(object):
+class UserFileService(object):
 
     @staticmethod
     @cache
@@ -75,13 +75,12 @@ class FileService(object):
                 task_spec=task_spec_name,
                 irb_doc_code=irb_doc_code
             )
-        return FileService.update_file(file_model, binary_data, content_type)
+        return UserFileService.update_file(file_model, binary_data, content_type)
 
     @staticmethod
     def get_workflow_files(workflow_id):
         """Returns all the file models associated with a running workflow."""
         return session.query(FileModel).filter(FileModel.workflow_id == workflow_id).\
-            filter(FileModel.archived == False).\
             order_by(FileModel.id).all()
 
     @staticmethod
@@ -103,13 +102,12 @@ class FileService(object):
         if (latest_data_model is not None) and (md5_checksum == latest_data_model.md5_hash):
             # This file does not need to be updated, it's the same file.  If it is arhived,
             # then de-arvhive it.
-            file_model.archived = False
             session.add(file_model)
             session.commit()
             return file_model
 
         # Verify the extension
-        file_extension = FileService.get_extension(file_model.name)
+        file_extension = UserFileService.get_extension(file_model.name)
         if file_extension not in FileType._member_names_:
             raise ApiError('unknown_extension',
                            'The file you provided does not have an accepted extension:' +
@@ -117,7 +115,6 @@ class FileService(object):
         else:
             file_model.type = FileType[file_extension]
             file_model.content_type = content_type
-            file_model.archived = False  # Unarchive the file if it is archived.
 
         if latest_data_model is None:
             version = 1
@@ -143,8 +140,7 @@ class FileService(object):
     def get_files_for_study(study_id, irb_doc_code=None):
         query = session.query(FileModel).\
                 join(WorkflowModel).\
-                filter(WorkflowModel.study_id == study_id).\
-                filter(FileModel.archived == False)
+                filter(WorkflowModel.study_id == study_id)
         if irb_doc_code:
             query = query.filter(FileModel.irb_doc_code == irb_doc_code)
         return query.all()
@@ -159,7 +155,6 @@ class FileService(object):
             if name:
                 query = query.filter_by(name=name)
 
-            query = query.filter(FileModel.archived == False)
             query = query.order_by(FileModel.id)
 
             results = query.all()
@@ -170,10 +165,10 @@ class FileService(object):
         """Returns all the FileDataModels related to a running workflow -
         So these are the latest data files that were uploaded or generated
         that go along with this workflow.  Not related to the spec in any way"""
-        file_models = FileService.get_files(workflow_id=workflow_id)
+        file_models = UserFileService.get_files(workflow_id=workflow_id)
         latest_data_files = []
         for file_model in file_models:
-            latest_data_files.append(FileService.get_file_data(file_model.id))
+            latest_data_files.append(UserFileService.get_file_data(file_model.id))
         return latest_data_files
 
     @staticmethod
@@ -190,22 +185,15 @@ class FileService(object):
     @staticmethod
     def delete_file(file_id):
         try:
-            lookup_files = session.query(LookupFileModel).filter_by(file_model_id=file_id).all()
-            for lf in lookup_files:
-                session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
-                session.query(LookupFileModel).filter_by(id=lf.id).delete()
             session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
             session.query(DataStoreModel).filter_by(file_id=file_id).delete()
             session.query(FileModel).filter_by(id=file_id).delete()
             session.commit()
         except IntegrityError as ie:
-            # We can't delete the file or file data, because it is referenced elsewhere,
-            # but we can at least mark it as deleted on the table.
             session.rollback()
-            file_model = session.query(FileModel).filter_by(id=file_id).first()
-            file_model.archived = True
             session.commit()
             app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
+            raise ApiError('Delete Failed', "Unable to delete file. ")
 
     @staticmethod
     def get_repo_branches():

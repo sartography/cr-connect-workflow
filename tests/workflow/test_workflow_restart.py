@@ -2,8 +2,8 @@ from tests.base_test import BaseTest
 
 from crc import session
 from crc.models.study import StudyModel
-from crc.services.file_service import FileService
 from crc.scripts.is_file_uploaded import IsFileUploaded
+from crc.services.user_file_service import UserFileService
 
 
 class TestWorkflowRestart(BaseTest):
@@ -47,16 +47,16 @@ class TestWorkflowRestart(BaseTest):
         first_task = workflow_api.next_task
 
         # Should not have any files yet
-        files = FileService.get_files_for_study(study_id)
+        files = UserFileService.get_files_for_study(study_id)
         self.assertEqual(0, len(files))
         self.assertEqual(False, IsFileUploaded.do_task(
             IsFileUploaded, first_task, study_id, workflow.id, irb_code))
 
         # Add a file
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="filename.txt", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="filename.txt", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code)
         # Assert we have the file
         self.assertEqual(True, IsFileUploaded.do_task(
             IsFileUploaded, first_task, study_id, workflow.id, irb_code))

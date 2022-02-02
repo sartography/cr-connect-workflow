@@ -12,8 +12,8 @@ from crc.models.task_log import TaskLogModelSchema, TaskLogQuery, TaskLogQuerySc
 from crc.models.workflow import WorkflowModel, WorkflowSpecModelSchema, WorkflowSpecModel, WorkflowSpecCategoryModel, \
     WorkflowSpecCategoryModelSchema, WorkflowLibraryModel, WorkflowLibraryModelSchema
 from crc.services.error_service import ValidationErrorService
-from crc.services.file_service import FileService
 from crc.services.lookup_service import LookupService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.task_logging_service import TaskLoggingService
 from crc.services.user_service import UserService
@@ -153,7 +153,7 @@ def delete_workflow_specification(spec_id):
     WorkflowService.delete_workflow_spec_workflow_models(spec_id)
 
     # Delete all files related to this specification
-    WorkflowService.delete_workflow_spec_files(spec_id)
+    SpecFileService.delete_all_files(spec)
 
     # Delete all events related to this specification
     WorkflowService.delete_workflow_spec_task_events(spec_id)

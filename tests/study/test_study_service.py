@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 from unittest.mock import patch
 
+from crc.services.user_file_service import UserFileService
 from tests.base_test import BaseTest
 
 from crc import db, app
@@ -9,7 +10,6 @@ from crc.models.study import StudyModel, StudyStatus, StudyAssociatedSchema
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, \
     WorkflowSpecCategoryModel
-from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -145,10 +145,10 @@ class TestStudyService(BaseTest):
         # Add a document to the study with the correct code.
         workflow = self.create_workflow('docx')
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name='t1',
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name='t1',
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code)
 
         docs = StudyService().get_documents_status(workflow.study_id)
         self.assertIsNotNone(docs)
@@ -168,18 +168,18 @@ class TestStudyService(BaseTest):
         workflow2 = self.create_workflow('empty_workflow', study=study)
 
         # Add files to both workflows.
-        FileService.add_workflow_file(workflow_id=workflow1.id,
-                                      task_spec_name="t1",
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
-        FileService.add_workflow_file(workflow_id=workflow1.id,
-                                      task_spec_name="t1",
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code="AD_Consent_Model")
-        FileService.add_workflow_file(workflow_id=workflow2.id,
-                                      task_spec_name="t1",
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
+        UserFileService.add_workflow_file(workflow_id=workflow1.id,
+                                          task_spec_name="t1",
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
+        UserFileService.add_workflow_file(workflow_id=workflow1.id,
+                                          task_spec_name="t1",
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code="AD_Consent_Model")
+        UserFileService.add_workflow_file(workflow_id=workflow2.id,
+                                          task_spec_name="t1",
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
 
         studies = StudyService().get_all_studies_with_files()
         self.assertEqual(1, len(studies))

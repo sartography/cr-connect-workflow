@@ -18,14 +18,14 @@ from SpiffWorkflow.specs import WorkflowSpec
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileType
+from crc.models.file import FileModel, FileType, File
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModelSchema
-from crc.models.workflow import WorkflowStatus, WorkflowModel
+from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecModel
 from crc.scripts.script import Script
-from crc.services.file_service import FileService
 from crc import app
 from crc.services.spec_file_service import SpecFileService
+from crc.services.user_file_service import UserFileService
 from crc.services.user_service import UserService
 
 
@@ -106,9 +106,8 @@ class WorkflowProcessor(object):
 
         spec = None
         if workflow_model.bpmn_workflow_json is None:
-            self.spec_files = SpecFileService().get_spec_files(
-                workflow_spec_id=workflow_model.workflow_spec_id, include_libraries=True)
-            spec = self.get_spec(self.spec_files, workflow_model.workflow_spec_id)
+            self.spec_files = SpecFileService.get_files(workflow_model.workflow_spec, include_libraries=True)
+            spec = self.get_spec(self.spec_files, workflow_model.workflow_spec)
 
         self.workflow_spec_id = workflow_model.workflow_spec_id
 
@@ -166,7 +165,7 @@ class WorkflowProcessor(object):
         if delete_files:
             files = FileModel.query.filter(FileModel.workflow_id == workflow_model.id).all()
             for file in files:
-                FileService.delete_file(file.id)
+                UserFileService.delete_file(file.id)
         session.commit()
         return WorkflowProcessor(workflow_model)
 
@@ -198,9 +197,9 @@ class WorkflowProcessor(object):
         """Executes a BPMN specification for the given study, without recording any information to the database
         Useful for running the master specification, which should not persist. """
         lasttime = firsttime()
-        spec_files = SpecFileService().get_spec_files(spec_model.id, include_libraries=True)
+        spec_files = SpecFileService().get_files(spec_model, include_libraries=True)
         lasttime = sincetime('load Files', lasttime)
-        spec = WorkflowProcessor.get_spec(spec_files, spec_model.id)
+        spec = WorkflowProcessor.get_spec(spec_files, spec_model)
         lasttime = sincetime('get spec', lasttime)
         try:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
@@ -224,28 +223,24 @@ class WorkflowProcessor(object):
         return parser
 
     @staticmethod
-    def get_spec(files: List[FileModel], workflow_spec_id):
+    def get_spec(files: List[File], workflow_spec_model: WorkflowSpecModel):
         """Returns a SpiffWorkflow specification for the given workflow spec,
-        using the files provided.  The Workflow_spec_id is only used to generate
-        better error messages."""
+        using the files provided. """
         parser = WorkflowProcessor.get_parser()
-        process_id = None
 
         for file in files:
-            data = SpecFileService().get_spec_file_data(file.id).data
+            data = SpecFileService.get_data(workflow_spec_model, file.name)
             if file.type == FileType.bpmn:
                 bpmn: etree.Element = etree.fromstring(data)
-                if file.primary and file.workflow_spec_id == workflow_spec_id:
-                    process_id = SpecFileService.get_process_id(bpmn)
                 parser.add_bpmn_xml(bpmn, filename=file.name)
             elif file.type == FileType.dmn:
                 dmn: etree.Element = etree.fromstring(data)
                 parser.add_dmn_xml(dmn, filename=file.name)
-        if process_id is None:
+        if workflow_spec_model.primary_process_id is None:
             raise (ApiError(code="no_primary_bpmn_error",
-                            message="There is no primary BPMN model defined for workflow %s" % workflow_spec_id))
+                            message="There is no primary BPMN model defined for workflow %s" % workflow_spec_model.id))
         try:
-            spec = parser.get_spec(process_id)
+            spec = parser.get_spec(workflow_spec_model.primary_process_id)
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
                            message="Failed to parse the Workflow Specification. " +

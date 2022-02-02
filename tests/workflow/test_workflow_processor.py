@@ -17,6 +17,7 @@ from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
+from crc.services.spec_file_service import SpecFileService
 
 
 class TestWorkflowProcessor(BaseTest):
@@ -60,7 +61,7 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("decision_table")
-        files = session.query(FileModel).filter_by(workflow_spec_id='decision_table').all()
+        files = SpecFileService.get_files(workflow_spec_model)
         self.assertEqual(2, len(files))
         processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
@@ -207,7 +208,7 @@ class TestWorkflowProcessor(BaseTest):
         self.load_example_data()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("docx")
-        files = session.query(FileModel).filter_by(workflow_spec_id='docx').all()
+        files = SpecFileService.get_files(workflow_spec_model)
         self.assertEqual(2, len(files))
         workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="docx").first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -262,7 +263,7 @@ class TestWorkflowProcessor(BaseTest):
 
         # Modify the specification, with a major change that alters the flow and can't be serialized effectively.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
-        self.replace_file("two_forms.bpmn", file_path)
+        self.replace_file(workflow_spec_model, "two_forms.bpmn", file_path)
 
         # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
         processor.workflow_model.bpmn_workflow_json = processor.serialize()
@@ -315,54 +316,6 @@ class TestWorkflowProcessor(BaseTest):
         task = processor.next_task()
         self.assertEqual("A1", task.task_spec.name)
 
-
-
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')
-    def test_master_bpmn_for_crc(self, mock_details, mock_required_docs, mock_investigators, mock_studies):
-
-        # Mock Protocol Builder response
-        studies_response = self.protocol_builder_response('user_studies.json')
-        mock_studies.return_value = ProtocolBuilderCreatorStudySchema(many=True).loads(studies_response)
-
-        investigators_response = self.protocol_builder_response('investigators.json')
-        mock_investigators.return_value = json.loads(investigators_response)
-
-        required_docs_response = self.protocol_builder_response('required_docs.json')
-        mock_required_docs.return_value = json.loads(required_docs_response)
-
-        details_response = self.protocol_builder_response('study_details.json')
-        mock_details.return_value = json.loads(details_response)
-
-        self.load_example_data(use_crc_data=True)
-        app.config['PB_ENABLED'] = True
-
-        study = session.query(StudyModel).first()
-        workflow_spec_model = db.session.query(WorkflowSpecModel).\
-            filter(WorkflowSpecModel.id == "top_level_workflow").first()
-        self.assertIsNotNone(workflow_spec_model)
-
-        processor = self.get_processor(study, workflow_spec_model)
-        processor.do_engine_steps()
-        self.assertTrue("Top level process is fully automatic.", processor.bpmn_workflow.is_completed())
-        data = processor.bpmn_workflow.last_task.data
-
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
-        # It should mark Enter Core Data as required, because it is always required.
-        self.assertTrue("enter_core_info" in data)
-        self.assertEqual("required", data["enter_core_info"])
-
-        # It should mark Personnel as required, because StudyInfo.investigators is not empty.
-        self.assertTrue("personnel" in data)
-        self.assertEqual("required", data["personnel"])
-
-        # It should mark the sponsor funding source as disabled since the funding required (12) is not included in the required docs.
-        self.assertTrue("sponsor_funding_source" in data)
-        self.assertEqual("required", data["sponsor_funding_source"])
-
     def test_enum_with_no_choices_raises_api_error(self):
         self.load_example_data()
         workflow_spec_model = self.load_test_spec("random_fact")
@@ -371,8 +324,6 @@ class TestWorkflowProcessor(BaseTest):
         processor.do_engine_steps()
         tasks = processor.next_user_tasks()
         task = tasks[0]
-
-
         field = FormField()
         field.id = "test_enum_field"
         field.type = "enum"

@@ -11,7 +11,7 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.email import EmailModel
-from crc.models.file import FileModel, File, FileSchema
+from crc.models.file import FileModel, File, FileSchema, FileDataModel
 from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
@@ -22,10 +22,10 @@ from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
     WorkflowStatus
 from crc.services.document_service import DocumentService
-from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.lookup_service import LookupService
 from crc.services.protocol_builder import ProtocolBuilderService
+from crc.services.user_file_service import UserFileService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -41,7 +41,9 @@ class StudyService(object):
             study_info = study_details[0]
         # The review types 2, 3, 23, 24 correspond to review type names
         # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
-        if isinstance(study_info, dict) and 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3, 23, 24]:
+        if isinstance(study_info, dict) and 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3,
+                                                                                                                 23,
+                                                                                                                 24]:
             return True
         return False
 
@@ -65,7 +67,7 @@ class StudyService(object):
         studies = []
         for s in db_studies:
             study = Study.from_model(s)
-            study.files = FileService.get_files_for_study(study.id)
+            study.files = UserFileService.get_files_for_study(study.id)
             studies.append(study)
         return studies
 
@@ -90,8 +92,8 @@ class StudyService(object):
             study.last_activity_date = last_event.date
         study.categories = StudyService.get_categories()
         workflow_metas = StudyService._get_workflow_metas(study_id)
-        files = FileService.get_files_for_study(study.id)
-        files = (File.from_models(model, FileService.get_file_data(model.id),
+        files = UserFileService.get_files_for_study(study.id)
+        files = (File.from_models(model, UserFileService.get_file_data(model.id),
                                   DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
         # Calling this line repeatedly is very very slow.  It creates the
@@ -236,7 +238,10 @@ class StudyService(object):
             return
 
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
-        session.query(FileModel).filter_by(workflow_id=workflow_id).update({'archived': True, 'workflow_id': None})
+        files = session.query(FileModel).filter_by(workflow_id=workflow_id).all()
+        for file in files:
+            session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).delete()
+            session.delete(file)
 
         session.delete(workflow)
         session.commit()
@@ -275,7 +280,9 @@ class StudyService(object):
 
             doc['required'] = False
             if ProtocolBuilderService.is_enabled() and doc['id'] != '':
-                pb_data = next((item for item in pb_docs['AUXDOCS'] if int(item['SS_AUXILIARY_DOC_TYPE_ID']) == int(doc['id'])), None)
+                pb_data = next(
+                    (item for item in pb_docs['AUXDOCS'] if int(item['SS_AUXILIARY_DOC_TYPE_ID']) == int(doc['id'])),
+                    None)
                 if pb_data:
                     doc['required'] = True
 
@@ -290,12 +297,12 @@ class StudyService(object):
             doc['display_name'] = ' / '.join(name_list)
 
             # For each file, get associated workflow status
-            doc_files = FileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
+            doc_files = UserFileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
             doc['count'] = len(doc_files)
             doc['files'] = []
 
             for file_model in doc_files:
-                file = File.from_models(file_model, FileService.get_file_data(file_model.id), [])
+                file = File.from_models(file_model, UserFileService.get_file_data(file_model.id), [])
                 file_data = FileSchema().dump(file)
                 del file_data['document']
                 doc['files'].append(Box(file_data))
@@ -309,19 +316,13 @@ class StudyService(object):
 
     @staticmethod
     def get_investigator_dictionary():
-        """Returns a dictionary of document details keyed on the doc_code."""
-        file_id = session.query(FileModel.id). \
-            filter(FileModel.name == StudyService.INVESTIGATOR_LIST). \
-            filter(FileModel.is_reference == True). \
-            scalar()
-        lookup_model = LookupService.get_lookup_model_for_file_data(file_id, StudyService.INVESTIGATOR_LIST, 'code', 'label')
+        lookup_model = LookupService.get_lookup_model_for_reference(StudyService.INVESTIGATOR_LIST, 'code', 'label')
         doc_dict = {}
         for lookup_data in lookup_model.dependencies:
             doc_dict[lookup_data.value] = lookup_data.data
         return doc_dict
 
     @staticmethod
-    
     def get_investigators(study_id, all=False):
         """Convert array of investigators from protocol builder into a dictionary keyed on the type. """
 
@@ -433,13 +434,14 @@ class StudyService(object):
     def _update_status_of_workflow_meta(workflow_metas, status):
         # Update the status on each workflow
         warnings = []
-        unused_statuses = status.copy() # A list of all the statuses that are not used.
+        unused_statuses = status.copy()  # A list of all the statuses that are not used.
         for wfm in workflow_metas:
             unused_statuses.pop(wfm.workflow_spec_id, None)
             wfm.state_message = ''
             # do we have a status for you
             if wfm.workflow_spec_id not in status.keys():
-                warnings.append(ApiError("missing_status", "No status information provided about workflow %s" % wfm.workflow_spec_id))
+                warnings.append(ApiError("missing_status",
+                                         "No status information provided about workflow %s" % wfm.workflow_spec_id))
                 continue
             if not isinstance(status[wfm.workflow_spec_id], dict):
                 warnings.append(ApiError(code='invalid_status',
@@ -454,7 +456,8 @@ class StudyService(object):
             if not WorkflowState.has_value(status[wfm.workflow_spec_id]['status']):
                 warnings.append(ApiError("invalid_state",
                                          "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'], ",".join(WorkflowState.list())
+                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'],
+                                             ",".join(WorkflowState.list())
                                          )))
                 continue
 
@@ -463,8 +466,8 @@ class StudyService(object):
         for status in unused_statuses:
             if isinstance(unused_statuses[status], dict) and 'status' in unused_statuses[status]:
                 warnings.append(ApiError("unmatched_status", "The master workflow provided a status for '%s' a "
-                                                         "workflow that doesn't seem to exist." %
-                                                         status))
+                                                             "workflow that doesn't seem to exist." %
+                                         status))
 
         return warnings
 

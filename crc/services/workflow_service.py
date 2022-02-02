@@ -19,6 +19,7 @@ from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
 from SpiffWorkflow.util.metrics import timeit
+from sqlalchemy.exc import InvalidRequestError
 
 from crc import db, app, session
 from crc.api.common import ApiError
@@ -32,7 +33,6 @@ from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecModel
 from crc.services.data_store_service import DataStoreBase
 
 from crc.services.document_service import DocumentService
-from crc.services.file_service import FileService
 from crc.services.jinja_service import JinjaService
 from crc.services.lookup_service import LookupService
 from crc.services.spec_file_service import SpecFileService
@@ -81,15 +81,19 @@ class WorkflowService(object):
             db.session.add(StudyModel(user_uid=user.uid, title="test"))
             db.session.commit()
             study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
+        spec = db.session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
         workflow_model = WorkflowModel(status=WorkflowStatus.not_started,
-                                       workflow_spec_id=spec_id,
+                                       workflow_spec=spec,
                                        last_updated=datetime.utcnow(),
                                        study=study)
         return workflow_model
 
     @staticmethod
     def delete_test_data(workflow: WorkflowModel):
-        db.session.delete(workflow)
+        try:
+            db.session.delete(workflow)
+        except InvalidRequestError as e:
+            pass
         # Also, delete any test study or user models that may have been created.
         for study in db.session.query(StudyModel).filter(StudyModel.user_uid == "test"):
             StudyService.delete_study(study.id)
@@ -567,10 +571,7 @@ class WorkflowService(object):
 
         navigation = processor.bpmn_workflow.get_deep_nav_list()
         WorkflowService.update_navigation(navigation, processor)
-
-
         spec = db.session.query(WorkflowSpecModel).filter_by(id=processor.workflow_spec_id).first()
-        is_review = FileService.is_workflow_review(processor.workflow_spec_id)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
             status=processor.get_status(),
@@ -580,7 +581,7 @@ class WorkflowService(object):
             total_tasks=len(navigation),
             completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
-            is_review=is_review,
+            is_review=spec.is_review,
             title=spec.display_name,
             study_id=processor.workflow_model.study_id or None
         )
@@ -764,7 +765,8 @@ class WorkflowService(object):
         try:
             doc_file_name = spiff_task.task_spec.name + ".md"
             workflow_id = spiff_task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-            workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == spiff_task.workflow.data['workflow_spec_id'])
+            workflow = db.session.query(WorkflowModel).\
+                filter(WorkflowModel.id == spiff_task.workflow.data['workflow_id']).first()
             data = SpecFileService.get_data(workflow.workflow_spec, doc_file_name)
             raw_doc = data.decode("utf-8")
         except ApiError:
@@ -1016,15 +1018,6 @@ class WorkflowService(object):
         return specs
 
     @staticmethod
-    def get_primary_workflow(workflow_spec_id):
-        # Returns the FileModel of the primary workflow for a workflow_spec
-        primary = None
-        file = db.session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id, FileModel.primary==True).first()
-        if file:
-            primary = file
-        return primary
-
-    @staticmethod
     def reorder_workflow_spec(spec, direction):
         category_id = spec.category_id
         # Direction is either `up` or `down`
@@ -1104,12 +1097,6 @@ class WorkflowService(object):
             session.add(category)
             new_order += 1
         session.commit()
-
-    @staticmethod
-    def delete_workflow_spec_files(spec_id):
-        files = session.query(FileModel).filter_by(workflow_spec_id=spec_id).all()
-        for file in files:
-            FileService.delete_file(file.id)
 
     @staticmethod
     def delete_workflow_spec_task_events(spec_id):

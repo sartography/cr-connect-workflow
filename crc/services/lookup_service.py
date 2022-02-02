@@ -50,12 +50,15 @@ class LookupService(object):
         return LookupService.__get_lookup_model(workflow, spiff_task.task_spec.name, field.id)
 
     @staticmethod
-    def get_lookup_model_for_file_data(file_id, file_name, value_column, label_column):
-        file_data = ReferenceFileService().get_reference_file_data(file_name)
-        lookup_model = db.session.query(LookupFileModel).filter(LookupFileModel.file_model_id == file_id).first()
+    def get_lookup_model_for_reference(file_name, value_column, label_column):
+        lookup_model = db.session.query(LookupFileModel).\
+            filter(LookupFileModel.file_name == file_name). \
+            filter(LookupFileModel.workflow_spec_id is None).\
+            first()
         if not lookup_model:
             logging.warning("!!!! Making a very expensive call to update the lookup model.")
-            lookup_model = LookupService.build_lookup_table(file_id, file_name, file_data.data, value_column, label_column)
+            file_data = ReferenceFileService().get_data(file_name)
+            lookup_model = LookupService.build_lookup_table(file_name, file_data, value_column, label_column)
         return lookup_model
 
     @staticmethod
@@ -73,7 +76,7 @@ class LookupService(object):
             if lookup_model.is_ldap:  # LDAP is always current
                 is_current = True
             else:
-                current_date = SpecFileService.last_modified(lookup_model.file_model.id)
+                current_date = SpecFileService.last_modified(workflow.workflow_spec, lookup_model.file_name)
                 is_current = current_date == lookup_model.last_updated
 
         if not is_current:
@@ -130,16 +133,16 @@ class LookupService(object):
             file_name = field.get_property(Task.FIELD_PROP_SPREADSHEET_NAME)
             value_column = field.get_property(Task.FIELD_PROP_VALUE_COLUMN)
             label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
-            latest_files = SpecFileService().get_spec_files(workflow_spec_id=workflow_model.workflow_spec_id,
-                                                            file_name=file_name)
+            latest_files = SpecFileService().get_files(workflow_model.workflow_spec, file_name=file_name)
             if len(latest_files) < 1:
                 raise ApiError("invalid_enum", "Unable to locate the lookup data file '%s'" % file_name)
             else:
                 file = latest_files[0]
 
-            file_data = SpecFileService().get_spec_file_data(file.id).data
+            workflow_spec = processor.workflow_model.workflow_spec
+            file_data = SpecFileService().get_data(workflow_spec, file_name)
 
-            lookup_model = LookupService.build_lookup_table(file.id, file_name, file_data, value_column, label_column,
+            lookup_model = LookupService.build_lookup_table(file_name, file_data, value_column, label_column,
                                                             workflow_model.workflow_spec_id, task_spec_id, field_id)
 
         #  Use the results of an LDAP request to populate enum field options
@@ -158,7 +161,7 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def build_lookup_table(file_id, file_name, file_data, value_column, label_column,
+    def build_lookup_table(file_name, file_data, value_column, label_column,
                            workflow_spec_id=None, task_spec_id=None, field_id=None):
         """ In some cases the lookup table can be very large.  This method will add all values to the database
          in a way that can be searched and returned via an api call - rather than sending the full set of
@@ -170,13 +173,17 @@ class LookupService(object):
         # The error comes back as zipfile.BadZipFile because xlsx files are zipped xml files
         except BadZipFile:
             raise ApiError(code='excel_error',
-                           message=f"Error opening excel file {file_name}. You may have an older .xls spreadsheet. (file_model_id: {file_id} workflow_spec_id: {workflow_spec_id}, task_spec_id: {task_spec_id}, and field_id: {field_id})")
+                           message=f"Error opening excel file {file_name}. You may have an older .xls spreadsheet. (workflow_spec_id: {workflow_spec_id}, task_spec_id: {task_spec_id}, and field_id: {field_id})")
         df = xlsx.parse(xlsx.sheet_names[0])  # Currently we only look at the fist sheet.
         df = df.convert_dtypes()
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')] # Drop unnamed columns.
         df = pd.DataFrame(df).dropna(how='all')  # Drop null rows
-        df = pd.DataFrame(df).replace({NA: ''})
-
+        for (column_name, column_data) in df.iteritems():
+            type = df.dtypes[column_name].name
+            if type == 'string':
+                df[column_name] = df[column_name].fillna('')
+            else:
+                df[column_name] = df[column_name].fillna(0)
         if value_column not in df:
             raise ApiError("invalid_enum",
                            "The file %s does not contain a column named % s" % (file_name,
@@ -189,7 +196,7 @@ class LookupService(object):
         lookup_model = LookupFileModel(workflow_spec_id=workflow_spec_id,
                                        field_id=field_id,
                                        task_spec_id=task_spec_id,
-                                       file_model_id=file_id,
+                                       file_name=file_name,
                                        is_ldap=False)
 
         db.session.add(lookup_model)

@@ -1,6 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc.models.data_store import DataStoreModel, DataStoreSchema
+from crc.services.user_file_service import UserFileService
 from crc.models.file import FileModel
 from crc import session
 
@@ -127,7 +128,9 @@ class DataStoreTest(BaseTest):
 
     def test_datastore_file(self):
         self.load_example_data()
-        test_file = session.query(FileModel).first()
+        workflow = self.create_workflow('random_fact')
+        self.add_test_user_data()
+        test_file = UserFileService.add_workflow_file(workflow.id, 'xxx', 'xxx', 'my_file.docx', 'docx', b'this is it.')
 
         # make sure we don't already have a datastore
         api_response = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
@@ -153,7 +156,9 @@ class DataStoreTest(BaseTest):
 
     def test_datastore_files(self):
         self.load_example_data()
-        test_file = session.query(FileModel).first()
+        workflow = self.create_workflow('random_fact')
+        self.add_test_user_data()
+        test_file = UserFileService.add_workflow_file(workflow.id, 'xxx', 'xxx', 'my_file.docx', 'docx', b'this is it.')
 
         # add datastore
         value_1 = 'Some File Data Value 1'

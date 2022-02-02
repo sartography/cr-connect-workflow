@@ -37,7 +37,7 @@ class TestSpecFileService(BaseTest):
         self.assertIsNotNone(data)
         spec_files = SpecFileService().get_files(spec_dt)
         self.assertEqual(0, len(SpecFileService().get_files(spec_dt, "random_fact.bpmn")))
-        SpecFileService.add_file(spec_dt, "random_fact.bpmn", data, "text/xml")
+        SpecFileService.add_file(spec_dt, "random_fact.bpmn", data)
         self.assertEqual(1, len(SpecFileService().get_files(spec_dt, "random_fact.bpmn")))
 
         orig = SpecFileService.get_files(spec_random, "random_fact.bpmn")[0]

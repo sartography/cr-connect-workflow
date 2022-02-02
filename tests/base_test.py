@@ -27,6 +27,7 @@ from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
 from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
+from crc.services.user_file_service import UserFileService
 
 # UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
 import logging
@@ -162,6 +163,8 @@ class BaseTest(unittest.TestCase):
         # else:
         #     ExampleDataLoader().load_test_data()
 
+        self.create_reference_document()
+
         session.commit()
         for study_json in self.studies:
             study_model = StudyModel(**study_json)
@@ -187,21 +190,35 @@ class BaseTest(unittest.TestCase):
         #         self.assertGreater(len(file_data), 0)
 
     @staticmethod
-    def load_test_spec(dir_name, display_name=None, master_spec=False, category_id=None):
-        """Loads a spec into the database based on a directory in /tests/data"""
-        if category_id is None:
-            category = WorkflowSpecCategoryModel(display_name="Test Workflows", display_order=0)
-            session.add(category)
-            session.commit()
+    def assure_category_exists(category_id=None):
+        category = None
+        if category_id is not None:
+            category = db.session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.id == category_id).first()
+        if category is None:
+            category = db.session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.display_name == "Test Workflows").first()
+            if not category:
+                category = WorkflowSpecCategoryModel(display_name="Test Workflows", display_order=0)
+                session.add(category)
+                session.commit()
             category_id = category.id
+        return category
+
+    @staticmethod
+    def load_test_spec(dir_name, display_name=None, master_spec=False, category_id=None, library=False):
+        """Loads a spec into the database based on a directory in /tests/data"""
+        category = BaseTest.assure_category_exists(category_id)
+        category_id = category.id
 
         if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
             return session.query(WorkflowSpecModel).filter_by(id=dir_name).first()
         filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
         if display_name is None:
             display_name = dir_name
-        return ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
-                                               display_name=display_name, category_id=category_id)
+        spec = ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
+                                               display_name=display_name, category_id=category_id, library=library)
+        db.session.add(spec)
+        db.session.commit()
+        return spec
 
     @staticmethod
     def protocol_builder_response(file_name):
@@ -254,16 +271,11 @@ class BaseTest(unittest.TestCase):
 
         return '?%s' % '&'.join(query_string_list)
 
-    def replace_file(self, name, file_path):
+    def replace_file(self, spec, name, file_path):
         """Replaces a stored file with the given name with the contents of the file at the given path."""
         file = open(file_path, "rb")
         data = file.read()
-
-        file_model = session.query(FileModel).filter(FileModel.name == name).first()
-        workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
-        noise, file_extension = os.path.splitext(file_path)
-        content_type = CONTENT_TYPES[file_extension[1:]]
-        SpecFileService().update_spec_file_data(workflow_spec_model, file_model.name, data)
+        SpecFileService().update_file(spec, name, data)
 
     def create_user(self, uid="dhf8r", email="daniel.h.funk@gmail.com", display_name="Hoopy Frood"):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()
@@ -285,7 +297,6 @@ class BaseTest(unittest.TestCase):
             session.commit()
         return study
 
-
     def create_workflow(self, dir_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
         spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == dir_name).first()
@@ -299,11 +310,14 @@ class BaseTest(unittest.TestCase):
         return workflow_model
 
     def create_reference_document(self):
-        file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'documents.xlsx')
         with open(file_path, "rb") as file:
             ReferenceFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
-                                               content_type=CONTENT_TYPES['xlsx'],
-                                               binary_data=file.read())
+                                                    file.read())
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
+        with open(file_path, "rb") as file:
+            ReferenceFileService.add_reference_file('investigators.xlsx',
+                                                    file.read())
 
     def get_workflow_common(self, url, user):
         rv = self.app.get(url,

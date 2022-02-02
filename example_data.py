@@ -7,10 +7,10 @@ from crc.models.ldap import LdapModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.document_service import DocumentService
-from crc.services.file_service import FileService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
+from crc.services.user_file_service import UserFileService
 
 
 class ExampleDataLoader:
@@ -188,9 +188,9 @@ class ExampleDataLoader:
     def load_rrt(self):
         file_path = os.path.join(app.root_path, 'static', 'reference', 'rrt_documents.xlsx')
         file = open(file_path, "rb")
-        ReferenceFileService.add_reference_file(FileService.DOCUMENT_LIST,
-                                       binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xls'])
+        ReferenceFileService.add_reference_file(UserFileService.DOCUMENT_LIST,
+                                                binary_data=file.read(),
+                                                content_type=CONTENT_TYPES['xls'])
         file.close()
 
         category = WorkflowSpecCategoryModel(
@@ -246,7 +246,6 @@ class ExampleDataLoader:
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
         global file
-        file_service = FileService()
         spec = WorkflowSpecModel(id=id,
                                  display_name=display_name,
                                  description=description,
@@ -269,15 +268,15 @@ class ExampleDataLoader:
 
             noise, file_extension = os.path.splitext(file_path)
             filename = os.path.basename(file_path)
-
-            is_status = filename.lower() == 'status.bpmn'
             is_primary = filename.lower() == id + '.bpmn'
             file = None
             try:
                 file = open(file_path, 'rb')
                 data = file.read()
                 content_type = CONTENT_TYPES[file_extension[1:]]
-                SpecFileService.add_file(workflow_spec=spec, file_name=filename, binary_data=data, content_type=content_type)
+                SpecFileService.add_file(workflow_spec=spec, file_name=filename, binary_data=data)
+                if is_primary:
+                    SpecFileService.set_primary_bpmn(spec, filename)
             except IsADirectoryError as de:
                 # Ignore sub directories
                 pass
@@ -287,18 +286,16 @@ class ExampleDataLoader:
         return spec
 
     def load_reference_documents(self):
-        file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'documents.xlsx')
         file = open(file_path, "rb")
         ReferenceFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
-                                       binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xlsx'])
+                                                file.read())
         file.close()
 
         file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
         file = open(file_path, "rb")
         ReferenceFileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
-                                       binary_data=file.read(),
-                                       content_type=CONTENT_TYPES['xlsx'])
+                                                file.read())
         file.close()
 
     def load_default_user(self):

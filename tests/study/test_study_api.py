@@ -1,4 +1,5 @@
 import json
+
 from tests.base_test import BaseTest
 
 from crc.services.ldap_service import LdapService
@@ -13,8 +14,8 @@ from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType, StudyAssociated
 from crc.models.workflow import WorkflowSpecModel, WorkflowModel
-from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.user_file_service import UserFileService
 
 
 class TestStudyApi(BaseTest):
@@ -49,14 +50,17 @@ class TestStudyApi(BaseTest):
         """NOTE:  The protocol builder is not enabled or mocked out.  As the master workflow (which is empty),
         and the test workflow do not need it, and it is disabled in the configuration."""
         self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.load_test_spec('random_fact')
         new_study = self.add_test_study()
         new_study = session.query(StudyModel).filter_by(id=new_study["id"]).first()
 
         api_response = self.app.get('/v1.0/study/%i' % new_study.id,
                                     headers=self.logged_in_headers(), content_type="application/json")
         self.assert_success(api_response)
-        study = StudySchema().loads(api_response.get_data(as_text=True))
+        self.create_workflow('random_fact', study=new_study)
 
+        study = StudySchema().loads(api_response.get_data(as_text=True))
         self.assertEqual(study.title, self.TEST_STUDY['title'])
         self.assertEqual(study.primary_investigator_id, self.TEST_STUDY['primary_investigator_id'])
         self.assertEqual(study.user_uid, self.TEST_STUDY['user_uid'])
@@ -64,11 +68,10 @@ class TestStudyApi(BaseTest):
         # Categories are read only, so switching to sub-scripting here.
         # This assumes there is one test category set up in the example data.
         category = study.categories[0]
-        self.assertEqual("Test Category", category['display_name'])
-        self.assertEqual(False, category['admin'])
+        self.assertEqual("Test Workflows", category['display_name'])
         self.assertEqual(1, len(category["workflows"]))
         workflow = category["workflows"][0]
-        self.assertEqual("Random Fact", workflow["display_name"])
+        self.assertEqual("random_fact", workflow["display_name"])
         self.assertEqual("optional", workflow["state"])
         self.assertEqual("not_started", workflow["status"])
         self.assertEqual(0, workflow["total_tasks"])
@@ -82,10 +85,10 @@ class TestStudyApi(BaseTest):
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=task.get_name(),
-                                      name="anything.png", content_type="png",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=task.get_name(),
+                                          name="anything.png", content_type="png",
+                                          binary_data=b'1234', irb_doc_code=irb_code)
 
         api_response = self.app.get('/v1.0/study/%i' % workflow.study_id,
                                     headers=self.logged_in_headers(), content_type="application/json")
@@ -99,6 +102,7 @@ class TestStudyApi(BaseTest):
 
     def test_add_study(self):
         self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
         study = self.add_test_study()
         db_study = session.query(StudyModel).filter_by(id=study['id']).first()
         self.assertIsNotNone(db_study)
@@ -255,10 +259,13 @@ class TestStudyApi(BaseTest):
 
     def test_delete_workflow(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.add_test_study()
         workflow = session.query(WorkflowModel).first()
-        FileService.add_workflow_file(workflow_id=workflow.id, task_spec_name='TaskSpec01',
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr" )
+        UserFileService.add_workflow_file(workflow_id=workflow.id, task_spec_name='TaskSpec01',
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr" )
 
         workflow_files = session.query(FileModel).filter_by(workflow_id=workflow.id)
         self.assertEqual(workflow_files.count(), 1)
@@ -271,14 +278,12 @@ class TestStudyApi(BaseTest):
         workflow_files = session.query(FileModel).filter_by(workflow_id=workflow.id)
         self.assertEqual(workflow_files.count(), 0)
 
-        # Finally, let's confirm the file was archived
-        workflow_files = session.query(FileModel).filter(FileModel.id.in_(workflow_files_ids))
-        for file in workflow_files:
-            self.assertTrue(file.archived)
-            self.assertIsNone(file.workflow_id)
 
     def test_delete_study_with_workflow_and_status_etc(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.add_test_study()
         workflow = session.query(WorkflowModel).first()
         stats1 = StudyEvent(
             study_id=workflow.study_id,

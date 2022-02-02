@@ -3,6 +3,7 @@ from crc.api.common import ApiError
 from crc.models.api_models import DocumentDirectory
 from crc.models.file import FileModel
 from crc.services.lookup_service import LookupService
+from crc.services.reference_file_service import ReferenceFileService
 
 
 class DocumentService(object):
@@ -38,11 +39,8 @@ class DocumentService(object):
     @staticmethod
     def get_dictionary():
         """Returns a dictionary of document details keyed on the doc_code."""
-        file_id = session.query(FileModel.id). \
-            filter(FileModel.name == DocumentService.DOCUMENT_LIST). \
-            filter(FileModel.is_reference == True). \
-            scalar()
-        lookup_model = LookupService.get_lookup_model_for_file_data(file_id, DocumentService.DOCUMENT_LIST, 'code', 'description')
+        lookup_model = LookupService.get_lookup_model_for_reference(DocumentService.DOCUMENT_LIST,
+                                                                    'code', 'description')
         doc_dict = {}
         for lookup_data in lookup_model.dependencies:
             doc_dict[lookup_data.value] = lookup_data.data

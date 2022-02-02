@@ -52,7 +52,6 @@ ma = Marshmallow(app)
 from crc import models
 from crc import api
 from crc.api import admin
-from crc.services.file_service import FileService
 from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 

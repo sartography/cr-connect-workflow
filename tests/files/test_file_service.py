@@ -1,5 +1,6 @@
 from github import UnknownObjectException
 from sqlalchemy import desc, column
+
 from tests.base_test import BaseTest
 from unittest.mock import patch, Mock
 
@@ -7,8 +8,8 @@ from crc import db, session
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowModel, WorkflowSpecModel
-from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.user_file_service import UserFileService
 
 
 class FakeGithubCreates(Mock):
@@ -59,20 +60,20 @@ class TestFileService(BaseTest):
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=task.get_name(),
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=task.get_name(),
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code)
         # Add the file again with different data
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=task.get_name(),
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'5678', irb_doc_code=irb_code)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=task.get_name(),
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'5678', irb_doc_code=irb_code)
 
-        file_models = FileService.get_workflow_files(workflow_id=workflow.id)
+        file_models = UserFileService.get_workflow_files(workflow_id=workflow.id)
         self.assertEqual(1, len(file_models))
 
-        file_data = FileService.get_workflow_data_files(workflow_id=workflow.id)
+        file_data = UserFileService.get_workflow_data_files(workflow_id=workflow.id)
         self.assertEqual(1, len(file_data))
         self.assertEqual(2, file_data[0].version)
         self.assertEqual(4, file_data[0].size) # File dat size is included.
@@ -83,56 +84,17 @@ class TestFileService(BaseTest):
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_workflow_file(workflow_id=workflow.id,
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
                                       task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234')
         # Add the file again with different data
-        FileService.add_workflow_file(workflow_id=workflow.id,
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
                                       task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'5678')
-
-    def test_replace_archive_file_unarchives_the_file_and_updates(self):
-        self.load_example_data()
-        workflow = self.create_workflow('file_upload_form')
-        processor = WorkflowProcessor(workflow)
-        task = processor.next_task()
-        irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      irb_doc_code=irb_code,
-                                      task_spec_name=task.get_name(),
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234')
-
-        # Archive the file
-        file_models = FileService.get_workflow_files(workflow_id=workflow.id)
-        self.assertEqual(1, len(file_models))
-        file_model = file_models[0]
-        file_model.archived = True
-        db.session.add(file_model)
-
-        # Assure that the file no longer comes back.
-        file_models = FileService.get_workflow_files(workflow_id=workflow.id)
-        self.assertEqual(0, len(file_models))
-
-        # Add the file again with different data
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      irb_doc_code=irb_code,
-                                      task_spec_name=task.get_name(),
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'5678')
-
-        file_models = FileService.get_workflow_files(workflow_id=workflow.id)
-        self.assertEqual(1, len(file_models))
-
-        file_data = FileService.get_workflow_data_files(workflow_id=workflow.id)
-
-        self.assertEqual(1, len(file_data))
-        self.assertEqual(2, file_data[0].version)
-        self.assertEqual(b'5678', file_data[0].data)
 
     def test_add_file_from_form_allows_multiple_files_with_different_names(self):
         self.load_example_data()
@@ -140,83 +102,17 @@ class TestFileService(BaseTest):
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_workflow_file(workflow_id=workflow.id,
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
                                       task_spec_name=task.get_name(),
                                       name="anything.png", content_type="text",
                                       binary_data=b'1234')
         # Add the file again with different data
-        FileService.add_workflow_file(workflow_id=workflow.id,
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
                                       irb_doc_code=irb_code,
                                       task_spec_name=task.get_name(),
                                       name="a_different_thing.png", content_type="text",
                                       binary_data=b'5678')
-        file_models = FileService.get_workflow_files(workflow_id=workflow.id)
+        file_models = UserFileService.get_workflow_files(workflow_id=workflow.id)
         self.assertEqual(2, len(file_models))
 
-    @patch('crc.services.file_service.Github')
-    def test_update_from_github(self, mock_github):
-        mock_github.return_value = FakeGithub()
-
-        self.load_example_data()
-        workflow = self.create_workflow('file_upload_form')
-        processor = WorkflowProcessor(workflow)
-        task = processor.next_task()
-        irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        file_model = FileService.add_workflow_file(workflow_id=workflow.id,
-                                                   irb_doc_code=irb_code,
-                                                   task_spec_name=task.get_name(),
-                                                   name="anything.png", content_type="text",
-                                                   binary_data=b'1234')
-        FileService.update_from_github([file_model.id])
-
-        file_model_data = FileDataModel.query.filter_by(
-            file_model_id=file_model.id
-        ).order_by(
-            desc(FileDataModel.version)
-        ).first()
-        self.assertEqual(file_model_data.data, b'Some bytes')
-
-    @patch('crc.services.file_service.Github')
-    def test_publish_to_github_creates(self, mock_github):
-        mock_github.return_value = FakeGithubCreates()
-
-        self.load_example_data()
-        workflow = self.create_workflow('file_upload_form')
-        processor = WorkflowProcessor(workflow)
-        task = processor.next_task()
-        irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        file_model = FileService.add_workflow_file(workflow_id=workflow.id,
-                                                   irb_doc_code=irb_code,
-                                                   task_spec_name=task.get_name(),
-                                                   name="anything.png", content_type="text",
-                                                   binary_data=b'1234')
-        result = FileService.publish_to_github([file_model.id])
-
-        self.assertEqual(result['created'], True)
-
-    @patch('crc.services.file_service.Github')
-    def test_publish_to_github_updates(self, mock_github):
-        mock_github.return_value = FakeGithub()
-
-        self.load_example_data()
-        workflow = self.create_workflow('file_upload_form')
-        processor = WorkflowProcessor(workflow)
-        task = processor.next_task()
-        irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        file_model = FileService.add_workflow_file(workflow_id=workflow.id,
-                                                   irb_doc_code=irb_code,
-                                                   task_spec_name=task.get_name(),
-                                                   name="anything.png", content_type="text",
-                                                   binary_data=b'1234')
-        result = FileService.publish_to_github([file_model.id])
-
-        self.assertEqual(result['updated'], True)
-
-    @patch('crc.services.file_service.Github')
-    def test_get_repo_branches(self, mock_github):
-        mock_github.return_value = FakeGithub()
-
-        branches = FileService.get_repo_branches()
-
-        self.assertIsInstance(branches, list)

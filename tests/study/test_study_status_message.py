@@ -14,6 +14,7 @@ class TestStudyStatusMessage(BaseTest):
         # shared code
         self.load_example_data()
         study_model = session.query(StudyModel).first()
+        self.create_workflow('random_fact', study=study_model)
         workflow_metas = StudyService._get_workflow_metas(study_model.id)
         warnings = StudyService._update_status_of_workflow_meta(workflow_metas, status)
         return workflow_metas, warnings

@@ -1,9 +1,11 @@
 import json
+import os.path
 
 from tests.base_test import BaseTest
 from crc import session
 from crc.models.file import FileModel
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
+from crc.services.spec_file_service import SpecFileService
 
 from example_data import ExampleDataLoader
 
@@ -12,6 +14,7 @@ class TestWorkflowSpec(BaseTest):
 
     def test_list_workflow_specifications(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
         spec = session.query(WorkflowSpecModel).first()
         rv = self.app.get('/v1.0/workflow-specification',
                           follow_redirects=True,
@@ -26,6 +29,7 @@ class TestWorkflowSpec(BaseTest):
 
     def test_add_new_workflow_specification(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
         num_before = session.query(WorkflowSpecModel).count()
         category_id = session.query(WorkflowSpecCategoryModel).first().id
         category_count = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
@@ -47,6 +51,7 @@ class TestWorkflowSpec(BaseTest):
 
     def test_get_workflow_specification(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
         db_spec = session.query(WorkflowSpecModel).first()
         rv = self.app.get('/v1.0/workflow-specification/%s' % db_spec.id, headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -56,7 +61,7 @@ class TestWorkflowSpec(BaseTest):
 
     def test_update_workflow_specification(self):
         self.load_example_data()
-
+        self.load_test_spec('random_fact')
         category_id = 99
         category = WorkflowSpecCategoryModel(id=category_id, display_name="It's a trap!", display_order=0)
         session.add(category)
@@ -88,11 +93,12 @@ class TestWorkflowSpec(BaseTest):
         spec = self.load_test_spec(spec_id)
         workflow = self.create_workflow(spec_id)
         workflow_api = self.get_workflow_api(workflow)
+        workflow_path = SpecFileService.workflow_path(spec)
 
         num_specs_before = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()
         self.assertEqual(num_specs_before, 1)
 
-        num_files_before = session.query(FileModel).filter_by(workflow_spec_id=spec_id).count()
+        num_files_before = len(SpecFileService.get_files(spec))
         num_workflows_before = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertGreater(num_files_before + num_workflows_before, 0)
 
@@ -102,13 +108,14 @@ class TestWorkflowSpec(BaseTest):
         num_specs_after = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()
         self.assertEqual(0, num_specs_after)
 
-        # Make sure that all items in the database with the workflow spec ID are deleted as well.
-        num_files_after = session.query(FileModel).filter_by(workflow_spec_id=spec_id).count()
+        # Make sure that all items in the database and file system are deleted as well.
+        self.assertFalse(os.path.exists(workflow_path))
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
-        self.assertEqual(num_files_after + num_workflows_after, 0)
+        self.assertEqual(num_workflows_after, 0)
 
     def test_display_order_after_delete_spec(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
         workflow_spec_category = session.query(WorkflowSpecCategoryModel).first()
         spec_model_1 = WorkflowSpecModel(id='test_spec_1', display_name='Test Spec 1',
                                          description='Test Spec 1 Description', category_id=workflow_spec_category.id,
@@ -137,6 +144,7 @@ class TestWorkflowSpec(BaseTest):
 
     def test_get_standalone_workflow_specs(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
         category = session.query(WorkflowSpecCategoryModel).first()
         ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=category.id,
                                         standalone=True, from_tests=True)
@@ -177,6 +185,7 @@ class TestWorkflowSpec(BaseTest):
 
     def test_update_workflow_spec_category(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
         category = session.query(WorkflowSpecCategoryModel).first()
         display_name_before = category.display_name
         new_display_name = display_name_before + '_asdf'
@@ -214,7 +223,8 @@ class TestWorkflowSpec(BaseTest):
         session.add(category_model_3)
         session.commit()
 
-        self.app.delete('/v1.0/workflow-spec-category/2', headers=self.logged_in_headers())
+        rv = self.app.delete('/v1.0/workflow-specification-category/2', headers=self.logged_in_headers())
+        self.assert_success(rv)
         test_order = 0
         categories = session.query(WorkflowSpecCategoryModel).order_by(WorkflowSpecCategoryModel.display_order).all()
         for test_category in categories:
@@ -223,6 +233,7 @@ class TestWorkflowSpec(BaseTest):
 
     def test_add_library_with_category_id(self):
         self.load_example_data()
+        self.load_test_spec('random_fact')
         category_id = session.query(WorkflowSpecCategoryModel).first().id
         spec = WorkflowSpecModel(id='test_spec', display_name='Test Spec',
                                  description='Library with a category id', category_id=category_id,

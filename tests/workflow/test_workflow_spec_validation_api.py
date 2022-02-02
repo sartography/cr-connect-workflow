@@ -126,6 +126,7 @@ class TestWorkflowSpecValidation(BaseTest):
         """A disabled workflow spec should fail validation"""
         app.config['PB_ENABLED'] = True
         self.load_example_data()
+        category = self.assure_category_exists()
         study_model = session.query(StudyModel).first()
 
         # workflow spec to validate
@@ -133,7 +134,7 @@ class TestWorkflowSpecValidation(BaseTest):
                                        display_name='Data Security Plan',
                                        description='Data Security Plan',
                                        is_master_spec=False,
-                                       category_id=0,
+                                       category_id=category.id,
                                        display_order=0,
                                        standalone=False,
                                        library=False)

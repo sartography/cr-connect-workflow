@@ -35,10 +35,9 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
         self.load_example_data()
         self._load_test_categories()
         initial_order = session.query(WorkflowSpecCategoryModel).order_by(WorkflowSpecCategoryModel.display_order).all()
-        self.assertEqual(0, initial_order[0].id)
-        self.assertEqual(1, initial_order[1].id)
-        self.assertEqual(2, initial_order[2].id)
-        self.assertEqual(3, initial_order[3].id)
+        self.assertEqual(1, initial_order[0].id)
+        self.assertEqual(2, initial_order[1].id)
+        self.assertEqual(3, initial_order[2].id)
 
     def test_workflow_spec_category_reorder_up(self):
         self.load_example_data()
@@ -47,13 +46,13 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
         # Move category 2 up
         rv = self.app.put(f"/v1.0/workflow-specification-category/2/reorder?direction=up",
                           headers=self.logged_in_headers())
-
+        self.assert_success(rv)
         # Make sure category 2 is in position 1 now
-        self.assertEqual(2, rv.json[1]['id'])
+        self.assertEqual(2, rv.json[0]['id'])
 
         ordered = session.query(WorkflowSpecCategoryModel).\
             order_by(WorkflowSpecCategoryModel.display_order).all()
-        self.assertEqual(2, ordered[1].id)
+        self.assertEqual(2, ordered[0].id)
 
     def test_workflow_spec_category_reorder_down(self):
         self.load_example_data()
@@ -64,11 +63,11 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
                           headers=self.logged_in_headers())
 
         # Make sure category 2 is in position 3 now
-        self.assertEqual(2, rv.json[3]['id'])
+        self.assertEqual(2, rv.json[2]['id'])
 
         ordered = session.query(WorkflowSpecCategoryModel). \
             order_by(WorkflowSpecCategoryModel.display_order).all()
-        self.assertEqual(2, ordered[3].id)
+        self.assertEqual(2, ordered[2].id)
 
     def test_workflow_spec_category_reorder_bad_direction(self):
         self.load_example_data()
@@ -109,8 +108,8 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
         self._load_test_categories()
         ordered = session.query(WorkflowSpecCategoryModel).order_by(WorkflowSpecCategoryModel.display_order).all()
 
-        # Try to move 0 up
-        rv = self.app.put(f"/v1.0/workflow-specification-category/0/reorder?direction=up",
+        # Try to move 1 up
+        rv = self.app.put(f"/v1.0/workflow-specification-category/1/reorder?direction=up",
                           headers=self.logged_in_headers())
         # Make sure we don't get an error
         self.assert_success(rv)
@@ -140,28 +139,18 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
         # Confirm the bad display_orders
         self.assertEqual('Test Category 1', bad_ordered[0].display_name)
         self.assertEqual(1, bad_ordered[0].display_order)
-        self.assertEqual('Test Category', bad_ordered[1].display_name)
+        self.assertEqual('Test Category 2', bad_ordered[1].display_name)
         self.assertEqual(1, bad_ordered[1].display_order)
-        self.assertEqual('Test Category 2', bad_ordered[2].display_name)
+        self.assertEqual('Test Category 3', bad_ordered[2].display_name)
         self.assertEqual(1, bad_ordered[2].display_order)
-        self.assertEqual('Test Category 3', bad_ordered[3].display_name)
-        self.assertEqual(3, bad_ordered[3].display_order)
 
-        # Reorder 2 up
+        # Reorder 1 up
         # This should cause a cleanup of the display_orders
-        # I don't know how Postgres/SQLAlchemy determine the order when
-        # multiple categories have the same display_order
-        # But, it ends up
-        # Test Category 1, Test Category, Test Category 2, Test Category 3
-        # So, after moving 2 up, we should end up with
-        # Test Category 1, Test Category 2, Test Category, Test Category 3
-        rv = self.app.put(f"/v1.0/workflow-specification-category/2/reorder?direction=up",
+        rv = self.app.put(f"/v1.0/workflow-specification-category/1/reorder?direction=up",
                           headers=self.logged_in_headers())
         self.assertEqual('Test Category 1', rv.json[0]['display_name'])
         self.assertEqual(0, rv.json[0]['display_order'])
         self.assertEqual('Test Category 2', rv.json[1]['display_name'])
         self.assertEqual(1, rv.json[1]['display_order'])
-        self.assertEqual('Test Category', rv.json[2]['display_name'])
+        self.assertEqual('Test Category 3', rv.json[2]['display_name'])
         self.assertEqual(2, rv.json[2]['display_order'])
-        self.assertEqual('Test Category 3', rv.json[3]['display_name'])
-        self.assertEqual(3, rv.json[3]['display_order'])

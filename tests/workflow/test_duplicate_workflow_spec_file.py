@@ -12,21 +12,15 @@ class TestDuplicateWorkflowSpecFile(BaseTest):
         # Users should not be able to upload a file that already exists.
 
         self.load_example_data()
-        spec = session.query(WorkflowSpecModel).first()
+        spec = self.load_test_spec('random_fact')
 
         # Add a file
-        file_model = SpecFileService.add_workflow_spec_file(spec,
-                                                        name="something.png",
-                                                        content_type="text",
-                                                        binary_data=b'1234')
+        file_model = SpecFileService.add_file(spec, "something.png", b'1234')
         self.assertEqual(file_model.name, 'something.png')
-        self.assertEqual(file_model.content_type, 'text')
+        self.assertEqual(file_model.content_type, 'image/png')
 
         # Try to add it again
         try:
-            SpecFileService.add_workflow_spec_file(spec,
-                                               name="something.png",
-                                               content_type="text",
-                                               binary_data=b'5678')
+            file_model = SpecFileService.add_file(spec, "something.png", b'1234')
         except ApiError as ae:
             self.assertEqual(ae.message, 'If you want to replace the file, use the update mechanism.')

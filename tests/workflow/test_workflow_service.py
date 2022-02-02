@@ -138,11 +138,3 @@ class TestWorkflowService(BaseTest):
         result2 = WorkflowService.get_dot_value(path, {"a.b.c":"garbage"})
         self.assertEqual("garbage", result2)
 
-    def test_get_primary_workflow(self):
-        workflow = self.create_workflow('hello_world')
-        workflow_spec_id = workflow.workflow_spec.id
-        primary_workflow = WorkflowService.get_primary_workflow(workflow_spec_id)
-        self.assertIsInstance(primary_workflow, FileModel)
-        self.assertEqual(workflow_spec_id, primary_workflow.workflow_spec_id)
-        self.assertEqual('hello_world.bpmn', primary_workflow.name)
-

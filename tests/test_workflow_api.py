@@ -1,10 +1,10 @@
-from crc.models.workflow import WorkflowLibraryModel
 from tests.base_test import BaseTest
 
 from crc import session
 from crc.models.user import UserModel
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
+from crc.models.workflow import WorkflowLibraryModel
 
 from example_data import ExampleDataLoader
 
@@ -16,7 +16,7 @@ class TestWorkflowApi(BaseTest):
     def test_get_task_events(self):
 
         self.load_example_data()
-        spec = ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=0, standalone=True, from_tests=True)
+        spec = self.load_test_spec('hello_world')
         user = session.query(UserModel).first()
         self.assertIsNotNone(user)
         WorkflowService.get_workflow_from_spec(spec.id, user)
@@ -27,17 +27,10 @@ class TestWorkflowApi(BaseTest):
                           headers=self.logged_in_headers())
         self.assert_success(rv)
 
-
     def test_library_code(self):
         self.load_example_data()
-        spec1 = ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=0, library=False,
-                                               from_tests=True)
-
-        spec2 = ExampleDataLoader().create_spec('hello_world_lib', 'Hello World Library', category_id=0, library=True,
-                                               from_tests=True)
-        user = session.query(UserModel).first()
-        self.assertIsNotNone(user)
-
+        spec1 = self.load_test_spec('hello_world')
+        spec2 = self.load_test_spec('hello_world_lib', library=True)
         rv = self.app.post(f'/v1.0/workflow-specification/%s/library/%s'%(spec1.id,spec2.id),
                           follow_redirects=True,
                           content_type="application/json",
@@ -63,11 +56,8 @@ class TestWorkflowApi(BaseTest):
 
     def test_library_cleanup(self):
         self.load_example_data()
-        spec1 = ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=0, library=False,
-                                               from_tests=True)
-
-        spec2 = ExampleDataLoader().create_spec('hello_world_lib', 'Hello World Library', category_id=0, library=True,
-                                               from_tests=True)
+        spec1 = self.load_test_spec('hello_world')
+        spec2 = self.load_test_spec('hello_world_lib', library=True)
         user = session.query(UserModel).first()
         self.assertIsNotNone(user)
 

@@ -539,7 +539,7 @@ paths:
             application/json:
               schema:
                 $ref: "#components/schemas/File"
-  /workflow-specification/{spec_id}/file/{file_id}:
+  /workflow-specification/{spec_id}/file/{file_name}:
     parameters:
       - name: spec_id
         in: path
@@ -547,12 +547,12 @@ paths:
         description: The unique id of an existing workflow specification to validate.
         schema:
           type: string
-      - name: file_id
+      - name: file_name
         in: path
         required: true
         description: The id of the spec file
         schema:
-          type: integer
+          type: string
     get:
       operationId: crc.api.spec_file.get_file
       summary: Returns metadata about the file
@@ -565,6 +565,32 @@ paths:
             application/json:
               schema:
                 $ref: "#components/schemas/File"
+    put:
+      operationId: crc.api.spec_file.update
+      summary: updates the given file to be the primary file and process, if so specified.
+      tags:
+        - Spec Files
+      parameters:
+        - name: is_primary
+          in: query
+          required: true
+          description: Whether to make this the primary file for the workflow.
+          schema:
+            type: boolean
+      requestBody:
+        description: Log Pagination Request
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/File'
+      responses:
+        '200':
+          description: Returns the file information.
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/File"
     delete:
       operationId: crc.api.spec_file.delete
       summary: Removes an existing workflow spec file.
@@ -573,7 +599,7 @@ paths:
       responses:
         '204':
           description: The file was removed.
-  /workflow-specification/{spec_id}/file/{file_id}/data:
+  /workflow-specification/{spec_id}/file/{file_name}/data:
     parameters:
       - name: spec_id
         in: path
@@ -581,12 +607,12 @@ paths:
         description: The unique id of an existing workflow specification to validate.
         schema:
           type: string
-      - name: file_id
+      - name: file_name
         in: path
         required: true
         description: The id of the requested file
         schema:
-          type: integer
+          type: string
     get:
       operationId: crc.api.spec_file.get_data
       summary: Returns only the spec file content
@@ -665,7 +691,7 @@ paths:
         required: true
         description: The unique id of an existing workflow spec category to modify.
         schema:
-          type: string
+          type: integer
     get:
       operationId: crc.api.workflow.get_workflow_spec_category
       summary: Returns a single workflow spec category
@@ -838,7 +864,7 @@ paths:
                 $ref: "#/components/schemas/File"
     delete:
       operationId: crc.api.file.delete_file
-      summary: Removes an existing file.  In the event the file can not be deleted, it is marked as "archived" in the database and is no longer returned unless specifically requested by id.
+      summary: Removes an existing file.
       tags:
         - Files
       responses:
@@ -992,25 +1018,6 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
-    put:
-      operationId: crc.api.reference_file.update_reference_file_info
-      security:
-        - auth_admin: ['secret']
-      summary: Update the file_info of a named reference file.
-      tags:
-        - Reference Files
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/File"
-      responses:
-        '200':
-          description: File info updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/File"
     delete:
       operationId: crc.api.reference_file.delete_reference_file
       summary: Remove an existing reference file.

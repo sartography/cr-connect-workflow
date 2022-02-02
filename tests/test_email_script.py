@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 from crc import mail
-from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
+from crc.services.user_file_service import UserFileService
 
 
 class TestEmailScript(BaseTest):
@@ -92,18 +92,18 @@ class TestEmailScript(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         first_task = workflow_api.next_task
 
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="something.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code_1)
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="another.png", content_type="text",
-                                      binary_data=b'67890', irb_doc_code=irb_code_1)
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'5678', irb_doc_code=irb_code_2)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="something.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code_1)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="another.png", content_type="text",
+                                          binary_data=b'67890', irb_doc_code=irb_code_1)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'5678', irb_doc_code=irb_code_2)
 
         with mail.record_messages() as outbox:
             self.complete_form(workflow, first_task, {'subject': 'My Test Subject', 'recipients': 'user@example.com',

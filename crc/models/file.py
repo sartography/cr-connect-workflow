@@ -83,8 +83,7 @@ class FileModel(db.Model):
     content_type = db.Column(db.String)
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     task_spec = db.Column(db.String, nullable=True)
-    irb_doc_code = db.Column(db.String, nullable=True)  # Code reference to the irb_documents.xlsx reference file.
-    is_review = db.Column(db.Boolean, default=False, nullable=True)
+    irb_doc_code = db.Column(db.String, nullable=True)  # Code reference to the documents.xlsx reference file.
     data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
 
 
@@ -129,8 +128,8 @@ class File(object):
         return instance
 
     @classmethod
-    def spec_file(cls, workflow_spec, file_name, file_type, content_type,
-                  last_modified, file_size):
+    def from_file_system(cls, file_name, file_type, content_type,
+                         last_modified, file_size):
 
         instance = cls()
         instance.name = file_name
@@ -166,31 +165,27 @@ class FileSchema(Schema):
 
     def get_url(self, obj):
         token = 'not_available'
-        if obj.id is None:
-            return "" # We can't return a url for a file that isn't stored yet.
-        file_url = url_for("/v1_0.crc_api_file_get_file_data_link", file_id=obj.id, _external=True)
-        if hasattr(flask.g, 'user'):
-            token = flask.g.user.encode_auth_token()
-        url = file_url + '?auth_token=' + urllib.parse.quote_plus(token)
-        return url
-
+        if hasattr(obj, 'id') and obj.id is not None:
+            file_url = url_for("/v1_0.crc_api_file_get_file_data_link", file_id=obj.id, _external=True)
+            if hasattr(flask.g, 'user'):
+                token = flask.g.user.encode_auth_token()
+            url = file_url + '?auth_token=' + urllib.parse.quote_plus(token)
+            return url
+        else:
+            return ""
 
 class LookupFileModel(db.Model):
-    """Gives us a quick way to tell what kind of lookup is set on a form field.
-    Connected to the file data model, so that if a new version of the same file is
-    created, we can update the listing."""
+    """Gives us a quick way to tell what kind of lookup is set on a form field."""
     __tablename__ = 'lookup_file'
     id = db.Column(db.Integer, primary_key=True)
     workflow_spec_id = db.Column(db.String)
     task_spec_id = db.Column(db.String)
     field_id = db.Column(db.String)
+    file_name = db.Column(db.String)
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
-    file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
     last_updated = db.Column(db.DateTime(timezone=True))
     dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model",
                                    cascade="all, delete, delete-orphan")
-    file_model = db.relationship("FileModel")
-
 
 class LookupDataModel(db.Model):
     __tablename__ = 'lookup_data'

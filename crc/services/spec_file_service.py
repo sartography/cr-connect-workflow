@@ -1,5 +1,6 @@
 import datetime
 import os
+import shutil
 from typing import List
 
 from crc import app, session
@@ -11,8 +12,10 @@ from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 
 from lxml import etree
 
+from crc.services.file_system_service import FileSystemService
 
-class SpecFileService(object):
+
+class SpecFileService(FileSystemService):
 
     """We store spec files on the file system. This allows us to take advantage of Git for
        syncing and versioning.
@@ -20,50 +23,30 @@ class SpecFileService(object):
     """
 
     @staticmethod
-    def get_files(workflow_spec, file_name=None, include_libraries=False) -> List[File]:
+    def get_files(workflow_spec: WorkflowSpecModel, file_name=None, include_libraries=False) -> List[File]:
         """ Returns all files associated with a workflow specification """
-        files = SpecFileService.__get_files(workflow_spec, file_name)
+        path = SpecFileService.workflow_path(workflow_spec)
+        files = SpecFileService._get_files(path, file_name)
         if include_libraries:
             libraries = session.query(WorkflowLibraryModel).filter(
                WorkflowLibraryModel.workflow_spec_id == workflow_spec.id).all()
             for lib in libraries:
-                files.extend(SpecFileService.__get_files(lib, file_name))
+                lib_path = SpecFileService.workflow_path(workflow_spec)
+                files.extend(SpecFileService._get_files(lib_path, file_name))
         return files
 
     @staticmethod
-    def __get_files(workflow_spec: WorkflowSpecModel, file_name=None) -> List[File]:
-        files = []
-        items = os.scandir(SpecFileService.workflow_path(workflow_spec))
-        for item in items:
-            if item.is_file():
-                if file_name is not None and item.name != file_name:
-                    continue
-                extension = SpecFileService.get_extension(item.name)
-                file_type = FileType[extension]
-                content_type = CONTENT_TYPES[file_type.name]
-                stats = item.stat()
-                file_size = stats.st_size
-                last_modified = datetime.datetime.fromtimestamp(stats.st_mtime)
-                files.append(File.spec_file(workflow_spec, item.name, file_type, content_type,
-                                            last_modified, file_size))
-        return files
-
-    @staticmethod
-    def add_file(workflow_spec: WorkflowSpecModel, file_name: str, binary_data: bytearray, content_type: str) -> File:
+    def add_file(workflow_spec: WorkflowSpecModel, file_name: str, binary_data: bytearray) -> File:
         # Same as update
-        return SpecFileService.update_file(workflow_spec, file_name, binary_data, content_type)
+        return SpecFileService.update_file(workflow_spec, file_name, binary_data)
 
     @staticmethod
-    def update_file(workflow_spec: WorkflowSpecModel, file_name: str, binary_data, content_type) -> File:
+    def update_file(workflow_spec: WorkflowSpecModel, file_name: str, binary_data) -> File:
         SpecFileService.assert_valid_file_name(file_name)
         file_path = SpecFileService.file_path(workflow_spec, file_name)
         SpecFileService.write_file_data_to_system(file_path, binary_data)
-        extension = SpecFileService.get_extension(file_name)
-        file_type = FileType[extension]
-        last_modified = SpecFileService.__last_modified(file_path)
-        size = os.path.getsize(file_path)
-        file = File.spec_file(workflow_spec, file_name, file_type, content_type, last_modified, size)
-        if file_name == workflow_spec.primary_file_name:
+        file = SpecFileService.to_file_object(file_name, file_path)
+        if file_name == workflow_spec.primary_file_name or workflow_spec.primary_file_name is None:
             SpecFileService.set_primary_bpmn(workflow_spec, file_name, binary_data)
         return file
 
@@ -101,6 +84,7 @@ class SpecFileService(object):
     #
     @staticmethod
     def root_path():
+        # fixme: allow absolute files
         dir_name = app.config['SYNC_FILE_ROOT']
         app_root = app.root_path
         return os.path.join(app_root, '..', dir_name)
@@ -132,23 +116,9 @@ class SpecFileService(object):
         return os.path.join(SpecFileService.workflow_path(spec), file_name)
 
     @staticmethod
-    def write_file_data_to_system(file_path, file_data):
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, 'wb') as f_handle:
-            f_handle.write(file_data)
-
-    @staticmethod
-    def get_extension(file_name):
-        basename, file_extension = os.path.splitext(file_name)
-        return file_extension.lower().strip()[1:]
-
-    @staticmethod
-    def assert_valid_file_name(file_name):
-        file_extension = SpecFileService.get_extension(file_name)
-        if file_extension not in FileType._member_names_:
-            raise ApiError('unknown_extension',
-                           'The file you provided does not have an accepted extension:' +
-                           file_extension, status_code=404)
+    def last_modified(spec: WorkflowSpecModel, file_name: str):
+        path = SpecFileService.file_path(spec, file_name)
+        return FileSystemService._last_modified(path)
 
     @staticmethod
     def has_swimlane(et_root: etree.Element):
@@ -165,14 +135,19 @@ class SpecFileService(object):
 
     @staticmethod
     def delete_file(spec, file_name):
+        # Fixme: Remember to remove the lookup files when the spec file is removed.
+        # lookup_files = session.query(LookupFileModel).filter_by(file_model_id=file_id).all()
+        # for lf in lookup_files:
+        #     session.query(LookupDataModel).filter_by(lookup_file_model_id=lf.id).delete()
+        #     session.query(LookupFileModel).filter_by(id=lf.id).delete()
         file_path = SpecFileService.file_path(spec, file_name)
         os.remove(file_path)
 
     @staticmethod
-    def __last_modified(file_path: str):
-        # Returns the last modified date of the given file.
-        timestamp = os.path.getmtime(file_path)
-        return datetime.datetime.fromtimestamp(timestamp)
+    def delete_all_files(spec):
+        dir_path = SpecFileService.workflow_path(spec)
+        if os.path.exists(dir_path):
+            shutil.rmtree(dir_path)
 
     @staticmethod
     def get_process_id(et_root: etree.Element):

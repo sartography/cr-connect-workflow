@@ -8,9 +8,9 @@ from crc.api.common import ApiError
 from crc.models.file import CONTENT_TYPES, FileModel
 from crc.models.workflow import WorkflowModel
 from crc.scripts.script import Script
-from crc.services.file_service import FileService
 from crc.services.jinja_service import JinjaService
 from crc.services.spec_file_service import SpecFileService
+from crc.services.user_file_service import UserFileService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -22,7 +22,7 @@ a word document that contains Jinja markup.  Please see https://docxtpl.readthed
 for more information on exact syntax.
 Takes two arguments:
 1. The name of a MS Word docx file to use as a template.
-2. The 'code' of the IRB Document as set in the irb_documents.xlsx file."
+2. The 'code' of the IRB Document as set in the documents.xlsx file."
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
@@ -35,12 +35,12 @@ Takes two arguments:
         final_document_stream = self.process_template(task, study_id, workflow, *args, **kwargs)
         file_name = args[0]
         irb_doc_code = args[1]
-        FileService.add_workflow_file(workflow_id=workflow_id,
-                                      task_spec_name=task.get_name(),
-                                      name=file_name,
-                                      content_type=CONTENT_TYPES['docx'],
-                                      binary_data=final_document_stream.read(),
-                                      irb_doc_code=irb_doc_code)
+        UserFileService.add_workflow_file(workflow_id=workflow_id,
+                                          task_spec_name=task.get_name(),
+                                          name=file_name,
+                                          content_type=CONTENT_TYPES['docx'],
+                                          binary_data=final_document_stream.read(),
+                                          irb_doc_code=irb_doc_code)
 
     def process_template(self, task, study_id, workflow=None, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""
@@ -49,7 +49,7 @@ Takes two arguments:
                            message="The CompleteTemplate script requires 2 arguments.  The first argument is "
                                    "the name of the docx template to use.  The second "
                                    "argument is a code for the document, as "
-                                   "set in the reference document %s. " % FileService.DOCUMENT_LIST)
+                                   "set in the reference document.")
         task_study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         file_name = args[0]
 
@@ -59,15 +59,7 @@ Takes two arguments:
 
         file_data = None
         if workflow is not None:
-            # Get the workflow specification file with the given name.
-            file_models = SpecFileService().get_spec_files(
-                workflow_spec_id=workflow.workflow_spec_id, file_name=file_name)
-            if len(file_models) > 0:
-                file_model = file_models[0]
-            else:
-                raise ApiError(code="invalid_argument",
-                               message="Uable to locate a file with the given name.")
-            file_data = SpecFileService().get_spec_file_data(file_model.id).data
+            file_data = SpecFileService().get_data(workflow.workflow_spec, file_name)
 
         # Get images from file/files fields
         if len(args) == 3:
@@ -101,7 +93,7 @@ Takes two arguments:
                         if not task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
                             # Get the actual image data
                             image_file_model = session.query(FileModel).filter_by(id=file_id).first()
-                            image_file_data_model = FileService.get_file_data(file_id, image_file_model)
+                            image_file_data_model = UserFileService.get_file_data(file_id, image_file_model)
                             if image_file_data_model is not None:
                                 image_file_data.append(image_file_data_model)
 

@@ -1,6 +1,7 @@
 import json
+
 from tests.base_test import BaseTest
-from crc.services.file_service import FileService
+from crc.services.user_file_service import UserFileService
 
 
 class TestDocumentDirectories(BaseTest):
@@ -15,15 +16,15 @@ class TestDocumentDirectories(BaseTest):
         study_id = workflow.study_id
 
         # Add a file
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="something.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code_1)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="something.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code_1)
         # Add second file
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'5678', irb_doc_code=irb_code_2)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'5678', irb_doc_code=irb_code_2)
 
         # Get back the list of documents and their directories.
         rv = self.app.get('/v1.0/document_directory/%i' % study_id, headers=self.logged_in_headers())

@@ -11,7 +11,6 @@ from crc.models.file import FileSchema
 from crc.models.ldap import LdapModel, LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
 from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowModel
-from crc.services.file_service import FileService
 
 
 class StudyStatus(enum.Enum):
@@ -135,7 +134,6 @@ class WorkflowMetadata(object):
 
     @classmethod
     def from_workflow(cls, workflow: WorkflowModel):
-        is_review = FileService.is_workflow_review(workflow.workflow_spec_id)
         instance = cls(
             id=workflow.id,
             display_name=workflow.workflow_spec.display_name,
@@ -146,7 +144,7 @@ class WorkflowMetadata(object):
             status=workflow.status,
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,
-            is_review=is_review,
+            is_review=workflow.workflow_spec.is_review,
             display_order=workflow.workflow_spec.display_order,
             workflow_spec_id=workflow.workflow_spec_id
         )
