@@ -3,7 +3,7 @@ import os
 from crc import app
 from crc.api.common import ApiError
 from crc.models.git_models import GitRepo
-from git import Repo, InvalidGitRepositoryError, NoSuchPathError
+from git import Repo, InvalidGitRepositoryError, NoSuchPathError, GitCommandError
 
 from datetime import datetime
 
@@ -41,10 +41,13 @@ class GitService(object):
         return repo
 
     def _get_repo(self):
+        # This returns a Repo object
         return self.__get_repo()
 
     def get_repo(self):
-        repo = self.__get_repo()
+        # This returns an instance of crc.models.git_models.GitRepo,
+        # built from a Repo object
+        repo = self._get_repo()
         repo_model = GitRepo().from_repo(repo)
         return repo_model
 
@@ -52,22 +55,10 @@ class GitService(object):
         if comment is None:
             comment = f"Git commit: {datetime.now()}"
         repo = self.__get_repo()
-        # directory = app.config['SYNC_FILE_ROOT']
-        # repo = self.get_repo(directory)
         # get list of changed files
         changes = [item.a_path for item in repo.index.diff(None)]
         # get list of untracked files
         untracked_files = repo.untracked_files
-        # branches = self.get_branches(repo)
-        # for branch in branches:
-        #     if branch != repo.active_branch:
-        #         print(f'Branch: {branch}')
-        #         diff = repo.git.diff(branch.name)
-        #         print('##########')
-        #         print('##########')
-        #         print('##########')
-        #         print(diff)
-        #         continue
 
         repo.index.add(changes)
         repo.index.add(untracked_files)
@@ -89,15 +80,23 @@ class GitService(object):
         current.checkout(force=True)
         print('merge_with_branch')
 
-    def pull_from_remote(self, branch):
+    def pull_from_remote(self):
+        branch = app.config['GIT_BRANCH']
         repo = self.__get_repo()
-        repo.git.checkout(branch)
-        repo.remotes.origin.pull()
+        # repo.git.checkout(branch)
+        if not repo.is_dirty():
+            try:
+                repo.remotes.origin.pull()
+            except GitCommandError as ce:
+                print(ce)
+        else:
+            raise ApiError(code='dirty_repo',
+                           message='You have modified or untracked files. Please fix this before attempting to pull.')
         print(repo)
         return repo
 
     def get_local_status(self):
-        repo = self.__get_repo()
+        repo = self._get_repo()
         # get list of changed files
         changes = [item.a_path for item in repo.index.diff(None)]
         # get list of untracked files
@@ -120,3 +119,17 @@ class GitService(object):
     #     for ref in refs:
     #         branches.append(ref)
     #     return branches
+
+    # directory = app.config['SYNC_FILE_ROOT']
+    # repo = self.get_repo(directory)
+
+    # branches = self.get_branches(repo)
+    # for branch in branches:
+    #     if branch != repo.active_branch:
+    #         print(f'Branch: {branch}')
+    #         diff = repo.git.diff(branch.name)
+    #         print('##########')
+    #         print('##########')
+    #         print('##########')
+    #         print(diff)
+    #         continue
