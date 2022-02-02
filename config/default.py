@@ -81,7 +81,7 @@ TARGET_BRANCH = environ.get('TARGET_BRANCH', None)
 # Git settings, used by git_service
 # The above Github settings--used in file_service, will likely be deprecated
 # You can override these settings in instance/config
-GIT_REMOTE = environ.get('GIT_REMOTE', None)
+GIT_REMOTE_PATH = environ.get('GIT_REMOTE_PATH', None)
 GIT_BRANCH = environ.get('GIT_BRANCH', None)
 GIT_MERGE_BRANCH = environ.get('GIT_MERGE_BRANCH', None)  # Developers can set this to 'all' in instance.config
 
