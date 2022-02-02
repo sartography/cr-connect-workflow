@@ -24,7 +24,7 @@ class GitCommit(object):
 class GitRepoSchema(ma.Schema):
     class Meta:
         model = GitRepo
-        fields = ["directory", "branch", "merge_branch", "status", "changes", "untracked"]
+        fields = ["directory", "branch", "merge_branch", "changes", "untracked"]
 
 
 class GitCommitSchema(ma.Schema):
