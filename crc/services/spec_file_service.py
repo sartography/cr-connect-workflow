@@ -46,7 +46,10 @@ class SpecFileService(FileSystemService):
         file_path = SpecFileService.file_path(workflow_spec, file_name)
         SpecFileService.write_file_data_to_system(file_path, binary_data)
         file = SpecFileService.to_file_object(file_name, file_path)
-        if file_name == workflow_spec.primary_file_name or workflow_spec.primary_file_name is None:
+        if file_name == workflow_spec.primary_file_name:
+            SpecFileService.set_primary_bpmn(workflow_spec, file_name, binary_data)
+        elif workflow_spec.primary_file_name is None and file.type == FileType.bpmn:
+            # If no primary process exists, make this pirmary process.
             SpecFileService.set_primary_bpmn(workflow_spec, file_name, binary_data)
         return file
 
