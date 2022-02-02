@@ -38,6 +38,8 @@ class GitService(object):
                            message=f'There was an unknown exception. Original message is: {e}')
             print(e)
             app.logger.error(e)
+        remote_ref = repo.refs[f'origin/{git_branch}']
+        repo.active_branch.set_tracking_branch(remote_ref)
         return repo
 
     def _get_repo(self):
