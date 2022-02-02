@@ -8,7 +8,8 @@ def get_repo():
 
 
 def pull_from_remote():
-    return GitService().pull_from_remote()
+    repo_model = GitService().pull_from_remote()
+    return GitRepoSchema().dump(repo_model)
 
 
 def push_to_remote(comment=None):
