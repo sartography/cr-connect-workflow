@@ -61,7 +61,8 @@ class GitService(object):
             repo.remotes.origin.push(refspec='{}:{}'.format(git_branch, f'origin/{git_branch}'))
             repo.remotes.origin.fetch()
 
-        remote_ref = repo.remotes.origin.refs[f'origin/{git_branch}']
+        # remote_ref = repo.remotes.origin.refs[f'origin/{git_branch}']
+        remote_ref = repo.remotes.origin.refs[f'{git_branch}']
         repo.active_branch.set_tracking_branch(remote_ref)
         return repo
 
