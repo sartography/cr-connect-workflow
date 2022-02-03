@@ -23,15 +23,3 @@ def merge_with_branch(branch):
     repo = GitService().merge_with_branch(branch)
     repo_model = GitRepo.from_repo(repo)
     return GitRepoSchema().dump(repo_model)
-
-
-# def get_local_status():
-#     return GitService().get_local_status()
-
-
-# def set_repo_branch():
-#     pass
-#
-#
-# def commit_repo_changes():
-#     pass
