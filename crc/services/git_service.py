@@ -58,10 +58,9 @@ class GitService(object):
             # The branch might not exist yet, so we create it and its remote ref
             repo.git.branch(git_branch)
             repo.git.checkout(git_branch)
-            repo.remotes.origin.push(refspec='{}:{}'.format(git_branch, f'origin/{git_branch}'))
+            repo.remotes.origin.push(refspec='{}:{}'.format(git_branch, f'{git_branch}'))
             repo.remotes.origin.fetch()
 
-        # remote_ref = repo.remotes.origin.refs[f'origin/{git_branch}']
         remote_ref = repo.remotes.origin.refs[f'{git_branch}']
         repo.active_branch.set_tracking_branch(remote_ref)
         return repo
