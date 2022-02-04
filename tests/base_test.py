@@ -190,6 +190,17 @@ class BaseTest(unittest.TestCase):
         #         self.assertGreater(len(file_data), 0)
 
     @staticmethod
+    def assure_category_name_exists(name):
+        category = db.session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.display_name == name).first()
+        if category is None:
+            cat_total = db.session.query(WorkflowSpecCategoryModel).count()
+            category = WorkflowSpecCategoryModel(display_name=name, display_order=cat_total)
+            session.add(category)
+            session.commit()
+        return category
+
+
+    @staticmethod
     def assure_category_exists(category_id=None):
         category = None
         if category_id is not None:

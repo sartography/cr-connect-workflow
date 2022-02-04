@@ -2,21 +2,22 @@ import datetime
 import os
 from typing import List
 
-from crc import app, session
+from crc import app
 from crc.api.common import ApiError
 from crc.models.file import FileType, CONTENT_TYPES, File
-from crc.models.workflow import WorkflowSpecModel, WorkflowLibraryModel
-
-from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
-
-from lxml import etree
+from crc.models.workflow import WorkflowSpecInfo
 
 
 class FileSystemService(object):
 
-    """ Simple Service meant for extension that provides some useful methods for dealing with the
-    File system.
+    """ Simple Service meant for extension that provides some useful
+    methods for dealing with the File system.
     """
+    LIBRARY_SPECS = "Library Specs"
+    STAND_ALONE_SPECS = "Stand Alone"
+    MASTER_SPECIFICATION = "Master Specification"
+    REFERENCE_FILES = "Reference Files"
+    SPECIAL_FOLDERS = [LIBRARY_SPECS, MASTER_SPECIFICATION, REFERENCE_FILES]
 
     @staticmethod
     def root_path():
@@ -24,6 +25,22 @@ class FileSystemService(object):
         dir_name = app.config['SYNC_FILE_ROOT']
         app_root = app.root_path
         return os.path.join(app_root, '..', dir_name)
+
+    @staticmethod
+    def category_path(name: str):
+        return os.path.join(FileSystemService.root_path(), name)
+
+    @staticmethod
+    def workflow_path(spec: WorkflowSpecInfo):
+        if spec.is_master_spec:
+            return os.path.join(FileSystemService.root_path(), FileSystemService.MASTER_SPECIFICATION)
+        elif spec.library:
+            category_path = FileSystemService.category_path(FileSystemService.LIBRARY_SPECS)
+        elif spec.standalone:
+            category_path = FileSystemService.category_path(FileSystemService.STAND_ALONE_SPECS)
+        else:
+            category_path = FileSystemService.category_path(spec.category.display_name)
+        return os.path.join(category_path, spec.display_name)
 
     @staticmethod
     def write_file_data_to_system(file_path, file_data):
@@ -89,3 +106,4 @@ class FileSystemService(object):
         file_size = stats.st_size
         last_modified = datetime.datetime.fromtimestamp(stats.st_mtime)
         return File.from_file_system(item.name, file_type, content_type, last_modified, file_size)
+
