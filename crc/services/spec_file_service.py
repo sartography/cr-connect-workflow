@@ -53,7 +53,7 @@ class SpecFileService(FileSystemService):
 
 
     @staticmethod
-    def get_data(workflow_spec: WorkflowSpecModel, file_name: str):
+    def get_data(workflow_spec: WorkflowSpecInfo, file_name: str):
         file_path = SpecFileService.file_path(workflow_spec, file_name)
         if not os.path.exists(file_path):
             raise ApiError("unknown_file", f"So file found with name {file_name} in {workflow_spec.display_name}")
@@ -63,11 +63,11 @@ class SpecFileService(FileSystemService):
 
 
     @staticmethod
-    def file_path(spec: WorkflowSpecModel, file_name: str):
+    def file_path(spec: WorkflowSpecInfo, file_name: str):
         return os.path.join(SpecFileService.workflow_path(spec), file_name)
 
     @staticmethod
-    def last_modified(spec: WorkflowSpecModel, file_name: str):
+    def last_modified(spec: WorkflowSpecInfo, file_name: str):
         path = SpecFileService.file_path(spec, file_name)
         return FileSystemService._last_modified(path)
 

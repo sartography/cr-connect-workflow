@@ -21,7 +21,7 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileType, File
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModelSchema
-from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecModel
+from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecInfo
 from crc.scripts.script import Script
 from crc import app
 from crc.services.spec_file_service import SpecFileService
@@ -223,24 +223,24 @@ class WorkflowProcessor(object):
         return parser
 
     @staticmethod
-    def get_spec(files: List[File], workflow_spec_model: WorkflowSpecModel):
+    def get_spec(files: List[File], workflow_spec_info: WorkflowSpecInfo):
         """Returns a SpiffWorkflow specification for the given workflow spec,
         using the files provided. """
         parser = WorkflowProcessor.get_parser()
 
         for file in files:
-            data = SpecFileService.get_data(workflow_spec_model, file.name)
+            data = SpecFileService.get_data(workflow_spec_info, file.name)
             if file.type == FileType.bpmn:
                 bpmn: etree.Element = etree.fromstring(data)
                 parser.add_bpmn_xml(bpmn, filename=file.name)
             elif file.type == FileType.dmn:
                 dmn: etree.Element = etree.fromstring(data)
                 parser.add_dmn_xml(dmn, filename=file.name)
-        if workflow_spec_model.primary_process_id is None:
+        if workflow_spec_info.primary_process_id is None:
             raise (ApiError(code="no_primary_bpmn_error",
-                            message="There is no primary BPMN model defined for workflow %s" % workflow_spec_model.id))
+                            message="There is no primary BPMN model defined for workflow %s" % workflow_spec_info.id))
         try:
-            spec = parser.get_spec(workflow_spec_model.primary_process_id)
+            spec = parser.get_spec(workflow_spec_info.primary_process_id)
         except ValidationException as ve:
             raise ApiError(code="workflow_validation_error",
                            message="Failed to parse the Workflow Specification. " +

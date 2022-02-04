@@ -12,13 +12,12 @@ import datetime
 import shutil
 from flask import g
 
-from crc import app, db, session
+from crc import app, db, session, WorkflowSpecService
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudyStatus, ProgressStatus
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
 from crc.services.ldap_service import LdapService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
@@ -39,6 +38,7 @@ class BaseTest(unittest.TestCase):
     """ Great class to inherit from, as it sets up and tears down classes
         efficiently when we have a database in place.
     """
+    workflow_spec_service = WorkflowSpecService()
 
     if not app.config['TESTING']:
         raise (Exception("INVALID TEST CONFIGURATION. This is almost always in import order issue."
@@ -191,8 +191,9 @@ class BaseTest(unittest.TestCase):
 
     @staticmethod
     def assure_category_name_exists(name):
-        category = db.session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.display_name == name).first()
+        category = BaseTest.workflow_spec_service.get_category(name)
         if category is None:
+            BaseTest.workflow_spec_service
             cat_total = db.session.query(WorkflowSpecCategoryModel).count()
             category = WorkflowSpecCategoryModel(display_name=name, display_order=cat_total)
             session.add(category)

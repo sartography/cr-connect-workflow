@@ -26,14 +26,38 @@ class WorkflowSpecService(FileSystemService):
         self.specs = {}
         self.master_spec = None
         self.libraries = {}
+        self.standalone = {}
         self.scan_file_system()
 
-    def save_spec(self, spec):
+    def save_spec(self, spec:WorkflowSpecInfo):
         spec_path = self.workflow_path(spec)
         json_path = os.path.join(spec_path, self.WF_JSON_FILE)
         with open(json_path, "w") as wf_json:
             json.dump(self.WF_SCHEMA.dump(spec), wf_json, indent=4)
         self.scan_file_system()
+
+    def reorder_workflow_spec(self, spec:WorkflowSpecInfo, direction):
+        workflows = spec.category.workflows
+        workflows.sort(key=lambda w: w.display_order)
+        index = workflows.index_of(spec)
+        if direction == 'up' and index > 0:
+            workflows[index-1], workflows[index] = workflows[index], workflows[index-1]
+        if direction == 'down' and index < len(workflows):
+            workflows[index+1], workflows[index] = workflows[index], workflows[index+1]
+        index = 0
+        for workflow in workflows:
+            workflow.display_order = index
+            self.save_spec(workflow)
+            index += 1
+        return workflows
+
+    def get_categories(self):
+        """Returns a list of categories in the correct order."""
+        return list(self.categories.values()).sort(key=lambda x: x.display_order)
+
+    def reorder_workflow_spec_category(self, spec:WorkflowSpecInfo, direction):
+        # Fixme:  Resort Workflow categories
+        pass
 
     def scan_file_system(self):
         """Build a model of our workflows, based on the file system structure and json files"""
@@ -75,6 +99,16 @@ class WorkflowSpecService(FileSystemService):
             self.scan_spec(item, category=cat)
         return cat
 
+    @staticmethod
+    def _get_workflow_metas(study_id):
+        # Add in the Workflows for each category
+        # Fixme: moved fro the Study Service
+        workflow_metas = []
+#        for workflow in workflow_models:
+#            workflow_metas.append(WorkflowMetadata.from_workflow(workflow))
+        return workflow_metas
+
+
     def scan_spec(self, dir_item: os.DirEntry, is_master=False, category=None):
         if not is_master and not category:
             raise ApiError("invalid_spec_dir", "Please specify what category this workflow belongs to.")
@@ -89,11 +123,10 @@ class WorkflowSpecService(FileSystemService):
                                     primary_file_name="")
             with open(spec_path, "w") as wf_json:
                 json.dump(WorkflowSpecInfoSchema.dump(spec), wf_json, indent=4)
-
-        self.specs[spec.id] = spec
         if is_master:
             self.master_spec = spec
         elif category:
+            self.specs[spec.id] = spec
             spec.category = category
             category.workflow_specs.append(spec)
 

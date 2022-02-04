@@ -18,6 +18,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+
 connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
@@ -43,6 +44,7 @@ session = db.session
 """:type: sqlalchemy.orm.Session"""
 scheduler = BackgroundScheduler()
 
+
 # Mail settings
 mail = Mail(app)
 
@@ -53,6 +55,7 @@ from crc import models
 from crc import api
 from crc.api import admin
 from crc.services.workflow_service import WorkflowService
+from crc.services.workflow_spec_service import WorkflowSpecService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 
 

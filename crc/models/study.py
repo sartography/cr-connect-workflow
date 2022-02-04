@@ -10,7 +10,7 @@ from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileSchema
 from crc.models.ldap import LdapModel, LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
-from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowModel
+from crc.models.workflow import WorkflowSpecCategory, WorkflowState, WorkflowStatus, WorkflowModel
 
 
 class StudyStatus(enum.Enum):
@@ -163,7 +163,7 @@ class WorkflowMetadataSchema(ma.Schema):
 
 
 class Category(object):
-    def __init__(self, model: WorkflowSpecCategoryModel):
+    def __init__(self, model: WorkflowSpecCategory):
         self.id = model.id
         self.display_name = model.display_name
         self.display_order = model.display_order

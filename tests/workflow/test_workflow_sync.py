@@ -5,7 +5,7 @@ import shutil
 from tests.base_test import BaseTest
 
 from crc.services.workflow_sync import WorkflowSyncService
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowSpecInfo, WorkflowSpecCategory
 from crc.services.file_system_service import FileSystemService
 from crc.services.spec_file_service import SpecFileService
 from crc import db, app

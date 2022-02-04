@@ -19,7 +19,7 @@ from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowM
     StudyAssociated, ProgressStatus
 from crc.models.task_event import TaskEventModel
 from crc.models.task_log import TaskLogModel
-from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
+from crc.models.workflow import WorkflowSpecCategory, WorkflowModel, WorkflowSpecInfo, WorkflowState, \
     WorkflowStatus
 from crc.services.document_service import DocumentService
 from crc.services.ldap_service import LdapService
@@ -247,16 +247,6 @@ class StudyService(object):
         session.commit()
 
     @staticmethod
-    def get_categories():
-        """Returns a list of category objects, in the correct order."""
-        cat_models = db.session.query(WorkflowSpecCategoryModel) \
-            .order_by(WorkflowSpecCategoryModel.display_order).all()
-        categories = []
-        for cat_model in cat_models:
-            categories.append(Category(cat_model))
-        return categories
-
-    @staticmethod
     def get_documents_status(study_id):
         """Returns a list of documents related to the study, and any file information
         that is available.."""
@@ -472,44 +462,31 @@ class StudyService(object):
         return warnings
 
     @staticmethod
-    def _get_workflow_metas(study_id):
-        # Add in the Workflows for each category
-        workflow_models = db.session.query(WorkflowModel). \
-            join(WorkflowSpecModel). \
-            filter(WorkflowSpecModel.is_master_spec == False). \
-            filter((WorkflowSpecModel.library == False) | \
-                   (WorkflowSpecModel.library == None)). \
-            filter(WorkflowModel.study_id == study_id). \
-            all()
-        workflow_metas = []
-        for workflow in workflow_models:
-            workflow_metas.append(WorkflowMetadata.from_workflow(workflow))
-        return workflow_metas
-
-    @staticmethod
     def _get_study_status(study_model):
+        # Fixme:  This belongs elsewhere. Not in the Study Service.
         """Uses the Top Level Workflow to calculate the status of the study, and it's
         workflow models."""
-        master_specs = db.session.query(WorkflowSpecModel). \
-            filter_by(is_master_spec=True).all()
-        if len(master_specs) < 1:
-            raise ApiError("missing_master_spec", "No specifications are currently marked as the master spec.")
-        if len(master_specs) > 1:
-            raise ApiError("multiple_master_specs",
-                           "There is more than one master specification, and I don't know what to do.")
-
-        return WorkflowProcessor.run_master_spec(master_specs[0], study_model)
+        # master_specs = db.session.query(WorkflowSpecModel). \
+        #     filter_by(is_master_spec=True).all()
+        # if len(master_specs) < 1:
+        #     raise ApiError("missing_master_spec", "No specifications are currently marked as the master spec.")
+        # if len(master_specs) > 1:
+        #     raise ApiError("multiple_master_specs",
+        #                    "There is more than one master specification, and I don't know what to do.")
+        #
+        # return WorkflowProcessor.run_master_spec(master_specs[0], study_model)
 
     @staticmethod
-    def _add_all_workflow_specs_to_study(study_model: StudyModel):
+    def _add_all_workflow_specs_to_study(study_model: StudyModel, specs: List[WorkflowSpecInfo]):
         existing_models = session.query(WorkflowModel).filter(WorkflowModel.study == study_model).all()
-        existing_specs = list(m.workflow_spec_id for m in existing_models)
-        new_specs = session.query(WorkflowSpecModel). \
-            filter(WorkflowSpecModel.is_master_spec == False). \
-            filter(WorkflowSpecModel.id.notin_(existing_specs)). \
-            all()
+#        existing_specs = list(m.workflow_spec_id for m in existing_models)
+#        new_specs = session.query(WorkflowSpecModel). \
+#            filter(WorkflowSpecModel.is_master_spec == False). \
+#            filter(WorkflowSpecModel.id.notin_(existing_specs)). \
+#            all()
         errors = []
-        for workflow_spec in new_specs:
+        for workflow_spec in specs:
+            #        fixme: don't create a new workflow model for any existing models.
             try:
                 StudyService._create_workflow_model(study_model, workflow_spec)
             except WorkflowTaskExecException as wtee:
