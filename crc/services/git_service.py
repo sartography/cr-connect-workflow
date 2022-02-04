@@ -10,6 +10,23 @@ from datetime import datetime
 
 class GitService(object):
 
+    """This is a wrapper around GitPython to manage versioning and syncing
+    for Workflow Spec files that reside on the filesystem.
+
+    This is not a full-service git tool. It has many limitations.
+
+    This service requires environment variables:
+
+        SYNC_FILE_ROOT - An absolute path to the local Workflow Spec files. This is our repository.
+        GIT_REMOTE_PATH - Location of spec files on GitHub. Currently, this is "sartography/crconnect-workflow-specs"
+        GIT_BRANCH - The name of your local development branch. We force load this branch
+        GIT_MERGE_BRANCH - The branch that can be merged into GIT_BRANCH. I.e., for Production machine, this would be set to 'staging', or something similar.
+        GIT_USER_NAME - The GitHub account to use
+        GIT_USER_PASS - The GitHub token to use for account GIT_USER_NAME
+    """
+
+    # TODO: Implement the GIT_MERGE_BRANCH feature
+
     @staticmethod
     def get_remote_url(remote_path):
         # we use github
@@ -90,7 +107,6 @@ class GitService(object):
         repo.index.commit(comment)
         repo.remotes.origin.push()
 
-        print(repo)
         return repo
 
     def pull_from_remote(self):
