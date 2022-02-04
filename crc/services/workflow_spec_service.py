@@ -186,16 +186,16 @@ class WorkflowSpecService(FileSystemService):
         return process_elements[0].attrib['id']
 
     # TODO Methods i would add...
-    # delete_workflow_spec(spec_id)
-    # get_workflow_spec(spec_id)
+    # delete_spec(spec_id)
+    # get_spec(spec_id)
     # update_spec(spec_id, body)
     # add_spec(body)
 
     # Other methods i would add, maybe not here..
     # add_library(body)
     # get_libraries()
-    # get_library(library)
-    # delete_library(library)
+    # get_library(spec_id, library_id)
+    # delete_library(library_id)
 
     # get_workflow_categories()
     # get_workflow_category(category, body)
