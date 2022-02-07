@@ -12,7 +12,7 @@ class WorkflowSpecCategory(object):
         self.display_name = display_name
         self.display_order = display_order
         self.admin = admin
-
+        self.workflows = []
 
 class WorkflowSpecCategorySchema(ma.Schema):
     class Meta:
@@ -25,7 +25,7 @@ class WorkflowSpecInfo(object):
                  display_order, is_master_spec,
                  standalone, library, primary_file_name, primary_process_id, is_review,
                  libraries):
-        self.id = id  # Sting unqiue id
+        self.id = id  # Sting unique id
         self.display_name = display_name
         self.description = description
         self.category_name = category_name

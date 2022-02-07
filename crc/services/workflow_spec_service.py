@@ -73,13 +73,20 @@ class WorkflowSpecService(FileSystemService):
         # fixme
         pass
 
-    # get_categories()
-    # get_category(category_name)
-    # add_category(body: WorkflowCategory)
-    # update_category(category, body)
-    # delete_category(category)
+    def get_categories(self) -> List[WorkflowSpecCategory]:
+        pass
 
+    def get_category(self, category_id) -> WorkflowSpecCategory:
+        pass
 
+    def add_category(self, category: WorkflowSpecCategory):
+        pass
+
+    def update_category(self, category: WorkflowSpecCategory):
+        pass
+
+    def delete_category(self, category: WorkflowSpecCategory):
+        pass
 
     def reorder_workflow_spec_category(self, spec:WorkflowSpecInfo, direction):
         # Fixme:  Resort Workflow categories
@@ -210,22 +217,4 @@ class WorkflowSpecService(FileSystemService):
             raise ValidationException('No start event found in %s' % et_root.attrib['id'])
 
         return process_elements[0].attrib['id']
-
-    # TODO Methods i would add...
-    # delete_spec(spec_id)
-    # get_spec(spec_id)
-    # update_spec(spec_id, body)
-    # add_spec(body)
-
-    # Other methods i would add, maybe not here..
-    # add_library(body)
-    # get_libraries()
-    # get_library(spec_id, library_id)
-    # delete_library(library_id)
-
-    # get_workflow_categories()
-    # get_workflow_category(category, body)
-    # add_workflow_category(body)
-    # update_workflow_category(category, body)
-    # delete_workflow_category(category)
 
