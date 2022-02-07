@@ -12,7 +12,7 @@ import datetime
 import shutil
 from flask import g
 
-from crc import app, db, session, WorkflowSpecService
+from crc import app, db, session
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
 from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
@@ -26,7 +26,7 @@ from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
 from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
-from crc.services.user_file_service import UserFileService
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 # UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
 import logging
