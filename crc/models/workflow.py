@@ -44,11 +44,14 @@ class WorkflowSpecInfo(object):
 class WorkflowSpecInfoSchema(ma.Schema):
     class Meta:
         model = WorkflowSpecInfo
-        fields = ["id", "display_name", "description", "category_id", "is_master_spec,",
+        fields = ["id", "display_name", "description", "is_master_spec,",
                   "standalone", "library", "primary_file_name", "primary_process_id", "is_review",
                   "libraries", "category_name", "display_order", "is_master_spec", "is_review"]
         unknown = EXCLUDE
-    category_name = fields.Str(dump_only=True)
+
+    category_name = fields.Method("get_name")
+    def get_name(self, obj):
+        return obj.category.display_name
 
     @post_load
     def make_spec(self, data, **kwargs):
