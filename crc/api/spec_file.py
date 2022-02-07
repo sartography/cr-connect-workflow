@@ -1,4 +1,4 @@
-from crc import session
+from crc import session, WorkflowSpecService
 from crc.api.common import ApiError
 from crc.models.file import FileSchema, FileType
 from crc.services.spec_file_service import SpecFileService
@@ -13,7 +13,7 @@ def get_files(spec_id, include_libraries=False):
     if spec_id is None:
         raise ApiError(code='missing_spec_id',
                        message='Please specify the workflow_spec_id.')
-    workflow_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    workflow_spec = WorkflowSpecService.get_spec(spec_id)
     if workflow_spec is None:
         raise ApiError(code='unknown_spec',
                        message=f'Unknown Spec: {spec_id}')
@@ -23,7 +23,7 @@ def get_files(spec_id, include_libraries=False):
 
 
 def get_file(spec_id, file_name):
-    workflow_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    workflow_spec = WorkflowSpecService.get_spec(spec_id)
     files = SpecFileService.get_files(workflow_spec, file_name)
     if len(files) == 0:
         raise ApiError(code='unknown file',
@@ -33,16 +33,16 @@ def get_file(spec_id, file_name):
 
 
 def add_file(spec_id):
-    workflow_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    workflow_spec = WorkflowSpecService.get_spec(spec_id)
     file = connexion.request.files['file']
     file = SpecFileService.add_file(workflow_spec, file.filename, file.stream.read())
-    if not WorkflowSpecModel.primary_process_id and file.type == FileType.bpmn:
+    if not workflow_spec.primary_process_name and file.type == FileType.bpmn:
         SpecFileService.set_primary_bpmn(workflow_spec, file.name)
     return FileSchema().dump(file)
 
 
 def update(spec_id, file_name, is_primary):
-    workflow_spec = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    workflow_spec = WorkflowSpecService.get_spec(spec_id)
     files = SpecFileService.get_files(workflow_spec, file_name)
     if len(files) < 1:
         raise ApiError(code='unknown file',
@@ -55,7 +55,7 @@ def update(spec_id, file_name, is_primary):
 
 
 def update_data(spec_id, file_name):
-    workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
+    workflow_spec_model = WorkflowSpecService.get_spec(spec_id)
     if workflow_spec_model is None:
         raise ApiError(code='missing_spec',
                        message=f'The workflow spec for id {spec_id} does not exist.')
@@ -65,10 +65,10 @@ def update_data(spec_id, file_name):
 
 
 def get_data(spec_id, file_name):
-    workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
-    file_data = SpecFileService.get_data(workflow_spec_model, file_name)
+    workflow_spec = WorkflowSpecService.get_spec(spec_id)
+    file_data = SpecFileService.get_data(workflow_spec, file_name)
     if file_data is not None:
-        file_info = SpecFileService.get_files(workflow_spec_model, file_name)[0]
+        file_info = SpecFileService.get_files(workflow_spec, file_name)[0]
         return send_file(
             io.BytesIO(file_data),
             attachment_filename=file_name,
@@ -82,5 +82,5 @@ def get_data(spec_id, file_name):
 
 
 def delete(spec_id, file_name):
-    workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id=spec_id).first()
-    SpecFileService.delete_file(workflow_spec_model, file_name)
+    workflow_spec = WorkflowSpecService.get_spec(spec_id)
+    SpecFileService.delete_file(workflow_spec, file_name)
