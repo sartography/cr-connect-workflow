@@ -20,9 +20,7 @@ class ResetWorkflow(Script):
 
         if 'reset_id' in kwargs.keys():
             reset_id = kwargs['reset_id']
-            # TODO: Find out what type of object is returned by get_spec, and how to get info out of it
             workflow_spec = WorkflowSpecService().get_spec(reset_id)
-            # workflow_spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=reset_id).first()
             if workflow_spec:
                 workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(
                     workflow_spec_id=workflow_spec.id,
