@@ -29,7 +29,6 @@ class WorkflowSpecService(FileSystemService):
         self.master_spec = None
         self.libraries = {}
         self.standalone = {}
-        self.scan_file_system()
 
     def add_spec(self, spec: WorkflowSpecInfo):
         self.update_spec(spec)
@@ -54,6 +53,9 @@ class WorkflowSpecService(FileSystemService):
             raise ApiError('unknown spec', 'unable to find a spec with id:' + spec_id)
         return self.specs[spec_id]
 
+    def get_specs(self):
+        return list(self.specs.values())
+
     def reorder_spec(self, spec:WorkflowSpecInfo, direction):
         workflows = spec.category.workflows
         workflows.sort(key=lambda w: w.display_order)
@@ -70,23 +72,45 @@ class WorkflowSpecService(FileSystemService):
         return workflows
 
     def get_libraries(self) -> List[WorkflowSpecInfo]:
-        # fixme
+        spec_list = list(self.libraries.values())
+        spec_list.sort(key=lambda w: w.display_order)
+        return spec_list
+
+    def get_standalones(self) -> List[WorkflowSpecInfo]:
+        spec_list = list(self.standalone.values())
+        spec_list.sort(key=lambda w: w.display_order)
+        return spec_list
+
+    def get_standalones(self) -> List[WorkflowSpecInfo]:
         pass
 
     def get_categories(self) -> List[WorkflowSpecCategory]:
-        pass
+        """Returns the categories as a list in display order"""
+        cat_list = list(self.categories.values())
+        cat_list.sort(key=lambda w: w.display_order)
+        return cat_list
 
     def get_category(self, category_id) -> WorkflowSpecCategory:
-        pass
+        if category_id not in self.categories:
+            raise ApiError('unknown category', 'unable to find a category with id:' + category_id)
+        return self.categories[category_id]
 
     def add_category(self, category: WorkflowSpecCategory):
-        pass
+        self.update_category(category)
 
     def update_category(self, category: WorkflowSpecCategory):
-        pass
+        cat_path = self.category_path(category.display_name)
+        os.makedirs(os.path.dirname(cat_path), exist_ok=True)
+        json_path = os.path.join(cat_path, self.CAT_JSON_FILE)
+        with open(json_path, "w") as cat_json:
+            json.dump(self.CAT_SCHEMA.dump(category), cat_json, indent=4)
+        self.scan_file_system()
 
-    def delete_category(self, category: WorkflowSpecCategory):
-        pass
+    def delete_category(self, category_id: str):
+        if category_id in self.specs:
+            path = self.category_path(category_id)
+            shutil.rmtree(path)
+            self.scan_file_system()
 
     def reorder_workflow_spec_category(self, spec:WorkflowSpecInfo, direction):
         # Fixme:  Resort Workflow categories
@@ -101,18 +125,20 @@ class WorkflowSpecService(FileSystemService):
         self.master_spec = None
         self.libraries = {}
         if not os.path.exists(FileSystemService.root_path()):
-            raise ApiError('missing_specs', 'The path for workflow specifications does not exist.')
+            return # Nothing to scan yet.  There are no files.
         directory_items = os.scandir(FileSystemService.root_path())
         for item in directory_items:
             if item.is_dir():
                 if item.name == self.LIBRARY_SPECS:
                     self.scan_category(item, is_library=True)
+                if item.name == self.STAND_ALONE_SPECS:
+                    self.scan_category(item, is_standalone=True)
                 elif item.name == self.MASTER_SPECIFICATION:
                     self.scan_spec(item, is_master=True)
                 else:
                     self.scan_category(item)
 
-    def scan_category(self, dir_item: os.DirEntry, is_library=False):
+    def scan_category(self, dir_item: os.DirEntry, is_library=False, is_standalone=False):
         """Reads the category.json file, and any workflow directories """
         cat_path = os.path.join(dir_item.path, self.CAT_JSON_FILE)
         if os.path.exists(cat_path):
@@ -125,6 +151,8 @@ class WorkflowSpecService(FileSystemService):
                 json.dump(self.CAT_SCHEMA.dump(cat), wf_json, indent=4)
         if is_library:
             self.libraries = cat
+        elif is_standalone:
+            self.standalone = cat
         else:
             self.categories[cat.id] = cat
         workflow_dirs = os.scandir(FileSystemService.root_path())
@@ -141,7 +169,6 @@ class WorkflowSpecService(FileSystemService):
 #            workflow_metas.append(WorkflowMetadata.from_workflow(workflow))
         return workflow_metas
 
-
     def scan_spec(self, dir_item: os.DirEntry, is_master=False, category=None):
         if not is_master and not category:
             raise ApiError("invalid_spec_dir", "Please specify what category this workflow belongs to.")
@@ -153,15 +180,16 @@ class WorkflowSpecService(FileSystemService):
         else:
             spec = WorkflowSpecInfo(id=dir_item.name, library=False, standalone=False, is_master_spec=is_master,
                                     display_name=dir_item.name, description="", primary_process_id="",
-                                    primary_file_name="")
+                                    primary_file_name="", category_name="", display_order=0, is_review=False,
+                                    libraries=[])
             with open(spec_path, "w") as wf_json:
-                json.dump(WorkflowSpecInfoSchema.dump(spec), wf_json, indent=4)
+                json.dump(self.WF_SCHEMA.dump(spec), wf_json, indent=4)
         if is_master:
             self.master_spec = spec
         elif category:
             self.specs[spec.id] = spec
             spec.category = category
-            category.workflow_specs.append(spec)
+            category.workflows.append(spec)
 
     def set_primary_bpmn(self, workflow_spec: WorkflowSpecInfo, file_name: str, binary_data=None):
         # If this is a BPMN, extract the process id, and determine if it is contains swim lanes.

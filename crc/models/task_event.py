@@ -14,7 +14,7 @@ class TaskEventModel(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     user_uid = db.Column(db.String, nullable=False) # In some cases the unique user id may not exist in the db yet.
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=False)
-    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    workflow_spec_id = db.Column(db.String)
     spec_version = db.Column(db.String)
     action = db.Column(db.String)
     task_id = db.Column(db.String)
