@@ -1,6 +1,6 @@
 import enum
 
-from marshmallow import EXCLUDE, post_load
+from marshmallow import EXCLUDE, post_load, fields
 from sqlalchemy import func
 
 from crc import db, ma
@@ -48,6 +48,7 @@ class WorkflowSpecInfoSchema(ma.Schema):
                   "standalone", "library", "primary_file_name", "primary_process_id", "is_review",
                   "libraries", "category_name", "display_order", "is_master_spec", "is_review"]
         unknown = EXCLUDE
+    category_name = fields.Str(dump_only=True)
 
     @post_load
     def make_spec(self, data, **kwargs):
