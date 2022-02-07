@@ -19,7 +19,6 @@ class ScriptTemplate(Script):
                            message='Please pass in a workflow_id to use in the search.')
         passed_workflow_id = args[0]
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == passed_workflow_id).first()
-        workflow_spec = WorkflowSpecService.get_spec(workflow.workflow_spec_id)
-        # TODO: Find out what type of object is returned by get_spec, and how to get info out of it
+        workflow_spec = WorkflowSpecService().get_spec(workflow.workflow_spec_id)
         if workflow_spec:
             return WorkflowSpecInfoSchema().dump(workflow_spec)
