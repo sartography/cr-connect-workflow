@@ -3,7 +3,7 @@ import os
 
 from crc import app, db, session
 from crc.models.file import CONTENT_TYPES
-from crc.models.workflow import WorkflowSpecModel
+from crc.models.workflow import WorkflowSpecInfo
 from crc.services.document_service import DocumentService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
@@ -28,14 +28,18 @@ class ExampleDataLoader:
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
         global file
-        spec = WorkflowSpecModel(id=id,
-                                 display_name=display_name,
-                                 description=description,
-                                 is_master_spec=master_spec,
-                                 category_id=category_id,
-                                 display_order=display_order,
-                                 standalone=standalone,
-                                 library=library)
+        spec = WorkflowSpecInfo(id=id,
+                                display_name=display_name,
+                                description=description,
+                                category_name=category_id,
+                                display_order=display_order,
+                                is_master_spec=master_spec,
+                                standalone=standalone,
+                                library=library,
+                                primary_file_name="",
+                                primary_process_id="",
+                                is_review=False,
+                                libraries=[])
         db.session.add(spec)
         db.session.commit()
         if not filepath and not from_tests:
@@ -46,7 +50,7 @@ class ExampleDataLoader:
         files = glob.glob(filepath)
         for file_path in files:
             if os.path.isdir(file_path):
-                continue # Don't try to process sub directories
+                continue  # Don't try to process sub directories
 
             noise, file_extension = os.path.splitext(file_path)
             filename = os.path.basename(file_path)
@@ -79,4 +83,3 @@ class ExampleDataLoader:
         ReferenceFileService.add_reference_file(StudyService.INVESTIGATOR_LIST,
                                                 file.read())
         file.close()
-

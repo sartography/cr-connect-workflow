@@ -1,5 +1,7 @@
 import json
 import os
+import shutil
+from typing import List
 
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from lxml import etree
@@ -29,14 +31,30 @@ class WorkflowSpecService(FileSystemService):
         self.standalone = {}
         self.scan_file_system()
 
-    def save_spec(self, spec:WorkflowSpecInfo):
+    def add_spec(self, spec: WorkflowSpecInfo):
+        self.update_spec(spec)
+
+    def update_spec(self, spec:WorkflowSpecInfo):
         spec_path = self.workflow_path(spec)
+        os.makedirs(os.path.dirname(spec_path), exist_ok=True)
         json_path = os.path.join(spec_path, self.WF_JSON_FILE)
         with open(json_path, "w") as wf_json:
             json.dump(self.WF_SCHEMA.dump(spec), wf_json, indent=4)
         self.scan_file_system()
 
-    def reorder_workflow_spec(self, spec:WorkflowSpecInfo, direction):
+    def delete_spec(self, spec_id: str):
+        if spec_id in self.specs:
+            spec = self.specs[spec_id]
+            path = self.workflow_path(spec)
+            shutil.rmtree(path)
+            self.scan_file_system()
+
+    def get_spec(self, spec_id: str):
+        if spec_id not in self.specs:
+            raise ApiError('unknown spec', 'unable to find a spec with id:' + spec_id)
+        return self.specs[spec_id]
+
+    def reorder_spec(self, spec:WorkflowSpecInfo, direction):
         workflows = spec.category.workflows
         workflows.sort(key=lambda w: w.display_order)
         index = workflows.index_of(spec)
@@ -51,9 +69,17 @@ class WorkflowSpecService(FileSystemService):
             index += 1
         return workflows
 
-    def get_categories(self):
-        """Returns a list of categories in the correct order."""
-        return list(self.categories.values()).sort(key=lambda x: x.display_order)
+    def get_libraries(self) -> List[WorkflowSpecInfo]:
+        # fixme
+        pass
+
+    # get_categories()
+    # get_category(category_name)
+    # add_category(body: WorkflowCategory)
+    # update_category(category, body)
+    # delete_category(category)
+
+
 
     def reorder_workflow_spec_category(self, spec:WorkflowSpecInfo, direction):
         # Fixme:  Resort Workflow categories
@@ -185,21 +211,4 @@ class WorkflowSpecService(FileSystemService):
 
         return process_elements[0].attrib['id']
 
-    # TODO Methods i would add...
-    # delete_workflow_spec(spec_id)
-    # get_workflow_spec(spec_id)
-    # update_spec(spec_id, body)
-    # add_spec(body)
-
-    # Other methods i would add, maybe not here..
-    # add_library(body)
-    # get_libraries()
-    # get_library(library)
-    # delete_library(library)
-
-    # get_workflow_categories()
-    # get_workflow_category(category, body)
-    # add_workflow_category(body)
-    # update_workflow_category(category, body)
-    # delete_workflow_category(category)
 

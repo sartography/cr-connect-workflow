@@ -21,13 +21,15 @@ class WorkflowSpecCategorySchema(ma.Schema):
 
 
 class WorkflowSpecInfo(object):
-    def __init__(self, id, display_name, description, category_name, is_master_spec,
+    def __init__(self, id, display_name, description, category_name,
+                 display_order, is_master_spec,
                  standalone, library, primary_file_name, primary_process_id, is_review,
                  libraries):
         self.id = id  # Sting unqiue id
         self.display_name = display_name
         self.description = description
         self.category_name = category_name
+        self.display_order = display_order
         self.is_master_spec = is_master_spec
         self.standalone = standalone
         self.library = library
