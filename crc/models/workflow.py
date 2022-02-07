@@ -79,7 +79,7 @@ class WorkflowModel(db.Model):
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     study = db.relationship("StudyModel", backref='workflow')
-    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    workflow_spec_id = db.Column(db.String)
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
