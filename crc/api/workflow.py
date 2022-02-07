@@ -23,28 +23,25 @@ from crc.services.workflow_service import WorkflowService
 def all_specifications(libraries=False,standalone=False):
     if libraries and standalone:
         raise ApiError('inconceivable!', 'You should specify libraries or standalone, but not both')
-    schema = WorkflowSpecModelSchema(many=True)
+
     if libraries:
-        return schema.dump(session.query(WorkflowSpecModel)\
-              .filter(WorkflowSpecModel.library==True).all())
+        return WorkflowSpecService.get_libraries()
 
     if standalone:
-        return schema.dump(session.query(WorkflowSpecModel)\
-              .filter(WorkflowSpecModel.standalone==True).all())
+        return WorkflowSpecService.get_standalones()
 
     # return standard workflows (not library, not standalone)
-    return schema.dump(session.query(WorkflowSpecModel)
-                       .filter((WorkflowSpecModel.library==False) | (
-                                WorkflowSpecModel.library==None))
-                       .filter((WorkflowSpecModel.standalone==False) | (
-                                WorkflowSpecModel.standalone==None))
-                       .all())
+    categories = WorkflowSpecService.get_categories()
+    workflows = []
+    for cat in categories:
+        workflows.extend(cat.workflows)
+    return workflows
 
 
 def add_workflow_specification(body):
-    category_id = body['display_name']
+    category_name = body['display_name']
     # TODO: set this spec to the last one in the spec list
-    # WorkflowService.cleanup_workflow_spec_display_order(category_id)
+    WorkflowService.cleanup_workflow_spec_display_order(category_name)
 
     # Libraries and standalone workflows don't get a category_id
     if body['library'] is True or body['standalone'] is True:
@@ -82,20 +79,28 @@ def validate_spec_and_library(spec_id,library_id):
 
 def add_workflow_spec_library(spec_id, library_id):
     validate_spec_and_library(spec_id, library_id)
-    libraries: workflow_spec_service.get_libraries()
+    libraries: WorkflowSpecService.get_libraries()
     libraryids = [x.library_spec_id for x in libraries]
     if library_id in libraryids:
-        raise ApiError('unknown_spec', 'The Library Specification "' + spec_id + '" is already attached.')
+        raise ApiError('unknown_spec', 'The Library Specification "' + library_id + '" is already attached.')
 
-    # TODO: this used to return all libraries. maybe we still want that here
-    newlib = WorkflowSpecService.add_library(spec_id, library_id)
-    return newlib
+    spec = WorkflowSpecService.get_spec(spec_id)
+    library = WorkflowSpecService.get_spec(library_id)
+    spec.libraries.push(library)
+    WorkflowSpecService.update_spec(spec_id)
+    return spec
 
-def drop_workflow_spec_library(spec_id,library_id):
+
+def drop_workflow_spec_library(spec_id, library_id):
     validate_spec_and_library(spec_id, library_id)
-    WorkflowSpecService.delete_library(library_id)
-    # TODO: this used to return all libraries. maybe we still want that here
-    return WorkflowSpecService.get_libraries()
+    spec = WorkflowSpecService.get_spec(spec_id)
+
+    # heres a piece of code that certainly wont work
+    library = WorkflowSpecService.get_spec(library_id)
+    if library in spec.libraries:
+        spec.libraries.pop(library)
+    WorkflowSpecService.update_spec(spec_id)
+    return spec
 
 
 def validate_workflow_specification(spec_id, study_id=None, test_until=None):
@@ -152,7 +157,6 @@ def delete_workflow_specification(spec_id):
     # .delete() doesn't work when we need a cascade. Must grab the record, and explicitly delete
     WorkflowSpecService.delete_spec(spec_id)
 
-    # TODO: fix reordering
     # Reorder the remaining specs
     WorkflowService.cleanup_workflow_spec_display_order(spec.category_id)
 
@@ -348,19 +352,16 @@ def update_workflow_spec_category(cat_id, body):
 def delete_workflow_spec_category(cat_id):
     workflow_spec_service.delete_category(cat_id)
 
+
 def reorder_workflow_spec_category(cat_id, direction):
-    # TODO: fix reordering here too
     if direction not in ('up', 'down'):
         raise ApiError(code='bad_direction',
                        message='The direction must be `up` or `down`.')
     WorkflowService.cleanup_workflow_spec_category_display_order()
-    # TODO: modify this to get_workflow_category(category)
-    category = session.query(WorkflowSpecCategoryModel).\
-        filter(WorkflowSpecCategoryModel.id == cat_id).first()
+    category = WorkflowSpecService.get_category(cat_id)
     if category:
-        ordered_categories = WorkflowService.reorder_workflow_spec_category(category, direction)
-        schema = WorkflowSpecCategoryModelSchema(many=True)
-        return schema.dump(ordered_categories)
+        ordered_categories = WorkflowSpecService.reorder_workflow_spec_category(category, direction)
+        return ordered_categories
     else:
         raise ApiError(code='bad_category_id',
                        message=f'The category id {cat_id} did not return a Workflow Spec Category. Make sure it is a valid ID.')

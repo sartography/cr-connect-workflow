@@ -82,6 +82,9 @@ class WorkflowSpecService(FileSystemService):
         spec_list.sort(key=lambda w: w.display_order)
         return spec_list
 
+    def get_standalones(self) -> List[WorkflowSpecInfo]:
+        pass
+
     def get_categories(self) -> List[WorkflowSpecCategory]:
         """Returns the categories as a list in display order"""
         cat_list = list(self.categories.values())
