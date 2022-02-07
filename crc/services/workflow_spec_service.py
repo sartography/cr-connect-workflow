@@ -179,7 +179,7 @@ class WorkflowSpecService(FileSystemService):
         else:
             spec = WorkflowSpecInfo(id=dir_item.name, library=False, standalone=False, is_master_spec=is_master,
                                     display_name=dir_item.name, description="", primary_process_id="",
-                                    primary_file_name="", category_name="", display_order=0, is_review=False,
+                                    primary_file_name="", display_order=0, is_review=False,
                                     libraries=[])
             with open(spec_path, "w") as wf_json:
                 json.dump(self.WF_SCHEMA.dump(spec), wf_json, indent=4)
