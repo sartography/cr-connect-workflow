@@ -72,7 +72,7 @@ class WorkflowSpecService(FileSystemService):
         return workflows
 
     def get_libraries(self) -> List[WorkflowSpecInfo]:
-        spec_list = list(self.libraries.values())
+        spec_list = self.libraries.workflows
         spec_list.sort(key=lambda w: w.display_order)
         return spec_list
 
@@ -107,7 +107,7 @@ class WorkflowSpecService(FileSystemService):
         self.scan_file_system()
 
     def delete_category(self, category_id: str):
-        if category_id in self.specs:
+        if category_id in self.categories:
             path = self.category_path(category_id)
             shutil.rmtree(path)
             self.scan_file_system()
@@ -124,14 +124,17 @@ class WorkflowSpecService(FileSystemService):
         self.specs = {}
         self.master_spec = None
         self.libraries = {}
+        self.standalone = {}
+
         if not os.path.exists(FileSystemService.root_path()):
             return # Nothing to scan yet.  There are no files.
+
         directory_items = os.scandir(FileSystemService.root_path())
         for item in directory_items:
             if item.is_dir():
                 if item.name == self.LIBRARY_SPECS:
                     self.scan_category(item, is_library=True)
-                if item.name == self.STAND_ALONE_SPECS:
+                elif item.name == self.STAND_ALONE_SPECS:
                     self.scan_category(item, is_standalone=True)
                 elif item.name == self.MASTER_SPECIFICATION:
                     self.scan_spec(item, is_master=True)
@@ -155,9 +158,10 @@ class WorkflowSpecService(FileSystemService):
             self.standalone = cat
         else:
             self.categories[cat.id] = cat
-        workflow_dirs = os.scandir(FileSystemService.root_path())
+        workflow_dirs = os.scandir(dir_item.path)
         for item in workflow_dirs:
-            self.scan_spec(item, category=cat)
+            if item.is_dir():
+                self.scan_spec(item, category=cat)
         return cat
 
     @staticmethod
@@ -187,9 +191,10 @@ class WorkflowSpecService(FileSystemService):
         if is_master:
             self.master_spec = spec
         elif category:
-            self.specs[spec.id] = spec
             spec.category = category
             category.workflows.append(spec)
+        self.specs[spec.id] = spec
+
 
     def set_primary_bpmn(self, workflow_spec: WorkflowSpecInfo, file_name: str, binary_data=None):
         # If this is a BPMN, extract the process id, and determine if it is contains swim lanes.
