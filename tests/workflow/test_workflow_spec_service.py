@@ -37,6 +37,7 @@ class TestWorkflowSync(BaseTest):
         self.assertEquals(0, len(workflow_spec_service.get_categories()))
         self.assertEquals(0, len(workflow_spec_service.get_specs()))
         self.copy_files_to_file_system()
+        workflow_spec_service.scan_file_system()
         self.assertEquals(2, len(workflow_spec_service.get_categories()))
         self.assertEquals(5, len(workflow_spec_service.get_specs()))
         self.assertEquals(1, len(workflow_spec_service.get_category('Category Number One').workflows))
