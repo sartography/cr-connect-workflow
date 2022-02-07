@@ -17,10 +17,6 @@ class TestWorkflowSync(BaseTest):
     import_spec_path = os.path.join(app.root_path, '..', 'tests', 'data', 'IMPORT_TEST')
     service = WorkflowSpecService()
 
-    def copy_files_to_file_system(self):
-        """Some tests rely on a well populated file system """
-        shutil.copytree(self.import_spec_path, self.spec_path)
-
     def build_file_system_from_models(self):
         """Some tests check to see what happens when we write data to an empty file system."""
 
@@ -39,7 +35,7 @@ class TestWorkflowSync(BaseTest):
         self.service.scan_file_system()
         self.assertEquals(0, len(self.service.get_categories()))
         self.assertEquals(0, len(self.service.get_specs()))
-        self.copy_files_to_file_system()
+        self.copy_files_to_file_system(self.import_spec_path, self.spec_path)
         self.service.scan_file_system()
         self.assertEquals(2, len(self.service.get_categories()))
         self.assertEquals(5, len(self.service.get_specs()))
@@ -50,7 +46,7 @@ class TestWorkflowSync(BaseTest):
         self.assertEquals(1, len(self.service.master_spec.libraries))
 
     def test_delete_category_and_workflows(self):
-        self.copy_files_to_file_system()
+        self.copy_files_to_file_system(self.import_spec_path, self.spec_path)
         self.service.scan_file_system()
         cat_path = SpecFileService().category_path('Category Number One')
         shutil.rmtree(cat_path) # Remove the path, as if from a git pull and the path was removed.

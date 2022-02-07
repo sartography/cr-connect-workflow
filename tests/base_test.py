@@ -106,6 +106,11 @@ class BaseTest(unittest.TestCase):
         self.clear_test_sync_files()
 
     @staticmethod
+    def copy_files_to_file_system(import_spec_path, spec_path):
+        """Some tests rely on a well populated file system """
+        shutil.copytree(import_spec_path, spec_path)
+
+    @staticmethod
     def clear_test_sync_files():
         sync_file_root = SpecFileService().root_path()
         if os.path.exists(sync_file_root):
