@@ -4,7 +4,7 @@ import os.path
 from tests.base_test import BaseTest
 from crc import session
 from crc.models.file import FileModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowModel, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
+from crc.models.workflow import WorkflowModel
 from crc.services.spec_file_service import SpecFileService
 
 from example_data import ExampleDataLoader

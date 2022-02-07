@@ -8,8 +8,7 @@ from tests.base_test import BaseTest
 from crc import db, app
 from crc.models.study import StudyModel, StudyStatus, StudyAssociatedSchema
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowModel, WorkflowStatus, \
-    WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor

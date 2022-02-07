@@ -1,7 +1,6 @@
 from tests.base_test import BaseTest
 
 from crc import session
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel
 
 import json
 

@@ -2,7 +2,6 @@ from tests.base_test import BaseTest
 
 from crc import session
 from crc.models.study import StudyModel, StudySchema
-from crc.models.workflow import WorkflowModel, WorkflowSpecModel
 
 import json
 from unittest.mock import patch

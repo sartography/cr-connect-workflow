@@ -5,7 +5,6 @@ from tests.base_test import BaseTest
 from crc.api.common import ApiError
 from crc import session, app
 from crc.models.file import FileDataModel, FileModel, LookupFileModel, LookupDataModel, CONTENT_TYPES
-from crc.models.workflow import WorkflowSpecModel
 from crc.services.lookup_service import LookupService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService

@@ -6,7 +6,7 @@ from tests.base_test import BaseTest
 from crc import session, app
 from crc.api.common import ApiErrorSchema
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel
+from crc.models.workflow import WorkflowModel
 from crc.services.workflow_service import WorkflowService
 
 

@@ -4,7 +4,6 @@ from crc import session
 from crc.models.user import UserModel
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
-from crc.models.workflow import WorkflowLibraryModel
 
 from example_data import ExampleDataLoader
 

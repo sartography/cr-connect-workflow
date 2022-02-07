@@ -13,7 +13,7 @@ from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType, StudyAssociated
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel
+from crc.models.workflow import WorkflowModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.user_file_service import UserFileService
 

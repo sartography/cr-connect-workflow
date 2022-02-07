@@ -1,7 +1,5 @@
 from tests.base_test import BaseTest
-from crc import session
 from crc.api.common import ApiError
-from crc.models.workflow import WorkflowSpecModel
 from crc.services.spec_file_service import SpecFileService
 
 
