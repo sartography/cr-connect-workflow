@@ -73,6 +73,9 @@ class WorkflowSpecService(FileSystemService):
         # fixme
         pass
 
+    def get_standalones(self) -> List[WorkflowSpecInfo]:
+        pass
+
     def get_categories(self) -> List[WorkflowSpecCategory]:
         pass
 
