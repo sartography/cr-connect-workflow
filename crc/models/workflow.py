@@ -1,6 +1,6 @@
 import enum
 
-from marshmallow import EXCLUDE
+from marshmallow import EXCLUDE, post_load
 from sqlalchemy import func
 
 from crc import db, ma
@@ -19,12 +19,15 @@ class WorkflowSpecCategorySchema(ma.Schema):
         model = WorkflowSpecCategory
         fields = ["id", "display_name", "display_order", "admin"]
 
+    @post_load
+    def make_cat(self, data, **kwargs):
+        return WorkflowSpecCategory(**data)
+
 
 class WorkflowSpecInfo(object):
-    def __init__(self, id, display_name, description, category_name,
-                 display_order, is_master_spec,
-                 standalone, library, primary_file_name, primary_process_id, is_review,
-                 libraries):
+    def __init__(self, id, display_name, description,  is_master_spec,
+                 standalone, library, primary_file_name, primary_process_id,
+                 libraries, category_name=None, display_order=0, is_review=False):
         self.id = id  # Sting unique id
         self.display_name = display_name
         self.description = description
@@ -45,9 +48,12 @@ class WorkflowSpecInfoSchema(ma.Schema):
         model = WorkflowSpecInfo
         fields = ["id", "display_name", "description", "category_id", "is_master_spec,",
                   "standalone", "library", "primary_file_name", "primary_process_id", "is_review",
-                  "libraries"]
+                  "libraries", "category_name", "display_order", "is_master_spec", "is_review"]
         unknown = EXCLUDE
 
+    @post_load
+    def make_spec(self, data, **kwargs):
+        return WorkflowSpecInfo(**data)
 
 class WorkflowState(enum.Enum):
     hidden = "hidden"

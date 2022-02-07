@@ -57,7 +57,7 @@ from crc.api import admin
 from crc.services.workflow_service import WorkflowService
 from crc.services.workflow_spec_service import WorkflowSpecService
 connexion_app.add_api('api.yml', base_path='/v1.0')
-
+workflow_spec_service = WorkflowSpecService()
 
 # needed function to avoid circular import
 def process_waiting_tasks():
