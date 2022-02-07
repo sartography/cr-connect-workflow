@@ -8,7 +8,7 @@ from crc.models.api_models import WorkflowApiSchema
 from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
 from crc.models.task_log import TaskLogModelSchema, TaskLogQuery, TaskLogQuerySchema
-from crc.models.workflow import WorkflowModel
+from crc.models.workflow import WorkflowModel, WorkflowSpecInfoSchema, WorkflowSpecCategorySchema
 from crc.services.error_service import ValidationErrorService
 from crc.services.lookup_service import LookupService
 from crc.services.spec_file_service import SpecFileService
@@ -26,17 +26,19 @@ def all_specifications(libraries=False,standalone=False):
         raise ApiError('inconceivable!', 'You should specify libraries or standalone, but not both')
 
     if libraries:
-        return spec_service.get_libraries()
+        workflows = spec_service.get_libraries()
+        return WorkflowSpecInfoSchema(many=True).dump(workflows)
 
     if standalone:
-        return spec_service.get_standalones()
+        workflows = spec_service.get_standalones()
+        return WorkflowSpecInfoSchema(many=True).dump(workflows)
 
     # return standard workflows (not library, not standalone)
     categories = spec_service.get_categories()
     workflows = []
     for cat in categories:
         workflows.extend(cat.workflows)
-    return workflows
+    return WorkflowSpecInfoSchema(many=True).dump(workflows)
 
 
 def add_workflow_specification(body):
@@ -49,7 +51,7 @@ def add_workflow_specification(body):
         body['category_id'] = None
 
     new_spec = spec_service.add_spec(body)
-    return new_spec
+    return WorkflowSpecInfoSchema().dump(new_spec)
 
 
 def get_workflow_specification(spec_id):
@@ -60,7 +62,7 @@ def get_workflow_specification(spec_id):
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
 
-    return spec
+    return WorkflowSpecInfoSchema().dump(spec)
 
 def validate_spec_and_library(spec_id,library_id):
     if spec_id is None:
@@ -89,7 +91,7 @@ def add_workflow_spec_library(spec_id, library_id):
     library = spec_service.get_spec(library_id)
     spec.libraries.push(library)
     spec_service.update_spec(spec_id)
-    return spec
+    return WorkflowSpecInfoSchema().dump(spec)
 
 
 def drop_workflow_spec_library(spec_id, library_id):
@@ -101,7 +103,7 @@ def drop_workflow_spec_library(spec_id, library_id):
     if library in spec.libraries:
         spec.libraries.pop(library)
     spec_service.update_spec(spec_id)
-    return spec
+    return WorkflowSpecInfoSchema().dump(spec)
 
 
 def validate_workflow_specification(spec_id, study_id=None, test_until=None):
@@ -133,7 +135,7 @@ def update_workflow_specification(spec_id, body):
         body['category_id'] = None
 
     spec = spec_service.update_spec(spec_id, body)
-    return spec
+    return WorkflowSpecInfoSchema().dump(spec)
 
 
 def delete_workflow_specification(spec_id):
@@ -172,7 +174,7 @@ def reorder_workflow_specification(spec_id, direction):
     else:
         raise ApiError(code='bad_spec_id',
                        message=f'The spec_id {spec_id} did not return a specification. Please check that it is valid.')
-    return ordered_specs
+    return WorkflowSpecInfoSchema(many=True).dump(ordered_specs)
 
 
 def get_workflow_from_spec(spec_id):
@@ -322,16 +324,19 @@ def __update_task(processor, task, data, user):
 
 
 def list_workflow_spec_categories():
-    return spec_service.get_categories()
+    categories = spec_service.get_categories()
+    return WorkflowSpecCategorySchema(many=True).dump(categories)
+
 
 
 def get_workflow_spec_category(cat_id):
-    return spec_service.get_category(cat_id)
+    category = spec_service.get_category(cat_id)
+    return WorkflowSpecCategorySchema().dump(category)
 
 
 def add_workflow_spec_category(body):
-    return spec_service.add_category(body)
-
+    category = spec_service.add_category(body)
+    return WorkflowSpecCategorySchema().dump(category)
 
 def update_workflow_spec_category(cat_id, body):
     if cat_id is None:
@@ -346,7 +351,7 @@ def update_workflow_spec_category(cat_id, body):
     # There is a separate endpoint for that
     body['display_order'] = category.display_order
 
-    return category
+    return WorkflowSpecCategorySchema().dump(category)
 
 
 def delete_workflow_spec_category(cat_id):
