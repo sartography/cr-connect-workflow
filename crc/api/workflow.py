@@ -2,7 +2,7 @@ import uuid
 
 from flask import g
 
-from crc import session, WorkflowSpecService
+from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
@@ -18,6 +18,9 @@ from crc.services.task_logging_service import TaskLoggingService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
+from crc.services.workflow_spec_service import WorkflowSpecService
+
+workflow_spec_service = WorkflowSpecService()
 
 
 def all_specifications(libraries=False,standalone=False):
@@ -25,13 +28,13 @@ def all_specifications(libraries=False,standalone=False):
         raise ApiError('inconceivable!', 'You should specify libraries or standalone, but not both')
 
     if libraries:
-        return WorkflowSpecService.get_libraries()
+        return workflow_spec_service.get_libraries()
 
     if standalone:
-        return WorkflowSpecService.get_standalones()
+        return workflow_spec_service.get_standalones()
 
     # return standard workflows (not library, not standalone)
-    categories = WorkflowSpecService.get_categories()
+    categories = workflow_spec_service.get_categories()
     workflows = []
     for cat in categories:
         workflows.extend(cat.workflows)
@@ -47,14 +50,14 @@ def add_workflow_specification(body):
     if body['library'] is True or body['standalone'] is True:
         body['category_id'] = None
 
-    new_spec = WorkflowSpecService.add_spec(body)
+    new_spec = workflow_spec_service.add_spec(body)
     return new_spec
 
 
 def get_workflow_specification(spec_id):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
-    spec = WorkflowSpecService.get_spec(spec_id)
+    spec = workflow_spec_service.get_spec(spec_id)
 
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
@@ -67,8 +70,8 @@ def validate_spec_and_library(spec_id,library_id):
     if library_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Library Specification ID.')
 
-    spec = WorkflowSpecService.get_spec(spec_id)
-    library = WorkflowSpecService.get_library(library_id);
+    spec = workflow_spec_service.get_spec(spec_id)
+    library = workflow_spec_service.get_library(library_id);
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
     if library is None:
@@ -79,27 +82,27 @@ def validate_spec_and_library(spec_id,library_id):
 
 def add_workflow_spec_library(spec_id, library_id):
     validate_spec_and_library(spec_id, library_id)
-    libraries: WorkflowSpecService.get_libraries()
+    libraries: workflow_spec_service.get_libraries()
     libraryids = [x.library_spec_id for x in libraries]
     if library_id in libraryids:
         raise ApiError('unknown_spec', 'The Library Specification "' + library_id + '" is already attached.')
 
-    spec = WorkflowSpecService.get_spec(spec_id)
-    library = WorkflowSpecService.get_spec(library_id)
+    spec = workflow_spec_service.get_spec(spec_id)
+    library = workflow_spec_service.get_spec(library_id)
     spec.libraries.push(library)
-    WorkflowSpecService.update_spec(spec_id)
+    workflow_spec_service.update_spec(spec_id)
     return spec
 
 
 def drop_workflow_spec_library(spec_id, library_id):
     validate_spec_and_library(spec_id, library_id)
-    spec = WorkflowSpecService.get_spec(spec_id)
+    spec = workflow_spec_service.get_spec(spec_id)
 
     # heres a piece of code that certainly wont work
-    library = WorkflowSpecService.get_spec(library_id)
+    library = workflow_spec_service.get_spec(library_id)
     if library in spec.libraries:
         spec.libraries.pop(library)
-    WorkflowSpecService.update_spec(spec_id)
+    workflow_spec_service.update_spec(spec_id)
     return spec
 
 
@@ -118,7 +121,7 @@ def validate_workflow_specification(spec_id, study_id=None, test_until=None):
 def update_workflow_specification(spec_id, body):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Spec ID.')
-    spec = WorkflowSpecService.get_spec(spec_id)
+    spec = workflow_spec_service.get_spec(spec_id)
 
     if spec is None:
         raise ApiError('unknown_study', 'The spec "' + spec_id + '" is not recognized.')
@@ -131,7 +134,7 @@ def update_workflow_specification(spec_id, body):
     if body['library'] is True or body['standalone'] is True:
         body['category_id'] = None
 
-    spec = WorkflowSpecService.update_spec(spec_id, body)
+    spec = workflow_spec_service.update_spec(spec_id, body)
     return spec
 
 
@@ -139,7 +142,7 @@ def delete_workflow_specification(spec_id):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
 
-    spec = WorkflowSpecService.get_spec(spec_id)
+    spec = workflow_spec_service.get_spec(spec_id)
 
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
@@ -155,7 +158,7 @@ def delete_workflow_specification(spec_id):
     WorkflowService.delete_workflow_spec_task_events(spec_id)
 
     # .delete() doesn't work when we need a cascade. Must grab the record, and explicitly delete
-    WorkflowSpecService.delete_spec(spec_id)
+    workflow_spec_service.delete_spec(spec_id)
 
     # Reorder the remaining specs
     WorkflowService.cleanup_workflow_spec_display_order(spec.category_id)
@@ -165,9 +168,9 @@ def reorder_workflow_specification(spec_id, direction):
     if direction not in ('up', 'down'):
         raise ApiError(code='bad_direction',
                        message='The direction must be `up` or `down`.')
-    spec = WorkflowSpecService.get_spec(spec_id)
+    spec = workflow_spec_service.get_spec(spec_id)
     if spec:
-        ordered_specs = WorkflowSpecService.reorder_spec(spec, direction)
+        ordered_specs = workflow_spec_service.reorder_spec(spec, direction)
     else:
         raise ApiError(code='bad_spec_id',
                        message=f'The spec_id {spec_id} did not return a specification. Please check that it is valid.')
@@ -322,22 +325,22 @@ def __update_task(processor, task, data, user):
 
 
 def list_workflow_spec_categories():
-    return WorkflowSpecService.get_workflow_categories()
+    return workflow_spec_service.get_workflow_categories()
 
 
 def get_workflow_spec_category(cat_id):
-    return WorkflowSpecService.get_workflow_category(cat_id)
+    return workflow_spec_service.get_workflow_category(cat_id)
 
 
 def add_workflow_spec_category(body):
-    return WorkflowSpecService.add_category(body)
+    return workflow_spec_service.add_category(body)
 
 
 def update_workflow_spec_category(cat_id, body):
     if cat_id is None:
         raise ApiError('unknown_category', 'Please provide a valid Workflow Spec Category ID.')
 
-    category = WorkflowSpecService.update_category(cat_id, body)
+    category = workflow_spec_service.update_category(cat_id, body)
 
     if category is None:
         raise ApiError('unknown_category', 'The category "' + cat_id + '" is not recognized.')
@@ -358,9 +361,9 @@ def reorder_workflow_spec_category(cat_id, direction):
         raise ApiError(code='bad_direction',
                        message='The direction must be `up` or `down`.')
     WorkflowService.cleanup_workflow_spec_category_display_order()
-    category = WorkflowSpecService.get_category(cat_id)
+    category = workflow_spec_service.get_category(cat_id)
     if category:
-        ordered_categories = WorkflowSpecService.reorder_workflow_spec_category(category, direction)
+        ordered_categories = workflow_spec_service.reorder_workflow_spec_category(category, direction)
         return ordered_categories
     else:
         raise ApiError(code='bad_category_id',
