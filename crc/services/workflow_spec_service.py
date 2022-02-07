@@ -14,9 +14,6 @@ from crc.services.file_system_service import FileSystemService
 
 
 class WorkflowSpecService(FileSystemService):
-
-    CAT_JSON_FILE = "category.json"
-    WF_JSON_FILE = "workflow.json"
     CAT_SCHEMA = WorkflowSpecCategorySchema()
     WF_SCHEMA = WorkflowSpecInfoSchema()
 
@@ -35,7 +32,7 @@ class WorkflowSpecService(FileSystemService):
 
     def update_spec(self, spec:WorkflowSpecInfo):
         spec_path = self.workflow_path(spec)
-        os.makedirs(os.path.dirname(spec_path), exist_ok=True)
+        os.makedirs(spec_path, exist_ok=True)
         json_path = os.path.join(spec_path, self.WF_JSON_FILE)
         with open(json_path, "w") as wf_json:
             json.dump(self.WF_SCHEMA.dump(spec), wf_json, indent=4)
@@ -50,7 +47,7 @@ class WorkflowSpecService(FileSystemService):
 
     def get_spec(self, spec_id: str):
         if spec_id not in self.specs:
-            raise ApiError('unknown spec', 'unable to find a spec with id:' + spec_id)
+            return None
         return self.specs[spec_id]
 
     def get_specs(self):
@@ -92,7 +89,7 @@ class WorkflowSpecService(FileSystemService):
 
     def get_category(self, category_id) -> WorkflowSpecCategory:
         if category_id not in self.categories:
-            raise ApiError('unknown category', 'unable to find a category with id:' + category_id)
+            return None
         return self.categories[category_id]
 
     def add_category(self, category: WorkflowSpecCategory):
@@ -100,7 +97,7 @@ class WorkflowSpecService(FileSystemService):
 
     def update_category(self, category: WorkflowSpecCategory):
         cat_path = self.category_path(category.display_name)
-        os.makedirs(os.path.dirname(cat_path), exist_ok=True)
+        os.makedirs(cat_path, exist_ok=True)
         json_path = os.path.join(cat_path, self.CAT_JSON_FILE)
         with open(json_path, "w") as cat_json:
             json.dump(self.CAT_SCHEMA.dump(category), cat_json, indent=4)
@@ -195,59 +192,4 @@ class WorkflowSpecService(FileSystemService):
             category.workflows.append(spec)
         self.specs[spec.id] = spec
 
-
-    def set_primary_bpmn(self, workflow_spec: WorkflowSpecInfo, file_name: str, binary_data=None):
-        # If this is a BPMN, extract the process id, and determine if it is contains swim lanes.
-        extension = self.get_extension(file_name)
-        file_type = FileType[extension]
-        if file_type == FileType.bpmn:
-            if not binary_data:
-                binary_data = self.get_data(workflow_spec, file_name)
-            try:
-                bpmn: etree.Element = etree.fromstring(binary_data)
-                workflow_spec.primary_process_id = self.get_process_id(bpmn)
-                workflow_spec.primary_file_name = file_name
-                workflow_spec.is_review = self.has_swimlane(bpmn)
-
-            except etree.XMLSyntaxError as xse:
-                raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_name)
-        else:
-            raise ApiError("invalid_xml", "Only a BPMN can be the primary file.", file_name=file_name)
-
-    @staticmethod
-    def has_swimlane(et_root: etree.Element):
-        """
-        Look through XML and determine if there are any lanes present that have a label.
-        """
-        elements = et_root.xpath('//bpmn:lane',
-                                 namespaces={'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'})
-        retval = False
-        for el in elements:
-            if el.get('name'):
-                retval = True
-        return retval
-
-    @staticmethod
-    def get_process_id(et_root: etree.Element):
-        process_elements = []
-        for child in et_root:
-            if child.tag.endswith('process') and child.attrib.get('isExecutable', False):
-                process_elements.append(child)
-
-        if len(process_elements) == 0:
-            raise ValidationException('No executable process tag found')
-
-        # There are multiple root elements
-        if len(process_elements) > 1:
-
-            # Look for the element that has the startEvent in it
-            for e in process_elements:
-                this_element: etree.Element = e
-                for child_element in list(this_element):
-                    if child_element.tag.endswith('startEvent'):
-                        return this_element.attrib['id']
-
-            raise ValidationException('No start event found in %s' % et_root.attrib['id'])
-
-        return process_elements[0].attrib['id']
 

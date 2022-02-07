@@ -87,3 +87,58 @@ class SpecFileService(FileSystemService):
         if os.path.exists(dir_path):
             shutil.rmtree(dir_path)
 
+    @staticmethod
+    def set_primary_bpmn(workflow_spec: WorkflowSpecInfo, file_name: str, binary_data=None):
+        # If this is a BPMN, extract the process id, and determine if it is contains swim lanes.
+        extension = SpecFileService.get_extension(file_name)
+        file_type = FileType[extension]
+        if file_type == FileType.bpmn:
+            if not binary_data:
+                binary_data = SpecFileService.get_data(workflow_spec, file_name)
+            try:
+                bpmn: etree.Element = etree.fromstring(binary_data)
+                workflow_spec.primary_process_id = SpecFileService.get_process_id(bpmn)
+                workflow_spec.primary_file_name = file_name
+                workflow_spec.is_review = SpecFileService.has_swimlane(bpmn)
+
+            except etree.XMLSyntaxError as xse:
+                raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_name)
+        else:
+            raise ApiError("invalid_xml", "Only a BPMN can be the primary file.", file_name=file_name)
+
+    @staticmethod
+    def has_swimlane(et_root: etree.Element):
+        """
+        Look through XML and determine if there are any lanes present that have a label.
+        """
+        elements = et_root.xpath('//bpmn:lane',
+                                 namespaces={'bpmn': 'http://www.omg.org/spec/BPMN/20100524/MODEL'})
+        retval = False
+        for el in elements:
+            if el.get('name'):
+                retval = True
+        return retval
+
+    @staticmethod
+    def get_process_id(et_root: etree.Element):
+        process_elements = []
+        for child in et_root:
+            if child.tag.endswith('process') and child.attrib.get('isExecutable', False):
+                process_elements.append(child)
+
+        if len(process_elements) == 0:
+            raise ValidationException('No executable process tag found')
+
+        # There are multiple root elements
+        if len(process_elements) > 1:
+
+            # Look for the element that has the startEvent in it
+            for e in process_elements:
+                this_element: etree.Element = e
+                for child_element in list(this_element):
+                    if child_element.tag.endswith('startEvent'):
+                        return this_element.attrib['id']
+
+            raise ValidationException('No start event found in %s' % et_root.attrib['id'])
+
+        return process_elements[0].attrib['id']

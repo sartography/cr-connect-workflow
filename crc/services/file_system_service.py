@@ -18,6 +18,8 @@ class FileSystemService(object):
     MASTER_SPECIFICATION = "Master Specification"
     REFERENCE_FILES = "Reference Files"
     SPECIAL_FOLDERS = [LIBRARY_SPECS, MASTER_SPECIFICATION, REFERENCE_FILES]
+    CAT_JSON_FILE = "category.json"
+    WF_JSON_FILE = "workflow.json"
 
     @staticmethod
     def root_path():
@@ -79,6 +81,8 @@ class FileSystemService(object):
         items = os.scandir(file_path)
         for item in items:
             if item.is_file():
+                if item.name == FileSystemService.WF_JSON_FILE:
+                    continue # Ignore the json files.
                 if file_name is not None and item.name != file_name:
                     continue
                 file = FileSystemService.to_file_object_from_dir_entry(item)

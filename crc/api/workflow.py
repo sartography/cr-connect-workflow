@@ -231,9 +231,8 @@ def get_task_events(action = None, workflow = None, study = None):
     for event in events:
         study = session.query(StudyModel).filter(StudyModel.id == event.study_id).first()
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == event.workflow_id).first()
-        workflow_meta = WorkflowMetadata.from_workflow(workflow)
         if study and study.status in [StudyStatus.open_for_enrollment, StudyStatus.in_progress]:
-            task_events.append(TaskEvent(event, study, workflow_meta))
+            task_events.append(TaskEvent(event, study, workflow))
     return TaskEventSchema(many=True).dump(task_events)
 
 

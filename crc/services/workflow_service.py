@@ -39,6 +39,7 @@ from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class WorkflowService(object):
@@ -576,6 +577,8 @@ class WorkflowService(object):
 
         navigation = processor.bpmn_workflow.get_deep_nav_list()
         WorkflowService.update_navigation(navigation, processor)
+        spec_service = WorkflowSpecService()
+        spec_service.scan_file_system()
         spec = spec_service.get_spec(processor.workflow_spec_id)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
@@ -772,7 +775,9 @@ class WorkflowService(object):
             workflow_id = spiff_task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
             workflow = db.session.query(WorkflowModel). \
                 filter(WorkflowModel.id == spiff_task.workflow.data['workflow_id']).first()
-            data = SpecFileService.get_data(workflow.workflow_spec, doc_file_name)
+            spec_service = WorkflowSpecService()
+            spec_service.scan_file_system()
+            data = SpecFileService.get_data(spec_service.get_spec(workflow.workflow_spec_id), doc_file_name)
             raw_doc = data.decode("utf-8")
         except ApiError:
             raw_doc = documentation

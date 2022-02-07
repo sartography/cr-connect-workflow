@@ -54,5 +54,5 @@ class TestWorkflowSync(BaseTest):
         self.assertEquals(1, len(self.service.get_categories()))
         self.assertEquals(4, len(self.service.get_specs()))
 
-
-
+    def test_create_file_system(self):
+        self.build_file_system_from_models()

@@ -8,9 +8,13 @@ from crc.services.document_service import DocumentService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class ExampleDataLoader:
+
+    workflow_spec_service = WorkflowSpecService()
+
     @staticmethod
     def clean_db():
         session.flush()  # Clear out any transactions before deleting it all to avoid spurious errors.
@@ -23,7 +27,7 @@ class ExampleDataLoader:
         session.flush()
 
     def create_spec(self, id, display_name="", description="", filepath=None, master_spec=False,
-                    category_id=None, display_order=None, from_tests=False, standalone=False, library=False):
+                    category=None, display_order=0, from_tests=False, standalone=False, library=False):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
@@ -31,7 +35,7 @@ class ExampleDataLoader:
         spec = WorkflowSpecInfo(id=id,
                                 display_name=display_name,
                                 description=description,
-                                category_name=category_id,
+                                category=category,
                                 display_order=display_order,
                                 is_master_spec=master_spec,
                                 standalone=standalone,
@@ -40,8 +44,8 @@ class ExampleDataLoader:
                                 primary_process_id="",
                                 is_review=False,
                                 libraries=[])
-        db.session.add(spec)
-        db.session.commit()
+        self.workflow_spec_service.add_spec(spec)
+
         if not filepath and not from_tests:
             filepath = os.path.join(app.root_path, 'static', 'bpmn', id, "*.*")
         if not filepath and from_tests:
@@ -62,7 +66,8 @@ class ExampleDataLoader:
                 content_type = CONTENT_TYPES[file_extension[1:]]
                 SpecFileService.add_file(workflow_spec=spec, file_name=filename, binary_data=data)
                 if is_primary:
-                    SpecFileService.set_primary_bpmn(spec, filename)
+                    SpecFileService.set_primary_bpmn(spec, filename, data)
+                    self.workflow_spec_service.update_spec(spec)
             except IsADirectoryError as de:
                 # Ignore sub directories
                 pass

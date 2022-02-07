@@ -27,11 +27,10 @@ class WorkflowSpecCategorySchema(ma.Schema):
 class WorkflowSpecInfo(object):
     def __init__(self, id, display_name, description,  is_master_spec,
                  standalone, library, primary_file_name, primary_process_id,
-                 libraries, category_name=None, display_order=0, is_review=False):
+                 libraries, category=None, display_order=0, is_review=False):
         self.id = id  # Sting unique id
         self.display_name = display_name
         self.description = description
-        self.category_name = category_name
         self.display_order = display_order
         self.is_master_spec = is_master_spec
         self.standalone = standalone
@@ -40,8 +39,7 @@ class WorkflowSpecInfo(object):
         self.primary_process_id = primary_process_id
         self.is_review = is_review
         self.libraries = libraries
-        self.category = None  # This should be set immediately after deserializing, based on location
-
+        self.category = category
 
 class WorkflowSpecInfoSchema(ma.Schema):
     class Meta:

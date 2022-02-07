@@ -27,6 +27,7 @@ from crc import app
 from crc.services.spec_file_service import SpecFileService
 from crc.services.user_file_service import UserFileService
 from crc.services.user_service import UserService
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class CustomBpmnScriptEngine(PythonScriptEngine):
@@ -98,6 +99,7 @@ class WorkflowProcessor(object):
     WORKFLOW_ID_KEY = "workflow_id"
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
+    workflow_spec_service = WorkflowSpecService()
 
     def __init__(self, workflow_model: WorkflowModel, validate_only=False):
         """Create a Workflow Processor based on the serialized information available in the workflow model."""
@@ -106,8 +108,10 @@ class WorkflowProcessor(object):
 
         spec = None
         if workflow_model.bpmn_workflow_json is None:
-            self.spec_files = SpecFileService.get_files(workflow_model.workflow_spec, include_libraries=True)
-            spec = self.get_spec(self.spec_files, workflow_model.workflow_spec)
+            self.workflow_spec_service.scan_file_system()
+            spec_info = self.workflow_spec_service.get_spec(workflow_model.workflow_spec_id)
+            self.spec_files = SpecFileService.get_files(spec_info, include_libraries=True)
+            spec = self.get_spec(self.spec_files, spec_info)
 
         self.workflow_spec_id = workflow_model.workflow_spec_id
 

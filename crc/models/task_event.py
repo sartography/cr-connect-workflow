@@ -40,9 +40,10 @@ class TaskEventModelSchema(SQLAlchemyAutoSchema):
 
 
 class TaskEvent(object):
-    def __init__(self, model: TaskEventModel, study: StudyModel, workflow: WorkflowMetadata):
+    def __init__(self, model: TaskEventModel, study: StudyModel, workflow: WorkflowModel):
         self.id = model.id
         self.study = study
+        # Fixme: this was workflowMetaData - but it is the only place it is used.
         self.workflow = workflow
         self.user_uid = model.user_uid
         self.user_display = LdapService.user_info(model.user_uid).display_name

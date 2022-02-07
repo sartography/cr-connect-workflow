@@ -18,6 +18,7 @@ from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudyStatus, ProgressStatus
 from crc.models.user import UserModel
+from crc.models.workflow import WorkflowSpecCategory
 from crc.services.ldap_service import LdapService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
@@ -194,48 +195,36 @@ class BaseTest(unittest.TestCase):
         #         self.assertIsNotNone(file_data)
         #         self.assertGreater(len(file_data), 0)
 
-    @staticmethod
-    def assure_category_name_exists(name):
-        category = BaseTest.workflow_spec_service.get_category(name)
+    def assure_category_name_exists(self, name):
+        category = self.workflow_spec_service.get_category(name)
         if category is None:
-            BaseTest.workflow_spec_service
-            cat_total = db.session.query(WorkflowSpecCategoryModel).count()
-            category = WorkflowSpecCategoryModel(display_name=name, display_order=cat_total)
-            session.add(category)
-            session.commit()
+            category = WorkflowSpecCategory(id=name, display_name=name, admin=False, display_order=0)
+            self.workflow_spec_service.add_category(category)
         return category
 
-
-    @staticmethod
-    def assure_category_exists(category_id=None):
+    def assure_category_exists(self, category_id=None):
         category = None
         if category_id is not None:
-            category = db.session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.id == category_id).first()
+            category = self.workflow_spec_service.get_category(category_id)
         if category is None:
-            category = db.session.query(WorkflowSpecCategoryModel).filter(WorkflowSpecCategoryModel.display_name == "Test Workflows").first()
-            if not category:
-                category = WorkflowSpecCategoryModel(display_name="Test Workflows", display_order=0)
-                session.add(category)
-                session.commit()
-            category_id = category.id
+            category = WorkflowSpecCategory(id="test_category", display_name="Test Workflows", admin=False, display_order=0)
         return category
 
-    @staticmethod
-    def load_test_spec(dir_name, display_name=None, master_spec=False, category_id=None, library=False):
+    def load_test_spec(self, dir_name, display_name=None, master_spec=False, category_id=None, library=False):
         """Loads a spec into the database based on a directory in /tests/data"""
         category = BaseTest.assure_category_exists(category_id)
         category_id = category.id
 
-        if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
-            return session.query(WorkflowSpecModel).filter_by(id=dir_name).first()
-        filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
-        if display_name is None:
-            display_name = dir_name
-        spec = ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
-                                               display_name=display_name, category_id=category_id, library=library)
-        db.session.add(spec)
-        db.session.commit()
-        return spec
+        workflow_spec = self.workflow_spec_service.get_spec(dir_name)
+        if workflow_spec:
+            return workflow_spec
+        else:
+            filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
+            if display_name is None:
+                display_name = dir_name
+            spec = ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
+                                                   display_name=display_name, category=category, library=library)
+            return spec
 
     @staticmethod
     def protocol_builder_response(file_name):
@@ -316,7 +305,7 @@ class BaseTest(unittest.TestCase):
 
     def create_workflow(self, dir_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
-        spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == dir_name).first()
+        spec = self.workflow_spec_service.get_spec(dir_name)
         if spec is None:
             if display_name is None:
                 display_name = dir_name
@@ -369,7 +358,8 @@ class BaseTest(unittest.TestCase):
         # workflow_in should be a workflow, not a workflow_api
         # we were passing in workflow_api in many of our tests, and
         # this caused problems testing standalone workflows
-        standalone = getattr(workflow_in.workflow_spec, 'standalone', False)
+        spec = self.workflow_spec_service.get_spec(workflow_in.workflow_spec_id)
+        standalone = getattr(spec, 'standalone', False)
         prev_completed_task_count = workflow_in.completed_tasks
         if isinstance(task_in, dict):
             task_id = task_in["id"]

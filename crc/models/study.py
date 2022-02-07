@@ -157,7 +157,7 @@ class WorkflowMetadataSchema(ma.Schema):
     class Meta:
         model = WorkflowMetadata
         additional = ["id", "display_name", "description",
-                 "total_tasks", "completed_tasks", "display_order",
+                      "total_tasks", "completed_tasks", "display_order",
                       "category_id", "is_review", "category_display_name", "state_message"]
         unknown = INCLUDE
 
