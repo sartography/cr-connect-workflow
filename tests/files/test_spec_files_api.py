@@ -6,7 +6,6 @@ from tests.base_test import BaseTest
 
 from crc import session, db, app
 from crc.models.file import FileModel, FileType, FileModelSchema
-from crc.models.workflow import WorkflowSpecModel
 from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.models.data_store import DataStoreModel

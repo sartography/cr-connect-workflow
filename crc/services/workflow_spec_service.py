@@ -26,6 +26,7 @@ class WorkflowSpecService(FileSystemService):
         self.master_spec = None
         self.libraries = {}
         self.standalone = {}
+        self.scan_file_system()
 
     def add_spec(self, spec: WorkflowSpecInfo):
         self.update_spec(spec)
