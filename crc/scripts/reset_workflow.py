@@ -1,8 +1,9 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.workflow import WorkflowModel, WorkflowSpecModel
+from crc.models.workflow import WorkflowModel, WorkflowSpecInfo
 from crc.scripts.script import Script
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class ResetWorkflow(Script):
@@ -19,7 +20,9 @@ class ResetWorkflow(Script):
 
         if 'reset_id' in kwargs.keys():
             reset_id = kwargs['reset_id']
-            workflow_spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=reset_id).first()
+            # TODO: Find out what type of object is returned by get_spec, and how to get info out of it
+            workflow_spec = WorkflowSpecService().get_spec(reset_id)
+            # workflow_spec: WorkflowSpecModel = session.query(WorkflowSpecModel).filter_by(id=reset_id).first()
             if workflow_spec:
                 workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(
                     workflow_spec_id=workflow_spec.id,
