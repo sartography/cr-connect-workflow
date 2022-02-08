@@ -133,6 +133,7 @@ class LookupService(object):
             file_name = field.get_property(Task.FIELD_PROP_SPREADSHEET_NAME)
             value_column = field.get_property(Task.FIELD_PROP_VALUE_COLUMN)
             label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
+            # TODO: workflow_model does not have a workflow_spec. It has a workflow_spec_id
             latest_files = SpecFileService().get_files(workflow_model.workflow_spec, file_name=file_name)
             if len(latest_files) < 1:
                 raise ApiError("invalid_enum", "Unable to locate the lookup data file '%s'" % file_name)
