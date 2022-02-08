@@ -83,13 +83,11 @@ def validate_spec_and_library(spec_id,library_id):
 def add_workflow_spec_library(spec_id, library_id):
     validate_spec_and_library(spec_id, library_id)
     spec = spec_service.get_spec(spec_id)
-    libraryids = [x.id for x in spec.libraries]
-    if library_id in libraryids:
+    if library_id in spec.libraries:
         raise ApiError('unknown_spec', 'The Library Specification "' + library_id + '" is already attached.')
 
-    library = spec_service.get_spec(library_id)
-    spec.libraries.push(library)
-    spec_service.update_spec(spec_id)
+    spec.libraries.append(library_id)
+    spec_service.update_spec(spec)
     return WorkflowSpecInfoSchema().dump(spec)
 
 
@@ -97,11 +95,9 @@ def drop_workflow_spec_library(spec_id, library_id):
     validate_spec_and_library(spec_id, library_id)
     spec = spec_service.get_spec(spec_id)
 
-    # heres a piece of code that certainly wont work
-    library = spec_service.get_spec(library_id)
-    if library in spec.libraries:
-        spec.libraries.pop(library)
-    spec_service.update_spec(spec_id)
+    if library_id in spec.libraries:
+        spec.libraries.remove(library_id)
+    spec_service.update_spec(spec)
     return WorkflowSpecInfoSchema().dump(spec)
 
 
