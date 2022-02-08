@@ -108,8 +108,20 @@ class WorkflowSpecService(FileSystemService):
             self.scan_file_system()
 
     def reorder_workflow_spec_category(self, spec:WorkflowSpecInfo, direction):
-        # Fixme:  Resort Workflow categories
-        pass
+        # TODO:  untested
+        categories = self.categories
+        categories.sort(key=lambda w: w.display_order)
+        index = categories.index_of(spec)
+        if direction == 'up' and index > 0:
+            categories[index-1], categories[index] = categories[index], categories[index-1]
+        if direction == 'down' and index < len(categories):
+            categories[index+1], categories[index] = categories[index], categories[index+1]
+        index = 0
+        for category in categories:
+            category.display_order = index
+            self.update_category(category)
+            index += 1
+        return categories
 
     def scan_file_system(self):
         """Build a model of our workflows, based on the file system structure and json files"""
