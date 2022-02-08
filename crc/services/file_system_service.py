@@ -32,6 +32,7 @@ class FileSystemService(object):
     def category_path(name: str):
         return os.path.join(FileSystemService.root_path(), name)
 
+
     @staticmethod
     def workflow_path(spec: WorkflowSpecInfo):
         if spec.is_master_spec:

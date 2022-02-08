@@ -49,8 +49,8 @@ def add_workflow_specification(body):
     workflows = spec_service.cleanup_workflow_spec_display_order(category)
     size = len(workflows)
     spec.display_order = size
-    new_spec = spec_service.add_spec(spec)
-    return WorkflowSpecInfoSchema().dump(new_spec)
+    spec_service.add_spec(spec)
+    return WorkflowSpecInfoSchema().dump(spec)
 
 
 def get_workflow_specification(spec_id):
@@ -135,8 +135,8 @@ def update_workflow_specification(spec_id, body):
     # Libraries and standalone workflows don't get a category_id
     if body['library'] is True or body['standalone'] is True:
         body['category_id'] = None
-
-    spec = spec_service.update_spec(spec_id, body)
+    spec = WorkflowSpecInfoSchema().load(body)
+    spec_service.update_spec(spec)
     return WorkflowSpecInfoSchema().dump(spec)
 
 
@@ -144,26 +144,10 @@ def delete_workflow_specification(spec_id):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
     spec_service = WorkflowSpecService()
-
     spec = spec_service.get_spec(spec_id)
-
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
-
-    # TODO : think about this
-    # Delete all workflow models related to this specification
-    # WorkflowService.delete_workflow_spec_workflow_models(spec_id)
-
-    # Delete all files related to this specification
-    SpecFileService.delete_all_files(spec)
-
-    # Delete all events related to this specification
-    WorkflowService.delete_workflow_spec_task_events(spec_id)
-
-    # .delete() doesn't work when we need a cascade. Must grab the record, and explicitly delete
     spec_service.delete_spec(spec_id)
-
-    # Reorder the remaining specs
     spec_service.cleanup_workflow_spec_display_order(spec.category_id)
 
 
@@ -343,22 +327,23 @@ def get_workflow_spec_category(cat_id):
 
 def add_workflow_spec_category(body):
     spec_service = WorkflowSpecService()
-    category = spec_service.add_category(body)
+    category = WorkflowSpecCategorySchema().load(body)
+    spec_service.add_category(category)
     return WorkflowSpecCategorySchema().dump(category)
 
 def update_workflow_spec_category(cat_id, body):
     if cat_id is None:
         raise ApiError('unknown_category', 'Please provide a valid Workflow Spec Category ID.')
     spec_service = WorkflowSpecService()
-    category = spec_service.update_category(cat_id, body)
-
+    category = spec_service.get_category(cat_id)
     if category is None:
         raise ApiError('unknown_category', 'The category "' + cat_id + '" is not recognized.')
 
     # Make sure they don't try to change the display_order
     # There is a separate endpoint for that
     body['display_order'] = category.display_order
-
+    category = WorkflowSpecCategorySchema().load(body)
+    spec_service.update_category(category)
     return WorkflowSpecCategorySchema().dump(category)
 
 

@@ -29,15 +29,20 @@ class WorkflowSpecService(FileSystemService):
         self.scan_file_system()
 
     def add_spec(self, spec: WorkflowSpecInfo):
+        display_order = len(self.categories[spec.category_id].len)
+        spec.display_order = display_order
         self.update_spec(spec)
 
-    def update_spec(self, spec:WorkflowSpecInfo):
+    def update_spec(self, spec:WorkflowSpecInfo, rescan=True):
         spec_path = self.workflow_path(spec)
+        if(spec.is_master_spec or spec.library or spec.standalone):
+            spec.category_id = ""
         os.makedirs(spec_path, exist_ok=True)
         json_path = os.path.join(spec_path, self.WF_JSON_FILE)
         with open(json_path, "w") as wf_json:
             json.dump(self.WF_SCHEMA.dump(spec), wf_json, indent=4)
-        self.scan_file_system()
+        if rescan:
+            self.scan_file_system()
 
     def delete_spec(self, spec_id: str):
         if spec_id in self.specs:
@@ -81,7 +86,7 @@ class WorkflowSpecService(FileSystemService):
         return spec_list
 
     def get_standalones(self) -> List[WorkflowSpecInfo]:
-        spec_list = list(self.standalone.values())
+        spec_list = list(self.standalone.workflows)
         spec_list.sort(key=lambda w: w.display_order)
         return spec_list
 
@@ -99,13 +104,14 @@ class WorkflowSpecService(FileSystemService):
     def add_category(self, category: WorkflowSpecCategory):
         return self.update_category(category)
 
-    def update_category(self, category: WorkflowSpecCategory):
+    def update_category(self, category: WorkflowSpecCategory, rescan=True):
         cat_path = self.category_path(category.display_name)
         os.makedirs(cat_path, exist_ok=True)
         json_path = os.path.join(cat_path, self.CAT_JSON_FILE)
         with open(json_path, "w") as cat_json:
             json.dump(self.CAT_SCHEMA.dump(category), cat_json, indent=4)
-        self.scan_file_system()
+        if rescan:
+            self.scan_file_system()
         return self.categories[category.id]
 
     def delete_category(self, category_id: str):
@@ -113,22 +119,31 @@ class WorkflowSpecService(FileSystemService):
             path = self.category_path(category_id)
             shutil.rmtree(path)
             self.scan_file_system()
+        self.cleanup_category_display_order()
+        self.scan_file_system()
 
-    def reorder_workflow_spec_category(self, spec:WorkflowSpecInfo, direction):
-        # TODO:  untested
-        categories = self.categories
-        categories.sort(key=lambda w: w.display_order)
-        index = categories.index_of(spec)
+    def reorder_workflow_spec_category(self, cat: WorkflowSpecCategory, direction):
+        cats = self.get_categories() # Returns an ordered list
+        index = cats.index_of(cat)
         if direction == 'up' and index > 0:
-            categories[index-1], categories[index] = categories[index], categories[index-1]
-        if direction == 'down' and index < len(categories):
-            categories[index+1], categories[index] = categories[index], categories[index+1]
+            cats[index-1], cats[index] = cats[index], cats[index-1]
+        if direction == 'down' and index < len(cats):
+            cats[index+1], cats[index] = cats[index], cats[index+1]
         index = 0
-        for category in categories:
+        for category in cats:
             category.display_order = index
-            self.update_category(category)
+            self.update_category(category, rescan=False)
             index += 1
-        return categories
+        return cats
+
+    def cleanup_category_display_order(self):
+        cats = self.get_categories() # Returns an ordered list
+        index = 0
+        for category in cats:
+            category.display_order = index
+            self.update_category(category, rescan=False)
+            index += 1
+        return cats
 
     def scan_file_system(self):
         """Build a model of our workflows, based on the file system structure and json files"""
@@ -176,6 +191,7 @@ class WorkflowSpecService(FileSystemService):
         for item in workflow_dirs:
             if item.is_dir():
                 self.scan_spec(item, category=cat)
+        cat.workflows.sort(key=lambda w: w.display_order)
         return cat
 
     @staticmethod
