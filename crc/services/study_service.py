@@ -355,7 +355,7 @@ class StudyService(object):
             return {}
 
     @staticmethod
-    def synch_with_protocol_builder_if_enabled(user):
+    def synch_with_protocol_builder_if_enabled(user, specs):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
 
@@ -387,7 +387,7 @@ class StudyService(object):
                     db_studies.append(db_study)
 
                 db_study.update_from_protocol_builder(pb_study, user.uid)
-                StudyService._add_all_workflow_specs_to_study(db_study)
+                StudyService._add_all_workflow_specs_to_study(db_study, specs)
 
                 # If there is a new automatic status change and there isn't a manual change in place, record it.
                 if new_status and db_study.status != StudyStatus.hold:

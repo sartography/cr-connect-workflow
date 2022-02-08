@@ -13,6 +13,7 @@ from crc.services.study_service import StudyService
 from crc.services.task_logging_service import TaskLoggingService
 from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 def add_study(body):
@@ -33,7 +34,8 @@ def add_study(body):
                                         event_type=StudyEventType.user,
                                         user_uid=g.user.uid)
 
-    errors = StudyService._add_all_workflow_specs_to_study(study_model)
+    specs = WorkflowSpecService.get_specs()
+    errors = StudyService._add_all_workflow_specs_to_study(study_model, specs)
     session.commit()
     study = StudyService().get_study(study_model.id, do_status=True)
     study_data = StudySchema().dump(study)
@@ -105,7 +107,8 @@ def delete_study(study_id):
 def user_studies():
     """Returns all the studies associated with the current user. """
     user = UserService.current_user(allow_admin_impersonate=True)
-    StudyService.synch_with_protocol_builder_if_enabled(user)
+    specs = WorkflowSpecService.get_specs()
+    StudyService.synch_with_protocol_builder_if_enabled(user, specs)
     studies = StudyService().get_studies_for_user(user)
     if len(studies) == 0:
         studies = StudyService().get_studies_for_user(user, include_invalid=True)
