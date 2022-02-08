@@ -32,3 +32,5 @@ print('TESTING = ', TESTING)
 LDAP_URL = 'mock'
 
 SYNC_FILE_ROOT = 'tests/SPECS'
+
+GIT_BRANCH = 'my_testing_branch'

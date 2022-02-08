@@ -1,6 +1,8 @@
 from tests.base_test import BaseTest
 
 from crc import session
+from crc.models.workflow import WorkflowSpecInfo, WorkflowSpecInfoSchema
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 import json
 
@@ -8,31 +10,54 @@ import json
 class TestWorkflowSpecReorder(BaseTest):
 
 
+
     def _load_sample_workflow_specs(self):
         self.load_example_data()
         self.load_test_spec('random_fact')
-        workflow_spec_category = session.query(WorkflowSpecCategoryModel).first()
-        spec_model_1 = WorkflowSpecModel(id='test_spec_1', display_name='Test Spec 1',
-                                         description='Test Spec 1 Description', category_id=workflow_spec_category.id,
-                                         standalone=False)
+        workflow_spec_category = WorkflowSpecService().categories['Test Workflows']
+        # workflow_spec_category = session.query(WorkflowSpecCategoryModel).first()
+        spec_model_1 = WorkflowSpecInfo(id='test_spec_1',
+                                        display_name='Test Spec 1',
+                                        description='Test Spec 1 Description',
+                                        category=workflow_spec_category,
+                                        standalone=False,
+                                        is_master_spec=False,
+                                        library=False,
+                                        primary_file_name='',
+                                        primary_process_id='',
+                                        libraries=None)
         rv_1 = self.app.post('/v1.0/workflow-specification',
                              headers=self.logged_in_headers(),
                              content_type="application/json",
-                             data=json.dumps(WorkflowSpecModelSchema().dump(spec_model_1)))
-        spec_model_2 = WorkflowSpecModel(id='test_spec_2', display_name='Test Spec 2',
-                                         description='Test Spec 2 Description', category_id=workflow_spec_category.id,
-                                         standalone=False)
+                             data=json.dumps(WorkflowSpecInfoSchema().dump(spec_model_1)))
+        spec_model_2 = WorkflowSpecInfo(id='test_spec_2',
+                                        display_name='Test Spec 2',
+                                        description='Test Spec 2 Description',
+                                        category=workflow_spec_category,
+                                        standalone=False,
+                                        is_master_spec=False,
+                                        library=False,
+                                        primary_file_name='',
+                                        primary_process_id='',
+                                        libraries=None)
         rv_2 = self.app.post('/v1.0/workflow-specification',
                              headers=self.logged_in_headers(),
                              content_type="application/json",
-                             data=json.dumps(WorkflowSpecModelSchema().dump(spec_model_2)))
-        spec_model_3 = WorkflowSpecModel(id='test_spec_3', display_name='Test Spec 3',
-                                         description='Test Spec 3 Description', category_id=workflow_spec_category.id,
-                                         standalone=False)
+                             data=json.dumps(WorkflowSpecInfoSchema().dump(spec_model_2)))
+        spec_model_3 = WorkflowSpecInfo(id='test_spec_3',
+                                        display_name='Test Spec 3',
+                                        description='Test Spec 3 Description',
+                                        category=workflow_spec_category,
+                                        standalone=False,
+                                        is_master_spec=False,
+                                        library=False,
+                                        primary_file_name='',
+                                        primary_process_id='',
+                                        libraries=None)
         rv_3 = self.app.post('/v1.0/workflow-specification',
                              headers=self.logged_in_headers(),
                              content_type="application/json",
-                             data=json.dumps(WorkflowSpecModelSchema().dump(spec_model_3)))
+                             data=json.dumps(WorkflowSpecInfoSchema().dump(spec_model_3)))
         return rv_1, rv_2, rv_3
 
     def test_load_sample_workflow_specs(self):

@@ -1627,6 +1627,66 @@ paths:
               schema:
                 $ref: "#/components/schemas/DataStore"
 
+  /git_repo:
+    get:
+      operationId: crc.api.git_repo.get_repo
+      summary: get current state of the git repo
+      tags:
+        - Git Repo
+      responses:
+        '200':
+          description: Current state of the git repo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitRepo"
+  /git_repo/merge:
+    parameters:
+      - name: branch
+        in: query
+        required: true
+        description: The branch to merge with
+        schema:
+          type: string
+          example: staging
+    get:
+      operationId: crc.api.git_repo.merge_with_branch
+      summary: merge with given branch
+      tags:
+        - Git Repo
+      responses:
+        '200':
+          description: Current state of the git repo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitRepo"
+  /git_repo/push:
+    parameters:
+      - name: comment
+        in: query
+        required: false
+        description: The comment we want to pass along with the push commit
+        schema:
+          type: string
+    get:
+      operationId: crc.api.git_repo.push_to_remote
+      summary: Push local changes to remote
+      tags:
+        - Git Repo
+      responses:
+        '200':
+          description: Local changes were pushed successfully
+  /git_repo/pull:
+    get:
+      operationId: crc.api.git_repo.pull_from_remote
+      summary: Pull current code from remote
+      tags:
+        - Git Repo
+      responses:
+        '200':
+          description: Remote code was pulled successfully
+
 components:
   securitySchemes:
     jwt:
@@ -2307,3 +2367,24 @@ components:
           type: number
           format: integer
           example: 5
+    GitRepo:
+      properties:
+#        remote:
+#          type: string
+#          example: sartography/crconnect-workflow-specs
+        directory:
+          type: string
+          example: /home/cr-connect/sync_files
+        branch:
+          type: string
+          example: dev
+        merge_branch:
+          type: string
+          example: staging
+#        status:
+#          type: string
+#          example: staging
+        changes:
+          type: array
+        untracked:
+          type: array
