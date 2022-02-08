@@ -1036,16 +1036,3 @@ class WorkflowService(object):
         for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
             StudyService.delete_workflow(workflow.id)
 
-    # TODO: fix this so it works with filesystem instead of DB
-    @staticmethod
-    def cleanup_workflow_spec_display_order(category_id):
-        # make sure we don't have gaps in display_order
-        new_order = 0
-        specs = session.query(WorkflowSpecModel). \
-            filter(WorkflowSpecModel.category_id == category_id). \
-            order_by(WorkflowSpecModel.display_order).all()
-        for spec in specs:
-            spec.display_order = new_order
-            session.add(spec)
-            new_order += 1
-        session.commit()

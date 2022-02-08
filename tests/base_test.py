@@ -245,7 +245,7 @@ class BaseTest(unittest.TestCase):
             data = json.loads(rv.get_data(as_text=True))
             self.assertTrue(200 <= rv.status_code < 300,
                             "BAD Response: %i. \n %s" %
-                            (rv.status_code, json.dumps(data)) + ". " + msg)
+                            (rv.status_code, data['message']) + ". " + msg + ". ")
         except:
             self.assertTrue(200 <= rv.status_code < 300,
                             "BAD Response: %i." % rv.status_code + ". " + msg)

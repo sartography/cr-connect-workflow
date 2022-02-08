@@ -8,7 +8,7 @@ from crc import db, ma
 
 class WorkflowSpecCategory(object):
     def __init__(self, id, display_name, display_order, admin):
-        self.id = id
+        self.id = id # A unique string name, lower case, under scores (ie, 'my_category')
         self.display_name = display_name
         self.display_order = display_order
         self.admin = admin
@@ -27,7 +27,7 @@ class WorkflowSpecCategorySchema(ma.Schema):
 class WorkflowSpecInfo(object):
     def __init__(self, id, display_name, description,  is_master_spec,
                  standalone, library, primary_file_name, primary_process_id,
-                 libraries, category=None, display_order=0, is_review=False):
+                 libraries, category_id=None, display_order=0, is_review=False):
         self.id = id  # Sting unique id
         self.display_name = display_name
         self.description = description
@@ -39,19 +39,15 @@ class WorkflowSpecInfo(object):
         self.primary_process_id = primary_process_id
         self.is_review = is_review
         self.libraries = libraries
-        self.category = category
+        self.category_id = category_id
 
 class WorkflowSpecInfoSchema(ma.Schema):
     class Meta:
         model = WorkflowSpecInfo
-        fields = ["id", "display_name", "description", "is_master_spec,",
+        fields = ["id", "display_name", "description", "is_master_spec",
                   "standalone", "library", "primary_file_name", "primary_process_id", "is_review",
-                  "libraries", "category_name", "display_order", "is_master_spec", "is_review"]
+                  "libraries", "display_order", "is_master_spec", "is_review", "category_id"]
         unknown = EXCLUDE
-
-    category_name = fields.Method("get_name")
-    def get_name(self, obj):
-        return obj.category.display_name
 
     @post_load
     def make_spec(self, data, **kwargs):

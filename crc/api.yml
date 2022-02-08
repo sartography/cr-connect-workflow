@@ -691,7 +691,7 @@ paths:
         required: true
         description: The unique id of an existing workflow spec category to modify.
         schema:
-          type: integer
+          type: string
     get:
       operationId: crc.api.workflow.get_workflow_spec_category
       summary: Returns a single workflow spec category
@@ -1860,7 +1860,7 @@ components:
           type: string
           nullable: true
         category_id:
-          type: integer
+          type: string
           nullable: true
         standalone:
           type: boolean
@@ -1874,7 +1874,7 @@ components:
     WorkflowSpecCategory:
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
         display_name:

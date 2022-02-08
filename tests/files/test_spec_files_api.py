@@ -129,7 +129,6 @@ class TestFilesApi(BaseTest):
     def test_change_primary_bpmn(self):
         self.load_example_data()
         spec = self.load_test_spec('random_fact')
-        spec = session.query(WorkflowSpecModel).first()
         data = {}
         data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
 

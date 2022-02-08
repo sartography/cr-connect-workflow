@@ -210,7 +210,6 @@ class TestWorkflowProcessor(BaseTest):
         workflow_spec_model = self.load_test_spec("docx")
         files = SpecFileService.get_files(workflow_spec_model)
         self.assertEqual(2, len(files))
-        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="docx").first()
         processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
