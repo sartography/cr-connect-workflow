@@ -223,7 +223,7 @@ class BaseTest(unittest.TestCase):
             if display_name is None:
                 display_name = dir_name
             spec = ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
-                                                   display_name=display_name, category=category, library=library)
+                                                   display_name=display_name, category_id=category_id, library=library)
             return spec
 
     @staticmethod
