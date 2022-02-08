@@ -39,6 +39,7 @@ class BaseTest(unittest.TestCase):
     """ Great class to inherit from, as it sets up and tears down classes
         efficiently when we have a database in place.
     """
+    workflow_spec_service = WorkflowSpecService()
 
     if not app.config['TESTING']:
         raise (Exception("INVALID TEST CONFIGURATION. This is almost always in import order issue."
@@ -97,7 +98,6 @@ class BaseTest(unittest.TestCase):
         db.drop_all()
 
     def setUp(self):
-        self.workflow_spec_service = WorkflowSpecService()
         pass
 
     def tearDown(self):
