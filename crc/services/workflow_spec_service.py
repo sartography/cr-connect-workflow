@@ -62,10 +62,10 @@ class WorkflowSpecService(FileSystemService):
     def reorder_spec(self, spec:WorkflowSpecInfo, direction):
         workflows = spec.category.workflows
         workflows.sort(key=lambda w: w.display_order)
-        index = workflows.index_of(spec)
+        index = workflows.index(spec)
         if direction == 'up' and index > 0:
             workflows[index-1], workflows[index] = workflows[index], workflows[index-1]
-        if direction == 'down' and index < len(workflows):
+        if direction == 'down' and index < len(workflows)-1:
             workflows[index+1], workflows[index] = workflows[index], workflows[index+1]
         return self.cleanup_workflow_spec_display_order(spec.category.id)
 
@@ -124,7 +124,7 @@ class WorkflowSpecService(FileSystemService):
 
     def reorder_workflow_spec_category(self, cat: WorkflowSpecCategory, direction):
         cats = self.get_categories() # Returns an ordered list
-        index = cats.index_of(cat)
+        index = cats.index(cat)
         if direction == 'up' and index > 0:
             cats[index-1], cats[index] = cats[index], cats[index-1]
         if direction == 'down' and index < len(cats):
