@@ -41,7 +41,7 @@ class FileSystemService(object):
         elif spec.standalone:
             category_path = FileSystemService.category_path(FileSystemService.STAND_ALONE_SPECS)
         else:
-            category_path = FileSystemService.category_path(spec.category.display_name)
+            category_path = FileSystemService.category_path(spec.category_id)
         return os.path.join(category_path, spec.display_name)
 
     @staticmethod

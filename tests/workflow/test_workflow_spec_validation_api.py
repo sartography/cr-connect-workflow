@@ -6,7 +6,7 @@ from tests.base_test import BaseTest
 from crc import session, app
 from crc.api.common import ApiErrorSchema
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowModel
+from crc.models.workflow import WorkflowModel, WorkflowSpecInfo
 from crc.services.workflow_service import WorkflowService
 
 
@@ -126,27 +126,15 @@ class TestWorkflowSpecValidation(BaseTest):
         """A disabled workflow spec should fail validation"""
         app.config['PB_ENABLED'] = True
         self.load_example_data()
-        category = self.assure_category_exists()
+        spec = self.load_test_spec('data_security_plan')
         study_model = session.query(StudyModel).first()
-
-        # workflow spec to validate
-        spec_model = WorkflowSpecModel(id='data_security_plan',
-                                       display_name='Data Security Plan',
-                                       description='Data Security Plan',
-                                       is_master_spec=False,
-                                       category_id=category.id,
-                                       display_order=0,
-                                       standalone=False,
-                                       library=False)
-        session.add(spec_model)
-        session.commit()
 
         # This response sets the status for data_security_plan to disabled
         status_response = self.protocol_builder_response('_get_study_status.json')
         mock_status.return_value = json.loads(status_response)[0]
 
         # This should raise an ApiError which we can see in the json data
-        rv = self.app.get('/v1.0/workflow-specification/%s/validate?study_id=%s' % (spec_model.id, study_model.id), headers=self.logged_in_headers())
+        rv = self.app.get('/v1.0/workflow-specification/%s/validate?study_id=%s' % (spec.id, study_model.id), headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data())
         self.assertEqual(1, len(json_data))

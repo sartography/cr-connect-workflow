@@ -62,12 +62,18 @@ class WorkflowSpecService(FileSystemService):
             workflows[index-1], workflows[index] = workflows[index], workflows[index-1]
         if direction == 'down' and index < len(workflows):
             workflows[index+1], workflows[index] = workflows[index], workflows[index+1]
+        return self.cleanup_workflow_spec_display_order(spec.category.id)
+
+    def cleanup_workflow_spec_display_order(self, category_id):
         index = 0
-        for workflow in workflows:
+        category = self.get_category(category_id)
+        if not category:
+            return []
+        for workflow in category.workflows:
             workflow.display_order = index
-            self.save_spec(workflow)
+            self.update_spec(workflow)
             index += 1
-        return workflows
+        return category.workflows
 
     def get_libraries(self) -> List[WorkflowSpecInfo]:
         spec_list = self.libraries.workflows
@@ -91,7 +97,7 @@ class WorkflowSpecService(FileSystemService):
         return self.categories[category_id]
 
     def add_category(self, category: WorkflowSpecCategory):
-        self.update_category(category)
+        return self.update_category(category)
 
     def update_category(self, category: WorkflowSpecCategory):
         cat_path = self.category_path(category.display_name)
@@ -100,6 +106,7 @@ class WorkflowSpecService(FileSystemService):
         with open(json_path, "w") as cat_json:
             json.dump(self.CAT_SCHEMA.dump(category), cat_json, indent=4)
         self.scan_file_system()
+        return self.categories[category.id]
 
     def delete_category(self, category_id: str):
         if category_id in self.categories:

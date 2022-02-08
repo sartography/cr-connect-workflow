@@ -4,7 +4,7 @@ import os.path
 from tests.base_test import BaseTest
 from crc import session
 from crc.models.file import FileModel
-from crc.models.workflow import WorkflowModel
+from crc.models.workflow import WorkflowModel, WorkflowSpecInfoSchema, WorkflowSpecInfo, WorkflowSpecCategory
 from crc.services.spec_file_service import SpecFileService
 
 from example_data import ExampleDataLoader
@@ -14,40 +14,38 @@ class TestWorkflowSpec(BaseTest):
 
     def test_list_workflow_specifications(self):
         self.load_example_data()
-        self.load_test_spec('random_fact')
-        spec = session.query(WorkflowSpecModel).first()
+        spec = self.load_test_spec('random_fact')
         rv = self.app.get('/v1.0/workflow-specification',
                           follow_redirects=True,
                           content_type="application/json",headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        specs = WorkflowSpecModelSchema(many=True).load(json_data, session=session)
+        specs = WorkflowSpecInfoSchema(many=True).load(json_data)
         spec2 = specs[0]
         self.assertEqual(spec.id, spec2.id)
         self.assertEqual(spec.display_name, spec2.display_name)
         self.assertEqual(spec.description, spec2.description)
 
     def test_add_new_workflow_specification(self):
-        self.load_example_data()
-        self.load_test_spec('random_fact')
-        num_before = session.query(WorkflowSpecModel).count()
-        category_id = session.query(WorkflowSpecCategoryModel).first().id
-        category_count = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
-        spec = WorkflowSpecModel(id='make_cookies', display_name='Cooooookies',
-                                 description='Om nom nom delicious cookies', category_id=category_id,
-                                 standalone=False)
+        self.workflow_spec_service.scan_file_system()
+        self.assertEqual(0, len(self.workflow_spec_service.get_specs()))
+        self.assertEqual(0, len(self.workflow_spec_service.get_categories()))
+        cat = WorkflowSpecCategory(id="test_cat", display_name="Test Category", display_order=0, admin=False)
+        self.workflow_spec_service.add_category(cat)
+        spec = WorkflowSpecInfo(id='make_cookies', display_name='Cooooookies',
+                                description='Om nom nom delicious cookies', category_id=cat.id,
+                                standalone=False, is_review=False, is_master_spec=False, libraries=[], library=False,
+                                primary_process_id='', primary_file_name='')
         rv = self.app.post('/v1.0/workflow-specification',
                            headers=self.logged_in_headers(),
                            content_type="application/json",
-                           data=json.dumps(WorkflowSpecModelSchema().dump(spec)))
+                           data=json.dumps(WorkflowSpecInfoSchema().dump(spec)))
         self.assert_success(rv)
-        db_spec = session.query(WorkflowSpecModel).filter_by(id='make_cookies').first()
-        self.assertEqual(spec.display_name, db_spec.display_name)
-        num_after = session.query(WorkflowSpecModel).count()
-        self.assertEqual(num_after, num_before + 1)
-        self.assertEqual(category_count, db_spec.display_order)
-        category_count_after = session.query(WorkflowSpecModel).filter_by(category_id=category_id).count()
-        self.assertEqual(category_count_after, category_count + 1)
+        self.workflow_spec_service.scan_file_system()
+        fs_spec = self.workflow_spec_service.get_spec('make_cookies')
+        self.assertEqual(spec.display_name, fs_spec.display_name)
+        self.assertEqual(0, fs_spec.display_order)
+        self.assertEqual(1, len(self.workflow_spec_service.get_categories()))
 
     def test_get_workflow_specification(self):
         self.load_example_data()
@@ -94,24 +92,22 @@ class TestWorkflowSpec(BaseTest):
         workflow = self.create_workflow(spec_id)
         workflow_api = self.get_workflow_api(workflow)
         workflow_path = SpecFileService.workflow_path(spec)
-
-        num_specs_before = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()
+        self.workflow_spec_service.scan_file_system()
+        num_specs_before = len(self.workflow_spec_service.get_specs())
         self.assertEqual(num_specs_before, 1)
-
         num_files_before = len(SpecFileService.get_files(spec))
         num_workflows_before = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
         self.assertGreater(num_files_before + num_workflows_before, 0)
-
         rv = self.app.delete('/v1.0/workflow-specification/' + spec_id, headers=self.logged_in_headers())
         self.assert_success(rv)
-
-        num_specs_after = session.query(WorkflowSpecModel).filter_by(id=spec_id).count()
+        self.workflow_spec_service.scan_file_system()
+        num_specs_after = len(self.workflow_spec_service.get_specs())
         self.assertEqual(0, num_specs_after)
 
         # Make sure that all items in the database and file system are deleted as well.
         self.assertFalse(os.path.exists(workflow_path))
         num_workflows_after = session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id).count()
-        self.assertEqual(num_workflows_after, 0)
+        self.assertEqual(num_workflows_after, 1)
 
     def test_display_order_after_delete_spec(self):
         self.load_example_data()

@@ -35,7 +35,7 @@ class ExampleDataLoader:
         spec = WorkflowSpecInfo(id=id,
                                 display_name=display_name,
                                 description=description,
-                                category=category,
+                                category_id=category.id,
                                 display_order=display_order,
                                 is_master_spec=master_spec,
                                 standalone=standalone,

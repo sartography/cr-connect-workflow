@@ -12,6 +12,7 @@ from crc.services.jinja_service import JinjaService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.user_file_service import UserFileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class CompleteTemplate(Script):
@@ -31,6 +32,7 @@ Takes two arguments:
         self.process_template(task, study_id, workflow, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
+        workflow_spec_service = WorkflowSpecService()
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
         final_document_stream = self.process_template(task, study_id, workflow, *args, **kwargs)
         file_name = args[0]
@@ -59,7 +61,10 @@ Takes two arguments:
 
         file_data = None
         if workflow is not None:
-            file_data = SpecFileService().get_data(workflow.workflow_spec, file_name)
+            workflow_spec_service = WorkflowSpecService()
+            workflow_spec_service.scan_file_system()
+            spec = workflow_spec_service.get_spec(workflow.workflow_spec_id)
+            file_data = SpecFileService().get_data(spec, file_name)
 
         # Get images from file/files fields
         if len(args) == 3:

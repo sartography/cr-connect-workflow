@@ -8,6 +8,6 @@
   "primary_file_name": "empty_workflow.bpmn",
   "primary_process_id": "empty_workflow",
   "libraries": [
-    { "id": "library_one" }
+    "library_one"
   ]
 }
