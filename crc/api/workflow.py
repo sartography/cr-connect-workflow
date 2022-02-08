@@ -71,7 +71,7 @@ def validate_spec_and_library(spec_id,library_id):
         raise ApiError('unknown_spec', 'Please provide a valid Library Specification ID.')
 
     spec = spec_service.get_spec(spec_id)
-    library = spec_service.get_library(library_id);
+    library = spec_service.get_spec(library_id);
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
     if library is None:
@@ -82,12 +82,11 @@ def validate_spec_and_library(spec_id,library_id):
 
 def add_workflow_spec_library(spec_id, library_id):
     validate_spec_and_library(spec_id, library_id)
-    libraries: spec_service.get_libraries()
-    libraryids = [x.library_spec_id for x in libraries]
+    spec = spec_service.get_spec(spec_id)
+    libraryids = [x.id for x in spec.libraries]
     if library_id in libraryids:
         raise ApiError('unknown_spec', 'The Library Specification "' + library_id + '" is already attached.')
 
-    spec = spec_service.get_spec(spec_id)
     library = spec_service.get_spec(library_id)
     spec.libraries.push(library)
     spec_service.update_spec(spec_id)
