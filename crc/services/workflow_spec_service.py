@@ -29,7 +29,7 @@ class WorkflowSpecService(FileSystemService):
         self.scan_file_system()
 
     def add_spec(self, spec: WorkflowSpecInfo):
-        display_order = len(self.categories[spec.category_id].len)
+        display_order = self.next_display_order(spec)
         spec.display_order = display_order
         self.update_spec(spec)
 

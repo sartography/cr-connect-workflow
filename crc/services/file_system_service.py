@@ -45,6 +45,13 @@ class FileSystemService(object):
             category_path = FileSystemService.category_path(spec.category_id)
         return os.path.join(category_path, spec.display_name)
 
+    def next_display_order(self, spec):
+        path = self.category_path(spec.category_id)
+        if os.path.exists(path):
+            return len(next(os.walk(path))[1])
+        else:
+            return 0
+
     @staticmethod
     def write_file_data_to_system(file_path, file_data):
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
