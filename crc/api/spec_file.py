@@ -42,6 +42,7 @@ def add_file(spec_id):
     file = SpecFileService.add_file(workflow_spec, file.filename, file.stream.read())
     if not workflow_spec.primary_process_id and file.type == FileType.bpmn:
         SpecFileService.set_primary_bpmn(workflow_spec, file.name)
+        workflow_spec_service.update_spec(workflow_spec)
     return FileSchema().dump(file)
 
 
