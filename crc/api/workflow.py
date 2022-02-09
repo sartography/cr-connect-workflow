@@ -37,7 +37,7 @@ def all_specifications(libraries=False,standalone=False):
     categories = spec_service.get_categories()
     workflows = []
     for cat in categories:
-        workflows.extend(cat.workflows)
+        workflows.extend(cat.specs)
     return WorkflowSpecInfoSchema(many=True).dump(workflows)
 
 
