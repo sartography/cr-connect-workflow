@@ -121,7 +121,7 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(1, len(errors))
         self.assertEqual("invalid_field_type", errors[0]['code'])
 
-    @patch('crc.services.study_service.StudyService._get_study_status')
+    @patch('crc.services.workflow_processor.WorkflowProcessor.run_master_spec')
     def test_disabled_spec_validation(self, mock_status):
         """A disabled workflow spec should fail validation"""
         app.config['PB_ENABLED'] = True

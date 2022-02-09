@@ -43,6 +43,7 @@ class FileSystemService(object):
         else:
             category_path = FileSystemService.category_path(spec.category_id)
         return category_path
+
     @staticmethod
     def workflow_path(spec: WorkflowSpecInfo):
         if spec.is_master_spec:

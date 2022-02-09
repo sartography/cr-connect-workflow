@@ -105,7 +105,13 @@ def drop_workflow_spec_library(spec_id, library_id):
 
 def validate_workflow_specification(spec_id, study_id=None, test_until=None):
     try:
-        WorkflowService.raise_if_disabled(spec_id, study_id)
+        master_spec = WorkflowSpecService().master_spec
+        if study_id is not None:
+            study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+            statuses = WorkflowProcessor.run_master_spec(master_spec, study_model)
+            if spec_id in statuses and statuses[spec_id]['status'] == 'disabled':
+                raise ApiError(code='disabled_workflow',
+                               message=f"This workflow is disabled. {statuses[spec_id]['message']}")
         WorkflowService.test_spec(spec_id, study_id, test_until)
         WorkflowService.test_spec(spec_id, study_id, test_until, required_only=True)
     except ApiError as ae:
