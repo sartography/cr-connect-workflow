@@ -115,7 +115,7 @@ class TestWorkflowSpec(BaseTest):
         self.load_test_spec('email')
 
         self.workflow_spec_service.scan_file_system()
-        all_specs = self.workflow_spec_service.get_categories()[0].workflows
+        all_specs = self.workflow_spec_service.get_categories()[0].specs
         for i in range(0, 3):
             self.assertEqual(i, all_specs[i].display_order)
 
@@ -124,7 +124,7 @@ class TestWorkflowSpec(BaseTest):
         test_order = 0
 
         self.workflow_spec_service.scan_file_system()
-        all_specs = self.workflow_spec_service.get_categories()[0].workflows
+        all_specs = self.workflow_spec_service.get_categories()[0].specs
         for i in range(0, 2):
             self.assertEqual(i, all_specs[i].display_order)
 
