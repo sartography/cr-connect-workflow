@@ -360,6 +360,7 @@ class BaseTest(unittest.TestCase):
         # workflow_in should be a workflow, not a workflow_api
         # we were passing in workflow_api in many of our tests, and
         # this caused problems testing standalone workflows
+        self.workflow_spec_service.scan_file_system()
         spec = self.workflow_spec_service.get_spec(workflow_in.workflow_spec_id)
         standalone = getattr(spec, 'standalone', False)
         prev_completed_task_count = workflow_in.completed_tasks
