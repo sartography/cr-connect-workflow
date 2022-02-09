@@ -14,7 +14,7 @@ from crc.services.workflow_processor import WorkflowProcessor
 class TestLookupService(BaseTest):
 
     def test_lookup_returns_good_error_on_bad_field(self):
-        spec = BaseTest.load_test_spec('enum_options_with_search')
+        spec = self.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
         file_model = session.query(FileModel).filter(FileModel.name == "customer_list.xlsx").first()
         file_data_model = session.query(FileDataModel).filter(FileDataModel.file_model == file_model).first()
@@ -22,7 +22,7 @@ class TestLookupService(BaseTest):
             LookupService.lookup(workflow, "Task_Enum_Lookup", "not_the_right_field", "sam", limit=10)
 
     def test_lookup_table_is_not_created_more_than_once(self):
-        spec = BaseTest.load_test_spec('enum_options_with_search')
+        spec = self.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "something", limit=10)
@@ -35,7 +35,7 @@ class TestLookupService(BaseTest):
         self.assertEqual(28, len(lookup_data))
 
     def test_updates_to_file_cause_lookup_rebuild(self):
-        spec = BaseTest.load_test_spec('enum_options_with_search')
+        spec = self.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
         lookup_records = session.query(LookupFileModel).all()
@@ -65,7 +65,7 @@ class TestLookupService(BaseTest):
         self.assertEqual(4, len(lookup_data))
 
     def test_lookup_based_on_id(self):
-        spec = BaseTest.load_test_spec('enum_options_from_file')
+        spec = self.load_test_spec('enum_options_from_file')
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -76,7 +76,7 @@ class TestLookupService(BaseTest):
 
 
     def test_lookup_with_two_spreadsheets_with_the_same_field_name_in_different_forms(self):
-        spec = BaseTest.load_test_spec('enum_options_competing_files')
+        spec = self.load_test_spec('enum_options_competing_files')
         workflow = self.create_workflow('enum_options_competing_files')
         processor = WorkflowProcessor(workflow)
 
@@ -107,7 +107,7 @@ class TestLookupService(BaseTest):
 
 
     def test_some_full_text_queries(self):
-        spec = BaseTest.load_test_spec('enum_options_from_file')
+        spec = self.load_test_spec('enum_options_from_file')
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -168,7 +168,7 @@ class TestLookupService(BaseTest):
         self.assertEqual("Other", results[0]['CUSTOMER_NAME'], "Can't find the word 'other', which is an english stop word")
 
     def test_find_by_id(self):
-        spec = BaseTest.load_test_spec('enum_options_from_file')
+        spec = self.load_test_spec('enum_options_from_file')
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -179,7 +179,7 @@ class TestLookupService(BaseTest):
         self.assertEquals('UVA - INTERNAL - GM USE ONLY', first_result['CUSTOMER_NAME'])
 
     def test_lookup_fails_for_xls(self):
-        spec = BaseTest.load_test_spec('enum_options_with_search')
+        spec = self.load_test_spec('enum_options_with_search')
 
         # Using an old xls file should raise an error
         file_data_xls = SpecFileService().get_data(spec, 'sponsors.xls')

@@ -99,7 +99,11 @@ def update_study(study_id, body):
 def get_study(study_id, update_status=False):
     spec_service = WorkflowSpecService()
     categories = spec_service.get_categories()
-    study = StudyService.get_study(study_id, categories=categories, do_status=update_status)
+    master_workflow_results = []
+    if update_status:
+        study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)
+    study = StudyService().get_study(study_id, categories, master_workflow_results)
     if (study is None):
         raise ApiError("unknown_study",  'The study "' + study_id + '" is not recognized.', status_code=404)
     return StudySchema().dump(study)

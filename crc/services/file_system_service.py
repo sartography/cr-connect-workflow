@@ -35,7 +35,7 @@ class FileSystemService(object):
     @staticmethod
     def category_path_for_spec(spec):
         if spec.is_master_spec:
-            return os.path.join(FileSystemService.root_path(), FileSystemService.MASTER_SPECIFICATION)
+            return os.path.join(FileSystemService.root_path())
         elif spec.library:
             category_path = FileSystemService.category_path(FileSystemService.LIBRARY_SPECS)
         elif spec.standalone:
@@ -45,8 +45,11 @@ class FileSystemService(object):
         return category_path
     @staticmethod
     def workflow_path(spec: WorkflowSpecInfo):
-        category_path = FileSystemService.category_path_for_spec(spec)
-        return os.path.join(category_path, spec.display_name)
+        if spec.is_master_spec:
+            return os.path.join(FileSystemService.root_path(), FileSystemService.MASTER_SPECIFICATION)
+        else:
+            category_path = FileSystemService.category_path_for_spec(spec)
+            return os.path.join(category_path, spec.display_name)
 
     def next_display_order(self, spec):
         path = self.category_path_for_spec(spec)

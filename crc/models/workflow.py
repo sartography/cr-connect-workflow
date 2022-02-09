@@ -1,7 +1,7 @@
 import enum
 
 import marshmallow
-from marshmallow import EXCLUDE, post_load, fields
+from marshmallow import EXCLUDE, post_load, fields, INCLUDE
 from sqlalchemy import func
 
 from crc import db, ma
@@ -30,7 +30,7 @@ class WorkflowSpecCategorySchema(ma.Schema):
 class WorkflowSpecInfo(object):
     def __init__(self, id, display_name, description,  is_master_spec=False,
                  standalone=False, library=False, primary_file_name='', primary_process_id='',
-                 libraries=[], category_id=None, display_order=0, is_review=False):
+                 libraries=[], category_id="", display_order=0, is_review=False):
         self.id = id  # Sting unique id
         self.display_name = display_name
         self.description = description
@@ -50,8 +50,8 @@ class WorkflowSpecInfoSchema(ma.Schema):
         fields = ["id", "display_name", "description", "is_master_spec",
                   "standalone", "library", "primary_file_name", "primary_process_id", "is_review",
                   "libraries", "display_order", "is_master_spec", "is_review", "category_id"]
-        unknown = EXCLUDE
-        category_id = marshmallow.fields.String(required=False, allow_none=True, missing="", default="")
+        unknown = INCLUDE
+    category_id = marshmallow.fields.String()
 
     @post_load
     def make_spec(self, data, **kwargs):
