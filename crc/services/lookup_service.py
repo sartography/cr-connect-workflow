@@ -19,6 +19,7 @@ from crc.services.spec_file_service import SpecFileService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.ldap_service import LdapService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class TSRank(GenericFunction):
@@ -134,13 +135,13 @@ class LookupService(object):
             value_column = field.get_property(Task.FIELD_PROP_VALUE_COLUMN)
             label_column = field.get_property(Task.FIELD_PROP_LABEL_COLUMN)
             # TODO: workflow_model does not have a workflow_spec. It has a workflow_spec_id
-            latest_files = SpecFileService().get_files(workflow_model.workflow_spec, file_name=file_name)
+            workflow_spec = WorkflowSpecService().get_spec(workflow_model.workflow_spec_id)
+            latest_files = SpecFileService().get_files(workflow_spec, file_name=file_name)
             if len(latest_files) < 1:
                 raise ApiError("invalid_enum", "Unable to locate the lookup data file '%s'" % file_name)
             else:
                 file = latest_files[0]
 
-            workflow_spec = processor.workflow_model.workflow_spec
             file_data = SpecFileService().get_data(workflow_spec, file_name)
 
             lookup_model = LookupService.build_lookup_table(file_name, file_data, value_column, label_column,

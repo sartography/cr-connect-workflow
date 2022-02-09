@@ -118,7 +118,7 @@ class WorkflowService(object):
                 workflow_model.status = WorkflowStatus.erroring
                 app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
                                  (workflow_model.id,
-                                  workflow_model.workflow_spec.id,
+                                  workflow_model.workflow_spec_id,
                                   workflow_model.study_id,
                                   str(e)))
 
