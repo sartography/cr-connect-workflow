@@ -41,8 +41,8 @@ class TestWorkflowApi(BaseTest):
                           headers=self.logged_in_headers())
         returned=rv.json
         self.assertIsNotNone(returned.get('libraries'))
-        self.assertEqual(len(returned['libraries']),1)
-        self.assertEqual(returned['libraries'][0].get('id'),'hello_world_lib')
+        self.assertEqual(len(returned['libraries']), 1)
+        self.assertEqual(returned['libraries'][0], 'hello_world_lib')
         rv = self.app.delete(f'/v1.0/workflow-specification/%s/library/%s'%(spec1.id,spec2.id),follow_redirects=True,
                           content_type="application/json",
                           headers=self.logged_in_headers())
