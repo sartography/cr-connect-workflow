@@ -307,6 +307,7 @@ class BaseTest(unittest.TestCase):
 
     def create_workflow(self, dir_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
+        self.workflow_spec_service.scan_file_system()
         spec = self.workflow_spec_service.get_spec(dir_name)
         if spec is None:
             if display_name is None:
