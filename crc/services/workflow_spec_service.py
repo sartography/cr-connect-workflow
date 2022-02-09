@@ -81,13 +81,17 @@ class WorkflowSpecService(FileSystemService):
         return category.specs
 
     def get_libraries(self) -> List[WorkflowSpecInfo]:
-        spec_list = self.libraries.specs
-        spec_list.sort(key=lambda w: w.display_order)
+        spec_list = []
+        if len(self.libraries.items()) > 0:
+            spec_list += self.libraries.specs
+            spec_list.sort(key=lambda w: w.display_order)
         return spec_list
 
     def get_standalones(self) -> List[WorkflowSpecInfo]:
-        spec_list = list(self.standalone.specs)
-        spec_list.sort(key=lambda w: w.display_order)
+        spec_list = []
+        if len(self.standalone.items()) > 0:
+            spec_list += self.standalone.specs
+            spec_list.sort(key=lambda w: w.display_order)
         return spec_list
 
     def get_categories(self) -> List[WorkflowSpecCategory]:
