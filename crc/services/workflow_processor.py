@@ -99,13 +99,12 @@ class WorkflowProcessor(object):
     WORKFLOW_ID_KEY = "workflow_id"
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
-    workflow_spec_service = WorkflowSpecService()
 
     def __init__(self, workflow_model: WorkflowModel, validate_only=False):
         """Create a Workflow Processor based on the serialized information available in the workflow model."""
 
         self.workflow_model = workflow_model
-
+        self.workflow_spec_service = WorkflowSpecService()
         spec = None
         if workflow_model.bpmn_workflow_json is None:
             self.workflow_spec_service.scan_file_system()

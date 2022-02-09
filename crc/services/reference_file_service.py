@@ -13,14 +13,13 @@ from sqlalchemy.exc import IntegrityError
 
 class ReferenceFileService(FileSystemService):
 
-    SUB_DIR = "Reference"
 
     @staticmethod
     def root_path():
         # fixme: allow absolute directory names (but support relative)
         dir_name = app.config['SYNC_FILE_ROOT']
         app_root = app.root_path
-        return os.path.join(app_root, '..', dir_name, ReferenceFileService.SUB_DIR)
+        return os.path.join(app_root, '..', dir_name, ReferenceFileService.REFERENCE_FILES)
 
     @staticmethod
     def file_path(file_name: str):

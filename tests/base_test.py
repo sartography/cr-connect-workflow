@@ -208,13 +208,15 @@ class BaseTest(unittest.TestCase):
             category = self.workflow_spec_service.get_category(category_id)
         if category is None:
             category = WorkflowSpecCategory(id="test_category", display_name="Test Workflows", admin=False, display_order=0)
+            self.workflow_spec_service.add_category(category)
         return category
 
     def load_test_spec(self, dir_name, display_name=None, master_spec=False, category_id=None, library=False):
         """Loads a spec into the database based on a directory in /tests/data"""
-        category = BaseTest.assure_category_exists(category_id)
-        category_id = category.id
-
+        category = None
+        if not master_spec and not library:
+            category = self.assure_category_exists(category_id)
+            category_id = category.id
         workflow_spec = self.workflow_spec_service.get_spec(dir_name)
         if workflow_spec:
             return workflow_spec

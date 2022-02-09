@@ -1,3 +1,4 @@
+from crc.services.workflow_spec_service import WorkflowSpecService
 from tests.base_test import BaseTest
 from crc import db, session
 from crc.models.study import StudyModel
@@ -15,7 +16,8 @@ class TestStudyStatusMessage(BaseTest):
         self.load_example_data()
         study_model = session.query(StudyModel).first()
         self.create_workflow('random_fact', study=study_model)
-        workflow_metas = StudyService._get_workflow_metas(study_model.id)
+        spec_service = WorkflowSpecService()
+        workflow_metas = StudyService._get_workflow_metas(study_model.id, spec_service.categories)
         warnings = StudyService._update_status_of_workflow_meta(workflow_metas, status)
         return workflow_metas, warnings
 

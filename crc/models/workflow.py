@@ -1,5 +1,6 @@
 import enum
 
+import marshmallow
 from marshmallow import EXCLUDE, post_load, fields
 from sqlalchemy import func
 
@@ -12,7 +13,8 @@ class WorkflowSpecCategory(object):
         self.display_name = display_name
         self.display_order = display_order
         self.admin = admin
-        self.workflows = []
+        self.workflows = []  # For storing Workflow Metadata
+        self.specs = [] # For the list of specifications associated with a category
 
 class WorkflowSpecCategorySchema(ma.Schema):
     class Meta:
@@ -48,6 +50,7 @@ class WorkflowSpecInfoSchema(ma.Schema):
                   "standalone", "library", "primary_file_name", "primary_process_id", "is_review",
                   "libraries", "display_order", "is_master_spec", "is_review", "category_id"]
         unknown = EXCLUDE
+        category_id = marshmallow.fields.String(required=False, allow_none=True, missing="", default="")
 
     @post_load
     def make_spec(self, data, **kwargs):

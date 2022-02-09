@@ -47,7 +47,7 @@ class StudyService(object):
             return True
         return False
 
-    def get_studies_for_user(self, user, include_invalid=False):
+    def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
         associated = session.query(StudyAssociated).filter_by(uid=user.uid, access=True).all()
         associated_studies = [x.study_id for x in associated]
@@ -57,7 +57,7 @@ class StudyService(object):
         studies = []
         for study_model in db_studies:
             if include_invalid or self._is_valid_study(study_model.id):
-                studies.append(StudyService.get_study(study_model.id, study_model, do_status=False))
+                studies.append(StudyService.get_study(study_model.id, categories, study_model))
         return studies
 
     @staticmethod
@@ -72,13 +72,13 @@ class StudyService(object):
         return studies
 
     @staticmethod
-    def get_study(study_id, study_model: StudyModel = None, do_status=False):
+    def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
+                  master_workflow_results=None):
         """Returns a study model that contains all the workflows organized by category.
-        IMPORTANT:  This is intended to be a lightweight call, it should never involve
-        loading up and executing all the workflows in a study to calculate information."""
+        Pass in the results of the master workflow spec, and the status of other workflows will be updated."""
+
         if not study_model:
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
-
         study = Study.from_model(study_model)
         study.create_user_display = LdapService.user_info(study.user_uid).display_name
         last_event: TaskEventModel = session.query(TaskEventModel) \
@@ -90,28 +90,32 @@ class StudyService(object):
         else:
             study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
             study.last_activity_date = last_event.date
-        study.categories = StudyService.get_categories()
-        workflow_metas = StudyService._get_workflow_metas(study_id)
+        study.categories = categories
         files = UserFileService.get_files_for_study(study.id)
         files = (File.from_models(model, UserFileService.get_file_data(model.id),
                                   DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
-        # Calling this line repeatedly is very very slow.  It creates the
-        # master spec and runs it.  Don't execute this for Abandoned studies, as
-        # we don't have the information to process them.
         if study.status != StudyStatus.abandoned:
-            # this line is taking 99% of the time that is used in get_study.
-            # see ticket #196
-            if do_status:
-                # __get_study_status() runs the master workflow to generate the status dictionary
-                status = StudyService._get_study_status(study_model)
-                study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas, status)
-
-            # Group the workflows into their categories.
             for category in study.categories:
-                category.workflows = {w for w in workflow_metas if w.category_id == category.id}
-
+                workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                if master_workflow_results:
+                    study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
+                                                                                  master_workflow_results)
+                category.workflows = workflow_metas
         return study
+
+    @staticmethod
+    def _get_workflow_metas(study_id, category):
+        # Add in the Workflows for each category
+        workflow_metas = []
+        for spec in category.specs:
+            workflow_models = db.session.query(WorkflowModel).\
+                filter(WorkflowModel.study_id == study_id).\
+                filter(WorkflowModel.workflow_spec_id == spec.id).\
+                all()
+            for workflow in workflow_models:
+                workflow_metas.append(WorkflowMetadata.from_workflow(workflow, spec))
+        return workflow_metas
 
     @staticmethod
     def get_study_associate(study_id=None, uid=None):
@@ -462,31 +466,13 @@ class StudyService(object):
         return warnings
 
     @staticmethod
-    def _get_study_status(study_model):
-        # Fixme:  This belongs elsewhere. Not in the Study Service.
-        """Uses the Top Level Workflow to calculate the status of the study, and it's
-        workflow models."""
-        # master_specs = db.session.query(WorkflowSpecModel). \
-        #     filter_by(is_master_spec=True).all()
-        # if len(master_specs) < 1:
-        #     raise ApiError("missing_master_spec", "No specifications are currently marked as the master spec.")
-        # if len(master_specs) > 1:
-        #     raise ApiError("multiple_master_specs",
-        #                    "There is more than one master specification, and I don't know what to do.")
-        #
-        # return WorkflowProcessor.run_master_spec(master_specs[0], study_model)
-
-    @staticmethod
-    def _add_all_workflow_specs_to_study(study_model: StudyModel, specs: List[WorkflowSpecInfo]):
+    def add_all_workflow_specs_to_study(study_model: StudyModel, specs: List[WorkflowSpecInfo]):
         existing_models = session.query(WorkflowModel).filter(WorkflowModel.study == study_model).all()
-#        existing_specs = list(m.workflow_spec_id for m in existing_models)
-#        new_specs = session.query(WorkflowSpecModel). \
-#            filter(WorkflowSpecModel.is_master_spec == False). \
-#            filter(WorkflowSpecModel.id.notin_(existing_specs)). \
-#            all()
+        existing_spec_ids = map(lambda x: x.workflow_spec_id, existing_models)
         errors = []
         for workflow_spec in specs:
-            #        fixme: don't create a new workflow model for any existing models.
+            if workflow_spec.id in existing_spec_ids:
+                continue
             try:
                 StudyService._create_workflow_model(study_model, workflow_spec)
             except WorkflowTaskExecException as wtee:
