@@ -127,7 +127,7 @@ class WorkflowSpecService(FileSystemService):
         index = cats.index(cat)
         if direction == 'up' and index > 0:
             cats[index-1], cats[index] = cats[index], cats[index-1]
-        if direction == 'down' and index < len(cats):
+        if direction == 'down' and index < len(cats)-1:
             cats[index+1], cats[index] = cats[index], cats[index+1]
         index = 0
         for category in cats:

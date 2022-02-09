@@ -356,12 +356,12 @@ def reorder_workflow_spec_category(cat_id, direction):
     if direction not in ('up', 'down'):
         raise ApiError(code='bad_direction',
                        message='The direction must be `up` or `down`.')
-    WorkflowService.cleanup_workflow_spec_category_display_order()
     spec_service = WorkflowSpecService()
+    spec_service.cleanup_category_display_order()
     category = spec_service.get_category(cat_id)
     if category:
         ordered_categories = spec_service.reorder_workflow_spec_category(category, direction)
-        return ordered_categories
+        return WorkflowSpecCategorySchema(many=True).dump(ordered_categories)
     else:
         raise ApiError(code='bad_category_id',
                        message=f'The category id {cat_id} did not return a Workflow Spec Category. Make sure it is a valid ID.')

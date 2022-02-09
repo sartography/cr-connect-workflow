@@ -8,13 +8,14 @@ from crc import db, ma
 
 
 class WorkflowSpecCategory(object):
-    def __init__(self, id, display_name, display_order, admin):
-        self.id = id # A unique string name, lower case, under scores (ie, 'my_category')
+    def __init__(self, id, display_name, display_order, admin=False):
+        self.id = id  # A unique string name, lower case, under scores (ie, 'my_category')
         self.display_name = display_name
         self.display_order = display_order
         self.admin = admin
         self.workflows = []  # For storing Workflow Metadata
-        self.specs = [] # For the list of specifications associated with a category
+        self.specs = []  # For the list of specifications associated with a category
+
 
 class WorkflowSpecCategorySchema(ma.Schema):
     class Meta:
