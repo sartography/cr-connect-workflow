@@ -156,14 +156,11 @@ class TestWorkflowSpecReorder(BaseTest):
         bad_specs = WorkflowSpecService().get_specs()
         bad_specs.sort(key=lambda w: w.display_order)
 
-        self.assertEqual(1, bad_specs[0].display_order)
-        self.assertEqual('test_spec_2', bad_specs[0].id)
-        self.assertEqual(1, bad_specs[1].display_order)
-        self.assertEqual('random_fact', bad_specs[1].id)
-        self.assertEqual(1, bad_specs[2].display_order)
-        self.assertEqual('test_spec_1', bad_specs[2].id)
-        self.assertEqual(3, bad_specs[3].display_order)
-        self.assertEqual('test_spec_3', bad_specs[3].id)
+        for spec in bad_specs:
+            if spec.id == 'test_spec_3':
+                self.assertEqual(3, spec.display_order)
+            else:
+                self.assertEqual(1, spec.display_order)
 
         # Move test_spec_2 up
         # This should cause a cleanup of the bad display_order numbers

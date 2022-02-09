@@ -47,9 +47,18 @@ class WorkflowSpecService(FileSystemService):
     def delete_spec(self, spec_id: str):
         if spec_id in self.specs:
             spec = self.specs[spec_id]
+            if spec.library:
+                self.remove_library_references(spec.id)
             path = self.workflow_path(spec)
             shutil.rmtree(path)
             self.scan_file_system()
+
+    def remove_library_references(self, spec_id):
+        for spec in self.get_specs():
+            if spec_id in spec.libraries:
+                spec.libraries.remove(spec_id)
+                self.update_spec(spec, rescan=False)
+        self.scan_file_system()
 
     def get_spec(self, spec_id: str):
         if spec_id not in self.specs:

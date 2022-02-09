@@ -70,14 +70,16 @@ class TestWorkflowApi(BaseTest):
                           content_type="application/json",
                           headers=self.logged_in_headers())
         returned=rv.json
-        lib = session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.library_spec_id==spec2.id).first()
-        self.assertIsNotNone(lib)
+        self.workflow_spec_service.scan_file_system()
+        spec1 = self.workflow_spec_service.get_spec('hello_world')
+        self.assertIn('hello_world_lib', spec1.libraries)
 
-        rv = self.app.delete(f'/v1.0/workflow-specification/%s'%(spec1.id),follow_redirects=True,
+        rv = self.app.delete(f'/v1.0/workflow-specification/%s'%(spec2.id),follow_redirects=True,
                           content_type="application/json",
                           headers=self.logged_in_headers())
 
-        lib = session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.library_spec_id==spec2.id).first()
-        self.assertIsNone(lib)
+        self.workflow_spec_service.scan_file_system()
+        spec1 = self.workflow_spec_service.get_spec('hello_world')
+        self.assertNotIn('hello_world_lib', spec1.libraries)
 
 
