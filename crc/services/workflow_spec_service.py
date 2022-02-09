@@ -86,7 +86,7 @@ class WorkflowSpecService(FileSystemService):
         return spec_list
 
     def get_standalones(self) -> List[WorkflowSpecInfo]:
-        spec_list = self.standalones.specs
+        spec_list = self.standalone.specs
         spec_list.sort(key=lambda w: w.display_order)
         return spec_list
 
