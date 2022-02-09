@@ -77,7 +77,8 @@ class LookupService(object):
             if lookup_model.is_ldap:  # LDAP is always current
                 is_current = True
             else:
-                current_date = SpecFileService.last_modified(workflow.workflow_spec, lookup_model.file_name)
+                workflow_spec = WorkflowSpecService().get_spec(workflow.workflow_spec_id)
+                current_date = SpecFileService.last_modified(workflow_spec, lookup_model.file_name)
                 is_current = current_date == lookup_model.last_updated
 
         if not is_current:

@@ -49,8 +49,7 @@ class TestLookupService(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data',
                                  'enum_options_with_search', 'sponsors_modified.xlsx')
         file = open(file_path, 'rb')
-        workflow_spec_model = session.query(WorkflowSpecModel)\
-            .filter(WorkflowSpecModel.id == workflow.workflow_spec_id).first()
+        workflow_spec_model = self.workflow_spec_service.get_spec(workflow.workflow_spec_id)
         SpecFileService().update_file(workflow_spec_model, "sponsors.xlsx", file.read())
         file.close()
 
