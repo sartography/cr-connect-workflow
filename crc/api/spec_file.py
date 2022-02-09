@@ -56,6 +56,7 @@ def update(spec_id, file_name, is_primary):
     file = files[0]
     if is_primary:
         SpecFileService.set_primary_bpmn(workflow_spec, file_name)
+        workflow_spec_service.update_spec(workflow_spec)
     return FileSchema().dump(file)
 
 

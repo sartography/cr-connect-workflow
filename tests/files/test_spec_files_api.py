@@ -103,7 +103,6 @@ class TestFilesApi(BaseTest):
     def test_get_spec_file(self):
         self.load_example_data()
         spec = self.load_test_spec('random_fact')
-        spec = session.query(WorkflowSpecModel).first()
         rv = self.app.get(f'/v1.0/workflow-specification/{spec.id}/file',
                              headers=self.logged_in_headers())
         files = json.loads(rv.get_data(as_text=True))
