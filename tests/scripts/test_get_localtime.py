@@ -7,8 +7,6 @@ import datetime
 class TestGetLocaltime(BaseTest):
 
     def test_get_localtime(self):
-        self.load_example_data()
-
         timestamp = datetime.datetime.utcnow()
         workflow = self.create_workflow('get_localtime')
 
@@ -28,7 +26,6 @@ class TestGetLocaltime(BaseTest):
         self.assertEqual(dateparser.parse(localtime_without), GetLocaltime().do_task(None, None, None, str(timestamp)))
 
     def test_get_localtime_with_timezone(self):
-        self.load_example_data()
 
         timestamp = datetime.datetime.utcnow()
         workflow = self.create_workflow('get_localtime')
@@ -51,7 +48,6 @@ class TestGetLocaltime(BaseTest):
 
     def test_get_localtime_no_timestamp(self):
         workflow = self.create_workflow('get_localtime')
-
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
 
