@@ -133,11 +133,11 @@ class TestWorkflowSpec(BaseTest):
         self.load_test_spec('random_fact')
         self.workflow_spec_service.scan_file_system()
         category = self.workflow_spec_service.get_categories()[0]
-        ExampleDataLoader().create_spec('hello_world', 'Hello World', category=category,
+        ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=category.id,
                                         standalone=True, from_tests=True)
         rv = self.app.get('/v1.0/workflow-specification?standalone=true', headers=self.logged_in_headers())
         self.assertEqual(1, len(rv.json))
-        ExampleDataLoader().create_spec('email_script', 'Email Script', category=category,
+        ExampleDataLoader().create_spec('email_script', 'Email Script', category_id=category.id,
                                         standalone=True, from_tests=True)
         rv = self.app.get('/v1.0/workflow-specification?standalone=true', headers=self.logged_in_headers())
         self.assertEqual(2, len(rv.json))
