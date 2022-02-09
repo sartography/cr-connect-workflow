@@ -10,7 +10,7 @@ from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileSchema
 from crc.models.ldap import LdapModel, LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
-from crc.models.workflow import WorkflowSpecCategory, WorkflowState, WorkflowStatus, WorkflowModel
+from crc.models.workflow import WorkflowSpecCategory, WorkflowState, WorkflowStatus, WorkflowModel, WorkflowSpecInfo
 
 
 class StudyStatus(enum.Enum):
@@ -133,19 +133,19 @@ class WorkflowMetadata(object):
 
 
     @classmethod
-    def from_workflow(cls, workflow: WorkflowModel):
+    def from_workflow(cls, workflow: WorkflowModel, spec: WorkflowSpecInfo):
         instance = cls(
             id=workflow.id,
-            display_name=workflow.workflow_spec.display_name,
-            description=workflow.workflow_spec.description,
-            category_id=workflow.workflow_spec.category_id,
-            category_display_name=workflow.workflow_spec.category.display_name,
+            display_name=spec.display_name,
+            description=spec.description,
+            category_id=spec.category_id,
+            category_display_name=spec.category.display_name,
             state=WorkflowState.optional,
             status=workflow.status,
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,
-            is_review=workflow.workflow_spec.is_review,
-            display_order=workflow.workflow_spec.display_order,
+            is_review=spec.is_review,
+            display_order=spec.display_order,
             workflow_spec_id=workflow.workflow_spec_id
         )
         return instance

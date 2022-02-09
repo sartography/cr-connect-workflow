@@ -13,8 +13,6 @@ from crc.services.workflow_spec_service import WorkflowSpecService
 
 class ExampleDataLoader:
 
-    workflow_spec_service = WorkflowSpecService()
-
     @staticmethod
     def clean_db():
         session.flush()  # Clear out any transactions before deleting it all to avoid spurious errors.
@@ -27,7 +25,7 @@ class ExampleDataLoader:
         session.flush()
 
     def create_spec(self, id, display_name="", description="", filepath=None, master_spec=False,
-                    category_id=None, display_order=0, from_tests=False, standalone=False, library=False):
+                    category_id='', display_order=0, from_tests=False, standalone=False, library=False):
         """Assumes that a directory exists in static/bpmn with the same name as the given id.
            further assumes that the [id].bpmn is the primary file for the workflow.
            returns an array of data models to be added to the database."""
@@ -44,7 +42,8 @@ class ExampleDataLoader:
                                 primary_process_id="",
                                 is_review=False,
                                 libraries=[])
-        self.workflow_spec_service.add_spec(spec)
+        workflow_spec_service = WorkflowSpecService()
+        workflow_spec_service.add_spec(spec)
 
         if not filepath and not from_tests:
             filepath = os.path.join(app.root_path, 'static', 'bpmn', id, "*.*")
@@ -67,7 +66,8 @@ class ExampleDataLoader:
                 SpecFileService.add_file(workflow_spec=spec, file_name=filename, binary_data=data)
                 if is_primary:
                     SpecFileService.set_primary_bpmn(spec, filename, data)
-                    self.workflow_spec_service.update_spec(spec)
+                    workflow_spec_service = WorkflowSpecService()
+                    workflow_spec_service.update_spec(spec)
             except IsADirectoryError as de:
                 # Ignore sub directories
                 pass
