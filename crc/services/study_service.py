@@ -391,7 +391,7 @@ class StudyService(object):
                     db_studies.append(db_study)
 
                 db_study.update_from_protocol_builder(pb_study, user.uid)
-                StudyService._add_all_workflow_specs_to_study(db_study, specs)
+                StudyService.add_all_workflow_specs_to_study(db_study, specs)
 
                 # If there is a new automatic status change and there isn't a manual change in place, record it.
                 if new_status and db_study.status != StudyStatus.hold:

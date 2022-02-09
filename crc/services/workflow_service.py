@@ -85,6 +85,8 @@ class WorkflowService(object):
                                        workflow_spec_id=spec_id,
                                        last_updated=datetime.utcnow(),
                                        study=study)
+        db.session.add(workflow_model)
+        db.session.commit()
         return workflow_model
 
     @staticmethod
