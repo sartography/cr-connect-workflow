@@ -34,11 +34,8 @@ def all_specifications(libraries=False,standalone=False):
         return WorkflowSpecInfoSchema(many=True).dump(workflows)
 
     # return standard workflows (not library, not standalone)
-    categories = spec_service.get_categories()
-    workflows = []
-    for cat in categories:
-        workflows.extend(cat.specs)
-    return WorkflowSpecInfoSchema(many=True).dump(workflows)
+    specs = spec_service.get_specs()
+    return WorkflowSpecInfoSchema(many=True).dump(specs)
 
 
 def add_workflow_specification(body):
