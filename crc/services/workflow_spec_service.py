@@ -102,6 +102,8 @@ class WorkflowSpecService(FileSystemService):
         return self.categories[category_id]
 
     def add_category(self, category: WorkflowSpecCategory):
+        display_order = len(self.get_categories())
+        category.display_order = display_order
         return self.update_category(category)
 
     def update_category(self, category: WorkflowSpecCategory, rescan=True):

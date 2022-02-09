@@ -8,7 +8,7 @@ from crc import db, ma
 
 
 class WorkflowSpecCategory(object):
-    def __init__(self, id, display_name, display_order, admin=False):
+    def __init__(self, id, display_name, display_order=0, admin=False):
         self.id = id  # A unique string name, lower case, under scores (ie, 'my_category')
         self.display_name = display_name
         self.display_order = display_order
