@@ -60,6 +60,8 @@ class WorkflowSpecService(FileSystemService):
     def get_spec(self, spec_id):
         if not os.path.exists(FileSystemService.root_path()):
             return # Nothing to scan yet.  There are no files.
+        if spec_id == 'master_spec':
+            return self.get_master_spec()
         with os.scandir(FileSystemService.root_path()) as category_dirs:
             for item in category_dirs:
                 category_dir = item
