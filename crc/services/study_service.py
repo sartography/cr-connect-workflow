@@ -468,7 +468,7 @@ class StudyService(object):
     @staticmethod
     def add_all_workflow_specs_to_study(study_model: StudyModel, specs: List[WorkflowSpecInfo]):
         existing_models = session.query(WorkflowModel).filter(WorkflowModel.study == study_model).all()
-        existing_spec_ids = map(lambda x: x.workflow_spec_id, existing_models)
+        existing_spec_ids = list(map(lambda x: x.workflow_spec_id, existing_models))
         errors = []
         for workflow_spec in specs:
             if workflow_spec.id in existing_spec_ids:
