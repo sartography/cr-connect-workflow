@@ -42,7 +42,7 @@ def add_study(body):
     session.commit()
 
     master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)
-    study = StudyService().get_study(study_model.id, categories, master_workflow_results)
+    study = StudyService().get_study(study_model.id, categories, master_workflow_results=master_workflow_results)
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
@@ -103,7 +103,7 @@ def get_study(study_id, update_status=False):
     if update_status:
         study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
         master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)
-    study = StudyService().get_study(study_id, categories, master_workflow_results)
+    study = StudyService().get_study(study_id, categories, master_workflow_results=master_workflow_results)
     if (study is None):
         raise ApiError("unknown_study",  'The study "' + study_id + '" is not recognized.', status_code=404)
     return StudySchema().dump(study)

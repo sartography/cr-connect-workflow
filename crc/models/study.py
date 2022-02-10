@@ -211,6 +211,8 @@ class Study(object):
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
+        if not isinstance(study_model, StudyModel):
+            raise ApiError("Please don't call me with something other than StudyModel")
         if study_model is not None and len(study_model.__dict__.items()) > 0:
             args = dict((k, v) for k, v in study_model.__dict__.items() if not k.startswith('_'))
             args['events_history'] = study_model.events_history  # For some reason this attribute is not picked up

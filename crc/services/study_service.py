@@ -57,7 +57,7 @@ class StudyService(object):
         studies = []
         for study_model in db_studies:
             if include_invalid or self._is_valid_study(study_model.id):
-                studies.append(StudyService.get_study(study_model.id, categories, study_model))
+                studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model))
         return studies
 
     @staticmethod
@@ -380,7 +380,9 @@ class StudyService(object):
             for pb_study in pb_studies:
                 new_status = None
                 new_progress_status = None
-                db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
+                db_study = session.query(StudyModel).filter(StudyModel.id == pb_study.STUDYID).first()
+                #db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
+
                 if not db_study:
                     db_study = StudyModel(id=pb_study.STUDYID)
                     db_study.status = None  # Force a new sa
