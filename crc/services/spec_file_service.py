@@ -51,16 +51,21 @@ class SpecFileService(FileSystemService):
             SpecFileService.set_primary_bpmn(workflow_spec, file_name, binary_data)
         return file
 
-
     @staticmethod
     def get_data(workflow_spec: WorkflowSpecInfo, file_name: str):
         file_path = SpecFileService.file_path(workflow_spec, file_name)
+        if not os.path.exists(file_path):
+            # If the file isn't here, it may be in a library
+            for lib in workflow_spec.libraries:
+                lib_path = SpecFileService.library_path(lib)
+                file_path = SpecFileService.file_path(workflow_spec, file_name)
+                if os.path.exists(file_path):
+                    break
         if not os.path.exists(file_path):
             raise ApiError("unknown_file", f"So file found with name {file_name} in {workflow_spec.display_name}")
         with open(file_path, 'rb') as f_handle:
             spec_file_data = f_handle.read()
         return spec_file_data
-
 
     @staticmethod
     def file_path(spec: WorkflowSpecInfo, file_name: str):

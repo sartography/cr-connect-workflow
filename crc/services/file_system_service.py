@@ -33,6 +33,10 @@ class FileSystemService(object):
         return os.path.join(FileSystemService.root_path(), name)
 
     @staticmethod
+    def library_path(name: str):
+        return os.path.join(FileSystemService.root_path(), FileSystemService.LIBRARY_SPECS, name)
+
+    @staticmethod
     def category_path_for_spec(spec):
         if spec.is_master_spec:
             return os.path.join(FileSystemService.root_path())
