@@ -1,3 +1,4 @@
+import time
 import uuid
 
 from flask import g
@@ -104,6 +105,7 @@ def drop_workflow_spec_library(spec_id, library_id):
 
 
 def validate_workflow_specification(spec_id, study_id=None, test_until=None):
+
     try:
         master_spec = WorkflowSpecService().master_spec
         if study_id is not None:
@@ -112,8 +114,16 @@ def validate_workflow_specification(spec_id, study_id=None, test_until=None):
             if spec_id in statuses and statuses[spec_id]['status'] == 'disabled':
                 raise ApiError(code='disabled_workflow',
                                message=f"This workflow is disabled. {statuses[spec_id]['message']}")
+        ts = time.time()
         WorkflowService.test_spec(spec_id, study_id, test_until)
+        te = time.time()
+        print('| %2.4f | % s ' % (te - ts, 'validate and complete all fields'))
+
+        ts = time.time()
         WorkflowService.test_spec(spec_id, study_id, test_until, required_only=True)
+        te = time.time()
+        print('| %2.4f | % s ' % (te - ts, 'validate only with required fields'))
+
     except ApiError as ae:
         error = ae
         error = ValidationErrorService.interpret_validation_error(error)

@@ -18,7 +18,6 @@ from sqlalchemy import column
 class TestFilesApi(BaseTest):
 
     def test_list_files_for_workflow_spec(self):
-        self.load_example_data(use_crc_data=True)
         spec_id = 'random_fact'
         spec = self.load_test_spec(spec_id)
         rv = self.app.get('/v1.0/workflow-specification/%s/file' % spec_id,

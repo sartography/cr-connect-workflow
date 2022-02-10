@@ -146,13 +146,6 @@ class BaseTest(unittest.TestCase):
         """
         ExampleDataLoader.clean_db()
 
-    def load_example_data(self, use_crc_data=False, use_rrt_data=False):
-        """use_crc_data will cause this to load the mammoth collection of documents
-        we built up developing crc, use_rrt_data will do the same for hte rrt project,
-         otherwise it depends on a small setup for running tests."""
-#        from example_data import ExampleDataLoader
-        pass
-
     def add_users(self):
         for user_json in self.users:
             ldap_info = LdapService.user_info(user_json['uid'])

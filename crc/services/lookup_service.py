@@ -54,8 +54,8 @@ class LookupService(object):
     def get_lookup_model_for_reference(file_name, value_column, label_column):
         lookup_model = db.session.query(LookupFileModel).\
             filter(LookupFileModel.file_name == file_name). \
-            filter(LookupFileModel.workflow_spec_id is None).\
-            first()
+            filter(LookupFileModel.workflow_spec_id == None).\
+            first()   # use "==" not "is none" which does NOT work, and makes this constantly expensive.
         if not lookup_model:
             logging.warning("!!!! Making a very expensive call to update the lookup model.")
             file_data = ReferenceFileService().get_data(file_name)

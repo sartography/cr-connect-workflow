@@ -1,6 +1,7 @@
 import copy
 import json
 import sys
+import time
 import traceback
 import random
 import string
@@ -144,6 +145,7 @@ class WorkflowService(object):
 
             while not processor.bpmn_workflow.is_completed():
                 processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
+
                 exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until)
                 if (exit_task != None):
                     raise ApiError.from_task("validation_break",
@@ -201,6 +203,7 @@ class WorkflowService(object):
         form_data = data
 
         hide_groups = []
+
         for field in task_api.form.fields:
             # Assure we have a field type
             if field.type is None:
@@ -292,6 +295,7 @@ class WorkflowService(object):
                         form_data[group][i][field.id] = WorkflowService.get_random_data_for_field(field, task)
             else:
                 form_data[field.id] = WorkflowService.get_random_data_for_field(field, task)
+
         if task.data is None:
             task.data = {}
 

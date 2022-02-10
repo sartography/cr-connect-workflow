@@ -22,9 +22,6 @@ class TestSudySponsorsScript(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
         app.config['PB_ENABLED'] = True
         flask.g.user = UserModel(uid='dhf8r')
-        self.load_example_data() # study_info script complains if irb_documents.xls is not loaded
-                                 # during the validate phase I'm going to assume that we will never
-                                 # have a case where irb_documents.xls is not loaded ??
 
         self.load_test_spec("study_sponsors_data_store")
         WorkflowService.test_spec("study_sponsors_data_store")  # This would raise errors if it didn't validate
