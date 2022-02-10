@@ -124,7 +124,7 @@ class FileSystemService(object):
             file_type = FileType[extension]
             content_type = CONTENT_TYPES[file_type.name]
         except KeyError:
-            raise ApiError("invalid_type", "Invalid File Type: %s, for file $%s" % (extension, item.name))
+            raise ApiError("invalid_type", "Invalid File Type: %s, for file %s" % (extension, item.name))
         stats = item.stat()
         file_size = stats.st_size
         last_modified = datetime.datetime.fromtimestamp(stats.st_mtime)
