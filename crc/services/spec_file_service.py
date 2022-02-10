@@ -57,8 +57,8 @@ class SpecFileService(FileSystemService):
         if not os.path.exists(file_path):
             # If the file isn't here, it may be in a library
             for lib in workflow_spec.libraries:
-                lib_path = SpecFileService.library_path(lib)
-                file_path = SpecFileService.file_path(workflow_spec, file_name)
+                file_path = SpecFileService.library_path(lib)
+                file_path = os.path.join(file_path, file_name)
                 if os.path.exists(file_path):
                     break
         if not os.path.exists(file_path):
