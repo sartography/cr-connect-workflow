@@ -61,11 +61,18 @@ class WorkflowSpecInfo(object):
 class WorkflowSpecInfoSchema(ma.Schema):
     class Meta:
         model = WorkflowSpecInfo
-        fields = ["id", "display_name", "description", "is_master_spec",
-                  "standalone", "library", "primary_file_name", "primary_process_id", "is_review",
-                  "libraries", "display_order", "is_master_spec", "is_review", "category_id"]
-        unknown = INCLUDE
-    category_id = marshmallow.fields.String()
+    id = marshmallow.fields.String(required=True)
+    display_name = marshmallow.fields.String(required=True)
+    description = marshmallow.fields.String()
+    is_master_spec = marshmallow.fields.Boolean(required=True)
+    standalone = marshmallow.fields.Boolean(required=True)
+    library = marshmallow.fields.Boolean(required=True)
+    display_order = marshmallow.fields.Integer(allow_none=True)
+    primary_file_name = marshmallow.fields.String(allow_none=True)
+    primary_process_id = marshmallow.fields.String(allow_none=True)
+    is_review = marshmallow.fields.Boolean(allow_none=True)
+    category_id = marshmallow.fields.String(allow_none=True)
+    libraries = marshmallow.fields.List(marshmallow.fields.String(), allow_none=True)
 
     @post_load
     def make_spec(self, data, **kwargs):
