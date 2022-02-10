@@ -142,16 +142,12 @@ class TestWorkflowSpecReorder(BaseTest):
         spec_model = specs[0]
         spec_model.display_order = 1
         WorkflowSpecService().update_spec(spec_model)
-        # session.add(spec_model)
         spec_model = specs[1]
         spec_model.display_order = 1
         WorkflowSpecService().update_spec(spec_model)
-        # session.add(spec_model)
         spec_model = specs[2]
         spec_model.display_order = 1
         WorkflowSpecService().update_spec(spec_model)
-        # session.add(spec_model)
-        # session.commit()
 
         bad_specs = WorkflowSpecService().get_specs()
         bad_specs.sort(key=lambda w: w.display_order)
@@ -167,14 +163,13 @@ class TestWorkflowSpecReorder(BaseTest):
         rv = self.app.put(f"/v1.0/workflow-specification/test_spec_2/reorder?direction=up",
                           headers=self.logged_in_headers())
 
-        # After moving 2 up, the order should be
-        # test_spec_1, test_spec_2, random_fact, test_spec_3
-        # Make sure we have good display_order numbers too
-        self.assertEqual('test_spec_2', rv.json[0]['id'])
-        self.assertEqual(0, rv.json[0]['display_order'])
-        self.assertEqual('random_fact', rv.json[1]['id'])
-        self.assertEqual(1, rv.json[1]['display_order'])
-        self.assertEqual('test_spec_1', rv.json[2]['id'])
-        self.assertEqual(2, rv.json[2]['display_order'])
-        self.assertEqual('test_spec_3', rv.json[3]['id'])
-        self.assertEqual(3, rv.json[3]['display_order'])
+        # After moving an up, specs should have incremental numbers
+        for i in range(0,3):
+            self.assertEqual(i, rv.json[i]['display_order'])
+
+        second_item_id = rv.json[1]['id']
+
+        #We can now move the second item up one.
+        rv = self.app.put(f"/v1.0/workflow-specification/{second_item_id}/reorder?direction=up",
+                          headers=self.logged_in_headers())
+        self.assertEqual(second_item_id, rv.json[0]['id'])

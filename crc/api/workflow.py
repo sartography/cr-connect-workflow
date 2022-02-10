@@ -151,7 +151,8 @@ def delete_workflow_specification(spec_id):
     if spec is None:
         raise ApiError('unknown_spec', 'The Workflow Specification "' + spec_id + '" is not recognized.')
     spec_service.delete_spec(spec_id)
-    spec_service.cleanup_workflow_spec_display_order(spec.category_id)
+    category = spec_service.get_category(spec.category_id)  # Reload the category, or cleanup may re-create the spec.
+    spec_service.cleanup_workflow_spec_display_order(category)
 
 
 def reorder_workflow_specification(spec_id, direction):

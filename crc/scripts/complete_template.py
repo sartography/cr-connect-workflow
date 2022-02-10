@@ -62,7 +62,6 @@ Takes two arguments:
         file_data = None
         if workflow is not None:
             workflow_spec_service = WorkflowSpecService()
-            workflow_spec_service.scan_file_system()
             spec = workflow_spec_service.get_spec(workflow.workflow_spec_id)
             file_data = SpecFileService().get_data(spec, file_name)
 

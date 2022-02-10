@@ -6,7 +6,8 @@ from crc.models.study import ProgressStatus
 class TestSetStudyProgressStatus(BaseTest):
 
     def test_set_study_progress_status_validation(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('set_study_progress_status')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         # The workflow has an enum option that causes an exception.

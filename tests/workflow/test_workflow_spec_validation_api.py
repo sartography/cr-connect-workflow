@@ -24,7 +24,8 @@ class TestWorkflowSpecValidation(BaseTest):
 
     def test_successful_validation_of_test_workflows(self):
         app.config['PB_ENABLED'] = False  # Assure this is disabled.
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         self.assertEqual(0, len(self.validate_workflow("parallel_tasks")))
         self.assertEqual(0, len(self.validate_workflow("decision_table")))
         self.assertEqual(0, len(self.validate_workflow("docx")))
@@ -36,7 +37,8 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual(0, len(self.validate_workflow("ldap_lookup")))
 
     def test_invalid_expression(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         errors = self.validate_workflow("invalid_expression")
         self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_exception", errors[0]['code'])
@@ -49,7 +51,8 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertIn("has_bananas", errors[0]['task_data'])
 
     def test_validation_error(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         errors = self.validate_workflow("invalid_spec")
         self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_error", errors[0]['code'])
@@ -58,7 +61,8 @@ class TestWorkflowSpecValidation(BaseTest):
 
 
     def test_invalid_script(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         errors = self.validate_workflow("invalid_script")
         self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_exception", errors[0]['code'])
@@ -68,7 +72,8 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("invalid_script.bpmn", errors[0]['file_name'])
 
     def test_invalid_script2(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         errors = self.validate_workflow("invalid_script2")
         self.assertEqual(1, len(errors))
         self.assertEqual("workflow_validation_exception", errors[0]['code'])
@@ -80,7 +85,8 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("invalid_script2.bpmn", errors[0]['file_name'])
 
     def test_invalid_script3(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         errors = self.validate_workflow("invalid_script3")
         self.assertEqual(1, len(errors))
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
@@ -88,14 +94,16 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("NameError", errors[0]['error_type'])
 
     def test_repeating_sections_correctly_populated(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('repeat_form')
         final_data = WorkflowService.test_spec(spec_model.id)
         self.assertIsNotNone(final_data)
         self.assertIn('cats', final_data)
 
     def test_required_fields(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('required_fields')
         final_data = WorkflowService.test_spec(spec_model.id)
         self.assertIsNotNone(final_data)
@@ -108,7 +116,8 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertNotIn('string_not_required', final_data)
 
     def test_enum_defaults_correctly_populated(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('required_fields')
         final_data = WorkflowService.test_spec(spec_model.id, required_only=True)
         self.assertIsNotNone(final_data)
@@ -116,7 +125,8 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual('maybe', final_data['enum_with_default'])
 
     def test_invalid_custom_field(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         errors = self.validate_workflow("invalid_custom_field")
         self.assertEqual(1, len(errors))
         self.assertEqual("invalid_field_type", errors[0]['code'])
@@ -125,8 +135,10 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_disabled_spec_validation(self, mock_status):
         """A disabled workflow spec should fail validation"""
         app.config['PB_ENABLED'] = True
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec = self.load_test_spec('data_security_plan')
+        workflow = self.create_workflow('data_security_plan')
         study_model = session.query(StudyModel).first()
 
         # This response sets the status for data_security_plan to disabled
@@ -148,5 +160,7 @@ class TestWorkflowSpecValidation(BaseTest):
         # it wasn't converted to an ISO String as it would be if submitted through the API.
         # subsequent attempts to work with the expected date_string failed, because it was already a date.
         # This can't happen in the front end code base, but it was breaking validation.
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         errors = self.validate_workflow("date_value_expression")
         self.assertEqual(0, len(errors))

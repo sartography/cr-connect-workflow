@@ -28,7 +28,6 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(spec.description, spec2.description)
 
     def test_add_new_workflow_specification(self):
-        self.workflow_spec_service.scan_file_system()
         self.assertEqual(0, len(self.workflow_spec_service.get_specs()))
         self.assertEqual(0, len(self.workflow_spec_service.get_categories()))
         cat = WorkflowSpecCategory(id="test_cat", display_name="Test Category", display_order=0, admin=False)
@@ -42,7 +41,7 @@ class TestWorkflowSpec(BaseTest):
                            content_type="application/json",
                            data=json.dumps(WorkflowSpecInfoSchema().dump(spec)))
         self.assert_success(rv)
-        self.workflow_spec_service.scan_file_system()
+
         fs_spec = self.workflow_spec_service.get_spec('make_cookies')
         self.assertEqual(spec.display_name, fs_spec.display_name)
         self.assertEqual(0, fs_spec.display_order)
@@ -55,7 +54,7 @@ class TestWorkflowSpec(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         api_spec = WorkflowSpecInfoSchema().load(json_data)
-        self.workflow_spec_service.scan_file_system()
+
         fs_spec = self.workflow_spec_service.get_spec('random_fact')
         self.assertEqual(WorkflowSpecInfoSchema().dump(fs_spec), json_data)
 
@@ -65,7 +64,7 @@ class TestWorkflowSpec(BaseTest):
         category_id = 'a_trap'
         category = WorkflowSpecCategory(id=category_id, display_name="It's a trap!", display_order=0, admin=False)
         self.workflow_spec_service.add_category(category)
-        self.workflow_spec_service.scan_file_system()
+
         spec_before: WorkflowSpecInfo = self.workflow_spec_service.get_spec('random_fact')
         self.assertNotEqual(spec_before.category_id, category_id)
 
@@ -79,7 +78,7 @@ class TestWorkflowSpec(BaseTest):
         api_spec = WorkflowSpecInfoSchema().load(json_data)
         self.assertEqual(WorkflowSpecInfoSchema().dump(spec_before), json_data)
 
-        self.workflow_spec_service.scan_file_system()
+
         spec_after: WorkflowSpecInfo = self.workflow_spec_service.get_spec('random_fact')
         self.assertIsNotNone(spec_after.category_id)
         self.assertIsNotNone(spec_after.category_id, category_id)
@@ -91,7 +90,7 @@ class TestWorkflowSpec(BaseTest):
         workflow = self.create_workflow(spec_id)
         workflow_api = self.get_workflow_api(workflow)
         workflow_path = SpecFileService.workflow_path(spec)
-        self.workflow_spec_service.scan_file_system()
+
         num_specs_before = len(self.workflow_spec_service.get_specs())
         self.assertEqual(num_specs_before, 1)
         num_files_before = len(SpecFileService.get_files(spec))
@@ -99,7 +98,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertGreater(num_files_before + num_workflows_before, 0)
         rv = self.app.delete('/v1.0/workflow-specification/' + spec_id, headers=self.logged_in_headers())
         self.assert_success(rv)
-        self.workflow_spec_service.scan_file_system()
+
         num_specs_after = len(self.workflow_spec_service.get_specs())
         self.assertEqual(0, num_specs_after)
 
@@ -109,12 +108,12 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(num_workflows_after, 1)
 
     def test_display_order_after_delete_spec(self):
-        self.workflow_spec_service.scan_file_system()
+
         self.load_test_spec('random_fact')
         self.load_test_spec('decision_table')
         self.load_test_spec('email')
 
-        self.workflow_spec_service.scan_file_system()
+
         all_specs = self.workflow_spec_service.get_categories()[0].specs
         for i in range(0, 3):
             self.assertEqual(i, all_specs[i].display_order)
@@ -123,7 +122,7 @@ class TestWorkflowSpec(BaseTest):
 
         test_order = 0
 
-        self.workflow_spec_service.scan_file_system()
+
         all_specs = self.workflow_spec_service.get_categories()[0].specs
         for i in range(0, 2):
             self.assertEqual(i, all_specs[i].display_order)
@@ -131,7 +130,7 @@ class TestWorkflowSpec(BaseTest):
     def test_get_standalone_workflow_specs(self):
         self.load_example_data()
         self.load_test_spec('random_fact')
-        self.workflow_spec_service.scan_file_system()
+
         category = self.workflow_spec_service.get_categories()[0]
         ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=category.id,
                                         standalone=True, from_tests=True)
@@ -159,7 +158,7 @@ class TestWorkflowSpec(BaseTest):
                            data=json.dumps(WorkflowSpecCategorySchema().dump(category))
                            )
         self.assert_success(rv)
-        self.workflow_spec_service.scan_file_system()
+
         result = WorkflowSpecCategorySchema().loads(rv.get_data(as_text=True))
         fs_category = self.workflow_spec_service.get_category('test')
         self.assertEqual('Another Test Category', result.display_name)
@@ -168,7 +167,7 @@ class TestWorkflowSpec(BaseTest):
     def test_update_workflow_spec_category(self):
         self.load_example_data()
         self.load_test_spec('random_fact')
-        self.workflow_spec_service.scan_file_system()
+
         category = self.workflow_spec_service.get_categories()[0]
         display_name_before = category.display_name
         new_display_name = display_name_before + '_asdf'
@@ -190,7 +189,7 @@ class TestWorkflowSpec(BaseTest):
         rv = self.app.delete('/v1.0/workflow-specification-category/Test Category 2', headers=self.logged_in_headers())
         self.assert_success(rv)
         test_order = 0
-        self.workflow_spec_service.scan_file_system()
+
         categories = self.workflow_spec_service.get_categories()
         self.assertEqual(2, len(categories))
         for test_category in categories:
@@ -200,7 +199,7 @@ class TestWorkflowSpec(BaseTest):
     def test_add_library_with_category_id(self):
         self.load_example_data()
         self.load_test_spec('random_fact')
-        self.workflow_spec_service.scan_file_system()
+
         category_id = self.workflow_spec_service.get_categories()[0].id
         spec = WorkflowSpecInfo(id='test_spec', display_name='Test Spec',
                                 description='Library with a category id', category_id=category_id,

@@ -7,6 +7,8 @@ class TestWorkflowHiddenRequiredField(BaseTest):
     def test_require_default(self):
         # We have a field that can be hidden and required.
         # Validation should fail if we don't have a default value.
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('hidden_required_field')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
 
@@ -17,11 +19,15 @@ class TestWorkflowHiddenRequiredField(BaseTest):
         self.assertIn('Field "name" is required but can be hidden', json_data[0]['message'])
 
     def test_require_default_pass(self):
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('hidden_required_field_pass')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual(0, len(rv.json))
 
     def test_require_default_pass_expression(self):
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('hidden_required_field_pass_expression')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual(0, len(rv.json))

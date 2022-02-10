@@ -97,7 +97,6 @@ class TestFileService(BaseTest):
                                       binary_data=b'5678')
 
     def test_add_file_from_form_allows_multiple_files_with_different_names(self):
-        self.load_example_data()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()

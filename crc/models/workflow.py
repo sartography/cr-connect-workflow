@@ -16,6 +16,12 @@ class WorkflowSpecCategory(object):
         self.workflows = []  # For storing Workflow Metadata
         self.specs = []  # For the list of specifications associated with a category
 
+    def __eq__(self, other):
+        if not isinstance(other, WorkflowSpecCategory):
+            return False
+        if other.id == self.id:
+            return True
+        return False
 
 class WorkflowSpecCategorySchema(ma.Schema):
     class Meta:
@@ -43,6 +49,14 @@ class WorkflowSpecInfo(object):
         self.is_review = is_review
         self.libraries = libraries
         self.category_id = category_id
+
+    def __eq__(self, other):
+        if not isinstance(other, WorkflowSpecInfo):
+            return False
+        if other.id == self.id:
+            return True
+        return False
+
 
 class WorkflowSpecInfoSchema(ma.Schema):
     class Meta:

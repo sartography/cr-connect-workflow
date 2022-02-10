@@ -107,7 +107,6 @@ class WorkflowProcessor(object):
         self.workflow_spec_service = WorkflowSpecService()
         spec = None
         if workflow_model.bpmn_workflow_json is None:
-            self.workflow_spec_service.scan_file_system()
             spec_info = self.workflow_spec_service.get_spec(workflow_model.workflow_spec_id)
             if spec_info is None:
                 raise (ApiError("missing_spec", "The spec this workflow references does not currently exist."))

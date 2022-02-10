@@ -570,7 +570,6 @@ class WorkflowService(object):
         navigation = processor.bpmn_workflow.get_deep_nav_list()
         WorkflowService.update_navigation(navigation, processor)
         spec_service = WorkflowSpecService()
-        spec_service.scan_file_system()
         spec = spec_service.get_spec(processor.workflow_spec_id)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
@@ -768,7 +767,6 @@ class WorkflowService(object):
             workflow = db.session.query(WorkflowModel). \
                 filter(WorkflowModel.id == spiff_task.workflow.data['workflow_id']).first()
             spec_service = WorkflowSpecService()
-            spec_service.scan_file_system()
             data = SpecFileService.get_data(spec_service.get_spec(workflow.workflow_spec_id), doc_file_name)
             raw_doc = data.decode("utf-8")
         except ApiError:

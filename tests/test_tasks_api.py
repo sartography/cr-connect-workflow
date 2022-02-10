@@ -189,7 +189,6 @@ class TestTasksApi(BaseTest):
         # Modify the specification, with a major change that alters the flow and can't be deserialized
         # effectively, if it uses the latest spec files.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
-        self.workflow_spec_service.scan_file_system()
         spec = self.workflow_spec_service.get_spec('two_forms')
         self.replace_file(spec, "two_forms.bpmn", file_path)
 

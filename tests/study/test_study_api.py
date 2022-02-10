@@ -112,7 +112,6 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study["ind_number"], db_study.ind_number)
         self.assertEqual(study["user_uid"], db_study.user_uid)
 
-        self.workflow_spec_service.scan_file_system()
         workflow_spec_count = len(self.workflow_spec_service.get_specs())
         workflow_count = session.query(WorkflowModel).filter(WorkflowModel.study_id == study['id']).count()
         self.assertEqual(workflow_spec_count, workflow_count)

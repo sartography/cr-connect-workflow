@@ -13,8 +13,9 @@ from io import BytesIO
 class TestDeleteTaskData(BaseTest):
 
     def test_delete_task_data_validation(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
         spec_model = self.load_test_spec('delete_task_data')
+        self.create_reference_document()
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         # Make sure we don't get json returned. This would indicate an error.
         self.assertEqual([], rv.json)

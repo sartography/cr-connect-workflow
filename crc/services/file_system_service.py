@@ -50,7 +50,7 @@ class FileSystemService(object):
             return os.path.join(FileSystemService.root_path(), FileSystemService.MASTER_SPECIFICATION)
         else:
             category_path = FileSystemService.category_path_for_spec(spec)
-            return os.path.join(category_path, spec.display_name)
+            return os.path.join(category_path, spec.id)
 
     def next_display_order(self, spec):
         path = self.category_path_for_spec(spec)

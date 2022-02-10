@@ -30,15 +30,15 @@ class TestWorkflowSync(BaseTest):
         self.load_test_spec('decision_table', category_id=c2.id)
         self.load_test_spec('empty_workflow', category_id=c1.id, master_spec=True)
         self.load_test_spec('email', category_id=c1.id, library=True)
+        # fixme: add a standalone
 
     def test_from_file_system_blank_slate(self):
-        self.service.scan_file_system()
         self.assertEquals(0, len(self.service.get_categories()))
         self.assertEquals(0, len(self.service.get_specs()))
+
         self.copy_files_to_file_system(self.import_spec_path, self.spec_path)
-        self.service.scan_file_system()
         self.assertEquals(2, len(self.service.get_categories()))
-        self.assertEquals(5, len(self.service.get_specs()))
+        self.assertEquals(3, len(self.service.get_specs()))
         self.assertEquals(1, len(self.service.get_category('category_number_one').specs))
         self.assertEquals(2, len(self.service.get_category('category_number_two').specs))
         self.assertIsNotNone(self.service.master_spec)
@@ -47,12 +47,10 @@ class TestWorkflowSync(BaseTest):
 
     def test_delete_category_and_workflows(self):
         self.copy_files_to_file_system(self.import_spec_path, self.spec_path)
-        self.service.scan_file_system()
-        cat_path = SpecFileService().category_path('Category Number One')
+        cat_path = SpecFileService().category_path('category_number_one')
         shutil.rmtree(cat_path) # Remove the path, as if from a git pull and the path was removed.
-        self.service.scan_file_system()
         self.assertEquals(1, len(self.service.get_categories()))
-        self.assertEquals(4, len(self.service.get_specs()))
+        self.assertEquals(2, len(self.service.get_specs()))
 
     def test_create_file_system(self):
         self.build_file_system_from_models()

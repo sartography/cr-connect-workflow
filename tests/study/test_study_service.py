@@ -24,7 +24,6 @@ class TestStudyService(BaseTest):
         cat = WorkflowSpecCategory(id="approvals", display_name="Approvals", display_order=0, admin=False)
         self.workflow_spec_service.add_category(cat)
         self.load_test_spec("random_fact", category_id=cat.id)
-        self.workflow_spec_service.scan_file_system()
         user = self.create_user()
         study = StudyModel(title="My title", status=StudyStatus.in_progress, user_uid=user.uid)
         db.session.add(study)

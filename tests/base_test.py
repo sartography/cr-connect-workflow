@@ -151,6 +151,7 @@ class BaseTest(unittest.TestCase):
         we built up developing crc, use_rrt_data will do the same for hte rrt project,
          otherwise it depends on a small setup for running tests."""
         from example_data import ExampleDataLoader
+        # Fixme: Is this really necissary? We already do it after every single test!
         ExampleDataLoader.clean_db()
 
         # # If in production mode, only add the first user.
@@ -307,7 +308,6 @@ class BaseTest(unittest.TestCase):
 
     def create_workflow(self, dir_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
-        self.workflow_spec_service.scan_file_system()
         spec = self.workflow_spec_service.get_spec(dir_name)
         if spec is None:
             if display_name is None:
@@ -361,7 +361,6 @@ class BaseTest(unittest.TestCase):
         # workflow_in should be a workflow, not a workflow_api
         # we were passing in workflow_api in many of our tests, and
         # this caused problems testing standalone workflows
-        self.workflow_spec_service.scan_file_system()
         spec = self.workflow_spec_service.get_spec(workflow_in.workflow_spec_id)
         standalone = getattr(spec, 'standalone', False)
         prev_completed_task_count = workflow_in.completed_tasks
