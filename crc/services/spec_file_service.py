@@ -62,7 +62,7 @@ class SpecFileService(FileSystemService):
                 if os.path.exists(file_path):
                     break
         if not os.path.exists(file_path):
-            raise ApiError("unknown_file", f"So file found with name {file_name} in {workflow_spec.display_name}")
+            raise ApiError("unknown_file", f"No file found with name {file_name} in {workflow_spec.display_name}")
         with open(file_path, 'rb') as f_handle:
             spec_file_data = f_handle.read()
         return spec_file_data
