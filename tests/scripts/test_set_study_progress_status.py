@@ -38,7 +38,6 @@ class TestSetStudyProgressStatus(BaseTest):
 
     def test_set_study_progress_status_fail(self):
 
-        self.load_example_data()
         workflow = self.create_workflow('set_study_progress_status')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task

@@ -7,7 +7,7 @@ from crc.services.user_file_service import UserFileService
 class TestDeleteIRBDocument(BaseTest):
 
     def test_delete_irb_document(self):
-        self.load_example_data()
+        self.create_reference_document()
         irb_code = 'Study_Protocol_Document'
 
         workflow = self.create_workflow('add_delete_irb_document')
@@ -43,7 +43,7 @@ class TestDeleteIRBDocument(BaseTest):
 
     def test_delete_irb_document_list(self):
         # try deleting a list of files
-        self.load_example_data()
+        self.create_reference_document()
         irb_code_1 = 'Study_Protocol_Document'
         irb_code_2 = 'Study_App_Doc'
         irb_codes = [irb_code_1, irb_code_2]
@@ -85,7 +85,7 @@ class TestDeleteIRBDocument(BaseTest):
 
     def test_delete_irb_document_no_document(self):
 
-        self.load_example_data()
+
         irb_code = 'Study_Protocol_Document'
         workflow = self.create_workflow('add_delete_irb_document')
         workflow_api = self.get_workflow_api(workflow)
@@ -96,7 +96,7 @@ class TestDeleteIRBDocument(BaseTest):
             self.complete_form(workflow, first_task, {'irb_document': irb_code})
 
     def test_delete_irb_document_bad_document(self):
-        self.load_example_data()
+
         # This is a bad document code
         irb_code = 'Study_Protocol_Doc'
         workflow = self.create_workflow('add_delete_irb_document')

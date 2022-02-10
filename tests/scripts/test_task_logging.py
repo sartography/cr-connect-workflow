@@ -56,7 +56,7 @@ class TestTaskLogging(BaseTest):
         self.assertEqual('debug_test_code', task.data['logging_models_debug_post'][0]['code'])
 
     def test_get_logs_for_study(self):
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow = self.create_workflow('hello_world', study=study)
         processor = WorkflowProcessor(workflow)
@@ -116,7 +116,7 @@ class TestTaskLogging(BaseTest):
         self.assertEqual(wf_logs, logs, "Logs returned for the workflow should be identical to those returned from study")
 
     def test_logging_service_paginates_and_sorts(self):
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_model = self.create_workflow('hello_world', study=study)
         workflow_processor = WorkflowProcessor(workflow_model)

@@ -34,7 +34,7 @@ class TestEmailScript(BaseTest):
             self.assertIn('Thank you for using this email example', outbox[0].body)
 
     def test_email_script_multiple(self):
-        self.load_example_data()
+        self.create_reference_document()
         with mail.record_messages() as outbox:
 
             workflow = self.create_workflow('email_script')
@@ -85,7 +85,7 @@ class TestEmailScript(BaseTest):
             self.assertIn(outbox[0].recipients[2], ['user@example.com', 'dhf8r@virginia.edu', 'lb3dp@virginia.edu'])
 
     def test_email_script_attachments(self):
-        self.load_example_data()
+        self.create_reference_document()
         irb_code_1 = 'Study_App_Doc'
         irb_code_2 = 'Study_Protocol_Document'
 

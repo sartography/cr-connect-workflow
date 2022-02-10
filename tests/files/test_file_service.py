@@ -55,7 +55,6 @@ class TestFileService(BaseTest):
     """Largely tested via the test_file_api, and time is tight, but adding new tests here."""
 
     def test_add_file_from_task_increments_version_and_replaces_on_subsequent_add(self):
-        self.load_example_data()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -79,7 +78,6 @@ class TestFileService(BaseTest):
         self.assertEqual(4, file_data[0].size) # File dat size is included.
 
     def test_add_file_from_form_increments_version_and_replaces_on_subsequent_add_with_same_name(self):
-        self.load_example_data()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()

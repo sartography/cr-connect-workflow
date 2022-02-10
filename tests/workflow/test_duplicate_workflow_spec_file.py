@@ -9,7 +9,7 @@ class TestDuplicateWorkflowSpecFile(BaseTest):
         # We want this to fail.
         # Users should not be able to upload a file that already exists.
 
-        self.load_example_data()
+
         spec = self.load_test_spec('random_fact')
 
         # Add a file

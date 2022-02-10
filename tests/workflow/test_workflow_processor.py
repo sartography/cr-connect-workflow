@@ -33,7 +33,7 @@ class TestWorkflowProcessor(BaseTest):
         return WorkflowProcessor(workflow_model)
 
     def test_create_and_complete_workflow(self):
-        self.load_example_data()
+        self.add_studies()
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -58,7 +58,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("FactService", data)
 
     def test_workflow_with_dmn(self):
-        self.load_example_data()
+
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("decision_table")
         files = SpecFileService.get_files(workflow_spec_model)
@@ -85,7 +85,7 @@ class TestWorkflowProcessor(BaseTest):
 
 
     def test_workflow_with_parallel_forms(self):
-        self.load_example_data()
+        self.create_reference_document()
         workflow_spec_model = self.load_test_spec("parallel_tasks")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -127,7 +127,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertTrue(processor.bpmn_workflow.is_completed())
 
     def test_workflow_processor_knows_the_text_task_even_when_parallel(self):
-        self.load_example_data()
+
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("parallel_tasks")
         processor = self.get_processor(study, workflow_spec_model)
@@ -149,7 +149,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(task.children[0], processor.next_task())
 
     def test_workflow_processor_returns_next_task_as_end_task_if_complete(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -166,7 +166,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIsInstance(task.task_spec, EndEvent)
 
     def test_workflow_processor_returns_waiting_task_if_no_ready_tasks_exist(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("timer_inline")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -180,7 +180,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(task.state, task.WAITING)
 
     def test_workflow_validation_error_is_properly_raised(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("invalid_spec")
         study = session.query(StudyModel).first()
         with self.assertRaises(ApiError) as context:
@@ -190,7 +190,7 @@ class TestWorkflowProcessor(BaseTest):
 
 
     def test_workflow_with_bad_expression_raises_sensible_error(self):
-        self.load_example_data()
+
 
         workflow_spec_model = self.load_test_spec("invalid_expression")
         study = session.query(StudyModel).first()
@@ -205,7 +205,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("task_error", context.exception.code)
 
     def test_workflow_with_docx_template(self):
-        self.load_example_data()
+
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("docx")
         files = SpecFileService.get_files(workflow_spec_model)
@@ -233,7 +233,7 @@ class TestWorkflowProcessor(BaseTest):
     def test_load_study_information(self):
         """ Test a workflow that includes requests to pull in Study Details."""
 
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_details")
         processor = self.get_processor(study, workflow_spec_model)
@@ -247,7 +247,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("sponsor", task.data["StudyInfo"]["info"])
 
     def test_hard_reset(self):
-        self.load_example_data()
+
         # Start the two_forms workflow, and enter some data in the first form.
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
@@ -284,7 +284,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("blue", processor3.next_task().data["color"])
 
     def test_next_task_when_completing_sequential_steps_within_parallel(self):
-        self.load_example_data()
+
         # Start the two_forms workflow, and enter some data in the first form.
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("nav_order")
@@ -316,7 +316,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("A1", task.task_spec.name)
 
     def test_enum_with_no_choices_raises_api_error(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -334,7 +334,7 @@ class TestWorkflowProcessor(BaseTest):
 
 
     def test_get_role_by_name(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("roles")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)

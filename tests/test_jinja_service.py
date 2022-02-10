@@ -17,7 +17,7 @@ import json
 class TestJinjaService(BaseTest):
 
     def test_jinja_service_element_documentation(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('random_fact')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()

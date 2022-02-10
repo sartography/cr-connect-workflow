@@ -16,7 +16,6 @@ from crc.services.workflow_processor import WorkflowProcessor
 class TestSpecFileService(BaseTest):
 
     def test_get_spec_files(self):
-        self.load_example_data()
         spec = self.load_test_spec("random_fact")
         spec_files = SpecFileService().get_files(spec)
         self.assertEqual(2, len(spec_files))
@@ -29,7 +28,6 @@ class TestSpecFileService(BaseTest):
         self.assertIsInstance(spec_files[0].last_modified, datetime.datetime)
 
     def test_add_file(self):
-        self.load_example_data()
         spec_random = self.load_test_spec("random_fact")
         spec_dt = self.load_test_spec("decision_table")
         data = SpecFileService.get_data(spec_random, "random_fact.bpmn")
@@ -46,7 +44,6 @@ class TestSpecFileService(BaseTest):
         #self.assertNotEqual(orig.last_modified, new.last_modified)
 
     def test_set_primary_bpmn(self):
-        self.load_example_data()
         spec_random = self.load_test_spec("random_fact")
         SpecFileService.set_primary_bpmn(spec_random, 'random_fact.bpmn')
         self.assertEquals('random_fact.bpmn', spec_random.primary_file_name)
@@ -56,7 +53,6 @@ class TestSpecFileService(BaseTest):
         self.assertEquals('Process_SecondFact', spec_random.primary_process_id)
 
     def test_delete_workflow_spec_file(self):
-        self.load_example_data()
         spec = self.load_test_spec("random_fact")
         spec_files = SpecFileService.get_files(spec)
         self.assertEqual(2, len(spec_files))

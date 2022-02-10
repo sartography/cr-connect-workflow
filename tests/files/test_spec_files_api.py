@@ -32,7 +32,6 @@ class TestFilesApi(BaseTest):
         self.assertTrue("%s.bpmn" % spec.id in file_names)
 
     def test_list_multiple_files_for_workflow_spec(self):
-        self.load_example_data()
         spec = self.load_test_spec("random_fact")
         data = {'file': (io.BytesIO(b"abcdef"), 'test.svg')}
         self.app.post('/v1.0/workflow-specification/%s/file' % spec.id, data=data, follow_redirects=True,
@@ -45,7 +44,6 @@ class TestFilesApi(BaseTest):
         self.assertEqual(3, len(json_data))
 
     def test_create_spec_file(self):
-        self.load_example_data()
         spec = self.load_test_spec('random_fact')
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
         rv = self.app.post('/v1.0/workflow-specification/%s/file' % spec.id, data=data, follow_redirects=True,
@@ -63,7 +61,6 @@ class TestFilesApi(BaseTest):
         self.assertEqual(file, file2)
 
     def test_update_spec_file_data(self):
-        self.load_example_data()
         spec = self.load_test_spec('random_fact')
         data = {}
         data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
@@ -101,7 +98,6 @@ class TestFilesApi(BaseTest):
         self.assertEqual(self.minimal_bpmn("efghijk"), data)
 
     def test_get_spec_file(self):
-        self.load_example_data()
         spec = self.load_test_spec('random_fact')
         rv = self.app.get(f'/v1.0/workflow-specification/{spec.id}/file',
                              headers=self.logged_in_headers())
@@ -113,7 +109,6 @@ class TestFilesApi(BaseTest):
         self.assertTrue(rv.content_length > 1)
 
     def test_delete_spec_file(self):
-        self.load_example_data()
         spec = self.load_test_spec('random_fact')
         rv = self.app.get(f'/v1.0/workflow-specification/{spec.id}/file/random_fact.bpmn',
                              headers=self.logged_in_headers())
@@ -126,7 +121,6 @@ class TestFilesApi(BaseTest):
         self.assertEqual(404, rv.status_code)
 
     def test_change_primary_bpmn(self):
-        self.load_example_data()
         spec = self.load_test_spec('random_fact')
         data = {}
         data['file'] = io.BytesIO(self.minimal_bpmn("abcdef")), 'my_new_file.bpmn'
@@ -162,7 +156,6 @@ class TestFilesApi(BaseTest):
         self.assertIsNotNone(workflow_spec['primary_process_id'])
 
     def test_file_upload_with_previous_name(self):
-        self.load_example_data()
         workflow_spec_model = self.load_test_spec('random_fact')
 
         # Add file

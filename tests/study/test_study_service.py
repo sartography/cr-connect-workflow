@@ -91,7 +91,7 @@ class TestStudyService(BaseTest):
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_get_required_docs(self, mock_docs, mock_details):
-        self.load_example_data()
+        self.create_reference_document()
         app.config['PB_ENABLED'] = True
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('required_docs.json')
@@ -123,7 +123,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_get_documents_has_file_details(self, mock_docs):
-        self.load_example_data()
+        self.create_reference_document()
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('required_docs.json')
         mock_docs.return_value = json.loads(docs_response)
@@ -178,7 +178,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_docs
     def test_get_personnel_roles(self, mock_docs):
-        self.load_example_data()
+        self.create_reference_document()
 
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('investigators.json')
@@ -204,7 +204,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_docs
     def test_get_study_personnel(self, mock_docs):
-        self.load_example_data()
+        self.create_reference_document()
 
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('investigators.json')

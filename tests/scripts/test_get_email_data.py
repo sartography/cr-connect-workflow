@@ -14,7 +14,6 @@ class TestGetEmailData(BaseTest):
         self.assertEqual([], rv.json)
 
     def test_get_email_data_by_email_id(self):
-        self.load_example_data()
         workflow = self.create_workflow('get_email_data')
         study = workflow.study
         with mail.record_messages() as outbox:
@@ -43,7 +42,6 @@ class TestGetEmailData(BaseTest):
             self.assertNotIn('content_html', email_data[0])
 
     def test_get_email_data_by_workflow_spec_id(self):
-        self.load_example_data()
         workflow = self.create_workflow('get_email_data_by_workflow')
         study = workflow.study
         email_workflow = session.query(WorkflowModel).first()

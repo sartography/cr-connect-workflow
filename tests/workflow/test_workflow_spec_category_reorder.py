@@ -101,7 +101,7 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
         self.assertEqual(categories[2].id, new_categories[2].id)
 
     def test_workflow_spec_category_up_too_far(self):
-        self.load_example_data()
+
         self._load_test_categories()
 
         categories = WorkflowSpecService().get_categories()
@@ -122,7 +122,7 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
         self.assertEqual(categories[2].id, new_categories[2].id)
 
     def test_workflow_spec_category_bad_order(self):
-        self.load_example_data()
+
         self._load_test_categories()
         workflow_spec_service = WorkflowSpecService()
 

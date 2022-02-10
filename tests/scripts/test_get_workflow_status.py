@@ -14,7 +14,6 @@ class TestGetWorkflowStatus(BaseTest):
         self.assertEqual([], rv.json)
 
     def test_get_workflow_status(self):
-        self.load_example_data()
         self.create_workflow('random_fact')
         workflow_model_1 = session.query(WorkflowModel).filter(WorkflowModel.id == 1).first()
         search_workflow_id = workflow_model_1.id

@@ -55,7 +55,7 @@ class TestWorkflowSpecReorder(BaseTest):
         self.assertEqual("The direction must be `up` or `down`.", rv.json['message'])
 
     def test_workflow_spec_reorder_bad_spec_id(self):
-        self.load_example_data()
+
         self._load_sample_workflow_specs()
         rv = self.app.put(f"/v1.0/workflow-specification/10/reorder?direction=up",
                           headers=self.logged_in_headers())

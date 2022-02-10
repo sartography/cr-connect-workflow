@@ -1,4 +1,7 @@
 import json
+import time
+
+from SpiffWorkflow.util.metrics import timeit
 from unittest.mock import patch
 
 from tests.base_test import BaseTest
@@ -13,6 +16,7 @@ from crc.services.workflow_service import WorkflowService
 class TestWorkflowSpecValidation(BaseTest):
 
     def validate_workflow(self, workflow_name):
+        # ts = time.time()
         spec_model = self.load_test_spec(workflow_name)
         total_workflows = session.query(WorkflowModel).count()
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
@@ -20,6 +24,9 @@ class TestWorkflowSpecValidation(BaseTest):
         total_workflows_after = session.query(WorkflowModel).count()
         self.assertEqual(total_workflows, total_workflows_after, "No rogue workflow exists after validation.")
         json_data = json.loads(rv.get_data(as_text=True))
+        # te = time.time()
+        # print('| %2.4f | % s ' % (te - ts, workflow_name))
+
         return ApiErrorSchema(many=True).load(json_data)
 
     def test_successful_validation_of_test_workflows(self):

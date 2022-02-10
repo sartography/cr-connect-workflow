@@ -35,7 +35,6 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
 
     def test_update_reference_file_data(self):
-        self.load_example_data()
         file_name = "documents.xlsx"
         filepath = os.path.join(app.root_path, 'static', 'reference', 'documents.xlsx')
         with open(filepath, 'rb') as myfile:
@@ -73,7 +72,7 @@ class TestFilesApi(BaseTest):
         self.assertEqual(file_data, data_out)
 
     def test_get_reference_file_info(self):
-        self.load_example_data()
+        self.create_reference_document()
         rv = self.app.get('/v1.0/reference_file/documents.xlsx', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())

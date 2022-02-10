@@ -6,7 +6,7 @@ from crc.scripts.is_file_uploaded import IsFileUploaded
 class TestIsFileUploaded(BaseTest):
 
     def test_file_uploaded_pass(self):
-        self.load_example_data()
+
         irb_code_1 = 'UVACompl_PRCAppr'
         irb_code_2 = 'Study_App_Doc'
 

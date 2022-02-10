@@ -150,51 +150,24 @@ class BaseTest(unittest.TestCase):
         """use_crc_data will cause this to load the mammoth collection of documents
         we built up developing crc, use_rrt_data will do the same for hte rrt project,
          otherwise it depends on a small setup for running tests."""
-        from example_data import ExampleDataLoader
-        # Fixme: Is this really necissary? We already do it after every single test!
-        ExampleDataLoader.clean_db()
+#        from example_data import ExampleDataLoader
+        pass
 
-        # # If in production mode, only add the first user.
-        if app.config['PRODUCTION']:
-            ldap_info = LdapService.user_info(self.users[0]['uid'])
-            session.add(UserModel(uid=self.users[0]['uid'], ldap_info=ldap_info))
-        else:
-            for user_json in self.users:
-                ldap_info = LdapService.user_info(user_json['uid'])
-                session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
-        #
-        # if use_crc_data:
-        #     ExampleDataLoader().load_all()
-        # elif use_rrt_data:
-        #     ExampleDataLoader().load_rrt()
-        # else:
-        #     ExampleDataLoader().load_test_data()
+    def add_users(self):
+        for user_json in self.users:
+            ldap_info = LdapService.user_info(user_json['uid'])
+            session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
+            session.commit()
 
-        self.create_reference_document()
-
-        session.commit()
+    def add_studies(self):
+        self.add_users()
         for study_json in self.studies:
             study_model = StudyModel(**study_json)
             session.add(study_model)
-#            StudyService._add_all_workflow_specs_to_study(study_model)
-#            session.commit()
             update_seq = f"ALTER SEQUENCE %s RESTART WITH %s" % (StudyModel.__tablename__ + '_id_seq', study_model.id + 1)
-            print("Update Sequence." + update_seq)
             session.execute(update_seq)
-        session.flush()
+        session.commit()
 
-        # specs = session.query(WorkflowSpecModel).all()
-        # self.assertIsNotNone(specs)
-        #
-        # for spec in specs:
-        #     files = SpecFileService.get_files(workflow_spec_id=spec.id)
-        #     self.assertIsNotNone(files)
-        #     self.assertGreater(len(files), 0)
-        #     for file in files:
-        #         # file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
-        #         file_data = SpecFileService().get_spec_file_data(file.id).data
-        #         self.assertIsNotNone(file_data)
-        #         self.assertGreater(len(file_data), 0)
 
     def assure_category_name_exists(self, name):
         category = self.workflow_spec_service.get_category(name)

@@ -38,7 +38,7 @@ class TestSudySponsorsScript(BaseTest):
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_data_store")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)

@@ -12,7 +12,7 @@ import zipfile
 class TestGetZippedFiles(BaseTest):
 
     def test_get_zipped_files(self):
-        self.load_example_data()
+        self.create_reference_document()
 
         workflow = self.create_workflow('get_zip_file')
         study_id = workflow.study_id

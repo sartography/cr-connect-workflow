@@ -13,7 +13,8 @@ import json
 class TestFileDatastore(BaseTest):
 
     def test_file_datastore_workflow(self):
-        self.load_example_data()
+        self.add_studies()
+        self.create_reference_document()
         # we need to create a file with an IRB code
         # for this study
         workflow = self.create_workflow('file_data_store')
@@ -32,7 +33,7 @@ class TestFileDatastore(BaseTest):
         self.assertEqual(task_data['output2'], 'nope')
 
     def test_file_data_store_file_data_property(self):
-        self.load_example_data()
+        self.create_reference_document()
         workflow = self.create_workflow('enum_file_data')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task

@@ -23,7 +23,7 @@ class TestStudyActionsStatus(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     def test_hold_study(self, mock_details):
-        self.load_example_data()
+        self.add_studies()
         details_response = self.protocol_builder_response('study_details.json')
         mock_details.return_value = json.loads(details_response)
 
@@ -39,7 +39,7 @@ class TestStudyActionsStatus(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     def test_abandon_study(self, mock_details):
-        self.load_example_data()
+        self.add_studies()
         details_response = self.protocol_builder_response('study_details.json')
         mock_details.return_value = json.loads(details_response)
 
@@ -55,7 +55,7 @@ class TestStudyActionsStatus(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     def test_open_enrollment_study(self, mock_details):
-        self.load_example_data()
+        self.add_studies()
         details_response = self.protocol_builder_response('study_details.json')
         mock_details.return_value = json.loads(details_response)
 

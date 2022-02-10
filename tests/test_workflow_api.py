@@ -14,7 +14,7 @@ class TestWorkflowApi(BaseTest):
 
     def test_get_task_events(self):
 
-        self.load_example_data()
+        self.add_users()
         spec = self.load_test_spec('hello_world')
         user = session.query(UserModel).first()
         self.assertIsNotNone(user)
@@ -27,7 +27,7 @@ class TestWorkflowApi(BaseTest):
         self.assert_success(rv)
 
     def test_library_code(self):
-        self.load_example_data()
+
         spec1 = self.load_test_spec('hello_world')
         spec2 = self.load_test_spec('hello_world_lib', library=True)
         rv = self.app.post(f'/v1.0/workflow-specification/%s/library/%s'%(spec1.id,spec2.id),
@@ -54,7 +54,7 @@ class TestWorkflowApi(BaseTest):
         self.assertEqual(len(returned['libraries']),0)
 
     def test_library_cleanup(self):
-        self.load_example_data()
+        self.add_users()
         spec1 = self.load_test_spec('hello_world')
         spec2 = self.load_test_spec('hello_world_lib', library=True)
         user = session.query(UserModel).first()

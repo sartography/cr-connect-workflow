@@ -7,7 +7,7 @@ from crc.services.user_file_service import UserFileService
 class TestDocumentDirectories(BaseTest):
 
     def test_directory_list(self):
-        self.load_example_data()
+        self.create_reference_document()
         irb_code_1 = 'UVACompl_PRCAppr'
         irb_code_2 = 'Study_App_Doc'
 

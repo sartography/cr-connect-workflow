@@ -37,7 +37,7 @@ class TestWorkflowRestart(BaseTest):
         self.assertNotIn('formdata', workflow_api.next_task.data)
 
     def test_workflow_restart_delete_files(self):
-        self.load_example_data()
+
         irb_code = 'Study_Protocol_Document'
 
         workflow = self.create_workflow('add_delete_irb_document')

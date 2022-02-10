@@ -50,7 +50,6 @@ class TestEmailScript(BaseTest):
 
     @patch('crc.services.email_service.EmailService.add_email')
     def test_email_raises_exception(self, mock_response):
-        self.load_example_data()
         mock_response.return_value.ok = True
         mock_response.side_effect = Exception("This is my exception!")
 

@@ -14,7 +14,7 @@ from example_data import ExampleDataLoader
 class TestWorkflowSpec(BaseTest):
 
     def test_list_workflow_specifications(self):
-        self.load_example_data()
+
         spec = self.load_test_spec('random_fact')
         rv = self.app.get('/v1.0/workflow-specification',
                           follow_redirects=True,
@@ -48,7 +48,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(1, len(self.workflow_spec_service.get_categories()))
 
     def test_get_workflow_specification(self):
-        self.load_example_data()
+
         self.load_test_spec('random_fact')
         rv = self.app.get('/v1.0/workflow-specification/random_fact', headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -59,7 +59,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(WorkflowSpecInfoSchema().dump(fs_spec), json_data)
 
     def test_update_workflow_specification(self):
-        self.load_example_data()
+
         self.load_test_spec('random_fact')
         category_id = 'a_trap'
         category = WorkflowSpecCategory(id=category_id, display_name="It's a trap!", display_order=0, admin=False)
@@ -84,7 +84,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertIsNotNone(spec_after.category_id, category_id)
 
     def test_delete_workflow_specification(self):
-        self.load_example_data()
+
         spec_id = 'random_fact'
         spec = self.load_test_spec(spec_id)
         workflow = self.create_workflow(spec_id)
@@ -128,7 +128,7 @@ class TestWorkflowSpec(BaseTest):
             self.assertEqual(i, all_specs[i].display_order)
 
     def test_get_standalone_workflow_specs(self):
-        self.load_example_data()
+
         self.load_test_spec('random_fact')
 
         category = self.workflow_spec_service.get_categories()[0]
@@ -142,7 +142,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(2, len(rv.json))
 
     def test_get_workflow_from_workflow_spec(self):
-        self.load_example_data()
+
         spec = self.load_test_spec('hello_world')
         rv = self.app.post(f'/v1.0/workflow-specification/{spec.id}', headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -150,7 +150,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual('Task_GetName', rv.json['next_task']['name'])
 
     def test_add_workflow_spec_category(self):
-        self.load_example_data()
+
         category = WorkflowSpecCategory(id="test", display_name='Another Test Category',display_order=0, admin=False)
         rv = self.app.post(f'/v1.0/workflow-specification-category',
                            headers=self.logged_in_headers(),
@@ -165,7 +165,7 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual("test", result.id)
 
     def test_update_workflow_spec_category(self):
-        self.load_example_data()
+
         self.load_test_spec('random_fact')
 
         category = self.workflow_spec_service.get_categories()[0]
@@ -197,7 +197,7 @@ class TestWorkflowSpec(BaseTest):
             test_order += 1
 
     def test_add_library_with_category_id(self):
-        self.load_example_data()
+
         self.load_test_spec('random_fact')
 
         category_id = self.workflow_spec_service.get_categories()[0].id

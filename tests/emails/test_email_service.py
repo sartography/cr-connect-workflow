@@ -9,7 +9,6 @@ from unittest.mock import patch
 class TestEmailService(BaseTest):
 
     def test_add_email(self):
-        self.load_example_data()
         study = self.create_study()
 
         subject = 'Email Subject'
@@ -46,7 +45,6 @@ class TestEmailService(BaseTest):
     @patch('crc.services.email_service.EmailService.add_email')
     def test_add_email_with_error(self, mock_response):
 
-        self.load_example_data()
         mock_response.return_value.ok = True
         mock_response.side_effect = Exception("This is my exception!")
 

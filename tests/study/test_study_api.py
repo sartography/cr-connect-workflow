@@ -39,7 +39,7 @@ class TestStudyApi(BaseTest):
         return json.loads(rv.get_data(as_text=True))
 
     def test_study_basics(self):
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         self.assertIsNotNone(study)
 
@@ -49,7 +49,6 @@ class TestStudyApi(BaseTest):
 
         """NOTE:  The protocol builder is not enabled or mocked out.  As the master workflow (which is empty),
         and the test workflow do not need it, and it is disabled in the configuration."""
-        self.load_example_data()
         self.load_test_spec('empty_workflow', master_spec=True)
         self.load_test_spec('random_fact')
         new_study = self.add_test_study()
@@ -80,7 +79,7 @@ class TestStudyApi(BaseTest):
     def test_get_study_has_details_about_files(self):
 
         # Set up the study and attach a file to it.
-        self.load_example_data()
+        self.create_reference_document()
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -101,7 +100,6 @@ class TestStudyApi(BaseTest):
         # TODO: WRITE A TEST FOR STUDY FILES
 
     def test_add_study(self):
-        self.load_example_data()
         self.load_test_spec('empty_workflow', master_spec=True)
         study = self.add_test_study()
         db_study = session.query(StudyModel).filter_by(id=study['id']).first()
@@ -124,7 +122,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study_event.user_uid, self.test_uid)
 
     def test_update_study(self):
-        self.load_example_data()
+        self.add_studies()
         update_comment = 'Updating the study'
         study: StudyModel = session.query(StudyModel).first()
         study.title = "Pilot Study of Fjord Placement for Single Fraction Outcomes to Cortisol Susceptibility"
@@ -156,7 +154,7 @@ class TestStudyApi(BaseTest):
         # Enable the protocol builder for these tests, as the master_workflow and other workflows
         # depend on using the PB for data.
         app.config['PB_ENABLED'] = True
-        self.load_example_data()
+        self.add_studies()
         with session.no_autoflush:
             s = StudyModel(
                 id=54321,  # This matches one of the ids from the study_details_json data.
@@ -236,7 +234,7 @@ class TestStudyApi(BaseTest):
         investigators_response = self.protocol_builder_response('investigators.json')
         mock_investigators.return_value = json.loads(investigators_response)
 
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         rv = self.app.get('/v1.0/study/%i' % study.id,
                           follow_redirects=True,
@@ -252,13 +250,13 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study.ind_number, json_data['ind_number'])
 
     def test_delete_study(self):
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
         self.assert_success(rv)
 
     def test_delete_workflow(self):
-        self.load_example_data()
+
         self.load_test_spec('random_fact')
         self.load_test_spec('empty_workflow', master_spec=True)
         self.add_test_study()
@@ -280,7 +278,7 @@ class TestStudyApi(BaseTest):
 
 
     def test_delete_study_with_workflow_and_status_etc(self):
-        self.load_example_data()
+
         self.load_test_spec('random_fact')
         self.load_test_spec('empty_workflow', master_spec=True)
         self.add_test_study()
@@ -336,7 +334,7 @@ class TestStudyApi(BaseTest):
     #     details_response = self.protocol_builder_response('study_details.json')
     #     mock_details.return_value = ProtocolBuilderStudyDetailsSchema().loads(details_response)
     #
-    #     self.load_example_data()
+    #     ()
     #     study = session.query(StudyModel).first()
     #     study_id = study.id
     #

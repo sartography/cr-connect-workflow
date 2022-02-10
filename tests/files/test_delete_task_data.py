@@ -21,9 +21,7 @@ class TestDeleteTaskData(BaseTest):
         self.assertEqual([], rv.json)
 
     def test_delete_task_data(self):
-
-        self.load_example_data()
-
+        self.create_reference_document()
         doc_code_1 = 'Study_Protocol_Document'
         doc_code_2 = 'Study_App_Doc'
 

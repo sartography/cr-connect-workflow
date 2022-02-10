@@ -37,7 +37,7 @@ class TestStudyCancellations(BaseTest):
         return study_result
 
     def load_workflow(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('study_cancellations')
         study_id = workflow.study_id
         return workflow, study_id

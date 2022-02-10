@@ -19,7 +19,7 @@ class TestTasksApi(BaseTest):
                 self.assertTrue(lookup_data_key in result, 'should have all lookup data columns populated')
 
     def test_get_current_user_tasks(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('random_fact')
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
@@ -55,7 +55,7 @@ class TestTasksApi(BaseTest):
 
     def test_two_forms_task(self):
         # Set up a new workflow
-        self.load_example_data()
+
         workflow = self.create_workflow('two_forms')
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
