@@ -105,10 +105,16 @@ class WorkflowSpecService(FileSystemService):
         return cat_list
 
     def get_libraries(self) -> List[WorkflowSpecInfo]:
-        return self.get_category(self.LIBRARY_SPECS).specs
+        cat = self.get_category(self.LIBRARY_SPECS)
+        if not cat:
+            return []
+        return cat.specs
 
     def get_standalones(self) -> List[WorkflowSpecInfo]:
-        return self.get_category(self.STAND_ALONE_SPECS).specs
+        cat = self.get_category(self.STAND_ALONE_SPECS)
+        if not cat:
+            return []
+        return cat.specs
 
     def get_category(self, category_id):
         """Look for a given category, and return it."""
@@ -225,4 +231,5 @@ class WorkflowSpecService(FileSystemService):
                 json.dump(self.WF_SCHEMA.dump(spec), wf_json, indent=4)
         if category:
             spec.category = category
+            spec.category_id = category.id
         return spec
