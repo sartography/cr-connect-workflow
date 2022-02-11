@@ -179,7 +179,7 @@ class WorkflowSpecService(FileSystemService):
         with os.scandir(FileSystemService.root_path()) as directory_items:
             categories = []
             for item in directory_items:
-                if item.is_dir():
+                if item.is_dir() and not item.name[0] == '.':
                     if item.name == self.REFERENCE_FILES:
                         continue
                     elif item.name == self.MASTER_SPECIFICATION:
