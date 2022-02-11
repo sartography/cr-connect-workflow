@@ -145,22 +145,22 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
         new_categories = WorkflowSpecService().get_categories()
         new_categories.sort(key=lambda w: w.display_order)
 
-        # Confirm the bad display_orders (They all have 1 as display_order)
-        self.assertEqual('Test Category 3', new_categories[0].display_name)
-        self.assertEqual(1, new_categories[0].display_order)
-        self.assertEqual('Test Category 2', new_categories[1].display_name)
-        self.assertEqual(1, new_categories[1].display_order)
-        self.assertEqual('Test Category 1', new_categories[2].display_name)
-        self.assertEqual(1, new_categories[2].display_order)
+        for cat in new_categories:
+            self.assertEqual(1, cat.display_order)
 
         # Reorder 1 up
         # This should cause a cleanup of the display_orders
         rv = self.app.put(f"/v1.0/workflow-specification-category/test_category_1/reorder?direction=up",
                           headers=self.logged_in_headers())
-        json_data = json.loads(rv.get_data(as_text=True))
-        self.assertEqual('Test Category 3', json_data[0]['display_name'])
-        self.assertEqual(0, json_data[0]['display_order'])
-        self.assertEqual('Test Category 1', json_data[1]['display_name'])
-        self.assertEqual(1, json_data[1]['display_order'])
-        self.assertEqual('Test Category 2', json_data[2]['display_name'])
-        self.assertEqual(2, json_data[2]['display_order'])
+
+        cats = rv.json
+        # Calling a reorder gives valid orders, hard to say what, but they are incremental
+        for i in range(0,3):
+            self.assertEqual(i, cats[i]['display_order'])
+
+        second_item = cats[1]
+        rv = self.app.put(f"/v1.0/workflow-specification-category/test_category_1/reorder?direction=up",
+                          headers=self.logged_in_headers())
+        cats = rv.json
+        self.assertEqual(second_item['id'], cats[0]['id'], "item was shifted up by one")
+

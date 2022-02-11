@@ -59,10 +59,8 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
                                             "Error evaluating expression "
                                             "'%s', %s" % (expression, str(e)))
 
-
     @timeit
     def execute(self, task: SpiffTask, script, data):
-
         study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
             workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
