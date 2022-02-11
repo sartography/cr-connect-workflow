@@ -28,7 +28,7 @@ class TestAuthentication(BaseTest):
         # Save the orginal timeout setting
         orig_ttl = float(app.config['TOKEN_AUTH_TTL_HOURS'])
 
-        self.load_example_data()
+
 
         # Set the timeout to something else
         new_ttl = 4.0
@@ -64,7 +64,7 @@ class TestAuthentication(BaseTest):
 
     def test_non_production_auth_creates_user(self):
         new_uid = self.non_admin_uid  ## Assure this user id is in the fake responses from ldap.
-#        self.load_example_data()
+#        ()
         user = session.query(UserModel).filter(UserModel.uid == new_uid).first()
         self.assertIsNone(user)
 
@@ -91,7 +91,8 @@ class TestAuthentication(BaseTest):
         # Switch production mode on
         app.config['PRODUCTION'] = True
 
-        self.load_example_data()
+        ldap_info = LdapService.user_info('dhf8r')
+        session.add(UserModel(uid='dhf8r', ldap_info=ldap_info))
 
         # User should not be in the system yet.
         user = session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
@@ -112,7 +113,7 @@ class TestAuthentication(BaseTest):
         app.config['PRODUCTION'] = False
 
     def test_current_user_status(self):
-        self.load_example_data()
+
         rv = self.app.get('/v1.0/user')
         self.assert_failure(rv, 401)
 
@@ -130,7 +131,8 @@ class TestAuthentication(BaseTest):
         # Switch production mode on
         app.config['PRODUCTION'] = True
 
-        self.load_example_data()
+
+        self.load_test_spec('empty_workflow', master_spec=True)
 
         admin_user = self._login_as_admin()
         admin_study = self._make_fake_study(admin_user.uid)
@@ -163,7 +165,8 @@ class TestAuthentication(BaseTest):
         # Switch production mode on
         app.config['PRODUCTION'] = True
 
-        self.load_example_data()
+
+        self.load_test_spec('empty_workflow', master_spec=True)
 
         # Non-admin user should not be able to delete a study
         non_admin_user = self._login_as_non_admin()
@@ -193,7 +196,7 @@ class TestAuthentication(BaseTest):
         app.config['PRODUCTION'] = False
 
     def test_list_all_users(self):
-        self.load_example_data()
+
         rv = self.app.get('/v1.0/user')
         self.assert_failure(rv, 401)
 
@@ -214,23 +217,11 @@ class TestAuthentication(BaseTest):
         # Switch production mode on
         app.config['PRODUCTION'] = True
 
-        self.load_example_data()
+
+        self.load_test_spec('empty_workflow', master_spec=True)
 
         admin_user = self._login_as_admin()
         admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token())
-
-        # User should not be in the system yet.
-        # non_admin_user = session.query(UserModel).filter(UserModel.uid == self.non_admin_uid).first()
-        # self.assertIsNone(non_admin_user)
-
-        # Admin should not be able to impersonate non-existent user
-        # rv_1 = self.app.get(
-        #    '/v1.0/user?admin_impersonate_uid=' + self.non_admin_uid,
-        #    content_type="application/json",
-        #    headers=admin_token_headers,
-        #    follow_redirects=False
-        #)
-        # self.assert_failure(rv_1, 400)
 
         # Add the non-admin user now
         self.logout()

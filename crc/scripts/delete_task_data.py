@@ -5,7 +5,7 @@ from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.scripts.script import Script
 from crc.services.document_service import DocumentService
-from crc.services.file_service import FileService
+from crc.services.user_file_service import UserFileService
 from crc.services.workflow_service import WorkflowService
 
 
@@ -44,7 +44,7 @@ class DeleteTaskData(Script):
 
         # delete files
         for file in files_to_delete:
-            FileService().delete_file(file.id)
+            UserFileService().delete_file(file.id)
 
             # delete the data store
             session.query(DataStoreModel). \

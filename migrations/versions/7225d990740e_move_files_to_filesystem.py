@@ -12,8 +12,6 @@ import sqlalchemy as sa
 # import crc
 from crc import app, session
 from crc.models.file import FileModel, FileModelSchema, FileDataModel, LookupFileModel, CONTENT_TYPES
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema
-from crc.services.file_service import FileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.workflow_service import WorkflowService
@@ -76,6 +74,7 @@ class FromFilesystemService(object):
     @staticmethod
     def process_workflow_spec_file(json_file, spec_directory):
         file_path = os.path.join(spec_directory, json_file)
+        from crc.services.file_service import FileService
 
         with open(file_path, 'r') as json_handle:
             data = json_handle.read()
@@ -259,6 +258,9 @@ class ToFilesystemService(object):
 
 
 def upgrade():
+
+    from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, \
+        WorkflowSpecCategoryModelSchema
 
     """"""
     bind = op.get_bind()

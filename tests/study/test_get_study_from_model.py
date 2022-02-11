@@ -8,7 +8,7 @@ class TestGetStudyFromModel(BaseTest):
 
     def test_get_study_from_model(self):
 
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).order_by(StudyModel.id.desc()).first()
         id = study.id + 1
         result = self.app.get('/v1.0/study/%i' % id,

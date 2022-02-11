@@ -44,7 +44,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         # This depends on getting a list of investigators back from the protocol builder.
         mock_study_service.return_value = self.mock_investigator_response
 
-        self.load_example_data()
+
         workflow_spec_model = self.create_workflow("irb_api_personnel")
         study = session.query(StudyModel).first()
         processor = WorkflowProcessor(workflow_spec_model)
@@ -64,7 +64,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         # This depends on getting a list of investigators back from the protocol builder.
         mock_study_service.return_value = self.mock_investigator_response
 
-        self.load_example_data()
+        self.add_studies()
         workflow_spec_model = self.load_test_spec("multi_instance")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -146,7 +146,7 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         # This depends on getting a list of investigators back from the protocol builder.
         mock_study_service.return_value = self.mock_investigator_response
 
-        self.load_example_data()
+        self.add_studies()
         workflow_spec_model = self.load_test_spec("multi_instance_parallel")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)

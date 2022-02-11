@@ -29,9 +29,9 @@ class ApiError(Exception):
         self.offset = offset
         self.error_type = error_type
         self.error_line = error_line
-        if hasattr(g, 'user'):
+        try:
             user = g.user.uid
-        else:
+        except Exception as e:
             user = 'Unknown'
         self.task_user = user
         # This is for sentry logging into Slack

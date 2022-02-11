@@ -43,6 +43,7 @@ werkzeug = "*"
 xlrd = "*"
 xlsxwriter = "*"
 pygithub = "*"
+gitpython = "*"
 apscheduler = "*"
 connexion = {extras = [ "swagger-ui",], version = "*"}
 sentry-sdk = {extras = [ "flask",], version = "==0.14.4"}

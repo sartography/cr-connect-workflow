@@ -1,4 +1,3 @@
-from crc.models.workflow import WorkflowLibraryModel
 from tests.base_test import BaseTest
 
 from crc import session
@@ -15,8 +14,8 @@ class TestWorkflowApi(BaseTest):
 
     def test_get_task_events(self):
 
-        self.load_example_data()
-        spec = ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=0, standalone=True, from_tests=True)
+        self.add_users()
+        spec = self.load_test_spec('hello_world')
         user = session.query(UserModel).first()
         self.assertIsNotNone(user)
         WorkflowService.get_workflow_from_spec(spec.id, user)
@@ -27,17 +26,10 @@ class TestWorkflowApi(BaseTest):
                           headers=self.logged_in_headers())
         self.assert_success(rv)
 
-
     def test_library_code(self):
-        self.load_example_data()
-        spec1 = ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=0, library=False,
-                                               from_tests=True)
 
-        spec2 = ExampleDataLoader().create_spec('hello_world_lib', 'Hello World Library', category_id=0, library=True,
-                                               from_tests=True)
-        user = session.query(UserModel).first()
-        self.assertIsNotNone(user)
-
+        spec1 = self.load_test_spec('hello_world')
+        spec2 = self.load_test_spec('hello_world_lib', library=True)
         rv = self.app.post(f'/v1.0/workflow-specification/%s/library/%s'%(spec1.id,spec2.id),
                           follow_redirects=True,
                           content_type="application/json",
@@ -49,8 +41,8 @@ class TestWorkflowApi(BaseTest):
                           headers=self.logged_in_headers())
         returned=rv.json
         self.assertIsNotNone(returned.get('libraries'))
-        self.assertEqual(len(returned['libraries']),1)
-        self.assertEqual(returned['libraries'][0].get('id'),'hello_world_lib')
+        self.assertEqual(len(returned['libraries']), 1)
+        self.assertEqual(returned['libraries'][0], 'hello_world_lib')
         rv = self.app.delete(f'/v1.0/workflow-specification/%s/library/%s'%(spec1.id,spec2.id),follow_redirects=True,
                           content_type="application/json",
                           headers=self.logged_in_headers())
@@ -62,12 +54,9 @@ class TestWorkflowApi(BaseTest):
         self.assertEqual(len(returned['libraries']),0)
 
     def test_library_cleanup(self):
-        self.load_example_data()
-        spec1 = ExampleDataLoader().create_spec('hello_world', 'Hello World', category_id=0, library=False,
-                                               from_tests=True)
-
-        spec2 = ExampleDataLoader().create_spec('hello_world_lib', 'Hello World Library', category_id=0, library=True,
-                                               from_tests=True)
+        self.add_users()
+        spec1 = self.load_test_spec('hello_world')
+        spec2 = self.load_test_spec('hello_world_lib', library=True)
         user = session.query(UserModel).first()
         self.assertIsNotNone(user)
 
@@ -81,14 +70,13 @@ class TestWorkflowApi(BaseTest):
                           content_type="application/json",
                           headers=self.logged_in_headers())
         returned=rv.json
-        lib = session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.library_spec_id==spec2.id).first()
-        self.assertIsNotNone(lib)
+        spec1 = self.workflow_spec_service.get_spec('hello_world')
+        self.assertIn('hello_world_lib', spec1.libraries)
 
-        rv = self.app.delete(f'/v1.0/workflow-specification/%s'%(spec1.id),follow_redirects=True,
+        rv = self.app.delete(f'/v1.0/workflow-specification/%s'%(spec2.id),follow_redirects=True,
                           content_type="application/json",
                           headers=self.logged_in_headers())
-
-        lib = session.query(WorkflowLibraryModel).filter(WorkflowLibraryModel.library_spec_id==spec2.id).first()
-        self.assertIsNone(lib)
+        spec1 = self.workflow_spec_service.get_spec('hello_world')
+        self.assertNotIn('hello_world_lib', spec1.libraries)
 
 

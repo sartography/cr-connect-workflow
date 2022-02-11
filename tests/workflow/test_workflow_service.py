@@ -17,7 +17,7 @@ from crc.api.common import ApiError
 class TestWorkflowService(BaseTest):
 
     def test_documentation_processing_handles_replacements(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('random_fact')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -54,7 +54,7 @@ class TestWorkflowService(BaseTest):
 
     def test_documentation_processing_handles_conditionals(self):
 
-        self.load_example_data()
+
         workflow = self.create_workflow('random_fact')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -69,7 +69,7 @@ class TestWorkflowService(BaseTest):
         self.assertEqual("This test works", docs)
 
     def test_enum_options_from_file(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -81,7 +81,7 @@ class TestWorkflowService(BaseTest):
         self.assertEqual("Other", options[0].name)
 
     def test_random_data_populate_form_on_auto_complete(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('enum_options_with_search')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -137,12 +137,4 @@ class TestWorkflowService(BaseTest):
 
         result2 = WorkflowService.get_dot_value(path, {"a.b.c":"garbage"})
         self.assertEqual("garbage", result2)
-
-    def test_get_primary_workflow(self):
-        workflow = self.create_workflow('hello_world')
-        workflow_spec_id = workflow.workflow_spec.id
-        primary_workflow = WorkflowService.get_primary_workflow(workflow_spec_id)
-        self.assertIsInstance(primary_workflow, FileModel)
-        self.assertEqual(workflow_spec_id, primary_workflow.workflow_spec_id)
-        self.assertEqual('hello_world.bpmn', primary_workflow.name)
 

@@ -4,7 +4,7 @@ from crc.api.common import ApiError
 from crc.services.data_store_service import DataStoreBase
 from crc.scripts.script import Script
 from crc.services.document_service import DocumentService
-from crc.services.file_service import FileService
+from crc.services.user_file_service import UserFileService
 
 
 class FileDataSet(Script, DataStoreBase):
@@ -51,7 +51,7 @@ class FileDataSet(Script, DataStoreBase):
         del(kwargs['file_id'])
         if kwargs['key'] == 'irb_code':
             irb_doc_code = kwargs['value']
-            FileService.update_irb_code(fileid,irb_doc_code)
+            UserFileService.update_irb_code(fileid, irb_doc_code)
 
 
         return self.set_data_common(task.id,

@@ -19,7 +19,7 @@ class TestTasksApi(BaseTest):
                 self.assertTrue(lookup_data_key in result, 'should have all lookup data columns populated')
 
     def test_get_current_user_tasks(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('random_fact')
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
@@ -55,7 +55,7 @@ class TestTasksApi(BaseTest):
 
     def test_two_forms_task(self):
         # Set up a new workflow
-        self.load_example_data()
+
         workflow = self.create_workflow('two_forms')
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
@@ -189,7 +189,8 @@ class TestTasksApi(BaseTest):
         # Modify the specification, with a major change that alters the flow and can't be deserialized
         # effectively, if it uses the latest spec files.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
-        self.replace_file("two_forms.bpmn", file_path)
+        spec = self.workflow_spec_service.get_spec('two_forms')
+        self.replace_file(spec, "two_forms.bpmn", file_path)
 
         # This should use the original workflow spec, and just move to the next task
         workflow_api_2 = self.get_workflow_api(workflow)

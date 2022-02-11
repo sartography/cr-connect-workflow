@@ -95,9 +95,65 @@ and primary investigator to dhf8r - which is a user in the mock ldap service, an
 fire up the interface.
 
 ### Configuration
-1. `instance/config.py`: This will configure the application for your local instance, overriding the configuration
-in config/default
- 
+This covers both local configurations for development, and production settings.
+We will cover all the settings below, but perhaps the most important part of the configuration is setting
+the location of your workflow specifications.  If you start up without setting a path, then it will
+use a few testing workflows as a default.  
+
+For CRConnect, there is a private repository that contains all the workflow specifications, so get this
+checked out, then in a file called /instance/config.py add the following setting:
+SYNC_FILE_ROOT = '/path/to/my/git/dir/crconnect-workflow-specs'
+
+#### Local Configuration
+`instance/config.py`: This will configure the application for your local instance, overriding the configuration
+in config/default.  Very handy for setting 
+
+#### Production Configuration
+We use environment variables with identical names to the variables in the default configuration file to configure the
+application for production deplyment in a docker container
+
+#### Common Configuration Settings
+While these can be set in instance/config.py or as environment settings in docker, I'll present this as how you would
+define the Docker Container, as /config/default.py offers a good example of the former.
+```yaml
+  cr-connect-backend-testing:
+    container_name: cr-connect-backend-testing 
+    image: ghcr.io/sartography/cr-connect-workflow:master  # We use GitHub's actions to publish images
+    volumes:
+      - /home/sartography/docker-volumes/testing:/var/lib/cr-connect/specs   # where specs are located.
+    ports:
+    environment:
+      - PRODUCTION=true   # Should be set to true if you aren't running locally for development.
+      - DEVELOPMENT=false # Should be the opposite of production.
+      - PB_ENABLED=true   # Generally true, we should connect to Protocol Builder
+      - PREFERRED_URL_SCHEME=https   # Generally you want to run on SSL, should be https 
+      - SERVER_NAME=testing.crconnect.uvadcos.io  # The url used to access this app.
+      - TOKEN_AUTH_SECRET_KEY=-0-0-0- TESTING SUPER SECURE -0-0-0- # Some random characters that seed our key gen.
+      - APPLICATION_ROOT=/api # Appended to SERVER_NAME, is the full path to this service
+      - ADMIN_UIDS=dhf8r,cah3us  # A comma delimited list of people who can preform administrative tasks.
+      - CORS_ALLOW_ORIGINS=testing.crconnect.uvadcos.io,shibidp.its.virginia.edu,sp.uvadcos.io # CORS stuff
+      - FRONTEND=testing.crconnect.uvadcos.io # URL to reach the front end application.
+      - BPMN=testing.crconnect.uvadcos.io/bpmn # URL to reach the configuration interface.
+      - PB_BASE_URL=http://10.250.124.174:11022/pb/v2.0/ # URL for Protocol Builder
+      - UPGRADE_DB=true # Will run all migrations on startup if set to true.  Generally a good idea for production.
+      - DB_USER=crc_user # Database user name
+      - DB_NAME=crc_testing  # Database passwprd
+      - DB_HOST=10.250.124.186 # Domain/IP of database server.
+      - DB_PORT=15432 # Port of database server.
+      - DB_PASSWORD=XXXXX  # Passwword for the database
+      - MAIL_PASSWORD=XXXX  # Mail Password
+      - MAIL_USERNAME=XXXXX # Mail username
+      - LDAP_URL=privopenldap.its.virginia.edu # URL for the LDAP Server
+      - LDAP_PASS=XXXX # Password for the ldap server
+      - LDAP_USER=cn=crcconnect,ou=Special Users,o=University of Virginia,c=US #LDAP settings for search, likely these.
+      - SENTRY_ENVIRONMENT=testing.crconnect.uvadcos.io # Configuration for Sentry
+      - GITHUB_TOKEN=XXXX # A token for GitHub so we can push and pull changes.
+      - PORT0=11021  # The port on the server where this sytem should be avialable,  could be 80, but we are behind a proxy.
+      - SYNC_FILE_ROOT=/var/lib/cr-connect/specs # This should be the same as the volumes above, a location where the specs are checked out in git.
+```
+
+
+
 
 ### Project Initialization
 1. Clone this repository.

@@ -7,7 +7,8 @@ class TestHiddenFileDataField(BaseTest):
 
     def test_hidden_file_data_field(self):
 
-        self.load_example_data()
+        self.add_studies()
+        self.create_reference_document()
         workflow = self.create_workflow('hidden_file_data_field')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
@@ -33,7 +34,8 @@ class TestHiddenFileDataField(BaseTest):
 
     def test_not_hidden_file_data_field(self):
 
-        self.load_example_data()
+        self.add_studies()
+        self.create_reference_document()
         workflow = self.create_workflow('hidden_file_data_field')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
