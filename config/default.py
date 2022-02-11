@@ -79,11 +79,11 @@ GITHUB_REPO = environ.get('GITHUB_REPO', None)
 TARGET_BRANCH = environ.get('TARGET_BRANCH', None)
 
 # Git settings, used by git_service
-# The above Github settings--used in file_service, will likely be deprecated
-# You can override these settings in instance/config
-GIT_REMOTE_PATH = environ.get('GIT_REMOTE_PATH', None)
-GIT_BRANCH = environ.get('GIT_BRANCH', None)
-GIT_MERGE_BRANCH = environ.get('GIT_MERGE_BRANCH', None)  # Developers can set this to 'all' in instance.config
+# Among other things, we use these to build a remote URL like https://username:password@host/path.git
+GIT_REMOTE_SERVER = environ.get('GIT_REMOTE_SERVER', None)  # example: 'github.com'
+GIT_REMOTE_PATH = environ.get('GIT_REMOTE_PATH', None)  # example: 'sartography/crconnect-workflow-specs
+GIT_BRANCH = environ.get('GIT_BRANCH', None)  # example: 'main'
+GIT_MERGE_BRANCH = environ.get('GIT_MERGE_BRANCH', None)  # Example: 'staging'
 
 # Email configuration
 DEFAULT_SENDER = 'uvacrconnect@virginia.edu'
