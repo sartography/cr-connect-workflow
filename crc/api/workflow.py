@@ -36,7 +36,9 @@ def all_specifications(libraries=False,standalone=False):
 
     # return standard workflows (not library, not standalone)
     specs = spec_service.get_specs()
-    specs.append(spec_service.get_master_spec())
+    master_spec = spec_service.get_master_spec()
+    if master_spec:
+        specs.append(spec_service.get_master_spec())
     return WorkflowSpecInfoSchema(many=True).dump(specs)
 
 

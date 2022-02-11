@@ -21,7 +21,7 @@ class TestWorkflowSpec(BaseTest):
                           content_type="application/json",headers=self.logged_in_headers())
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
-        specs = WorkflowSpecInfoSchema(many=True).load(json_data)
+        specs = WorkflowSpecInfoSchema(many=True).load(json_data, partial=True)
         spec2 = specs[0]
         self.assertEqual(spec.id, spec2.id)
         self.assertEqual(spec.display_name, spec2.display_name)
