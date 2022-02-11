@@ -2,8 +2,8 @@ from tests.base_test import BaseTest
 
 from crc import db
 from crc.models.data_store import DataStoreModel
-from crc.services.file_service import FileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.user_file_service import UserFileService
 
 from io import BytesIO
 
@@ -13,15 +13,16 @@ import json
 class TestFileDatastore(BaseTest):
 
     def test_file_datastore_workflow(self):
-        self.load_example_data()
+        self.add_studies()
+        self.create_reference_document()
         # we need to create a file with an IRB code
         # for this study
         workflow = self.create_workflow('file_data_store')
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name='task1',
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name='task1',
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code)
 
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -32,7 +33,7 @@ class TestFileDatastore(BaseTest):
         self.assertEqual(task_data['output2'], 'nope')
 
     def test_file_data_store_file_data_property(self):
-        self.load_example_data()
+        self.create_reference_document()
         workflow = self.create_workflow('enum_file_data')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task

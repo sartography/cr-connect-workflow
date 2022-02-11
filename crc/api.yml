@@ -162,197 +162,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Study"
-
-
-  /workflow_sync/pullall:
-    get:
-      operationId: crc.api.workflow_sync.sync_all_changed_workflows
-      summary: Sync all workflows that have changed on the remote side and provide a list of the results
-      security:
-        - ApiKeyAuth : []
-      # in the endpoint
-      parameters:
-        - name: remote
-          in: query
-          required: true
-          description: The remote endpoint
-          schema:
-            type: string
-            example: https://testing.crconnect.uvadcos.io/api
-      tags:
-        - Workflow Sync API
-      responses:
-        '200':
-          description: An array of workflow specs that were synced from remote.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-                example : ['top_level_workflow','3b495037-f7d4-4509-bf58-cee41c0c6b0e']
-
-  /workflow_sync/diff:
-    get:
-      operationId: crc.api.workflow_sync.get_changed_workflows
-      summary: Provides a list of workflow that differ from remote and if it is new or not
-      security :
-        - ApiKeyAuth : []
-      # in the endpoint
-      parameters:
-        - name: remote
-          in: query
-          required: true
-          description: The remote endpoint
-          schema:
-            type: string
-      tags:
-        - Workflow Sync API
-      responses:
-        '200':
-          description: An array of workflow specs, with last touched date and which one is most recent.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpecDiffList"
-
-  /workflow_sync/{workflow_spec_id}/spec:
-    parameters:
-      - name: workflow_spec_id
-        in: path
-        required: true
-        description: The unique id of an existing workflow specification to modify.
-        schema:
-          type: string
-    get:
-      operationId: crc.api.workflow_sync.get_sync_workflow_specification
-      summary: Returns a single workflow specification
-      security:
-        - ApiKeyAuth: []
-      tags:
-        - Workflow Sync API
-      responses:
-        '200':
-          description: Workflow specification.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/WorkflowSpec"
-
-  /workflow_sync/{workflow_spec_id}/files:
-    get:
-      operationId: crc.api.workflow_sync.get_workflow_spec_files
-      summary: Provides a list of files for a workflow spec on this machine.
-      security :
-        - ApiKeyAuth : []
-      parameters:
-        - name: workflow_spec_id
-          in: path
-          required: true
-          description: The workflow_spec id
-          schema:
-            type: string
-
-      tags:
-        - Workflow Sync API
-      responses:
-        '200':
-          description: An array of files for a workflow spec on the local system, with details.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpecFilesList"
-
-  /workflow_sync/{workflow_spec_id}/files/sync:
-    get:
-      operationId: crc.api.workflow_sync.sync_changed_files
-      summary: Syncs files from a workflow on a remote system and provides a list of files that were updated
-      security :
-        - ApiKeyAuth : []
-      parameters:
-        - name: workflow_spec_id
-          in: path
-          required: true
-          description: The workflow_spec id
-          schema:
-            type: string
-        - name: remote
-          in: query
-          required: true
-          description: The remote endpoint
-          schema:
-            type: string
-
-      tags:
-        - Workflow Sync API
-      responses:
-        '200':
-          description: A list of files that were synced for the workflow.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type : string
-                example : ["data_security_plan.dmn",'some_other_file.xml']
-
-  /workflow_sync/{workflow_spec_id}/files/diff:
-    get:
-      operationId: crc.api.workflow_sync.get_changed_files
-      summary: Provides a list of files for a workflow specs that differ from remote and their signature.
-      security :
-        - ApiKeyAuth : []
-
-      parameters:
-        - name: workflow_spec_id
-          in: path
-          required: true
-          description: The workflow_spec id
-          schema:
-            type: string
-        - name: remote
-          in: query
-          required: true
-          description: The remote endpoint
-          schema:
-            type: string
-
-      tags:
-        - Workflow Sync API
-      responses:
-        '200':
-          description: An array of files that are different from remote, with last touched date and file signature.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpecFilesDiff"
-
-  /workflow_sync/all:
-    get:
-      operationId: crc.api.workflow_sync.get_all_spec_state
-      summary: Provides a list of workflow specs, last update date and thumbprint
-      security:
-        - ApiKeyAuth : []
-
-      tags:
-        - Workflow Sync API
-      responses:
-        '200':
-          description: An array of workflow specs, with last touched date and file signature.
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/WorkflowSpecAll"
-
-
   /study/all:
     get:
       operationId: crc.api.study.all_studies
@@ -687,6 +496,160 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Error"
+  /workflow-specification/{spec_id}/file:
+    parameters:
+      - name: spec_id
+        in: path
+        required: true
+        description: The unique id of an existing workflow specification to validate.
+        schema:
+          type: string
+    get:
+      operationId: crc.api.spec_file.get_files
+      summary: Provide a list of workflow spec files for the given workflow_spec_id. IMPORTANT, only includes metadata, not the file content.
+      tags:
+        - Spec Files
+      responses:
+        '200':
+          description: An array of file descriptions (not the file content)
+          content:
+            application/json:
+             schema:
+               type: array
+               items:
+                 $ref: "#/components/schemas/File"
+    post:
+      operationId: crc.api.spec_file.add_file
+      summary: Add a new workflow spec file
+      tags:
+        - Spec Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Metadata about the uploaded file, but not the file content.
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/File"
+  /workflow-specification/{spec_id}/file/{file_name}:
+    parameters:
+      - name: spec_id
+        in: path
+        required: true
+        description: The unique id of an existing workflow specification to validate.
+        schema:
+          type: string
+      - name: file_name
+        in: path
+        required: true
+        description: The id of the spec file
+        schema:
+          type: string
+    get:
+      operationId: crc.api.spec_file.get_file
+      summary: Returns metadata about the file
+      tags:
+        - Spec Files
+      responses:
+        '200':
+          description: Returns the file information requested.
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/File"
+    put:
+      operationId: crc.api.spec_file.update
+      summary: updates the given file to be the primary file and process, if so specified.
+      tags:
+        - Spec Files
+      parameters:
+        - name: is_primary
+          in: query
+          required: true
+          description: Whether to make this the primary file for the workflow.
+          schema:
+            type: boolean
+      requestBody:
+        description: Log Pagination Request
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/File'
+      responses:
+        '200':
+          description: Returns the file information.
+          content:
+            application/json:
+              schema:
+                $ref: "#components/schemas/File"
+    delete:
+      operationId: crc.api.spec_file.delete
+      summary: Removes an existing workflow spec file.
+      tags:
+        - Spec Files
+      responses:
+        '204':
+          description: The file was removed.
+  /workflow-specification/{spec_id}/file/{file_name}/data:
+    parameters:
+      - name: spec_id
+        in: path
+        required: true
+        description: The unique id of an existing workflow specification to validate.
+        schema:
+          type: string
+      - name: file_name
+        in: path
+        required: true
+        description: The id of the requested file
+        schema:
+          type: string
+    get:
+      operationId: crc.api.spec_file.get_data
+      summary: Returns only the spec file content
+      tags:
+        - Spec Files
+      responses:
+        '200':
+          description: Returns the actual spec file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+    put:
+      operationId: crc.api.spec_file.update_data
+      summary: Update the contents of a spec file
+      tags:
+        - Spec Files
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              x-body-name: file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        '200':
+          description: Returns the updated file model
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
   /workflow-specification-category:
     get:
       operationId: crc.api.workflow.list_workflow_spec_categories
@@ -901,36 +864,12 @@ paths:
                 $ref: "#/components/schemas/File"
     delete:
       operationId: crc.api.file.delete_file
-      summary: Removes an existing file.  In the event the file can not be deleted, it is marked as "archived" in the database and is no longer returned unless specifically requested by id.
+      summary: Removes an existing file.
       tags:
         - Files
       responses:
         '204':
           description: The file has been removed.
-  /file/{md5_hash}/hash_data:
-    parameters:
-      - name: md5_hash
-        in: path
-        required: true
-        description: The md5 hash of the file requested
-        schema:
-          type: string
-    get:
-      operationId: crc.api.file.get_file_data_by_hash
-      summary: Returns only the file contents
-      security:
-        - ApiKeyAuth: []
-      tags:
-        - Files
-      responses:
-        '200':
-          description: Returns the actual file
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
   /file/{file_id}/download :
     parameters :
       - name : file_id
@@ -1079,25 +1018,6 @@ paths:
                 type: string
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
-    put:
-      operationId: crc.api.reference_file.update_reference_file_info
-      security:
-        - auth_admin: ['secret']
-      summary: Update the file_info of a named reference file.
-      tags:
-        - Reference Files
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/File"
-      responses:
-        '200':
-          description: File info updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/File"
     delete:
       operationId: crc.api.reference_file.delete_reference_file
       summary: Remove an existing reference file.
@@ -1153,141 +1073,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/File"
-
-  /spec_file:
-    parameters:
-      - name: workflow_spec_id
-        in: query
-        required: true
-        description: The unique id of a workflow specification
-        schema:
-          type: string
-    get:
-      operationId: crc.api.spec_file.get_spec_files
-      summary: Provide a list of workflow spec files for the given workflow_spec_id. IMPORTANT, only includes metadata, not the file content.
-      tags:
-        - Spec Files
-      responses:
-        '200':
-          description: An array of file descriptions (not the file content)
-          content:
-            application/json:
-             schema:
-               type: array
-               items:
-                 $ref: "#/components/schemas/File"
-    post:
-      operationId: crc.api.spec_file.add_spec_file
-      summary: Add a new workflow spec file
-      tags:
-        - Spec Files
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: Metadata about the uploaded file, but not the file content.
-          content:
-            application/json:
-              schema:
-                $ref: "#components/schemas/File"
-  /spec_file/{file_id}:
-    parameters:
-      - name: file_id
-        in: path
-        required: true
-        description: The id of the spec file
-        schema:
-          type: integer
-    get:
-      operationId: crc.api.spec_file.get_spec_file_info
-      summary: Returns metadata about the file
-      tags:
-        - Spec Files
-      responses:
-        '200':
-          description: Returns the file information requested.
-          content:
-            application/json:
-              schema:
-                $ref: "#components/schemas/File"
-    put:
-      operationId: crc.api.spec_file.update_spec_file_info
-      summary: Update existing spec file with the given parameters.
-      tags:
-        - Spec Files
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/File"
-      responses:
-        '200':
-          description: File info updated successfully.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/File"
-    delete:
-      operationId: crc.api.spec_file.delete_spec_file
-      summary: Removes an existing workflow spec file.
-      tags:
-        - Spec Files
-      responses:
-        '204':
-          description: The file was removed.
-  /spec_file/{file_id}/data:
-    parameters:
-      - name: file_id
-        in: path
-        required: true
-        description: The id of the requested file
-        schema:
-          type: integer
-    get:
-      operationId: crc.api.spec_file.get_spec_file_data
-      summary: Returns only the spec file content
-      tags:
-        - Spec Files
-      responses:
-        '200':
-          description: Returns the actual spec file
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-    put:
-      operationId: crc.api.spec_file.update_spec_file_data
-      summary: Update the contents of a spec file
-      tags:
-        - Spec Files
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              x-body-name: file
-              type: object
-              properties:
-                file:
-                  type: string
-                  format: binary
-              required:
-                - file
-      responses:
-        '200':
-          description: Returns the updated file model
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/File"
-
   /dmn_from_ss:
     post:
       operationId: crc.api.file.dmn_from_ss
@@ -1842,6 +1627,66 @@ paths:
               schema:
                 $ref: "#/components/schemas/DataStore"
 
+  /git_repo:
+    get:
+      operationId: crc.api.git_repo.get_repo
+      summary: get current state of the git repo
+      tags:
+        - Git Repo
+      responses:
+        '200':
+          description: Current state of the git repo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitRepo"
+  /git_repo/merge:
+    parameters:
+      - name: branch
+        in: query
+        required: true
+        description: The branch to merge with
+        schema:
+          type: string
+          example: staging
+    get:
+      operationId: crc.api.git_repo.merge_with_branch
+      summary: merge with given branch
+      tags:
+        - Git Repo
+      responses:
+        '200':
+          description: Current state of the git repo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GitRepo"
+  /git_repo/push:
+    parameters:
+      - name: comment
+        in: query
+        required: false
+        description: The comment we want to pass along with the push commit
+        schema:
+          type: string
+    get:
+      operationId: crc.api.git_repo.push_to_remote
+      summary: Push local changes to remote
+      tags:
+        - Git Repo
+      responses:
+        '200':
+          description: Local changes were pushed successfully
+  /git_repo/pull:
+    get:
+      operationId: crc.api.git_repo.pull_from_remote
+      summary: Pull current code from remote
+      tags:
+        - Git Repo
+      responses:
+        '200':
+          description: Remote code was pulled successfully
+
 components:
   securitySchemes:
     jwt:
@@ -1854,11 +1699,6 @@ components:
       scheme: bearer
       bearerFormat: JWT
       x-bearerInfoFunc: crc.api.user.verify_token_admin
-    ApiKeyAuth :
-        type : apiKey
-        in : header
-        name : X-CR-API-KEY
-        x-apikeyInfoFunc: crc.api.workflow_sync.verify_token
 
   schemas:
     User:
@@ -2080,7 +1920,7 @@ components:
           type: string
           nullable: true
         category_id:
-          type: integer
+          type: string
           nullable: true
         standalone:
           type: boolean
@@ -2094,7 +1934,7 @@ components:
     WorkflowSpecCategory:
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
         display_name:
@@ -2527,3 +2367,24 @@ components:
           type: number
           format: integer
           example: 5
+    GitRepo:
+      properties:
+#        remote:
+#          type: string
+#          example: sartography/crconnect-workflow-specs
+        directory:
+          type: string
+          example: /home/cr-connect/sync_files
+        branch:
+          type: string
+          example: dev
+        merge_branch:
+          type: string
+          example: staging
+#        status:
+#          type: string
+#          example: staging
+        changes:
+          type: array
+        untracked:
+          type: array

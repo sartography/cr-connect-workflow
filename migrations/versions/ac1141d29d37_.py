@@ -11,7 +11,6 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-from crc.models.workflow import WorkflowSpecModel, WorkflowModel
 
 revision = 'ac1141d29d37'
 down_revision = '8580676e5302'
@@ -20,6 +19,7 @@ depends_on = None
 
 
 def upgrade():
+    from crc.models.workflow import WorkflowSpecModel, WorkflowModel
     print("Doing the upgrade")
     op.execute('ALTER TABLE workflow DROP CONSTRAINT workflow_workflow_spec_id_fkey')
     op.execute('ALTER TABLE file DROP CONSTRAINT file_workflow_spec_id_fkey')

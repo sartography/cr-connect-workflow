@@ -9,19 +9,11 @@ from crc.api.common import ApiError
 from crc.api.user import verify_token
 from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel
 from crc.services.document_service import DocumentService
-from crc.services.file_service import FileService
-from crc.services.reference_file_service import ReferenceFileService
-from crc.services.spec_file_service import SpecFileService
+from crc.services.user_file_service import UserFileService
 
 
 def to_file_api(file_model):
-    """Converts a FileModel object to something we can return via the api"""
-    if file_model.workflow_spec_id is not None:
-        file_data_model = SpecFileService().get_spec_file_data(file_model.id)
-    elif file_model.is_reference:
-        file_data_model = ReferenceFileService().get_reference_file_data(file_model.name)
-    else:
-        file_data_model = FileService.get_file_data(file_model.id)
+    file_data_model = UserFileService.get_file_data(file_model.id)
     return File.from_models(file_model, file_data_model,
                             DocumentService.get_dictionary())
 
@@ -32,9 +24,9 @@ def get_files(workflow_id=None, form_field_key=None, study_id=None):
                        'Please specify a workflow_id with an optional form_field_key')
 
     if study_id is not None:
-        file_models = FileService.get_files_for_study(study_id=study_id, irb_doc_code=form_field_key)
+        file_models = UserFileService.get_files_for_study(study_id=study_id, irb_doc_code=form_field_key)
     else:
-        file_models = FileService.get_files(workflow_id=workflow_id,
+        file_models = UserFileService.get_files(workflow_id=workflow_id,
                                             irb_doc_code=form_field_key)
 
     files = (to_file_api(model) for model in file_models)
@@ -50,7 +42,7 @@ def add_file(workflow_id=None, task_spec_name=None, form_field_key=None):
         if task_spec_name is None:
             raise ApiError('invalid_workflow_file',
                            'When adding a workflow related file, you must specify a task_spec_name')
-        file_model = FileService.add_workflow_file(workflow_id=workflow_id, irb_doc_code=form_field_key,
+        file_model = UserFileService.add_workflow_file(workflow_id=workflow_id, irb_doc_code=form_field_key,
                                                    task_spec_name=task_spec_name,
                                                    name=file.filename, content_type=file.content_type,
                                                    binary_data=file.stream.read())
@@ -65,7 +57,7 @@ def update_file_data(file_id):
     file = connexion.request.files['file']
     if file_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
-    file_model = FileService.update_file(file_model, file.stream.read(), file.content_type)
+    file_model = UserFileService.update_file(file_model, file.stream.read(), file.content_type)
     return FileSchema().dump(to_file_api(file_model))
 
 
@@ -77,7 +69,7 @@ def get_file_data_by_hash(md5_hash):
 def get_file_data(file_id, version=None):
     file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
     if file_model is not None:
-        file_data_model = FileService.get_file_data(file_id, version)
+        file_data_model = UserFileService.get_file_data(file_id, version)
         if file_data_model is not None:
             return send_file(
                 io.BytesIO(file_data_model.data),
@@ -95,12 +87,7 @@ def get_file_data_link(file_id, auth_token, version=None):
     if not verify_token(auth_token):
         raise ApiError('not_authenticated', 'You need to include an authorization token in the URL with this')
     file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
-    if file_model.workflow_spec_id is not None:
-        file_data = SpecFileService().get_spec_file_data(file_id)
-    elif file_model.is_reference:
-        file_data = ReferenceFileService().get_reference_file_data(file_id)
-    else:
-        file_data = FileService.get_file_data(file_id, version)
+    file_data = UserFileService.get_file_data(file_id, version)
     if file_data is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     return send_file(
@@ -136,12 +123,12 @@ def update_file_info(file_id, body):
 
 
 def delete_file(file_id):
-    FileService.delete_file(file_id)
+    UserFileService.delete_file(file_id)
 
 
 def dmn_from_ss():
     file = connexion.request.files['file']
-    result = FileService.dmn_from_spreadsheet(file)
+    result = UserFileService.dmn_from_spreadsheet(file)
     return send_file(
         io.BytesIO(result),
         attachment_filename='temp_dmn.dmn',

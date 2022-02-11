@@ -78,6 +78,13 @@ GITHUB_TOKEN = environ.get('GITHUB_TOKEN', None)
 GITHUB_REPO = environ.get('GITHUB_REPO', None)
 TARGET_BRANCH = environ.get('TARGET_BRANCH', None)
 
+# Git settings, used by git_service
+# The above Github settings--used in file_service, will likely be deprecated
+# You can override these settings in instance/config
+GIT_REMOTE_PATH = environ.get('GIT_REMOTE_PATH', None)
+GIT_BRANCH = environ.get('GIT_BRANCH', None)
+GIT_MERGE_BRANCH = environ.get('GIT_MERGE_BRANCH', None)  # Developers can set this to 'all' in instance.config
+
 # Email configuration
 DEFAULT_SENDER = 'uvacrconnect@virginia.edu'
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
@@ -90,4 +97,4 @@ MAIL_USERNAME = environ.get('MAIL_USERNAME', default='')
 MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='')
 
 # Local file path
-SYNC_FILE_ROOT = './SPECS'
+SYNC_FILE_ROOT = environ.get('SYNC_FILE_ROOT', default='tests/data/IMPORT_TEST')

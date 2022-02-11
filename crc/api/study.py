@@ -12,7 +12,9 @@ from crc.models.task_log import TaskLogModelSchema, TaskLogQuery, TaskLogQuerySc
 from crc.services.study_service import StudyService
 from crc.services.task_logging_service import TaskLoggingService
 from crc.services.user_service import UserService
+from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 def add_study(body):
@@ -33,15 +35,33 @@ def add_study(body):
                                         event_type=StudyEventType.user,
                                         user_uid=g.user.uid)
 
-    errors = StudyService._add_all_workflow_specs_to_study(study_model)
+    spec_service = WorkflowSpecService()
+    specs = spec_service.get_specs()
+    categories = spec_service.get_categories()
+    errors = StudyService.add_all_workflow_specs_to_study(study_model, specs)
     session.commit()
-    study = StudyService().get_study(study_model.id, do_status=True)
+
+    master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)
+    study = StudyService().get_study(study_model.id, categories, master_workflow_results=master_workflow_results)
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
 
 
+def __run_master_spec(study_model, master_spec):
+    """Runs the master workflow spec to get details on the status of each workflow.
+       This is a fairly expensive call."""
+    """Uses the Top Level Workflow to calculate the status of the study, and it's
+    workflow models."""
+    if not master_spec:
+        raise ApiError("missing_master_spec", "No specifications are currently marked as the master spec.")
+    return WorkflowProcessor.run_master_spec(master_spec, study_model)
+
+
 def update_study(study_id, body):
+    spec_service = WorkflowSpecService()
+    categories = spec_service.get_categories()
+
     """Pretty limited, but allows manual modifications to the study status """
     if study_id is None:
         raise ApiError('unknown_study', 'Please provide a valid Study ID.')
@@ -72,12 +92,18 @@ def update_study(study_id, body):
         WorkflowService.process_workflows_for_cancels(study_id)
 
     # Need to reload the full study to return it to the frontend
-    study = StudyService.get_study(study_id)
+    study = StudyService.get_study(study_id, categories)
     return StudySchema().dump(study)
 
 
 def get_study(study_id, update_status=False):
-    study = StudyService.get_study(study_id, do_status=update_status)
+    spec_service = WorkflowSpecService()
+    categories = spec_service.get_categories()
+    master_workflow_results = []
+    if update_status:
+        study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)
+    study = StudyService().get_study(study_id, categories, master_workflow_results=master_workflow_results)
     if (study is None):
         raise ApiError("unknown_study",  'The study "' + study_id + '" is not recognized.', status_code=404)
     return StudySchema().dump(study)
@@ -105,10 +131,13 @@ def delete_study(study_id):
 def user_studies():
     """Returns all the studies associated with the current user. """
     user = UserService.current_user(allow_admin_impersonate=True)
-    StudyService.synch_with_protocol_builder_if_enabled(user)
-    studies = StudyService().get_studies_for_user(user)
+    spec_service = WorkflowSpecService()
+    specs = spec_service.get_specs()
+    cats = spec_service.get_categories()
+    StudyService.synch_with_protocol_builder_if_enabled(user, specs)
+    studies = StudyService().get_studies_for_user(user, categories=cats)
     if len(studies) == 0:
-        studies = StudyService().get_studies_for_user(user, include_invalid=True)
+        studies = StudyService().get_studies_for_user(user, categories=cats, include_invalid=True)
         if len(studies) > 0:
             message = f"All studies associated with User: {user.uid} failed study validation"
             raise ApiError(code="study_integrity_error", message=message)

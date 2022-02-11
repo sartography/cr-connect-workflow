@@ -6,7 +6,8 @@ from unittest.mock import patch
 class TestCheckStudy(BaseTest):
 
     def test_check_study_script_validation(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('check_study_script')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual([], rv.json)

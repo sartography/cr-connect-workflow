@@ -2,7 +2,6 @@ from tests.base_test import BaseTest
 
 from crc import session
 from crc.models.study import StudyModel, StudySchema
-from crc.models.workflow import WorkflowModel, WorkflowSpecModel
 
 import json
 from unittest.mock import patch
@@ -38,7 +37,7 @@ class TestStudyCancellations(BaseTest):
         return study_result
 
     def load_workflow(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('study_cancellations')
         study_id = workflow.study_id
         return workflow, study_id

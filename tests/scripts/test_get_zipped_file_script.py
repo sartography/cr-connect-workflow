@@ -2,7 +2,7 @@ from tests.base_test import BaseTest
 
 from crc import session
 from crc.models.file import FileDataModel
-from crc.services.file_service import FileService
+from crc.services.user_file_service import UserFileService
 
 import io
 import os
@@ -12,7 +12,7 @@ import zipfile
 class TestGetZippedFiles(BaseTest):
 
     def test_get_zipped_files(self):
-        self.load_example_data()
+        self.create_reference_document()
 
         workflow = self.create_workflow('get_zip_file')
         study_id = workflow.study_id
@@ -20,15 +20,15 @@ class TestGetZippedFiles(BaseTest):
         task = workflow_api.next_task
 
         # Add files to use in the test
-        model_1 = FileService.add_workflow_file(workflow_id=workflow.id,
+        model_1 = UserFileService.add_workflow_file(workflow_id=workflow.id,
                                       name="document_1.png", content_type="text",
                                       task_spec_name=task.name,
                                       binary_data=b'1234', irb_doc_code='Study_Protocol_Document')
-        model_2 = FileService.add_workflow_file(workflow_id=workflow.id,
+        model_2 = UserFileService.add_workflow_file(workflow_id=workflow.id,
                                       name="document_2.txt", content_type="text",
                                       task_spec_name=task.name,
                                       binary_data=b'1234', irb_doc_code='Study_App_Doc')
-        model_3 = FileService.add_workflow_file(workflow_id=workflow.id,
+        model_3 = UserFileService.add_workflow_file(workflow_id=workflow.id,
                                       name="document_3.pdf", content_type="text",
                                       task_spec_name=task.name,
                                       binary_data=b'1234', irb_doc_code='AD_Consent_Model')
