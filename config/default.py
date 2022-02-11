@@ -97,4 +97,4 @@ MAIL_USERNAME = environ.get('MAIL_USERNAME', default='')
 MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='')
 
 # Local file path
-SYNC_FILE_ROOT = 'tests/data/IMPORT_TEST'
+SYNC_FILE_ROOT = environ.get('SYNC_FILE_ROOT', default='tests/data/IMPORT_TEST')
