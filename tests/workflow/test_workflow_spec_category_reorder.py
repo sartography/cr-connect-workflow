@@ -159,7 +159,7 @@ class TestWorkflowSpecCategoryReorder(BaseTest):
             self.assertEqual(i, cats[i]['display_order'])
 
         second_item = cats[1]
-        rv = self.app.put(f"/v1.0/workflow-specification-category/test_category_1/reorder?direction=up",
+        rv = self.app.put(f"/v1.0/workflow-specification-category/{second_item['id']}/reorder?direction=up",
                           headers=self.logged_in_headers())
         cats = rv.json
         self.assertEqual(second_item['id'], cats[0]['id'], "item was shifted up by one")
