@@ -11,10 +11,11 @@ from typing import List
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
+from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
+from SpiffWorkflow.bpmn.specs.StartEvent import StartEvent
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
-from SpiffWorkflow.bpmn.specs.events import EndEvent, StartEvent
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge

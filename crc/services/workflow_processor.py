@@ -1,7 +1,7 @@
 from typing import List
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
-from SpiffWorkflow.bpmn.specs.events import EndEvent
+from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
