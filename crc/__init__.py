@@ -65,9 +65,9 @@ def process_waiting_tasks():
 
 @app.before_first_request
 def init_scheduler():
-    scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
-    # scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
-    scheduler.start()
+    if app.config['PROCESS_WAITING_TASKS']:
+        scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
+        scheduler.start()
 
 
 # Convert list of allowed origins to list of regexes

@@ -98,3 +98,6 @@ MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='')
 
 # Local file path
 SYNC_FILE_ROOT = environ.get('SYNC_FILE_ROOT', default='tests/data/IMPORT_TEST')
+
+# Turn on/off processing waiting tasks
+PROCESS_WAITING_TASKS = environ.get('PROCESS_WAITING_TASKS', default='true')
