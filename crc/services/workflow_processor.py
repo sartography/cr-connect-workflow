@@ -1,6 +1,7 @@
 from typing import List
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
+from SpiffWorkflow.bpmn.specs.events import EndEvent
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
@@ -9,7 +10,6 @@ from datetime import datetime
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
-from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
@@ -278,7 +278,7 @@ class WorkflowProcessor(object):
     def cancel_notify(self):
         try:
             self.bpmn_workflow.signal('cancel') # generate a cancel signal.
-            self.bpmn_workflow.cancel_notify() # call cancel_notify in
+#            self.bpmn_workflow.cancel_notify()  # call cancel_notify in
         except WorkflowTaskExecException as we:
             raise ApiError.from_workflow_exception("task_error", str(we), we)
 

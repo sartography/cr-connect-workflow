@@ -37,7 +37,6 @@ class TestStudyCancellations(BaseTest):
         return study_result
 
     def load_workflow(self):
-
         workflow = self.create_workflow('study_cancellations')
         study_id = workflow.study_id
         return workflow, study_id
@@ -66,7 +65,7 @@ class TestStudyCancellations(BaseTest):
         mock_details.return_value = json.loads(details_response)
 
         workflow, study_id = self.load_workflow()
-        self.get_first_task(workflow)
+        self.get_first_task(workflow) # Asserts we are on the first task in the workflow.
 
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('Beer consumption in the bipedal software engineer', study_result.title)
@@ -96,6 +95,7 @@ class TestStudyCancellations(BaseTest):
         workflow_api, next_task = self.get_second_task(workflow)
         self.complete_form(workflow, next_task, {'how_many': 3})
 
+        workflow_api, next_task = self.get_third_task(workflow)
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('Second Title', study_result.title)
 
