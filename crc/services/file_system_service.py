@@ -100,8 +100,10 @@ class FileSystemService(object):
         items = os.scandir(file_path)
         for item in items:
             if item.is_file():
+                if item.name.startswith('.'):
+                    continue  # Ignore hidden files
                 if item.name == FileSystemService.WF_JSON_FILE:
-                    continue # Ignore the json files.
+                    continue  # Ignore the json files.
                 if file_name is not None and item.name != file_name:
                     continue
                 file = FileSystemService.to_file_object_from_dir_entry(item)
