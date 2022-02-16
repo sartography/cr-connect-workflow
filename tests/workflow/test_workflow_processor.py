@@ -3,9 +3,10 @@ import logging
 import os
 from unittest.mock import patch
 
+from SpiffWorkflow.bpmn.specs.events import EndEvent
+
 from tests.base_test import BaseTest
 
-from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.camunda.specs.UserTask import FormField
 
 from crc import session, db, app
