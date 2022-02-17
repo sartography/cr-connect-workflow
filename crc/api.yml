@@ -2381,10 +2381,9 @@ components:
         merge_branch:
           type: string
           example: staging
-#        status:
-#          type: string
-#          example: staging
         changes:
           type: array
+          example: ['file_1.txt', 'file_2.txt']
         untracked:
           type: array
+          example: ['a_file.txt', 'b_file.txt']
