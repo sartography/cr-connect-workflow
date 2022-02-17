@@ -36,38 +36,31 @@ del(delta1)</bpmn:script>
     <bpmn:manualTask id="Activity_0phz7ks" name="Display Dates">
       <bpmn:documentation># Dates
 
-
 ## A Date
 {{ a_date }}
 
-
-## A Delta
-{{ a_delta }}
-
-
-## Modified Date
-{{ modified_date }}</bpmn:documentation>
+</bpmn:documentation>
       <bpmn:incoming>Flow_0dvxkh6</bpmn:incoming>
       <bpmn:outgoing>Flow_19hbirj</bpmn:outgoing>
     </bpmn:manualTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1wfi0e5">
-      <bpmndi:BPMNEdge id="Flow_09e6w2a_di" bpmnElement="Flow_09e6w2a">
-        <di:waypoint x="215" y="117" />
-        <di:waypoint x="270" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0cbbsi7_di" bpmnElement="Flow_0cbbsi7">
-        <di:waypoint x="370" y="117" />
-        <di:waypoint x="430" y="117" />
+      <bpmndi:BPMNEdge id="Flow_19hbirj_di" bpmnElement="Flow_19hbirj">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0dvxkh6_di" bpmnElement="Flow_0dvxkh6">
         <di:waypoint x="530" y="117" />
         <di:waypoint x="590" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_19hbirj_di" bpmnElement="Flow_19hbirj">
-        <di:waypoint x="690" y="117" />
-        <di:waypoint x="752" y="117" />
+      <bpmndi:BPMNEdge id="Flow_0cbbsi7_di" bpmnElement="Flow_0cbbsi7">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09e6w2a_di" bpmnElement="Flow_09e6w2a">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
