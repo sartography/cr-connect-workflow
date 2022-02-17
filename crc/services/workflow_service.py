@@ -541,6 +541,8 @@ class WorkflowService(object):
             return FileSchema().dump(file)
         elif field.type == 'files':
             return random.randrange(1, 100)
+        elif field.type == 'date':
+            return datetime.utcnow()
         else:
             return WorkflowService._random_string()
 
