@@ -85,6 +85,10 @@ class FileSystemService(object):
                            file_extension, status_code=404)
 
     @staticmethod
+    def _timestamp(file_path: str):
+        return os.path.getmtime(file_path)
+
+    @staticmethod
     def _last_modified(file_path: str):
         # Returns the last modified date of the given file.
         timestamp = os.path.getmtime(file_path)

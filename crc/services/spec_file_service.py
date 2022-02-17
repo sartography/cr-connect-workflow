@@ -77,6 +77,11 @@ class SpecFileService(FileSystemService):
         return FileSystemService._last_modified(path)
 
     @staticmethod
+    def timestamp(spec: WorkflowSpecInfo, file_name: str):
+        path = SpecFileService.file_path(spec, file_name)
+        return FileSystemService._timestamp(path)
+
+    @staticmethod
     def delete_file(spec, file_name):
         # Fixme: Remember to remove the lookup files when the spec file is removed.
         # lookup_files = session.query(LookupFileModel).filter_by(file_model_id=file_id).all()

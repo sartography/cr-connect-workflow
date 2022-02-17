@@ -214,8 +214,12 @@ def restart_workflow(workflow_id, clear_data=False, delete_files=False):
     """Restart a workflow with the latest spec.
        Clear data allows user to restart the workflow without previous data."""
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    WorkflowProcessor.reset(workflow_model, clear_data=clear_data, delete_files=delete_files)
-    return get_workflow(workflow_model.id)
+    processor = WorkflowProcessor.reset(workflow_model, clear_data=clear_data, delete_files=delete_files)
+    processor.do_engine_steps()
+    processor.save()
+    WorkflowService.update_task_assignments(processor)
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
+    return WorkflowApiSchema().dump(workflow_api_model)
 
 
 def get_task_events(action = None, workflow = None, study = None):

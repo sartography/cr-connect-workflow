@@ -77,3 +77,7 @@ class ReferenceFileService(FileSystemService):
     @staticmethod
     def last_modified(file_name):
         return FileSystemService._last_modified(ReferenceFileService.file_path(file_name))
+
+    @staticmethod
+    def timestamp(file_name):
+        return FileSystemService._timestamp(ReferenceFileService.file_path(file_name))
