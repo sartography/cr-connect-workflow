@@ -53,7 +53,6 @@ class Task(object):
     FIELD_PROP_HIDE_EXPRESSION = "hide_expression"
     FIELD_PROP_REQUIRED_EXPRESSION = "required_expression"
     FIELD_PROP_LABEL_EXPRESSION = "label_expression"
-    FIELD_PROP_VALUE_EXPRESSION = "value_expression"
     FIELD_PROP_REPEAT_HIDE_EXPRESSION = "repeat_hide_expression"
 
     # Enum field options
