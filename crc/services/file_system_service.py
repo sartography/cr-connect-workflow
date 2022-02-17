@@ -2,6 +2,8 @@ import datetime
 import os
 from typing import List
 
+import pytz
+
 from crc import app
 from crc.api.common import ApiError
 from crc.models.file import FileType, CONTENT_TYPES, File
@@ -83,10 +85,16 @@ class FileSystemService(object):
                            file_extension, status_code=404)
 
     @staticmethod
+    def _timestamp(file_path: str):
+        return os.path.getmtime(file_path)
+
+    @staticmethod
     def _last_modified(file_path: str):
         # Returns the last modified date of the given file.
         timestamp = os.path.getmtime(file_path)
-        return datetime.datetime.fromtimestamp(timestamp)
+        utc_dt = datetime.datetime.utcfromtimestamp(timestamp)
+        aware_utc_dt = utc_dt.replace(tzinfo=pytz.utc)
+        return aware_utc_dt
 
     @staticmethod
     def file_type(file_name):
@@ -100,8 +108,10 @@ class FileSystemService(object):
         items = os.scandir(file_path)
         for item in items:
             if item.is_file():
+                if item.name.startswith('.'):
+                    continue  # Ignore hidden files
                 if item.name == FileSystemService.WF_JSON_FILE:
-                    continue # Ignore the json files.
+                    continue  # Ignore the json files.
                 if file_name is not None and item.name != file_name:
                     continue
                 file = FileSystemService.to_file_object_from_dir_entry(item)
@@ -127,6 +137,6 @@ class FileSystemService(object):
             raise ApiError("invalid_type", "Invalid File Type: %s, for file %s" % (extension, item.name))
         stats = item.stat()
         file_size = stats.st_size
-        last_modified = datetime.datetime.fromtimestamp(stats.st_mtime)
+        last_modified = FileSystemService._last_modified(item.path)
         return File.from_file_system(item.name, file_type, content_type, last_modified, file_size)
 

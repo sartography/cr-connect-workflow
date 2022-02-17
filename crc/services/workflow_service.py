@@ -11,11 +11,10 @@ from typing import List
 import jinja2
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
-from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
-from SpiffWorkflow.bpmn.specs.StartEvent import StartEvent
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
+from SpiffWorkflow.bpmn.specs.events import EndEvent, StartEvent
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
@@ -41,6 +40,9 @@ from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_spec_service import WorkflowSpecService
+
+from flask import request
+from sentry_sdk import capture_message, push_scope
 
 
 class WorkflowService(object):
@@ -124,6 +126,53 @@ class WorkflowService(object):
                                   workflow_model.workflow_spec_id,
                                   workflow_model.study_id,
                                   str(e)))
+
+    @staticmethod
+    def get_erroring_workflows():
+        workflows = session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.erroring).all()
+        return workflows
+
+    @staticmethod
+    def get_workflow_url(workflow):
+        base_url = app.config['FRONTEND']
+        workflow_url = f'https://{base_url}/workflow/{workflow.id}'
+        return workflow_url
+
+    def process_erroring_workflows(self):
+        workflows = self.get_erroring_workflows()
+        if len(workflows) > 0:
+            workflow_urls = []
+            if len(workflows) == 1:
+                workflow = workflows[0]
+                workflow_url_link = self.get_workflow_url(workflow)
+                workflow_urls.append(workflow_url_link)
+                message = 'There is one workflow in an error state.'
+                message += f'\n You can restart the workflow at {workflow_url_link}.'
+            else:
+                message = f'There are {len(workflows)} workflows in an error state.'
+                message += '\nYou can restart the workflows at these URLs:'
+                for workflow in workflows:
+                    workflow_url_link = self.get_workflow_url(workflow)
+                    workflow_urls.append(workflow_url_link)
+                    message += f'\n{workflow_url_link}'
+
+            with push_scope() as scope:
+                scope.user = {"urls": workflow_urls}
+                scope.set_extra("workflow_urls", workflow_urls)
+                # this sends a message through sentry
+                capture_message(message)
+            # We return message so we can use it in a test
+            return message
+
+    @staticmethod
+    def raise_if_disabled(spec_id, study_id):
+        """Raise an exception of the workflow is not enabled and can not be executed."""
+        if study_id is not None:
+            study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+            spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == spec_id).first()
+            status = StudyService._get_study_status(study_model)
+            if spec_model.id in status and status[spec_model.id]['status'] == 'disabled':
+                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.id]['message']}")
 
     @staticmethod
     @timeit
@@ -542,6 +591,8 @@ class WorkflowService(object):
             return FileSchema().dump(file)
         elif field.type == 'files':
             return random.randrange(1, 100)
+        elif field.type == 'date':
+            return datetime.utcnow()
         else:
             return WorkflowService._random_string()
 

@@ -196,66 +196,6 @@ class UserFileService(object):
             raise ApiError('Delete Failed', "Unable to delete file. ")
 
     @staticmethod
-    def get_repo_branches():
-        gh_token = app.config['GITHUB_TOKEN']
-        github_repo = app.config['GITHUB_REPO']
-        _github = Github(gh_token)
-        repo = _github.get_user().get_repo(github_repo)
-        branches = [branch.name for branch in repo.get_branches()]
-        return branches
-
-    @staticmethod
-    def update_from_github(file_ids, source_target=GithubObject.NotSet):
-        gh_token = app.config['GITHUB_TOKEN']
-        github_repo = app.config['GITHUB_REPO']
-        _github = Github(gh_token)
-        repo = _github.get_user().get_repo(github_repo)
-
-        for file_id in file_ids:
-            file_data_model = FileDataModel.query.filter_by(
-                file_model_id=file_id
-            ).order_by(
-                desc(FileDataModel.version)
-            ).first()
-            try:
-                repo_file = repo.get_contents(file_data_model.file_model.name, ref=source_target)
-            except UnknownObjectException:
-                return {'error': 'Attempted to update from repository but file was not present'}
-            else:
-                file_data_model.data = repo_file.decoded_content
-                session.add(file_data_model)
-                session.commit()
-
-    @staticmethod
-    def publish_to_github(file_ids):
-        target_branch = app.config['TARGET_BRANCH'] if app.config['TARGET_BRANCH'] else GithubObject.NotSet
-        gh_token = app.config['GITHUB_TOKEN']
-        github_repo = app.config['GITHUB_REPO']
-        _github = Github(gh_token)
-        repo = _github.get_user().get_repo(github_repo)
-        for file_id in file_ids:
-            file_data_model = FileDataModel.query.filter_by(file_model_id=file_id).first()
-            try:
-                repo_file = repo.get_contents(file_data_model.file_model.name, ref=target_branch)
-            except UnknownObjectException:
-                repo.create_file(
-                    path=file_data_model.file_model.name,
-                    message=f'Creating {file_data_model.file_model.name}',
-                    content=file_data_model.data,
-                    branch=target_branch
-                )
-                return {'created': True}
-            else:
-                updated = repo.update_file(
-                    path=repo_file.path,
-                    message=f'Updating {file_data_model.file_model.name}',
-                    content=file_data_model.data + b'brah-model',
-                    sha=repo_file.sha,
-                    branch=target_branch
-                )
-                return {'updated': True}
-
-    @staticmethod
     def dmn_from_spreadsheet(ss_data):
 
         def _get_random_string(length):

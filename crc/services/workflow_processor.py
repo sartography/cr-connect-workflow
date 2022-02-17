@@ -1,6 +1,7 @@
 from typing import List
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
+from SpiffWorkflow.bpmn.specs.events import EndEvent, CancelEventDefinition
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
@@ -9,7 +10,6 @@ from datetime import datetime
 from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
-from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
 from SpiffWorkflow.camunda.parser.CamundaParser import CamundaParser
 from SpiffWorkflow.dmn.parser.BpmnDmnParser import BpmnDmnParser
@@ -145,12 +145,11 @@ class WorkflowProcessor(object):
 
     @staticmethod
     def reset(workflow_model, clear_data=False, delete_files=False):
-        print('WorkflowProcessor: reset: ')
 
         # Try to execute a cancel notify
         try:
             wp = WorkflowProcessor(workflow_model)
-            wp.cancel_notify() # The executes a notification to all endpoints that
+            wp.cancel_notify()  # The executes a notification to all endpoints that
         except Exception as e:
             app.logger.error(f"Unable to send a cancel notify for workflow %s during a reset."
                              f" Continuing with the reset anyway so we don't get in an unresolvable"
@@ -277,8 +276,10 @@ class WorkflowProcessor(object):
 
     def cancel_notify(self):
         try:
-            self.bpmn_workflow.signal('cancel') # generate a cancel signal.
-            self.bpmn_workflow.cancel_notify() # call cancel_notify in
+            # A little hackly, but make the bpmn_workflow catch a cancel event.
+            self.bpmn_workflow.signal('cancel')  # generate a cancel signal.
+            self.bpmn_workflow.catch(CancelEventDefinition())
+            self.bpmn_workflow.do_engine_steps()
         except WorkflowTaskExecException as we:
             raise ApiError.from_workflow_exception("task_error", str(we), we)
 

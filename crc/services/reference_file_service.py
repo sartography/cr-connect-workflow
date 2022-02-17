@@ -73,3 +73,11 @@ class ReferenceFileService(FileSystemService):
     def delete(file_name):
         file_path = ReferenceFileService.file_path(file_name)
         os.remove(file_path)
+
+    @staticmethod
+    def last_modified(file_name):
+        return FileSystemService._last_modified(ReferenceFileService.file_path(file_name))
+
+    @staticmethod
+    def timestamp(file_name):
+        return FileSystemService._timestamp(ReferenceFileService.file_path(file_name))

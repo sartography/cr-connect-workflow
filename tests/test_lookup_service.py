@@ -6,9 +6,9 @@ from crc.api.common import ApiError
 from crc import session, app
 from crc.models.file import FileDataModel, FileModel, LookupFileModel, LookupDataModel, CONTENT_TYPES
 from crc.services.lookup_service import LookupService
-from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.document_service import DocumentService
 
 
 class TestLookupService(BaseTest):
@@ -24,8 +24,13 @@ class TestLookupService(BaseTest):
     def test_lookup_table_is_not_created_more_than_once(self):
         spec = self.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
+        self.assertEqual(0, session.query(LookupFileModel).count())
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
+        self.assertEqual(1, session.query(LookupFileModel).count())
+        lookup_table_orig = session.query(LookupFileModel).first()
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "something", limit=10)
+        lookup_table = session.query(LookupFileModel).first()
+        self.assertEqual(lookup_table_orig, lookup_table)
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "blah", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
@@ -182,14 +187,24 @@ class TestLookupService(BaseTest):
 
         # Using an old xls file should raise an error
         file_data_xls = SpecFileService().get_data(spec, 'sponsors.xls')
+        timestamp = SpecFileService().timestamp(spec, 'sponsors.xls')
         with self.assertRaises(ApiError) as ae:
-            LookupService.build_lookup_table('sponsors.xls', file_data_xls, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
+            LookupService.build_lookup_table('sponsors.xls', file_data_xls, timestamp, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertIn('Error opening excel file', ae.exception.args[0])
 
         # Using an xlsx file should work
         file_data_xlsx = SpecFileService().get_data(spec, 'sponsors.xlsx')
-        lookup_model = LookupService.build_lookup_table('sponsors.xlsx', file_data_xlsx,
+        timestamp = SpecFileService().timestamp(spec, 'sponsors.xlsx')
+        lookup_model = LookupService.build_lookup_table('sponsors.xlsx', file_data_xlsx, timestamp,
                                                         'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertEqual(28, len(lookup_model.dependencies))
         self.assertIn('CUSTOMER_NAME', lookup_model.dependencies[0].data.keys())
         self.assertIn('CUSTOMER_NUMBER', lookup_model.dependencies[0].data.keys())
+
+    def test_lookup_for_reference_caches_properly(self):
+        self.create_reference_document()
+        lookup_model_1 = LookupService.get_lookup_model_for_reference(DocumentService.DOCUMENT_LIST,
+                                                                      'code', 'description')
+        lookup_model_2 = LookupService.get_lookup_model_for_reference(DocumentService.DOCUMENT_LIST,
+                                                                      'code', 'description')
+        self.assertEqual(lookup_model_1, lookup_model_2)

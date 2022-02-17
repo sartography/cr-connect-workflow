@@ -1,6 +1,6 @@
 from tests.base_test import BaseTest
 
-from crc import session
+from crc import session, db
 from crc.models.study import StudyModel, StudySchema
 
 import json
@@ -37,7 +37,6 @@ class TestStudyCancellations(BaseTest):
         return study_result
 
     def load_workflow(self):
-
         workflow = self.create_workflow('study_cancellations')
         study_id = workflow.study_id
         return workflow, study_id
@@ -66,9 +65,13 @@ class TestStudyCancellations(BaseTest):
         mock_details.return_value = json.loads(details_response)
 
         workflow, study_id = self.load_workflow()
-        self.get_first_task(workflow)
+        self.get_first_task(workflow) # Asserts we are on the first task in the workflow.
 
+        study = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        self.assertEqual('Beer consumption in the bipedal software engineer', study.title)
         study_result = self.put_study_on_hold(study_id)
+        self.get_first_task(workflow) # Asserts we are on the first task in the workflow.
+
         self.assertEqual('Beer consumption in the bipedal software engineer', study_result.title)
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
@@ -96,6 +99,7 @@ class TestStudyCancellations(BaseTest):
         workflow_api, next_task = self.get_second_task(workflow)
         self.complete_form(workflow, next_task, {'how_many': 3})
 
+        workflow_api, next_task = self.get_third_task(workflow)
         study_result = self.put_study_on_hold(study_id)
         self.assertEqual('Second Title', study_result.title)
 

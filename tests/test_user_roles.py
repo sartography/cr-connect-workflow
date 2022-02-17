@@ -162,10 +162,13 @@ class TestUserRoles(BaseTest):
         self.assertEqual('LOCKED', nav[1].state)  # First item belongs to the submitter, and is locked.
         self.assertEqual('COMPLETED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
         self.assertEqual('READY', nav[3].state)  # Gateway is ready, and should be unfolded
-        self.assertEqual(None, nav[3].children[0].state)  # sequence flow for approved is none - we aren't going this way.
-        self.assertEqual('READY', nav[3].children[1].state)  # sequence flow for denied is ready
-        self.assertEqual('LOCKED', nav[3].children[1].children[0].state)  # Feedback is locked, it belongs to submitter
-        self.assertEqual('LOCKED', nav[3].children[1].children[0].state)  # Approval is locked, it belongs to the submitter
+        # order of these is unclear ...
+        approved = list(filter(lambda child: child.name == 'approved', nav[3].children))[0]
+        rejected = list(filter(lambda child: child.name == 'rejected', nav[3].children))[0]
+        self.assertEqual(None, approved.state)  # sequence flow for approved is none - we aren't going this way.
+        self.assertEqual('READY', rejected.state)  # sequence flow for denied is ready
+        self.assertEqual('LOCKED', rejected.children[0].state)  # Feedback is locked, it belongs to submitter
+        self.assertEqual('LOCKED', rejected.children[0].state)  # Approval is locked, it belongs to the submitter
         self.assertEqual('LOCKED', workflow_api.next_task.state)
 
         # Navigation as Submitter, coming back in to a rejected workflow to view the rejection message.
@@ -175,10 +178,12 @@ class TestUserRoles(BaseTest):
         self.assertEqual('COMPLETED', nav[1].state)  # First item belongs to the submitter, and is locked.
         self.assertEqual('LOCKED', nav[2].state)  # Second item is locked, it is the review and doesn't belong to this user.
         self.assertEqual('READY', nav[3].state)
-        self.assertEqual(None, nav[3].children[0].state)  # sequence flow for approved is none - we aren't going this way.
-        self.assertEqual('READY', nav[3].children[1].state)  # sequence flow for denied is ready
-        self.assertEqual('READY', nav[3].children[1].children[0].state)  # Feedback is locked, it belongs to submitter
-        self.assertEqual('READY', nav[3].children[1].children[0].state)  # Approval is locked, it belongs to the submitter
+        # order of these is unclear ...
+        approved = list(filter(lambda child: child.name == 'approved', nav[3].children))[0]
+        rejected = list(filter(lambda child: child.name == 'rejected', nav[3].children))[0]
+        self.assertEqual(None, approved.state)  # sequence flow for approved is none - we aren't going this way.
+        self.assertEqual('READY', rejected.state)  # sequence flow for denied is ready
+        self.assertEqual('READY', rejected.children[0].state)  # Feedback is locked, it belongs to submitter
 
         # Navigation as Submitter, re-completing the original request a second time, and sending it for review.
         workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=submitter.uid)
