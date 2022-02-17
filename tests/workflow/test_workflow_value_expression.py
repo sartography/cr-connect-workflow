@@ -36,7 +36,8 @@ class TestValueExpression(BaseTest):
     def test_validate_task_with_both_default_and_expression(self):
         # This actually fails validation.
         # We are testing the error message is correct.
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('default_value_expression')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual('default value and value_expression', rv.json[0]['code'])

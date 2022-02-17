@@ -19,7 +19,7 @@ class TestSudySponsorsScript(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data() # study_info script complains if irb_documents.xls is not loaded
+        () # study_info script complains if irb_documents.xls is not loaded
                                  # during the validate phase I'm going to assume that we will never
                                  # have a case where irb_documents.xls is not loaded ??
 
@@ -34,8 +34,7 @@ class TestSudySponsorsScript(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data()
-        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)

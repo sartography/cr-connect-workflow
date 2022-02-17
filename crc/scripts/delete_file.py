@@ -3,7 +3,7 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel
 from crc.scripts.script import Script
 from crc.services.document_service import DocumentService
-from crc.services.file_service import FileService
+from crc.services.user_file_service import UserFileService
 
 
 class DeleteFile(Script):
@@ -15,7 +15,7 @@ class DeleteFile(Script):
                 FileModel.workflow_id == workflow_id, FileModel.irb_doc_code == doc_code).all()
             if isinstance(result, list) and len(result) > 0 and isinstance(result[0], FileModel):
                 for file in result:
-                    FileService.delete_file(file.id)
+                    UserFileService.delete_file(file.id)
             else:
                 raise ApiError.from_task(code='no_document_found',
                                          message=f'No document of type {doc_code} was found for this workflow.',

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_070ba96" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_TestMultiple" name="Test Multiple" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1w8il3k</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1w8il3k" sourceRef="StartEvent_1" targetRef="Activity_GetNumbers" />
+    <bpmn:sequenceFlow id="Flow_0zy8gri" sourceRef="Activity_GetNumbers" targetRef="Activity_1ie5wag" />
+    <bpmn:callActivity id="Activity_1ie5wag" name="Multiply" calledElement="Process_Multiply">
+      <bpmn:incoming>Flow_0zy8gri</bpmn:incoming>
+      <bpmn:outgoing>Flow_0mtrjqf</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:task id="Activity_1iai20j" name="Display Multiple">
+      <bpmn:documentation>## Multiple
+{{ multiple }}
+</bpmn:documentation>
+      <bpmn:incoming>Flow_0mtrjqf</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zy8247</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_0mtrjqf" sourceRef="Activity_1ie5wag" targetRef="Activity_1iai20j" />
+    <bpmn:endEvent id="Event_1hiokdc">
+      <bpmn:incoming>Flow_0zy8247</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0zy8247" sourceRef="Activity_1iai20j" targetRef="Event_1hiokdc" />
+    <bpmn:userTask id="Activity_GetNumbers" name="Get Numbers" camunda:formKey="NumberForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="num_1" label="First Number" type="long">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="num_2" label="Second Number" type="long" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1w8il3k</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zy8gri</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_TestMultiple">
+      <bpmndi:BPMNEdge id="Flow_0zy8247_di" bpmnElement="Flow_0zy8247">
+        <di:waypoint x="690" y="177" />
+        <di:waypoint x="752" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mtrjqf_di" bpmnElement="Flow_0mtrjqf">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="590" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zy8gri_di" bpmnElement="Flow_0zy8gri">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1w8il3k_di" bpmnElement="Flow_1w8il3k">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10bb50r_di" bpmnElement="Activity_1ie5wag">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1iai20j_di" bpmnElement="Activity_1iai20j">
+        <dc:Bounds x="590" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hiokdc_di" bpmnElement="Event_1hiokdc">
+        <dc:Bounds x="752" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1kqfoxq_di" bpmnElement="Activity_GetNumbers">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -7,51 +7,32 @@ from tests.base_test import BaseTest
 from crc import db, app
 from crc.models.study import StudyModel, StudyStatus, StudyAssociatedSchema
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowModel, WorkflowStatus, \
-    WorkflowSpecCategoryModel
-from crc.services.file_service import FileService
+from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecCategory
 from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.user_file_service import UserFileService
+from crc.services.user_service import UserService
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class TestStudyService(BaseTest):
     """Largely tested via the test_study_api, and time is tight, but adding new tests here."""
 
     def create_user_with_study_and_workflow(self):
-
-        # clear it all out.
-        from example_data import ExampleDataLoader
-        ExampleDataLoader.clean_db()
-
-        # Assure some basic models are in place, This is a damn mess.  Our database models need an overhaul to make
-        # this easier - better relationship modeling is now critical.
-        cat = WorkflowSpecCategoryModel(id=None, display_name="Approvals", display_order=0)
-        db.session.add(cat)
-        db.session.commit()
-        self.load_test_spec("top_level_workflow", master_spec=True, category_id=cat.id)
-        user = db.session.query(UserModel).filter(UserModel.uid == "dhf8r").first()
-        if not user:
-            ldap = LdapService.user_info('dhf8r')
-            user = UserModel(uid="dhf8r", ldap_info=ldap)
-            db.session.add(user)
-            db.session.commit()
-        else:
-            for study in db.session.query(StudyModel).all():
-                StudyService().delete_study(study.id)
-
+        self.load_test_spec("top_level_workflow", master_spec=True)
+        cat = WorkflowSpecCategory(id="approvals", display_name="Approvals", display_order=0, admin=False)
+        self.workflow_spec_service.add_category(cat)
+        self.load_test_spec("random_fact", category_id=cat.id)
+        user = self.create_user()
         study = StudyModel(title="My title", status=StudyStatus.in_progress, user_uid=user.uid)
         db.session.add(study)
-
-        self.load_test_spec("random_fact", category_id=cat.id)
-
+        db.session.commit()
         self.assertIsNotNone(study.id)
         workflow = WorkflowModel(workflow_spec_id="random_fact", study_id=study.id,
                                  status=WorkflowStatus.not_started, last_updated=datetime.utcnow())
         db.session.add(workflow)
         db.session.commit()
-        # Assure there is a master specification, one standard spec, and lookup tables.
-        ExampleDataLoader().load_reference_documents()
         return user
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
@@ -67,10 +48,12 @@ class TestStudyService(BaseTest):
         user = self.create_user_with_study_and_workflow()
 
         # The load example data script should set us up a user and at least one study, one category, and one workflow.
-        studies = StudyService().get_studies_for_user(user)
+        spec_service = WorkflowSpecService()
+        categories = spec_service.get_categories()
+        studies = StudyService().get_studies_for_user(user, categories)
         self.assertTrue(len(studies) == 1)
         self.assertTrue(len(studies[0].categories) == 1)
-        self.assertTrue(len(studies[0].categories[0].workflows) == 1)
+        self.assertEqual(1, len(studies[0].categories[0].workflows))
 
         workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
 
@@ -85,12 +68,13 @@ class TestStudyService(BaseTest):
         processor.do_engine_steps()
 
         # Assure the workflow is now started, and knows the total and completed tasks.
-        studies = StudyService().get_studies_for_user(user)
+        spec_service = WorkflowSpecService()
+        categories = spec_service.get_categories()
+        studies = StudyService().get_studies_for_user(user, categories)
         workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
         # self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
         self.assertTrue(workflow.total_tasks > 0)
         self.assertEqual(0, workflow.completed_tasks)
-        self.assertIsNotNone(workflow.spec_version)
 
         # Complete a task
         task = processor.next_task()
@@ -98,7 +82,7 @@ class TestStudyService(BaseTest):
         processor.save()
 
         # Assure the workflow has moved on to the next task.
-        studies = StudyService().get_studies_for_user(user)
+        studies = StudyService().get_studies_for_user(user, spec_service.get_categories())
         workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
         self.assertEqual(1, workflow.completed_tasks)
 
@@ -107,6 +91,7 @@ class TestStudyService(BaseTest):
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_get_required_docs(self, mock_docs, mock_details):
+        self.create_reference_document()
         app.config['PB_ENABLED'] = True
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('required_docs.json')
@@ -115,7 +100,9 @@ class TestStudyService(BaseTest):
         mock_details.return_value = json.loads(details_response)
 
         user = self.create_user_with_study_and_workflow()
-        studies = StudyService().get_studies_for_user(user)
+        spec_service = WorkflowSpecService()
+        categories = spec_service.get_categories()
+        studies = StudyService().get_studies_for_user(user, categories)
         study = studies[0]
 
 
@@ -136,7 +123,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_get_documents_has_file_details(self, mock_docs):
-
+        self.create_reference_document()
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('required_docs.json')
         mock_docs.return_value = json.loads(docs_response)
@@ -146,10 +133,10 @@ class TestStudyService(BaseTest):
         # Add a document to the study with the correct code.
         workflow = self.create_workflow('docx')
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name='t1',
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name='t1',
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code)
 
         docs = StudyService().get_documents_status(workflow.study_id)
         self.assertIsNotNone(docs)
@@ -169,18 +156,18 @@ class TestStudyService(BaseTest):
         workflow2 = self.create_workflow('empty_workflow', study=study)
 
         # Add files to both workflows.
-        FileService.add_workflow_file(workflow_id=workflow1.id,
-                                      task_spec_name="t1",
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
-        FileService.add_workflow_file(workflow_id=workflow1.id,
-                                      task_spec_name="t1",
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code="AD_Consent_Model")
-        FileService.add_workflow_file(workflow_id=workflow2.id,
-                                      task_spec_name="t1",
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
+        UserFileService.add_workflow_file(workflow_id=workflow1.id,
+                                          task_spec_name="t1",
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
+        UserFileService.add_workflow_file(workflow_id=workflow1.id,
+                                          task_spec_name="t1",
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code="AD_Consent_Model")
+        UserFileService.add_workflow_file(workflow_id=workflow2.id,
+                                          task_spec_name="t1",
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code="UVACompl_PRCAppr" )
 
         studies = StudyService().get_all_studies_with_files()
         self.assertEqual(1, len(studies))
@@ -191,7 +178,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_docs
     def test_get_personnel_roles(self, mock_docs):
-        self.load_example_data()
+        self.create_reference_document()
 
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('investigators.json')
@@ -217,7 +204,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_docs
     def test_get_study_personnel(self, mock_docs):
-        self.load_example_data()
+        self.create_reference_document()
 
         # mock out the protocol builder
         docs_response = self.protocol_builder_response('investigators.json')
@@ -244,7 +231,9 @@ class TestStudyService(BaseTest):
         mock_details.return_value = json.loads(details_response)
 
         user = self.create_user_with_study_and_workflow()
-        studies = StudyService().get_studies_for_user(user)
+        spec_service = WorkflowSpecService()
+        categories = spec_service.get_categories()
+        studies = StudyService().get_studies_for_user(user, categories)
         # study_details has a valid REVIEW_TYPE, so we should get 1 study back
         self.assertEqual(1, len(studies))
 
@@ -253,8 +242,10 @@ class TestStudyService(BaseTest):
         details_response = self.protocol_builder_response('study_details_bad_review_type.json')
         mock_details.return_value = json.loads(details_response)
 
+        spec_service = WorkflowSpecService()
+        categories = spec_service.get_categories()
         user = self.create_user_with_study_and_workflow()
-        studies = StudyService().get_studies_for_user(user)
+        studies = StudyService().get_studies_for_user(user, categories)
         # study_details has an invalid REVIEW_TYPE, so we should get 0 studies back
         self.assertEqual(0, len(studies))
 

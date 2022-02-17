@@ -2,18 +2,19 @@ import os
 
 from tests.base_test import BaseTest
 
-from crc.services.file_service import FileService
 from crc.api.common import ApiError
 from crc import session, app
 from crc.models.file import FileDataModel, FileModel, LookupFileModel, LookupDataModel, CONTENT_TYPES
 from crc.services.lookup_service import LookupService
+from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.document_service import DocumentService
 
 
 class TestLookupService(BaseTest):
 
     def test_lookup_returns_good_error_on_bad_field(self):
-        spec = BaseTest.load_test_spec('enum_options_with_search')
+        spec = self.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
         file_model = session.query(FileModel).filter(FileModel.name == "customer_list.xlsx").first()
         file_data_model = session.query(FileDataModel).filter(FileDataModel.file_model == file_model).first()
@@ -21,10 +22,15 @@ class TestLookupService(BaseTest):
             LookupService.lookup(workflow, "Task_Enum_Lookup", "not_the_right_field", "sam", limit=10)
 
     def test_lookup_table_is_not_created_more_than_once(self):
-        spec = BaseTest.load_test_spec('enum_options_with_search')
+        spec = self.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
+        self.assertEqual(0, session.query(LookupFileModel).count())
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
+        self.assertEqual(1, session.query(LookupFileModel).count())
+        lookup_table_orig = session.query(LookupFileModel).first()
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "something", limit=10)
+        lookup_table = session.query(LookupFileModel).first()
+        self.assertEqual(lookup_table_orig, lookup_table)
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "blah", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
@@ -34,9 +40,8 @@ class TestLookupService(BaseTest):
         self.assertEqual(28, len(lookup_data))
 
     def test_updates_to_file_cause_lookup_rebuild(self):
-        spec = BaseTest.load_test_spec('enum_options_with_search')
+        spec = self.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
-        file_model = session.query(FileModel).filter(FileModel.name == "sponsors.xlsx").first()
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "sam", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
@@ -49,11 +54,11 @@ class TestLookupService(BaseTest):
         file_path = os.path.join(app.root_path, '..', 'tests', 'data',
                                  'enum_options_with_search', 'sponsors_modified.xlsx')
         file = open(file_path, 'rb')
-        FileService.update_file(file_model, file.read(), CONTENT_TYPES['xlsx'])
+        workflow_spec_model = self.workflow_spec_service.get_spec(workflow.workflow_spec_id)
+        SpecFileService().update_file(workflow_spec_model, "sponsors.xlsx", file.read())
         file.close()
 
         # restart the workflow, so it can pick up the changes.
-
         processor = WorkflowProcessor.reset(workflow)
         workflow = processor.workflow_model
 
@@ -64,7 +69,7 @@ class TestLookupService(BaseTest):
         self.assertEqual(4, len(lookup_data))
 
     def test_lookup_based_on_id(self):
-        spec = BaseTest.load_test_spec('enum_options_from_file')
+        spec = self.load_test_spec('enum_options_from_file')
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -75,7 +80,7 @@ class TestLookupService(BaseTest):
 
 
     def test_lookup_with_two_spreadsheets_with_the_same_field_name_in_different_forms(self):
-        spec = BaseTest.load_test_spec('enum_options_competing_files')
+        spec = self.load_test_spec('enum_options_competing_files')
         workflow = self.create_workflow('enum_options_competing_files')
         processor = WorkflowProcessor(workflow)
 
@@ -106,7 +111,7 @@ class TestLookupService(BaseTest):
 
 
     def test_some_full_text_queries(self):
-        spec = BaseTest.load_test_spec('enum_options_from_file')
+        spec = self.load_test_spec('enum_options_from_file')
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -167,7 +172,7 @@ class TestLookupService(BaseTest):
         self.assertEqual("Other", results[0]['CUSTOMER_NAME'], "Can't find the word 'other', which is an english stop word")
 
     def test_find_by_id(self):
-        spec = BaseTest.load_test_spec('enum_options_from_file')
+        spec = self.load_test_spec('enum_options_from_file')
         workflow = self.create_workflow('enum_options_from_file')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
@@ -178,19 +183,28 @@ class TestLookupService(BaseTest):
         self.assertEquals('UVA - INTERNAL - GM USE ONLY', first_result['CUSTOMER_NAME'])
 
     def test_lookup_fails_for_xls(self):
-        BaseTest.load_test_spec('enum_options_with_search')
+        spec = self.load_test_spec('enum_options_with_search')
 
         # Using an old xls file should raise an error
-        file_model_xls = session.query(FileModel).filter(FileModel.name == 'sponsors.xls').first()
-        file_data_model_xls = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xls.id).first()
+        file_data_xls = SpecFileService().get_data(spec, 'sponsors.xls')
+        file_date = SpecFileService().last_modified(spec, 'sponsors.xls')
         with self.assertRaises(ApiError) as ae:
-            LookupService.build_lookup_table(file_data_model_xls, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
+            LookupService.build_lookup_table('sponsors.xls', file_data_xls, file_date, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertIn('Error opening excel file', ae.exception.args[0])
 
         # Using an xlsx file should work
-        file_model_xlsx = session.query(FileModel).filter(FileModel.name == 'sponsors.xlsx').first()
-        file_data_model_xlsx = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_xlsx.id).first()
-        lookup_model = LookupService.build_lookup_table(file_data_model_xlsx, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
+        file_data_xlsx = SpecFileService().get_data(spec, 'sponsors.xlsx')
+        file_date = SpecFileService().last_modified(spec, 'sponsors.xlsx')
+        lookup_model = LookupService.build_lookup_table('sponsors.xlsx', file_data_xlsx, file_date,
+                                                        'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertEqual(28, len(lookup_model.dependencies))
         self.assertIn('CUSTOMER_NAME', lookup_model.dependencies[0].data.keys())
         self.assertIn('CUSTOMER_NUMBER', lookup_model.dependencies[0].data.keys())
+
+    def test_lookup_for_reference_caches_properly(self):
+        self.create_reference_document()
+        lookup_model_1 = LookupService.get_lookup_model_for_reference(DocumentService.DOCUMENT_LIST,
+                                                                      'code', 'description')
+        lookup_model_2 = LookupService.get_lookup_model_for_reference(DocumentService.DOCUMENT_LIST,
+                                                                      'code', 'description')
+        self.assertEqual(lookup_model_1, lookup_model_2)

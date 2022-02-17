@@ -15,7 +15,7 @@ class TestValidateEndEvent(BaseTest):
 
         error_string = """Jinja Template Error:  expected token 'end of statement block', got '='"""
 
-        self.load_example_data()
+
         spec_model = self.load_test_spec('verify_end_event')
         try:
             WorkflowService.test_spec(spec_model.id)

@@ -4,7 +4,6 @@ from unittest.mock import patch
 import flask
 
 from crc.api.common import ApiError
-from crc.services.user_service import UserService
 
 from crc import session, app
 from crc.models.study import StudyModel
@@ -27,10 +26,7 @@ class TestSudySponsorsScript(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('sponsors.json')
         flask.g.user = UserModel(uid='dhf8r')
-        self.load_example_data() # study_info script complains if irb_documents.xls is not loaded
-                                 # during the validate phase I'm going to assume that we will never
-                                 # have a case where irb_documents.xls is not loaded ??
-
+        self.add_users()
         self.load_test_spec("study_sponsors_associate")
         WorkflowService.test_spec("study_sponsors_associate")  # This would raise errors if it didn't validate
 
@@ -42,8 +38,7 @@ class TestSudySponsorsScript(BaseTest):
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data()
-        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -80,8 +75,7 @@ class TestSudySponsorsScript(BaseTest):
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data()
-        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate_fail")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -98,8 +92,7 @@ class TestSudySponsorsScript(BaseTest):
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data()
-        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -120,8 +113,7 @@ class TestSudySponsorsScript(BaseTest):
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data()
-        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -152,8 +144,7 @@ class TestSudySponsorsScript(BaseTest):
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data()
-        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associate_switch_user")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -181,8 +172,7 @@ class TestSudySponsorsScript(BaseTest):
         flask.g.user = UserModel(uid='dhf8r')
         app.config['PB_ENABLED'] = True
 
-        self.load_example_data()
-        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_sponsors_associates_delete")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)

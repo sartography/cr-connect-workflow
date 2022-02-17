@@ -1,16 +1,14 @@
 import json
 import os
-import random
-from unittest.mock import patch
 
 from tests.base_test import BaseTest
 
 from crc import session, app
-from crc.models.api_models import WorkflowApiSchema, MultiInstanceType, TaskSchema
+from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModelSchema
 from crc.models.workflow import WorkflowStatus
 from crc.models.task_event import TaskEventModel
-from SpiffWorkflow.bpmn.PythonScriptEngine import Box
+
 
 class TestTasksApi(BaseTest):
 
@@ -21,7 +19,7 @@ class TestTasksApi(BaseTest):
                 self.assertTrue(lookup_data_key in result, 'should have all lookup data columns populated')
 
     def test_get_current_user_tasks(self):
-        self.load_example_data()
+
         workflow = self.create_workflow('random_fact')
         workflow = self.get_workflow_api(workflow)
         task = workflow.next_task
@@ -57,7 +55,7 @@ class TestTasksApi(BaseTest):
 
     def test_two_forms_task(self):
         # Set up a new workflow
-        self.load_example_data()
+
         workflow = self.create_workflow('two_forms')
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
@@ -185,34 +183,34 @@ class TestTasksApi(BaseTest):
     def test_load_workflow_from_outdated_spec(self):
         # Start the basic two_forms workflow and complete a task.
         workflow = self.create_workflow('two_forms')
-        workflow_api = self.get_workflow_api(workflow)
-        self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
-        self.assertTrue(workflow_api.is_latest_spec)
+        workflow_api_1 = self.get_workflow_api(workflow)
+        self.complete_form(workflow, workflow_api_1.next_task, {"color": "blue"})
 
         # Modify the specification, with a major change that alters the flow and can't be deserialized
         # effectively, if it uses the latest spec files.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
-        self.replace_file("two_forms.bpmn", file_path)
+        spec = self.workflow_spec_service.get_spec('two_forms')
+        self.replace_file(spec, "two_forms.bpmn", file_path)
 
-        workflow_api = self.get_workflow_api(workflow)
-        self.assertTrue(workflow_api.spec_version.startswith("v1 "))
-        self.assertFalse(workflow_api.is_latest_spec)
+        # This should use the original workflow spec, and just move to the next task
+        workflow_api_2 = self.get_workflow_api(workflow)
+        self.assertEqual('StepTwo', workflow_api_2.next_task.name)
 
-        workflow_api = self.restart_workflow_api(workflow_api, clear_data=True)
-        self.assertTrue(workflow_api.spec_version.startswith("v2 "))
-        self.assertTrue(workflow_api.is_latest_spec)
+        workflow_api_3 = self.restart_workflow_api(workflow_api_2, clear_data=True)
+        # This should restart the workflow and we should be back on StepOne
+        self.assertEqual('StepOne', workflow_api_3.next_task.name)
 
         # Assure this hard_reset sticks (added this after a bug was found)
-        workflow_api = self.get_workflow_api(workflow)
-        self.assertTrue(workflow_api.spec_version.startswith("v2 "))
-        self.assertTrue(workflow_api.is_latest_spec)
+        # Again, we should be on StepOne
+        workflow_api_4 = self.get_workflow_api(workflow)
+        self.assertEqual('StepOne', workflow_api_4.next_task.name)
 
     def test_reset_workflow_from_broken_spec(self):
         # Start the basic two_forms workflow and complete a task.
         workflow = self.create_workflow('two_forms')
         workflow_api = self.get_workflow_api(workflow)
         self.complete_form(workflow, workflow_api.next_task, {"color": "blue"})
-        self.assertTrue(workflow_api.is_latest_spec)
+        # self.assertTrue(workflow_api.is_latest_spec)
 
         # Break the bpmn json
         workflow.bpmn_workflow_json = '{"something":"broken"}'
@@ -227,12 +225,10 @@ class TestTasksApi(BaseTest):
         workflow_api = self.restart_workflow_api(workflow_api, clear_data=True)
         self.assertIsNotNone(workflow_api)
 
-
-
     def test_manual_task_with_external_documentation(self):
         workflow = self.create_workflow('manual_task_with_external_documentation')
 
-        # get the first form in the two form workflow.
+        # Complete the form in the workflow.
         task = self.get_workflow_api(workflow).next_task
         workflow_api = self.complete_form(workflow, task, {"name": "Dan"})
 

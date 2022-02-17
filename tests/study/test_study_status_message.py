@@ -3,6 +3,7 @@ from crc import db, session
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowState
 from crc.services.study_service import StudyService
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class TestStudyStatusMessage(BaseTest):
@@ -12,9 +13,11 @@ class TestStudyStatusMessage(BaseTest):
 
     def run_update_status(self, status):
         # shared code
-        self.load_example_data()
+        self.load_test_spec('random_fact')
+        self.create_workflow('random_fact')
         study_model = session.query(StudyModel).first()
-        workflow_metas = StudyService._get_workflow_metas(study_model.id)
+        spec_service = WorkflowSpecService()
+        workflow_metas = StudyService._get_workflow_metas(study_model.id, spec_service.get_categories()[0])
         warnings = StudyService._update_status_of_workflow_meta(workflow_metas, status)
         return workflow_metas, warnings
 

@@ -1,8 +1,6 @@
 from tests.base_test import BaseTest
-from crc import session
 from crc.api.common import ApiError
-from crc.models.workflow import WorkflowSpecModel
-from crc.services.file_service import FileService
+from crc.services.spec_file_service import SpecFileService
 
 
 class TestDuplicateWorkflowSpecFile(BaseTest):
@@ -11,22 +9,16 @@ class TestDuplicateWorkflowSpecFile(BaseTest):
         # We want this to fail.
         # Users should not be able to upload a file that already exists.
 
-        self.load_example_data()
-        spec = session.query(WorkflowSpecModel).first()
+
+        spec = self.load_test_spec('random_fact')
 
         # Add a file
-        file_model = FileService.add_workflow_spec_file(spec,
-                                                        name="something.png",
-                                                        content_type="text",
-                                                        binary_data=b'1234')
+        file_model = SpecFileService.add_file(spec, "something.png", b'1234')
         self.assertEqual(file_model.name, 'something.png')
-        self.assertEqual(file_model.content_type, 'text')
+        self.assertEqual(file_model.content_type, 'image/png')
 
         # Try to add it again
         try:
-            FileService.add_workflow_spec_file(spec,
-                                               name="something.png",
-                                               content_type="text",
-                                               binary_data=b'5678')
+            file_model = SpecFileService.add_file(spec, "something.png", b'1234')
         except ApiError as ae:
             self.assertEqual(ae.message, 'If you want to replace the file, use the update mechanism.')

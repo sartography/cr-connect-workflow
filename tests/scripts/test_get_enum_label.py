@@ -8,7 +8,6 @@ from crc.services.workflow_processor import WorkflowProcessor
 class TestGetEnumLabel(BaseTest):
 
     def setUp(self):
-        self.load_example_data()
         self.workflow = self.create_workflow('enum_options_all')
         self.workflow_api = self.get_workflow_api(self.workflow)
 

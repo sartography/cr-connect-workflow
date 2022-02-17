@@ -10,8 +10,7 @@ from crc.api.common import ApiErrorSchema, ApiError
 from crc.models.file import FileSchema
 from crc.models.ldap import LdapModel, LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
-from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowState, WorkflowStatus, WorkflowModel
-from crc.services.file_service import FileService
+from crc.models.workflow import WorkflowSpecCategory, WorkflowState, WorkflowStatus, WorkflowModel, WorkflowSpecInfo
 
 
 class StudyStatus(enum.Enum):
@@ -134,21 +133,19 @@ class WorkflowMetadata(object):
 
 
     @classmethod
-    def from_workflow(cls, workflow: WorkflowModel):
-        is_review = FileService.is_workflow_review(workflow.workflow_spec_id)
+    def from_workflow(cls, workflow: WorkflowModel, spec: WorkflowSpecInfo):
         instance = cls(
             id=workflow.id,
-            display_name=workflow.workflow_spec.display_name,
-            description=workflow.workflow_spec.description,
-            spec_version=workflow.spec_version(),
-            category_id=workflow.workflow_spec.category_id,
-            category_display_name=workflow.workflow_spec.category.display_name,
+            display_name=spec.display_name,
+            description=spec.description,
+            category_id=spec.category_id,
+            category_display_name=spec.category.display_name,
             state=WorkflowState.optional,
             status=workflow.status,
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,
-            is_review=is_review,
-            display_order=workflow.workflow_spec.display_order,
+            is_review=spec.is_review,
+            display_order=spec.display_order,
             workflow_spec_id=workflow.workflow_spec_id
         )
         return instance
@@ -160,13 +157,13 @@ class WorkflowMetadataSchema(ma.Schema):
     class Meta:
         model = WorkflowMetadata
         additional = ["id", "display_name", "description",
-                 "total_tasks", "completed_tasks", "display_order",
+                      "total_tasks", "completed_tasks", "display_order",
                       "category_id", "is_review", "category_display_name", "state_message"]
         unknown = INCLUDE
 
 
 class Category(object):
-    def __init__(self, model: WorkflowSpecCategoryModel):
+    def __init__(self, model: WorkflowSpecCategory):
         self.id = model.id
         self.display_name = model.display_name
         self.display_order = model.display_order

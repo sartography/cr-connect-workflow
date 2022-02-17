@@ -11,13 +11,13 @@ from werkzeug.utils import redirect
 from jinja2 import Markup
 
 from crc import db, app
+from crc.api.common import ApiError
 from crc.api.user import verify_token, verify_token_admin
 from crc.models.file import FileModel, FileDataModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel
-from crc.services.file_service import FileService
 
 
 class AdminModelView(sqla.ModelView):
@@ -59,11 +59,11 @@ class FileView(AdminModelView):
 
     @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
     def action_publish(self, ids):
-        FileService.publish_to_github(ids)
+        raise ApiError("not_implemented", "This method is not yet implemented.")
 
     @action('update', 'Update', 'Are you sure you want to update this file(s)?')
     def action_update(self, ids):
-        FileService.update_from_github(ids)
+        raise ApiError("not_implemented", "This method is not yet implemented.")
 
 
 def json_formatter(view, context, model, name):

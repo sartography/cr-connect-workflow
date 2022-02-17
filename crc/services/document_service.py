@@ -1,7 +1,11 @@
+import time
+
+from crc import session
 from crc.api.common import ApiError
 from crc.models.api_models import DocumentDirectory
-from crc.services.file_service import FileService
+from crc.models.file import FileModel
 from crc.services.lookup_service import LookupService
+from crc.services.reference_file_service import ReferenceFileService
 
 
 class DocumentService(object):
@@ -37,8 +41,8 @@ class DocumentService(object):
     @staticmethod
     def get_dictionary():
         """Returns a dictionary of document details keyed on the doc_code."""
-        file_data = FileService.get_reference_file_data(DocumentService.DOCUMENT_LIST)
-        lookup_model = LookupService.get_lookup_model_for_file_data(file_data, 'code', 'description')
+        lookup_model = LookupService.get_lookup_model_for_reference(DocumentService.DOCUMENT_LIST,
+                                                                    'code', 'description')
         doc_dict = {}
         for lookup_data in lookup_model.dependencies:
             doc_dict[lookup_data.value] = lookup_data.data
@@ -59,7 +63,6 @@ class DocumentService(object):
                     expand = file.workflow_id == int(workflow_id)
                 else:
                     expand = False
-                print(expand)
                 categories = [x for x in [doc_code['category1'], doc_code['category2'], doc_code['category3'], file] if x]
                 DocumentService.ensure_exists(directory, categories, expanded=expand)
         return directory
@@ -90,8 +93,6 @@ class DocumentService(object):
                 new_level.expanded = expanded
                 output.append(new_level)
                 DocumentService.ensure_exists(new_level.children, categories[1:], expanded)
-            else:
-                print("Found it")
         else:
             new_level = DocumentDirectory(file=current_item)
             new_level.expanded = expanded

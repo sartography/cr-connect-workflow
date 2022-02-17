@@ -17,8 +17,9 @@ class TestStudyDetailsScript(BaseTest):
     test_study_id = 1
 
     def setUp(self):
-        self.load_example_data()
         self.create_reference_document()
+        self.add_studies()
+
         self.study = session.query(StudyModel).first()
         self.workflow_spec_model = self.load_test_spec("two_forms")
         self.workflow_model = StudyService._create_workflow_model(self.study, self.workflow_spec_model)

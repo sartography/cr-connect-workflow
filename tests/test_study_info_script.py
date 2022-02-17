@@ -15,7 +15,7 @@ class TestStudyInfoScript(BaseTest):
 
     def do_work(self, info_type):
         app.config['PB_ENABLED'] = True
-        self.load_example_data()
+        self.create_reference_document()
         self.workflow = self.create_workflow('study_info_script')
         self.workflow_api = self.get_workflow_api(self.workflow)
         # grab study_info directly from script
@@ -37,7 +37,7 @@ class TestStudyInfoScript(BaseTest):
         self.assertIn(study_info['title'], second_task.documentation)
 
     def test_info_script_updated_study_info(self):
-        self.load_example_data()
+
         short_name = "My Short Name"
         proposal_name = "My Proposal Name"
         workflow = self.create_workflow('update_study_info')

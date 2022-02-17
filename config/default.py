@@ -25,7 +25,8 @@ CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default
 TESTING = environ.get('TESTING', default="false") == "true"
 PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")
 TEST_UID = environ.get('TEST_UID', default="dhf8r")
-ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,ajl2j,cah3us,cl3wf"))
+ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,kcm4zc,cah3us"))
+DEFAULT_UID = environ.get('DEFAULT_UID', default="dhf8r")
 
 # Sentry flag
 ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"  # To be removed soon
@@ -77,6 +78,13 @@ GITHUB_TOKEN = environ.get('GITHUB_TOKEN', None)
 GITHUB_REPO = environ.get('GITHUB_REPO', None)
 TARGET_BRANCH = environ.get('TARGET_BRANCH', None)
 
+# Git settings, used by git_service
+# The above Github settings--used in file_service, will likely be deprecated
+# You can override these settings in instance/config
+GIT_REMOTE_PATH = environ.get('GIT_REMOTE_PATH', None)
+GIT_BRANCH = environ.get('GIT_BRANCH', None)
+GIT_MERGE_BRANCH = environ.get('GIT_MERGE_BRANCH', None)  # Developers can set this to 'all' in instance.config
+
 # Email configuration
 DEFAULT_SENDER = 'uvacrconnect@virginia.edu'
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
@@ -87,3 +95,9 @@ MAIL_USE_SSL = environ.get('MAIL_USE_SSL', default=False)
 MAIL_USE_TLS = environ.get('MAIL_USE_TLS', default=False)
 MAIL_USERNAME = environ.get('MAIL_USERNAME', default='')
 MAIL_PASSWORD = environ.get('MAIL_PASSWORD', default='')
+
+# Local file path
+SYNC_FILE_ROOT = environ.get('SYNC_FILE_ROOT', default='tests/data/IMPORT_TEST')
+
+# Turn on/off processing waiting tasks
+PROCESS_WAITING_TASKS = environ.get('PROCESS_WAITING_TASKS', default='true')

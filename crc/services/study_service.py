@@ -11,7 +11,7 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.email import EmailModel
-from crc.models.file import FileModel, File, FileSchema
+from crc.models.file import FileModel, File, FileSchema, FileDataModel
 from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
@@ -19,13 +19,13 @@ from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowM
     StudyAssociated, ProgressStatus
 from crc.models.task_event import TaskEventModel
 from crc.models.task_log import TaskLogModel
-from crc.models.workflow import WorkflowSpecCategoryModel, WorkflowModel, WorkflowSpecModel, WorkflowState, \
-    WorkflowStatus, WorkflowSpecDependencyFile
+from crc.models.workflow import WorkflowSpecCategory, WorkflowModel, WorkflowSpecInfo, WorkflowState, \
+    WorkflowStatus
 from crc.services.document_service import DocumentService
-from crc.services.file_service import FileService
 from crc.services.ldap_service import LdapService
 from crc.services.lookup_service import LookupService
 from crc.services.protocol_builder import ProtocolBuilderService
+from crc.services.user_file_service import UserFileService
 from crc.services.workflow_processor import WorkflowProcessor
 
 
@@ -41,11 +41,13 @@ class StudyService(object):
             study_info = study_details[0]
         # The review types 2, 3, 23, 24 correspond to review type names
         # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
-        if isinstance(study_info, dict) and 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3, 23, 24]:
+        if isinstance(study_info, dict) and 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3,
+                                                                                                                 23,
+                                                                                                                 24]:
             return True
         return False
 
-    def get_studies_for_user(self, user, include_invalid=False):
+    def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
         associated = session.query(StudyAssociated).filter_by(uid=user.uid, access=True).all()
         associated_studies = [x.study_id for x in associated]
@@ -55,7 +57,7 @@ class StudyService(object):
         studies = []
         for study_model in db_studies:
             if include_invalid or self._is_valid_study(study_model.id):
-                studies.append(StudyService.get_study(study_model.id, study_model, do_status=False))
+                studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model))
         return studies
 
     @staticmethod
@@ -65,18 +67,18 @@ class StudyService(object):
         studies = []
         for s in db_studies:
             study = Study.from_model(s)
-            study.files = FileService.get_files_for_study(study.id)
+            study.files = UserFileService.get_files_for_study(study.id)
             studies.append(study)
         return studies
 
     @staticmethod
-    def get_study(study_id, study_model: StudyModel = None, do_status=False):
+    def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
+                  master_workflow_results=None):
         """Returns a study model that contains all the workflows organized by category.
-        IMPORTANT:  This is intended to be a lightweight call, it should never involve
-        loading up and executing all the workflows in a study to calculate information."""
+        Pass in the results of the master workflow spec, and the status of other workflows will be updated."""
+
         if not study_model:
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
-
         study = Study.from_model(study_model)
         study.create_user_display = LdapService.user_info(study.user_uid).display_name
         last_event: TaskEventModel = session.query(TaskEventModel) \
@@ -88,28 +90,32 @@ class StudyService(object):
         else:
             study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
             study.last_activity_date = last_event.date
-        study.categories = StudyService.get_categories()
-        workflow_metas = StudyService._get_workflow_metas(study_id)
-        files = FileService.get_files_for_study(study.id)
-        files = (File.from_models(model, FileService.get_file_data(model.id),
+        study.categories = categories
+        files = UserFileService.get_files_for_study(study.id)
+        files = (File.from_models(model, UserFileService.get_file_data(model.id),
                                   DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
-        # Calling this line repeatedly is very very slow.  It creates the
-        # master spec and runs it.  Don't execute this for Abandoned studies, as
-        # we don't have the information to process them.
         if study.status != StudyStatus.abandoned:
-            # this line is taking 99% of the time that is used in get_study.
-            # see ticket #196
-            if do_status:
-                # __get_study_status() runs the master workflow to generate the status dictionary
-                status = StudyService._get_study_status(study_model)
-                study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas, status)
-
-            # Group the workflows into their categories.
             for category in study.categories:
-                category.workflows = {w for w in workflow_metas if w.category_id == category.id}
-
+                workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                if master_workflow_results:
+                    study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
+                                                                                  master_workflow_results)
+                category.workflows = workflow_metas
         return study
+
+    @staticmethod
+    def _get_workflow_metas(study_id, category):
+        # Add in the Workflows for each category
+        workflow_metas = []
+        for spec in category.specs:
+            workflow_models = db.session.query(WorkflowModel).\
+                filter(WorkflowModel.study_id == study_id).\
+                filter(WorkflowModel.workflow_spec_id == spec.id).\
+                all()
+            for workflow in workflow_models:
+                workflow_metas.append(WorkflowMetadata.from_workflow(workflow, spec))
+        return workflow_metas
 
     @staticmethod
     def get_study_associate(study_id=None, uid=None):
@@ -236,21 +242,13 @@ class StudyService(object):
             return
 
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
-        session.query(WorkflowSpecDependencyFile).filter_by(workflow_id=workflow_id).delete(synchronize_session='fetch')
-        session.query(FileModel).filter_by(workflow_id=workflow_id).update({'archived': True, 'workflow_id': None})
+        files = session.query(FileModel).filter_by(workflow_id=workflow_id).all()
+        for file in files:
+            session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).delete()
+            session.delete(file)
 
         session.delete(workflow)
         session.commit()
-
-    @staticmethod
-    def get_categories():
-        """Returns a list of category objects, in the correct order."""
-        cat_models = db.session.query(WorkflowSpecCategoryModel) \
-            .order_by(WorkflowSpecCategoryModel.display_order).all()
-        categories = []
-        for cat_model in cat_models:
-            categories.append(Category(cat_model))
-        return categories
 
     @staticmethod
     def get_documents_status(study_id):
@@ -276,7 +274,9 @@ class StudyService(object):
 
             doc['required'] = False
             if ProtocolBuilderService.is_enabled() and doc['id'] != '':
-                pb_data = next((item for item in pb_docs['AUXDOCS'] if int(item['SS_AUXILIARY_DOC_TYPE_ID']) == int(doc['id'])), None)
+                pb_data = next(
+                    (item for item in pb_docs['AUXDOCS'] if int(item['SS_AUXILIARY_DOC_TYPE_ID']) == int(doc['id'])),
+                    None)
                 if pb_data:
                     doc['required'] = True
 
@@ -291,12 +291,12 @@ class StudyService(object):
             doc['display_name'] = ' / '.join(name_list)
 
             # For each file, get associated workflow status
-            doc_files = FileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
+            doc_files = UserFileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
             doc['count'] = len(doc_files)
             doc['files'] = []
 
             for file_model in doc_files:
-                file = File.from_models(file_model, FileService.get_file_data(file_model.id), [])
+                file = File.from_models(file_model, UserFileService.get_file_data(file_model.id), [])
                 file_data = FileSchema().dump(file)
                 del file_data['document']
                 doc['files'].append(Box(file_data))
@@ -310,16 +310,13 @@ class StudyService(object):
 
     @staticmethod
     def get_investigator_dictionary():
-        """Returns a dictionary of document details keyed on the doc_code."""
-        file_data = FileService.get_reference_file_data(StudyService.INVESTIGATOR_LIST)
-        lookup_model = LookupService.get_lookup_model_for_file_data(file_data, 'code', 'label')
+        lookup_model = LookupService.get_lookup_model_for_reference(StudyService.INVESTIGATOR_LIST, 'code', 'label')
         doc_dict = {}
         for lookup_data in lookup_model.dependencies:
             doc_dict[lookup_data.value] = lookup_data.data
         return doc_dict
 
     @staticmethod
-    
     def get_investigators(study_id, all=False):
         """Convert array of investigators from protocol builder into a dictionary keyed on the type. """
 
@@ -362,7 +359,7 @@ class StudyService(object):
             return {}
 
     @staticmethod
-    def synch_with_protocol_builder_if_enabled(user):
+    def synch_with_protocol_builder_if_enabled(user, specs):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
 
@@ -383,7 +380,9 @@ class StudyService(object):
             for pb_study in pb_studies:
                 new_status = None
                 new_progress_status = None
-                db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
+                db_study = session.query(StudyModel).filter(StudyModel.id == pb_study.STUDYID).first()
+                #db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
+
                 if not db_study:
                     db_study = StudyModel(id=pb_study.STUDYID)
                     db_study.status = None  # Force a new sa
@@ -394,7 +393,7 @@ class StudyService(object):
                     db_studies.append(db_study)
 
                 db_study.update_from_protocol_builder(pb_study, user.uid)
-                StudyService._add_all_workflow_specs_to_study(db_study)
+                StudyService.add_all_workflow_specs_to_study(db_study, specs)
 
                 # If there is a new automatic status change and there isn't a manual change in place, record it.
                 if new_status and db_study.status != StudyStatus.hold:
@@ -431,13 +430,14 @@ class StudyService(object):
     def _update_status_of_workflow_meta(workflow_metas, status):
         # Update the status on each workflow
         warnings = []
-        unused_statuses = status.copy() # A list of all the statuses that are not used.
+        unused_statuses = status.copy()  # A list of all the statuses that are not used.
         for wfm in workflow_metas:
             unused_statuses.pop(wfm.workflow_spec_id, None)
             wfm.state_message = ''
             # do we have a status for you
             if wfm.workflow_spec_id not in status.keys():
-                warnings.append(ApiError("missing_status", "No status information provided about workflow %s" % wfm.workflow_spec_id))
+                warnings.append(ApiError("missing_status",
+                                         "No status information provided about workflow %s" % wfm.workflow_spec_id))
                 continue
             if not isinstance(status[wfm.workflow_spec_id], dict):
                 warnings.append(ApiError(code='invalid_status',
@@ -452,7 +452,8 @@ class StudyService(object):
             if not WorkflowState.has_value(status[wfm.workflow_spec_id]['status']):
                 warnings.append(ApiError("invalid_state",
                                          "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'], ",".join(WorkflowState.list())
+                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'],
+                                             ",".join(WorkflowState.list())
                                          )))
                 continue
 
@@ -461,50 +462,19 @@ class StudyService(object):
         for status in unused_statuses:
             if isinstance(unused_statuses[status], dict) and 'status' in unused_statuses[status]:
                 warnings.append(ApiError("unmatched_status", "The master workflow provided a status for '%s' a "
-                                                         "workflow that doesn't seem to exist." %
-                                                         status))
+                                                             "workflow that doesn't seem to exist." %
+                                         status))
 
         return warnings
 
     @staticmethod
-    def _get_workflow_metas(study_id):
-        # Add in the Workflows for each category
-        workflow_models = db.session.query(WorkflowModel). \
-            join(WorkflowSpecModel). \
-            filter(WorkflowSpecModel.is_master_spec == False). \
-            filter((WorkflowSpecModel.library == False) | \
-                   (WorkflowSpecModel.library == None)). \
-            filter(WorkflowModel.study_id == study_id). \
-            all()
-        workflow_metas = []
-        for workflow in workflow_models:
-            workflow_metas.append(WorkflowMetadata.from_workflow(workflow))
-        return workflow_metas
-
-    @staticmethod
-    def _get_study_status(study_model):
-        """Uses the Top Level Workflow to calculate the status of the study, and it's
-        workflow models."""
-        master_specs = db.session.query(WorkflowSpecModel). \
-            filter_by(is_master_spec=True).all()
-        if len(master_specs) < 1:
-            raise ApiError("missing_master_spec", "No specifications are currently marked as the master spec.")
-        if len(master_specs) > 1:
-            raise ApiError("multiple_master_specs",
-                           "There is more than one master specification, and I don't know what to do.")
-
-        return WorkflowProcessor.run_master_spec(master_specs[0], study_model)
-
-    @staticmethod
-    def _add_all_workflow_specs_to_study(study_model: StudyModel):
+    def add_all_workflow_specs_to_study(study_model: StudyModel, specs: List[WorkflowSpecInfo]):
         existing_models = session.query(WorkflowModel).filter(WorkflowModel.study == study_model).all()
-        existing_specs = list(m.workflow_spec_id for m in existing_models)
-        new_specs = session.query(WorkflowSpecModel). \
-            filter(WorkflowSpecModel.is_master_spec == False). \
-            filter(WorkflowSpecModel.id.notin_(existing_specs)). \
-            all()
+        existing_spec_ids = list(map(lambda x: x.workflow_spec_id, existing_models))
         errors = []
-        for workflow_spec in new_specs:
+        for workflow_spec in specs:
+            if workflow_spec.id in existing_spec_ids:
+                continue
             try:
                 StudyService._create_workflow_model(study_model, workflow_spec)
             except WorkflowTaskExecException as wtee:
