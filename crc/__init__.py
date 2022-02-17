@@ -67,7 +67,6 @@ def process_waiting_tasks():
 def init_scheduler():
     if app.config['PROCESS_WAITING_TASKS']:
         scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
-        scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
         scheduler.add_job(WorkflowService().process_erroring_workflows, 'interval', minutes=1440)
         scheduler.start()
 
@@ -123,8 +122,8 @@ def validate_all(study_id, category=None, spec_id=None):
     """Step through all the local workflows and validate them, returning any errors. This make take forever.
     Please provide a real study id to use for validation, an optional category can be specified to only validate
     that category, and you can further specify a specific spec, if needed."""
-    from crc.models.workflow import WorkflowSpecModel
     from crc.services.workflow_service import WorkflowService
+    from crc.services.workflow_spec_service import WorkflowSpecService
     from crc.api.common import ApiError
     from crc.models.study import StudyModel
     from crc.models.user import UserModel
@@ -133,7 +132,7 @@ def validate_all(study_id, category=None, spec_id=None):
     study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
     g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
     g.token = "anything_is_fine_just_need_something."
-    specs = session.query(WorkflowSpecModel).all()
+    specs = WorkflowSpecService.get_specs()
     for spec in specs:
         if spec_id and spec_id != spec.id:
             continue
