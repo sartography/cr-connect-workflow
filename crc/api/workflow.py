@@ -214,8 +214,12 @@ def restart_workflow(workflow_id, clear_data=False, delete_files=False):
     """Restart a workflow with the latest spec.
        Clear data allows user to restart the workflow without previous data."""
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    WorkflowProcessor.reset(workflow_model, clear_data=clear_data, delete_files=delete_files)
-    return get_workflow(workflow_model.id)
+    processor = WorkflowProcessor.reset(workflow_model, clear_data=clear_data, delete_files=delete_files)
+    processor.do_engine_steps()
+    processor.save()
+    WorkflowService.update_task_assignments(processor)
+    workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
+    return WorkflowApiSchema().dump(workflow_api_model)
 
 
 def get_task_events(action = None, workflow = None, study = None):
@@ -254,6 +258,9 @@ def set_current_task(workflow_id, task_id):
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
+    if not spiff_task:
+        # An invalid task_id was requested.
+        raise ApiError("invalid_task", "The Task you requested no longer exists as a part of this workflow.")
     _verify_user_and_role(processor, spiff_task)
     user_uid = UserService.current_user(allow_admin_impersonate=True).uid
     if spiff_task.state != spiff_task.COMPLETED and spiff_task.state != spiff_task.READY:

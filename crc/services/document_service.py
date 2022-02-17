@@ -63,7 +63,6 @@ class DocumentService(object):
                     expand = file.workflow_id == int(workflow_id)
                 else:
                     expand = False
-                print(expand)
                 categories = [x for x in [doc_code['category1'], doc_code['category2'], doc_code['category3'], file] if x]
                 DocumentService.ensure_exists(directory, categories, expanded=expand)
         return directory
@@ -94,8 +93,6 @@ class DocumentService(object):
                 new_level.expanded = expanded
                 output.append(new_level)
                 DocumentService.ensure_exists(new_level.children, categories[1:], expanded)
-            else:
-                print("Found it")
         else:
             new_level = DocumentDirectory(file=current_item)
             new_level.expanded = expanded

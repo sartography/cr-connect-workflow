@@ -135,6 +135,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_file_data_set_invalid_irb_code_fails(self, mock_get):
+        self.create_reference_document()
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
         self.add_studies()

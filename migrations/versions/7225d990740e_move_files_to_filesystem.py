@@ -258,54 +258,13 @@ class ToFilesystemService(object):
 
 
 def upgrade():
-
-    from crc.models.workflow import WorkflowSpecModel, WorkflowSpecModelSchema, WorkflowSpecCategoryModel, \
-        WorkflowSpecCategoryModelSchema
-
-    """"""
-    bind = op.get_bind()
-    session = sa.orm.Session(bind=bind)
-
     op.drop_table('workflow_spec_dependency_file')
     op.add_column('lookup_file', sa.Column('file_model_id', sa.Integer(), nullable=True))
     op.add_column('lookup_file', sa.Column('last_updated', sa.DateTime(), nullable=True))
     op.create_foreign_key(None, 'lookup_file', 'file', ['file_model_id'], ['id'])
 
-    processed_files = []
-    location = SpecFileService.get_sync_file_root()
-    if os.path.exists(location):
-        rmtree(location)
-    # Process workflow spec files
-    files = session.query(FileModel).filter(FileModel.workflow_spec_id is not None).all()
-    for file in files:
-        if file.archived is not True:
-            ToFilesystemService().write_file_to_system(session, file, location)
-            processed_files.append(file.id)
-
-    # Process reference files
-    # get_reference_files only returns files where archived is False
-    reference_files = ReferenceFileService.get_reference_files()
-    for reference_file in reference_files:
-        ToFilesystemService().write_file_to_system(session, reference_file, location)
-        processed_files.append(reference_file.id)
-
-    session.flush()
-    lookups = session.query(LookupFileModel).all()
-    for lookup in lookups:
-        session.delete(lookup)
-    session.commit()
-    for file_id in processed_files:
-        processed_data_models = session.query(FileDataModel).filter(FileDataModel.file_model_id==file_id).all()
-        for processed_data_model in processed_data_models:
-            session.delete(processed_data_model)
-            session.commit()
-        print(f'upgrade: in processed files: file_id: {file_id}')
-    print('upgrade: done: ')
-
-
 def downgrade():
 
-    # TODO: This is a work in progress, and depends on what we do in upgrade()
     op.add_column('lookup_file', sa.Column('file_data_model_id', sa.Integer(), nullable=True))
     op.create_foreign_key(None, 'lookup_file', 'file', ['file_data_model_id'], ['id'])
     op.drop_constraint('lookup_file_file_model_id_key', 'lookup_file', type_='foreignkey')
@@ -318,8 +277,3 @@ def downgrade():
         sa.ForeignKeyConstraint(['workflow_id'], ['workflow.id'], ),
         sa.PrimaryKeyConstraint('file_data_id', 'workflow_id')
     )
-
-    location = SpecFileService.get_sync_file_root()
-    FromFilesystemService().update_file_metadata_from_filesystem(location)
-
-    print('downgrade: ')
