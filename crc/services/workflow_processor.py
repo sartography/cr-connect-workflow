@@ -145,7 +145,6 @@ class WorkflowProcessor(object):
 
     @staticmethod
     def reset(workflow_model, clear_data=False, delete_files=False):
-        print('WorkflowProcessor: reset: ')
 
         # Try to execute a cancel notify
         try:

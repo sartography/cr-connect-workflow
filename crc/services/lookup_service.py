@@ -59,7 +59,8 @@ class LookupService(object):
         if not lookup_model:
             logging.warning("!!!! Making a very expensive call to update the lookup model.")
             file_data = ReferenceFileService().get_data(file_name)
-            lookup_model = LookupService.build_lookup_table(file_name, file_data, value_column, label_column)
+            file_date = ReferenceFileService().last_modified(file_name)
+            lookup_model = LookupService.build_lookup_table(file_name, file_data, file_date, value_column, label_column)
         return lookup_model
 
     @staticmethod
@@ -76,7 +77,9 @@ class LookupService(object):
         if lookup_model:
             if lookup_model.is_ldap:  # LDAP is always current
                 is_current = True
-            else:
+            elif lookup_model.file_name is not None and lookup_model.last_updated is not None:
+                # In some legacy cases, the lookup model might exist, but not have a file name, in which case we need
+                # to rebuild.
                 workflow_spec = WorkflowSpecService().get_spec(workflow.workflow_spec_id)
                 current_date = SpecFileService.last_modified(workflow_spec, lookup_model.file_name)
                 is_current = current_date == lookup_model.last_updated
@@ -144,8 +147,9 @@ class LookupService(object):
                 file = latest_files[0]
 
             file_data = SpecFileService().get_data(workflow_spec, file_name)
+            file_date = SpecFileService.last_modified(workflow_spec, file_name)
 
-            lookup_model = LookupService.build_lookup_table(file_name, file_data, value_column, label_column,
+            lookup_model = LookupService.build_lookup_table(file_name, file_data, file_date, value_column, label_column,
                                                             workflow_model.workflow_spec_id, task_spec_id, field_id)
 
         #  Use the results of an LDAP request to populate enum field options
@@ -164,7 +168,7 @@ class LookupService(object):
         return lookup_model
 
     @staticmethod
-    def build_lookup_table(file_name, file_data, value_column, label_column,
+    def build_lookup_table(file_name, file_data, file_date, value_column, label_column,
                            workflow_spec_id=None, task_spec_id=None, field_id=None):
         """ In some cases the lookup table can be very large.  This method will add all values to the database
          in a way that can be searched and returned via an api call - rather than sending the full set of
@@ -200,7 +204,9 @@ class LookupService(object):
                                        field_id=field_id,
                                        task_spec_id=task_spec_id,
                                        file_name=file_name,
+                                       last_updated=file_date,
                                        is_ldap=False)
+
 
         db.session.add(lookup_model)
         for index, row in df.iterrows():

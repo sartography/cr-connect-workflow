@@ -254,6 +254,9 @@ def set_current_task(workflow_id, task_id):
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
+    if not spiff_task:
+        # An invalid task_id was requested.
+        raise ApiError("invalid_task", "The Task you requested no longer exists as a part of this workflow.")
     _verify_user_and_role(processor, spiff_task)
     user_uid = UserService.current_user(allow_admin_impersonate=True).uid
     if spiff_task.state != spiff_task.COMPLETED and spiff_task.state != spiff_task.READY:
