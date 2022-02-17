@@ -10,6 +10,7 @@ from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
 from crc.api.common import ApiError
+from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
 from crc.models.file import FileModel, File, FileSchema, FileDataModel
 from crc.models.ldap import LdapSchema
@@ -228,7 +229,6 @@ class StudyService(object):
         session.query(StudyAssociated).filter_by(study_id=study_id).delete()
         session.query(EmailModel).filter_by(study_id=study_id).delete()
         session.query(StudyEvent).filter_by(study_id=study_id).delete()
-
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
             StudyService.delete_workflow(workflow.id)
         study = session.query(StudyModel).filter_by(id=study_id).first()
@@ -244,6 +244,7 @@ class StudyService(object):
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
         files = session.query(FileModel).filter_by(workflow_id=workflow_id).all()
         for file in files:
+            session.query(DataStoreModel).filter(DataStoreModel.file_id == file.id).delete()
             session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).delete()
             session.delete(file)
 
