@@ -466,7 +466,9 @@ class WorkflowService(object):
     def get_default_value(field, task, data):
         has_lookup = WorkflowService.has_lookup(field)
         # default = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
-        default = task.workflow.script_engine._evaluate(field.default_value, data)
+        default = None
+        if field.default_value is not None:
+            default = task.workflow.script_engine._evaluate(field.default_value, data)
 
         # If no default exists, return None
         # Note: if default is False, we don't want to execute this code

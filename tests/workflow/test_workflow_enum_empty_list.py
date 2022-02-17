@@ -25,5 +25,5 @@ class TestEmptyEnumList(BaseTest):
         service = WorkflowService()
         checkbox_enum_field = task.task_spec.form.fields[0]
         radio_enum_field = task.task_spec.form.fields[1]
-        self.assertEqual([], service.get_default_value(checkbox_enum_field, task))
-        self.assertEqual(None, service.get_default_value(radio_enum_field, task))
+        self.assertEqual([], service.get_default_value(checkbox_enum_field, task, task.data))
+        self.assertEqual(None, service.get_default_value(radio_enum_field, task, task.data))
