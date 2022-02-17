@@ -182,8 +182,8 @@ class LookupFileModel(db.Model):
     task_spec_id = db.Column(db.String)
     field_id = db.Column(db.String)
     file_name = db.Column(db.String)
+    file_timestamp = db.Column(db.FLOAT) #The file systems time stamp, to check for changes to the file.
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
-    last_updated = db.Column(db.DateTime(timezone=True))
     dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model",
                                    cascade="all, delete, delete-orphan")
 

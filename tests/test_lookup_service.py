@@ -187,15 +187,15 @@ class TestLookupService(BaseTest):
 
         # Using an old xls file should raise an error
         file_data_xls = SpecFileService().get_data(spec, 'sponsors.xls')
-        file_date = SpecFileService().last_modified(spec, 'sponsors.xls')
+        timestamp = SpecFileService().timestamp(spec, 'sponsors.xls')
         with self.assertRaises(ApiError) as ae:
-            LookupService.build_lookup_table('sponsors.xls', file_data_xls, file_date, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
+            LookupService.build_lookup_table('sponsors.xls', file_data_xls, timestamp, 'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertIn('Error opening excel file', ae.exception.args[0])
 
         # Using an xlsx file should work
         file_data_xlsx = SpecFileService().get_data(spec, 'sponsors.xlsx')
-        file_date = SpecFileService().last_modified(spec, 'sponsors.xlsx')
-        lookup_model = LookupService.build_lookup_table('sponsors.xlsx', file_data_xlsx, file_date,
+        timestamp = SpecFileService().timestamp(spec, 'sponsors.xlsx')
+        lookup_model = LookupService.build_lookup_table('sponsors.xlsx', file_data_xlsx, timestamp,
                                                         'CUSTOMER_NUMBER', 'CUSTOMER_NAME')
         self.assertEqual(28, len(lookup_model.dependencies))
         self.assertIn('CUSTOMER_NAME', lookup_model.dependencies[0].data.keys())
