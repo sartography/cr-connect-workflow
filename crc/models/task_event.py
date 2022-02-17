@@ -14,7 +14,7 @@ class TaskEventModel(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     user_uid = db.Column(db.String, nullable=False) # In some cases the unique user id may not exist in the db yet.
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=False)
-    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
+    workflow_spec_id = db.Column(db.String)
     spec_version = db.Column(db.String)
     action = db.Column(db.String)
     task_id = db.Column(db.String)
@@ -40,9 +40,10 @@ class TaskEventModelSchema(SQLAlchemyAutoSchema):
 
 
 class TaskEvent(object):
-    def __init__(self, model: TaskEventModel, study: StudyModel, workflow: WorkflowMetadata):
+    def __init__(self, model: TaskEventModel, study: StudyModel, workflow: WorkflowModel):
         self.id = model.id
         self.study = study
+        # Fixme: this was workflowMetaData - but it is the only place it is used.
         self.workflow = workflow
         self.user_uid = model.user_uid
         self.user_display = LdapService.user_info(model.user_uid).display_name

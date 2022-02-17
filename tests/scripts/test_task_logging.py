@@ -17,7 +17,8 @@ import types
 class TestTaskLogging(BaseTest):
 
     def test_logging_validation(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('logging_task')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual([], rv.json)
@@ -35,7 +36,8 @@ class TestTaskLogging(BaseTest):
         self.assertEqual('Activity_LogEvent', log_model.task)
 
     def test_get_logging_validation(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('get_logging')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual([], rv.json)
@@ -54,7 +56,7 @@ class TestTaskLogging(BaseTest):
         self.assertEqual('debug_test_code', task.data['logging_models_debug_post'][0]['code'])
 
     def test_get_logs_for_study(self):
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow = self.create_workflow('hello_world', study=study)
         processor = WorkflowProcessor(workflow)
@@ -114,7 +116,7 @@ class TestTaskLogging(BaseTest):
         self.assertEqual(wf_logs, logs, "Logs returned for the workflow should be identical to those returned from study")
 
     def test_logging_service_paginates_and_sorts(self):
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_model = self.create_workflow('hello_world', study=study)
         workflow_processor = WorkflowProcessor(workflow_model)

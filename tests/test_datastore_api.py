@@ -1,6 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc.models.data_store import DataStoreModel, DataStoreSchema
+from crc.services.user_file_service import UserFileService
 from crc.models.file import FileModel
 from crc import session
 
@@ -62,7 +63,7 @@ class DataStoreTest(BaseTest):
 
         """NOTE:  The protocol builder is not enabled or mocked out.  As the master workflow (which is empty),
         and the test workflow do not need it, and it is disabled in the configuration."""
-        self.load_example_data()
+
         new_study = self.add_test_study_data()
         new_study = session.query(DataStoreModel).filter_by(id=new_study["id"]).first()
 
@@ -77,7 +78,7 @@ class DataStoreTest(BaseTest):
         self.assertEqual(study_data.user_id, None)
 
     def test_update_datastore(self):
-        self.load_example_data()
+
         new_study = self.add_test_study_data()
         new_study = session.query(DataStoreModel).filter_by(id=new_study["id"]).first()
         new_study.value = 'MyNewValue'
@@ -96,7 +97,7 @@ class DataStoreTest(BaseTest):
         self.assertEqual(study_data.user_id, None)
 
     def test_delete_datastore(self):
-        self.load_example_data()
+
         new_study = self.add_test_study_data()
         oldid = new_study['id']
         new_study = session.query(DataStoreModel).filter_by(id=new_study["id"]).first()
@@ -108,7 +109,7 @@ class DataStoreTest(BaseTest):
     def test_data_crosstalk(self):
         """Test to make sure that data saved for user or study is not accessible from the other method"""
 
-        self.load_example_data()
+
         new_study = self.add_test_study_data()
         new_user = self.add_test_user_data()
 
@@ -126,8 +127,10 @@ class DataStoreTest(BaseTest):
         self.assertEqual(d[0]['value'],'Some Value')
 
     def test_datastore_file(self):
-        self.load_example_data()
-        test_file = session.query(FileModel).first()
+
+        workflow = self.create_workflow('random_fact')
+        self.add_test_user_data()
+        test_file = UserFileService.add_workflow_file(workflow.id, 'xxx', 'xxx', 'my_file.docx', 'docx', b'this is it.')
 
         # make sure we don't already have a datastore
         api_response = self.app.get(f'/v1.0/datastore/file/{test_file.id}',
@@ -152,8 +155,10 @@ class DataStoreTest(BaseTest):
         self.assertEqual('Some File Data Value', data[0]['value'])
 
     def test_datastore_files(self):
-        self.load_example_data()
-        test_file = session.query(FileModel).first()
+
+        workflow = self.create_workflow('random_fact')
+        self.add_test_user_data()
+        test_file = UserFileService.add_workflow_file(workflow.id, 'xxx', 'xxx', 'my_file.docx', 'docx', b'this is it.')
 
         # add datastore
         value_1 = 'Some File Data Value 1'

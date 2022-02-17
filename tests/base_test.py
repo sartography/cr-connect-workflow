@@ -18,7 +18,7 @@ from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel, StudyStatus, ProgressStatus
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel
+from crc.models.workflow import WorkflowSpecCategory
 from crc.services.ldap_service import LdapService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
@@ -27,6 +27,7 @@ from crc.services.user_service import UserService
 from crc.services.workflow_service import WorkflowService
 from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 # UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
 import logging
@@ -38,6 +39,7 @@ class BaseTest(unittest.TestCase):
     """ Great class to inherit from, as it sets up and tears down classes
         efficiently when we have a database in place.
     """
+    workflow_spec_service = WorkflowSpecService()
 
     if not app.config['TESTING']:
         raise (Exception("INVALID TEST CONFIGURATION. This is almost always in import order issue."
@@ -105,8 +107,13 @@ class BaseTest(unittest.TestCase):
         self.clear_test_sync_files()
 
     @staticmethod
+    def copy_files_to_file_system(import_spec_path, spec_path):
+        """Some tests rely on a well populated file system """
+        shutil.copytree(import_spec_path, spec_path)
+
+    @staticmethod
     def clear_test_sync_files():
-        sync_file_root = SpecFileService().get_sync_file_root()
+        sync_file_root = SpecFileService().root_path()
         if os.path.exists(sync_file_root):
             shutil.rmtree(sync_file_root)
 
@@ -139,68 +146,54 @@ class BaseTest(unittest.TestCase):
         """
         ExampleDataLoader.clean_db()
 
-    def load_example_data(self, use_crc_data=False, use_rrt_data=False):
-        """use_crc_data will cause this to load the mammoth collection of documents
-        we built up developing crc, use_rrt_data will do the same for hte rrt project,
-         otherwise it depends on a small setup for running tests."""
-        from example_data import ExampleDataLoader
-        ExampleDataLoader.clean_db()
-        # If in production mode, only add the first user.
-        if app.config['PRODUCTION']:
-            ldap_info = LdapService.user_info(self.users[0]['uid'])
-            session.add(UserModel(uid=self.users[0]['uid'], ldap_info=ldap_info))
-        else:
-            for user_json in self.users:
-                ldap_info = LdapService.user_info(user_json['uid'])
-                session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
+    def add_users(self):
+        for user_json in self.users:
+            ldap_info = LdapService.user_info(user_json['uid'])
+            session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
+            session.commit()
 
-        if use_crc_data:
-            ExampleDataLoader().load_all()
-        elif use_rrt_data:
-            ExampleDataLoader().load_rrt()
-        else:
-            ExampleDataLoader().load_test_data()
-
-        session.commit()
+    def add_studies(self):
+        self.add_users()
         for study_json in self.studies:
             study_model = StudyModel(**study_json)
             session.add(study_model)
-            StudyService._add_all_workflow_specs_to_study(study_model)
-            session.commit()
             update_seq = f"ALTER SEQUENCE %s RESTART WITH %s" % (StudyModel.__tablename__ + '_id_seq', study_model.id + 1)
-            print("Update Sequence." + update_seq)
             session.execute(update_seq)
-        session.flush()
+        session.commit()
 
-        specs = session.query(WorkflowSpecModel).all()
-        self.assertIsNotNone(specs)
 
-        for spec in specs:
-            files = session.query(FileModel).filter_by(workflow_spec_id=spec.id).all()
-            self.assertIsNotNone(files)
-            self.assertGreater(len(files), 0)
-            for file in files:
-                # file_data = session.query(FileDataModel).filter_by(file_model_id=file.id).all()
-                file_data = SpecFileService().get_spec_file_data(file.id).data
-                self.assertIsNotNone(file_data)
-                self.assertGreater(len(file_data), 0)
+    def assure_category_name_exists(self, name):
+        category = self.workflow_spec_service.get_category(name)
+        if category is None:
+            category = WorkflowSpecCategory(id=name, display_name=name, admin=False, display_order=0)
+            self.workflow_spec_service.add_category(category)
+        return category
 
-    @staticmethod
-    def load_test_spec(dir_name, display_name=None, master_spec=False, category_id=None):
+    def assure_category_exists(self, category_id=None):
+        category = None
+        if category_id is not None:
+            category = self.workflow_spec_service.get_category(category_id)
+        if category is None:
+            category = WorkflowSpecCategory(id="test_category", display_name="Test Workflows", admin=False, display_order=0)
+            self.workflow_spec_service.add_category(category)
+        return category
+
+    def load_test_spec(self, dir_name, display_name=None, master_spec=False, category_id=None, library=False):
         """Loads a spec into the database based on a directory in /tests/data"""
-        if category_id is None:
-            category = WorkflowSpecCategoryModel(display_name="Test Workflows", display_order=0)
-            session.add(category)
-            session.commit()
+        category = None
+        if not master_spec and not library:
+            category = self.assure_category_exists(category_id)
             category_id = category.id
-
-        if session.query(WorkflowSpecModel).filter_by(id=dir_name).count() > 0:
-            return session.query(WorkflowSpecModel).filter_by(id=dir_name).first()
-        filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
-        if display_name is None:
-            display_name = dir_name
-        return ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
-                                               display_name=display_name, category_id=category_id)
+        workflow_spec = self.workflow_spec_service.get_spec(dir_name)
+        if workflow_spec:
+            return workflow_spec
+        else:
+            filepath = os.path.join(app.root_path, '..', 'tests', 'data', dir_name, "*")
+            if display_name is None:
+                display_name = dir_name
+            spec = ExampleDataLoader().create_spec(id=dir_name, filepath=filepath, master_spec=master_spec,
+                                                   display_name=display_name, category_id=category_id, library=library)
+            return spec
 
     @staticmethod
     def protocol_builder_response(file_name):
@@ -221,7 +214,7 @@ class BaseTest(unittest.TestCase):
             data = json.loads(rv.get_data(as_text=True))
             self.assertTrue(200 <= rv.status_code < 300,
                             "BAD Response: %i. \n %s" %
-                            (rv.status_code, json.dumps(data)) + ". " + msg)
+                            (rv.status_code, data['message']) + ". " + msg + ". ")
         except:
             self.assertTrue(200 <= rv.status_code < 300,
                             "BAD Response: %i." % rv.status_code + ". " + msg)
@@ -253,16 +246,11 @@ class BaseTest(unittest.TestCase):
 
         return '?%s' % '&'.join(query_string_list)
 
-    def replace_file(self, name, file_path):
+    def replace_file(self, spec, name, file_path):
         """Replaces a stored file with the given name with the contents of the file at the given path."""
         file = open(file_path, "rb")
         data = file.read()
-
-        file_model = session.query(FileModel).filter(FileModel.name == name).first()
-        workflow_spec_model = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==file_model.workflow_spec_id).first()
-        noise, file_extension = os.path.splitext(file_path)
-        content_type = CONTENT_TYPES[file_extension[1:]]
-        SpecFileService().update_spec_file_data(workflow_spec_model, file_model.name, data)
+        SpecFileService().update_file(spec, name, data)
 
     def create_user(self, uid="dhf8r", email="daniel.h.funk@gmail.com", display_name="Hoopy Frood"):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()
@@ -284,10 +272,9 @@ class BaseTest(unittest.TestCase):
             session.commit()
         return study
 
-
     def create_workflow(self, dir_name, display_name=None, study=None, category_id=None, as_user="dhf8r"):
         session.flush()
-        spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id == dir_name).first()
+        spec = self.workflow_spec_service.get_spec(dir_name)
         if spec is None:
             if display_name is None:
                 display_name = dir_name
@@ -298,11 +285,14 @@ class BaseTest(unittest.TestCase):
         return workflow_model
 
     def create_reference_document(self):
-        file_path = os.path.join(app.root_path, 'static', 'reference', 'irb_documents.xlsx')
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'documents.xlsx')
         with open(file_path, "rb") as file:
             ReferenceFileService.add_reference_file(DocumentService.DOCUMENT_LIST,
-                                               content_type=CONTENT_TYPES['xlsx'],
-                                               binary_data=file.read())
+                                                    file.read())
+        file_path = os.path.join(app.root_path, 'static', 'reference', 'investigators.xlsx')
+        with open(file_path, "rb") as file:
+            ReferenceFileService.add_reference_file('investigators.xlsx',
+                                                    file.read())
 
     def get_workflow_common(self, url, user):
         rv = self.app.get(url,
@@ -337,7 +327,8 @@ class BaseTest(unittest.TestCase):
         # workflow_in should be a workflow, not a workflow_api
         # we were passing in workflow_api in many of our tests, and
         # this caused problems testing standalone workflows
-        standalone = getattr(workflow_in.workflow_spec, 'standalone', False)
+        spec = self.workflow_spec_service.get_spec(workflow_in.workflow_spec_id)
+        standalone = getattr(spec, 'standalone', False)
         prev_completed_task_count = workflow_in.completed_tasks
         if isinstance(task_in, dict):
             task_id = task_in["id"]

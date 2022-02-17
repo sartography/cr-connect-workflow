@@ -18,6 +18,7 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+
 connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
@@ -43,6 +44,7 @@ session = db.session
 """:type: sqlalchemy.orm.Session"""
 scheduler = BackgroundScheduler()
 
+
 # Mail settings
 mail = Mail(app)
 
@@ -52,10 +54,8 @@ ma = Marshmallow(app)
 from crc import models
 from crc import api
 from crc.api import admin
-from crc.services.file_service import FileService
 from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
-
 
 # needed function to avoid circular import
 def process_waiting_tasks():
@@ -65,9 +65,9 @@ def process_waiting_tasks():
 
 @app.before_first_request
 def init_scheduler():
-    scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
-    # scheduler.add_job(FileService.cleanup_file_data, 'interval', minutes=1440)  # once a day
-    scheduler.start()
+    if app.config['PROCESS_WAITING_TASKS']:
+        scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
+        scheduler.start()
 
 
 # Convert list of allowed origins to list of regexes
@@ -87,7 +87,7 @@ if app.config['SENTRY_ENVIRONMENT']:
 def render_errors(exception):
     from crc.api.common import ApiError, ApiErrorSchema
     error = ApiError(code=exception.title, message=exception.detail, status_code=exception.status)
-    return Response(ApiErrorSchema().dump(error), status=401, mimetype="application/json")
+    return Response(ApiErrorSchema().dumps(error), status=500, mimetype="text/json")
 
 
 connexion_app.add_error_handler(ProblemException, render_errors)
@@ -108,47 +108,10 @@ print('ADMIN_UIDS = ', app.config['ADMIN_UIDS'])
 
 
 @app.cli.command()
-def load_files_from_filesystem():
-    """Load file data into the database."""
-    from crc.services.temp_migration_service import FromFilesystemService
-    location = app.config['SYNC_FILE_ROOT']
-    FromFilesystemService().update_file_metadata_from_filesystem(location)
-
-
-@app.cli.command()
-def load_example_data():
-    """Load example data into the database."""
-    from example_data import ExampleDataLoader
-    ExampleDataLoader.clean_db()
-    ExampleDataLoader().load_all()
-    ExampleDataLoader().load_default_user()
-
-
-@app.cli.command()
-def load_example_rrt_data():
-    """Load example data into the database."""
-    from example_data import ExampleDataLoader
-    ExampleDataLoader.clean_db()
-    ExampleDataLoader().load_rrt()
-
-
-@app.cli.command()
-def load_reference_files():
-    """Load example data into the database."""
-    from example_data import ExampleDataLoader
-    ExampleDataLoader().load_reference_documents()
-
-@app.cli.command()
 def clear_db():
     """Load example data into the database."""
     from example_data import ExampleDataLoader
     ExampleDataLoader.clean_db()
-
-@app.cli.command()
-def sync_with_testing():
-    """Load all the workflows currently on testing into this system."""
-    from crc.api import workflow_sync
-    workflow_sync.sync_all_changed_workflows("https://testing.crconnect.uvadcos.io/api")
 
 @app.cli.command()
 @click.argument("study_id")

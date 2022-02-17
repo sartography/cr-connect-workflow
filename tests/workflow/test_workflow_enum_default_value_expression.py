@@ -39,6 +39,8 @@ class TestWorkflowEnumDefault(BaseTest):
         self.assertEqual('white', workflow_api.next_task.data['color_select'])
 
     def test_enum_value_expression_and_default(self):
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('enum_value_expression_fail')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
 

@@ -1,7 +1,8 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.workflow import WorkflowModel, WorkflowSpecModel, WorkflowSpecModelSchema
+from crc.models.workflow import WorkflowModel, WorkflowSpecInfo, WorkflowSpecInfoSchema  # WorkflowSpecModel, WorkflowSpecModelSchema
 from crc.scripts.script import Script
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class ScriptTemplate(Script):
@@ -18,6 +19,6 @@ class ScriptTemplate(Script):
                            message='Please pass in a workflow_id to use in the search.')
         passed_workflow_id = args[0]
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == passed_workflow_id).first()
-        workflow_spec = session.query(WorkflowSpecModel).filter(WorkflowSpecModel.id==workflow.workflow_spec_id).first()
+        workflow_spec = WorkflowSpecService().get_spec(workflow.workflow_spec_id)
         if workflow_spec:
-            return WorkflowSpecModelSchema().dump(workflow_spec)
+            return WorkflowSpecInfoSchema().dump(workflow_spec)

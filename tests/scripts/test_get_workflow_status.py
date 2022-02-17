@@ -7,13 +7,14 @@ from crc.models.workflow import WorkflowModel
 class TestGetWorkflowStatus(BaseTest):
 
     def test_get_workflow_status_validation(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('get_workflow_status')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual([], rv.json)
 
     def test_get_workflow_status(self):
-        self.load_example_data()
+        self.create_workflow('random_fact')
         workflow_model_1 = session.query(WorkflowModel).filter(WorkflowModel.id == 1).first()
         search_workflow_id = workflow_model_1.id
         workflow = self.create_workflow('get_workflow_status')

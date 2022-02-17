@@ -12,7 +12,6 @@ from crc.scripts.ldap import Ldap
 class TestLdapLookupScript(BaseTest):
 
     def test_get_existing_user_details(self):
-        self.load_example_data()
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -32,7 +31,6 @@ class TestLdapLookupScript(BaseTest):
         self.assertEqual(user_details['proper_name'], 'Dan Funk - (dhf8r)')
 
     def test_get_invalid_user_details(self):
-        self.load_example_data()
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -46,7 +44,6 @@ class TestLdapLookupScript(BaseTest):
         self.assertEqual({}, user_details)
 
     def test_get_current_user_details(self):
-        self.load_example_data()
         workflow = self.create_workflow('empty_workflow')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()

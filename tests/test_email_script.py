@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 from crc import mail
-from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
+from crc.services.user_file_service import UserFileService
 
 
 class TestEmailScript(BaseTest):
@@ -10,7 +10,8 @@ class TestEmailScript(BaseTest):
         # This validates scripts.email.do_task_validate_only
         # It also tests that we don't overwrite the default email_address with random text during validation
         # Otherwise json would have an error about parsing the email address
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('email_script')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual([], rv.json)
@@ -33,7 +34,7 @@ class TestEmailScript(BaseTest):
             self.assertIn('Thank you for using this email example', outbox[0].body)
 
     def test_email_script_multiple(self):
-        self.load_example_data()
+        self.create_reference_document()
         with mail.record_messages() as outbox:
 
             workflow = self.create_workflow('email_script')
@@ -84,7 +85,7 @@ class TestEmailScript(BaseTest):
             self.assertIn(outbox[0].recipients[2], ['user@example.com', 'dhf8r@virginia.edu', 'lb3dp@virginia.edu'])
 
     def test_email_script_attachments(self):
-        self.load_example_data()
+        self.create_reference_document()
         irb_code_1 = 'Study_App_Doc'
         irb_code_2 = 'Study_Protocol_Document'
 
@@ -92,18 +93,18 @@ class TestEmailScript(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         first_task = workflow_api.next_task
 
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="something.png", content_type="text",
-                                      binary_data=b'1234', irb_doc_code=irb_code_1)
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="another.png", content_type="text",
-                                      binary_data=b'67890', irb_doc_code=irb_code_1)
-        FileService.add_workflow_file(workflow_id=workflow.id,
-                                      task_spec_name=first_task.name,
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'5678', irb_doc_code=irb_code_2)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="something.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code_1)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="another.png", content_type="text",
+                                          binary_data=b'67890', irb_doc_code=irb_code_1)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'5678', irb_doc_code=irb_code_2)
 
         with mail.record_messages() as outbox:
             self.complete_form(workflow, first_task, {'subject': 'My Test Subject', 'recipients': 'user@example.com',

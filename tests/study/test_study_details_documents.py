@@ -10,11 +10,12 @@ from crc.models.file import FileDataModel, FileModel
 from crc.models.protocol_builder import ProtocolBuilderRequiredDocumentSchema
 from crc.models.study import StudyModel
 from crc.scripts.study_info import StudyInfo
-from crc.services.file_service import FileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.scripts.file_data_set import FileDataSet
 from crc.services.document_service import DocumentService
+from crc.services.user_file_service import UserFileService
+from crc.services.reference_file_service import ReferenceFileService
 
 
 class TestStudyDetailsDocumentsScript(BaseTest):
@@ -33,7 +34,9 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
 
-        self.load_example_data()
+        self.create_reference_document()
+        self.add_studies()
+
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -41,14 +44,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         task = processor.next_task()
 
         # Remove the reference file.
-        file_model = db.session.query(FileModel). \
-            filter(FileModel.is_reference is True). \
-            filter(FileModel.name == DocumentService.DOCUMENT_LIST).first()
-        if file_model:
-            db.session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model.id).delete()
-            db.session.query(FileModel).filter(FileModel.id == file_model.id).delete()
-        db.session.commit()
-        db.session.flush()
+        ReferenceFileService.delete(DocumentService.DOCUMENT_LIST)
 
         with self.assertRaises(ApiError):
             StudyInfo().do_task_validate_only(task, study.id, "documents")
@@ -58,7 +54,8 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
 
-        self.load_example_data()
+        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -79,7 +76,8 @@ class TestStudyDetailsDocumentsScript(BaseTest):
     def test_study_info_returns_a_box_object(self, mock_get):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
-        self.load_example_data()
+        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
@@ -94,15 +92,16 @@ class TestStudyDetailsDocumentsScript(BaseTest):
     def test_study_info_returns_document_data_store_values_with_documents(self, mock_get):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
-        self.load_example_data()
+        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                             task_spec_name='Acitivity01',
-                                             name="anything.png", content_type="text",
-                                             binary_data=b'1234', irb_doc_code=irb_code)
+        file = UserFileService.add_workflow_file(workflow_id=workflow_model.id,
+                                                 task_spec_name='Acitivity01',
+                                                 name="anything.png", content_type="text",
+                                                 binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
         FileDataSet().do_task(task, study.id, workflow_model.id, key="ginger", value="doodle", file_id=file.id)
@@ -115,15 +114,16 @@ class TestStudyDetailsDocumentsScript(BaseTest):
     def test_file_data_set_changes_irb_code(self, mock_get):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
-        self.load_example_data()
+        self.create_reference_document()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                             task_spec_name='TaskSpec01',
-                                             name="anything.png", content_type="text",
-                                             binary_data=b'1234', irb_doc_code=irb_code)
+        file = UserFileService.add_workflow_file(workflow_id=workflow_model.id,
+                                                 task_spec_name='TaskSpec01',
+                                                 name="anything.png", content_type="text",
+                                                 binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
         FileDataSet().do_task(task, study.id, workflow_model.id, key="irb_code", value="Study_App_Doc", file_id=file.id)
@@ -137,15 +137,15 @@ class TestStudyDetailsDocumentsScript(BaseTest):
     def test_file_data_set_invalid_irb_code_fails(self, mock_get):
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('required_docs.json')
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
         workflow_model = StudyService._create_workflow_model(study, workflow_spec_model)
         irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        file = FileService.add_workflow_file(workflow_id=workflow_model.id,
-                                             task_spec_name='Activity01',
-                                             name="anything.png", content_type="text",
-                                             binary_data=b'1234', irb_doc_code=irb_code)
+        file = UserFileService.add_workflow_file(workflow_id=workflow_model.id,
+                                                 task_spec_name='Activity01',
+                                                 name="anything.png", content_type="text",
+                                                 binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
         with self.assertRaises(ApiError):

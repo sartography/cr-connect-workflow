@@ -6,7 +6,8 @@ from crc.api.common import ApiError
 class TestWorkflowReset(BaseTest):
 
     def test_workflow_reset_validation(self):
-        self.load_example_data()
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
         spec_model = self.load_test_spec('reset_workflow')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual([], rv.json)

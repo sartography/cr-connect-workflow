@@ -2,6 +2,7 @@ from crc.scripts.script import Script
 from crc.api.common import ApiError
 from crc.services.protocol_builder import ProtocolBuilderService
 from crc.services.study_service import StudyService
+from crc.services.workflow_spec_service import WorkflowSpecService
 
 
 class CheckStudy(Script):
@@ -12,7 +13,9 @@ class CheckStudy(Script):
         return """Returns the Check Study data for a Study"""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        study = StudyService.get_study(study_id)
+        spec_service = WorkflowSpecService()
+        categories = spec_service.get_categories()
+        study = StudyService.get_study(study_id, categories)
         if study:
             return {"DETAIL": "Passed validation.", "STATUS": "No Error"}
         else:

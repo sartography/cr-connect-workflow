@@ -10,7 +10,7 @@ from example_data import ExampleDataLoader
 class TestNoStudyWorkflow(BaseTest):
 
     def test_no_study_workflow(self):
-        self.load_example_data()
+        self.add_users()
         spec = ExampleDataLoader().create_spec('hello_world', 'Hello World', standalone=True, from_tests=True)
         user = session.query(UserModel).first()
         self.assertIsNotNone(user)

@@ -3,9 +3,10 @@ import logging
 import os
 from unittest.mock import patch
 
+from SpiffWorkflow.bpmn.specs.events import EndEvent
+
 from tests.base_test import BaseTest
 
-from SpiffWorkflow.bpmn.specs.EndEvent import EndEvent
 from SpiffWorkflow.camunda.specs.UserTask import FormField
 
 from crc import session, db, app
@@ -13,10 +14,11 @@ from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
 from crc.models.study import StudyModel
-from crc.models.workflow import WorkflowSpecModel, WorkflowStatus
+from crc.models.workflow import WorkflowStatus
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
+from crc.services.spec_file_service import SpecFileService
 
 
 class TestWorkflowProcessor(BaseTest):
@@ -32,7 +34,7 @@ class TestWorkflowProcessor(BaseTest):
         return WorkflowProcessor(workflow_model)
 
     def test_create_and_complete_workflow(self):
-        self.load_example_data()
+        self.add_studies()
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -57,10 +59,10 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("FactService", data)
 
     def test_workflow_with_dmn(self):
-        self.load_example_data()
+
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("decision_table")
-        files = session.query(FileModel).filter_by(workflow_spec_id='decision_table').all()
+        files = SpecFileService.get_files(workflow_spec_model)
         self.assertEqual(2, len(files))
         processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
@@ -84,7 +86,7 @@ class TestWorkflowProcessor(BaseTest):
 
 
     def test_workflow_with_parallel_forms(self):
-        self.load_example_data()
+        self.create_reference_document()
         workflow_spec_model = self.load_test_spec("parallel_tasks")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -126,7 +128,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertTrue(processor.bpmn_workflow.is_completed())
 
     def test_workflow_processor_knows_the_text_task_even_when_parallel(self):
-        self.load_example_data()
+
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("parallel_tasks")
         processor = self.get_processor(study, workflow_spec_model)
@@ -148,7 +150,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(task.children[0], processor.next_task())
 
     def test_workflow_processor_returns_next_task_as_end_task_if_complete(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -165,7 +167,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIsInstance(task.task_spec, EndEvent)
 
     def test_workflow_processor_returns_waiting_task_if_no_ready_tasks_exist(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("timer_inline")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
@@ -179,7 +181,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual(task.state, task.WAITING)
 
     def test_workflow_validation_error_is_properly_raised(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("invalid_spec")
         study = session.query(StudyModel).first()
         with self.assertRaises(ApiError) as context:
@@ -189,7 +191,7 @@ class TestWorkflowProcessor(BaseTest):
 
 
     def test_workflow_with_bad_expression_raises_sensible_error(self):
-        self.load_example_data()
+
 
         workflow_spec_model = self.load_test_spec("invalid_expression")
         study = session.query(StudyModel).first()
@@ -204,12 +206,11 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("task_error", context.exception.code)
 
     def test_workflow_with_docx_template(self):
-        self.load_example_data()
+
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("docx")
-        files = session.query(FileModel).filter_by(workflow_spec_id='docx').all()
+        files = SpecFileService.get_files(workflow_spec_model)
         self.assertEqual(2, len(files))
-        workflow_spec_model = session.query(WorkflowSpecModel).filter_by(id="docx").first()
         processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
         self.assertEqual(WorkflowStatus.user_input_required, processor.get_status())
@@ -233,7 +234,7 @@ class TestWorkflowProcessor(BaseTest):
     def test_load_study_information(self):
         """ Test a workflow that includes requests to pull in Study Details."""
 
-        self.load_example_data()
+        self.add_studies()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("study_details")
         processor = self.get_processor(study, workflow_spec_model)
@@ -247,7 +248,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertIn("sponsor", task.data["StudyInfo"]["info"])
 
     def test_hard_reset(self):
-        self.load_example_data()
+
         # Start the two_forms workflow, and enter some data in the first form.
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("two_forms")
@@ -262,7 +263,7 @@ class TestWorkflowProcessor(BaseTest):
 
         # Modify the specification, with a major change that alters the flow and can't be serialized effectively.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data', 'two_forms', 'modified', 'two_forms_struc_mod.bpmn')
-        self.replace_file("two_forms.bpmn", file_path)
+        self.replace_file(workflow_spec_model, "two_forms.bpmn", file_path)
 
         # Assure that creating a new processor doesn't cause any issues, and maintains the spec version.
         processor.workflow_model.bpmn_workflow_json = processor.serialize()
@@ -284,7 +285,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("blue", processor3.next_task().data["color"])
 
     def test_next_task_when_completing_sequential_steps_within_parallel(self):
-        self.load_example_data()
+
         # Start the two_forms workflow, and enter some data in the first form.
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("nav_order")
@@ -315,64 +316,14 @@ class TestWorkflowProcessor(BaseTest):
         task = processor.next_task()
         self.assertEqual("A1", task.task_spec.name)
 
-
-
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')
-    def test_master_bpmn_for_crc(self, mock_details, mock_required_docs, mock_investigators, mock_studies):
-
-        # Mock Protocol Builder response
-        studies_response = self.protocol_builder_response('user_studies.json')
-        mock_studies.return_value = ProtocolBuilderCreatorStudySchema(many=True).loads(studies_response)
-
-        investigators_response = self.protocol_builder_response('investigators.json')
-        mock_investigators.return_value = json.loads(investigators_response)
-
-        required_docs_response = self.protocol_builder_response('required_docs.json')
-        mock_required_docs.return_value = json.loads(required_docs_response)
-
-        details_response = self.protocol_builder_response('study_details.json')
-        mock_details.return_value = json.loads(details_response)
-
-        self.load_example_data(use_crc_data=True)
-        app.config['PB_ENABLED'] = True
-
-        study = session.query(StudyModel).first()
-        workflow_spec_model = db.session.query(WorkflowSpecModel).\
-            filter(WorkflowSpecModel.id == "top_level_workflow").first()
-        self.assertIsNotNone(workflow_spec_model)
-
-        processor = self.get_processor(study, workflow_spec_model)
-        processor.do_engine_steps()
-        self.assertTrue("Top level process is fully automatic.", processor.bpmn_workflow.is_completed())
-        data = processor.bpmn_workflow.last_task.data
-
-        logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
-        # It should mark Enter Core Data as required, because it is always required.
-        self.assertTrue("enter_core_info" in data)
-        self.assertEqual("required", data["enter_core_info"])
-
-        # It should mark Personnel as required, because StudyInfo.investigators is not empty.
-        self.assertTrue("personnel" in data)
-        self.assertEqual("required", data["personnel"])
-
-        # It should mark the sponsor funding source as disabled since the funding required (12) is not included in the required docs.
-        self.assertTrue("sponsor_funding_source" in data)
-        self.assertEqual("required", data["sponsor_funding_source"])
-
     def test_enum_with_no_choices_raises_api_error(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("random_fact")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)
         processor.do_engine_steps()
         tasks = processor.next_user_tasks()
         task = tasks[0]
-
-
         field = FormField()
         field.id = "test_enum_field"
         field.type = "enum"
@@ -384,7 +335,7 @@ class TestWorkflowProcessor(BaseTest):
 
 
     def test_get_role_by_name(self):
-        self.load_example_data()
+
         workflow_spec_model = self.load_test_spec("roles")
         study = session.query(StudyModel).first()
         processor = self.get_processor(study, workflow_spec_model)

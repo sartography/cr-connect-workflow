@@ -1,70 +1,82 @@
 import enum
 
 import marshmallow
-from marshmallow import EXCLUDE
-from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
+from marshmallow import EXCLUDE, post_load, fields, INCLUDE
 from sqlalchemy import func
-from sqlalchemy.orm import backref
 
-from crc import db
-from crc.models.file import FileDataModel
+from crc import db, ma
 
 
-class WorkflowSpecCategoryModel(db.Model):
-    __tablename__ = 'workflow_spec_category'
-    id = db.Column(db.Integer, primary_key=True)
-    display_name = db.Column(db.String)
-    display_order = db.Column(db.Integer)
-    admin = db.Column(db.Boolean)
+class WorkflowSpecCategory(object):
+    def __init__(self, id, display_name, display_order=0, admin=False):
+        self.id = id  # A unique string name, lower case, under scores (ie, 'my_category')
+        self.display_name = display_name
+        self.display_order = display_order
+        self.admin = admin
+        self.workflows = []  # For storing Workflow Metadata
+        self.specs = []  # For the list of specifications associated with a category
 
+    def __eq__(self, other):
+        if not isinstance(other, WorkflowSpecCategory):
+            return False
+        if other.id == self.id:
+            return True
+        return False
 
-class WorkflowSpecCategoryModelSchema(SQLAlchemyAutoSchema):
+class WorkflowSpecCategorySchema(ma.Schema):
     class Meta:
-        model = WorkflowSpecCategoryModel
-        load_instance = True
-        include_relationships = True
+        model = WorkflowSpecCategory
+        fields = ["id", "display_name", "display_order", "admin"]
+
+    @post_load
+    def make_cat(self, data, **kwargs):
+        return WorkflowSpecCategory(**data)
 
 
-class WorkflowSpecModel(db.Model):
-    __tablename__ = 'workflow_spec'
-    id = db.Column(db.String, primary_key=True)
-    display_name = db.Column(db.String)
-    display_order = db.Column(db.Integer, nullable=True)
-    description = db.Column(db.Text)
-    category_id = db.Column(db.Integer, db.ForeignKey('workflow_spec_category.id'), nullable=True)
-    category = db.relationship("WorkflowSpecCategoryModel")
-    is_master_spec = db.Column(db.Boolean, default=False)
-    standalone = db.Column(db.Boolean, default=False)
-    library = db.Column(db.Boolean, default=False)
+class WorkflowSpecInfo(object):
+    def __init__(self, id, display_name, description,  is_master_spec=False,
+                 standalone=False, library=False, primary_file_name='', primary_process_id='',
+                 libraries=[], category_id="", display_order=0, is_review=False):
+        self.id = id  # Sting unique id
+        self.display_name = display_name
+        self.description = description
+        self.display_order = display_order
+        self.is_master_spec = is_master_spec
+        self.standalone = standalone
+        self.library = library
+        self.primary_file_name = primary_file_name
+        self.primary_process_id = primary_process_id
+        self.is_review = is_review
+        self.libraries = libraries
+        self.category_id = category_id
+
+    def __eq__(self, other):
+        if not isinstance(other, WorkflowSpecInfo):
+            return False
+        if other.id == self.id:
+            return True
+        return False
 
 
-class WorkflowLibraryModel(db.Model):
-   __tablename__ = 'workflow_library'
-   id = db.Column(db.Integer, primary_key=True)
-   workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
-   library_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'), nullable=True)
-   parent = db.relationship(WorkflowSpecModel,
-                                   primaryjoin=workflow_spec_id==WorkflowSpecModel.id,
-                                  backref=backref('libraries',cascade='all, delete'))
-   library = db.relationship(WorkflowSpecModel,primaryjoin=library_spec_id==WorkflowSpecModel.id,
-                                  backref=backref('parents',cascade='all, delete'))
-
-
-class WorkflowSpecModelSchema(SQLAlchemyAutoSchema):
+class WorkflowSpecInfoSchema(ma.Schema):
     class Meta:
-        model = WorkflowSpecModel
-        load_instance = True
-        include_relationships = True
-        include_fk = True  # Includes foreign keys
-        unknown = EXCLUDE
+        model = WorkflowSpecInfo
+    id = marshmallow.fields.String(required=True)
+    display_name = marshmallow.fields.String(required=True)
+    description = marshmallow.fields.String()
+    is_master_spec = marshmallow.fields.Boolean(required=True)
+    standalone = marshmallow.fields.Boolean(required=True)
+    library = marshmallow.fields.Boolean(required=True)
+    display_order = marshmallow.fields.Integer(allow_none=True)
+    primary_file_name = marshmallow.fields.String(allow_none=True)
+    primary_process_id = marshmallow.fields.String(allow_none=True)
+    is_review = marshmallow.fields.Boolean(allow_none=True)
+    category_id = marshmallow.fields.String(allow_none=True)
+    libraries = marshmallow.fields.List(marshmallow.fields.String(), allow_none=True)
 
-    category = marshmallow.fields.Nested(WorkflowSpecCategoryModelSchema, dump_only=True)
-    libraries = marshmallow.fields.Function(lambda obj: [{'id':x.library.id,
-                                                          'display_name':x.library.display_name} for x in
-                                                          obj.libraries] )
-    parents = marshmallow.fields.Function(lambda obj: [{'id':x.parent.id,
-                                                          'display_name':x.parent.display_name} for x in
-                                                          obj.parents] )
+    @post_load
+    def make_spec(self, data, **kwargs):
+        return WorkflowSpecInfo(**data)
 
 class WorkflowState(enum.Enum):
     hidden = "hidden"
@@ -89,15 +101,6 @@ class WorkflowStatus(enum.Enum):
     erroring = "erroring"
 
 
-class WorkflowLibraryModelSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = WorkflowLibraryModel
-        load_instance = True
-        include_relationships = True
-
-    library = marshmallow.fields.Nested('WorkflowSpecModelSchema')
-
-
 class WorkflowModel(db.Model):
     __tablename__ = 'workflow'
     id = db.Column(db.Integer, primary_key=True)
@@ -105,8 +108,7 @@ class WorkflowModel(db.Model):
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     study = db.relationship("StudyModel", backref='workflow')
-    workflow_spec_id = db.Column(db.String, db.ForeignKey('workflow_spec.id'))
-    workflow_spec = db.relationship("WorkflowSpecModel")
+    workflow_spec_id = db.Column(db.String)
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
