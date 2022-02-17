@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_19xdwix" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_1wfi0e5" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_09e6w2a</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_09e6w2a" sourceRef="StartEvent_1" targetRef="Activity_1lg09if" />
+    <bpmn:sequenceFlow id="Flow_0cbbsi7" sourceRef="Activity_1lg09if" targetRef="Activity_05yevzg" />
+    <bpmn:sequenceFlow id="Flow_0dvxkh6" sourceRef="Activity_05yevzg" targetRef="Activity_0phz7ks" />
+    <bpmn:endEvent id="Event_1ieukoa">
+      <bpmn:incoming>Flow_19hbirj</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_19hbirj" sourceRef="Activity_0phz7ks" targetRef="Event_1ieukoa" />
+    <bpmn:userTask id="Activity_1lg09if" name="Get Date" camunda:formKey="DateForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="a_date" label="A Date" type="date">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_09e6w2a</bpmn:incoming>
+      <bpmn:outgoing>Flow_0cbbsi7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Activity_05yevzg" name="Modify Date">
+      <bpmn:incoming>Flow_0cbbsi7</bpmn:incoming>
+      <bpmn:outgoing>Flow_0dvxkh6</bpmn:outgoing>
+      <bpmn:script>delta1 = timedelta(hours=2)
+format = '%Y-%m-%dT%H:%M:%S.%fZ'
+the_date = datetime.datetime.strptime(a_date, format)
+modified_date = the_date + delta1
+del(delta1)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Activity_0phz7ks" name="Display Dates">
+      <bpmn:documentation># Dates
+
+## A Date
+{{ a_date }}
+
+</bpmn:documentation>
+      <bpmn:incoming>Flow_0dvxkh6</bpmn:incoming>
+      <bpmn:outgoing>Flow_19hbirj</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1wfi0e5">
+      <bpmndi:BPMNEdge id="Flow_19hbirj_di" bpmnElement="Flow_19hbirj">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0dvxkh6_di" bpmnElement="Flow_0dvxkh6">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0cbbsi7_di" bpmnElement="Flow_0cbbsi7">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_09e6w2a_di" bpmnElement="Flow_09e6w2a">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ieukoa_di" bpmnElement="Event_1ieukoa">
+        <dc:Bounds x="752" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05be3cs_di" bpmnElement="Activity_1lg09if">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1s4snzz_di" bpmnElement="Activity_05yevzg">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_15nchcr_di" bpmnElement="Activity_0phz7ks">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

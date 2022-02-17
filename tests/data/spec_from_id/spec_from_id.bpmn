@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_daa6ad0" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_GetSpecFromID" name="Get Spec From ID" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_08i8lxh</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_08i8lxh" sourceRef="StartEvent_1" targetRef="Activity_GetSpecID" />
+    <bpmn:sequenceFlow id="Flow_1fhu6em" sourceRef="Activity_GetSpecID" targetRef="Activity_GetSpec" />
+    <bpmn:sequenceFlow id="Flow_06e4nx2" sourceRef="Activity_GetSpec" targetRef="Activity_DisplaySpec" />
+    <bpmn:endEvent id="Event_1o8wpdp">
+      <bpmn:incoming>Flow_0saprky</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0saprky" sourceRef="Activity_DisplaySpec" targetRef="Event_1o8wpdp" />
+    <bpmn:userTask id="Activity_GetSpecID" name="Get Spec ID" camunda:formKey="SpecIDForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="spec_id" label="Spec ID" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_08i8lxh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1fhu6em</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Activity_GetSpec" name="Get Spec">
+      <bpmn:incoming>Flow_1fhu6em</bpmn:incoming>
+      <bpmn:outgoing>Flow_06e4nx2</bpmn:outgoing>
+      <bpmn:script>spec = get_spec_from_id(spec_id)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Activity_DisplaySpec" name="Display Spec">
+      <bpmn:documentation>## Spec
+{{ spec }}
+</bpmn:documentation>
+      <bpmn:incoming>Flow_06e4nx2</bpmn:incoming>
+      <bpmn:outgoing>Flow_0saprky</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_GetSpecFromID">
+      <bpmndi:BPMNEdge id="Flow_0saprky_di" bpmnElement="Flow_0saprky">
+        <di:waypoint x="690" y="177" />
+        <di:waypoint x="752" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06e4nx2_di" bpmnElement="Flow_06e4nx2">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="590" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1fhu6em_di" bpmnElement="Flow_1fhu6em">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08i8lxh_di" bpmnElement="Flow_08i8lxh">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1o8wpdp_di" bpmnElement="Event_1o8wpdp">
+        <dc:Bounds x="752" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0dq9ius_di" bpmnElement="Activity_GetSpecID">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ux2vk8_di" bpmnElement="Activity_GetSpec">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fzla1m_di" bpmnElement="Activity_DisplaySpec">
+        <dc:Bounds x="590" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

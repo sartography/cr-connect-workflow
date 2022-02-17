@@ -1,5 +1,6 @@
 from tests.base_test import BaseTest
 
+from crc import app
 from crc.services.git_service import GitService
 
 from unittest.mock import patch, Mock, call
@@ -57,6 +58,10 @@ class TestGitService(BaseTest):
         self.assertIn(call.index.commit('This is my comment'), method_calls)
         self.assertIn(call.remotes.origin.push(), method_calls)
 
-    # def test_pull_from_remote(self):
-    #     result = GitService.pull_from_remote()
-    #     print(result)
+    def test_get_remote_url(self):
+        app.config['GIT_REMOTE_SERVER'] = 'test_server.com'
+        app.config['GIT_USER_NAME'] = 'test_username'
+        app.config['GIT_USER_PASS'] = 'test_pass'
+
+        result = GitService.get_remote_url('my_test_path')
+        self.assertEqual('https://test_username:test_pass@test_server.com/my_test_path.git', result)
