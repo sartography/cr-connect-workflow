@@ -49,7 +49,5 @@ class TestWorkflowHiddenRequiredField(BaseTest):
         self.complete_form(workflow, second_task, {})
         workflow_api = self.get_workflow_api(workflow)
 
-        # The color field is hidden and required. Make sure we use the default value
         third_task = workflow_api.next_task
         self.assertEqual('Activity_CheckDefault', third_task.name)
-        self.assertEqual('Gray', third_task.data['color'])

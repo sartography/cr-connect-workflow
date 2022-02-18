@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_c2698da" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_c2698da" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
   <bpmn:process id="Process_edd0a94" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_04t40px</bpmn:outgoing>
@@ -11,7 +11,7 @@
     <bpmn:userTask id="Activity_1jpj09a" name="Do Hide" camunda:formKey="My Form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="showNextField" label="Should I show the next field?" type="boolean" defaultValue="false" />
+          <camunda:formField id="showNextField" label="Should I show the next field?" type="boolean" defaultValue="False" />
           <camunda:formField id="likeSpam" label="Do you like Spam?" type="boolean">
             <camunda:properties>
               <camunda:property id="hide_expression" value="showNextField == False" />
@@ -26,12 +26,8 @@
     <bpmn:userTask id="Activity_1npmm8p" name="Do Label Change" camunda:formKey="change_label">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="my_label" label="Set Label for next field" type="string" defaultValue="My Label" />
-          <camunda:formField id="custom_field" label="Custom Label" type="string">
-            <camunda:properties>
-              <camunda:property id="label_expression" value="my_label" />
-            </camunda:properties>
-          </camunda:formField>
+          <camunda:formField id="my_label" label="Set Label for next field" type="string" defaultValue="&#39;My Label&#39;" />
+          <camunda:formField id="custom_field" label="Custom Label" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0y96gip</bpmn:incoming>
@@ -44,11 +40,7 @@
 This takes the label from the previous form and uses it as the default value in this form.  Please note that existing values must exist in the data BEFORE the form is loaded.  You can't populate one field with a default property that is set by another field in the same form on the same page.</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="my_value" type="string">
-            <camunda:properties>
-              <camunda:property id="value_expression" value="my_label" />
-            </camunda:properties>
-          </camunda:formField>
+          <camunda:formField id="my_value" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_162wyra</bpmn:incoming>
@@ -58,7 +50,7 @@ This takes the label from the previous form and uses it as the default value in 
     <bpmn:userTask id="Activity_0otfiwr" name="Do Require" camunda:formKey="required_fields">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="require_next_field" label="Require Next Field?" type="boolean" defaultValue="true" />
+          <camunda:formField id="require_next_field" label="Require Next Field?" type="boolean" defaultValue="True" />
           <camunda:formField id="my_required_field" label="Required Field" type="string">
             <camunda:properties>
               <camunda:property id="required_expression" value="require_next_field" />
@@ -73,7 +65,7 @@ This takes the label from the previous form and uses it as the default value in 
     <bpmn:userTask id="Activity_1btzxi7" name="Do Hide Group" camunda:formKey="repeat_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="show_repeat" label="Show Repeating Section?" type="boolean" defaultValue="true" />
+          <camunda:formField id="show_repeat" label="Show Repeating Section?" type="boolean" defaultValue="True" />
           <camunda:formField id="first_name" label="First Name" type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="name" />
@@ -95,49 +87,49 @@ This takes the label from the previous form and uses it as the default value in 
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_edd0a94">
       <bpmndi:BPMNEdge id="Flow_125mive_di" bpmnElement="Flow_125mive">
-        <di:waypoint x="1020" y="177" />
-        <di:waypoint x="1202" y="177" />
+        <di:waypoint x="1020" y="117" />
+        <di:waypoint x="1202" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0y96gip_di" bpmnElement="Flow_0y96gip">
-        <di:waypoint x="540" y="177" />
-        <di:waypoint x="600" y="177" />
+        <di:waypoint x="540" y="117" />
+        <di:waypoint x="600" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1u8z7hs_di" bpmnElement="Flow_1u8z7hs">
-        <di:waypoint x="860" y="177" />
-        <di:waypoint x="920" y="177" />
+        <di:waypoint x="860" y="117" />
+        <di:waypoint x="920" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_162wyra_di" bpmnElement="Flow_162wyra">
-        <di:waypoint x="700" y="177" />
-        <di:waypoint x="760" y="177" />
+        <di:waypoint x="700" y="117" />
+        <di:waypoint x="760" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0bo5tdr_di" bpmnElement="Flow_0bo5tdr">
-        <di:waypoint x="370" y="177" />
-        <di:waypoint x="440" y="177" />
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="440" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_04t40px_di" bpmnElement="Flow_04t40px">
-        <di:waypoint x="215" y="177" />
-        <di:waypoint x="270" y="177" />
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="179" y="159" width="36" height="36" />
+        <dc:Bounds x="179" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_09hba1p_di" bpmnElement="Event_09hba1p">
-        <dc:Bounds x="1202" y="159" width="36" height="36" />
+        <dc:Bounds x="1202" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_16nmmjp_di" bpmnElement="Activity_1jpj09a">
-        <dc:Bounds x="270" y="137" width="100" height="80" />
+        <dc:Bounds x="270" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0dfquqc_di" bpmnElement="Activity_1npmm8p">
-        <dc:Bounds x="600" y="137" width="100" height="80" />
+        <dc:Bounds x="600" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1du715a_di" bpmnElement="Activity_1d5wyyo">
-        <dc:Bounds x="760" y="137" width="100" height="80" />
+        <dc:Bounds x="760" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0w1cduj_di" bpmnElement="Activity_0otfiwr">
-        <dc:Bounds x="440" y="137" width="100" height="80" />
+        <dc:Bounds x="440" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_05v5bh0_di" bpmnElement="Activity_1btzxi7">
-        <dc:Bounds x="920" y="137" width="100" height="80" />
+        <dc:Bounds x="920" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
