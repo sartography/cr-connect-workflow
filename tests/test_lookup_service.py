@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 from tests.base_test import BaseTest
 
@@ -30,7 +31,9 @@ class TestLookupService(BaseTest):
         lookup_table_orig = session.query(LookupFileModel).first()
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "something", limit=10)
         lookup_table = session.query(LookupFileModel).first()
-        self.assertEqual(lookup_table_orig, lookup_table)
+        self.assertEqual(lookup_table_orig, lookup_table, f"Lookup models should be the same, and have the same dates:"
+                                                          f"{lookup_table_orig.file_timestamp} "
+                                                          f"and {lookup_table.file_timestamp} ")
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "blah", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
@@ -50,6 +53,7 @@ class TestLookupService(BaseTest):
         lookup_data = session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_record).all()
         self.assertEqual(28, len(lookup_data))
 
+        sleep(1)
         # Update the workflow specification file.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data',
                                  'enum_options_with_search', 'sponsors_modified.xlsx')
