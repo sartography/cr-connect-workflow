@@ -83,7 +83,10 @@ class LookupService(object):
                 # to rebuild.
                 workflow_spec = WorkflowSpecService().get_spec(workflow.workflow_spec_id)
                 timestamp = SpecFileService.timestamp(workflow_spec, lookup_model.file_name)
-                is_current = timestamp == lookup_model.file_timestamp
+                print(f"*** Comparing {timestamp} and {lookup_model.file_timestamp}")
+                # Assures we have the same timestamp, as storage in the database might create slight variations in
+                # the floating point values, just assure they values match to within a second.
+                is_current = abs(timestamp - lookup_model.file_timestamp) == 0
 
         if not is_current:
             # Very very very expensive, but we don't know need this till we do.

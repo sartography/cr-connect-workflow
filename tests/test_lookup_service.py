@@ -30,7 +30,9 @@ class TestLookupService(BaseTest):
         lookup_table_orig = session.query(LookupFileModel).first()
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "something", limit=10)
         lookup_table = session.query(LookupFileModel).first()
-        self.assertEqual(lookup_table_orig, lookup_table)
+        self.assertEqual(lookup_table_orig, lookup_table, f"Lookup models should be the same, and have the same dates:"
+                                                          f"{lookup_table_orig.file_timestamp} "
+                                                          f"and {lookup_table.file_timestamp} ")
         LookupService.lookup(workflow, "Task_Enum_Lookup", "sponsor", "blah", limit=10)
         lookup_records = session.query(LookupFileModel).all()
         self.assertIsNotNone(lookup_records)
