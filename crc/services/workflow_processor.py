@@ -237,7 +237,7 @@ class WorkflowProcessor(object):
             elif file.type == FileType.dmn:
                 dmn: etree.Element = etree.fromstring(data)
                 parser.add_dmn_xml(dmn, filename=file.name)
-        if workflow_spec_info.primary_process_id is None:
+        if workflow_spec_info.primary_process_id is None or workflow_spec_info.primary_process_id == "":
             raise (ApiError(code="no_primary_bpmn_error",
                             message="There is no primary BPMN model defined for workflow %s" % workflow_spec_info.id))
         try:

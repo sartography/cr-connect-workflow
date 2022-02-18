@@ -16,6 +16,7 @@ from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.bpmn.specs.events import EndEvent, StartEvent
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
 from SpiffWorkflow.util.metrics import timeit
@@ -468,8 +469,10 @@ class WorkflowService(object):
         # default = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
         default = None
         if field.default_value is not None:
-            default = task.workflow.script_engine._evaluate(field.default_value, data)
-
+            try:
+                default = task.workflow.script_engine._evaluate(field.default_value, data)
+            except Exception as e:
+                raise WorkflowTaskExecException(task, "invalid_default", e)
         # If no default exists, return None
         # Note: if default is False, we don't want to execute this code
         if default is None or (isinstance(default, str) and default.strip() == ''):
