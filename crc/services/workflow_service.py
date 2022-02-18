@@ -305,6 +305,9 @@ class WorkflowService(object):
                                              task=task)
                 if not field.has_property(Task.FIELD_PROP_REPEAT):
                     continue
+            else:
+                form_data[field.id] = None
+
 
             # If we are only populating required fields, and this isn't required. stop here.
             if required_only:
