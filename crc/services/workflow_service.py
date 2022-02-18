@@ -271,10 +271,14 @@ class WorkflowService(object):
             WorkflowService.check_field_properties(field, task)
             WorkflowService.check_field_type(field, task)
 
-            # Process the label of the field if it is dynamic.
-            if field.has_property(Task.FIELD_PROP_LABEL_EXPRESSION):
-                result = WorkflowService.evaluate_property(Task.FIELD_PROP_LABEL_EXPRESSION, field, task)
-                field.label = result
+            # If we have a label, try to set the label
+            if field.label:
+                try:
+                    field.label = task.workflow.script_engine._evaluate(field.label, data)
+                except Exception as e:
+                    raise ApiError.from_task("bad label", f'The label "{field.label}" in field {field.id} '
+                                                          f'could not be understood or evaluated. ',
+                                             task=task)
 
             # If a field is hidden and required, it must have a default value
             if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(
@@ -293,7 +297,12 @@ class WorkflowService(object):
 
             # If we have a default_value, try to set the default
             if field.default_value:
-                form_data[field.id] = WorkflowService.get_default_value(field, task, data)
+                try:
+                    form_data[field.id] = WorkflowService.get_default_value(field, task, data)
+                except Exception as e:
+                    raise ApiError.from_task("bad default value", f'The default value "{field.default_value}" in field {field.id} '
+                                                          f'could not be understood or evaluated. ',
+                                             task=task)
                 if not field.has_property(Task.FIELD_PROP_REPEAT):
                     continue
 
