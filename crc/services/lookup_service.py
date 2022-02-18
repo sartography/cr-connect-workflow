@@ -1,4 +1,5 @@
 import logging
+import math
 import re
 from collections import OrderedDict
 from zipfile import BadZipFile
@@ -86,7 +87,7 @@ class LookupService(object):
                 print(f"*** Comparing {timestamp} and {lookup_model.file_timestamp}")
                 # Assures we have the same timestamp, as storage in the database might create slight variations in
                 # the floating point values, just assure they values match to within a second.
-                is_current = abs(timestamp - lookup_model.file_timestamp) == 0
+                is_current = int(timestamp - lookup_model.file_timestamp) == 0
 
         if not is_current:
             # Very very very expensive, but we don't know need this till we do.

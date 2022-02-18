@@ -1,4 +1,5 @@
 import os
+from time import sleep
 
 from tests.base_test import BaseTest
 
@@ -52,6 +53,7 @@ class TestLookupService(BaseTest):
         lookup_data = session.query(LookupDataModel).filter(LookupDataModel.lookup_file_model == lookup_record).all()
         self.assertEqual(28, len(lookup_data))
 
+        sleep(1)
         # Update the workflow specification file.
         file_path = os.path.join(app.root_path, '..', 'tests', 'data',
                                  'enum_options_with_search', 'sponsors_modified.xlsx')
