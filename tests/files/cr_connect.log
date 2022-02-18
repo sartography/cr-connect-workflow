@@ -1,5 +1,0 @@
-2021-11-16 11:39:17,159 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-2021-11-16 11:39:17,159 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
-2021-11-16 11:39:17,160 - apscheduler.scheduler - INFO - Added job "process_waiting_tasks" to job store "default"
-2021-11-16 11:39:17,160 - apscheduler.scheduler - INFO - Added job "FileService.cleanup_file_data" to job store "default"
-2021-11-16 11:39:17,160 - apscheduler.scheduler - INFO - Scheduler started
