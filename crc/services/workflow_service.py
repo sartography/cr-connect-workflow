@@ -275,7 +275,8 @@ class WorkflowService(object):
             # If we have a label, try to set the label
             if field.label:
                 try:
-                    field.label = task.workflow.script_engine._evaluate(field.label, data)
+                    # Assure that we can evaluate the field.label, but no need to save the resulting value.
+                    task.workflow.script_engine._evaluate(field.label, data)
                 except Exception as e:
                     raise ApiError.from_task("bad label", f'The label "{field.label}" in field {field.id} '
                                                           f'could not be understood or evaluated. ',
