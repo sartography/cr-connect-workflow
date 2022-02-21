@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_HiddenField" name="Hidden Field" camunda:formKey="HiddenFieldForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name" type="string" defaultValue="value_expression_value">
+          <camunda:formField id="name" label="'Name'"  type="string" defaultValue="value_expression_value">
             <camunda:properties>
               <camunda:property id="hide_expression" value="True" />
             </camunda:properties>

@@ -14,7 +14,7 @@
     <bpmn:userTask id="Activity_GetName" name="Get Name" camunda:formKey="GetNameForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name: " defaultValue="World" />
+          <camunda:formField id="name" label="'Name: '"  defaultValue="World" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1wfzn0v</bpmn:incoming>

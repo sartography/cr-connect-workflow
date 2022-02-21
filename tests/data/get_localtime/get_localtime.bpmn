@@ -45,18 +45,18 @@ else:
       <bpmn:documentation>This is my email</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="with_timestamp" label="With Timestamp" type="boolean" defaultValue="False">
+          <camunda:formField id="with_timestamp" label="'With Timestamp'"  type="boolean" defaultValue="False">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="with_timezone" label="With Timezone" type="boolean" defaultValue="False">
+          <camunda:formField id="with_timezone" label="'With Timezone'"  type="boolean" defaultValue="False">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="timestamp" label="Timestamp" type="string" />
-          <camunda:formField id="timezone" label="Timezone" type="string" />
+          <camunda:formField id="timestamp" label="'Timestamp'"  type="string" />
+          <camunda:formField id="timezone" label="'Timezone'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0lnc9x0</bpmn:incoming>

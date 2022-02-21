@@ -10,7 +10,7 @@
     <bpmn:userTask id="Activity_UserInput" name="User Input" camunda:formKey="UserInput">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="user_input" label="Select Yes or No" type="boolean" defaultValue="True" />
+          <camunda:formField id="user_input" label="'Select Yes or No'"  type="boolean" defaultValue="True" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_02xzhf3</bpmn:incoming>
@@ -24,7 +24,7 @@
       <bpmn:documentation>&lt;h1&gt;Hello {{ lookup_output }}&lt;/h1&gt;</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="color_select" label="Pick a color" type="enum" defaultValue="white">
+          <camunda:formField id="color_select" label="'Pick a color'"  type="enum" defaultValue="white">
             <camunda:properties>
               <camunda:property id="value_expression" value="lookup_output" />
             </camunda:properties>

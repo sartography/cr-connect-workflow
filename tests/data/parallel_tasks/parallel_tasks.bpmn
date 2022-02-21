@@ -38,15 +38,15 @@
     <bpmn:userTask id="Task_1sxp42p" name="Do the dishes" camunda:formKey="form_a_1">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_1ojqdk5" label="How big a mess is your kitchen?" type="enum">
+          <camunda:formField id="FormField_1ojqdk5" label="'How big a mess is your kitchen?'"  type="enum">
             <camunda:value id="Value_0ehrqjb" name="Perfectly clean!" />
             <camunda:value id="Value_04hjtaa" name="Not too bad." />
             <camunda:value id="Value_2fb98di" name="We&#39;re gonna be here a while." />
             <camunda:value id="Value_0l52r92" name="I&#39;ve got a bad feeling about this." />
             <camunda:value id="Value_3fpalk7" name="Run away! Run away!" />
           </camunda:formField>
-          <camunda:formField id="FormField_3vtabe9" label="Files" type="files" />
-          <camunda:formField id="FormField_0eg7ror" label="One file" type="file" />
+          <camunda:formField id="FormField_3vtabe9" label="'Files'"  type="files" />
+          <camunda:formField id="FormField_0eg7ror" label="'One file'"  type="file" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0pfke5z</bpmn:incoming>
@@ -55,8 +55,8 @@
     <bpmn:userTask id="Task_1dbfcq0" name="Take out the trash" camunda:formKey="form_b_1">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_331jajn" label="Is tomorrow trash day?" type="boolean" />
-          <camunda:formField id="FormField_0b2vddh" label="How many trash cans are there?" type="long" />
+          <camunda:formField id="FormField_331jajn" label="'Is tomorrow trash day?'"  type="boolean" />
+          <camunda:formField id="FormField_0b2vddh" label="'How many trash cans are there?'"  type="long" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1kar3r1</bpmn:incoming>
@@ -65,7 +65,7 @@
     <bpmn:userTask id="Task_1q3s7gs" name="Make the coffee" camunda:formKey="form_c_1">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_1kj5msi" label="How many cups of coffee do you want to make?" type="long" />
+          <camunda:formField id="FormField_1kj5msi" label="'How many cups of coffee do you want to make?'"  type="long" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0vtu9qd</bpmn:incoming>
@@ -74,7 +74,7 @@
     <bpmn:userTask id="Task_0oxu2ne" name="Do the monster mash" camunda:formKey="form_d_1">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_2c0nbbu" label="What kind of monster?" type="enum">
+          <camunda:formField id="FormField_2c0nbbu" label="'What kind of monster?'"  type="enum">
             <camunda:value id="Value_17btpjh" name="Purple People Eater" />
             <camunda:value id="Value_1r00nte" name="Dr. Frankenfurter" />
             <camunda:value id="Value_3crfv5j" name="Addams Family" />
@@ -87,7 +87,7 @@
     <bpmn:userTask id="Task_1o1we8w" name="Dishes" camunda:formKey="form_a_2">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_3479k9o" label="Finished yet?" type="boolean" />
+          <camunda:formField id="FormField_3479k9o" label="'Finished yet?'"  type="boolean" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1hsb3c5</bpmn:incoming>
@@ -96,7 +96,7 @@
     <bpmn:userTask id="Task_19r6r37" name="Trash" camunda:formKey="form_b_2">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_3uiple6" label="Finished yet?" type="boolean" />
+          <camunda:formField id="FormField_3uiple6" label="'Finished yet?'"  type="boolean" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_18jx43l</bpmn:incoming>
@@ -105,7 +105,7 @@
     <bpmn:userTask id="Task_0n6vigs" name="Coffee" camunda:formKey="form_c_2">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_0jctp35" label="Finished yet?" type="boolean" />
+          <camunda:formField id="FormField_0jctp35" label="'Finished yet?'"  type="boolean" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0rcgayc</bpmn:incoming>
@@ -114,7 +114,7 @@
     <bpmn:userTask id="Task_03u4wg2" name="Mash" camunda:formKey="form_d_2">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_16eseth" label="Finished yet?" type="boolean" />
+          <camunda:formField id="FormField_16eseth" label="'Finished yet?'"  type="boolean" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_18z9ub0</bpmn:incoming>
@@ -124,7 +124,7 @@
     <bpmn:userTask id="Task_0c7seuo" name="Time warp" camunda:formKey="last_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_159qrqu" label="Do the time warp again?" type="boolean" />
+          <camunda:formField id="FormField_159qrqu" label="'Do the time warp again?'"  type="boolean" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_06rqrvw</bpmn:incoming>

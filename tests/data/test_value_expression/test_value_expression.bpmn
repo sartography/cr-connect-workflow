@@ -16,7 +16,7 @@
     <bpmn:userTask id="Activity_Data" name="Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="color" label="Select" type="enum" defaultValue="value_expression_value">
+          <camunda:formField id="color" label="'Select'"  type="enum" defaultValue="value_expression_value">
             <camunda:value id="black" name="Black" />
             <camunda:value id="white" name="White" />
           </camunda:formField>

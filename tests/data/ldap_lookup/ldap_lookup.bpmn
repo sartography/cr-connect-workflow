@@ -12,7 +12,7 @@
     <bpmn:userTask id="Task_14svgcu" name="Enum Lookup Form in Ldap" camunda:formKey="EnumForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="Person" label="Select a value" type="autocomplete">
+          <camunda:formField id="Person" label="'Select a value'"  type="autocomplete">
             <camunda:properties>
               <camunda:property id="ldap.lookup" value="true" />
             </camunda:properties>

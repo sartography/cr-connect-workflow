@@ -12,13 +12,13 @@
     <bpmn:userTask id="Task_Required_Fields" name="Required fields" camunda:formKey="RequiredForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="string_required" label="String" type="string" defaultValue="&#39;some string&#39;">
+          <camunda:formField id="string_required" label="'String'"  type="string" defaultValue="&#39;some string&#39;">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
           <camunda:formField id="string_not_required" type="string" />
-          <camunda:formField id="enum_with_default" label="My Enum" type="enum" defaultValue="&#39;maybe&#39;">
+          <camunda:formField id="enum_with_default" label="'My Enum'"  type="enum" defaultValue="&#39;maybe&#39;">
             <camunda:value id="yes" name="Yes" />
             <camunda:value id="no" name="No" />
             <camunda:value id="maybe" name="Maybe so, I don&#39;t know." />

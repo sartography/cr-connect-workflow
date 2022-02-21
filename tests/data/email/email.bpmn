@@ -32,8 +32,8 @@ email_model = email(subject=subject,recipients=recipients)</bpmn:script>
     <bpmn:userTask id="Activity_1l9vih3" name="Set Recipients" camunda:formKey="MyFormKey">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="ApprvlApprvr1" label="Approver" type="string" />
-          <camunda:formField id="PIComputingID" label="Primary Investigator" type="string" />
+          <camunda:formField id="ApprvlApprvr1" label="'Approver'"  type="string" />
+          <camunda:formField id="PIComputingID" label="'Primary Investigator'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1synsig</bpmn:incoming>

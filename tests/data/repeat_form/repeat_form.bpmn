@@ -12,7 +12,7 @@
     <bpmn:userTask id="Task_14svgcu" name="Repeating Form" camunda:formKey="RepeatForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Add a cat name" type="string" defaultValue="&#39;couger buttons&#39;">
+          <camunda:formField id="name" label="'Add a cat name'"  type="string" defaultValue="&#39;couger buttons&#39;">
             <camunda:properties>
               <camunda:property id="repeat" value="cats" />
             </camunda:properties>

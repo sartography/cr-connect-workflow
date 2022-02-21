@@ -13,8 +13,8 @@
     <bpmn:userTask id="Activity_GetName" name="Get Name" camunda:formKey="GetName">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name" type="string" defaultValue="&#39;World&#39;" />
-          <camunda:formField id="me.name" label="Enter" type="string" />
+          <camunda:formField id="name" label="'Name'"  type="string" defaultValue="&#39;World&#39;" />
+          <camunda:formField id="me.name" label="'Enter'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1hytves</bpmn:incoming>
@@ -24,7 +24,7 @@
     <bpmn:userTask id="Activity_GetTitle" name="Get Title" camunda:formKey="GetTitle">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="user-title" label="Title" type="string" />
+          <camunda:formField id="user-title" label="'Title'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1iphrck</bpmn:incoming>

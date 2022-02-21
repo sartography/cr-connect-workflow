@@ -8,7 +8,7 @@
     <bpmn:userTask id="Date_Value_Expression" name="Date Form" camunda:formKey="My Form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="my_date" label="my Date" type="date" defaultValue="datetime.datetime.now()">
+          <camunda:formField id="my_date" label="'my Date'"  type="date" defaultValue="datetime.datetime.now()">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>

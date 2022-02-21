@@ -11,8 +11,8 @@
     <bpmn:userTask id="Activity_1jpj09a" name="Do Hide" camunda:formKey="My Form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="showNextField" label="Should I show the next field?" type="boolean" defaultValue="False" />
-          <camunda:formField id="likeSpam" label="Do you like Spam?" type="boolean">
+          <camunda:formField id="showNextField" label="'Should I show the next field?'"  type="boolean" defaultValue="False" />
+          <camunda:formField id="likeSpam" label="'Do you like Spam?'"  type="boolean">
             <camunda:properties>
               <camunda:property id="hide_expression" value="showNextField == False" />
             </camunda:properties>
@@ -26,8 +26,8 @@
     <bpmn:userTask id="Activity_1npmm8p" name="Do Label Change" camunda:formKey="change_label">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="my_label" label="Set Label for next field" type="string" defaultValue="&#39;My Label&#39;" />
-          <camunda:formField id="custom_field" label="Custom Label" type="string" />
+          <camunda:formField id="my_label" label="'Set Label for next field'"  type="string" defaultValue="&#39;My Label&#39;" />
+          <camunda:formField id="custom_field" label="'Custom Label'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0y96gip</bpmn:incoming>
@@ -50,8 +50,8 @@ This takes the label from the previous form and uses it as the default value in 
     <bpmn:userTask id="Activity_0otfiwr" name="Do Require" camunda:formKey="required_fields">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="require_next_field" label="Require Next Field?" type="boolean" defaultValue="True" />
-          <camunda:formField id="my_required_field" label="Required Field" type="string">
+          <camunda:formField id="require_next_field" label="'Require Next Field?'"  type="boolean" defaultValue="True" />
+          <camunda:formField id="my_required_field" label="'Required Field'"  type="string">
             <camunda:properties>
               <camunda:property id="required_expression" value="require_next_field" />
             </camunda:properties>
@@ -65,15 +65,15 @@ This takes the label from the previous form and uses it as the default value in 
     <bpmn:userTask id="Activity_1btzxi7" name="Do Hide Group" camunda:formKey="repeat_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="show_repeat" label="Show Repeating Section?" type="boolean" defaultValue="True" />
-          <camunda:formField id="first_name" label="First Name" type="string">
+          <camunda:formField id="show_repeat" label="'Show Repeating Section?'"  type="boolean" defaultValue="True" />
+          <camunda:formField id="first_name" label="'First Name'"  type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="name" />
               <camunda:property id="repeat_title" value="Add People" />
               <camunda:property id="repeat_hide_expression" value="show_repeat == False" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="last_name" label="Last Name" type="string">
+          <camunda:formField id="last_name" label="'Last Name'"  type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="name" />
             </camunda:properties>

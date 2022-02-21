@@ -9,7 +9,7 @@
     <bpmn:userTask id="Activity_GetEmailAddress" name="Get Email Address" camunda:formKey="EmailAddress">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="address" label="Please enter an email address" type="string" defaultValue="username@company.com" />
+          <camunda:formField id="address" label="'Please enter an email address'"  type="string" defaultValue="username@company.com" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0b5st2e</bpmn:incoming>

@@ -27,8 +27,8 @@ email_id = email(subject=subject,recipients=recipients, attachments=attachments)
     <bpmn:userTask id="Activity_GetEmailData" name="Get Email Data" camunda:formKey="MyFormKey">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="subject" label="Subject" type="string" />
-          <camunda:formField id="recipients" label="Recipients" type="string" />
+          <camunda:formField id="subject" label="'Subject'"  type="string" />
+          <camunda:formField id="recipients" label="'Recipients'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1synsig</bpmn:incoming>

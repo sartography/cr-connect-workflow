@@ -8,7 +8,7 @@
     <bpmn:userTask id="Task_0zremzf" name="Set Value Expression" camunda:formKey="valueExpression">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="value_expression_expression" label="Expression Value" type="string">
+          <camunda:formField id="value_expression_expression" label="'Expression Value'"  type="string">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
@@ -22,7 +22,7 @@
     <bpmn:userTask id="Task_GetName" name="Get Name" camunda:formKey="getName">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name" type="string" defaultValue="World">
+          <camunda:formField id="name" label="'Name'"  type="string" defaultValue="World">
             <camunda:properties>
               <camunda:property id="value_expression" value="value_expression_expression" />
             </camunda:properties>

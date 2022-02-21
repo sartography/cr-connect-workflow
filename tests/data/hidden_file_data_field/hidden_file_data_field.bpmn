@@ -7,13 +7,13 @@
     <bpmn:userTask id="Activity_FileUpload" name="File Upload" camunda:formKey="UploadFile">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="UploadFile" label="Select File" type="file" />
-          <camunda:formField id="Name" label="Enter Name" type="string">
+          <camunda:formField id="UploadFile" label="'Select File'"  type="file" />
+          <camunda:formField id="Name" label="'Enter Name'"  type="string">
             <camunda:properties>
               <camunda:property id="file_data" value="UploadFile" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="ExtraField" label="Could Be Hidden" type="string" defaultValue="Extra Field String">
+          <camunda:formField id="ExtraField" label="'Could Be Hidden'"  type="string" defaultValue="Extra Field String">
             <camunda:properties>
               <camunda:property id="hide_expression" value="hide_field" />
               <camunda:property id="file_data" value="UploadFile" />
@@ -38,7 +38,7 @@
     <bpmn:userTask id="Activity_AddData" name="Add Data" camunda:formKey="HideData">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="hide_field" label="Hide Field?" type="boolean">
+          <camunda:formField id="hide_field" label="'Hide Field?'"  type="boolean">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>

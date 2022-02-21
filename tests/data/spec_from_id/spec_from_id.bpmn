@@ -14,7 +14,7 @@
     <bpmn:userTask id="Activity_GetSpecID" name="Get Spec ID" camunda:formKey="SpecIDForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="spec_id" label="Spec ID" type="string">
+          <camunda:formField id="spec_id" label="'Spec ID'"  type="string">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>

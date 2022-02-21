@@ -5,7 +5,7 @@
     <bpmn:userTask name="Has Bananas?" camunda:formKey="bananas_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="has_bananas" label="Do you have bananas?" type="boolean" />
+          <camunda:formField id="has_bananas" label="'Do you have bananas?'"  type="boolean" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1pnq3kg</bpmn:incoming>
@@ -23,7 +23,7 @@
     <bpmn:userTask id="Task_Num_Bananas" name="Number of Bananas" camunda:formKey="banana_count">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="num_bananas" label="How Many Bananas do you have?" type="long" defaultValue="1" />
+          <camunda:formField id="num_bananas" label="'How Many Bananas do you have?'"  type="long" defaultValue="1" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_Yes_Bananas</bpmn:incoming>
@@ -32,7 +32,7 @@
     <bpmn:userTask id="Task_Why_No_Bananas" name="Why no bananas" camunda:formKey="no_bananas">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="why_no_bananas" label="Why you have no bananas?" type="string" defaultValue="I don&#39;t know." />
+          <camunda:formField id="why_no_bananas" label="'Why you have no bananas?'"  type="string" defaultValue="I don&#39;t know." />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_No_Bananas</bpmn:incoming>

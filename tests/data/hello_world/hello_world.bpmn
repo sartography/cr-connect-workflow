@@ -10,7 +10,7 @@
       <bpmn:documentation>Hello</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name" type="string" defaultValue="World" />
+          <camunda:formField id="name" label="'Name'"  type="string" defaultValue="World" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0qyd2b7</bpmn:incoming>

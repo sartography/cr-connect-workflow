@@ -30,7 +30,7 @@
     <bpmn:userTask id="complete_word" name="Write a word that starts with letter" camunda:formKey="wordForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="template" label="complete the word" type="string" />
+          <camunda:formField id="template" label="'complete the word'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_04lkxb1</bpmn:incoming>
