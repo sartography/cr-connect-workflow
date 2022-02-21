@@ -10,9 +10,10 @@ class TestDeleteVariables(BaseTest):
         workflow = self.create_workflow('delete_variables')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
-        for item in ('a', 'b', 'c', 'd', 'e'):
+        items = ('a', 'b', 'c', 'd', 'e')
+        for item in items:
             self.assertIn(item, task.data)
         workflow_api = self.complete_form(workflow, task, {})
         task = workflow_api.next_task
-        for item in ('a', 'b', 'c', 'd', 'e'):
+        for item in items:
             self.assertNotIn(item, task.data)
