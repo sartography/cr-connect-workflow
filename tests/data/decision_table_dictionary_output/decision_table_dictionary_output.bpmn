@@ -26,7 +26,7 @@
     <bpmn:userTask id="Task_SetName" name="Set Name" camunda:formKey="NameForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name" type="string" defaultValue="Layla" />
+          <camunda:formField id="name" label="'Name'"  type="string" defaultValue="Layla" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0x4n744</bpmn:incoming>

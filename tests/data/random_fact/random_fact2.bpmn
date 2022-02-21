@@ -107,7 +107,7 @@ Autoconverted link https://github.com/nodeca/pica (enable linkify to see)
 ![Stormtroopocat](https://octodex.github.com/images/stormtroopocat.jpg "The Stormtroopocat")</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="type" label="Type" type="enum" defaultValue="cat">
+          <camunda:formField id="type" label="'Type'"  type="enum" defaultValue="cat">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>

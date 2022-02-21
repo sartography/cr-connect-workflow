@@ -18,8 +18,8 @@
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="user" label="User" type="string" defaultValue="&#39;World&#39;" />
-          <camunda:formField id="spam" label="Spam" type="boolean" defaultValue="False" />
+          <camunda:formField id="user" label="'User'"  type="string" defaultValue="&#39;World&#39;" />
+          <camunda:formField id="spam" label="'Spam'"  type="boolean" defaultValue="False" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_13jyds8</bpmn:incoming>

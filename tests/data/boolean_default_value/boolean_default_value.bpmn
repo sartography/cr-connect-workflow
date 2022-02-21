@@ -7,7 +7,7 @@
     <bpmn:userTask id="Activity_SelectBoolean" name="Boolean Select" camunda:formKey="PickOne">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="pick_one" label="Pick One" type="boolean" defaultValue="yes_no" />
+          <camunda:formField id="pick_one" label="'Pick One'"  type="boolean" defaultValue="yes_no" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0zp5mss</bpmn:incoming>
@@ -37,7 +37,7 @@
       <bpmn:documentation>&lt;H1&gt;Hello&lt;/H1&gt;</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="yes_no" label="Set A default" type="boolean">
+          <camunda:formField id="yes_no" label="'Set A default'"  type="boolean">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>

@@ -19,7 +19,7 @@
     <bpmn:userTask id="Activity_DisplayOnlyField" name="Display Only Field&#10;" camunda:formKey="ReadOnlyFormField">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="read_only_field" label="Read Only" type="string" defaultValue="string_value">
+          <camunda:formField id="read_only_field" label="'Read Only'"  type="string" defaultValue="string_value">
             <camunda:properties>
               <camunda:property id="read_only" value="True" />
             </camunda:properties>

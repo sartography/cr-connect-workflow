@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_EmptyEnum" name="Empty Results" camunda:formKey="EnumForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="checkbox" label="Select One" type="enum">
+          <camunda:formField id="checkbox" label="'Select One'"  type="enum">
             <camunda:properties>
               <camunda:property id="enum_type" value="checkbox" />
             </camunda:properties>

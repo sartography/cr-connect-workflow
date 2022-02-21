@@ -8,8 +8,8 @@
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="GetDataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="short_name" label="Short Name" type="string" />
-          <camunda:formField id="proposal_name" label="Proposal Name" type="string" />
+          <camunda:formField id="short_name" label="'Short Name'"  type="string" />
+          <camunda:formField id="proposal_name" label="'Proposal Name'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0g8e1jy</bpmn:incoming>

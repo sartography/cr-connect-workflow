@@ -25,12 +25,12 @@
     <bpmn:userTask id="Activity_GetNumbers" name="Get Numbers" camunda:formKey="NumberForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="num_1" label="First Number" type="long">
+          <camunda:formField id="num_1" label="'First Number'"  type="long">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="num_2" label="Second Number" type="long" />
+          <camunda:formField id="num_2" label="'Second Number'"  type="long" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1w8il3k</bpmn:incoming>

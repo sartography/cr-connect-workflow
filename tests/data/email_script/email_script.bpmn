@@ -8,20 +8,20 @@
     <bpmn:userTask id="Activity_EmailForm" name="Email Form" camunda:formKey="email_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="subject" label="Subject" type="string" defaultValue="&#39;My Email Subject&#39;">
+          <camunda:formField id="subject" label="'Subject'"  type="string" defaultValue="&#39;My Email Subject&#39;">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="recipients" label="Enter Email" type="string" defaultValue="&#39;user@example.com&#39;">
+          <camunda:formField id="recipients" label="'Enter Email'"  type="string" defaultValue="&#39;user@example.com&#39;">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="cc" label="CC" type="string" />
-          <camunda:formField id="bcc" label="Bcc" type="string" />
-          <camunda:formField id="reply_to" label="Reply To" type="string" />
-          <camunda:formField id="doc_code" label="Doc Code" type="string">
+          <camunda:formField id="cc" label="'CC'"  type="string" />
+          <camunda:formField id="bcc" label="'Bcc'"  type="string" />
+          <camunda:formField id="reply_to" label="'Reply To'"  type="string" />
+          <camunda:formField id="doc_code" label="'Doc Code'"  type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="doc_codes" />
             </camunda:properties>

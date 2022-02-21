@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_0gtrm5e" name="Select Enum" camunda:formKey="Upload Application">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="IRB_HSR_Application_Type" label="IRB-HSR Application Type" type="enum">
+          <camunda:formField id="IRB_HSR_Application_Type" label="'IRB-HSR Application Type'"  type="enum">
             <camunda:properties>
               <camunda:property id="file_data" value="Study_App_Doc" />
               <camunda:property id="spreadsheet.name" value="IRB_HSR_Application_Type.xlsx" />
@@ -20,23 +20,23 @@
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="Study_App_Doc" label="IRB-HSR Application" type="file" />
-          <camunda:formField id="my_test_field" label="Nickname" type="string">
+          <camunda:formField id="Study_App_Doc" label="'IRB-HSR Application'"  type="file" />
+          <camunda:formField id="my_test_field" label="'Nickname'"  type="string">
             <camunda:properties>
               <camunda:property id="file_data" value="Study_App_Doc" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="some_date" label="Date" type="date">
+          <camunda:formField id="some_date" label="'Date'"  type="date">
             <camunda:properties>
               <camunda:property id="file_data" value="Study_App_Doc" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="a_boolean" label="A Boolean" type="boolean">
+          <camunda:formField id="a_boolean" label="'A Boolean'"  type="boolean">
             <camunda:properties>
               <camunda:property id="file_data" value="Study_App_Doc" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="the_number" label="The Number" type="long">
+          <camunda:formField id="the_number" label="'The Number'"  type="long">
             <camunda:properties>
               <camunda:property id="file_data" value="Study_App_Doc" />
             </camunda:properties>

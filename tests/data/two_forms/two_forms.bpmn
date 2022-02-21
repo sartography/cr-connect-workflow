@@ -13,7 +13,7 @@
     <bpmn:userTask id="StepOne" name="Step 1" camunda:formKey="StepOneForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="color" label="What is your favorite color?" type="string" />
+          <camunda:formField id="color" label="'What is your favorite color?'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0myefwb</bpmn:incoming>
@@ -22,7 +22,7 @@
     <bpmn:userTask id="StepTwo" name="Step 2" camunda:formKey="StepTwoForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="capital" label="What is the capital of Assyria?" type="string" />
+          <camunda:formField id="capital" label="'What is the capital of Assyria?'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_00p5po6</bpmn:incoming>

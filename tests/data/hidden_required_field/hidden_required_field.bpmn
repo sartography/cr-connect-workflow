@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_HiddenField" name="Hidden Field" camunda:formKey="HiddenFieldForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name" type="string">
+          <camunda:formField id="name" label="'Name'"  type="string">
             <camunda:properties>
               <camunda:property id="hide_expression" value="hide_yes_no" />
             </camunda:properties>
@@ -52,7 +52,7 @@ if not 'hide_yes_no' in globals():
     <bpmn:userTask id="Activity_CheckDefault" name="Check Default" camunda:formKey="CheckDefaultForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="color" label="Color" type="string" defaultValue="Gray">
+          <camunda:formField id="color" label="'Color'"  type="string" defaultValue="Gray">
             <camunda:properties>
               <camunda:property id="hide_expression" value="True" />
             </camunda:properties>

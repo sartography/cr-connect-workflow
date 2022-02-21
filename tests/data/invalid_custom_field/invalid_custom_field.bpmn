@@ -10,7 +10,7 @@
     <bpmn:userTask id="Activity_InvalidField" name="Invalid Custom Field" camunda:formKey="SomeForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="TextBadArea" label="Short Description" type="noSuchType" />
+          <camunda:formField id="TextBadArea" label="'Short Description'"  type="noSuchType" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_12ulmn8</bpmn:incoming>

@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_EmptyEnum" name="Empty Enum" camunda:formKey="EmptyEnumForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="empty_select" label="Select One" type="enum">
+          <camunda:formField id="empty_select" label="'Select One'"  type="enum">
             <camunda:properties>
               <camunda:property id="spreadsheet.name" value="empty_spreadsheet.xlsx" />
               <camunda:property id="spreadsheet.value.column" value="COMPANY_ID" />

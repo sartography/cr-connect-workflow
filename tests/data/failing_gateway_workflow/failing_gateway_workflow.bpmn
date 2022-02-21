@@ -40,7 +40,7 @@
     <bpmn:userTask id="Activity_Name" name="Name" camunda:formKey="NameForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Please type your name" type="string" defaultValue="Cruel World" />
+          <camunda:formField id="name" label="'Please type your name'"  type="string" defaultValue="Cruel World" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_True</bpmn:incoming>
@@ -51,7 +51,7 @@
     <bpmn:userTask id="Activity_DataSelect" name="Data Select" camunda:formKey="DataSelectForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="select_one" label="Please Select One" type="boolean">
+          <camunda:formField id="select_one" label="'Please Select One'"  type="boolean">
             <camunda:properties>
               <camunda:property id="value_expression" value="yes_no" />
             </camunda:properties>

@@ -31,9 +31,9 @@
 ##### Affiliation: {{ pi.PI.affiliation }}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="pi.edit_access" label="Should the Principal Investigator have full editing access in the system?" type="boolean" defaultValue="true" />
-          <camunda:formField id="pi.emails" label="Should the Principal Investigator receive automated email notifications?" type="boolean" defaultValue="true" />
-          <camunda:formField id="pi.experience" label="Investigator&#39;s Experience" type="textarea">
+          <camunda:formField id="pi.edit_access" label="'Should the Principal Investigator have full editing access in the system?'"  type="boolean" defaultValue="true" />
+          <camunda:formField id="pi.emails" label="'Should the Principal Investigator receive automated email notifications?'"  type="boolean" defaultValue="true" />
+          <camunda:formField id="pi.experience" label="'Investigator&#39;s Experience'"  type="textarea">
             <camunda:properties>
               <camunda:property id="rows" value="5" />
             </camunda:properties>
@@ -93,8 +93,8 @@
 ##### Affiliation: {{ sc.affiliation }}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="sc.access" label="Should this Study Coordinator have full editing access in the system?" type="boolean" />
-          <camunda:formField id="sc.emails" label="Should this Study Coordinator receive automated email notifications?" type="boolean" defaultValue="yes" />
+          <camunda:formField id="sc.access" label="'Should this Study Coordinator have full editing access in the system?'"  type="boolean" />
+          <camunda:formField id="sc.emails" label="'Should this Study Coordinator receive automated email notifications?'"  type="boolean" defaultValue="yes" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0xifvai</bpmn:incoming>

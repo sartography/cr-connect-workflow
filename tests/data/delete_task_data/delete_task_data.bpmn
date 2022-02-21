@@ -10,13 +10,13 @@
     <bpmn:userTask id="Activity_UploadSingle" name="Upload Single" camunda:formKey="SingleFile">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="Study_Protocol_Document" label="Select File" type="file" />
-          <camunda:formField id="ShortDesc" label="Short Description" type="textarea">
+          <camunda:formField id="Study_Protocol_Document" label="'Select File'"  type="file" />
+          <camunda:formField id="ShortDesc" label="'Short Description'"  type="textarea">
             <camunda:properties>
               <camunda:property id="file_data" value="Study_Protocol_Document" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="VerDate" label="Version Date" type="date">
+          <camunda:formField id="VerDate" label="'Version Date'"  type="date">
             <camunda:properties>
               <camunda:property id="file_data" value="Study_Protocol_Document" />
             </camunda:properties>
@@ -29,18 +29,18 @@
     <bpmn:userTask id="Activity_UploadRepeat" name="Upload Repeat" camunda:formKey="RepeatFile">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="Study_App_Doc" label="Select File" type="file">
+          <camunda:formField id="Study_App_Doc" label="'Select File'"  type="file">
             <camunda:properties>
               <camunda:property id="repeat" value="StudyAppDoc" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="ShortDesc" label="Short Description" type="textarea">
+          <camunda:formField id="ShortDesc" label="'Short Description'"  type="textarea">
             <camunda:properties>
               <camunda:property id="repeat" value="StudyAppDoc" />
               <camunda:property id="file_data" value="Study_App_Doc" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="VerDate" label="Version Date" type="date">
+          <camunda:formField id="VerDate" label="'Version Date'"  type="date">
             <camunda:properties>
               <camunda:property id="repeat" value="StudyAppDoc" />
               <camunda:property id="file_data" value="Study_App_Doc" />

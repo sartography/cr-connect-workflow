@@ -7,7 +7,7 @@
     <bpmn:userTask id="Activity_GetSelectedStatus" name="Get Selected Status" camunda:formKey="SelectStudyStatus">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="selected_status" label="Select Study Status" type="enum">
+          <camunda:formField id="selected_status" label="'Select Study Status'"  type="enum">
             <camunda:value id="approved" name="Approved" />
             <camunda:value id="disapproved" name="Disapproved" />
           </camunda:formField>

@@ -122,6 +122,8 @@ class WorkflowService(object):
                 processor.save()
             except Exception as e:
                 workflow_model.status = WorkflowStatus.erroring
+                db.session.add(workflow_model)
+                db.session.commit()
                 app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
                                  (workflow_model.id,
                                   workflow_model.workflow_spec_id,
