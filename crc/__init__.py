@@ -1,5 +1,6 @@
 import logging.config
 import os
+import traceback
 
 import click
 import sentry_sdk
@@ -151,5 +152,7 @@ def validate_all(study_id, category=None, spec_id=None):
             continue
         except Exception as e:
             print(f"Unexpected Error ({e.__class__.__name__}), {e} validate workflow {spec.id} in Category {spec.category.display_name}")
+            # printing stack trace
+            traceback.print_exc()
             print(e)
-            continue
+            return
