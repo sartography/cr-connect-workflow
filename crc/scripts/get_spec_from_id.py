@@ -4,7 +4,7 @@ from crc.scripts.script import Script
 from crc.services.workflow_spec_service import WorkflowSpecService
 
 
-class ScriptTemplate(Script):
+class GetSpecFromID(Script):
 
     def get_description(self):
         return """Get workflow spec information from a workflow spec id"""
