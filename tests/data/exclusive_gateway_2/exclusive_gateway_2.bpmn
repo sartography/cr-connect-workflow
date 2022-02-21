@@ -28,7 +28,7 @@
     <bpmn:userTask id="Activity_07iglj7" name="Enter Task 1" camunda:formKey="form_task_1">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="which_branch" label="Which branch?" type="enum">
+          <camunda:formField id="which_branch" label="'Which branch?'"  type="enum">
             <camunda:value id="a" name="Task 2a" />
             <camunda:value id="b" name="Task 2b" />
           </camunda:formField>
@@ -40,7 +40,7 @@
     <bpmn:userTask id="Activity_19ig0xo" name="Enter Task 2a" camunda:formKey="form_task2a">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_0taj99h" label="What is your favorite color?" type="string" />
+          <camunda:formField id="FormField_0taj99h" label="'What is your favorite color?'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1fok0lz</bpmn:incoming>
@@ -49,7 +49,7 @@
     <bpmn:userTask id="Activity_1hx53cu" name="Enter Task 2b" camunda:formKey="form_task2b">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_1l30p68" label="Do you like pie?" type="boolean" />
+          <camunda:formField id="FormField_1l30p68" label="'Do you like pie?'"  type="boolean" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_21he29w</bpmn:incoming>
@@ -58,7 +58,7 @@
     <bpmn:userTask id="Activity_1b15riu" name="Enter Task 3" camunda:formKey="form_task3">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FormField_3nh4vhj" label="Tell me a bedtime story." type="textarea" />
+          <camunda:formField id="FormField_3nh4vhj" label="'Tell me a bedtime story.'"  type="textarea" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1ph05b1</bpmn:incoming>

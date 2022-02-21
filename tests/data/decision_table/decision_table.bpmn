@@ -8,7 +8,7 @@
     <bpmn:userTask id="get_num_presents" name="Get number of presents" camunda:formKey="present_question">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="num_presents" label="How many presents will my dog Ginger leave for me today?" type="long" defaultValue="0">
+          <camunda:formField id="num_presents" label="'How many presents will my dog Ginger leave for me today?'"  type="long" defaultValue="0">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0ybr9ph" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0ybr9ph" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
   <bpmn:collaboration id="Collaboration_0xjb3la">
     <bpmn:participant id="Participant_0ozb2sp" processRef="Process_1aebbrh" />
   </bpmn:collaboration>
@@ -23,9 +23,9 @@
       <bpmn:documentation># Answer me these questions 3, ere the other side you see!</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="favorite_color" label="What is your favorite color?" type="string" defaultValue="Yellow" />
-          <camunda:formField id="quest" label="What is your quest?" type="string" defaultValue="To seek the holly Grail!" />
-          <camunda:formField id="swallow_speed" label="What is the air speed velocity of an unladen swallow?" type="string" defaultValue="About 24 miles per hour" />
+          <camunda:formField id="favorite_color" label="'What is your favorite color?'"  type="string" defaultValue="&#39;Yellow&#39;" />
+          <camunda:formField id="quest" label="'What is your quest?'"  type="string" defaultValue="&#39;To seek the holly Grail!&#39;" />
+          <camunda:formField id="swallow_speed" label="'What is the air speed velocity of an unladen swallow?'"  type="string" defaultValue="&#39;About 24 miles per hour&#39;" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0a7090c</bpmn:incoming>
@@ -69,8 +69,8 @@ Please press save to re-try the questions, and submit your responses again.</bpm
     <bpmn:userTask id="Activity_14eor1x" name="Approve Responses" camunda:formKey="form2">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="approval" label="I approve of this information" type="boolean" defaultValue="false" />
-          <camunda:formField id="feedback" label="Feedback" type="string" defaultValue="Please provide any feedback you have here." />
+          <camunda:formField id="approval" label="'I approve of this information'"  type="boolean" defaultValue="False" />
+          <camunda:formField id="feedback" label="'Feedback'"  type="string" defaultValue="&#39;Please provide any feedback you have here.&#39;" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1hcpt7c</bpmn:incoming>

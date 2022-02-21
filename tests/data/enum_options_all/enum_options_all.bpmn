@@ -26,7 +26,7 @@
     <bpmn:userTask id="myFormTask" name="Render Form" camunda:formKey="my_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="ldap" label="LDAP Lookup" type="autocomplete">
+          <camunda:formField id="ldap" label="'LDAP Lookup'"  type="autocomplete">
             <camunda:properties>
               <camunda:property id="ldap.lookup" value="True" />
               <camunda:property id="value.column" value="uid" />
@@ -35,7 +35,7 @@
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="standard_enum" label="Standard Enum" type="enum">
+          <camunda:formField id="standard_enum" label="'Standard Enum'"  type="enum">
             <camunda:properties>
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>
@@ -45,7 +45,7 @@
             <camunda:value id="four" name="4" />
             <camunda:value id="five" name="5" />
           </camunda:formField>
-          <camunda:formField id="spreadsheet" label="Spreadsheet" type="autocomplete">
+          <camunda:formField id="spreadsheet" label="'Spreadsheet'"  type="autocomplete">
             <camunda:properties>
               <camunda:property id="label.column" value="desc" />
               <camunda:property id="value.column" value="code" />
@@ -53,7 +53,7 @@
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="data" label="My Data" type="enum">
+          <camunda:formField id="data" label="'My Data'"  type="enum">
             <camunda:properties>
               <camunda:property id="data.name" value="dogs" />
               <camunda:property id="value.column" value="value" />
@@ -61,7 +61,7 @@
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="checkbox" label="My Checkbox" type="enum">
+          <camunda:formField id="checkbox" label="'My Checkbox'"  type="enum">
             <camunda:properties>
               <camunda:property id="enum_type" value="checkbox" />
               <camunda:property id="data.name" value="dogs" />
@@ -70,12 +70,12 @@
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="standard" label="Simple" type="string">
+          <camunda:formField id="standard" label="'Simple'"  type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="pets" label="Prefered Pet" type="enum">
+          <camunda:formField id="pets" label="'Prefered Pet'"  type="enum">
             <camunda:properties>
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>
@@ -83,13 +83,13 @@
             <camunda:value id="dogs" name="Dogs" />
             <camunda:value id="other" name="other" />
           </camunda:formField>
-          <camunda:formField id="petsOther" label="Prefered Pet (Other)" type="string">
+          <camunda:formField id="petsOther" label="'Prefered Pet (Other)'"  type="string">
             <camunda:properties>
               <camunda:property id="hide_expression" value="pets != &#39;other&#39;" />
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="file" label="upload file" type="file">
+          <camunda:formField id="file" label="'upload file'"  type="file">
             <camunda:properties>
               <camunda:property id="repeat" value="repeatme" />
             </camunda:properties>

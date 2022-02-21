@@ -16,6 +16,7 @@ from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
 from SpiffWorkflow.bpmn.specs.events import EndEvent, StartEvent
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
 from SpiffWorkflow.util.metrics import timeit
@@ -121,6 +122,8 @@ class WorkflowService(object):
                 processor.save()
             except Exception as e:
                 workflow_model.status = WorkflowStatus.erroring
+                db.session.add(workflow_model)
+                db.session.commit()
                 app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
                                  (workflow_model.id,
                                   workflow_model.workflow_spec_id,
@@ -271,18 +274,22 @@ class WorkflowService(object):
             WorkflowService.check_field_properties(field, task)
             WorkflowService.check_field_type(field, task)
 
-            # Process the label of the field if it is dynamic.
-            if field.has_property(Task.FIELD_PROP_LABEL_EXPRESSION):
-                result = WorkflowService.evaluate_property(Task.FIELD_PROP_LABEL_EXPRESSION, field, task)
-                field.label = result
+            # If we have a label, try to set the label
+            if field.label:
+                try:
+                    # Assure that we can evaluate the field.label, but no need to save the resulting value.
+                    task.workflow.script_engine._evaluate(field.label, data)
+                except Exception as e:
+                    raise ApiError.from_task("bad label", f'The label "{field.label}" in field {field.id} '
+                                                          f'could not be understood or evaluated. ',
+                                             task=task)
 
-            # If a field is hidden and required, it must have a default value or value_expression
+            # If a field is hidden and required, it must have a default value
             if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(
                     Task.FIELD_CONSTRAINT_REQUIRED):
-                if not field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) and \
-                        (not (hasattr(field, 'default_value')) or field.default_value is None):
+                if field.default_value is None:
                     raise ApiError(code='hidden and required field missing default',
-                                   message=f'Field "{field.id}" is required but can be hidden. It must have either a default value or a value_expression',
+                                   message=f'Field "{field.id}" is required but can be hidden. It must have a default value.',
                                    task_id='task.id',
                                    task_name=task.get_name())
 
@@ -292,18 +299,19 @@ class WorkflowService(object):
                 if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
                     continue
 
-            # A task should only have default_value **or** value expression, not both.
-            if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) and (
-                    hasattr(field, 'default_value') and field.default_value):
-                raise ApiError.from_task(code='default value and value_expression',
-                                         message=f'This task ({task.get_name()}) has both a default_value and value_expression. Please fix this to only have one or the other.',
-                                         task=task)
-            # If we have a default_value or value_expression, try to set the default
-            if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION) or (
-                    hasattr(field, 'default_value') and field.default_value):
-                form_data[field.id] = WorkflowService.get_default_value(field, task)
+            # If we have a default_value, try to set the default
+            if field.default_value:
+                try:
+                    form_data[field.id] = WorkflowService.get_default_value(field, task, data)
+                except Exception as e:
+                    raise ApiError.from_task("bad default value", f'The default value "{field.default_value}" in field {field.id} '
+                                                          f'could not be understood or evaluated. ',
+                                             task=task)
                 if not field.has_property(Task.FIELD_PROP_REPEAT):
                     continue
+            else:
+                form_data[field.id] = None
+
 
             # If we are only populating required fields, and this isn't required. stop here.
             if required_only:
@@ -471,15 +479,15 @@ class WorkflowService(object):
         return has_ldap_lookup or has_file_lookup
 
     @staticmethod
-    def get_default_value(field, task):
+    def get_default_value(field, task, data):
         has_lookup = WorkflowService.has_lookup(field)
-
-        default = field.default_value
-        # If there is a value expression, use that rather than the default value.
-        if field.has_property(Task.FIELD_PROP_VALUE_EXPRESSION):
-            result = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
-            default = result
-
+        # default = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
+        default = None
+        if field.default_value is not None:
+            try:
+                default = task.workflow.script_engine._evaluate(field.default_value, data)
+            except Exception as e:
+                raise WorkflowTaskExecException(task, "invalid_default", e)
         # If no default exists, return None
         # Note: if default is False, we don't want to execute this code
         if default is None or (isinstance(default, str) and default.strip() == ''):
@@ -514,9 +522,7 @@ class WorkflowService(object):
                 return default
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
-                                                                  "are incorrect: %s " % field.id, task)
-        elif field.type == "long":
-            return int(default)
+                                                                 "are incorrect: %s " % field.id, task)
         elif field.type == 'boolean':
             default = str(default).lower()
             if default == 'true' or default == 't':
@@ -761,8 +767,8 @@ class WorkflowService(object):
                 for i, field in enumerate(task.form.fields):
                     task.form.fields[i] = WorkflowService.process_options(spiff_task, field)
                     # If there is a default value, set it.
-                    if field.id not in task.data and WorkflowService.get_default_value(field, spiff_task) is not None:
-                        task.data[field.id] = WorkflowService.get_default_value(field, spiff_task)
+                    #if field.id not in task.data and WorkflowService.get_default_value(field, spiff_task) is not None:
+                    #    task.data[field.id] = WorkflowService.get_default_value(field, spiff_task)
             task.documentation = WorkflowService._process_documentation(spiff_task)
 
         # All ready tasks should have a valid name, and this can be computed for

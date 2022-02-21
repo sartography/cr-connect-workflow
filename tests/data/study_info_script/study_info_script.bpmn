@@ -8,7 +8,7 @@
     <bpmn:userTask id="Task_WhichInfo" name="Which Info" camunda:formKey="WhichForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="which" label="Which" type="enum">
+          <camunda:formField id="which" label="'Which'"  type="enum">
             <camunda:value id="info" name="Info" />
             <camunda:value id="investigators" name="Investigators" />
             <camunda:value id="roles" name="Roles" />

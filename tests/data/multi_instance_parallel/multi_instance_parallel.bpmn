@@ -15,7 +15,7 @@
 ## Role: {{investigator.type_full}}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="investigator.email" label="Email Address:" type="string" />
+          <camunda:formField id="investigator.email" label="'Email Address:'"  type="string" />
         </camunda:formData>
         <camunda:properties>
           <camunda:property name="display_name" value="investigator.label" />

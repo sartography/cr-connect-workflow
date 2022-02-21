@@ -10,7 +10,7 @@
     <bpmn:userTask id="Task_GetName" name="Get Name" camunda:formKey="NameForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name" type="string">
+          <camunda:formField id="name" label="'Name'"  type="string">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
@@ -23,7 +23,7 @@
     <bpmn:userTask id="Task_GetAge" name="Get Age" camunda:formKey="AgeForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="age" label="Age" type="long">
+          <camunda:formField id="age" label="'Age'"  type="long">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>

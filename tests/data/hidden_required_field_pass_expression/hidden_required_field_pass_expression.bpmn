@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1mhc2v8" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.5.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1mhc2v8" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
   <bpmn:process id="Process_HiddenRequired" name="Hidden Reguired Field" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0zt7wv5</bpmn:outgoing>
@@ -8,10 +8,9 @@
     <bpmn:userTask id="Activity_HiddenField" name="Hidden Field" camunda:formKey="HiddenFieldForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="name" label="Name" type="string">
+          <camunda:formField id="name" label="'Name'"  type="string" defaultValue="value_expression_value">
             <camunda:properties>
               <camunda:property id="hide_expression" value="True" />
-              <camunda:property id="value_expression" value="value_expression_value" />
             </camunda:properties>
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
@@ -35,8 +34,7 @@ if not 'value_expression_value' in globals():
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0fb4w15" sourceRef="Activity_PreData" targetRef="Activity_HiddenField" />
     <bpmn:manualTask id="Activity_GoodBye" name="Good Bye">
-      <bpmn:documentation>&lt;H1&gt;Good Bye{% if name %} {{ name }}{% endif %}&lt;/H1&gt;
-</bpmn:documentation>
+      <bpmn:documentation>&lt;H1&gt;Good Bye{% if name %} {{ name }}{% endif %}&lt;/H1&gt;</bpmn:documentation>
       <bpmn:incoming>Flow_0c2rym0</bpmn:incoming>
       <bpmn:outgoing>Flow_1udbzd6</bpmn:outgoing>
     </bpmn:manualTask>
@@ -53,6 +51,14 @@ if not 'value_expression_value' in globals():
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_HiddenRequired">
+      <bpmndi:BPMNEdge id="Flow_0c2rym0_di" bpmnElement="Flow_0c2rym0">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="750" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1udbzd6_di" bpmnElement="Flow_1udbzd6">
+        <di:waypoint x="850" y="117" />
+        <di:waypoint x="912" y="117" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0fb4w15_di" bpmnElement="Flow_0fb4w15">
         <di:waypoint x="530" y="117" />
         <di:waypoint x="590" y="117" />
@@ -65,14 +71,6 @@ if not 'value_expression_value' in globals():
         <di:waypoint x="215" y="117" />
         <di:waypoint x="270" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0c2rym0_di" bpmnElement="Flow_0c2rym0">
-        <di:waypoint x="690" y="117" />
-        <di:waypoint x="750" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1udbzd6_di" bpmnElement="Flow_1udbzd6">
-        <di:waypoint x="850" y="117" />
-        <di:waypoint x="912" y="117" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
@@ -82,14 +80,14 @@ if not 'value_expression_value' in globals():
       <bpmndi:BPMNShape id="Activity_0kjyqk8_di" bpmnElement="Activity_PreData">
         <dc:Bounds x="430" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0v7ietz_di" bpmnElement="Activity_Hello">
-        <dc:Bounds x="270" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_12r6tn2_di" bpmnElement="Activity_GoodBye">
         <dc:Bounds x="750" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_194gjyj_di" bpmnElement="Event_194gjyj">
         <dc:Bounds x="912" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0v7ietz_di" bpmnElement="Activity_Hello">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

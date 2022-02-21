@@ -23,10 +23,10 @@
       <bpmn:documentation># Answer me these questions 3, ere the other side you see!</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="favorite_color" label="What is your favorite color?" type="string" defaultValue="Yellow" />
-          <camunda:formField id="quest" label="What is your quest?" type="string" defaultValue="To seek the holly Grail!" />
-          <camunda:formField id="swallow_speed" label="What is the air speed velocity of an unladen swallow?" type="string" defaultValue="About 24 miles per hour" />
-          <camunda:formField id="supervisor" label="Please enter the UVA Id of your supervisor" type="string" defaultValue="dhf8r" />
+          <camunda:formField id="favorite_color" label="'What is your favorite color?'"  type="string" defaultValue="&#39;Yellow&#39;" />
+          <camunda:formField id="quest" label="'What is your quest?'"  type="string" defaultValue="&#39;To seek the holly Grail!&#39;" />
+          <camunda:formField id="swallow_speed" label="'What is the air speed velocity of an unladen swallow?'"  type="string" defaultValue="&#39;About 24 miles per hour&#39;" />
+          <camunda:formField id="supervisor" label="'Please enter the UVA Id of your supervisor'"  type="string" defaultValue="&#39;dhf8r&#39;" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0a7090c</bpmn:incoming>
@@ -80,8 +80,8 @@ Please press save to re-try the questions, and submit your responses again.</bpm
     <bpmn:userTask id="Activity_14eor1x" name="Approve Responses" camunda:formKey="approval_form_key">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="approval" label="I approve of this information" type="boolean" />
-          <camunda:formField id="feedback" label="Feedback" type="string" defaultValue="Please provide any feedback you have here." />
+          <camunda:formField id="approval" label="'I approve of this information'"  type="boolean" />
+          <camunda:formField id="feedback" label="'Feedback'"  type="string" defaultValue="&#39;Please provide any feedback you have here.&#39;" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1hcpt7c</bpmn:incoming>

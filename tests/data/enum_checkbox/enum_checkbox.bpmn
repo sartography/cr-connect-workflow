@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="some_field" label="Select" type="enum">
+          <camunda:formField id="some_field" label="'Select'"  type="enum">
             <camunda:properties>
               <camunda:property id="enum_type" value="checkbox" />
             </camunda:properties>

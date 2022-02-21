@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1j7idla" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.10.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1j7idla" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
   <bpmn:process id="Process_18biih5" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_1pnq3kg</bpmn:outgoing>
@@ -8,7 +8,7 @@
     <bpmn:userTask id="Task_Has_Bananas" name="Has Bananas?" camunda:formKey="bananas_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="has_bananas" label="Do you have bananas?" type="boolean" defaultValue="false" />
+          <camunda:formField id="has_bananas" label="'Do you have bananas?'"  type="boolean" defaultValue="False" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1pnq3kg</bpmn:incoming>
@@ -29,7 +29,7 @@
     <bpmn:userTask id="Task_Num_Bananas" name="Number of Bananas" camunda:formKey="banana_count">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="num_bananas" label="How Many Bananas do you have?" type="long" defaultValue="1" />
+          <camunda:formField id="num_bananas" label="'How Many Bananas do you have?'"  type="long" defaultValue="1" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_Yes_Bananas</bpmn:incoming>
@@ -38,7 +38,7 @@
     <bpmn:userTask id="Task_Why_No_Bananas" name="Why no bananas" camunda:formKey="no_bananas">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="why_no_bananas" label="Why you have no bananas?" type="string" defaultValue="I don&#39;t know." />
+          <camunda:formField id="why_no_bananas" label="'Why you have no bananas?'"  type="string" defaultValue="&#39;I don\&#39;t know.&#39;" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_No_Bananas</bpmn:incoming>

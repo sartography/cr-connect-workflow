@@ -17,7 +17,7 @@
     <bpmn:userTask id="Activity_0q620ux" name="test task exentsions" camunda:formKey="formkey">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="field1" label="should clear the data on return" type="string" />
+          <camunda:formField id="field1" label="'should clear the data on return'"  type="string" />
         </camunda:formData>
         <camunda:properties>
           <camunda:property name="clear_data" value="True" />

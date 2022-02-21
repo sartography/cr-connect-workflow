@@ -1,5 +1,6 @@
 import logging.config
 import os
+import traceback
 
 import click
 import sentry_sdk
@@ -132,7 +133,7 @@ def validate_all(study_id, category=None, spec_id=None):
     study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
     g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
     g.token = "anything_is_fine_just_need_something."
-    specs = WorkflowSpecService.get_specs()
+    specs = WorkflowSpecService().get_specs()
     for spec in specs:
         if spec_id and spec_id != spec.id:
             continue
@@ -145,11 +146,13 @@ def validate_all(study_id, category=None, spec_id=None):
                 print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
             else:
                 print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}")
-                return
+                continue
         except WorkflowTaskExecException as e:
             print(f"Workflow Error, {e}, in Task {e.task.name} validate workflow {spec.id} in Category {spec.category.display_name}")
-            return
+            continue
         except Exception as e:
-            print(f"Unexpected Error, {e} validate workflow {spec.id} in Category {spec.category.display_name}")
+            print(f"Unexpected Error ({e.__class__.__name__}), {e} validate workflow {spec.id} in Category {spec.category.display_name}")
+            # printing stack trace
+            traceback.print_exc()
             print(e)
             return

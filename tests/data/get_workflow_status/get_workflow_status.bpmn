@@ -38,7 +38,7 @@
     <bpmn:userTask id="Activity_WorkflowID" name="Get Workflow ID" camunda:formKey="WorkflowIDForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="search_workflow_id" label="Workflow ID" type="long" defaultValue="1">
+          <camunda:formField id="search_workflow_id" label="'Workflow ID'"  type="long" defaultValue="1">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>

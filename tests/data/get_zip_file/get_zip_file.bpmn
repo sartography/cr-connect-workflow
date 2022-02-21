@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_GetFileIDs" name="Get File IDs" camunda:formKey="GetName">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="file_id" label="File ID" type="long">
+          <camunda:formField id="file_id" label="'File ID'"  type="long">
             <camunda:properties>
               <camunda:property id="repeat" value="file_ids" />
             </camunda:properties>

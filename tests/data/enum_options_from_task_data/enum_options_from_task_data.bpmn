@@ -12,7 +12,7 @@
     <bpmn:userTask id="Task_14svgcu" name="Enum Lookup Form" camunda:formKey="EnumForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="guest_of_honor" label="Who is the guest of honor?" type="enum">
+          <camunda:formField id="guest_of_honor" label="'Who is the guest of honor?'"  type="enum">
             <camunda:properties>
               <camunda:property id="data.name" value="invitees" />
               <camunda:property id="value.column" value="secret_id" />
@@ -28,37 +28,37 @@
     <bpmn:userTask id="Activity_0oa736e" name="Who do you want to invite to your tea party?" camunda:formKey="task_1_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="first_name" label="What is their first name?" type="string">
+          <camunda:formField id="first_name" label="'What is their first name?'"  type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="invitees" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="last_name" label="What is their last name?" type="string">
+          <camunda:formField id="last_name" label="'What is their last name?'"  type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="invitees" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="age" label="How old are they?" type="long">
+          <camunda:formField id="age" label="'How old are they?'"  type="long">
             <camunda:properties>
               <camunda:property id="repeat" value="invitees" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="likes_pie" label="Do they like pie?" type="boolean">
+          <camunda:formField id="likes_pie" label="'Do they like pie?'"  type="boolean">
             <camunda:properties>
               <camunda:property id="repeat" value="invitees" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="num_lumps" label="How many lumps of sugar in their tea?" type="long">
+          <camunda:formField id="num_lumps" label="'How many lumps of sugar in their tea?'"  type="long">
             <camunda:properties>
               <camunda:property id="repeat" value="invitees" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="secret_id" label="What is their secret identity?" type="string">
+          <camunda:formField id="secret_id" label="'What is their secret identity?'"  type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="invitees" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="display_name" label="What&#39;s their nickname?" type="string">
+          <camunda:formField id="display_name" label="'What&#39;s their nickname?'"  type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="invitees" />
             </camunda:properties>

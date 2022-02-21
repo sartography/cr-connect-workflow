@@ -12,7 +12,7 @@ print('New Title')</bpmn:script>
     <bpmn:userTask id="Activity_GetData" name="GetData" camunda:formKey="FirstTaskForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="formdata" label="Gimme some data" type="string" />
+          <camunda:formField id="formdata" label="'Gimme some data'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1rvh899</bpmn:incoming>
@@ -39,7 +39,7 @@ printdata = formdata</bpmn:script>
     <bpmn:userTask id="Activity_HowMany" name="HowMany" camunda:formKey="HowMany">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="how_many" label="How many?" type="long" defaultValue="1" />
+          <camunda:formField id="how_many" label="'How many?'"  type="long" defaultValue="1" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1n1fs6z</bpmn:incoming>

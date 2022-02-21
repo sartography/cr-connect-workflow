@@ -14,7 +14,7 @@ print('New Title')</bpmn:script>
     <bpmn:userTask id="Activity_HowMany" name="HowMany" camunda:formKey="HowMany">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="how_many" label="How many?" type="long" defaultValue="1" />
+          <camunda:formField id="how_many" label="'How many?'"  type="long" defaultValue="1" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1e9j7mj</bpmn:incoming>
@@ -51,7 +51,7 @@ print('Second Title')</bpmn:script>
       <bpmn:userTask id="Activity_Modify" name="Modify" camunda:formKey="FormModify">
         <bpmn:extensionElements>
           <camunda:formData>
-            <camunda:formField id="modify" label="Modify Data?" type="boolean" defaultValue="True" />
+            <camunda:formField id="modify" label="'Modify Data?'"  type="boolean" defaultValue="True" />
           </camunda:formData>
         </bpmn:extensionElements>
         <bpmn:incoming>Flow_0tbg5qf</bpmn:incoming>

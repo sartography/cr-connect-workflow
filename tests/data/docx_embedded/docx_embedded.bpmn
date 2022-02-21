@@ -8,12 +8,12 @@
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="file_name" label="File Name" type="string" />
-          <camunda:formField id="irb_doc_code" label="IRB Doc Code" type="enum">
+          <camunda:formField id="file_name" label="'File Name'"  type="string" />
+          <camunda:formField id="irb_doc_code" label="'IRB Doc Code'"  type="enum">
             <camunda:value id="Study_App_Doc" name="Study_App_Doc" />
             <camunda:value id="Study_Protocol" name="Study_Protocol" />
           </camunda:formField>
-          <camunda:formField id="name" label="Name" type="string" defaultValue="World" />
+          <camunda:formField id="name" label="'Name'"  type="string" defaultValue="World" />
           <camunda:formField id="include_me" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>

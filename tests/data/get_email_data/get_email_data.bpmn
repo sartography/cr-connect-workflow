@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="email_id" label="Email ID" type="string">
+          <camunda:formField id="email_id" label="'Email ID'"  type="string">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>

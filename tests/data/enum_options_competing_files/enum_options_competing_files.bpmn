@@ -30,7 +30,7 @@
     <bpmn:userTask id="animals" name="Animals" camunda:formKey="FormA">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="selectedItem" label="Select An Item" type="enum">
+          <camunda:formField id="selectedItem" label="'Select An Item'"  type="enum">
             <camunda:properties>
               <camunda:property id="spreadsheet.name" value="animals.xlsx" />
               <camunda:property id="value.column" value="Value" />

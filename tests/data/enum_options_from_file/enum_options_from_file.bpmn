@@ -12,7 +12,7 @@
     <bpmn:userTask id="TaskEnumLookup" name="Enum Lookup Form" camunda:formKey="EnumForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="AllTheNames" label="Select a value" type="enum">
+          <camunda:formField id="AllTheNames" label="'Select a value'"  type="enum">
             <camunda:properties>
               <camunda:property id="spreadsheet.name" value="customer_list.xlsx" />
               <camunda:property id="value.column" value="CUSTOMER_NUMBER" />

@@ -15,7 +15,7 @@
     <bpmn:userTask id="Task_GetWorkflow" name="Get Workflow" camunda:formKey="WorkflowForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="workflow_name" label="Workflow Name" type="string">
+          <camunda:formField id="workflow_name" label="'Workflow Name'"  type="string">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>

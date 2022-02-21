@@ -20,8 +20,8 @@ me = ldap()</bpmn:script>
     <bpmn:userTask id="Activity_1l9vih3" name="Set UIDs" camunda:formKey="SetUids">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="Supervisor" label="Approver" type="string" />
-          <camunda:formField id="Investigator" label="Primary Investigator" type="string" />
+          <camunda:formField id="Supervisor" label="'Approver'"  type="string" />
+          <camunda:formField id="Investigator" label="'Primary Investigator'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1synsig</bpmn:incoming>

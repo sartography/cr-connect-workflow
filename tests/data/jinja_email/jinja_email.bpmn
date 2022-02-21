@@ -14,14 +14,14 @@
     <bpmn:userTask id="Activity_15btti7" name="Get Email Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="subject" label="Subject" type="string" />
-          <camunda:formField id="recipients" label="Recipients" type="string" />
-          <camunda:formField id="include_me" label="Included Template" type="string">
+          <camunda:formField id="subject" label="'Subject'"  type="string" />
+          <camunda:formField id="recipients" label="'Recipients'"  type="string" />
+          <camunda:formField id="include_me" label="'Included Template'"  type="string">
             <camunda:properties>
               <camunda:property id="Property_01o03tf" value="&#39;My Value&#39;" />
             </camunda:properties>
           </camunda:formField>
-          <camunda:formField id="name" label="Name" type="string" />
+          <camunda:formField id="name" label="'Name'"  type="string" />
         </camunda:formData>
         <camunda:properties>
           <camunda:property name="my_extension" value="&#39;My Value&#39;" />

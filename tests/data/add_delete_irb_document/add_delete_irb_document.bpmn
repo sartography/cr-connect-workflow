@@ -12,7 +12,7 @@
     <bpmn:userTask id="Activity_WhichIRBDocument" name="Which IRB Document" camunda:formKey="UploadIRBDoc">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="irb_document" label="IRB Document" type="string" defaultValue="Study_Protocol_Document" />
+          <camunda:formField id="irb_document" label="'IRB Document'"  type="string" defaultValue="Study_Protocol_Document" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1j6i6nv</bpmn:incoming>

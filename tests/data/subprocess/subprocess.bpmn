@@ -15,7 +15,7 @@
         <bpmn:documentation>Enter Form1</bpmn:documentation>
         <bpmn:extensionElements>
           <camunda:formData>
-            <camunda:formField id="FieldA" label="Fill out A" type="string" />
+            <camunda:formField id="FieldA" label="'Fill out A'"  type="string" />
           </camunda:formData>
         </bpmn:extensionElements>
         <bpmn:incoming>Flow_2</bpmn:incoming>
@@ -32,7 +32,7 @@
       <bpmn:documentation>Enter form 2</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="FieldB" label="Enter B" type="string" />
+          <camunda:formField id="FieldB" label="'Enter B'"  type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_4</bpmn:incoming>

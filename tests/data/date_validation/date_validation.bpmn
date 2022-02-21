@@ -14,7 +14,7 @@
     <bpmn:userTask id="Activity_1lg09if" name="Get Date" camunda:formKey="DateForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="a_date" label="A Date" type="date">
+          <camunda:formField id="a_date" label="'A Date'"  type="date">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
