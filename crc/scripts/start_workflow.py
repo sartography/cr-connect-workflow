@@ -35,7 +35,7 @@ class StartWorkflow(Script):
             return WorkflowApiSchema().dump(workflow_api)
 
         else:
-            raise ApiError(code='missing_parameters',
+            raise ApiError(code='missing_parameter',
                            message=f'The start_workflow script requires a workflow id')
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
@@ -54,5 +54,5 @@ class StartWorkflow(Script):
             return workflow_api
 
         else:
-            raise ApiError(code='missing_parameters',
+            raise ApiError(code='missing_parameter',
                            message=f'The start_workflow script requires a workflow id')
