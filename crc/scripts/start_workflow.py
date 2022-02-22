@@ -55,4 +55,4 @@ class StartWorkflow(Script):
 
         else:
             raise ApiError(code='missing_parameters',
-                           message=f'The start_workflow script requires a study id and a workflow id')
+                           message=f'The start_workflow script requires a workflow id')
