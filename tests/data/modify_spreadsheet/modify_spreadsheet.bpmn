@@ -28,7 +28,7 @@
     <bpmn:scriptTask id="Activity_ModifySpreadsheet" name="Modify Spreadsheet">
       <bpmn:incoming>Flow_0fpc32g</bpmn:incoming>
       <bpmn:outgoing>Flow_10ulj3l</bpmn:outgoing>
-      <bpmn:script>result = modify_spreadsheet(upload_workflow_id, 'Finance_BCA', cell_indicator, input_text)</bpmn:script>
+      <bpmn:script>result = modify_spreadsheet('Finance_BCA', cell_indicator, input_text)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Activity_DisplayResults" name="Display Modify Results">
       <bpmn:documentation>## Modify Results
@@ -41,11 +41,6 @@
 {{ Finance_BCA }}</bpmn:documentation>
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="upload_workflow_id" label="&#39;Upload Workflow ID&#39;" type="long">
-            <camunda:validation>
-              <camunda:constraint name="required" config="True" />
-            </camunda:validation>
-          </camunda:formField>
           <camunda:formField id="cell_indicator" label="Cell Indicator" type="string">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />

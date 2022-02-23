@@ -49,8 +49,7 @@ class TestModifySpreadsheet(BaseTest):
         self.assertEqual(None, sheet[cell_indicator].value)
 
         task = workflow_api.next_task
-        self.complete_form(workflow, task, {'upload_workflow_id': workflow.id,
-                                            'cell_indicator': cell_indicator,
+        self.complete_form(workflow, task, {'cell_indicator': cell_indicator,
                                             'input_text': input_text})
 
         sheet = self.get_sheet(workflow.id, irb_doc_code)
