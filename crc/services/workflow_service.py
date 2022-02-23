@@ -842,7 +842,10 @@ class WorkflowService(object):
         try:
             return JinjaService.get_content(raw_doc, spiff_task.data)
         except jinja2.exceptions.TemplateSyntaxError as tse:
-            error_line = documentation.splitlines()[tse.lineno - 1]
+            lines = tse.source.splitlines()
+            error_line = ""
+            if len(lines) >= tse.lineno - 1:
+                error_line = tse.source.splitlines()[tse.lineno - 1]
             raise ApiError.from_task(code="template_error", message="Jinja Template Error:  %s" % str(tse),
                                      task=spiff_task, line_number=tse.lineno, error_line=error_line)
         except jinja2.exceptions.TemplateError as te:
