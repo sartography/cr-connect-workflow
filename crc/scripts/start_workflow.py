@@ -1,12 +1,25 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.api.workflow import get_workflow
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema
 from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.scripts.script import Script
+from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_service import WorkflowService
 
 
 class StartWorkflow(Script):
+
+    @staticmethod
+    def get_workflow(workflow_id):
+        workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+        processor = WorkflowProcessor(workflow_model)
+
+        processor.do_engine_steps()
+        processor.save()
+        WorkflowService.update_task_assignments(processor)
+
+        workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
+        return WorkflowApiSchema().dump(workflow_api_model)
 
     def get_description(self):
         return """Script to start a workflow programmatically.
@@ -49,8 +62,8 @@ class StartWorkflow(Script):
                 filter(WorkflowModel.study_id==study_id).\
                 filter(WorkflowModel.workflow_spec_id==workflow_spec_id).\
                 first()
-            workflow_api = get_workflow(workflow.id)
 
+            workflow_api = self.get_workflow(workflow.id)
             return workflow_api
 
         else:
