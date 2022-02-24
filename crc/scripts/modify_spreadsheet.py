@@ -35,10 +35,10 @@ class ModifySpreadsheet(Script):
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         parameters = self.get_parameters(args, kwargs)
         if len(parameters) == 3:
-            return parameters
+            return True
         else:
             raise ApiError(code='missing_parameters',
-                           message='The modify_spreadsheet script requires 4 parameters: upload_workflow_id, irb_doc_code, cell, and text')
+                           message='The modify_spreadsheet script requires 3 parameters: irb_doc_code, cell, and text')
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         parameters = self.get_parameters(args, kwargs)
@@ -48,16 +48,19 @@ class ModifySpreadsheet(Script):
                 filter(FileModel.workflow_id == workflow_id). \
                 filter(FileModel.irb_doc_code == parameters['irb_doc_code']).\
                 first()
-            spreadsheet_data = session.query(FileDataModel).\
-                filter(FileDataModel.file_model_id==spreadsheet.id).\
-                first()
-            workbook = load_workbook(BytesIO(spreadsheet_data.data))
-            sheet = workbook.active
-            sheet[parameters['cell']] = parameters['text']
-            data_string = save_virtual_workbook(workbook)
-            spreadsheet_data.data = data_string
-            session.commit()
-            return parameters
+            if spreadsheet:
+                spreadsheet_data = session.query(FileDataModel).\
+                    filter(FileDataModel.file_model_id==spreadsheet.id).\
+                    first()
+                workbook = load_workbook(BytesIO(spreadsheet_data.data))
+                sheet = workbook.active
+                sheet[parameters['cell']] = parameters['text']
+                data_string = save_virtual_workbook(workbook)
+                spreadsheet_data.data = data_string
+                session.commit()
+            else:
+                raise ApiError(code='missing_spreadsheet',
+                               message=f"The spreadshhet you want to modify does not exist. Workflow ID is {workflow_id}, and IRB Doc Code is {parameters['irb_doc_code']}")
         else:
             raise ApiError(code='missing_parameters',
-                           message='The modify_spreadsheet script requires 4 parameters: upload_workflow_id, irb_doc_code, cell, and text')
+                           message='The modify_spreadsheet script requires 3 parameters: irb_doc_code, cell, and text')
