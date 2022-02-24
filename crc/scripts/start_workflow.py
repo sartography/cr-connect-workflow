@@ -63,8 +63,12 @@ class StartWorkflow(Script):
                 filter(WorkflowModel.workflow_spec_id==workflow_spec_id).\
                 first()
 
-            workflow_api = self.get_workflow(workflow.id)
-            return workflow_api
+            if workflow:
+                workflow_api = self.get_workflow(workflow.id)
+                return workflow_api
+            else:
+                raise ApiError(code='unknown_workflow',
+                               message=f"We could not find a workflow with workflow_spec_id '{workflow_spec_id}'.")
 
         else:
             raise ApiError(code='missing_parameter',
