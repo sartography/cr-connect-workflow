@@ -2,14 +2,20 @@ import importlib
 import os
 import pkgutil
 
+from SpiffWorkflow.util.metrics import timeit
+
 from crc.api.common import ApiError
 
+
+# Generally speaking, having some global in a flask app is TERRIBLE.
+# This is here, because after loading the application this will never change under
+# any known condition, and it is expensive to calculate it everytime.
+SCRIPT_SUB_CLASSES = None
 
 class Script(object):
     """ Provides an abstract class that defines how scripts should work, this
     must be extended in all Script Tasks."""
 
-    SUB_CLASSES = []
 
     def get_description(self):
         raise ApiError("invalid_script",
@@ -81,11 +87,13 @@ class Script(object):
         return execlist
 
     @classmethod
+    @timeit
     def get_all_subclasses(cls):
-        # This is expensive to generate, so reuse it if possible.
-        if not cls.SUB_CLASSES:
-            cls.SUB_CLASSES = Script._get_all_subclasses(Script)
-        return cls.SUB_CLASSES
+        # This is expensive to generate, never changes after we load up.
+        global SCRIPT_SUB_CLASSES
+        if not SCRIPT_SUB_CLASSES:
+            SCRIPT_SUB_CLASSES = Script._get_all_subclasses(Script)
+        return SCRIPT_SUB_CLASSES
 
     @staticmethod
     def _get_all_subclasses(cls):

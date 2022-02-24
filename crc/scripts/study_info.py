@@ -198,6 +198,7 @@ Please note this is just a few examples, ALL known document types are returned i
 
         return self.box_it(retval, prefix)
 
+    @timeit
     def box_it(self, retval, prefix = None):
         if isinstance(retval, list):
             return [Box(item) for item in retval]

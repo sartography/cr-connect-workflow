@@ -35,6 +35,7 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
     It will execute python code read in from the bpmn.  It will also make any scripts in the
      scripts directory available for execution. """
 
+    @timeit
     def evaluate(self, task, expression):
         """
         Evaluate the given expression, within the context of the given task and
@@ -70,16 +71,13 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
             if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
                 augment_methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
+                # Costs 0.25 seconds the first time it is executed.
                 augment_methods = Script.generate_augmented_list(task, study_id, workflow_id)
             super().execute(task, script, data, external_methods=augment_methods)
         except WorkflowException as e:
             raise e
         except Exception as e:
             raise WorkflowTaskExecException(task, f' {script}, {e}', e)
-
-
-
-
 
 
 class MyCustomParser(BpmnDmnParser):
@@ -144,12 +142,12 @@ class WorkflowProcessor(object):
                                    (self.workflow_spec_id, str(ke)))
 
     @staticmethod
+    @timeit
     def reset(workflow_model, clear_data=False, delete_files=False):
-
         # Try to execute a cancel notify
         try:
             wp = WorkflowProcessor(workflow_model)
-            wp.cancel_notify()  # The executes a notification to all endpoints that
+            wp.cancel_notify()  # The executes a notification to all endpoints
         except Exception as e:
             app.logger.error(f"Unable to send a cancel notify for workflow %s during a reset."
                              f" Continuing with the reset anyway so we don't get in an unresolvable"

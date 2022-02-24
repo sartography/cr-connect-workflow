@@ -107,7 +107,7 @@ class TestStudyService(BaseTest):
 
 
         study_service = StudyService()
-        documents = study_service.get_documents_status(study_id=study.id)  # Mocked out, any random study id works.
+        documents = study_service.get_documents_status(study_id=study.id, force=True)  # Mocked out, any random study id works.
         self.assertIsNotNone(documents)
         self.assertTrue("UVACompl_PRCAppr" in documents.keys())
         self.assertEqual("UVACompl_PRCAppr", documents["UVACompl_PRCAppr"]['code'])

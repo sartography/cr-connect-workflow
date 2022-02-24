@@ -19,7 +19,7 @@ from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
-from SpiffWorkflow.util.metrics import timeit
+from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from sqlalchemy.exc import InvalidRequestError
 
 from crc import db, app, session
@@ -627,14 +627,18 @@ class WorkflowService(object):
         return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
+    @timeit
     def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
-
+        lasttime = firsttime()
         navigation = processor.bpmn_workflow.get_deep_nav_list()
+        lasttime = sincetime('WS: TO API: create navigation', lasttime)
         WorkflowService.update_navigation(navigation, processor)
+        lasttime = sincetime('WS: TO API: updateNav', lasttime)
         spec_service = WorkflowSpecService()
         spec = spec_service.get_spec(processor.workflow_spec_id)
+        lasttime = sincetime('WS: TO API: GET_SPEC', lasttime)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
             status=processor.get_status(),
@@ -648,6 +652,7 @@ class WorkflowService(object):
             title=spec.display_name,
             study_id=processor.workflow_model.study_id or None
         )
+        lasttime = sincetime('WS: TO API: CREATE API', lasttime)
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
             next_task = processor.next_task()
@@ -661,17 +666,18 @@ class WorkflowService(object):
             user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
             if not UserService.in_list(user_uids, allow_admin_impersonate=True):
                 workflow_api.next_task.state = WorkflowService.TASK_STATE_LOCKED
+        lasttime = sincetime('WS: TO API: NEXT_TASK', lasttime)
+
         return workflow_api
 
     @staticmethod
+    @timeit
     def update_navigation(navigation: List[NavItem], processor: WorkflowProcessor):
         # Recursive function to walk down through children, and clean up descriptions, and statuses
         for nav_item in navigation:
             spiff_task = processor.bpmn_workflow.get_task(nav_item.task_id)
             if spiff_task:
-                # Use existing logic to set the description, and alter the state based on permissions.
-                api_task = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
-                nav_item.description = api_task.title
+                nav_item.description = WorkflowService.__calculate_title(spiff_task)
                 user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
                 if (isinstance(spiff_task.task_spec, UserTask) or isinstance(spiff_task.task_spec, ManualTask)) \
                         and not UserService.in_list(user_uids, allow_admin_impersonate=True):
@@ -780,13 +786,23 @@ class WorkflowService(object):
         if spiff_task.state == SpiffTask.READY:
             task.properties = WorkflowService._process_properties(spiff_task, props)
 
-        # Replace the title with the display name if it is set in the task properties,
-        # otherwise strip off the first word of the task, as that should be following
-        # a BPMN standard, and should not be included in the display.
-        if task.properties and "display_name" in task.properties:
+        task.title = WorkflowService.__calculate_title(spiff_task)
+
+        if task.properties and "clear_data" in task.properties:
+            if task.form and task.properties['clear_data'] == 'True':
+                for i in range(len(task.form.fields)):
+                    task.data.pop(task.form.fields[i].id, None)
+
+        return task
+
+    @staticmethod
+    def __calculate_title(spiff_task):
+        title = spiff_task.task_spec.description or None
+        if hasattr(spiff_task.task_spec, 'extensions') and "display_name" in spiff_task.task_spec.extensions:
+            title = spiff_task.task_spec.extensions["display_name"]
             try:
-                task.title = spiff_task.workflow.script_engine.evaluate(spiff_task,
-                                                                        task.properties[Task.PROP_EXTENSIONS_TITLE])
+                title = JinjaService.get_content(title, spiff_task.data)
+                title = spiff_task.workflow.script_engine.evaluate(spiff_task, title)
             except Exception as e:
                 # if the task is ready, we should raise an error, but if it is in the future or the past, we may not
                 # have the information we need to properly set the title, so don't error out, and just use what is
@@ -796,16 +812,10 @@ class WorkflowService(object):
                                              message="Could not set task title on task %s with '%s' property because %s" %
                                                      (spiff_task.task_spec.name, Task.PROP_EXTENSIONS_TITLE, str(e)),
                                              task=spiff_task)
-                # Otherwise, just use the curreent title.
-        elif task.title and ' ' in task.title:
-            task.title = task.title.partition(' ')[2]
+        elif title and ' ' in title:
+            title = title.partition(' ')[2]
+        return title
 
-        if task.properties and "clear_data" in task.properties:
-            if task.form and task.properties['clear_data'] == 'True':
-                for i in range(len(task.form.fields)):
-                    task.data.pop(task.form.fields[i].id, None)
-
-        return task
 
     @staticmethod
     def _process_properties(spiff_task, props):

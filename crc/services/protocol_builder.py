@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import List, Optional
 
 import requests
+from SpiffWorkflow.util.metrics import timeit
 
 from crc import app
 from crc.api.common import ApiError
@@ -55,6 +56,7 @@ class ProtocolBuilderService(object):
         return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.REQUIRED_DOCS_URL)
 
     @staticmethod
+    @timeit
     def get_study_details(study_id) -> {}:
         return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.STUDY_DETAILS_URL)
 
