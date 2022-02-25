@@ -27,7 +27,7 @@
     <bpmn:scriptTask id="Activity_ModifySpreadsheet" name="Modify Spreadsheet">
       <bpmn:incoming>Flow_0fpc32g</bpmn:incoming>
       <bpmn:outgoing>Flow_10ulj3l</bpmn:outgoing>
-      <bpmn:script>modify_spreadsheet('Finance_BCA', cell_indicator, input_text)</bpmn:script>
+      <bpmn:script>modify_spreadsheet(irb_doc_code='Finance_BCA', cell=cell_indicator, text=input_text)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:userTask id="Activity_GetModifyData" name="Get Modify Data" camunda:formKey="ModifyData">
       <bpmn:documentation>## File Upload
