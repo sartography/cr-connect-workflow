@@ -86,7 +86,7 @@ GIT_BRANCH = environ.get('GIT_BRANCH', None)  # example: 'main'
 GIT_MERGE_BRANCH = environ.get('GIT_MERGE_BRANCH', None)  # Example: 'staging'
 
 # Email configuration
-DEFAULT_SENDER = 'uvacrconnect@virginia.edu'
+DEFAULT_SENDER = 'crconnect2@virginia.edu'
 FALLBACK_EMAILS = ['askresearch@virginia.edu', 'sartographysupport@googlegroups.com']
 MAIL_DEBUG = environ.get('MAIL_DEBUG', default=True)
 MAIL_SERVER = environ.get('MAIL_SERVER', default='smtp.mailtrap.io')

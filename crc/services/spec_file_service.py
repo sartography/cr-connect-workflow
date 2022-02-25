@@ -113,6 +113,13 @@ class SpecFileService(FileSystemService):
 
             except etree.XMLSyntaxError as xse:
                 raise ApiError("invalid_xml", "Failed to parse xml: " + str(xse), file_name=file_name)
+            except ValidationException as ve:
+                if ve.args[0].find('No executable process tag found') >= 0:
+                    raise ApiError(code='missing_executable_option',
+                                   message='No executable process tag found. Please make sure the Executable option is set in the workflow.')
+                else:
+                    raise ApiError(code='validation_error',
+                                   message=f'There was an error validating your workflow. Original message is: {ve}')
         else:
             raise ApiError("invalid_xml", "Only a BPMN can be the primary file.", file_name=file_name)
 

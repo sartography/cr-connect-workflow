@@ -1,3 +1,5 @@
+from SpiffWorkflow.util.metrics import timeit
+
 from crc.scripts.script import Script
 from crc.services.user_file_service import UserFileService
 
@@ -14,10 +16,6 @@ class IsFileUploaded(Script):
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
-        files = UserFileService.get_files_for_study(study_id)
-        if len(files) > 0:
-            doc_code = args[0]
-            for file in files:
-                if doc_code == file.irb_doc_code:
-                    return True
-        return False
+        doc_code = args[0]
+        files = UserFileService.get_files_for_study(study_id, irb_doc_code=doc_code)
+        return len(files) > 0
