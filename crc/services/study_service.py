@@ -283,8 +283,6 @@ class StudyService(object):
         # and use pb_docs to mark those as required.
         doc_dictionary = DocumentService.get_dictionary()
 
-
-        file_time = 0
         documents = {}
         study_files = UserFileService.get_files_for_study(study_id=study_id)
 

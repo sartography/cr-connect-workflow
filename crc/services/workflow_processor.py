@@ -1,3 +1,4 @@
+import json
 from typing import List
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
@@ -106,7 +107,27 @@ class WorkflowProcessor(object):
                 raise (ApiError("missing_spec", "The spec this workflow references does not currently exist."))
             self.spec_files = SpecFileService.get_files(spec_info, include_libraries=True)
             spec = self.get_spec(self.spec_files, spec_info)
-
+        else:
+            B = len(workflow_model.bpmn_workflow_json.encode('utf-8'))
+            MB = float(1024 ** 2)
+            json_size = B/MB
+            if json_size > 1:
+                wf_json = json.loads(workflow_model.bpmn_workflow_json)
+                task_tree = wf_json['task_tree']
+                test_spec = wf_json['wf_spec']
+                task_size = "{:.2f}".format(len(json.dumps(task_tree).encode('utf-8'))/MB)
+                spec_size = "{:.2f}".format(len(test_spec.encode('utf-8'))/MB)
+                task_specs = json.loads(test_spec)['task_specs']
+                sub_workflows = json.loads(test_spec)['sub_workflows']
+                message = 'Workflow ' + workflow_model.workflow_spec_id + ' JSON Size is over 1MB:{0:.2f} MB'.format(json_size)
+                message += f"\n  Task Size: {task_size}"
+                message += f"\n  Spec Size: {spec_size}"
+                message += f"\n   Largest Sub-Process Sizes:"
+                for sw_name, sw_data in sub_workflows.items():
+                    size = len(json.dumps(sw_data).encode('utf-8')) / MB
+                    if size > 0.1:
+                        message += "\n      " + sw_name + "  {:.2f}".format(size)
+                app.logger.warning(message)
         self.workflow_spec_id = workflow_model.workflow_spec_id
 
         try:
