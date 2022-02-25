@@ -19,7 +19,7 @@ from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
-from SpiffWorkflow.util.metrics import timeit
+from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from sqlalchemy.exc import InvalidRequestError
 
 from crc import db, app, session
@@ -178,7 +178,6 @@ class WorkflowService(object):
                 raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.id]['message']}")
 
     @staticmethod
-    @timeit
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
@@ -630,7 +629,6 @@ class WorkflowService(object):
     def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
-
         navigation = processor.bpmn_workflow.get_deep_nav_list()
         WorkflowService.update_navigation(navigation, processor)
         spec_service = WorkflowSpecService()
@@ -661,6 +659,7 @@ class WorkflowService(object):
             user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
             if not UserService.in_list(user_uids, allow_admin_impersonate=True):
                 workflow_api.next_task.state = WorkflowService.TASK_STATE_LOCKED
+
         return workflow_api
 
     @staticmethod
@@ -669,9 +668,7 @@ class WorkflowService(object):
         for nav_item in navigation:
             spiff_task = processor.bpmn_workflow.get_task(nav_item.task_id)
             if spiff_task:
-                # Use existing logic to set the description, and alter the state based on permissions.
-                api_task = WorkflowService.spiff_task_to_api_task(spiff_task, add_docs_and_forms=False)
-                nav_item.description = api_task.title
+                nav_item.description = WorkflowService.__calculate_title(spiff_task)
                 user_uids = WorkflowService.get_users_assigned_to_task(processor, spiff_task)
                 if (isinstance(spiff_task.task_spec, UserTask) or isinstance(spiff_task.task_spec, ManualTask)) \
                         and not UserService.in_list(user_uids, allow_admin_impersonate=True):
@@ -780,13 +777,23 @@ class WorkflowService(object):
         if spiff_task.state == SpiffTask.READY:
             task.properties = WorkflowService._process_properties(spiff_task, props)
 
-        # Replace the title with the display name if it is set in the task properties,
-        # otherwise strip off the first word of the task, as that should be following
-        # a BPMN standard, and should not be included in the display.
-        if task.properties and "display_name" in task.properties:
+        task.title = WorkflowService.__calculate_title(spiff_task)
+
+        if task.properties and "clear_data" in task.properties:
+            if task.form and task.properties['clear_data'] == 'True':
+                for i in range(len(task.form.fields)):
+                    task.data.pop(task.form.fields[i].id, None)
+
+        return task
+
+    @staticmethod
+    def __calculate_title(spiff_task):
+        title = spiff_task.task_spec.description or None
+        if hasattr(spiff_task.task_spec, 'extensions') and "display_name" in spiff_task.task_spec.extensions:
+            title = spiff_task.task_spec.extensions["display_name"]
             try:
-                task.title = spiff_task.workflow.script_engine.evaluate(spiff_task,
-                                                                        task.properties[Task.PROP_EXTENSIONS_TITLE])
+                title = JinjaService.get_content(title, spiff_task.data)
+                title = spiff_task.workflow.script_engine.evaluate(spiff_task, title)
             except Exception as e:
                 # if the task is ready, we should raise an error, but if it is in the future or the past, we may not
                 # have the information we need to properly set the title, so don't error out, and just use what is
@@ -796,16 +803,10 @@ class WorkflowService(object):
                                              message="Could not set task title on task %s with '%s' property because %s" %
                                                      (spiff_task.task_spec.name, Task.PROP_EXTENSIONS_TITLE, str(e)),
                                              task=spiff_task)
-                # Otherwise, just use the curreent title.
-        elif task.title and ' ' in task.title:
-            task.title = task.title.partition(' ')[2]
+        elif title and ' ' in title:
+            title = title.partition(' ')[2]
+        return title
 
-        if task.properties and "clear_data" in task.properties:
-            if task.form and task.properties['clear_data'] == 'True':
-                for i in range(len(task.form.fields)):
-                    task.data.pop(task.form.fields[i].id, None)
-
-        return task
 
     @staticmethod
     def _process_properties(spiff_task, props):
@@ -932,9 +933,8 @@ class WorkflowService(object):
         db.session.query(TaskEventModel). \
             filter(TaskEventModel.workflow_id == processor.workflow_model.id). \
             filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).delete()
-        db.session.commit()
-
-        for task in processor.get_current_user_tasks():
+        tasks = processor.get_current_user_tasks()
+        for task in tasks:
             user_ids = WorkflowService.get_users_assigned_to_task(processor, task)
             for user_id in user_ids:
                 WorkflowService.log_task_action(user_id, processor, task, WorkflowService.TASK_ACTION_ASSIGNMENT)
@@ -1002,7 +1002,6 @@ class WorkflowService(object):
             # date=datetime.utcnow(), <=== For future reference, NEVER do this. Let the database set the time.
         )
         db.session.add(task_event)
-        db.session.commit()
 
     @staticmethod
     def extract_form_data(latest_data, task):

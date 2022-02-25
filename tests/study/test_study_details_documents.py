@@ -107,6 +107,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         FileDataSet().do_task(task, study.id, workflow_model.id, key="ginger", value="doodle", file_id=file.id)
         docs = StudyInfo().do_task(task, study.id, workflow_model.id, "documents")
         self.assertTrue(isinstance(docs, Box))
+        docs = StudyService.get_documents_status(study.id, force=True)
         self.assertEqual(1, len(docs.UVACompl_PRCAppr.files))
         self.assertEqual("doodle", docs.UVACompl_PRCAppr.files[0].data_store.ginger)
 

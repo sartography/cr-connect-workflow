@@ -3,6 +3,7 @@ from json import JSONDecodeError
 from typing import List, Optional
 
 import requests
+from SpiffWorkflow.util.metrics import timeit
 
 from crc import app
 from crc.api.common import ApiError

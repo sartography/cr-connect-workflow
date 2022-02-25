@@ -6,6 +6,7 @@ from crc.scripts.study_info import StudyInfo
 from crc import app
 from unittest.mock import patch
 from crc.services.protocol_builder import ProtocolBuilderService
+from crc.services.study_service import StudyService
 
 
 class TestStudyInfoScript(BaseTest):
@@ -100,6 +101,8 @@ class TestStudyInfoScript(BaseTest):
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_data = json.loads(rv.get_data(as_text=True))
+        study_info = StudyService.get_documents_status(self.workflow.study_id, force=True)
+        self.assertEqual(1, len(study_info['Grant_App']['files']), "Grant_App has exactly one file.")
 
         # Now get the study info again.
         study_info = StudyInfo().do_task(self.workflow_api.study_id, self.workflow.study.id, self.workflow.id,

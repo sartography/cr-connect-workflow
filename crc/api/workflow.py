@@ -1,6 +1,7 @@
 import time
 import uuid
 
+from SpiffWorkflow.util.metrics import firsttime, timeit, sincetime
 from flask import g
 
 from crc import session
@@ -209,7 +210,6 @@ def get_workflow(workflow_id, do_engine_steps=True):
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
-
 def restart_workflow(workflow_id, clear_data=False, delete_files=False):
     """Restart a workflow with the latest spec.
        Clear data allows user to restart the workflow without previous data."""
@@ -219,7 +219,8 @@ def restart_workflow(workflow_id, clear_data=False, delete_files=False):
     processor.save()
     WorkflowService.update_task_assignments(processor)
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
-    return WorkflowApiSchema().dump(workflow_api_model)
+    api_model = WorkflowApiSchema().dump(workflow_api_model)
+    return api_model
 
 
 def get_task_events(action = None, workflow = None, study = None):
