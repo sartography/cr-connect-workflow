@@ -14,7 +14,7 @@ class ModifySpreadsheet(Script):
     def get_parameters(args, kwargs):
         parameters = {}
         if len(args) == 3 or ('irb_doc_code' in kwargs and 'cell' in kwargs and 'text' in kwargs):
-            if 'irb_doc_code' in kwargs and 'line' in kwargs and 'text' in kwargs:
+            if 'irb_doc_code' in kwargs and 'cell' in kwargs and 'text' in kwargs:
                 parameters['irb_doc_code'] = (kwargs['irb_doc_code'])
                 parameters['cell'] = (kwargs['cell'])
                 parameters['text'] = (kwargs['text'])
