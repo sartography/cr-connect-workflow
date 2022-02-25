@@ -272,7 +272,6 @@ class StudyService(object):
         """Returns a list of documents related to the study, and any file information
         that is available.."""
 
-        lastime = firsttime()
         # Get PB required docs, if Protocol Builder Service is enabled.
         if ProtocolBuilderService.is_enabled() and study_id is not None:
             try:
@@ -282,17 +281,14 @@ class StudyService(object):
                 pb_docs = []
         else:
             pb_docs = []
-        lasttime = sincetime("GET_REQUIRED DOCS", lastime)
         # Loop through all known document types, get the counts for those files,
         # and use pb_docs to mark those as required.
         doc_dictionary = DocumentService.get_dictionary()
-        lasttime = sincetime("GET DOC DICTIONARY", lastime)
 
 
         file_time = 0
         documents = {}
         study_files = UserFileService.get_files_for_study(study_id=study_id)
-        lasttime = sincetime("GET_FILES_FOR_STUDY", lastime)
 
         for code, doc in doc_dictionary.items():
 
@@ -315,7 +311,6 @@ class StudyService(object):
                     name_list.append(doc[cat_key])
             doc['display_name'] = ' / '.join(name_list)
 
-            t = firsttime()
 
             # For each file, get associated workflow status
             doc_files = list(filter(lambda f: f.irb_doc_code == code, study_files))
@@ -323,7 +318,6 @@ class StudyService(object):
             doc['count'] = len(doc_files)
             doc['files'] = []
 
-            file_time = file_time + firsttime() - t
 
             for file_model in doc_files:
                 file = File.from_models(file_model, UserFileService.get_file_data(file_model.id), [])
@@ -336,7 +330,6 @@ class StudyService(object):
                     doc['status'] = status.value
 
             documents[code] = doc
-        lasttime = sincetime("PROCESS_DOCUMENTS", lastime)
         return Box(documents)
 
     @staticmethod

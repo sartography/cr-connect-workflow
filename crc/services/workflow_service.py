@@ -631,14 +631,10 @@ class WorkflowService(object):
     def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
-        lasttime = firsttime()
         navigation = processor.bpmn_workflow.get_deep_nav_list()
-        lasttime = sincetime('WS: TO API: create navigation', lasttime)
         WorkflowService.update_navigation(navigation, processor)
-        lasttime = sincetime('WS: TO API: updateNav', lasttime)
         spec_service = WorkflowSpecService()
         spec = spec_service.get_spec(processor.workflow_spec_id)
-        lasttime = sincetime('WS: TO API: GET_SPEC', lasttime)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
             status=processor.get_status(),
@@ -652,7 +648,6 @@ class WorkflowService(object):
             title=spec.display_name,
             study_id=processor.workflow_model.study_id or None
         )
-        lasttime = sincetime('WS: TO API: CREATE API', lasttime)
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
             next_task = processor.next_task()
@@ -666,7 +661,6 @@ class WorkflowService(object):
             user_uids = WorkflowService.get_users_assigned_to_task(processor, next_task)
             if not UserService.in_list(user_uids, allow_admin_impersonate=True):
                 workflow_api.next_task.state = WorkflowService.TASK_STATE_LOCKED
-        lasttime = sincetime('WS: TO API: NEXT_TASK', lasttime)
 
         return workflow_api
 
@@ -942,9 +936,8 @@ class WorkflowService(object):
         db.session.query(TaskEventModel). \
             filter(TaskEventModel.workflow_id == processor.workflow_model.id). \
             filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).delete()
-        db.session.commit()
-
-        for task in processor.get_current_user_tasks():
+        tasks = processor.get_current_user_tasks()
+        for task in tasks:
             user_ids = WorkflowService.get_users_assigned_to_task(processor, task)
             for user_id in user_ids:
                 WorkflowService.log_task_action(user_id, processor, task, WorkflowService.TASK_ACTION_ASSIGNMENT)
@@ -1012,7 +1005,6 @@ class WorkflowService(object):
             # date=datetime.utcnow(), <=== For future reference, NEVER do this. Let the database set the time.
         )
         db.session.add(task_event)
-        db.session.commit()
 
     @staticmethod
     def extract_form_data(latest_data, task):

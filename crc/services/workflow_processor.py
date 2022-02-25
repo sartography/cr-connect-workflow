@@ -125,7 +125,6 @@ class WorkflowProcessor(object):
             if self.WORKFLOW_ID_KEY not in self.bpmn_workflow.data:
                 if not workflow_model.id:
                     session.add(workflow_model)
-                    session.commit()
                     # If the model is new, and has no id, save it, write it into the workflow model
                     # and save it again.  In this way, the workflow process is always aware of the
                     # database model to which it is associated, and scripts running within the model
@@ -133,6 +132,7 @@ class WorkflowProcessor(object):
                 self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
                 workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(
                     self.bpmn_workflow, include_spec=True)
+
                 self.save()
 
         except MissingSpecError as ke:
@@ -146,8 +146,8 @@ class WorkflowProcessor(object):
     def reset(workflow_model, clear_data=False, delete_files=False):
         # Try to execute a cancel notify
         try:
-            wp = WorkflowProcessor(workflow_model)
-            wp.cancel_notify()  # The executes a notification to all endpoints
+            bpmn_workflow = WorkflowProcessor.__get_bpmn_workflow(workflow_model)
+            WorkflowProcessor.__cancel_notify(bpmn_workflow)
         except Exception as e:
             app.logger.error(f"Unable to send a cancel notify for workflow %s during a reset."
                              f" Continuing with the reset anyway so we don't get in an unresolvable"
@@ -168,12 +168,15 @@ class WorkflowProcessor(object):
         session.commit()
         return WorkflowProcessor(workflow_model)
 
-    def __get_bpmn_workflow(self, workflow_model: WorkflowModel, spec: WorkflowSpec, validate_only=False):
+    @staticmethod
+    @timeit
+    def __get_bpmn_workflow(workflow_model: WorkflowModel, spec: WorkflowSpec = None, validate_only=False):
         if workflow_model.bpmn_workflow_json:
-            bpmn_workflow = self._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
+            bpmn_workflow = WorkflowProcessor._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
                                                                   workflow_spec=spec)
+            bpmn_workflow.script_engine = WorkflowProcessor._script_engine
         else:
-            bpmn_workflow = BpmnWorkflow(spec, script_engine=self._script_engine)
+            bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
         return bpmn_workflow
@@ -195,18 +198,13 @@ class WorkflowProcessor(object):
     def run_master_spec(spec_model, study):
         """Executes a BPMN specification for the given study, without recording any information to the database
         Useful for running the master specification, which should not persist. """
-        lasttime = firsttime()
         spec_files = SpecFileService().get_files(spec_model, include_libraries=True)
-        lasttime = sincetime('load Files', lasttime)
         spec = WorkflowProcessor.get_spec(spec_files, spec_model)
-        lasttime = sincetime('get spec', lasttime)
         try:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
-            lasttime = sincetime('get_workflow', lasttime)
             bpmn_workflow.do_engine_steps()
-            lasttime = sincetime('run steps', lasttime)
         except WorkflowException as we:
             raise ApiError.from_task_spec("error_running_master_spec", str(we), we.sender)
 
@@ -273,13 +271,18 @@ class WorkflowProcessor(object):
             raise ApiError.from_workflow_exception("task_error", str(we), we)
 
     def cancel_notify(self):
+        self.__cancel_notify(self.bpmn_workflow)
+
+    @staticmethod
+    def __cancel_notify(bpmn_workflow):
         try:
             # A little hackly, but make the bpmn_workflow catch a cancel event.
-            self.bpmn_workflow.signal('cancel')  # generate a cancel signal.
-            self.bpmn_workflow.catch(CancelEventDefinition())
-            self.bpmn_workflow.do_engine_steps()
+            bpmn_workflow.signal('cancel')  # generate a cancel signal.
+            bpmn_workflow.catch(CancelEventDefinition())
+            bpmn_workflow.do_engine_steps()
         except WorkflowTaskExecException as we:
             raise ApiError.from_workflow_exception("task_error", str(we), we)
+
 
     def serialize(self):
         return self._serializer.serialize_workflow(self.bpmn_workflow,include_spec=True)
