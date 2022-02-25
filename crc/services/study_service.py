@@ -6,6 +6,8 @@ import requests
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime, LOG
+from flask import g
 from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
@@ -251,8 +253,20 @@ class StudyService(object):
         session.delete(workflow)
         session.commit()
 
+    @classmethod
+    def get_documents_status(cls, study_id, force=False):
+        """Returns a list of documents related to the study, and any file information
+        that is available.  This is a fairly expensive operation.  So we cache the results
+        in Flask's g.  Each fresh api request will get an up to date list, but we won't
+        re-create it sevearl times."""
+        if 'doc_statuses' not in g:
+            g.doc_statuses = {}
+        if study_id not in g.doc_statuses or force:
+            g.doc_statuses[study_id] = StudyService.__get_documents_status(study_id)
+        return g.doc_statuses[study_id]
+
     @staticmethod
-    def get_documents_status(study_id):
+    def __get_documents_status(study_id):
         """Returns a list of documents related to the study, and any file information
         that is available.."""
 
@@ -265,12 +279,13 @@ class StudyService(object):
                 pb_docs = []
         else:
             pb_docs = []
-
         # Loop through all known document types, get the counts for those files,
         # and use pb_docs to mark those as required.
         doc_dictionary = DocumentService.get_dictionary()
 
         documents = {}
+        study_files = UserFileService.get_files_for_study(study_id=study_id)
+
         for code, doc in doc_dictionary.items():
 
             doc['required'] = False
@@ -284,6 +299,7 @@ class StudyService(object):
             doc['study_id'] = study_id
             doc['code'] = code
 
+
             # Make a display name out of categories
             name_list = []
             for cat_key in ['category1', 'category2', 'category3']:
@@ -291,10 +307,13 @@ class StudyService(object):
                     name_list.append(doc[cat_key])
             doc['display_name'] = ' / '.join(name_list)
 
+
             # For each file, get associated workflow status
-            doc_files = UserFileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
+            doc_files = list(filter(lambda f: f.irb_doc_code == code, study_files))
+#            doc_files = UserFileService.get_files_for_study(study_id=study_id, irb_doc_code=code)
             doc['count'] = len(doc_files)
             doc['files'] = []
+
 
             for file_model in doc_files:
                 file = File.from_models(file_model, UserFileService.get_file_data(file_model.id), [])

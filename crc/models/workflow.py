@@ -3,6 +3,7 @@ import enum
 import marshmallow
 from marshmallow import EXCLUDE, post_load, fields, INCLUDE
 from sqlalchemy import func
+from sqlalchemy.orm import deferred
 
 from crc import db, ma
 
@@ -104,10 +105,10 @@ class WorkflowStatus(enum.Enum):
 class WorkflowModel(db.Model):
     __tablename__ = 'workflow'
     id = db.Column(db.Integer, primary_key=True)
-    bpmn_workflow_json = db.Column(db.JSON)
+    bpmn_workflow_json = deferred(db.Column(db.JSON))
     status = db.Column(db.Enum(WorkflowStatus))
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
-    study = db.relationship("StudyModel", backref='workflow')
+    study = db.relationship("StudyModel", backref='workflow', lazy='select')
     workflow_spec_id = db.Column(db.String)
     total_tasks = db.Column(db.Integer, default=0)
     completed_tasks = db.Column(db.Integer, default=0)
