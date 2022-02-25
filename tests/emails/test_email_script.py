@@ -35,7 +35,7 @@ class TestEmailScript(BaseTest):
             self.assertIn('<strong>Test Some Formatting</strong><br />', outbox[0].html)
 
             # Correct From field
-            self.assertEqual('uvacrconnect@virginia.edu', outbox[0].sender)
+            self.assertEqual('crconnect2@virginia.edu', outbox[0].sender)
 
             # Make sure we log the email
             # Grab model for comparison below
