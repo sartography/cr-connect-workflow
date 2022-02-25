@@ -14,16 +14,16 @@
     <bpmn:scriptTask id="Activity_1ufzsi0" name="Create Variables">
       <bpmn:incoming>Flow_0zdl9n2</bpmn:incoming>
       <bpmn:outgoing>Flow_14niiph</bpmn:outgoing>
-      <bpmn:script>a = 1
-b = 2
-c = 'a string'
-d = a + b
-e = datetime.datetime.now()</bpmn:script>
+      <bpmn:script>a_item = 1
+b_item = 2
+c_item = 'a string'
+d_item = a_item + b_item
+e_item = datetime.datetime.now()</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_0nuz6z0" name="Delete Variables">
       <bpmn:incoming>Flow_0ke44z0</bpmn:incoming>
       <bpmn:outgoing>Flow_1wjlzq0</bpmn:outgoing>
-      <bpmn:script>delete_variables('a', 'b', 'c', 'd', 'e')</bpmn:script>
+      <bpmn:script>delete_variables('a_item', 'b_item', 'c_item', 'd_item', 'e_item')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Activity_0gtt0h2" name="Print Task Data">
       <bpmn:documentation>## Task Data
@@ -41,34 +41,34 @@ e = datetime.datetime.now()</bpmn:script>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1so2rqu">
-      <bpmndi:BPMNEdge id="Flow_0zdl9n2_di" bpmnElement="Flow_0zdl9n2">
-        <di:waypoint x="215" y="117" />
-        <di:waypoint x="270" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_14niiph_di" bpmnElement="Flow_14niiph">
-        <di:waypoint x="370" y="117" />
-        <di:waypoint x="430" y="117" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0ke44z0_di" bpmnElement="Flow_0ke44z0">
         <di:waypoint x="530" y="117" />
         <di:waypoint x="588" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1wjlzq0_di" bpmnElement="Flow_1wjlzq0">
-        <di:waypoint x="688" y="117" />
-        <di:waypoint x="748" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0aftk6v_di" bpmnElement="Flow_0aftk6v">
         <di:waypoint x="848" y="117" />
         <di:waypoint x="910" y="117" />
       </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1wjlzq0_di" bpmnElement="Flow_1wjlzq0">
+        <di:waypoint x="688" y="117" />
+        <di:waypoint x="748" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14niiph_di" bpmnElement="Flow_14niiph">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zdl9n2_di" bpmnElement="Flow_0zdl9n2">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0ukmng8_di" bpmnElement="Activity_1ufzsi0">
-        <dc:Bounds x="270" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1dxgxez_di" bpmnElement="Event_1dxgxez">
         <dc:Bounds x="910" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ukmng8_di" bpmnElement="Activity_1ufzsi0">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0ykd81y_di" bpmnElement="Activity_0nuz6z0">
         <dc:Bounds x="588" y="77" width="100" height="80" />

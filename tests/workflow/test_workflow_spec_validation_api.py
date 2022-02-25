@@ -96,14 +96,6 @@ class TestWorkflowSpecValidation(BaseTest):
     def test_invalid_script3(self):
         self.load_test_spec('empty_workflow', master_spec=True)
         self.create_reference_document()
-
-        workflow = self.create_workflow('delete_variables')
-        workflow_api = self.get_workflow_api(workflow)
-        task = workflow_api.next_task
-        workflow_api = self.complete_form(workflow, task, {})
-#        for item in ('a', 'b', 'c', 'd', 'e'):
-#            self.assertIn(item, task.data)
-
         errors = self.validate_workflow("invalid_script3")
         self.assertEqual(1, len(errors))
         self.assertEqual("Invalid_Script_Task", errors[0]['task_id'])
