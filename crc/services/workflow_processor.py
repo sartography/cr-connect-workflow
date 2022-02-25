@@ -35,7 +35,6 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
     It will execute python code read in from the bpmn.  It will also make any scripts in the
      scripts directory available for execution. """
 
-    @timeit
     def evaluate(self, task, expression):
         """
         Evaluate the given expression, within the context of the given task and
@@ -60,7 +59,6 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
                                             "Error evaluating expression "
                                             "'%s', %s" % (expression, str(e)))
 
-    @timeit
     def execute(self, task: SpiffTask, script, data):
         study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
@@ -142,7 +140,6 @@ class WorkflowProcessor(object):
                                    (self.workflow_spec_id, str(ke)))
 
     @staticmethod
-    @timeit
     def reset(workflow_model, clear_data=False, delete_files=False):
         # Try to execute a cancel notify
         try:
@@ -169,7 +166,6 @@ class WorkflowProcessor(object):
         return WorkflowProcessor(workflow_model)
 
     @staticmethod
-    @timeit
     def __get_bpmn_workflow(workflow_model: WorkflowModel, spec: WorkflowSpec = None, validate_only=False):
         if workflow_model.bpmn_workflow_json:
             bpmn_workflow = WorkflowProcessor._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
@@ -194,7 +190,6 @@ class WorkflowProcessor(object):
         session.commit()
 
     @staticmethod
-    @timeit
     def run_master_spec(spec_model, study):
         """Executes a BPMN specification for the given study, without recording any information to the database
         Useful for running the master specification, which should not persist. """

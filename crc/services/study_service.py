@@ -254,7 +254,6 @@ class StudyService(object):
         session.commit()
 
     @classmethod
-    @timeit
     def get_documents_status(cls, study_id, force=False):
         """Returns a list of documents related to the study, and any file information
         that is available.  This is a fairly expensive operation.  So we cache the results
@@ -267,7 +266,6 @@ class StudyService(object):
         return g.doc_statuses[study_id]
 
     @staticmethod
-    @timeit
     def __get_documents_status(study_id):
         """Returns a list of documents related to the study, and any file information
         that is available.."""
@@ -341,7 +339,6 @@ class StudyService(object):
         return doc_dict
 
     @staticmethod
-    @timeit
     def get_investigators(study_id, all=False):
         """Convert array of investigators from protocol builder into a dictionary keyed on the type. """
 

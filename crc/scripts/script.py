@@ -87,7 +87,6 @@ class Script(object):
         return execlist
 
     @classmethod
-    @timeit
     def get_all_subclasses(cls):
         # This is expensive to generate, never changes after we load up.
         global SCRIPT_SUB_CLASSES

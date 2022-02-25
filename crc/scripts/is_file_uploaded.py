@@ -14,7 +14,6 @@ class IsFileUploaded(Script):
         doc_code = args[0]
         files = UserFileService.get_files_for_study(study_id)
 
-    @timeit
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
         doc_code = args[0]

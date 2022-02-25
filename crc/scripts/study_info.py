@@ -166,7 +166,6 @@ Please note this is just a few examples, ALL known document types are returned i
         # in order to test multiple paths thru the workflow
         return self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
-    @timeit
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         self.check_args(args, 2)
         prefix = None
@@ -198,7 +197,6 @@ Please note this is just a few examples, ALL known document types are returned i
 
         return self.box_it(retval, prefix)
 
-    @timeit
     def box_it(self, retval, prefix = None):
         if isinstance(retval, list):
             return [Box(item) for item in retval]

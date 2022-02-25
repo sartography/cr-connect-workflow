@@ -178,7 +178,6 @@ class WorkflowService(object):
                 raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_model.id]['message']}")
 
     @staticmethod
-    @timeit
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
@@ -627,7 +626,6 @@ class WorkflowService(object):
         return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
-    @timeit
     def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
@@ -665,7 +663,6 @@ class WorkflowService(object):
         return workflow_api
 
     @staticmethod
-    @timeit
     def update_navigation(navigation: List[NavItem], processor: WorkflowProcessor):
         # Recursive function to walk down through children, and clean up descriptions, and statuses
         for nav_item in navigation:
