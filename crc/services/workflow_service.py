@@ -168,15 +168,6 @@ class WorkflowService(object):
             return message
 
     @staticmethod
-    def raise_if_disabled(spec_id, study_id):
-        """Raise an exception of the workflow is not enabled and can not be executed."""
-        if study_id is not None:
-            study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
-            status = StudyService._get_study_status(study_model)
-            if spec_id in status and status[spec_id]['status'] == 'disabled':
-                raise ApiError(code='disabled_workflow', message=f"This workflow is disabled. {status[spec_id]['message']}")
-
-    @staticmethod
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
         """Runs a spec through it's paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
@@ -189,7 +180,6 @@ class WorkflowService(object):
           """
 
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
-        WorkflowService.raise_if_disabled(spec_id, validate_study_id)
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
             count = 0
