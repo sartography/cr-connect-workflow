@@ -992,6 +992,7 @@ class WorkflowService(object):
             # date=datetime.utcnow(), <=== For future reference, NEVER do this. Let the database set the time.
         )
         db.session.add(task_event)
+        db.session.commit()
 
     @staticmethod
     def extract_form_data(latest_data, task):
