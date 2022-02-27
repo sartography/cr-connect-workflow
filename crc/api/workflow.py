@@ -114,19 +114,16 @@ def validate_workflow_specification(spec_id, study_id=None, test_until=None):
         master_spec = WorkflowSpecService().master_spec
         if study_id is not None:
             study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+            if study_model is None:
+                raise ApiError(code='invalid_study',
+                               message=f"Unable to validate Workflow because the"
+                                       f" provided study id ({study_id}) does not exist.")
             statuses = WorkflowProcessor.run_master_spec(master_spec, study_model)
             if spec_id in statuses and statuses[spec_id]['status'] == 'disabled':
                 raise ApiError(code='disabled_workflow',
                                message=f"This workflow is disabled. {statuses[spec_id]['message']}")
-        ts = time.time()
         WorkflowService.test_spec(spec_id, study_id, test_until)
-        te = time.time()
-        print('| %2.4f | % s ' % (te - ts, 'validate and complete all fields'))
-
-        ts = time.time()
         WorkflowService.test_spec(spec_id, study_id, test_until, required_only=True)
-        te = time.time()
-        print('| %2.4f | % s ' % (te - ts, 'validate only with required fields'))
 
     except ApiError as ae:
         error = ae
