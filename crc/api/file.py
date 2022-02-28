@@ -8,7 +8,9 @@ from crc import session
 from crc.api.common import ApiError
 from crc.api.user import verify_token
 from crc.models.file import FileSchema, FileModel, File, FileModelSchema, FileDataModel
+from crc.models.workflow import WorkflowModel
 from crc.services.document_service import DocumentService
+from crc.services.study_service import StudyService
 from crc.services.user_file_service import UserFileService
 
 
@@ -36,6 +38,10 @@ def get_files(workflow_id=None, form_field_key=None, study_id=None):
 def add_file(workflow_id=None, task_spec_name=None, form_field_key=None):
     file = connexion.request.files['file']
     if workflow_id:
+        workflow = session.query(WorkflowModel).filter(WorkflowModel.id == WorkflowModel.id).first()
+        if workflow is None:
+            raise ApiError('invalid_workflow',
+                           f'Unable to find a workflow with id {workflow_id}')
         if form_field_key is None:
             raise ApiError('invalid_workflow_file',
                            'When adding a workflow related file, you must specify a form_field_key')
@@ -46,6 +52,9 @@ def add_file(workflow_id=None, task_spec_name=None, form_field_key=None):
                                                    task_spec_name=task_spec_name,
                                                    name=file.filename, content_type=file.content_type,
                                                    binary_data=file.stream.read())
+        # We calculate the document statuses once per request, but a script may execute more quickly
+        # So force a refresh of the document status here.
+        StudyService.get_documents_status(study_id=workflow.study_id, force=True)
     else:
         raise ApiError("invalid_file", "You must supply either a workflow spec id or a workflow_id and form_field_key.")
 
