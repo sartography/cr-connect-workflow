@@ -42,7 +42,6 @@ from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_spec_service import WorkflowSpecService
 
-from flask import request
 from sentry_sdk import capture_message, push_scope
 
 
@@ -227,6 +226,14 @@ class WorkflowService(object):
 
         except WorkflowException as we:
             raise ApiError.from_workflow_exception("workflow_validation_exception", str(we), we)
+        except ApiError:
+            # Raising because we have some tests that depend on it
+            raise
+        except Exception as e:
+            # Catch generic exceptions so that the finally clause always executes
+            app.logger.error(f'Unexpected exception caught in WorkflowService.test_spec. Original exception: {str(e)}', exc_info=True)
+            raise ApiError(code='unknown_exception',
+                           message=f'We caught an unexpected exception in test_spec. Original exception is: {str(e)}')
         finally:
             WorkflowService.delete_test_data(workflow_model)
         return processor.bpmn_workflow.last_task.data
