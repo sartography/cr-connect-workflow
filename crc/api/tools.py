@@ -5,9 +5,11 @@ import inspect
 import os
 
 import connexion
+from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from flask import send_file
 from jinja2 import Template, UndefinedError
 
+from crc import app
 from crc.api.common import ApiError
 from crc.scripts.complete_template import CompleteTemplate
 from crc.scripts.script import Script
@@ -90,6 +92,14 @@ def evaluate_python_expression(body):
     there is a hide expression that is based on a previous value in the same form.
     The response includes both the result, and a hash of the original query, subsequent calls
     of the same hash are unnecessary. """
+
+    # In an effort to speed things up, try evaluating the expression immediately, with just the data as
+    # context,  if this failes, then run it through the full expression engine.
+    try:
+        eval(body['expression'], Box(body['data']))
+    except Exception as e:
+        app.logger.info("Failed to handle expression immediately, doing a more complex operation.")
+
     try:
         script_engine = CustomBpmnScriptEngine()
         result = script_engine._evaluate(body['expression'], **body['data'])
