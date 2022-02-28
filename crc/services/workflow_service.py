@@ -458,7 +458,7 @@ class WorkflowService(object):
         try:
             return task.workflow.script_engine._evaluate(expression, **data)
         except Exception as e:
-            message = f"The field {field.id} contains an invalid expression. {e}"
+            message = f"The field {field.id} contains an invalid expression: '{expression}'.  {e}"
             raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
 
     @staticmethod

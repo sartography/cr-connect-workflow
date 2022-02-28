@@ -10,6 +10,7 @@ from crc.models.workflow import WorkflowModel
 from crc.scripts.script import Script
 from crc.services.jinja_service import JinjaService
 from crc.services.spec_file_service import SpecFileService
+from crc.services.study_service import StudyService
 from crc.services.user_file_service import UserFileService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_spec_service import WorkflowSpecService
@@ -43,6 +44,8 @@ Takes two arguments:
                                           content_type=CONTENT_TYPES['docx'],
                                           binary_data=final_document_stream.read(),
                                           irb_doc_code=irb_doc_code)
+        # Force the list of document statuses to update, now that we have a new file
+        StudyService.get_documents_status(study_id=study_id, force=True)
 
     def process_template(self, task, study_id, workflow=None, *args, **kwargs):
         """Entry point, mostly worried about wiring it all up."""
