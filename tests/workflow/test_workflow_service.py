@@ -1,17 +1,14 @@
-import json
-import unittest
-
 from tests.base_test import BaseTest
 
+from crc import session
+from crc.api.common import ApiError
+from crc.models.workflow import WorkflowModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
-from SpiffWorkflow import Task as SpiffTask, WorkflowException
-from example_data import ExampleDataLoader
-from crc import db
-from crc.models.task_event import TaskEventModel
-from crc.models.api_models import Task
-from crc.models.file import FileModel
-from crc.api.common import ApiError
+
+from unittest.mock import patch
+
+import json
 
 
 class TestWorkflowService(BaseTest):
@@ -95,7 +92,6 @@ class TestWorkflowService(BaseTest):
         with self.assertRaises(ApiError):
             WorkflowService.test_spec(workflow_spec_model.id)
 
-
     def test_expressions_in_forms(self):
         workflow_spec_model = self.load_test_spec("form_expressions")
         WorkflowService.test_spec(workflow_spec_model.id)
@@ -121,7 +117,6 @@ class TestWorkflowService(BaseTest):
         self.assertNotIn("field1", workflow_api.next_task.data)
         self.assertNotIn("field1", first_task.data)
 
-
     def test_set_value(self):
         destiation = {}
         path = "a.b.c"
@@ -138,3 +133,16 @@ class TestWorkflowService(BaseTest):
         result2 = WorkflowService.get_dot_value(path, {"a.b.c":"garbage"})
         self.assertEqual("garbage", result2)
 
+    @patch('crc.services.workflow_processor.WorkflowProcessor')
+    def test_test_spec_cleans_up_after_unknown_exception(self, mock_processor):
+        """We have a finally clause in test_spec that cleans up test data for the validation.
+        Make sure the cleanup clause is called when we have an unknown exception"""
+        mock_processor.side_effect = Exception('Mocked error message')
+        mock_processor.return_value = 'Mocked error message'
+        spec_model = self.load_test_spec('hello_world')
+        rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
+        self.assert_success(rv)
+        json_data = json.loads(rv.get_data(as_text=True))
+        self.assertEqual('unknown_exception', json_data[0]['code'])
+        workflows = session.query(WorkflowModel).all()
+        self.assertEqual(0, len(workflows))
