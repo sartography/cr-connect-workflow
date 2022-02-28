@@ -40,6 +40,7 @@ class TestCompleteTemplate(unittest.TestCase):
 class TestEmbeddedTemplate(BaseTest):
 
     def test_embedded_template(self):
+        self.create_reference_document()
         workflow = self.create_workflow('docx_embedded')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task

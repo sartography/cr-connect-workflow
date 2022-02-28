@@ -51,6 +51,7 @@ class GetZippedFiles(Script):
                         file_model = UserFileService().add_workflow_file(workflow_id, None, task.get_name(),
                                                                          zip_filename, 'application/zip', handle.read())
                         # return file_model
+                        StudyService.get_documents_status(study_id=study_id, force=True)
                         return FileSchema().dump(to_file_api(file_model))
         else:
             raise ApiError(code='missing_file_ids',

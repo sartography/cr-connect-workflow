@@ -206,7 +206,7 @@ class TestWorkflowProcessor(BaseTest):
         self.assertEqual("task_error", context.exception.code)
 
     def test_workflow_with_docx_template(self):
-
+        self.create_reference_document()
         study = session.query(StudyModel).first()
         workflow_spec_model = self.load_test_spec("docx")
         files = SpecFileService.get_files(workflow_spec_model)
