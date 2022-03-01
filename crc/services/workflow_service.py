@@ -923,6 +923,8 @@ class WorkflowService(object):
         db.session.query(TaskEventModel). \
             filter(TaskEventModel.workflow_id == processor.workflow_model.id). \
             filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).delete()
+        db.session.commit()
+
         tasks = processor.get_current_user_tasks()
         for task in tasks:
             user_ids = WorkflowService.get_users_assigned_to_task(processor, task)
