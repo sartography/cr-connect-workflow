@@ -231,9 +231,9 @@ class WorkflowService(object):
             raise
         except Exception as e:
             # Catch generic exceptions so that the finally clause always executes
-            app.logger.error(f'Unexpected exception caught in WorkflowService.test_spec. Original exception: {str(e)}', exc_info=True)
+            app.logger.error(f'Unexpected exception caught during validation. Original exception: {str(e)}', exc_info=True)
             raise ApiError(code='unknown_exception',
-                           message=f'We caught an unexpected exception in test_spec. Original exception is: {str(e)}')
+                           message=f'We caught an unexpected exception during validation. Original exception is: {str(e)}')
         finally:
             WorkflowService.delete_test_data(workflow_model)
         return processor.bpmn_workflow.last_task.data
