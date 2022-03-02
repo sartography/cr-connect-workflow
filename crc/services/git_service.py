@@ -45,6 +45,8 @@ class GitService(object):
         remote_path = app.config['GIT_REMOTE_PATH']
         git_branch = app.config['GIT_BRANCH']
         directory = app.config['SYNC_FILE_ROOT']
+        display_push = app.config['GIT_DISPLAY_PUSH']
+        display_merge = app.config['GIT_DISPLAY_MERGE']
         try:
             repo = Repo(directory)
 
@@ -79,6 +81,8 @@ class GitService(object):
 
         remote_ref = repo.remotes.origin.refs[f'{git_branch}']
         repo.active_branch.set_tracking_branch(remote_ref)
+        repo.display_push = display_push
+        repo.display_merge = display_merge
         return repo
 
     def _get_repo(self):
