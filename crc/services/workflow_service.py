@@ -781,6 +781,15 @@ class WorkflowService(object):
                 for i in range(len(task.form.fields)):
                     task.data.pop(task.form.fields[i].id, None)
 
+        # Pass help text through the Jinja parser
+        if task.form and task.form.fields:
+            for field in task.form.fields:
+                if field.properties:
+                    for field_property in field.properties:
+                        if field_property.id == 'help':
+                            jinja_text = JinjaService().get_content(field_property.value, task.data)
+                            field_property.value = jinja_text
+
         return task
 
     @staticmethod
