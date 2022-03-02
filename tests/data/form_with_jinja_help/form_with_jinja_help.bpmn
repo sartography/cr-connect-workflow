@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_fdb62d5" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_TestJinjaHelp" name="Test Jinja Help" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_17bkn17</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_17bkn17" sourceRef="StartEvent_1" targetRef="Activity_1fyumcq" />
+    <bpmn:sequenceFlow id="Flow_0whf895" sourceRef="Activity_1fyumcq" targetRef="Activity_UserForm" />
+    <bpmn:sequenceFlow id="Flow_00tcg8m" sourceRef="Activity_UserForm" targetRef="Activity_SayHello" />
+    <bpmn:endEvent id="Event_0msjaax">
+      <bpmn:incoming>Flow_075bliw</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_075bliw" sourceRef="Activity_SayHello" targetRef="Event_0msjaax" />
+    <bpmn:scriptTask id="Activity_1fyumcq" name="Add Variable">
+      <bpmn:incoming>Flow_17bkn17</bpmn:incoming>
+      <bpmn:outgoing>Flow_0whf895</bpmn:outgoing>
+      <bpmn:script>my_variable = 'Cruel'</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="Activity_UserForm" name="User Form with Help" camunda:formKey="DataForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="name" label="Name" type="string">
+            <camunda:properties>
+              <camunda:property id="help" value="Hello {{ my_variable }} World" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0whf895</bpmn:incoming>
+      <bpmn:outgoing>Flow_00tcg8m</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Activity_SayHello" name="Say Hello">
+      <bpmn:documentation>## Hello
+{{ my_variable }}
+{{name }}
+</bpmn:documentation>
+      <bpmn:incoming>Flow_00tcg8m</bpmn:incoming>
+      <bpmn:outgoing>Flow_075bliw</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_TestJinjaHelp">
+      <bpmndi:BPMNEdge id="Flow_17bkn17_di" bpmnElement="Flow_17bkn17">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0whf895_di" bpmnElement="Flow_0whf895">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00tcg8m_di" bpmnElement="Flow_00tcg8m">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="590" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_075bliw_di" bpmnElement="Flow_075bliw">
+        <di:waypoint x="690" y="177" />
+        <di:waypoint x="752" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0msjaax_di" bpmnElement="Event_0msjaax">
+        <dc:Bounds x="752" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1yjydwa_di" bpmnElement="Activity_1fyumcq">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0gl5ux4_di" bpmnElement="Activity_UserForm">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0aqw6ql_di" bpmnElement="Activity_SayHello">
+        <dc:Bounds x="590" y="137" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
