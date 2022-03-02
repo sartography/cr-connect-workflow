@@ -97,7 +97,7 @@ class GitService(object):
         return repo_model
 
     def push_to_remote(self, comment=None):
-        if comment is None:
+        if comment is None or comment.strip() == '':
             comment = f"Git commit: {datetime.now()}"
         repo = self._get_repo()
         # get list of changed files
