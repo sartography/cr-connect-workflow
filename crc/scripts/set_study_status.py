@@ -27,4 +27,3 @@ class SetStudyStatus(Script):
                 study = session.query(StudyModel).filter(StudyModel.id==study_id).first()
                 study.status = StudyStatus(args[0]).value
                 session.commit()
-        print('SetStudyStatus')
