@@ -7,8 +7,8 @@ from crc.scripts.script import Script
 class SetStudyStatus(Script):
 
     def get_description(self):
-        return """Set the study status.
-        Requires 'in_progress', 'hold', 'open_for_enrollment', 'abandoned', or 'cr_connect_complete'."""
+        return """Set the study status. Requires a study status.
+        Study status must be 'in_progress', 'hold', 'open_for_enrollment', 'abandoned', or 'cr_connect_complete'."""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         if len(args) == 1:
