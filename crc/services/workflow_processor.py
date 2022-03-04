@@ -37,24 +37,34 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
      scripts directory available for execution. """
 
     def evaluate(self, task, expression):
+        return self._evaluate(expression, task.data, task)
+
+    @staticmethod
+    def __get_augment_methods(task):
+        methods = []
+        if task:
+            study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+            if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
+                workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+            else:
+                workflow_id = None
+
+            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+                methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
+            else:
+                methods = Script.generate_augmented_list(task, study_id, workflow_id)
+        return methods
+
+    def _evaluate(self, expression, context, task=None, external_methods=None):
         """
         Evaluate the given expression, within the context of the given task and
         return the result.
         """
-        study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-        if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
-            workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-        else:
-            workflow_id = None
-
+        methods = self.__get_augment_methods(task)
+        if(external_methods):
+            methods.update(external_methods)
         try:
-            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                augmentMethods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
-            else:
-                augmentMethods = Script.generate_augmented_list(task, study_id, workflow_id)
-
-            return self._evaluate(expression, external_methods=augmentMethods, **task.data)
-
+            return super()._evaluate(expression, context, task, methods)
         except Exception as e:
             raise WorkflowTaskExecException(task,
                                             "Error evaluating expression "
@@ -67,11 +77,7 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
         else:
             workflow_id = None
         try:
-            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
-                augment_methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
-            else:
-                # Costs 0.25 seconds the first time it is executed.
-                augment_methods = Script.generate_augmented_list(task, study_id, workflow_id)
+            augment_methods = self.__get_augment_methods(task)
             super().execute(task, script, data, external_methods=augment_methods)
         except WorkflowException as e:
             raise e
@@ -134,12 +140,7 @@ class WorkflowProcessor(object):
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec, validate_only)
             self.bpmn_workflow.script_engine = self._script_engine
 
-            if UserService.has_user():
-                current_user = UserService.current_user(allow_admin_impersonate=True)
-                current_user_data = UserModelSchema().dump(current_user)
-                tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
-                for task in tasks:
-                    task.data['current_user'] = current_user_data
+            self.add_user_info_to_workflow(self.bpmn_workflow)
 
             if self.WORKFLOW_ID_KEY not in self.bpmn_workflow.data:
                 if not workflow_model.id:
@@ -159,6 +160,15 @@ class WorkflowProcessor(object):
                            message="Failed to deserialize workflow"
                                    " '%s'  due to a mis-placed or missing task '%s'" %
                                    (self.workflow_spec_id, str(ke)))
+
+    @staticmethod
+    def add_user_info_to_workflow(bpmn_workflow):
+        if UserService.has_user():
+            current_user = UserService.current_user(allow_admin_impersonate=True)
+            current_user_data = UserModelSchema().dump(current_user)
+            tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
+            for task in tasks:
+                task.data['current_user'] = current_user_data
 
     @staticmethod
     def reset(workflow_model, clear_data=False, delete_files=False):
@@ -220,6 +230,7 @@ class WorkflowProcessor(object):
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
+            WorkflowProcessor.add_user_info_to_workflow(bpmn_workflow)
             bpmn_workflow.do_engine_steps()
         except WorkflowException as we:
             raise ApiError.from_task_spec("error_running_master_spec", str(we), we.sender)

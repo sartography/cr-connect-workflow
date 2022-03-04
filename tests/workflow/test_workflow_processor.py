@@ -1,24 +1,21 @@
-import json
-import logging
 import os
-from unittest.mock import patch
-
-from SpiffWorkflow.bpmn.specs.events import EndEvent
 
 from tests.base_test import BaseTest
 
+from SpiffWorkflow.bpmn.specs.events import EndEvent
 from SpiffWorkflow.camunda.specs.UserTask import FormField
+from flask import g
 
 from crc import session, db, app
 from crc.api.common import ApiError
 from crc.models.file import FileModel, FileDataModel
-from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowStatus
+from crc.models.user import UserModel
+from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
-from crc.services.spec_file_service import SpecFileService
 
 
 class TestWorkflowProcessor(BaseTest):
@@ -347,3 +344,14 @@ class TestWorkflowProcessor(BaseTest):
         supervisor_task = processor.next_user_tasks()[0]
         self.assertEqual("supervisor", supervisor_task.task_spec.lane)
 
+    def test_run_master_spec_knows_about_current_user(self):
+        """Master spec should have access to the current user."""
+        spec = self.load_test_spec('empty_workflow', "Master", master_spec=True)
+        study = self.create_study()
+
+        # Make it seem like we are logged in
+        g.user = UserModel.query.filter_by(uid=study.user_uid).first()
+        g.token = 'my_fake_token'
+
+        results = WorkflowProcessor.run_master_spec(spec, study)
+        self.assertIn('current_user', results.keys())

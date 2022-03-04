@@ -102,7 +102,7 @@ def evaluate_python_expression(body):
 
     try:
         script_engine = CustomBpmnScriptEngine()
-        result = script_engine._evaluate(body['expression'], **body['data'])
+        result = script_engine._evaluate(body['expression'], body['data'])
         return {"result": result, "expression": body['expression'], "key": body['key']}
     except Exception as e:
         return {"result": False, "expression": body['expression'], "key": body['key'], "error": str(e)}
