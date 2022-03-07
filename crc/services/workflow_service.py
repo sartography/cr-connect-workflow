@@ -277,7 +277,7 @@ class WorkflowService(object):
             if field.label:
                 try:
                     # Assure that we can evaluate the field.label, but no need to save the resulting value.
-                    task.workflow.script_engine._evaluate(field.label, data)
+                    task.workflow.script_engine._evaluate(field.label, data, task)
                 except Exception as e:
                     raise ApiError.from_task("bad label", f'The label "{field.label}" in field {field.id} '
                                                           f'could not be understood or evaluated. ',
@@ -419,7 +419,7 @@ class WorkflowService(object):
             # This is generally handled by the front end, but it is possible that the file was uploaded BEFORE
             # the doc_code was correctly set, so this is a stop gap measure to assure we still hit it correctly.
             file_id = data[field.id]["id"]
-            doc_code = task.workflow.script_engine._evaluate(field.get_property(Task.FIELD_PROP_DOC_CODE), **data)
+            doc_code = task.workflow.script_engine._evaluate(field.get_property(Task.FIELD_PROP_DOC_CODE), data, task)
             file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
             if (file):
                 file.irb_doc_code = doc_code
@@ -463,7 +463,7 @@ class WorkflowService(object):
             new_data = copy.deepcopy(task.data)
 
         try:
-            return task.workflow.script_engine._evaluate(expression, **data)
+            return task.workflow.script_engine._evaluate(expression, data, task)
         except Exception as e:
             message = f"The field {field.id} contains an invalid expression: '{expression}'.  {e}"
             raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
@@ -484,7 +484,7 @@ class WorkflowService(object):
         default = None
         if field.default_value is not None:
             try:
-                default = task.workflow.script_engine._evaluate(field.default_value, data)
+                default = task.workflow.script_engine._evaluate(field.default_value, data, task)
             except Exception as e:
                 raise WorkflowTaskExecException(task, "invalid_default", e)
         # If no default exists, return None
