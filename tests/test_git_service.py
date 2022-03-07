@@ -35,6 +35,9 @@ class TestGitService(BaseTest):
     def test__get_repo(self, mock_repo):
         # _get_repo returns a GitPython Repo object
 
+        app.config['GIT_DISPLAY_PUSH'] = True
+        app.config['GIT_DISPLAY_MERGE'] = False
+
         self.setup_mock_repo(mock_repo)
         repo = GitService()._get_repo()
 
@@ -43,6 +46,8 @@ class TestGitService(BaseTest):
         self.assertEqual(repo.untracked_files, ['a_file.txt', 'b_file.txt'])
         self.assertEqual(repo.index.diff(None)[0].a_path, 'c_file.txt')
         self.assertEqual(repo.index.diff(None)[1].a_path, 'd_file.txt')
+        self.assertTrue(repo.display_push)
+        self.assertFalse(repo.display_merge)
 
     @patch('crc.services.git_service.Repo')
     def test_push_to_remote(self, mock_repo):
@@ -57,6 +62,28 @@ class TestGitService(BaseTest):
         self.assertIn(call.index.add(['c_file.txt', 'd_file.txt']), method_calls)
         self.assertIn(call.index.commit('This is my comment'), method_calls)
         self.assertIn(call.remotes.origin.push(), method_calls)
+
+    @patch('crc.services.git_service.Repo')
+    def test_push_no_comment(self, mock_repo):
+        # If no message is passed to push, we generate one.
+
+        self.setup_mock_repo(mock_repo)
+        mock_repo.remotes.origin.push.return_value = 'some_string'
+
+        repo = GitService().push_to_remote()
+        method_calls = repo.method_calls
+        self.assertIn('Git commit:', method_calls[5].args[0])
+
+    @patch('crc.services.git_service.Repo')
+    def test_push_empty_comment(self, mock_repo):
+        # If no message is passed to push, we generate one.
+
+        self.setup_mock_repo(mock_repo)
+        mock_repo.remotes.origin.push.return_value = 'some_string'
+
+        repo = GitService().push_to_remote(comment=' ')
+        method_calls = repo.method_calls
+        self.assertIn('Git commit:', method_calls[5].args[0])
 
     def test_get_remote_url(self):
         app.config['GIT_REMOTE_SERVER'] = 'test_server.com'
