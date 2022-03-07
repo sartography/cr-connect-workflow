@@ -18,6 +18,7 @@ class StudyStatus(enum.Enum):
     hold = 'hold'
     open_for_enrollment = 'open_for_enrollment'
     abandoned = 'abandoned'
+    cr_connect_complete = 'cr_connect_complete'
 
 
 class ProgressStatus(enum.Enum):

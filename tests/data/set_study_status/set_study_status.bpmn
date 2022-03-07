@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_7fa2a49" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_SetStudyStatus" name="Set Study Status" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1id1rb8</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1id1rb8" sourceRef="StartEvent_1" targetRef="Activity_Pause" />
+    <bpmn:endEvent id="Event_0ky05kq">
+      <bpmn:incoming>Flow_0kxs039</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0kxs039" sourceRef="Activity_SetStudyStatus" targetRef="Event_0ky05kq" />
+    <bpmn:scriptTask id="Activity_SetStudyStatus" name="Set Study Status">
+      <bpmn:incoming>Flow_1wyotj4</bpmn:incoming>
+      <bpmn:outgoing>Flow_0kxs039</bpmn:outgoing>
+      <bpmn:script>set_study_status('cr_connect_complete')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1wyotj4" sourceRef="Activity_Pause" targetRef="Activity_SetStudyStatus" />
+    <bpmn:manualTask id="Activity_Pause" name="Pause">
+      <bpmn:incoming>Flow_1id1rb8</bpmn:incoming>
+      <bpmn:outgoing>Flow_1wyotj4</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_SetStudyStatus">
+      <bpmndi:BPMNEdge id="Flow_1id1rb8_di" bpmnElement="Flow_1id1rb8">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="280" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0kxs039_di" bpmnElement="Flow_0kxs039">
+        <di:waypoint x="570" y="117" />
+        <di:waypoint x="642" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1wyotj4_di" bpmnElement="Flow_1wyotj4">
+        <di:waypoint x="380" y="117" />
+        <di:waypoint x="470" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ky05kq_di" bpmnElement="Event_0ky05kq">
+        <dc:Bounds x="642" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1mxl8q8_di" bpmnElement="Activity_SetStudyStatus">
+        <dc:Bounds x="470" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ds8uv8_di" bpmnElement="Activity_Pause">
+        <dc:Bounds x="280" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
