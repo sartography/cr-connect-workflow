@@ -5,6 +5,7 @@ import marshmallow
 from crc import db, ma
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel
+from crc.services.workflow_spec_service import WorkflowSpecService
 from sqlalchemy import func
 
 
@@ -30,6 +31,7 @@ class TaskLogModel(db.Model):
     user_uid = db.Column(db.String)
     study_id = db.Column(db.Integer, db.ForeignKey(StudyModel.id), nullable=False)
     workflow_id = db.Column(db.Integer, db.ForeignKey(WorkflowModel.id), nullable=False)
+    workflow_spec_id = db.Column(db.String)
     task = db.Column(db.String)
     timestamp = db.Column(db.DateTime(timezone=True), server_default=func.now())
 
@@ -37,7 +39,23 @@ class TaskLogModel(db.Model):
 class TaskLogModelSchema(ma.Schema):
     class Meta:
         model = TaskLogModel
-        fields = ["id", "level", "code", "message", "study_id", "workflow_id", "user_uid", "timestamp"]
+        fields = ["id", "level", "code", "message", "study_id", "workflow", "workflow_id",
+                  "workflow_spec_id", "category", "user_uid", "timestamp"]
+    category = marshmallow.fields.Method('get_category')
+    workflow = marshmallow.fields.Method('get_workflow')
+
+    @staticmethod
+    def get_category(obj):
+        if hasattr(obj, 'workflow_spec_id') and obj.workflow_spec_id is not None:
+            workflow_spec = WorkflowSpecService().get_spec(obj.workflow_spec_id)
+            category = WorkflowSpecService().get_category(workflow_spec.category_id)
+            return category.display_name
+
+    @staticmethod
+    def get_workflow(obj):
+        if hasattr(obj, 'workflow_spec_id') and obj.workflow_spec_id is not None:
+            workflow_spec = WorkflowSpecService().get_spec(obj.workflow_spec_id)
+            return workflow_spec.display_name
 
 
 class TaskLogQuery:
@@ -68,6 +86,7 @@ class TaskLogQuery:
         self.has_next = paginator.has_next
         self.has_prev = paginator.has_prev
         self.total = paginator.total
+
 
 class TaskLogQuerySchema(ma.Schema):
     class Meta:
