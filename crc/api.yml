@@ -2117,7 +2117,7 @@ components:
           has_next:
             type: boolean
             example: true
-          has_previous:
+          has_prev:
             type: boolean
             example: false
     TaskLog:
