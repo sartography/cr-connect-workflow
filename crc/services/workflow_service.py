@@ -306,8 +306,9 @@ class WorkflowService(object):
                     raise ApiError.from_task("bad default value", f'The default value "{field.default_value}" in field {field.id} '
                                                           f'could not be understood or evaluated. ',
                                              task=task)
-                if not field.has_property(Task.FIELD_PROP_REPEAT):
-                    continue
+# fixme:  Not sure I understand the purpose of these two lines.  If the default value above, evaluates to null, we have to keep going. We can't stop.
+#                if not field.has_property(Task.FIELD_PROP_REPEAT):
+#                    continue
             else:
                 form_data[field.id] = None
 

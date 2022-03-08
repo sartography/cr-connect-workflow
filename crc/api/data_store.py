@@ -74,7 +74,6 @@ def update_datastore(id, body):
 def add_datastore(body):
     """ add a new datastore item """
 
-    print(body)
     if body.get(id, None):
         raise ApiError('id_specified', 'You may not specify an id for a new datastore item')
 
