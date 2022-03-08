@@ -1,9 +1,12 @@
+from unittest import skip
+
 from tests.base_test import BaseTest
 import json
 
 
 class TestWorkflowHiddenRequiredField(BaseTest):
 
+    @skip("Maybe we don't need to require a default for required hidden fields after all.")
     def test_require_default(self):
         # We have a field that can be hidden and required.
         # Validation should fail if we don't have a default value.
