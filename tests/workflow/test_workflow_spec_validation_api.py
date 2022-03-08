@@ -173,3 +173,13 @@ class TestWorkflowSpecValidation(BaseTest):
         self.create_reference_document()
         errors = self.validate_workflow("date_value_expression")
         self.assertEqual(0, len(errors))
+
+    def test_fields_required_based_on_later_fields_correctly_populates(self):
+        """Say you have a form, where the first field is required only if the
+        SECOND field is checked true.  This assures such a case will validate and
+        that the variables that should exist (because they are required) do exist."""
+        self.load_test_spec('empty_workflow', master_spec=True)
+        self.create_reference_document()
+        errors = self.validate_workflow("required_expressions")
+        self.assertEqual(0, len(errors))
+

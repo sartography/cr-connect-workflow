@@ -1,10 +1,9 @@
 import copy
 import json
-import sys
-import time
-import traceback
 import random
 import string
+import sys
+import traceback
 from datetime import datetime
 from typing import List
 
@@ -19,7 +18,7 @@ from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import CancelTask, StartTask
 from SpiffWorkflow.util.deep_merge import DeepMerge
-from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
+from sentry_sdk import capture_message, push_scope
 from sqlalchemy.exc import InvalidRequestError
 
 from crc import db, app, session
@@ -32,7 +31,6 @@ from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.services.data_store_service import DataStoreBase
-
 from crc.services.document_service import DocumentService
 from crc.services.jinja_service import JinjaService
 from crc.services.lookup_service import LookupService
@@ -41,8 +39,6 @@ from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_spec_service import WorkflowSpecService
-
-from sentry_sdk import capture_message, push_scope
 
 
 class WorkflowService(object):
@@ -209,6 +205,11 @@ class WorkflowService(object):
                                        task_id=task.id,
                                        task_name=task.get_name())
                     WorkflowService.populate_form_with_random_data(task, task_api, required_only)
+                    if not WorkflowService.validate_form(task, task_api):
+                        # In the process of completing the form, it is possible for fields to become required
+                        # based on later fields.  Re-run the validation to assure we complete the forms correctly.
+                        WorkflowService.populate_form_with_random_data(task, task_api, required_only)
+
                     processor.complete_task(task)
                     if test_until == task.task_spec.name:
                         raise ApiError.from_task(
@@ -239,6 +240,26 @@ class WorkflowService(object):
         return processor.bpmn_workflow.last_task.data
 
     @staticmethod
+    def validate_form(task, task_api):
+        for field in task_api.form.fields:
+            if WorkflowService.is_required_field(field, task):
+                if not field.id in task.data or task.data[field.id] is None:
+                    return False
+        return True
+
+    @staticmethod
+    def is_required_field(field, task):
+        # Get Required State
+        is_required = False
+        if (field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED) and
+                field.get_validation(Task.FIELD_CONSTRAINT_REQUIRED)):
+            is_required = True
+        if (field.has_property(Task.FIELD_PROP_REQUIRED_EXPRESSION) and
+                WorkflowService.evaluate_property(Task.FIELD_PROP_REQUIRED_EXPRESSION, field, task)):
+            is_required = True
+        return is_required
+
+    @staticmethod
     def populate_form_with_random_data(task, task_api, required_only):
         """populates a task with random data - useful for testing a spec."""
 
@@ -256,6 +277,8 @@ class WorkflowService(object):
             form_data[field.id] = None
 
         for field in task_api.form.fields:
+            is_required = WorkflowService.is_required_field(field, task)
+
             # Assure we have a field type
             if field.type is None:
                 raise ApiError(code='invalid_form_data',
@@ -284,17 +307,16 @@ class WorkflowService(object):
                                              task=task)
 
             # If a field is hidden and required, it must have a default value
-            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(
-                    Task.FIELD_CONSTRAINT_REQUIRED):
-                if field.default_value is None:
-                    raise ApiError(code='hidden and required field missing default',
-                                   message=f'Field "{field.id}" is required but can be hidden. It must have a default value.',
-                                   task_id='task.id',
-                                   task_name=task.get_name())
+            # if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and field.has_validation(
+            #         Task.FIELD_CONSTRAINT_REQUIRED):
+            #     if field.default_value is None:
+            #         raise ApiError(code='hidden and required field missing default',
+            #                        message=f'Field "{field.id}" is required but can be hidden. It must have a def1ault value.',
+            #                        task_id='task.id',
+            #                        task_name=task.get_name())
 
-            # If the field is hidden and not required, it should not produce a value.
-            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION) and not field.has_validation(
-                    Task.FIELD_CONSTRAINT_REQUIRED):
+            # If the field is hidden it should not produce a value.
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
                 if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
                     continue
 
@@ -315,13 +337,8 @@ class WorkflowService(object):
 
             # If we are only populating required fields, and this isn't required. stop here.
             if required_only:
-                if (not field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED) or
-                        field.get_validation(Task.FIELD_CONSTRAINT_REQUIRED).lower().strip() != "true"):
+                if not is_required:
                     continue  # Don't include any fields that aren't specifically marked as required.
-                if field.has_property(Task.FIELD_PROP_REQUIRED_EXPRESSION):
-                    result = WorkflowService.evaluate_property(Task.FIELD_PROP_REQUIRED_EXPRESSION, field, task)
-                    if not result and required_only:
-                        continue  # Don't complete fields that are not required.
 
             # If it is read only, stop here.
             if field.has_property("read_only") and field.get_property(
@@ -1083,14 +1100,6 @@ class WorkflowService(object):
         db.session.add(workflow_model)
         db.session.commit()
         return workflow_model
-
-    @staticmethod
-    def get_standalone_workflow_specs():
-        return spec_service.standalone.values()
-
-    @staticmethod
-    def get_library_workflow_specs():
-        return spec_service.libraries.values()
 
     @staticmethod
     def delete_workflow_spec_task_events(spec_id):
