@@ -199,16 +199,17 @@ class WorkflowService(object):
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
                     # make sure forms have a form key
-                    if hasattr(task_api, 'form') and task_api.form is not None and task_api.form.key == '':
-                        raise ApiError(code='missing_form_key',
+                    if hasattr(task_api, 'form') and task_api.form is not None:
+                        if task_api.form.key == '':
+                            raise ApiError(code='missing_form_key',
                                        message='Forms must include a Form Key.',
                                        task_id=task.id,
                                        task_name=task.get_name())
-                    WorkflowService.populate_form_with_random_data(task, task_api, required_only)
-                    if not WorkflowService.validate_form(task, task_api):
-                        # In the process of completing the form, it is possible for fields to become required
-                        # based on later fields.  Re-run the validation to assure we complete the forms correctly.
                         WorkflowService.populate_form_with_random_data(task, task_api, required_only)
+                        if not WorkflowService.validate_form(task, task_api):
+                            # In the process of completing the form, it is possible for fields to become required
+                            # based on later fields.  Re-run the validation to assure we complete the forms correctly.
+                            WorkflowService.populate_form_with_random_data(task, task_api, required_only)
 
                     processor.complete_task(task)
                     if test_until == task.task_spec.name:
@@ -315,11 +316,6 @@ class WorkflowService(object):
             #                        task_id='task.id',
             #                        task_name=task.get_name())
 
-            # If the field is hidden it should not produce a value.
-            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
-                if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
-                    continue
-
             # If we have a default_value, try to set the default
             if field.default_value:
                 try:
@@ -334,6 +330,10 @@ class WorkflowService(object):
             else:
                 form_data[field.id] = None
 
+            # If the field is hidden it should not produce a value.
+            if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
+                if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
+                    continue
 
             # If we are only populating required fields, and this isn't required. stop here.
             if required_only:

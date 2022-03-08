@@ -23,6 +23,11 @@
               <camunda:property id="required_expression" value="not boolean_field" />
             </camunda:properties>
           </camunda:formField>
+          <camunda:formField id="always_set" type="string" defaultValue="&#34;always&#34;">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="True" />
+            </camunda:properties>
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_0lvudp8</bpmn:incoming>
@@ -39,6 +44,11 @@ if boolean_field:
   result = required_if_true
 else:
   result = required_if_false
+
+# Note that hidden fields with a default
+# value should always exist.
+if not always_set == "always":
+  should_never_get_here
 </bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>
