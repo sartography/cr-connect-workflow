@@ -82,8 +82,12 @@ class TestJinjaService(BaseTest):
 
         { % include
         'template_2' %}
+
+        { % include 'template_3' -%}
+        {% include 'template_4'%}
+
         """
-        self.assertEqual(['template_1', 'template_2'], JinjaService().template_references(test_string))
+        self.assertEqual(['template_1', 'template_2', 'template_3', 'template_4'], JinjaService().template_references(test_string))
 
     def test_better_error_message_for_wordwrap(self):
         data = {"my_val": None}

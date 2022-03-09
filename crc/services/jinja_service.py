@@ -31,7 +31,7 @@ Please Introduce yourself.
 Hi Dan, This is a jinja template too!
 Cool Right?
 """
-    template_pattern = re.compile('{ ?% ?include\s*[\'\"](\w+)[\'\"]\s*?%}', re.DOTALL)
+    template_pattern = re.compile('{ ?% ?include\s*[\'\"](\w+)[\'\"]\s*?-?%}', re.DOTALL)
 
     @staticmethod
     def get_content(input_template, data):
