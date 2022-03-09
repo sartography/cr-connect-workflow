@@ -124,6 +124,7 @@ def validate_all(study_id, category=None, spec_id=None):
     Please provide a real study id to use for validation, an optional category can be specified to only validate
     that category, and you can further specify a specific spec, if needed."""
     from crc.services.workflow_service import WorkflowService
+    from crc.services.workflow_processor import WorkflowProcessor
     from crc.services.workflow_spec_service import WorkflowSpecService
     from crc.api.common import ApiError
     from crc.models.study import StudyModel
@@ -134,11 +135,21 @@ def validate_all(study_id, category=None, spec_id=None):
     g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
     g.token = "anything_is_fine_just_need_something."
     specs = WorkflowSpecService().get_specs()
+    statuses = WorkflowProcessor.run_master_spec(WorkflowSpecService().master_spec, study)
+
     for spec in specs:
         if spec_id and spec_id != spec.id:
             continue
         if category and (not spec.category or spec.category.display_name != category):
             continue
+
+        print("-----------------------------------------")
+        print(f"{spec.category.display_name} / {spec.id}")
+        print("-----------------------------------------")
+
+        if spec_id in statuses and statuses[spec_id]['status'] == 'disabled':
+            print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
+
         try:
             WorkflowService.test_spec(spec.id, validate_study_id=study_id)
         except ApiError as e:
