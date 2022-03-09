@@ -90,7 +90,7 @@ class TestJinjaService(BaseTest):
         my_tempate = "{{my_val | wordwrap(70)}}"
         with self.assertRaises(ApiError) as e:
             result = JinjaService().get_content(my_tempate, data)
-        self.assertEqual(e.exception.message, 'Error processing template.  You may have be using a wordwrap '
+        self.assertEqual(e.exception.message, 'Error processing template.  You may be using a wordwrap '
                                               'with a field that has no value.')
 
     def test_jinja_service_properties(self):

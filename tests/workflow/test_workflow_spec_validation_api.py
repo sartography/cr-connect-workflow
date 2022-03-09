@@ -179,7 +179,7 @@ class TestWorkflowSpecValidation(BaseTest):
         SECOND field is checked true.  This assures such a case will validate and
         that the variables that should exist (because they are required) do exist.
 
-        As a bonus test, we also assert that a default field is always present
+        As a bonus test, we also assert that a field with a default value is always present
         regardless of it's hidden status.
         """
         self.load_test_spec('empty_workflow', master_spec=True)

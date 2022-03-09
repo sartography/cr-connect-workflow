@@ -50,7 +50,7 @@ Cool Right?
             result = template.render(**data)
         except AttributeError as ae:
             if str(ae) == '\'NoneType\' object has no attribute \'splitlines\'':
-                raise ApiError("template_error", "Error processing template.  You may have be using a wordwrap "
+                raise ApiError("template_error", "Error processing template.  You may be using a wordwrap "
                                                  "with a field that has no value.")
 
         return result
