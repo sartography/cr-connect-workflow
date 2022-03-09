@@ -19,21 +19,29 @@ Examples:
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        return self.do_task(task, study_id, workflow_id, *args, **kwargs)
+        if 'workflow_spec_id' in kwargs.keys() or len(args) > 0:
+            return 'not_started'
+        else:
+            raise ApiError.from_task(code='missing_argument',
+                                     message='You must include a workflow_spec_id when calling the `get_workflow_status` script.',
+                                     task=task)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        if 'search_workflow_id' in kwargs.keys() or len(args) > 0:
-            if 'search_workflow_id' in kwargs.keys():
-                search_workflow_id = kwargs['search_workflow_id']
+        if 'workflow_spec_id' in kwargs.keys() or len(args) > 0:
+            if 'workflow_spec_id' in kwargs.keys():
+                workflow_spec_id = kwargs['workflow_spec_id']
             else:
-                search_workflow_id = args[0]
-            workflow_model = session.query(WorkflowModel).filter(WorkflowModel.id == search_workflow_id).first()
+                workflow_spec_id = args[0]
+            workflow_model = session.query(WorkflowModel). \
+                filter(WorkflowModel.workflow_spec_id == workflow_spec_id). \
+                filter(WorkflowModel.study_id == study_id).\
+                first()
             if workflow_model:
                 return workflow_model.status.value
             else:
-                return f'No model found for workflow {search_workflow_id}.'
+                return f'No model found for workflow {workflow_spec_id}.'
 
         else:
             raise ApiError.from_task(code='missing_argument',
-                                     message='You must include a workflow_id when calling the `get_workflow_status` script.',
+                                     message='You must include a workflow_spec_id when calling the `get_workflow_status` script.',
                                      task=task)
