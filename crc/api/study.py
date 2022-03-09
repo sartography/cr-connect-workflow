@@ -119,6 +119,10 @@ def get_logs_for_study(study_id, body):
         TaskLoggingService.get_logs_for_study(study_id, task_log_query))
 
 
+def download_logs_for_study(study_id):
+    logs = TaskLoggingService.download_all_logs_for_study(study_id)
+
+
 def delete_study(study_id):
     try:
         StudyService.delete_study(study_id)

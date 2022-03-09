@@ -82,3 +82,12 @@ class TaskLoggingService(object):
                                                              error_out=False)
         task_log_query.update_from_sqlalchemy_paginator(paginator)
         return task_log_query
+
+    @staticmethod
+    def download_all_logs_for_study(study_id):
+        # Admins can download the logs for a study as a csv file
+        # In this case, we don't want to paginate
+        # We also provide data that we don't include when displaying logs on the study page
+        query = session.query(TaskLogModel).filter(TaskLogModel.study_id == study_id).all()
+
+        print('download_all_logs_for_study')

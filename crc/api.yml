@@ -284,6 +284,29 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TaskLog"
+  /study/{study_id}/log/download:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which logs should be returned.
+        schema:
+          type: integer
+          format: int32
+    put:
+      operationId: crc.api.study.download_logs_for_study
+      summary: Returns a csv file of logged events that occured within a study
+      tags:
+        - Studies
+      responses:
+        '200':
+          description: Returns the csv file of logged events
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
