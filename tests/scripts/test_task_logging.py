@@ -3,15 +3,12 @@ import json
 from tests.base_test import BaseTest
 
 from crc.models.user import UserModel
-from crc import session, WorkflowService
-from crc.models.api_models import Task, TaskSchema
-from crc.models.task_log import TaskLogModel, TaskLogModelSchema, TaskLogQuery, TaskLogQuerySchema
+from crc import session
+from crc.models.task_log import TaskLogModel, TaskLogQuery, TaskLogQuerySchema
 from crc.models.study import StudyModel
 from crc.scripts.log import TaskLog
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.task_logging_service import TaskLoggingService
-
-import types
 
 
 class TestTaskLogging(BaseTest):
@@ -37,8 +34,8 @@ class TestTaskLogging(BaseTest):
 
     def test_add_log(self):
         log_data = {'level': 'info',
-                     'code': 'test_code',
-                     'message': 'You forgot to include the correct data.'}
+                    'code': 'test_code',
+                    'message': 'You forgot to include the correct data.'}
         log_id = self.add_log(log_data)
         log_model = session.query(TaskLogModel).filter(TaskLogModel.id == log_id).first()
 
@@ -47,10 +44,9 @@ class TestTaskLogging(BaseTest):
         self.assertEqual('Activity_LogEvent', log_model.task)
 
     def test_add_metrics_log(self):
-
         log_data = {'level': 'metrics',
-                     'code': 'test_code',
-                     'message': 'You forgot to include the correct data.'}
+                    'code': 'test_code',
+                    'message': 'You forgot to include the correct data.'}
         log_id = self.add_log(log_data)
         log_model = session.query(TaskLogModel).filter(TaskLogModel.id == log_id).first()
 
