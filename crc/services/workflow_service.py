@@ -208,7 +208,8 @@ class WorkflowService(object):
                         WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                         if not WorkflowService.validate_form(task, task_api):
                             # In the process of completing the form, it is possible for fields to become required
-                            # based on later fields.  Re-run the validation to assure we complete the forms correctly.
+                            # based on later fields.  If the form has incomplete, but required fields (validate_form)
+                            # then try to populate the form again, with this new information.
                             WorkflowService.populate_form_with_random_data(task, task_api, required_only)
 
                     processor.complete_task(task)
