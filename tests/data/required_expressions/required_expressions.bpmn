@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1v1rp1q" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.10.0">
+  <bpmn:process id="Required" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_0lvudp8</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0lvudp8" sourceRef="StartEvent_1" targetRef="Task_Required_Fields" />
+    <bpmn:endEvent id="EndEvent_0q4qzl9">
+      <bpmn:incoming>Flow_0payrur</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_02vev7n" sourceRef="Task_Required_Fields" targetRef="Activity_0kbvgue" />
+    <bpmn:userTask id="Task_Required_Fields" name="Required fields" camunda:formKey="RequiredForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="required_if_true" label="&#39;String&#39;" type="string" defaultValue="&#39;some string&#39;">
+            <camunda:properties>
+              <camunda:property id="required_expression" value="boolean_field" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="boolean_field" label="&#39;My Boolean&#39;" type="boolean" defaultValue="True" />
+          <camunda:formField id="required_if_false" label="&#39;some label&#39;" type="string">
+            <camunda:properties>
+              <camunda:property id="required_expression" value="not boolean_field" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="always_set" type="string" defaultValue="&#34;always&#34;">
+            <camunda:properties>
+              <camunda:property id="hide_expression" value="True" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_0lvudp8</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_02vev7n</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0payrur" sourceRef="Activity_0kbvgue" targetRef="EndEvent_0q4qzl9" />
+    <bpmn:scriptTask id="Activity_0kbvgue" name="Verify Script">
+      <bpmn:incoming>SequenceFlow_02vev7n</bpmn:incoming>
+      <bpmn:outgoing>Flow_0payrur</bpmn:outgoing>
+      <bpmn:script># By directly referencing the variables
+# we can assure that whatever happens in
+# validation, we won't have an error.
+if boolean_field:
+  result = required_if_true
+else:
+  result = required_if_false
+
+# Note that hidden fields with a default
+# value should always exist.
+if not always_set == "always":
+  should_never_get_here
+</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Required">
+      <bpmndi:BPMNEdge id="SequenceFlow_02vev7n_di" bpmnElement="SequenceFlow_02vev7n">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="440" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0lvudp8_di" bpmnElement="SequenceFlow_0lvudp8">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0payrur_di" bpmnElement="Flow_0payrur">
+        <di:waypoint x="540" y="117" />
+        <di:waypoint x="592" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="UserTask_18ly1yq_di" bpmnElement="Task_Required_Fields">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0q4qzl9_di" bpmnElement="EndEvent_0q4qzl9">
+        <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ks06ox_di" bpmnElement="Activity_0kbvgue">
+        <dc:Bounds x="440" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

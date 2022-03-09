@@ -24,7 +24,6 @@ class FactService(Script):
         self.do_task(task, study_id, workflow_id, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, **kwargs):
-        print(task.data)
 
         if "type" not in task.data:
             raise Exception("No Fact Provided.")
@@ -41,6 +40,4 @@ class FactService(Script):
             details = "unknown fact type."
 
         #self.add_data_to_task(task, details)
-
-        print(details)
         return details
