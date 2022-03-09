@@ -33,8 +33,6 @@ pet_label = enum_label(task='task_pet_form',field='pet',value='1')    // might r
         # get the field information for the provided task_name (NOT the current task)
         workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
         field = self.find_field(task_name, field_name, spiff_task.workflow)
-        print(field)
-
         if field.type == Task.FIELD_TYPE_AUTO_COMPLETE:
             return self.lookup_label(workflow_model, task_name, field, value)
         elif field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME):

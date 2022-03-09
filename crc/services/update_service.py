@@ -31,7 +31,6 @@ SPEC_SCHEMA = WorkflowSpecModelSchema()
 
 def remove_all_json_files(path):
     for json_file in pathlib.Path(path).glob('*.json'):
-        print("removing ", json_file)
         os.remove(json_file)
 
 
@@ -41,7 +40,6 @@ def update_workflows_for_category(path, schemas, category_id):
         new_path = os.path.join(path, schema.id)
         if (os.path.exists(orig_path)):
             os.rename(orig_path, new_path)
-            print(new_path)
         update_spec(new_path, schema, category_id)
 
 

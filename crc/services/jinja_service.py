@@ -31,17 +31,36 @@ Please Introduce yourself.
 Hi Dan, This is a jinja template too!
 Cool Right?
 """
+    template_pattern = re.compile('{ ?% ?include\s*[\'\"](\w+)[\'\"]\s*?%}', re.DOTALL)
 
     @staticmethod
     def get_content(input_template, data):
-        templates = data
+        templates = {}
+        references = JinjaService.template_references(input_template)
+        for ref in references:
+            if ref in data.keys():
+                templates[ref] = data[ref]
+            else:
+                raise ApiError("missing_template", f"Your documentation imports a template that doest not exist: {ref}")
         templates['main_template'] = input_template
         jinja2_env = Environment(loader=DictLoader(templates))
-
         # We just make a call here and let any errors percolate up to the calling method
         template = jinja2_env.get_template('main_template')
-        return template.render(**data)
+        try:
+            result = template.render(**data)
+        except AttributeError as ae:
+            if str(ae) == '\'NoneType\' object has no attribute \'splitlines\'':
+                raise ApiError("template_error", "Error processing template.  You may have be using a wordwrap "
+                                                 "with a field that has no value.")
 
+        return result
+
+
+    @staticmethod
+    def template_references(input_template):
+        """Using regex, determine what other templates are included, and return a list of those names."""
+        matches = JinjaService.template_pattern.findall(input_template)
+        return matches
     #
     # The rest of this is for using Word documents as Jinja templates
     #

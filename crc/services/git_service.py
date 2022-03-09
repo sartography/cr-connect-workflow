@@ -66,7 +66,6 @@ class GitService(object):
             repo = self.setup_repo(remote_path, directory)
 
         except Exception as e:
-            print(e)
             app.logger.error(e)
             raise ApiError(code='unknown_exception',
                            message=f'There was an unknown exception. Original message is: {e}')
@@ -118,11 +117,11 @@ class GitService(object):
             try:
                 repo.remotes.origin.pull()
             except GitCommandError as ce:
-                print(ce)
+                raise ApiError(code='git_command_error',
+                               message='Error Running Git Command:' + str(ce))
         else:
             raise ApiError(code='dirty_repo',
                            message='You have modified or untracked files. Please fix this before attempting to pull.')
-        print(repo)
         return repo
 
     def merge_with_branch(self, branch):

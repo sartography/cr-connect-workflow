@@ -76,7 +76,22 @@ class TestJinjaService(BaseTest):
         self.assertEquals("Word Document creation error : unexpected '%'", ae.exception.message)
         self.assertEquals(14, ae.exception.line_number)
 
+    def test_find_template_references(self):
+        test_string = """
+        { % include 'template_1' %}
 
+        { % include
+        'template_2' %}
+        """
+        self.assertEqual(['template_1', 'template_2'], JinjaService().template_references(test_string))
+
+    def test_better_error_message_for_wordwrap(self):
+        data = {"my_val": None}
+        my_tempate = "{{my_val | wordwrap(70)}}"
+        with self.assertRaises(ApiError) as e:
+            result = JinjaService().get_content(my_tempate, data)
+        self.assertEqual(e.exception.message, 'Error processing template.  You may have be using a wordwrap '
+                                              'with a field that has no value.')
 
     def test_jinja_service_properties(self):
         pass
