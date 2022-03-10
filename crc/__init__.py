@@ -131,6 +131,8 @@ def validate_all(study_id, category=None, spec_id=None):
     from crc.models.user import UserModel
     from flask import g
 
+    logging.root.removeHandler(logging.root.handlers[0])
+
     study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
     g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
     g.token = "anything_is_fine_just_need_something."
@@ -147,11 +149,12 @@ def validate_all(study_id, category=None, spec_id=None):
         print(f"{spec.category.display_name} / {spec.id}")
         print("-----------------------------------------")
 
-        if spec_id in statuses and statuses[spec_id]['status'] == 'disabled':
+        if spec.id in statuses and statuses[spec.id]['status'] == 'disabled':
             print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
-
+            continue
         try:
             WorkflowService.test_spec(spec.id, validate_study_id=study_id)
+            print('Success!')
         except ApiError as e:
             if e.code == 'disabled_workflow':
                 print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
