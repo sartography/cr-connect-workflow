@@ -1,20 +1,22 @@
 from datetime import datetime
 
-from flask import g
+from flask import g, send_file
 from sqlalchemy.exc import IntegrityError
 
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
-from crc.models.protocol_builder import ProtocolBuilderStatus
-from crc.models.study import Study, StudyEvent, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
+from crc.models.study import Study, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
     StudyStatus, StudyAssociatedSchema
-from crc.models.task_log import TaskLogModelSchema, TaskLogQuery, TaskLogQuerySchema
+from crc.models.task_log import TaskLogQuery, TaskLogQuerySchema
+from crc.services.spreadsheet_service import SpreadsheetService
 from crc.services.study_service import StudyService
 from crc.services.task_logging_service import TaskLoggingService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 from crc.services.workflow_spec_service import WorkflowSpecService
+
+import io
 
 
 def add_study(body):
@@ -120,7 +122,18 @@ def get_logs_for_study(study_id, body):
 
 
 def download_logs_for_study(study_id):
-    logs = TaskLoggingService.download_all_logs_for_study(study_id)
+    title = f'Study {study_id}'
+    logs, headers = TaskLoggingService.get_all_logs_for_download(study_id)
+    spreadsheet = SpreadsheetService.create_spreadsheet(logs, headers, title)
+
+    return send_file(
+        io.BytesIO(spreadsheet),
+        attachment_filename='logs.xlsx',
+        mimetype='xlsx',
+        cache_timeout=-1,  # Don't cache these files on the browser.
+        last_modified=datetime.now(),
+        as_attachment=True
+    )
 
 
 def delete_study(study_id):
