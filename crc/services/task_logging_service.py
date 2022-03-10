@@ -1,22 +1,13 @@
-import markdown
-import re
-
-from flask import render_template
-from flask_mail import Message
-from jinja2 import Template
-from sqlalchemy import desc
-
-from crc import app, db, mail, session
+from crc import app, session
 from crc.api.common import ApiError
-
-from crc.models.email import EmailModel
-from crc.models.file import FileDataModel
-from crc.models.study import StudyModel
-from crc.models.task_log import TaskLogModel, TaskLogLevels, TaskLogQuery
-from crc.models.user import UserModel
-
-from crc.services.jinja_service import JinjaService
+from crc.models.task_log import TaskLogModel, TaskLogLevels, TaskLogQuery, TaskLogModelSchema
 from crc.services.user_service import UserService
+
+from sqlalchemy import desc
+from dateutil import tz
+
+import dateparser
+import pytz
 
 
 class TaskLoggingService(object):
@@ -84,10 +75,32 @@ class TaskLoggingService(object):
         return task_log_query
 
     @staticmethod
-    def download_all_logs_for_study(study_id):
-        # Admins can download the logs for a study as a csv file
+    def get_all_logs_for_download(study_id):
+        # Admins can download the metrics logs for a study as an Excel file
         # In this case, we don't want to paginate
-        # We also provide data that we don't include when displaying logs on the study page
-        query = session.query(TaskLogModel).filter(TaskLogModel.study_id == study_id).all()
+        logs = []
+        headers = []
+        result = session.query(TaskLogModel).\
+            filter(TaskLogModel.study_id == study_id).\
+            filter(TaskLogModel.level == 'metrics').\
+            all()
+        schemas = TaskLogModelSchema(many=True).dump(result)
+        # We only use these fields
+        fields = ['category', 'workflow', 'level', 'code', 'message', 'user_uid', 'timestamp', 'workflow_id', 'workflow_spec_id']
+        for schema in schemas:
+            # Build a dictionary using the items in fields
+            log = {}
+            for field in fields:
+                if field == 'timestamp':
+                    # Excel doesn't accept timezones,
+                    # so we return a local datetime without the timezone
+                    parsed_timestamp = dateparser.parse(str(schema['timestamp']))
+                    localtime = parsed_timestamp.astimezone(pytz.timezone('US/Eastern'))
+                    log[field] = localtime.strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    log[field] = schema[field]
+                if field.capitalize() not in headers:
+                    headers.append(field.capitalize())
+            logs.append(log)
 
-        print('download_all_logs_for_study')
+        return logs, headers
