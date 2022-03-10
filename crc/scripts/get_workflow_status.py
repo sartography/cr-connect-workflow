@@ -1,6 +1,6 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.workflow import WorkflowModel
+from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.scripts.script import Script
 
 
@@ -20,7 +20,7 @@ Examples:
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         if 'workflow_spec_id' in kwargs.keys() or len(args) > 0:
-            return 'not_started'
+            return WorkflowStatus.not_started.value
         else:
             raise ApiError.from_task(code='missing_argument',
                                      message='You must include a workflow_spec_id when calling the `get_workflow_status` script.',
@@ -39,7 +39,7 @@ Examples:
             if workflow_model:
                 return workflow_model.status.value
             else:
-                return f'No model found for workflow {workflow_spec_id}.'
+                return WorkflowStatus.not_started.value
 
         else:
             raise ApiError.from_task(code='missing_argument',
