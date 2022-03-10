@@ -4,7 +4,6 @@ from crc.models.task_log import TaskLogModel, TaskLogLevels, TaskLogQuery, TaskL
 from crc.services.user_service import UserService
 
 from sqlalchemy import desc
-from dateutil import tz
 
 import dateparser
 import pytz
@@ -94,6 +93,7 @@ class TaskLoggingService(object):
                 if field == 'timestamp':
                     # Excel doesn't accept timezones,
                     # so we return a local datetime without the timezone
+                    # TODO: detect the local timezone with something like dateutil.tz.tzlocal()
                     parsed_timestamp = dateparser.parse(str(schema['timestamp']))
                     localtime = parsed_timestamp.astimezone(pytz.timezone('US/Eastern'))
                     log[field] = localtime.strftime('%Y-%m-%d %H:%M:%S')
