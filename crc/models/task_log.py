@@ -20,6 +20,7 @@ class TaskLogLevels(enum.Enum, metaclass=MyEnumMeta):
     warning = 30
     info = 20
     debug = 10
+    metrics = 5
 
 
 class TaskLogModel(db.Model):

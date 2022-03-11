@@ -16,13 +16,13 @@ class TestGetWorkflowStatus(BaseTest):
     def test_get_workflow_status(self):
         self.create_workflow('random_fact')
         workflow_model_1 = session.query(WorkflowModel).filter(WorkflowModel.id == 1).first()
-        search_workflow_id = workflow_model_1.id
+        workflow_spec_id = workflow_model_1.workflow_spec_id
         workflow = self.create_workflow('get_workflow_status')
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
 
         # calls get_workflow_status(search_workflow_id)
-        workflow_api = self.complete_form(workflow, task, {'search_workflow_id': search_workflow_id})
+        workflow_api = self.complete_form(workflow, task, {'workflow_spec_id': workflow_spec_id})
         task = workflow_api.next_task
         self.assertEqual('Activity_StatusArg', task.name)
         self.assertEqual(task.data['status_arg'], workflow_model_1.status.value)

@@ -8,7 +8,7 @@
     <bpmn:scriptTask id="Activity_0y5dzit" name="Get Workflow Status Arg">
       <bpmn:incoming>Flow_0wp4z9u</bpmn:incoming>
       <bpmn:outgoing>Flow_0fl7rsj</bpmn:outgoing>
-      <bpmn:script>status_arg = get_workflow_status(search_workflow_id)</bpmn:script>
+      <bpmn:script>status_arg = get_workflow_status(workflow_spec_id)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0fl7rsj" sourceRef="Activity_0y5dzit" targetRef="Activity_StatusArg" />
     <bpmn:manualTask id="Activity_StatusArg" name="Display Workflow Status Arg">
@@ -21,7 +21,7 @@
     <bpmn:scriptTask id="Activity_09p0m5x" name="Get Workflow Status Kwarg">
       <bpmn:incoming>Flow_00x8h5p</bpmn:incoming>
       <bpmn:outgoing>Flow_0lt7dwr</bpmn:outgoing>
-      <bpmn:script>status_kwarg = get_workflow_status(search_workflow_id=search_workflow_id)</bpmn:script>
+      <bpmn:script>status_kwarg = get_workflow_status(workflow_spec_id=workflow_spec_id)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Activity_StatusKwarg" name="Display Workflow Status Kwarg">
       <bpmn:documentation># Status Kwarg
@@ -38,7 +38,7 @@
     <bpmn:userTask id="Activity_WorkflowID" name="Get Workflow ID" camunda:formKey="WorkflowIDForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="search_workflow_id" label="'Workflow ID'"  type="long" defaultValue="1">
+          <camunda:formField id="workflow_spec_id" label="&#39;Workflow Spec ID&#39;" type="string">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
@@ -51,6 +51,10 @@
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0k8r3a2">
+      <bpmndi:BPMNEdge id="Flow_0wp4z9u_di" bpmnElement="Flow_0wp4z9u">
+        <di:waypoint x="340" y="117" />
+        <di:waypoint x="410" y="117" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0eg806h_di" bpmnElement="Flow_0eg806h">
         <di:waypoint x="990" y="117" />
         <di:waypoint x="1052" y="117" />
@@ -71,21 +75,14 @@
         <di:waypoint x="188" y="117" />
         <di:waypoint x="240" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0wp4z9u_di" bpmnElement="Flow_0wp4z9u">
-        <di:waypoint x="340" y="117" />
-        <di:waypoint x="410" y="117" />
-      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0bsr1f1_di" bpmnElement="Activity_0y5dzit">
         <dc:Bounds x="410" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_18ywo1x_di" bpmnElement="Activity_StatusArg">
         <dc:Bounds x="570" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="152" y="99" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1s8egpj_di" bpmnElement="Activity_WorkflowID">
-        <dc:Bounds x="240" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0lhah9s_di" bpmnElement="Activity_09p0m5x">
         <dc:Bounds x="730" y="77" width="100" height="80" />
@@ -95,6 +92,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1nvmkni_di" bpmnElement="Event_1nvmkni">
         <dc:Bounds x="1052" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1s8egpj_di" bpmnElement="Activity_WorkflowID">
+        <dc:Bounds x="240" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

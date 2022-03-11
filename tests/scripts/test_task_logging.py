@@ -3,18 +3,27 @@ import json
 from tests.base_test import BaseTest
 
 from crc.models.user import UserModel
-from crc import session, WorkflowService
-from crc.models.api_models import Task, TaskSchema
-from crc.models.task_log import TaskLogModel, TaskLogModelSchema, TaskLogQuery, TaskLogQuerySchema
+from crc import session
+from crc.models.task_log import TaskLogModel, TaskLogQuery, TaskLogQuerySchema
 from crc.models.study import StudyModel
 from crc.scripts.log import TaskLog
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.task_logging_service import TaskLoggingService
 
-import types
-
 
 class TestTaskLogging(BaseTest):
+
+    def add_log(self, log_data):
+        workflow = self.create_workflow('logging_task')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        workflow_api = self.complete_form(workflow, task, log_data)
+        task = workflow_api.next_task
+
+        log_id = task.data['log_model']['id']
+
+        return log_id
 
     def test_logging_validation(self):
         self.load_test_spec('empty_workflow', master_spec=True)
@@ -24,16 +33,24 @@ class TestTaskLogging(BaseTest):
         self.assertEqual([], rv.json)
 
     def test_add_log(self):
-        workflow = self.create_workflow('logging_task')
-        workflow_api = self.get_workflow_api(workflow)
-        task = workflow_api.next_task
-
-        log_id = task.data['log_model']['id']
+        log_data = {'level': 'info',
+                    'code': 'test_code',
+                    'message': 'You forgot to include the correct data.'}
+        log_id = self.add_log(log_data)
         log_model = session.query(TaskLogModel).filter(TaskLogModel.id == log_id).first()
 
         self.assertEqual('test_code', log_model.code)
         self.assertEqual('info', log_model.level)
         self.assertEqual('Activity_LogEvent', log_model.task)
+
+    def test_add_metrics_log(self):
+        log_data = {'level': 'metrics',
+                    'code': 'test_code',
+                    'message': 'You forgot to include the correct data.'}
+        log_id = self.add_log(log_data)
+        log_model = session.query(TaskLogModel).filter(TaskLogModel.id == log_id).first()
+
+        self.assertEqual('metrics', log_model.level)
 
     def test_get_logging_validation(self):
         self.load_test_spec('empty_workflow', master_spec=True)
@@ -90,6 +107,12 @@ class TestTaskLogging(BaseTest):
     def test_logging_api(self):
         workflow = self.create_workflow('logging_task')
         workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        form_data = {'level': 'info',
+                     'code': 'test_code',
+                     'message': 'You forgot to include the correct data.'}
+        workflow_api = self.complete_form(workflow, task, form_data)
         task = workflow_api.next_task
 
         user = session.query(UserModel).filter_by(uid=self.test_uid).first()
