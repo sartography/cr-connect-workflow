@@ -118,12 +118,12 @@ def get_study_associates(study_id):
 def get_logs_for_study(study_id, body):
     task_log_query = TaskLogQuery(**body)
     return TaskLogQuerySchema().dump(
-        TaskLoggingService.get_logs_for_study(study_id, task_log_query))
+        TaskLoggingService.get_logs_for_study_paginated(study_id, task_log_query))
 
 
 def download_logs_for_study(study_id):
     title = f'Study {study_id}'
-    logs, headers = TaskLoggingService.get_all_logs_for_download(study_id)
+    logs, headers = TaskLoggingService.get_log_data_for_download(study_id)
     spreadsheet = SpreadsheetService.create_spreadsheet(logs, headers, title)
 
     return send_file(

@@ -37,14 +37,35 @@ class TaskLoggingService(object):
         session.commit()
         return log_model
 
-    @staticmethod
-    def get_logs_for_workflow(workflow_id, tq: TaskLogQuery):
-        """ Returns an updated TaskLogQuery, with items in reverse chronological order by default. """
-        query = session.query(TaskLogModel).filter(TaskLogModel.workflow_id == workflow_id)
-        return TaskLoggingService.__paginate(query, tq)
+    def get_logs_for_workflow(self, workflow_id: int, level: str = None, code: str = None, size: int = None):
+        logs = self.get_logs(workflow_id=workflow_id, level=level, code=code, size=size)
+        return logs
+
+    def get_logs_for_study(self, study_id: int, level: str = None, code: str = None, size: int = None):
+        logs = self.get_logs(study_id=study_id, level=level, code=code, size=size)
+        return logs
 
     @staticmethod
-    def get_logs_for_study(study_id, tq: TaskLogQuery):
+    def get_logs(study_id: int = None, workflow_id: int = None, level: str = None, code: str = None, size: int = None):
+        """We should almost always get a study_id or a workflow_id.
+           In *very* rare circumstances, an admin may want all the logs.
+           This could be a *lot* of logs."""
+        query = session.query(TaskLogModel)
+        if study_id:
+            query = query.filter(TaskLogModel.study_id == study_id)
+        if workflow_id:
+            query = query.filter(TaskLogModel.workflow_id == workflow_id)
+        if level:
+            query = query.filter(TaskLogModel.level == level)
+        if code:
+            query = query.filter(TaskLogModel.code == code)
+        if size:
+            query = query.limit(size)
+        logs = query.all()
+        return logs
+
+    @staticmethod
+    def get_logs_for_study_paginated(study_id, tq: TaskLogQuery):
         """ Returns an updated TaskLogQuery, with items in reverse chronological order by default. """
         query = session.query(TaskLogModel).filter(TaskLogModel.study_id == study_id)
         return TaskLoggingService.__paginate(query, tq)
@@ -74,9 +95,9 @@ class TaskLoggingService(object):
         return task_log_query
 
     @staticmethod
-    def get_all_logs_for_download(study_id):
+    def get_log_data_for_download(study_id):
         # Admins can download the metrics logs for a study as an Excel file
-        # In this case, we don't want to paginate
+        # We only use a subset of the fields
         logs = []
         headers = []
         result = session.query(TaskLogModel).\
