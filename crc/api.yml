@@ -1225,34 +1225,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
-  /workflow/{workflow_id}/log:
-    parameters:
-      - name: workflow_id
-        in: path
-        required: true
-        description: The id of the workflow for which logs should be returned.
-        schema:
-          type: integer
-          format: int32
-    put:
-      operationId: crc.api.workflow.get_logs_for_workflow
-      summary: Provides a paginated list of logged events that occured within a study,
-      tags:
-        - Workflows and Tasks
-      requestBody:
-        description: Log Pagination Request
-        required: true
-        content:
-          application/json:
-            schema:
-                $ref: "#/components/schemas/PaginatedTaskLog"
-      responses:
-        '200':
-          description: list of logs - events that have occured within a specific workflow.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedTaskLog"
   /workflow/{workflow_id}/task/{task_id}/data:
     parameters:
       - name: workflow_id

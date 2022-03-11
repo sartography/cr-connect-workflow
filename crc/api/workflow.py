@@ -422,9 +422,3 @@ def _verify_user_and_role(processor, spiff_task):
         raise ApiError.from_task("permission_denied",
                                  f"This task must be completed by '{allowed_users}', "
                                  f"but you are {user.uid}", spiff_task)
-
-
-def get_logs_for_workflow(workflow_id, body):
-    task_log_query = TaskLogQuery(**body)
-    return TaskLogQuerySchema().dump(
-        TaskLoggingService.get_logs_for_workflow(workflow_id, task_log_query))
