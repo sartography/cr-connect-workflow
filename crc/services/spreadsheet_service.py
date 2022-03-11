@@ -1,11 +1,13 @@
 from openpyxl import Workbook
 from tempfile import NamedTemporaryFile
 
+from typing import List
+
 
 class SpreadsheetService(object):
 
     @staticmethod
-    def create_spreadsheet(data: list[dict], headers: list[str] = None, title: str = None):
+    def create_spreadsheet(data: List[dict], headers: List[str] = None, title: str = None):
         """The length of headers must be the same as the number of items in the dictionaries,
            and the order must match up.
            The title is used for the worksheet, not the filename."""

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_e3059e6" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_e3059e6" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.10.0">
   <bpmn:process id="Process_LoggingTask" name="Logging Task" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0d5wpav</bpmn:outgoing>
@@ -37,14 +37,14 @@ log_model_debug = log(level='debug', code='debug_test_code', message='This is my
     <bpmn:scriptTask id="Activity_GetLoggingPre" name="Get Logging Pre">
       <bpmn:incoming>Flow_0d5wpav</bpmn:incoming>
       <bpmn:outgoing>Flow_0pc42yp</bpmn:outgoing>
-      <bpmn:script>logging_models_pre = get_logs()</bpmn:script>
+      <bpmn:script>logging_models_pre = get_logs_for_workflow()</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_GetLoggingPost" name="Get Logging Post">
       <bpmn:incoming>Flow_0n34cdi</bpmn:incoming>
       <bpmn:outgoing>Flow_07j4f0v</bpmn:outgoing>
-      <bpmn:script>logging_models_all_post = get_logs()
-logging_models_info_post = get_logs('test_code')
-logging_models_debug_post = get_logs('debug_test_code')</bpmn:script>
+      <bpmn:script>logging_models_all_post = get_logs_for_workflow()
+logging_models_info_post = get_logs_for_workflow(code='test_code')
+logging_models_debug_post = get_logs_for_workflow(code='debug_test_code')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0d5wpav" sourceRef="StartEvent_1" targetRef="Activity_GetLoggingPre" />
     <bpmn:sequenceFlow id="Flow_0pc42yp" sourceRef="Activity_GetLoggingPre" targetRef="Activity_LogEvent" />
