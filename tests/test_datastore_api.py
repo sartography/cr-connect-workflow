@@ -106,6 +106,21 @@ class DataStoreTest(BaseTest):
         studyreponse = session.query(DataStoreModel).filter_by(id=oldid).first()
         self.assertEqual(studyreponse,None)
 
+    def test_delete_study_with_datastore(self):
+        study = self.create_study()
+        study_data = DataStoreSchema().dump(self.TEST_STUDY_ITEM)
+        study_data['study_id'] = study.id
+        self.assertEqual(0, session.query(DataStoreModel).count())
+        rv = self.app.post('/v1.0/datastore',
+                           content_type="application/json",
+                           headers=self.logged_in_headers(),
+                           data=json.dumps(study_data))
+        self.assertEqual(1, session.query(DataStoreModel).count())
+        rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
+        self.assertEqual(0, session.query(DataStoreModel).count())
+
+
+
     def test_data_crosstalk(self):
         """Test to make sure that data saved for user or study is not accessible from the other method"""
 
