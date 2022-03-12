@@ -231,7 +231,6 @@ class StudyService(object):
         session.query(StudyAssociated).filter_by(study_id=study_id).delete()
         session.query(EmailModel).filter_by(study_id=study_id).delete()
         session.query(StudyEvent).filter_by(study_id=study_id).delete()
-        session.query(DataStoreModel).filter_by(study_id=study_id).delete()
         for workflow in session.query(WorkflowModel).filter_by(study_id=study_id):
             StudyService.delete_workflow(workflow.id)
         study = session.query(StudyModel).filter_by(id=study_id).first()
