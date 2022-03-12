@@ -32,7 +32,8 @@ class ProgressStatus(enum.Enum):
     approved_with_conditions = 'approved_with_conditions'
     deferred = 'deferred'
     disapproved = 'disapproved'
-
+    ready_for_pre_review = 'ready_for_pre_review'
+    resubmitted_for_pre_review = 'resubmitted_for_pre_review'
 
 class IrbStatus(enum.Enum):
     incomplete_in_protocol_builder = 'incomplete in protocol builder'
