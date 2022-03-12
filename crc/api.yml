@@ -293,7 +293,7 @@ paths:
         schema:
           type: integer
           format: int32
-    put:
+    get:
       operationId: crc.api.study.download_logs_for_study
       summary: Returns a csv file of logged events that occured within a study
       tags:
