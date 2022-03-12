@@ -130,14 +130,6 @@ class TestTaskLogging(BaseTest):
         self.assertEqual(self.test_uid, logs[0]['user_uid'])
         self.assertEqual('You forgot to include the correct data.', logs[0]['message'])
 
-        url = f'/v1.0/workflow/{workflow.id}/log'
-        rv = self.app.put(url, headers=self.logged_in_headers(user), content_type="application/json",
-                          data=TaskLogQuerySchema().dump(task_log_query))
-
-        self.assert_success(rv)
-        wf_logs = json.loads(rv.get_data(as_text=True))['items']
-        self.assertEqual(wf_logs, logs, "Logs returned for the workflow should be identical to those returned from study")
-
     def test_logging_service_paginates_and_sorts(self):
         self.add_studies()
         study = session.query(StudyModel).first()
@@ -155,22 +147,24 @@ class TestTaskLogging(BaseTest):
             TaskLog().do_task(task, study.id, workflow_model.id, level='info', code='debug_code',
                               message=f'This is my info message # {i}.')
 
-        results = TaskLoggingService.get_logs_for_study(study.id, TaskLogQuery(per_page=100))
+        results = TaskLoggingService().get_logs_for_study_paginated(study.id, TaskLogQuery(per_page=100))
         self.assertEqual(40, len(results.items), "There should be 40 logs total")
 
-        logs = TaskLoggingService.get_logs_for_study(study.id, TaskLogQuery(per_page=5))
+        logs = TaskLoggingService().get_logs_for_study_paginated(study.id, TaskLogQuery(per_page=5))
         self.assertEqual(40, logs.total)
         self.assertEqual(5, len(logs.items), "I can limit results to 5")
-        self.assertEqual(1, logs.page)
+        self.assertEqual(0, logs.page)
         self.assertEqual(8, logs.pages)
         self.assertEqual(5, logs.per_page)
         self.assertEqual(True, logs.has_next)
         self.assertEqual(False, logs.has_prev)
 
-        logs = TaskLoggingService.get_logs_for_study(study.id, TaskLogQuery(per_page=5, sort_column="level"))
+        logs = TaskLoggingService.get_logs_for_study_paginated(study.id, TaskLogQuery(per_page=5, sort_column="level"))
         for i in range(0, 5):
             self.assertEqual('critical', logs.items[i].level, "It is possible to sort on a column")
 
-        logs = TaskLoggingService.get_logs_for_study(study.id, TaskLogQuery(per_page=5, sort_column="level", sort_reverse=True))
+        logs = TaskLoggingService.get_logs_for_study_paginated(study.id, TaskLogQuery(per_page=5, sort_column="level", sort_reverse=True))
         for i in range(0, 5):
             self.assertEqual('info', logs.items[i].level, "It is possible to sort on a column")
+
+
