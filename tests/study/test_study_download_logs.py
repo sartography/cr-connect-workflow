@@ -1,7 +1,10 @@
+import json
+
 from tests.base_test import BaseTest
 
 from crc import session
-from crc.models.task_log import TaskLogModel
+from crc.models.task_log import TaskLogModel, TaskLogQuery, TaskLogQuerySchema
+from crc.models.user import UserModel
 
 from openpyxl import load_workbook
 from io import BytesIO
@@ -40,10 +43,19 @@ class TestDownloadLogsForStudy(BaseTest):
                     'message': 'This is a third message.'}
         self.add_log(study_id, workflow.id, task.name, 'empty_workflow', log_data)
 
-        rv = self.app.get(f'/v1.0/study/{study_id}/log/download',
-                          content_type="application/json",
-                          headers=self.logged_in_headers())
+        # Run the query, which should include a 'download_url' link that we can click on.
+        url = f'/v1.0/study/{workflow.study_id}/log'
+        task_log_query = TaskLogQuery()
+        user = session.query(UserModel).filter_by(uid=self.test_uid).first()
+        rv = self.app.put(url, headers=self.logged_in_headers(user), content_type="application/json",
+                          data=TaskLogQuerySchema().dump(task_log_query))
+        self.assert_success(rv)
+        log_query = json.loads(rv.get_data(as_text=True))
+        self.assertIsNotNone(log_query['download_url'])
 
+        # Use the provided link to get the file.
+        rv = self.app.get(log_query['download_url'])
+        self.assert_success(rv)
         wb = load_workbook(BytesIO(rv.data))
         ws = wb.active
 

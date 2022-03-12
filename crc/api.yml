@@ -293,14 +293,21 @@ paths:
         schema:
           type: integer
           format: int32
+      - name : auth_token
+        in : query
+        required : true
+        description : User Auth Toeken
+        schema:
+          type: string
     get:
       operationId: crc.api.study.download_logs_for_study
       summary: Returns a csv file of logged events that occured within a study
+      security: [] # Will verify manually with provided Auth Token.
       tags:
         - Studies
       responses:
         '200':
-          description: Returns the csv file of logged events
+          description: Returns the spreadsheet file of logged events
           content:
             application/octet-stream:
               schema:

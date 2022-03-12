@@ -89,7 +89,7 @@ class TaskLoggingService(object):
             sort_column = desc(task_log_query.sort_column)
         else:
             sort_column = task_log_query.sort_column
-        paginator = sql_query.order_by(sort_column).paginate(task_log_query.page, task_log_query.per_page,
+        paginator = sql_query.order_by(sort_column).paginate(task_log_query.page + 1, task_log_query.per_page,
                                                              error_out=False)
         task_log_query.update_from_sqlalchemy_paginator(paginator)
         return task_log_query

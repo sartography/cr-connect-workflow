@@ -153,7 +153,7 @@ class TestTaskLogging(BaseTest):
         logs = TaskLoggingService().get_logs_for_study_paginated(study.id, TaskLogQuery(per_page=5))
         self.assertEqual(40, logs.total)
         self.assertEqual(5, len(logs.items), "I can limit results to 5")
-        self.assertEqual(1, logs.page)
+        self.assertEqual(0, logs.page)
         self.assertEqual(8, logs.pages)
         self.assertEqual(5, logs.per_page)
         self.assertEqual(True, logs.has_next)
@@ -166,3 +166,5 @@ class TestTaskLogging(BaseTest):
         logs = TaskLoggingService.get_logs_for_study_paginated(study.id, TaskLogQuery(per_page=5, sort_column="level", sort_reverse=True))
         for i in range(0, 5):
             self.assertEqual('info', logs.items[i].level, "It is possible to sort on a column")
+
+

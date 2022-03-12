@@ -2,7 +2,6 @@ from datetime import datetime
 
 from flask import g, send_file
 from sqlalchemy.exc import IntegrityError
-
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.study import Study, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
@@ -15,6 +14,7 @@ from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 from crc.services.workflow_spec_service import WorkflowSpecService
+from crc.api.user import verify_token
 
 import io
 
@@ -117,11 +117,16 @@ def get_study_associates(study_id):
 
 def get_logs_for_study(study_id, body):
     task_log_query = TaskLogQuery(**body)
+    task_log_query.study_id = study_id  # Force the study id
     return TaskLogQuerySchema().dump(
         TaskLoggingService.get_logs_for_study_paginated(study_id, task_log_query))
 
 
-def download_logs_for_study(study_id):
+def download_logs_for_study(study_id, auth_token):
+    # Download links incorporate an auth token in the request for direct download
+    if not verify_token(auth_token):
+        raise ApiError('not_authenticated', 'You need to include an authorization token in the URL with this')
+
     title = f'Study {study_id}'
     logs, headers = TaskLoggingService.get_log_data_for_download(study_id)
     spreadsheet = SpreadsheetService.create_spreadsheet(logs, headers, title)

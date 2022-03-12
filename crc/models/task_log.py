@@ -1,6 +1,10 @@
 import enum
+import urllib
 
+import flask
 import marshmallow
+from flask import url_for
+from marshmallow.fields import Method
 
 from crc import db, ma
 from crc.models.study import StudyModel
@@ -62,9 +66,10 @@ class TaskLogModelSchema(ma.Schema):
 class TaskLogQuery:
     """Encapsulates the paginated queries and results when retrieving and filtering task logs over the
     API"""
-    def __init__(self, code="", level="", user="", page=1, per_page=10,
+    def __init__(self, study_id=None, code="", level="", user="", page=0, per_page=10,
                  sort_column=None, sort_reverse=False, items=None,
-                 pages=0, total=0, has_next=False, has_prev=False):
+                 pages=0, total=0, has_next=False, has_prev=False, download_url=None):
+        self.study_id = study_id  # Filter on Study.
         self.code = code  # Filter on code.
         self.level = level  # Filter on level.
         self.user = user  # Filter on user.
@@ -77,11 +82,12 @@ class TaskLogQuery:
         self.pages = pages
         self.has_next = False
         self.has_prev = False
+        self.download_url = None
 
     def update_from_sqlalchemy_paginator(self, paginator):
         """Updates this with results that are returned from the paginator"""
         self.items = paginator.items
-        self.page = paginator.page
+        self.page = paginator.page - 1
         self.per_page = paginator.per_page
         self.pages = paginator.pages
         self.has_next = paginator.has_next
@@ -94,5 +100,18 @@ class TaskLogQuerySchema(ma.Schema):
         model = TaskLogModel
         fields = ["code", "level", "user",
                   "page", "per_page", "sort_column", "sort_reverse", "items", "pages", "total",
-                  "has_next", "has_prev"]
+                  "has_next", "has_prev", "download_url"]
     items = marshmallow.fields.List(marshmallow.fields.Nested(TaskLogModelSchema))
+    download_url = Method("get_url")
+
+    def get_url(self, obj):
+        token = 'not_available'
+        if hasattr(obj, 'study_id') and obj.study_id is not None:
+            file_url = url_for("/v1_0.crc_api_study_download_logs_for_study", study_id=obj.study_id, _external=True)
+            if hasattr(flask.g, 'user'):
+                token = flask.g.user.encode_auth_token()
+            url = file_url + '?auth_token=' + urllib.parse.quote_plus(token)
+            return url
+        else:
+            return ""
+
