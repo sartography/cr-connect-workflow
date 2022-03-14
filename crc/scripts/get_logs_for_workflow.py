@@ -43,6 +43,4 @@ class GetLogsByWorkflow(Script):
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         level, code, size = self.get_parameters(args, kwargs)
         log_models = TaskLoggingService().get_logs_for_workflow(workflow_id=workflow_id, level=level, code=code, size=size)
-        # query = TaskLogQuery(code=code, per_page=size)
-        # log_models = TaskLoggingService.get_logs_for_workflow(workflow_id, query).items
         return TaskLogModelSchema(many=True).dump(log_models)
