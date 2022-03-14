@@ -1,7 +1,5 @@
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 
-from crc import session
-from crc.api.common import ApiError
 from crc.models.task_log import TaskLogModel, TaskLogModelSchema, TaskLogLevels
 from crc.scripts.script import Script
 from crc.services.task_logging_service import TaskLoggingService
@@ -45,8 +43,6 @@ class TaskLog(Script):
             raise WorkflowTaskExecException(task, 'You must include a level, code, and message'
                                                   ' when calling the log() script')
 
-
-
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         level, code, message = self.get_arguments(task, *args, **kwargs)
         log_model = TaskLogModel(level=level,
@@ -61,4 +57,3 @@ class TaskLog(Script):
         level, code, message = self.get_arguments(task, *args, **kwargs)
         log_model = TaskLoggingService.add_log(task, level, code, message, study_id, workflow_id)
         return TaskLogModelSchema().dump(log_model)
-
