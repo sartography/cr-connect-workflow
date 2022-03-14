@@ -39,7 +39,8 @@ Cool Right?
         references = JinjaService.template_references(input_template)
         for ref in references:
             if ref in data.keys():
-                templates[ref] = data[ref]
+                sub_content = JinjaService.get_content(data[ref], data)
+                templates[ref] = sub_content
             else:
                 raise ApiError("missing_template", f"Your documentation imports a template that doest not exist: {ref}")
         templates['main_template'] = input_template
