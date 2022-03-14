@@ -1,8 +1,6 @@
 import os
 from io import BytesIO
 
-from lxml import etree
-
 from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
@@ -29,6 +27,27 @@ class TestJinjaService(BaseTest):
         docs = WorkflowService._process_documentation(task)
         self.assertEqual("Hi Dan, This is a jinja template too! Cool Right?", docs)
 
+    def test_jinja_service_included_includes(self):
+        """This is an obnoxious test for nested includes.
+           Also tests for multiple includes within a single template"""
+        workflow = self.create_workflow('random_fact')
+        processor = WorkflowProcessor(workflow)
+        processor.do_engine_steps()
+
+        task = processor.next_task()
+        data = {"my_template": "Hi {% include 'my_name_template' %} from {% include 'my_org_template' %},\n{% include 'my_content_template' %}",
+                "my_name_template": "{{name}}",
+                "my_org_template": "{{org}}",
+                "my_content_template": "This is an included {% include 'my_jinja_template' %} template too!",
+                "my_jinja_template": "Jinja",
+                "name": "Dan",
+                "org": "Bucky's"}
+        task.data = data
+        task.task_spec.documentation = """This is an included template:\n {% include 'my_template' %} \nCool Right?"""
+        docs = WorkflowService._process_documentation(task)
+
+        self.assertEqual('This is an included template:\n Hi Dan from Bucky\'s,\nThis is an included Jinja template too! \nCool Right?', docs)
+
     def test_jinja_service_email(self):
         workflow = self.create_workflow('jinja_email')
         workflow_api = self.get_workflow_api(workflow)
@@ -45,8 +64,6 @@ class TestJinjaService(BaseTest):
             self.assertIn("# Email Model", workflow_api.next_task.documentation)
             self.assertIn("My Email Subject", workflow_api.next_task.documentation)
             self.assertIn("user@example.com", workflow_api.next_task.documentation)
-
-            print(f'test_jinja_service_email: {workflow_api.next_task.data}')
 
     def test_jinja_service_tools_markdown(self):
         template = "This is my template. {% include 'include_me' %} Was something included?"
