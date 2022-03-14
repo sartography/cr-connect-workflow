@@ -42,6 +42,7 @@ class TestTaskLogging(BaseTest):
         self.assertEqual('test_code', log_model.code)
         self.assertEqual('info', log_model.level)
         self.assertEqual('Activity_LogEvent', log_model.task)
+        self.assertEqual('logging_task', log_model.workflow_spec_id)
 
     def test_add_metrics_log(self):
         log_data = {'level': 'metrics',
@@ -51,6 +52,7 @@ class TestTaskLogging(BaseTest):
         log_model = session.query(TaskLogModel).filter(TaskLogModel.id == log_id).first()
 
         self.assertEqual('metrics', log_model.level)
+        self.assertEqual('logging_task', log_model.workflow_spec_id)
 
     def test_get_logging_validation(self):
         self.load_test_spec('empty_workflow', master_spec=True)
@@ -71,6 +73,10 @@ class TestTaskLogging(BaseTest):
         self.assertIn(task.data['logging_models_debug_post'][0], task.data['logging_models_all_post'])
         self.assertEqual('test_code', task.data['logging_models_info_post'][0]['code'])
         self.assertEqual('debug_test_code', task.data['logging_models_debug_post'][0]['code'])
+        self.assertEqual('Test Workflows', task.data['logging_models_info_post'][0]['category'])
+        self.assertEqual('Test Workflows', task.data['logging_models_debug_post'][0]['category'])
+        self.assertEqual('get_logging', task.data['logging_models_info_post'][0]['workflow'])
+        self.assertEqual('get_logging', task.data['logging_models_debug_post'][0]['workflow'])
 
     def test_get_logs_for_study(self):
         self.add_studies()
@@ -102,7 +108,11 @@ class TestTaskLogging(BaseTest):
         workflow_logs = task_api.data['workflow_logs']
         study_logs = task_api.data['study_logs']
         self.assertEqual(3, len(workflow_logs))
+        self.assertEqual('Test Workflows', workflow_logs[0]['category'])
+        self.assertEqual('get_logging_for_study', workflow_logs[0]['workflow'])
         self.assertEqual(5, len(study_logs))
+        self.assertEqual('Test Workflows', study_logs[0]['category'])
+        self.assertEqual('hello_world', study_logs[0]['workflow'])
 
     def test_logging_api(self):
         workflow = self.create_workflow('logging_task')
@@ -129,6 +139,8 @@ class TestTaskLogging(BaseTest):
         self.assertEqual('info', logs[0]['level'])
         self.assertEqual(self.test_uid, logs[0]['user_uid'])
         self.assertEqual('You forgot to include the correct data.', logs[0]['message'])
+        self.assertEqual('Test Workflows', logs[0]['category'])
+        self.assertEqual('logging_task', logs[0]['workflow'])
 
     def test_logging_service_paginates_and_sorts(self):
         self.add_studies()
