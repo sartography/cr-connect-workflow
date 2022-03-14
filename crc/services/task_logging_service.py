@@ -1,6 +1,7 @@
 from crc import app, session
 from crc.api.common import ApiError
 from crc.models.task_log import TaskLogModel, TaskLogLevels, TaskLogQuery, TaskLogModelSchema
+from crc.models.workflow import WorkflowModel
 from crc.services.user_service import UserService
 
 from sqlalchemy import desc
@@ -24,15 +25,22 @@ class TaskLoggingService(object):
             user_uid = UserService.current_user().uid
         except ApiError as e:
             user_uid = "unknown"
-        log_message = f"Workflow {workflow_id}, study {study_id}, task {task.get_name()}, user {user_uid}: {message}"
+        if workflow_id:
+            workflow_spec_id = session.query(WorkflowModel.workflow_spec_id).\
+                filter(WorkflowModel.id == workflow_id).\
+                scalar()
+        else:
+            workflow_spec_id = None
+        log_message = f"Workflow Spec {workflow_spec_id}, study {study_id}, task {task.get_name()}, user {user_uid}: {message}"
         app.logger.log(TaskLogLevels[level].value, log_message)
         log_model = TaskLogModel(level=level,
                                  code=code,
-                                 user_uid=user_uid,
                                  message=message,
                                  study_id=study_id,
                                  workflow_id=workflow_id,
-                                 task=task.get_name())
+                                 task=task.get_name(),
+                                 user_uid=user_uid,
+                                 workflow_spec_id=workflow_spec_id)
         session.add(log_model)
         session.commit()
         return log_model
