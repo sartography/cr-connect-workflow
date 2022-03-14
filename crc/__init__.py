@@ -159,7 +159,7 @@ def validate_all(study_id, category=None, spec_id=None):
             if e.code == 'disabled_workflow':
                 print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
             else:
-                print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}")
+                print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}. {e.message}")
                 continue
         except WorkflowTaskExecException as e:
             print(f"Workflow Error, {e}, in Task {e.task.name} validate workflow {spec.id} in Category {spec.category.display_name}")

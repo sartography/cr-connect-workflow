@@ -14,7 +14,8 @@ import sentry_sdk
 class ApiError(Exception):
     def __init__(self, code, message, status_code=400,
                  file_name="", task_id="", task_name="", tag="",
-                 task_data=None, error_type="", error_line="", line_number=0,  offset=0):
+                 task_data=None, error_type="", error_line="", line_number=0, offset=0,
+                 task_trace=[]):
         if task_data is None:
             task_data = {}
         self.status_code = status_code
@@ -29,6 +30,8 @@ class ApiError(Exception):
         self.offset = offset
         self.error_type = error_type
         self.error_line = error_line
+        self.task_stack = task_trace
+
         try:
             user = g.user.uid
         except Exception as e:
@@ -49,7 +52,8 @@ class ApiError(Exception):
         return msg
 
     @classmethod
-    def from_task(cls, code, message, task, status_code=400, line_number=0, offset=0, error_type="", error_line=""):
+    def from_task(cls, code, message, task, status_code=400, line_number=0, offset=0, error_type="", error_line="",
+                  task_trace=None):
         """Constructs an API Error with details pulled from the current task."""
         instance = cls(code, message, status_code=status_code)
         instance.task_id = task.task_spec.name or ""
@@ -59,6 +63,10 @@ class ApiError(Exception):
         instance.offset = offset
         instance.error_type = error_type
         instance.error_line = error_line
+        if task_trace:
+            instance.task_trace = task_trace
+        else:
+            instance.task_trace = WorkflowTaskExecException.get_task_trace(task)
 
         # Fixme: spiffworkflow is doing something weird where task ends up referenced in the data in some cases.
         if "task" in task.data:
@@ -108,7 +116,8 @@ class ApiError(Exception):
             return ApiError.from_task(code, message, exp.task, line_number=exp.line_number,
                                       offset=exp.offset,
                                       error_type=exp.exception.__class__.__name__,
-                                      error_line=exp.error_line)
+                                      error_line=exp.error_line,
+                                      task_trace=exp.task_trace)
 
         else:
             return ApiError.from_task_spec(code, message, exp.sender)
@@ -117,7 +126,8 @@ class ApiError(Exception):
 class ApiErrorSchema(ma.Schema):
     class Meta:
         fields = ("code", "message", "workflow_name", "file_name", "task_name", "task_id",
-                  "task_data", "task_user", "hint", "line_number", "offset", "error_type", "error_line")
+                  "task_data", "task_user", "hint", "line_number", "offset", "error_type",
+                  "error_line", "task_trace")
 
 
 @app.errorhandler(ApiError)

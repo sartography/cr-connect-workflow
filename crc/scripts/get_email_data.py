@@ -1,3 +1,5 @@
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
+
 from crc.scripts.script import Script
 from crc.api.common import ApiError
 from crc import session
@@ -26,9 +28,8 @@ class EmailData(Script):
             return EmailModelSchema(many=True).dump([email_model])
 
         else:
-            raise ApiError.from_task(code='missing_email_id',
-                                     message='You must include an email_id or workflow_spec_id with the get_email_data script.',
-                                     task=task)
+            raise WorkflowTaskExecException(task, f'get_email_data() failed. You must include an email_id or '
+                                                  f'workflow_spec_id with the get_email_data script.')
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         email_models = None
@@ -41,9 +42,8 @@ class EmailData(Script):
                 .filter(EmailModel.workflow_spec_id == str(kwargs['workflow_spec_id']))\
                 .all()
         else:
-            raise ApiError.from_task(code='missing_email_id',
-                                     message='You must include an email_id or workflow_spec_id with the get_email_data script.',
-                                     task=task)
+            raise WorkflowTaskExecException(task, f'get_email_data() failed. You must include an email_id or '
+                                                  f'workflow_spec_id with the get_email_data script.')
 
         if email_models:
             email_data = EmailModelSchema(many=True).dump(email_models)

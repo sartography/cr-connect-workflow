@@ -1,4 +1,5 @@
 import requests
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
 
 from crc import db
 from crc.api.common import ApiError
@@ -35,8 +36,7 @@ update_study(title=PIComputingID.label, short_title="Really Short Name")
 
     def __update_study(self, task, study, *args, **kwargs):
         if len(kwargs.keys()) < 1:
-            raise ApiError.from_task("missing_argument", self.argument_error_message,
-                                     task=task)
+            raise WorkflowTaskExecException(task, f"update_study() failed.  {self.argument_error_message}")
 
         for arg in kwargs.keys():
             if arg.lower() == "title":
@@ -50,5 +50,4 @@ update_study(title=PIComputingID.label, short_title="Really Short Name")
             elif arg.lower() == "pi":
                 study.primary_investigator_id = kwargs[arg]
             else:
-                raise ApiError.from_task("invalid_argument", self.argument_error_message,
-                                         task=task)
+                raise WorkflowTaskExecException(task, f"update_study() failed.  {self.argument_error_message}")

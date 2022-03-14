@@ -1,3 +1,5 @@
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
+
 from crc.scripts.script import Script
 from crc.api.common import ApiError
 
@@ -19,6 +21,5 @@ class IRBInfo(Script):
         if irb_info:
             return irb_info
         else:
-            raise ApiError.from_task(code='missing_irb_info',
-                                     message=f'There was a problem retrieving IRB Info for study {study_id}.',
-                                     task=task)
+            raise WorkflowTaskExecException(task, f'get_irb_info failed.  There was a problem retrieving IRB Info'
+                                                  f' for study {study_id}.')

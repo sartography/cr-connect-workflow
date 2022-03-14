@@ -1,3 +1,5 @@
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
+
 from crc import session
 from crc.api.common import ApiError
 from crc.models.workflow import WorkflowModel, WorkflowStatus
@@ -22,9 +24,8 @@ Examples:
         if 'workflow_spec_id' in kwargs.keys() or len(args) > 0:
             return WorkflowStatus.not_started.value
         else:
-            raise ApiError.from_task(code='missing_argument',
-                                     message='You must include a workflow_spec_id when calling the `get_workflow_status` script.',
-                                     task=task)
+            raise WorkflowTaskExecException(task, f'get_workflow_status() failed. You must include a workflow_spec_id'
+                                                  f' when calling the `get_workflow_status` script.')
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         if 'workflow_spec_id' in kwargs.keys() or len(args) > 0:
@@ -42,6 +43,5 @@ Examples:
                 return WorkflowStatus.not_started.value
 
         else:
-            raise ApiError.from_task(code='missing_argument',
-                                     message='You must include a workflow_spec_id when calling the `get_workflow_status` script.',
-                                     task=task)
+            raise WorkflowTaskExecException(task, f'get_workflow_status() failed. You must include a workflow_spec_id'
+                                                  f' when calling the `get_workflow_status` script.')
