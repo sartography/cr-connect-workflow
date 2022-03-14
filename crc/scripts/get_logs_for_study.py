@@ -13,7 +13,7 @@ class GetLogsByWorkflow(Script):
         """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        log_model = TaskLogModel(level='info',
+        log_model = TaskLogModel(level='metrics',
                                  code='mocked_code',
                                  message='This is my logging message',
                                  study_id=study_id,
@@ -22,17 +22,21 @@ class GetLogsByWorkflow(Script):
         return TaskLogModelSchema(many=True).dump([log_model])
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
+        level = None
         code = None
-        size = 10
+        size = None
+        if 'level' in kwargs:
+            level = kwargs['level']
+        elif len(args) > 0:
+            level = args[0]
         if 'code' in kwargs:
             code = kwargs['code']
-        elif len(args) > 0:
-            code = args[0]
+        elif len(args) > 1:
+            code = args[1]
         if 'size' in kwargs:
             size = kwargs['size']
-        elif len(args) > 1:
-            size = args[1]
+        elif len(args) > 2:
+            size = args[2]
 
-        query = TaskLogQuery(code=code, per_page=size)
-        log_models = TaskLoggingService.get_logs_for_study(study_id, query).items
+        log_models = TaskLoggingService().get_logs_for_study(study_id, level, code, size)
         return TaskLogModelSchema(many=True).dump(log_models)

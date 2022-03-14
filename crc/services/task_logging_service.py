@@ -1,22 +1,12 @@
-import markdown
-import re
+from crc import app, session
+from crc.api.common import ApiError
+from crc.models.task_log import TaskLogModel, TaskLogLevels, TaskLogQuery, TaskLogModelSchema
+from crc.services.user_service import UserService
 
-from flask import render_template
-from flask_mail import Message
-from jinja2 import Template
 from sqlalchemy import desc
 
-from crc import app, db, mail, session
-from crc.api.common import ApiError
-
-from crc.models.email import EmailModel
-from crc.models.file import FileDataModel
-from crc.models.study import StudyModel
-from crc.models.task_log import TaskLogModel, TaskLogLevels, TaskLogQuery
-from crc.models.user import UserModel
-
-from crc.services.jinja_service import JinjaService
-from crc.services.user_service import UserService
+import dateparser
+import pytz
 
 
 class TaskLoggingService(object):
@@ -47,14 +37,35 @@ class TaskLoggingService(object):
         session.commit()
         return log_model
 
-    @staticmethod
-    def get_logs_for_workflow(workflow_id, tq: TaskLogQuery):
-        """ Returns an updated TaskLogQuery, with items in reverse chronological order by default. """
-        query = session.query(TaskLogModel).filter(TaskLogModel.workflow_id == workflow_id)
-        return TaskLoggingService.__paginate(query, tq)
+    def get_logs_for_workflow(self, workflow_id: int, level: str = None, code: str = None, size: int = None):
+        logs = self.get_logs(workflow_id=workflow_id, level=level, code=code, size=size)
+        return logs
+
+    def get_logs_for_study(self, study_id: int, level: str = None, code: str = None, size: int = None):
+        logs = self.get_logs(study_id=study_id, level=level, code=code, size=size)
+        return logs
 
     @staticmethod
-    def get_logs_for_study(study_id, tq: TaskLogQuery):
+    def get_logs(study_id: int = None, workflow_id: int = None, level: str = None, code: str = None, size: int = None):
+        """We should almost always get a study_id or a workflow_id.
+           In *very* rare circumstances, an admin may want all the logs.
+           This could be a *lot* of logs."""
+        query = session.query(TaskLogModel)
+        if study_id:
+            query = query.filter(TaskLogModel.study_id == study_id)
+        if workflow_id:
+            query = query.filter(TaskLogModel.workflow_id == workflow_id)
+        if level:
+            query = query.filter(TaskLogModel.level == level)
+        if code:
+            query = query.filter(TaskLogModel.code == code)
+        if size:
+            query = query.limit(size)
+        logs = query.all()
+        return logs
+
+    @staticmethod
+    def get_logs_for_study_paginated(study_id, tq: TaskLogQuery):
         """ Returns an updated TaskLogQuery, with items in reverse chronological order by default. """
         query = session.query(TaskLogModel).filter(TaskLogModel.study_id == study_id)
         return TaskLoggingService.__paginate(query, tq)
@@ -78,7 +89,39 @@ class TaskLoggingService(object):
             sort_column = desc(task_log_query.sort_column)
         else:
             sort_column = task_log_query.sort_column
-        paginator = sql_query.order_by(sort_column).paginate(task_log_query.page, task_log_query.per_page,
+        paginator = sql_query.order_by(sort_column).paginate(task_log_query.page + 1, task_log_query.per_page,
                                                              error_out=False)
         task_log_query.update_from_sqlalchemy_paginator(paginator)
         return task_log_query
+
+    @staticmethod
+    def get_log_data_for_download(study_id):
+        # Admins can download the metrics logs for a study as an Excel file
+        # We only use a subset of the fields
+        logs = []
+        headers = []
+        result = session.query(TaskLogModel).\
+            filter(TaskLogModel.study_id == study_id).\
+            filter(TaskLogModel.level == 'metrics').\
+            all()
+        schemas = TaskLogModelSchema(many=True).dump(result)
+        # We only use these fields
+        fields = ['category', 'workflow', 'level', 'code', 'message', 'user_uid', 'timestamp', 'workflow_id', 'workflow_spec_id']
+        for schema in schemas:
+            # Build a dictionary using the items in fields
+            log = {}
+            for field in fields:
+                if field == 'timestamp':
+                    # Excel doesn't accept timezones,
+                    # so we return a local datetime without the timezone
+                    # TODO: detect the local timezone with something like dateutil.tz.tzlocal()
+                    parsed_timestamp = dateparser.parse(str(schema['timestamp']))
+                    localtime = parsed_timestamp.astimezone(pytz.timezone('US/Eastern'))
+                    log[field] = localtime.strftime('%Y-%m-%d %H:%M:%S')
+                else:
+                    log[field] = schema[field]
+                if field.capitalize() not in headers:
+                    headers.append(field.capitalize())
+            logs.append(log)
+
+        return logs, headers

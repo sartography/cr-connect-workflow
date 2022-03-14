@@ -284,6 +284,36 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/TaskLog"
+  /study/{study_id}/log/download:
+    parameters:
+      - name: study_id
+        in: path
+        required: true
+        description: The id of the study for which logs should be returned.
+        schema:
+          type: integer
+          format: int32
+      - name : auth_token
+        in : query
+        required : true
+        description : User Auth Toeken
+        schema:
+          type: string
+    get:
+      operationId: crc.api.study.download_logs_for_study
+      summary: Returns a csv file of logged events that occured within a study
+      security: [] # Will verify manually with provided Auth Token.
+      tags:
+        - Studies
+      responses:
+        '200':
+          description: Returns the spreadsheet file of logged events
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
   /workflow-specification:
     get:
       operationId: crc.api.workflow.all_specifications
@@ -1202,34 +1232,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Workflow"
-  /workflow/{workflow_id}/log:
-    parameters:
-      - name: workflow_id
-        in: path
-        required: true
-        description: The id of the workflow for which logs should be returned.
-        schema:
-          type: integer
-          format: int32
-    put:
-      operationId: crc.api.workflow.get_logs_for_workflow
-      summary: Provides a paginated list of logged events that occured within a study,
-      tags:
-        - Workflows and Tasks
-      requestBody:
-        description: Log Pagination Request
-        required: true
-        content:
-          application/json:
-            schema:
-                $ref: "#/components/schemas/PaginatedTaskLog"
-      responses:
-        '200':
-          description: list of logs - events that have occured within a specific workflow.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PaginatedTaskLog"
   /workflow/{workflow_id}/task/{task_id}/data:
     parameters:
       - name: workflow_id
@@ -2117,7 +2119,7 @@ components:
           has_next:
             type: boolean
             example: true
-          has_previous:
+          has_prev:
             type: boolean
             example: false
     TaskLog:

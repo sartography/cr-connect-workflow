@@ -24,7 +24,7 @@ log('debug', 'debug_code', f'This message has a { some_text }!')</bpmn:script>
     <bpmn:scriptTask id="Activity_GetLogs" name="Get Logs">
       <bpmn:incoming>Flow_10fc3fk</bpmn:incoming>
       <bpmn:outgoing>Flow_1dfqchi</bpmn:outgoing>
-      <bpmn:script>workflow_logs = get_logs()
+      <bpmn:script>workflow_logs = get_logs_for_workflow()
 study_logs = get_logs_for_study()</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_1dfqchi" sourceRef="Activity_GetLogs" targetRef="Activity_DisplayInfo" />
