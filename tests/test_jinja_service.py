@@ -1,8 +1,6 @@
 import os
 from io import BytesIO
 
-from lxml import etree
-
 from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
@@ -64,8 +62,6 @@ class TestJinjaService(BaseTest):
             self.assertIn("# Email Model", workflow_api.next_task.documentation)
             self.assertIn("My Email Subject", workflow_api.next_task.documentation)
             self.assertIn("user@example.com", workflow_api.next_task.documentation)
-
-            print(f'test_jinja_service_email: {workflow_api.next_task.data}')
 
     def test_jinja_service_tools_markdown(self):
         template = "This is my template. {% include 'include_me' %} Was something included?"
