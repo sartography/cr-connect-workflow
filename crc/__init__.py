@@ -124,28 +124,42 @@ def validate_all(study_id, category=None, spec_id=None):
     Please provide a real study id to use for validation, an optional category can be specified to only validate
     that category, and you can further specify a specific spec, if needed."""
     from crc.services.workflow_service import WorkflowService
+    from crc.services.workflow_processor import WorkflowProcessor
     from crc.services.workflow_spec_service import WorkflowSpecService
     from crc.api.common import ApiError
     from crc.models.study import StudyModel
     from crc.models.user import UserModel
     from flask import g
 
+    logging.root.removeHandler(logging.root.handlers[0])
+
     study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
     g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
     g.token = "anything_is_fine_just_need_something."
     specs = WorkflowSpecService().get_specs()
+    statuses = WorkflowProcessor.run_master_spec(WorkflowSpecService().master_spec, study)
+
     for spec in specs:
         if spec_id and spec_id != spec.id:
             continue
         if category and (not spec.category or spec.category.display_name != category):
             continue
+
+        print("-----------------------------------------")
+        print(f"{spec.category.display_name} / {spec.id}")
+        print("-----------------------------------------")
+
+        if spec.id in statuses and statuses[spec.id]['status'] == 'disabled':
+            print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
+            continue
         try:
             WorkflowService.test_spec(spec.id, validate_study_id=study_id)
+            print('Success!')
         except ApiError as e:
             if e.code == 'disabled_workflow':
                 print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
             else:
-                print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}")
+                print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}. {e.message}")
                 continue
         except WorkflowTaskExecException as e:
             print(f"Workflow Error, {e}, in Task {e.task.name} validate workflow {spec.id} in Category {spec.category.display_name}")

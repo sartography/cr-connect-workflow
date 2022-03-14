@@ -1,3 +1,5 @@
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
+
 from crc.scripts.script import Script
 from crc.api.common import ApiError
 from crc.services.protocol_builder import ProtocolBuilderService
@@ -19,15 +21,11 @@ class CheckStudy(Script):
         if study:
             return {"DETAIL": "Passed validation.", "STATUS": "No Error"}
         else:
-            raise ApiError.from_task(code='bad_study',
-                                     message=f'No study for study_id {study_id}',
-                                     task=task)
+            raise WorkflowTaskExecException(task, 'Function check_study failed. There is no study for study_id {study_id}.')
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         check_study = self.pb.check_study(study_id)
         if check_study:
             return check_study
         else:
-            raise ApiError.from_task(code='missing_check_study',
-                                     message='There was a problem checking information for this study.',
-                                     task=task)
+            raise WorkflowTaskExecException(task, 'There was a problem checking information for this study.')

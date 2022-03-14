@@ -1,3 +1,5 @@
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
+
 from crc import session
 from crc.api.common import ApiError
 from crc.models.file import FileModel
@@ -17,13 +19,11 @@ class DeleteFile(Script):
                 for file in result:
                     UserFileService.delete_file(file.id)
             else:
-                raise ApiError.from_task(code='no_document_found',
-                                         message=f'No document of type {doc_code} was found for this workflow.',
-                                         task=task)
+                raise WorkflowTaskExecException(task, f'delete_file() failed. No document of type {doc_code}'
+                                                      f' was found for this workflow.')
+
         else:
-            raise ApiError.from_task(code='invalid_document_code',
-                                     message=f'{doc_code} is not a valid document code',
-                                     task=task)
+            raise WorkflowTaskExecException(task, f'delete_file() failed. {doc_code} is not  valid document code.')
 
     def get_codes(self, task, args, kwargs):
         if 'code' in kwargs:
@@ -40,8 +40,8 @@ class DeleteFile(Script):
                     codes.append(arg)
 
         if codes is None or len(codes) == 0:
-            raise ApiError.from_task("invalid_argument", "Please provide a valid document code to delete.  "
-                                                         "No valid arguments found.", task=task)
+            raise WorkflowTaskExecException(task, f'delete_file() failed. Please provide a document code.')
+
         return codes
 
     def get_description(self):

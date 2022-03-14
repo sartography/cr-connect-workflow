@@ -460,9 +460,9 @@ class WorkflowService(object):
 
         data = copy.deepcopy(task.data)
         # If there's a field key with no initial value, give it one (None)
-        for field in task.task_spec.form.fields:
-            if field.id not in data:
-                data[field.id] = None
+        for other_field in task.task_spec.form.fields:
+            if other_field.id not in data:
+                data[other_field.id] = None
 
         if field.has_property(Task.FIELD_PROP_REPEAT):
             # Then you must evaluate the expression based on the data within the group, if that data exists.
