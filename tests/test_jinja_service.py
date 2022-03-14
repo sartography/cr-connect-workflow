@@ -28,6 +28,8 @@ class TestJinjaService(BaseTest):
         self.assertEqual("Hi Dan, This is a jinja template too! Cool Right?", docs)
 
     def test_jinja_service_included_includes(self):
+        """This is an obnoxious test for nested includes.
+           Also tests for multiple includes within a single template"""
         workflow = self.create_workflow('random_fact')
         processor = WorkflowProcessor(workflow)
         processor.do_engine_steps()
