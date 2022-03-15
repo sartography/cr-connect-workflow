@@ -53,7 +53,7 @@ def add_study(body):
 def __run_master_spec(study_model, master_spec):
     """Runs the master workflow spec to get details on the status of each workflow.
        This is a fairly expensive call."""
-    """Uses the Top Level Workflow to calculate the status of the study, and it's
+    """Uses the Top Level Workflow to calculate the status of the study, and its
     workflow models."""
     if not master_spec:
         raise ApiError("missing_master_spec", "No specifications are currently marked as the master spec.")

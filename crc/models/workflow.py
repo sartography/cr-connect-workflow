@@ -16,6 +16,7 @@ class WorkflowSpecCategory(object):
         self.admin = admin
         self.workflows = []  # For storing Workflow Metadata
         self.specs = []  # For the list of specifications associated with a category
+        self.meta = []
 
     def __eq__(self, other):
         if not isinstance(other, WorkflowSpecCategory):
@@ -24,10 +25,11 @@ class WorkflowSpecCategory(object):
             return True
         return False
 
+
 class WorkflowSpecCategorySchema(ma.Schema):
     class Meta:
         model = WorkflowSpecCategory
-        fields = ["id", "display_name", "display_order", "admin"]
+        fields = ["id", "display_name", "display_order", "admin", "meta"]
 
     @post_load
     def make_cat(self, data, **kwargs):

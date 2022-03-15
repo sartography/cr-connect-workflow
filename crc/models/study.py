@@ -35,6 +35,7 @@ class ProgressStatus(enum.Enum):
     ready_for_pre_review = 'ready_for_pre_review'
     resubmitted_for_pre_review = 'resubmitted_for_pre_review'
 
+
 class IrbStatus(enum.Enum):
     incomplete_in_protocol_builder = 'incomplete in protocol builder'
     completed_in_protocol_builder = 'completed in protocol builder'
@@ -62,7 +63,7 @@ class StudyModel(db.Model):
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
     on_hold = db.Column(db.Boolean, default=False)
     enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    #events = db.relationship("TaskEventModel")
+    # events = db.relationship("TaskEventModel")
     events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
     short_name = db.Column(db.String, nullable=True)
     proposal_name = db.Column(db.String, nullable=True)
@@ -94,11 +95,11 @@ class StudyAssociated(db.Model):
 
 class StudyAssociatedSchema(ma.Schema):
     class Meta:
-        fields=['uid', 'role', 'send_email', 'access', 'ldap_info']
+        fields = ['uid', 'role', 'send_email', 'access', 'ldap_info']
         model = StudyAssociated
         unknown = INCLUDE
-    ldap_info = fields.Nested(LdapSchema, dump_only=True)
 
+    ldap_info = fields.Nested(LdapSchema, dump_only=True)
 
 
 class StudyEvent(db.Model):
@@ -113,11 +114,27 @@ class StudyEvent(db.Model):
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
+class CategoryMetadata(object):
+    def __init__(self, id, state: WorkflowState = None, state_message=None):
+        self.id = id
+        self.state = state
+        self.state_message = state_message
+
+
+class CategoryMetadataSchema(ma.Schema):
+    state = EnumField(WorkflowState)
+
+    class Meta:
+        model = CategoryMetadata
+        additional = ["id", "state_message"]
+        unknown = INCLUDE
+
+
 class WorkflowMetadata(object):
-    def __init__(self, id, display_name = None, description = None, spec_version = None,
-                 category_id  = None, category_display_name  = None, state: WorkflowState  = None,
-                 status: WorkflowStatus  = None, total_tasks  = None, completed_tasks  = None,
-                 is_review=None,display_order = None, state_message = None, workflow_spec_id=None):
+    def __init__(self, id, display_name=None, description=None, spec_version=None,
+                 category_id=None, category_display_name=None, state: WorkflowState = None,
+                 status: WorkflowStatus = None, total_tasks=None, completed_tasks=None,
+                 is_review=None, display_order=None, state_message=None, workflow_spec_id=None):
         self.id = id
         self.display_name = display_name
         self.description = description
@@ -132,7 +149,6 @@ class WorkflowMetadata(object):
         self.is_review = is_review
         self.display_order = display_order
         self.workflow_spec_id = workflow_spec_id
-
 
     @classmethod
     def from_workflow(cls, workflow: WorkflowModel, spec: WorkflowSpecInfo):
@@ -156,6 +172,7 @@ class WorkflowMetadata(object):
 class WorkflowMetadataSchema(ma.Schema):
     state = EnumField(WorkflowState)
     status = EnumField(WorkflowStatus)
+
     class Meta:
         model = WorkflowMetadata
         additional = ["id", "display_name", "description",
@@ -174,6 +191,7 @@ class Category(object):
 
 class CategorySchema(ma.Schema):
     workflows = fields.List(fields.Nested(WorkflowMetadataSchema), dump_only=True)
+
     class Meta:
         model = Category
         additional = ["id", "display_name", "display_order", "admin"]
@@ -183,10 +201,11 @@ class CategorySchema(ma.Schema):
 class Study(object):
 
     def __init__(self, title, short_title, last_updated, primary_investigator_id, user_uid,
-                 id=None, status=None, progress_status=None, irb_status=None, short_name=None, proposal_name=None, comment="",
+                 id=None, status=None, progress_status=None, irb_status=None, short_name=None, proposal_name=None,
+                 comment="",
                  sponsor="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, events_history=[],
-                 last_activity_user="",last_activity_date =None,create_user_display="", **argsv):
+                 last_activity_user="", last_activity_date=None, create_user_display="", **argsv):
         self.id = id
         self.user_uid = user_uid
         self.create_user_display = create_user_display
@@ -231,7 +250,6 @@ class Study(object):
 
 
 class StudyForUpdateSchema(ma.Schema):
-
     id = fields.Integer(required=False, allow_none=True)
     status = EnumField(StudyStatus, by_value=True)
     sponsor = fields.String(allow_none=True)
@@ -250,7 +268,6 @@ class StudyForUpdateSchema(ma.Schema):
 
 
 class StudyEventSchema(ma.Schema):
-
     id = fields.Integer(required=False)
     create_date = fields.DateTime()
     status = EnumField(StudyStatus, by_value=True)
@@ -259,7 +276,6 @@ class StudyEventSchema(ma.Schema):
 
 
 class StudySchema(ma.Schema):
-
     id = fields.Integer(required=False, allow_none=True)
     categories = fields.List(fields.Nested(CategorySchema), dump_only=True)
     warnings = fields.List(fields.Nested(ApiErrorSchema), dump_only=True)
@@ -287,4 +303,3 @@ class StudySchema(ma.Schema):
     def make_study(self, data, **kwargs):
         """Can load the basic study data for updates to the database, but categories are write only"""
         return Study(**data)
-

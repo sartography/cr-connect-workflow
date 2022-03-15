@@ -104,6 +104,7 @@ class StudyService(object):
                 if master_workflow_results:
                     study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
                                                                                   master_workflow_results)
+                    category.meta = StudyService._update_status_of_workflow_meta(category.meta, master_workflow_results)
                 category.workflows = workflow_metas
         return study
 
