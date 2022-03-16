@@ -459,6 +459,8 @@ class StudyService(object):
             cat_meta.id = cat.id
             cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']]
             cat_meta.message = unused_statuses.get(cat.id)['message']
+            cat_meta.message = unused_statuses.get(cat.id)['message'] \
+                if unused_statuses.get(cat.id)['message'] else ''
         return cat_meta
 
 
