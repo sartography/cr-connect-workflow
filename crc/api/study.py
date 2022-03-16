@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.study import Study, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
-    StudyStatus, StudyAssociatedSchema
+    StudyStatus, StudyAssociatedSchema, Category
 from crc.models.task_log import TaskLogQuery, TaskLogQuerySchema
 from crc.services.spreadsheet_service import SpreadsheetService
 from crc.services.study_service import StudyService

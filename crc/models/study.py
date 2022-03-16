@@ -115,10 +115,10 @@ class StudyEvent(db.Model):
 
 
 class CategoryMetadata(object):
-    def __init__(self, id, state: WorkflowState = None, state_message=None):
+    def __init__(self, id=None, state: WorkflowState = None, message=None):
         self.id = id
         self.state = state
-        self.state_message = state_message
+        self.message = message
 
 
 class CategoryMetadataSchema(ma.Schema):
@@ -126,7 +126,7 @@ class CategoryMetadataSchema(ma.Schema):
 
     class Meta:
         model = CategoryMetadata
-        additional = ["id", "state_message"]
+        additional = ["id", "message"]
         unknown = INCLUDE
 
 
@@ -191,6 +191,7 @@ class Category(object):
 
 class CategorySchema(ma.Schema):
     workflows = fields.List(fields.Nested(WorkflowMetadataSchema), dump_only=True)
+    meta = fields.Nested(CategoryMetadataSchema)
 
     class Meta:
         model = Category

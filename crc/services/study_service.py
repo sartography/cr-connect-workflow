@@ -19,7 +19,7 @@ from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
-    StudyAssociated, ProgressStatus
+    StudyAssociated, ProgressStatus, CategoryMetadata
 from crc.models.task_event import TaskEventModel
 from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategory, WorkflowModel, WorkflowSpecInfo, WorkflowState, \
@@ -101,12 +101,13 @@ class StudyService(object):
         if study.status != StudyStatus.abandoned:
             for category in study.categories:
                 workflow_metas = StudyService._get_workflow_metas(study_id, category)
-                category_metas = StudyService._get_category_metas(categories)
+                category_meta = []
                 if master_workflow_results:
                     study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
                                                                                   master_workflow_results)
-                    StudyService._update_status_of_category_meta(category_metas, master_workflow_results)
+                    category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
                 category.workflows = workflow_metas
+                category.meta = category_meta
         return study
 
     @staticmethod
@@ -121,13 +122,6 @@ class StudyService(object):
             for workflow in workflow_models:
                 workflow_metas.append(WorkflowMetadata.from_workflow(workflow, spec))
         return workflow_metas
-
-    @staticmethod
-    def _get_category_metas(categories):
-        category_metas = []
-        for cat in categories:
-            category_metas.append(cat.meta)
-        return category_metas
 
 
     @staticmethod
@@ -458,9 +452,15 @@ class StudyService(object):
         db.session.commit()
 
     @staticmethod
-    def _update_status_of_category_meta(cat_metas, status):
-        warnings = []
+    def _update_status_of_category_meta(status, cat):
+        cat_meta = CategoryMetadata()
         unused_statuses = status.copy()
+        if unused_statuses.get(cat.id):
+            cat_meta.id = cat.id
+            cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']]
+            cat_meta.message = unused_statuses.get(cat.id)['message']
+        return cat_meta
+
 
     @staticmethod
     def _update_status_of_workflow_meta(workflow_metas, status):
