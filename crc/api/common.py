@@ -32,7 +32,7 @@ class ApiError(Exception):
         self.offset = offset
         self.error_type = error_type
         self.error_line = error_line
-        self.trask_trace = task_trace
+        self.task_trace = task_trace
 
         try:
             user = g.user.uid
