@@ -74,6 +74,7 @@ class StudyService(object):
             studies.append(study)
         return studies
 
+
     @staticmethod
     def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
                   master_workflow_results=None):
@@ -105,7 +106,20 @@ class StudyService(object):
                     study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
                                                                                   master_workflow_results)
                 category.workflows = workflow_metas
+        # Calculate study progress and return it as a integer out of a hundred
+        completed_wfs = 0
+        total_wfs = 0
+        for category in study.categories:
+            for workflow in category.workflows:
+                total_wfs +=1
+                if workflow.status == WorkflowStatus.complete:
+                    completed_wfs += 1
+        if total_wfs > 0:
+            study.progress = int((completed_wfs/total_wfs)*100)
+        else:
+            study.progress = 0
         return study
+
 
     @staticmethod
     def _get_workflow_metas(study_id, category):
@@ -265,6 +279,7 @@ class StudyService(object):
         if study_id not in g.doc_statuses or force:
             g.doc_statuses[study_id] = StudyService.__get_documents_status(study_id)
         return g.doc_statuses[study_id]
+
 
     @staticmethod
     def __get_documents_status(study_id):
