@@ -411,6 +411,7 @@ class StudyService(object):
                     new_status = StudyStatus.in_progress
                     new_progress_status = ProgressStatus.in_progress
 
+                    # we use add_study below to determine whether we add the study to the session
                     add_study = True
                     db_studies.append(db_study)
 
@@ -426,6 +427,8 @@ class StudyService(object):
                     StudyService.add_study_update_event(db_study,
                                                         status=new_status,
                                                         event_type=StudyEventType.automatic)
+                # we moved session.add here so that it comes after we update the study
+                # we only add if it doesnt already exist in the DB
                 if add_study:
                     session.add(db_study)
 
