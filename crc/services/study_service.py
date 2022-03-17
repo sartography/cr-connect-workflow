@@ -404,13 +404,14 @@ class StudyService(object):
                 db_study = session.query(StudyModel).filter(StudyModel.id == pb_study.STUDYID).first()
                 #db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
 
+                add_study = False
                 if not db_study:
                     db_study = StudyModel(id=pb_study.STUDYID)
                     db_study.status = None  # Force a new sa
                     new_status = StudyStatus.in_progress
                     new_progress_status = ProgressStatus.in_progress
 
-                    session.add(db_study)
+                    add_study = True
                     db_studies.append(db_study)
 
                 db_study.update_from_protocol_builder(pb_study, user.uid)
@@ -425,6 +426,8 @@ class StudyService(object):
                     StudyService.add_study_update_event(db_study,
                                                         status=new_status,
                                                         event_type=StudyEventType.automatic)
+                if add_study:
+                    session.add(db_study)
 
             # Mark studies as inactive that are no longer in Protocol Builder
             for study in db_studies:
