@@ -192,6 +192,9 @@ class TestStudyApi(BaseTest):
                     num_in_progress += 1
                 if study['status'] == 'open_for_enrollment':  # Currently, we don't automatically set studies to open for enrollment
                     num_open += 1
+                if study['id'] == 65432:
+                    # This study has `null` for DATELASTMODIFIED, so we should use the value in DATECREATED
+                    self.assertEqual('2020-02-19T14:24:55.101695+00:00', study['last_updated'])
 
             db_studies_after = session.query(StudyModel).all()
             num_db_studies_after = len(db_studies_after)
