@@ -70,7 +70,10 @@ class StudyModel(db.Model):
     def update_from_protocol_builder(self, study: ProtocolBuilderCreatorStudy, user_id):
         self.title = study.TITLE
         self.user_uid = user_id
-        self.last_updated = study.DATELASTMODIFIED
+        if study.DATELASTMODIFIED:
+            self.last_updated = study.DATELASTMODIFIED
+        else:
+            self.last_updated = study.DATECREATED
 
         self.irb_status = IrbStatus.incomplete_in_protocol_builder
 
