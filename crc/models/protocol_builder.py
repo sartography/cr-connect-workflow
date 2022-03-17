@@ -38,7 +38,7 @@ class ProtocolBuilderStatus(enum.Enum):
 
 class ProtocolBuilderCreatorStudy(object):
 
-    def __init__(self, STUDYID, TITLE, DATELASTMODIFIED=None, DATECREATED=None):
+    def __init__(self, STUDYID, TITLE, DATECREATED, DATELASTMODIFIED=None):
         self.STUDYID = STUDYID
         self.DATELASTMODIFIED = DATELASTMODIFIED
         self.DATECREATED = DATECREATED
@@ -51,7 +51,7 @@ class ProtocolBuilderCreatorStudySchema(ma.Schema):
 
     STUDYID = fields.Integer()
     DATELASTMODIFIED = fields.String(allow_none=True)
-    DATECREATED = fields.String(allow_none=True)
+    DATECREATED = fields.String()
     TITLE = fields.String()
 
     @post_load
