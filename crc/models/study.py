@@ -70,6 +70,7 @@ class StudyModel(db.Model):
     on_hold = db.Column(db.Boolean, default=False)
     proposal_name = db.Column(db.String, nullable=True)
     short_name = db.Column(db.String, nullable=True)
+    progress = db.Column(db.Integer, nullable=True)
 
     def update_from_protocol_builder(self, study: ProtocolBuilderCreatorStudy, user_id):
         self.title = study.TITLE
@@ -213,8 +214,8 @@ class Study(object):
                  comment="",
                  sponsor="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, events_history=[],
-                 last_activity_user="", last_activity_date=None, create_user_display="",
-                 primary_investigator="", **argsv):
+                 primary_investigator="",
+                 last_activity_user="",last_activity_date =None,create_user_display="", progress=0, **argsv):
         self.id = id
         self.user_uid = user_uid
         self.create_user_display = create_user_display
@@ -238,6 +239,7 @@ class Study(object):
         self.short_name = short_name
         self.proposal_name = proposal_name
         self.primary_investigator = primary_investigator
+        self.progress = progress
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
@@ -301,13 +303,14 @@ class StudySchema(ma.Schema):
     proposal_name = fields.String(allow_none=True)
     review_type = fields.Integer(allow_none=True)
     primary_investigator = fields.String(allow_none=True)
+    progress = fields.Integer(allow_none=True)
 
     class Meta:
         model = Study
         additional = ["id", "title", "short_title", "last_updated", "user_uid",
                       "sponsor", "ind_number", "files", "enrollment_date",
                       "create_user_display", "last_activity_date", "last_activity_user",
-                      "events_history", "short_name", "proposal_name", "primary_investigator"]
+                      "events_history", "short_name", "proposal_name", "progress", "primary_investigator"]
         unknown = INCLUDE
 
     @marshmallow.post_load

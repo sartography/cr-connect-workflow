@@ -65,16 +65,20 @@ class StudyService(object):
             studies.append(study)
         return studies
 
+
     @staticmethod
+    @timeit
     def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
                   master_workflow_results=None):
         """Returns a study model that contains all the workflows organized by category.
         Pass in the results of the master workflow spec, and the status of other workflows will be updated."""
-
+        last_time = firsttime()
         if not study_model:
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
         study = Study.from_model(study_model)
+        last_time = sincetime("from model", last_time)
         study.create_user_display = LdapService.user_info(study.user_uid).display_name
+        last_time = sincetime("user", last_time)
         last_event: TaskEventModel = session.query(TaskEventModel) \
             .filter_by(study_id=study_id, action='COMPLETE') \
             .order_by(TaskEventModel.date.desc()).first()
@@ -84,11 +88,13 @@ class StudyService(object):
         else:
             study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
             study.last_activity_date = last_event.date
+        last_time = sincetime("task_events", last_time)
         study.categories = categories
         files = UserFileService.get_files_for_study(study.id)
         files = (File.from_models(model, UserFileService.get_file_data(model.id),
                                   DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
+        last_time = sincetime("files", last_time)
         if study.status != StudyStatus.abandoned:
             for category in study.categories:
                 workflow_metas = StudyService._get_workflow_metas(study_id, category)
@@ -99,13 +105,29 @@ class StudyService(object):
                     category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
                 category.workflows = workflow_metas
                 category.meta = category_meta
+        last_time = sincetime("categories", last_time)
 
         if study.primary_investigator is None:
             associates = StudyService().get_study_associates(study.id)
             for associate in associates:
                 if associate.role == "Primary Investigator":
                     study.primary_investigator = associate.ldap_info.display_name
+        # Calculate study progress and return it as a integer out of a hundred
+        last_time = sincetime("PI", last_time)
+        completed_wfs = 0
+        total_wfs = 0
+        for category in study.categories:
+            for workflow in category.workflows:
+                total_wfs +=1
+                if workflow.status == WorkflowStatus.complete:
+                    completed_wfs += 1
+        if total_wfs > 0:
+            study.progress = int((completed_wfs/total_wfs)*100)
+        else:
+            study.progress = 0
         return study
+        last_time = sincetime("progress", last_time)
+
 
     @staticmethod
     def _get_workflow_metas(study_id, category):
@@ -266,6 +288,7 @@ class StudyService(object):
         if study_id not in g.doc_statuses or force:
             g.doc_statuses[study_id] = StudyService.__get_documents_status(study_id)
         return g.doc_statuses[study_id]
+
 
     @staticmethod
     def __get_documents_status(study_id):
