@@ -51,7 +51,7 @@ class StudyService(object):
         studies = []
         for study_model in db_studies:
             if include_invalid or study_model.review_type in self.VALID_REVIEW_TYPES:
-                studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model))
+                studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model, process_categories=False))
         return studies
 
     @staticmethod
@@ -69,7 +69,7 @@ class StudyService(object):
     @staticmethod
     @timeit
     def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
-                  master_workflow_results=None):
+                  master_workflow_results=None, process_categories=False):
         """Returns a study model that contains all the workflows organized by category.
         Pass in the results of the master workflow spec, and the status of other workflows will be updated."""
         last_time = firsttime()
@@ -95,17 +95,18 @@ class StudyService(object):
                                   DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
         last_time = sincetime("files", last_time)
-        if study.status != StudyStatus.abandoned:
-            for category in study.categories:
-                workflow_metas = StudyService._get_workflow_metas(study_id, category)
-                category_meta = []
-                if master_workflow_results:
-                    study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
-                                                                                  master_workflow_results)
-                    category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
-                category.workflows = workflow_metas
-                category.meta = category_meta
-        last_time = sincetime("categories", last_time)
+        if process_categories:
+            if study.status != StudyStatus.abandoned:
+                for category in study.categories:
+                    workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                    category_meta = []
+                    if master_workflow_results:
+                        study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
+                                                                                      master_workflow_results)
+                        category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
+                    category.workflows = workflow_metas
+                    category.meta = category_meta
+            last_time = sincetime("categories", last_time)
 
         if study.primary_investigator is None:
             associates = StudyService().get_study_associates(study.id)
