@@ -24,7 +24,6 @@ class TestStudyApi(BaseTest):
         "title": "Phase III Trial of Genuine People Personalities (GPP) Autonomous Intelligent Emotional Agents "
                  "for Interstellar Spacecraft",
         "last_updated": datetime.utcnow(),
-        "primary_investigator_id": "tmm2x",
         "user_uid": "dhf8r",
     }
 

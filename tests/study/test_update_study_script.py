@@ -36,6 +36,5 @@ class TestUpdateStudyScript(BaseTest):
                        proposal_name=details.proposal_name)
         self.assertEqual(details.title, workflow.study.title)
         self.assertEqual(details.short_title, workflow.study.short_title)
-        self.assertEqual(details.pi, workflow.study.primary_investigator_id)
         self.assertEqual(details.short_name, workflow.study.short_name)
         self.assertEqual(details.proposal_name, workflow.study.proposal_name)

@@ -272,7 +272,6 @@ class TestAuthentication(BaseTest):
             "title": "blah",
             "last_updated": datetime.utcnow(),
             "status": StudyStatus.in_progress,
-            "primary_investigator_id": uid,
             "user_uid": uid,
         }
 

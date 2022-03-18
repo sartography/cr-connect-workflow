@@ -20,15 +20,12 @@ import io
 
 
 def add_study(body):
-    """Or any study like object. Body should include a title, and primary_investigator_id """
-    if 'primary_investigator_id' not in body:
-        raise ApiError("missing_pi", "Can't create a new study without a Primary Investigator.")
+    """Or any study like object. Body should include a title """
     if 'title' not in body:
         raise ApiError("missing_title", "Can't create a new study without a title.")
 
     study_model = StudyModel(user_uid=UserService.current_user().uid,
                              title=body['title'],
-                             primary_investigator_id=body['primary_investigator_id'],
                              last_updated=datetime.utcnow(),
                              status=StudyStatus.in_progress)
     session.add(study_model)
