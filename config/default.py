@@ -66,6 +66,8 @@ PB_STUDY_DETAILS_URL = environ.get('PB_STUDY_DETAILS_URL', default=PB_BASE_URL +
 PB_SPONSORS_URL = environ.get('PB_SPONSORS_URL', default=PB_BASE_URL + "sponsors?studyid=%i")
 PB_IRB_INFO_URL = environ.get('PB_IRB_INFO_URL', default=PB_BASE_URL + "current_irb_info/%i")
 PB_CHECK_STUDY_URL = environ.get('PB_CHECK_STUDY_URL', default=PB_BASE_URL + "check_study/%i")
+# The earliest date a study was last modified in PB that we will import.
+PB_MIN_DATE = environ.get('PB_MIN_DATE', default="2020-01-01T00:00:00.000Z")
 
 # Ldap Configuration
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://

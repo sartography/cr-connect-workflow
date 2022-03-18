@@ -1,5 +1,6 @@
 from copy import copy
 from datetime import datetime
+from dateutil import parser
 from typing import List
 
 import requests
@@ -40,6 +41,7 @@ class StudyService(object):
     # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
     # These are considered to be the valid review types that can be shown to users.
     VALID_REVIEW_TYPES = [2, 3, 23, 24]
+    PB_MIN_DATE = parser.parse(app.config['PB_MIN_DATE'])
 
     def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
@@ -51,7 +53,7 @@ class StudyService(object):
         studies = []
         for study_model in db_studies:
             if include_invalid or study_model.review_type in self.VALID_REVIEW_TYPES:
-                studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model))
+                studies.append(StudyService.get_study(study_model.id, [], study_model=study_model))
         return studies
 
     @staticmethod
@@ -98,6 +100,7 @@ class StudyService(object):
         if study.status != StudyStatus.abandoned:
             for category in study.categories:
                 workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                last_time = sincetime("get_workflow_metas", last_time)
                 category_meta = []
                 if master_workflow_results:
                     study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
@@ -105,6 +108,12 @@ class StudyService(object):
                     category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
                 category.workflows = workflow_metas
                 category.meta = category_meta
+
+        if study.primary_investigator is None:
+            associates = StudyService().get_study_associates(study.id)
+            for associate in associates:
+                if associate.role == "Primary Investigator":
+                    study.primary_investigator = associate.ldap_info.display_name
 
         # Calculate study progress and return it as a integer out of a hundred
         all_workflows = db.session.query(WorkflowModel).\
@@ -116,8 +125,7 @@ class StudyService(object):
             count()
         if all_workflows > 0:
             study.progress = int((complete_workflows/all_workflows)*100)
-        else:
-            study.progress = 0
+
         return study
 
 
@@ -396,6 +404,7 @@ class StudyService(object):
             return {}
 
     @staticmethod
+    @timeit
     def synch_with_protocol_builder_if_enabled(user, specs):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
@@ -415,6 +424,16 @@ class StudyService(object):
             # Further assures that every active study (that does exist in the protocol builder)
             # has a reference to every available workflow (though some may not have started yet)
             for pb_study in pb_studies:
+                try:
+                    if pb_study.DATELASTMODIFIED:
+                        last_modified = parser.parse(pb_study.DATELASTMODIFIED)
+                    else:
+                        last_modified = parser.parse(pb_study.DATECREATED)
+                    if last_modified.date() < StudyService.PB_MIN_DATE.date():
+                        continue
+                except Exception as e:
+                    # Last modified is null or undefined.  Don't import it.
+                    continue
                 new_status = None
                 new_progress_status = None
                 db_study = session.query(StudyModel).filter(StudyModel.id == pb_study.STUDYID).first()
