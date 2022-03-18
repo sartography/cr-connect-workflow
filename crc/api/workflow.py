@@ -252,6 +252,8 @@ def set_current_task(workflow_id, task_id):
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
+    cancel_notify = (spiff_task.state == spiff_task.COMPLETED and
+                     spiff_task.task_spec.__class__.__name__ != 'EndEvent')
     if not spiff_task:
         # An invalid task_id was requested.
         raise ApiError("invalid_task", "The Task you requested no longer exists as a part of this workflow.")
@@ -262,7 +264,7 @@ def set_current_task(workflow_id, task_id):
                                         "currently set to COMPLETE or READY.")
 
     # Only reset the token if the task doesn't already have it.
-    if spiff_task.state == spiff_task.COMPLETED:
+    if cancel_notify:
         processor.cancel_notify()
         spiff_task.reset_token({}, reset_data=True)  # Don't try to copy the existing data back into this task.
 
