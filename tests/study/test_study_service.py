@@ -5,9 +5,10 @@ from unittest.mock import patch
 from tests.base_test import BaseTest
 
 from crc import db, app
-from crc.models.study import StudyModel, StudyStatus, StudyAssociatedSchema
+from crc.models.study import StudyModel, StudyStatus, StudyAssociatedSchema, CategoryMetadata, StudySchema, \
+    CategorySchema, Category
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecCategory
+from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowSpecCategory, WorkflowSpecCategorySchema
 from crc.services.ldap_service import LdapService
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -256,3 +257,23 @@ class TestStudyService(BaseTest):
         assoc_json = StudyAssociatedSchema(many=True).dump(associates)
         print(assoc_json)
         self.assertEquals("Dan", assoc_json[0]['ldap_info']['given_name'])
+
+    def test_set_category_metadata(self):
+        user = self.create_user_with_study_and_workflow()
+        study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
+
+        ####
+        wfscat = WorkflowSpecCategory(id='test_cat', display_name='test cat', display_order=0, admin=False)
+        wfs = self.create_workflow('empty_workflow')
+
+        wfscat.workflows = wfs
+        x = WorkflowSpecCategorySchema().dump(wfscat)
+        ####
+
+        s = StudyService.get_study(study.id, [wfscat], None, {'test_cat':{'status':'hidden', 'message': 'msg'}})
+        d = StudySchema().dump(s)
+        self.assertEqual({'id': 'test_cat', 'message': 'msg', 'state': 'hidden'}, d['categories'][0]['meta'])
+
+
+
+

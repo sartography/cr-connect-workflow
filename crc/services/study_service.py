@@ -19,7 +19,7 @@ from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
 from crc.models.study import StudyModel, Study, StudyStatus, Category, WorkflowMetadata, StudyEventType, StudyEvent, \
-    StudyAssociated, ProgressStatus
+    StudyAssociated, ProgressStatus, CategoryMetadata
 from crc.models.task_event import TaskEventModel
 from crc.models.task_log import TaskLogModel
 from crc.models.workflow import WorkflowSpecCategory, WorkflowModel, WorkflowSpecInfo, WorkflowState, \
@@ -92,10 +92,19 @@ class StudyService(object):
         if study.status != StudyStatus.abandoned:
             for category in study.categories:
                 workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                category_meta = []
                 if master_workflow_results:
                     study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
                                                                                   master_workflow_results)
+                    category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
                 category.workflows = workflow_metas
+                category.meta = category_meta
+
+        if study.primary_investigator is None:
+            associates = StudyService().get_study_associates(study.id)
+            for associate in associates:
+                if associate.role == "Primary Investigator":
+                    study.primary_investigator = associate.ldap_info.display_name
         return study
 
     @staticmethod
@@ -110,6 +119,7 @@ class StudyService(object):
             for workflow in workflow_models:
                 workflow_metas.append(WorkflowMetadata.from_workflow(workflow, spec))
         return workflow_metas
+
 
     @staticmethod
     def get_study_associate(study_id=None, uid=None):
@@ -445,6 +455,19 @@ class StudyService(object):
         db.session.commit()
 
     @staticmethod
+    def _update_status_of_category_meta(status, cat):
+        cat_meta = CategoryMetadata()
+        unused_statuses = status.copy()
+        if unused_statuses.get(cat.id):
+            cat_meta.id = cat.id
+            cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']]
+            cat_meta.message = unused_statuses.get(cat.id)['message']
+            cat_meta.message = unused_statuses.get(cat.id)['message'] \
+                if unused_statuses.get(cat.id)['message'] else ''
+        return cat_meta
+
+
+    @staticmethod
     def _update_status_of_workflow_meta(workflow_metas, status):
         # Update the status on each workflow
         warnings = []
@@ -459,7 +482,8 @@ class StudyService(object):
                 continue
             if not isinstance(status[wfm.workflow_spec_id], dict):
                 warnings.append(ApiError(code='invalid_status',
-                                         message=f'Status must be a dictionary with "status" and "message" keys. Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
+                                         message=f'Status must be a dictionary with "status" and "message" keys. '
+                                                 f'Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
                 continue
             if 'message' in status[wfm.workflow_spec_id].keys():
                 wfm.state_message = status[wfm.workflow_spec_id]['message']

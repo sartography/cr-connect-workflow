@@ -34,7 +34,6 @@ class TestStudyInfoScript(BaseTest):
         study_info, second_task = self.do_work(info_type='info')
 
         self.assertEqual(study_info['title'], second_task.data['info']['title'])
-        self.assertEqual(study_info['primary_investigator_id'], second_task.data['info']['primary_investigator_id'])
         self.assertIn(study_info['title'], second_task.documentation)
 
     def test_info_script_updated_study_info(self):

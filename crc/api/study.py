@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.study import Study, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
-    StudyStatus, StudyAssociatedSchema
+    StudyStatus, StudyAssociatedSchema, Category
 from crc.models.task_log import TaskLogQuery, TaskLogQuerySchema
 from crc.services.spreadsheet_service import SpreadsheetService
 from crc.services.study_service import StudyService
@@ -26,14 +26,12 @@ def add_study(body):
     """
     This method seems to be used by one test, and no where else!
     Or any study like object. Body should include a title, and primary_investigator_id """
-    if 'primary_investigator_id' not in body:
-        raise ApiError("missing_pi", "Can't create a new study without a Primary Investigator.")
+    """Or any study like object. Body should include a title """
     if 'title' not in body:
         raise ApiError("missing_title", "Can't create a new study without a title.")
 
     study_model = StudyModel(user_uid=UserService.current_user().uid,
                              title=body['title'],
-                             primary_investigator_id=body['primary_investigator_id'],
                              last_updated=datetime.utcnow(),
                              status=StudyStatus.in_progress,
                              review_type=body['review_type'])
@@ -59,7 +57,7 @@ def add_study(body):
 def __run_master_spec(study_model, master_spec):
     """Runs the master workflow spec to get details on the status of each workflow.
        This is a fairly expensive call."""
-    """Uses the Top Level Workflow to calculate the status of the study, and it's
+    """Uses the Top Level Workflow to calculate the status of the study, and its
     workflow models."""
     if not master_spec:
         raise ApiError("missing_master_spec", "No specifications are currently marked as the master spec.")
