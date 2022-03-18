@@ -106,16 +106,17 @@ class StudyService(object):
                     study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
                                                                                   master_workflow_results)
                 category.workflows = workflow_metas
+
         # Calculate study progress and return it as a integer out of a hundred
-        completed_wfs = 0
-        total_wfs = 0
-        for category in study.categories:
-            for workflow in category.workflows:
-                total_wfs +=1
-                if workflow.status == WorkflowStatus.complete:
-                    completed_wfs += 1
-        if total_wfs > 0:
-            study.progress = int((completed_wfs/total_wfs)*100)
+        all_workflows = db.session.query(WorkflowModel).\
+            filter(WorkflowModel.study_id == study.id).\
+            count()
+        complete_workflows = db.session.query(WorkflowModel).\
+            filter(WorkflowModel.study_id == study.id).\
+            filter(WorkflowModel.status == WorkflowStatus.complete).\
+            count()
+        if all_workflows > 0:
+            study.progress = int((complete_workflows/all_workflows)*100)
         else:
             study.progress = 0
         return study
