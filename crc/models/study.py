@@ -202,7 +202,7 @@ class CategorySchema(ma.Schema):
 
 class Study(object):
 
-    def __init__(self, title, short_title, last_updated, primary_investigator_id, user_uid,
+    def __init__(self, title, short_title, last_updated, user_uid,
                  id=None, status=None, progress_status=None, irb_status=None, short_name=None, proposal_name=None,
                  comment="",
                  sponsor="", ind_number="", categories=[],
@@ -221,7 +221,6 @@ class Study(object):
         self.progress_status = progress_status
         self.irb_status = irb_status
         self.comment = comment
-        self.primary_investigator_id = primary_investigator_id
         self.sponsor = sponsor
         self.ind_number = ind_number
         self.categories = categories

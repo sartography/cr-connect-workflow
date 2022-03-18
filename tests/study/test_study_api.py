@@ -61,7 +61,6 @@ class TestStudyApi(BaseTest):
 
         study = StudySchema().loads(api_response.get_data(as_text=True))
         self.assertEqual(study.title, self.TEST_STUDY['title'])
-        self.assertEqual(study.primary_investigator_id, self.TEST_STUDY['primary_investigator_id'])
         self.assertEqual(study.user_uid, self.TEST_STUDY['user_uid'])
 
         # Categories are read only, so switching to sub-scripting here.
@@ -105,7 +104,6 @@ class TestStudyApi(BaseTest):
         db_study = session.query(StudyModel).filter_by(id=study['id']).first()
         self.assertIsNotNone(db_study)
         self.assertEqual(study["title"], db_study.title)
-        self.assertEqual(study["primary_investigator_id"], db_study.primary_investigator_id)
         self.assertEqual(study["sponsor"], db_study.sponsor)
         self.assertEqual(study["ind_number"], db_study.ind_number)
         self.assertEqual(study["user_uid"], db_study.user_uid)
@@ -245,7 +243,6 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study.id, json_data['id'])
         self.assertEqual(study.title, json_data['title'])
         self.assertEqual(study.status.value, json_data['status'])
-        self.assertEqual(study.primary_investigator_id, json_data['primary_investigator_id'])
         self.assertEqual(study.sponsor, json_data['sponsor'])
         self.assertEqual(study.ind_number, json_data['ind_number'])
 
