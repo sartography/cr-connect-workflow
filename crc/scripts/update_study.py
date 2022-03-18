@@ -10,7 +10,6 @@ from crc.scripts.script import Script
 class mock_study:
     def __init__(self):
         self.title = ""
-        self.principle_investigator_id = ""
 
 
 class UpdateStudy(Script):
@@ -47,7 +46,5 @@ update_study(title=PIComputingID.label, short_title="Really Short Name")
                 study.short_name = kwargs[arg]
             elif arg.lower() == "proposal_name":
                 study.proposal_name = kwargs[arg]
-            elif arg.lower() == "pi":
-                study.primary_investigator_id = kwargs[arg]
             else:
                 raise WorkflowTaskExecException(task, f"update_study() failed.  {self.argument_error_message}")

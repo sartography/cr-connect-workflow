@@ -42,7 +42,7 @@ class UserView(AdminModelView):
 
 
 class StudyView(AdminModelView):
-    column_filters = ['id', 'primary_investigator_id']
+    column_filters = ['id']
     column_searchable_list = ['title']
 
 

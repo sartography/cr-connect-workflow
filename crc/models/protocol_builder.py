@@ -1,6 +1,6 @@
 import enum
 
-from marshmallow import INCLUDE, post_load
+from marshmallow import INCLUDE, post_load, fields
 
 from crc import ma
 
@@ -38,17 +38,21 @@ class ProtocolBuilderStatus(enum.Enum):
 
 class ProtocolBuilderCreatorStudy(object):
 
-    def __init__(self, STUDYID, DATELASTMODIFIED, DATECREATED, TITLE):
+    def __init__(self, STUDYID, TITLE, REVIEW_TYPE, DATECREATED, DATELASTMODIFIED=None):
         self.STUDYID = STUDYID
         self.DATELASTMODIFIED = DATELASTMODIFIED
         self.DATECREATED = DATECREATED
         self.TITLE = TITLE
-
+        self.REVIEW_TYPE = REVIEW_TYPE
 
 class ProtocolBuilderCreatorStudySchema(ma.Schema):
     class Meta:
         unknown = INCLUDE
-        fields = ["STUDYID", "DATELASTMODIFIED", "DATECREATED", "TITLE"]
+    STUDYID = fields.Integer()
+    DATELASTMODIFIED = fields.String(allow_none=True)
+    DATECREATED = fields.String()
+    TITLE = fields.String()
+    REVIEW_TYPE = fields.Integer(allow_none=True)
 
     @post_load
     def make_study(self, data, **kwargs):

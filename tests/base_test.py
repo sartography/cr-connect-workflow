@@ -65,10 +65,10 @@ class BaseTest(unittest.TestCase):
             'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
             'progress_status': ProgressStatus.in_progress,
-            'primary_investigator_id': 'dhf8r',
             'sponsor': 'Sartography Pharmaceuticals',
             'ind_number': '1234',
-            'user_uid': 'dhf8r'
+            'user_uid': 'dhf8r',
+            'review_type': 2
         },
         {
             'id': 1,
@@ -76,10 +76,10 @@ class BaseTest(unittest.TestCase):
             'last_updated': datetime.datetime.utcnow(),
             'status': StudyStatus.in_progress,
             'progress_status': ProgressStatus.in_progress,
-            'primary_investigator_id': 'dhf8r',
             'sponsor': 'Makerspace & Co.',
             'ind_number': '5678',
-            'user_uid': 'dhf8r'
+            'user_uid': 'dhf8r',
+            'review_type': 2
         }
     ]
 
@@ -261,13 +261,12 @@ class BaseTest(unittest.TestCase):
             session.commit()
         return user
 
-    def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer",
-                     primary_investigator_id="lb3dp"):
+    def create_study(self, uid="dhf8r", title="Beer consumption in the bipedal software engineer"):
         study = session.query(StudyModel).filter_by(user_uid=uid).filter_by(title=title).first()
         if study is None:
             user = self.create_user(uid=uid)
             study = StudyModel(title=title, status=StudyStatus.in_progress,
-                               user_uid=user.uid, primary_investigator_id=primary_investigator_id)
+                               user_uid=user.uid, review_type=2)
             session.add(study)
             session.commit()
         return study
