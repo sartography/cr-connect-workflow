@@ -1147,6 +1147,12 @@ paths:
         description: Restrict results to the given study.
         schema:
           type: number
+      - name: nonulls
+        in: query
+        required: false
+        description: Restrict results to not include null task lanes.
+        schema:
+          type: boolean
     get:
       operationId: crc.api.workflow.get_task_events
       summary: Returns a list of task events related to the current user.  Can be filtered by type.
