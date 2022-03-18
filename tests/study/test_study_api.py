@@ -26,6 +26,7 @@ class TestStudyApi(BaseTest):
         "last_updated": datetime.utcnow(),
         "primary_investigator_id": "tmm2x",
         "user_uid": "dhf8r",
+        "review_type": 2
     }
 
     def add_test_study(self):

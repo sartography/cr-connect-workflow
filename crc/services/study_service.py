@@ -36,19 +36,10 @@ class StudyService(object):
     """Provides common tools for working with a Study"""
     INVESTIGATOR_LIST = "investigators.xlsx"  # A reference document containing details about what investigators to show, and when.
 
-    @staticmethod
-    def _is_valid_study(study_id):
-        study_info = None
-        study_details = ProtocolBuilderService().get_study_details(study_id)
-        if len(study_details) > 0:
-            study_info = study_details[0]
-        # The review types 2, 3, 23, 24 correspond to review type names
-        # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
-        if isinstance(study_info, dict) and 'REVIEW_TYPE' in study_info.keys() and study_info['REVIEW_TYPE'] in [2, 3,
-                                                                                                                 23,
-                                                                                                                 24]:
-            return True
-        return False
+    # The review types 2, 3, 23, 24 correspond to review type names
+    # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
+    # These are considered to be the valid review types that can be shown to users.
+    VALID_REVIEW_TYPES = [2, 3, 23, 24]
 
     def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
@@ -59,7 +50,7 @@ class StudyService(object):
 
         studies = []
         for study_model in db_studies:
-            if include_invalid or self._is_valid_study(study_model.id):
+            if include_invalid or study_model.review_type in self.VALID_REVIEW_TYPES:
                 studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model))
         return studies
 

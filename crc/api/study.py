@@ -1,5 +1,7 @@
+import json
 from datetime import datetime
 
+from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from flask import g, send_file
 from sqlalchemy.exc import IntegrityError
 from crc import session
@@ -20,7 +22,10 @@ import io
 
 
 def add_study(body):
-    """Or any study like object. Body should include a title, and primary_investigator_id """
+    # fixme: Remove this method.  We don't add a study this way except in testing.
+    """
+    This method seems to be used by one test, and no where else!
+    Or any study like object. Body should include a title, and primary_investigator_id """
     if 'primary_investigator_id' not in body:
         raise ApiError("missing_pi", "Can't create a new study without a Primary Investigator.")
     if 'title' not in body:
@@ -30,7 +35,8 @@ def add_study(body):
                              title=body['title'],
                              primary_investigator_id=body['primary_investigator_id'],
                              last_updated=datetime.utcnow(),
-                             status=StudyStatus.in_progress)
+                             status=StudyStatus.in_progress,
+                             review_type=body['review_type'])
     session.add(study_model)
     StudyService.add_study_update_event(study_model,
                                         status=StudyStatus.in_progress,

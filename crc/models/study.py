@@ -52,24 +52,28 @@ class StudyModel(db.Model):
     short_title = db.Column(db.String, nullable=True)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     status = db.Column(db.Enum(StudyStatus))
-    progress_status = db.Column(db.Enum(ProgressStatus))
     irb_status = db.Column(db.Enum(IrbStatus))
     primary_investigator_id = db.Column(db.String, nullable=True)
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=False)
+    enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    review_type = db.Column(db.Integer, nullable=True)  # Nullable only because we are adding it late, always set in practice.
+    events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
+
+    #fixme:  All of the fields below should likely be removed.
+    #events = db.relationship("TaskEventModel")
+    progress_status = db.Column(db.Enum(ProgressStatus))
     sponsor = db.Column(db.String, nullable=True)
     ind_number = db.Column(db.String, nullable=True)
-    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=False)
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
     on_hold = db.Column(db.Boolean, default=False)
-    enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    #events = db.relationship("TaskEventModel")
-    events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
     short_name = db.Column(db.String, nullable=True)
     proposal_name = db.Column(db.String, nullable=True)
 
     def update_from_protocol_builder(self, study: ProtocolBuilderCreatorStudy, user_id):
         self.title = study.TITLE
         self.user_uid = user_id
+        self.review_type = study.REVIEW_TYPE
         if study.DATELASTMODIFIED:
             self.last_updated = study.DATELASTMODIFIED
         else:
@@ -277,6 +281,7 @@ class StudySchema(ma.Schema):
     events_history = fields.List(fields.Nested('StudyEventSchema'), dump_only=True)
     short_name = fields.String(allow_none=True)
     proposal_name = fields.String(allow_none=True)
+    review_type = fields.Integer(allow_none=True)
 
     class Meta:
         model = Study

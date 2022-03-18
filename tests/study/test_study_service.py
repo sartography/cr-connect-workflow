@@ -25,7 +25,7 @@ class TestStudyService(BaseTest):
         self.workflow_spec_service.add_category(cat)
         self.load_test_spec("random_fact", category_id=cat.id)
         user = self.create_user()
-        study = StudyModel(title="My title", status=StudyStatus.in_progress, user_uid=user.uid)
+        study = StudyModel(title="My title", status=StudyStatus.in_progress, user_uid=user.uid, review_type=2)
         db.session.add(study)
         db.session.commit()
         self.assertIsNotNone(study.id)
@@ -237,14 +237,13 @@ class TestStudyService(BaseTest):
         # study_details has a valid REVIEW_TYPE, so we should get 1 study back
         self.assertEqual(1, len(studies))
 
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
-    def test_get_user_studies_bad_review_type(self, mock_details):
-        details_response = self.protocol_builder_response('study_details_bad_review_type.json')
-        mock_details.return_value = json.loads(details_response)
-
+    def test_get_user_studies_bad_review_type(self):
         spec_service = WorkflowSpecService()
         categories = spec_service.get_categories()
         user = self.create_user_with_study_and_workflow()
+        study = db.session.query(StudyModel).first()
+        study.review_type = 1984 # A particularly bad review type.
+        db.session.commit()
         studies = StudyService().get_studies_for_user(user, categories)
         # study_details has an invalid REVIEW_TYPE, so we should get 0 studies back
         self.assertEqual(0, len(studies))

@@ -68,7 +68,8 @@ class BaseTest(unittest.TestCase):
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Sartography Pharmaceuticals',
             'ind_number': '1234',
-            'user_uid': 'dhf8r'
+            'user_uid': 'dhf8r',
+            'review_type': 2
         },
         {
             'id': 1,
@@ -79,7 +80,8 @@ class BaseTest(unittest.TestCase):
             'primary_investigator_id': 'dhf8r',
             'sponsor': 'Makerspace & Co.',
             'ind_number': '5678',
-            'user_uid': 'dhf8r'
+            'user_uid': 'dhf8r',
+            'review_type': 2
         }
     ]
 
@@ -267,7 +269,8 @@ class BaseTest(unittest.TestCase):
         if study is None:
             user = self.create_user(uid=uid)
             study = StudyModel(title=title, status=StudyStatus.in_progress,
-                               user_uid=user.uid, primary_investigator_id=primary_investigator_id)
+                               user_uid=user.uid, primary_investigator_id=primary_investigator_id,
+                               review_type=2)
             session.add(study)
             session.commit()
         return study
