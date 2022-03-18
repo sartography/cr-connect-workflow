@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.study import Study, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
-    StudyStatus, StudyAssociatedSchema
+    StudyStatus, StudyAssociatedSchema, Category
 from crc.models.task_log import TaskLogQuery, TaskLogQuerySchema
 from crc.services.spreadsheet_service import SpreadsheetService
 from crc.services.study_service import StudyService
@@ -53,7 +53,7 @@ def add_study(body):
 def __run_master_spec(study_model, master_spec):
     """Runs the master workflow spec to get details on the status of each workflow.
        This is a fairly expensive call."""
-    """Uses the Top Level Workflow to calculate the status of the study, and it's
+    """Uses the Top Level Workflow to calculate the status of the study, and its
     workflow models."""
     if not master_spec:
         raise ApiError("missing_master_spec", "No specifications are currently marked as the master spec.")

@@ -16,6 +16,7 @@ class WorkflowSpecCategory(object):
         self.admin = admin
         self.workflows = []  # For storing Workflow Metadata
         self.specs = []  # For the list of specifications associated with a category
+        self.meta = None  # For storing category metadata
 
     def __eq__(self, other):
         if not isinstance(other, WorkflowSpecCategory):
@@ -23,6 +24,7 @@ class WorkflowSpecCategory(object):
         if other.id == self.id:
             return True
         return False
+
 
 class WorkflowSpecCategorySchema(ma.Schema):
     class Meta:
