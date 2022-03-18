@@ -38,7 +38,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
-    def test_total_tasks_updated(self, mock_docs, mock_details):
+    def test_study_progress(self, mock_docs, mock_details):
         """Assure that as a users progress is available when getting a list of studies for that user."""
         app.config['PB_ENABLED'] = True
         docs_response = self.protocol_builder_response('required_docs.json')
@@ -52,43 +52,26 @@ class TestStudyService(BaseTest):
         spec_service = WorkflowSpecService()
         categories = spec_service.get_categories()
         studies = StudyService().get_studies_for_user(user, categories)
-        self.assertTrue(len(studies) == 1)
-        self.assertTrue(len(studies[0].categories) == 1)
-        study_id = studies[0].id
-        study = StudyService().get_study(study_id, categories, process_categories=True)
-        workflow = study.categories[0].workflows[0]
 
-        # workflow should not be started, and it should have 0 completed tasks, and 0 total tasks.
-        self.assertEqual(WorkflowStatus.not_started, workflow.status)
-        self.assertEqual(0, workflow.total_tasks)
-        self.assertEqual(0, workflow.completed_tasks)
+        self.assertTrue(len(studies) == 1)
+        self.assertEqual(0, studies[0].progress)
 
         # Initialize the Workflow with the workflow processor.
-        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == studies[0].id).first()
         processor = WorkflowProcessor(workflow_model)
         processor.do_engine_steps()
 
-        # Assure the workflow is now started, and knows the total and completed tasks.
-        spec_service = WorkflowSpecService()
-        categories = spec_service.get_categories()
-        study = StudyService().get_study(study_id, categories, process_categories=True)
-        workflow = study.categories[0].workflows[0]
-
-        # self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
-        self.assertTrue(workflow.total_tasks > 0)
-        self.assertEqual(0, workflow.completed_tasks)
-
         # Complete a task
         task = processor.next_task()
+        task.data = {"type":"norris"}
         processor.complete_task(task)
+        processor.do_engine_steps()
         processor.save()
 
-        # Assure the workflow has moved on to the next task.
-        study = StudyService().get_study(study_id, categories, process_categories=True)
-        workflow = study.categories[0].workflows[0]
-        self.assertEqual(1, workflow.completed_tasks)
+        # Assure the progress is now updated
+        studies = StudyService().get_studies_for_user(user, categories)
+        self.assertGreater(studies[0].progress, 0)
 
-        # Get approvals
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs

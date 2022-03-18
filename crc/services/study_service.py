@@ -1,5 +1,6 @@
 from copy import copy
 from datetime import datetime
+from dateutil import parser
 from typing import List
 
 import requests
@@ -40,6 +41,7 @@ class StudyService(object):
     # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
     # These are considered to be the valid review types that can be shown to users.
     VALID_REVIEW_TYPES = [2, 3, 23, 24]
+    PB_MIN_DATE = parser.parse(app.config['PB_MIN_DATE'])
 
     def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
@@ -51,7 +53,8 @@ class StudyService(object):
         studies = []
         for study_model in db_studies:
             if include_invalid or study_model.review_type in self.VALID_REVIEW_TYPES:
-                studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model, process_categories=False))
+                studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model,
+                                                      process_categories=False))
         return studies
 
     @staticmethod
@@ -69,7 +72,7 @@ class StudyService(object):
     @staticmethod
     @timeit
     def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
-                  master_workflow_results=None, process_categories=False):
+                  master_workflow_results=None, process_categories=True):
         """Returns a study model that contains all the workflows organized by category.
         Pass in the results of the master workflow spec, and the status of other workflows will be updated."""
         last_time = firsttime()
@@ -95,7 +98,7 @@ class StudyService(object):
                                   DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
         last_time = sincetime("files", last_time)
-        if process_categories:
+        if process_categories and master_workflow_results:
             if study.status != StudyStatus.abandoned:
                 for category in study.categories:
                     workflow_metas = StudyService._get_workflow_metas(study_id, category)
@@ -113,21 +116,19 @@ class StudyService(object):
             for associate in associates:
                 if associate.role == "Primary Investigator":
                     study.primary_investigator = associate.ldap_info.display_name
+
         # Calculate study progress and return it as a integer out of a hundred
-        last_time = sincetime("PI", last_time)
-        completed_wfs = 0
-        total_wfs = 0
-        for category in study.categories:
-            for workflow in category.workflows:
-                total_wfs +=1
-                if workflow.status == WorkflowStatus.complete:
-                    completed_wfs += 1
-        if total_wfs > 0:
-            study.progress = int((completed_wfs/total_wfs)*100)
-        else:
-            study.progress = 0
+        all_workflows = db.session.query(WorkflowModel).\
+            filter(WorkflowModel.study_id == study.id).\
+            count()
+        complete_workflows = db.session.query(WorkflowModel).\
+            filter(WorkflowModel.study_id == study.id).\
+            filter(WorkflowModel.status == WorkflowStatus.complete).\
+            count()
+        if all_workflows > 0:
+            study.progress = int((complete_workflows/all_workflows)*100)
+
         return study
-        last_time = sincetime("progress", last_time)
 
 
     @staticmethod
@@ -405,6 +406,7 @@ class StudyService(object):
             return {}
 
     @staticmethod
+    @timeit
     def synch_with_protocol_builder_if_enabled(user, specs):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
@@ -424,6 +426,16 @@ class StudyService(object):
             # Further assures that every active study (that does exist in the protocol builder)
             # has a reference to every available workflow (though some may not have started yet)
             for pb_study in pb_studies:
+                try:
+                    if pb_study.DATELASTMODIFIED:
+                        last_modified = parser.parse(pb_study.DATELASTMODIFIED)
+                    else:
+                        last_modified = parser.parse(pb_study.DATECREATED)
+                    if last_modified.date() < StudyService.PB_MIN_DATE.date():
+                        continue
+                except Exception as e:
+                    # Last modified is null or undefined.  Don't import it.
+                    continue
                 new_status = None
                 new_progress_status = None
                 db_study = session.query(StudyModel).filter(StudyModel.id == pb_study.STUDYID).first()

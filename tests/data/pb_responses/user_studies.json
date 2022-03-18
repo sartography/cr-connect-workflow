@@ -1,5 +1,12 @@
 [
   {
+    "DATECREATED": "2002-02-19T14:26:49.127756",
+    "DATELASTMODIFIED": "2012-02-19T14:26:49.127756",
+    "STUDYID": 11111,
+    "TITLE": "An old study from the good old days that should not show up.",
+    "REVIEW_TYPE": 2
+  },
+  {
     "DATECREATED": "2020-02-19T14:26:49.127756",
     "DATELASTMODIFIED": "2020-02-19T14:26:49.127756",
     "STUDYID": 54321,

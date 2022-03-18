@@ -45,7 +45,7 @@ class TestStudyApi(BaseTest):
 
     def test_get_study(self):
         """Generic test, but pretty detailed, in that the study should return a categorized list of workflows
-        This starts with out loading the example data, to show that all the bases are covered from ground 0."""
+        This starts without loading the example data, to show that all the bases are covered from ground 0."""
 
         """NOTE:  The protocol builder is not enabled or mocked out.  As the master workflow (which is empty),
         and the test workflow do not need it, and it is disabled in the configuration."""
@@ -152,6 +152,7 @@ class TestStudyApi(BaseTest):
         # Enable the protocol builder for these tests, as the master_workflow and other workflows
         # depend on using the PB for data.
         app.config['PB_ENABLED'] = True
+        app.config['PB_MIN_DATE'] = "2020-01-01T00:00:00.000Z"
         self.add_studies()
         with session.no_autoflush:
             s = StudyModel(
@@ -193,7 +194,8 @@ class TestStudyApi(BaseTest):
                 if study['id'] == 65432:
                     # This study has `null` for DATELASTMODIFIED, so we should use the value in DATECREATED
                     self.assertEqual('2020-02-19T14:24:55.101695+00:00', study['last_updated'])
-
+                if study['id'] == 11111:
+                    self.assertTrue(False,"Study 11111 is too old to be processed and imported, it should be ignored.")
             db_studies_after = session.query(StudyModel).all()
             num_db_studies_after = len(db_studies_after)
             self.assertGreater(num_db_studies_after, num_db_studies_before)
@@ -212,6 +214,7 @@ class TestStudyApi(BaseTest):
 
             abandoned_events = session.query(StudyEvent).filter_by(status=StudyStatus.abandoned)
             self.assertEqual(abandoned_events.count(), 1)  # 1 study has been abandoned
+
 
             # We don't currently set any studies to Open for Enrollment automatically
             # Leaving the test here because we will need it again

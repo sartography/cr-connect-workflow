@@ -48,7 +48,8 @@ def add_study(body):
     session.commit()
 
     master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)
-    study = StudyService().get_study(study_model.id, categories, master_workflow_results=master_workflow_results)
+    study = StudyService().get_study(study_model.id, categories, master_workflow_results=master_workflow_results,
+                                     process_categories=True)
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
