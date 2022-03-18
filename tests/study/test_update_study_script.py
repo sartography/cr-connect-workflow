@@ -31,7 +31,6 @@ class TestUpdateStudyScript(BaseTest):
         script.do_task(task, workflow.study_id, workflow.id,
                        title=details.title,
                        short_title=details.short_title,
-                       pi=details.pi,
                        short_name=details.short_name,
                        proposal_name=details.proposal_name)
         self.assertEqual(details.title, workflow.study.title)
