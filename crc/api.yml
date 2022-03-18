@@ -1147,7 +1147,7 @@ paths:
         description: Restrict results to the given study.
         schema:
           type: number
-      - name: nonulls
+      - name: onlylanes
         in: query
         required: false
         description: Restrict results to not include null task lanes.

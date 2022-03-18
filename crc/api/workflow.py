@@ -215,7 +215,7 @@ def restart_workflow(workflow_id, clear_data=False, delete_files=False):
     return api_model
 
 
-def get_task_events(action = None, workflow = None, study = None, nonulls = None):
+def get_task_events(action = None, workflow = None, study = None, onlylanes = None):
     """Provides a way to see a history of what has happened, or get a list of tasks that need your attention."""
     user = UserService.current_user(allow_admin_impersonate=True)
     studies = session.query(StudyModel).filter(StudyModel.user_uid==user.uid)
@@ -228,7 +228,7 @@ def get_task_events(action = None, workflow = None, study = None, nonulls = None
         query = query.filter(TaskEventModel.workflow_id == workflow)
     if study:
         query = query.filter(TaskEventModel.study_id == study)
-    if nonulls:
+    if onlylanes:
         query = query.filter(TaskEventModel.task_lane != None)
     events = query.all()
 
