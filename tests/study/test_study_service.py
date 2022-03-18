@@ -54,9 +54,9 @@ class TestStudyService(BaseTest):
         studies = StudyService().get_studies_for_user(user, categories)
         self.assertTrue(len(studies) == 1)
         self.assertTrue(len(studies[0].categories) == 1)
-        self.assertEqual(1, len(studies[0].categories[0].workflows))
-
-        workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
+        study_id = studies[0].id
+        study = StudyService().get_study(study_id, categories, process_categories=True)
+        workflow = study.categories[0].workflows[0]
 
         # workflow should not be started, and it should have 0 completed tasks, and 0 total tasks.
         self.assertEqual(WorkflowStatus.not_started, workflow.status)
@@ -71,8 +71,9 @@ class TestStudyService(BaseTest):
         # Assure the workflow is now started, and knows the total and completed tasks.
         spec_service = WorkflowSpecService()
         categories = spec_service.get_categories()
-        studies = StudyService().get_studies_for_user(user, categories)
-        workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
+        study = StudyService().get_study(study_id, categories, process_categories=True)
+        workflow = study.categories[0].workflows[0]
+
         # self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
         self.assertTrue(workflow.total_tasks > 0)
         self.assertEqual(0, workflow.completed_tasks)
@@ -83,8 +84,8 @@ class TestStudyService(BaseTest):
         processor.save()
 
         # Assure the workflow has moved on to the next task.
-        studies = StudyService().get_studies_for_user(user, spec_service.get_categories())
-        workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
+        study = StudyService().get_study(study_id, categories, process_categories=True)
+        workflow = study.categories[0].workflows[0]
         self.assertEqual(1, workflow.completed_tasks)
 
         # Get approvals
@@ -270,7 +271,7 @@ class TestStudyService(BaseTest):
         x = WorkflowSpecCategorySchema().dump(wfscat)
         ####
 
-        s = StudyService.get_study(study.id, [wfscat], None, {'test_cat':{'status':'hidden', 'message': 'msg'}})
+        s = StudyService.get_study(study.id, [wfscat], None, {'test_cat':{'status':'hidden', 'message': 'msg'}}, process_categories=True)
         d = StudySchema().dump(s)
         self.assertEqual({'id': 'test_cat', 'message': 'msg', 'state': 'hidden'}, d['categories'][0]['meta'])
 
