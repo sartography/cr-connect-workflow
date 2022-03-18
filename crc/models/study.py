@@ -55,7 +55,6 @@ class StudyModel(db.Model):
     status = db.Column(db.Enum(StudyStatus))
     progress_status = db.Column(db.Enum(ProgressStatus))
     irb_status = db.Column(db.Enum(IrbStatus))
-    primary_investigator_id = db.Column(db.String, nullable=True)
     sponsor = db.Column(db.String, nullable=True)
     ind_number = db.Column(db.String, nullable=True)
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=False)
@@ -297,7 +296,7 @@ class StudySchema(ma.Schema):
 
     class Meta:
         model = Study
-        additional = ["id", "title", "short_title", "last_updated", "primary_investigator_id", "user_uid",
+        additional = ["id", "title", "short_title", "last_updated", "user_uid",
                       "sponsor", "ind_number", "files", "enrollment_date",
                       "create_user_display", "last_activity_date", "last_activity_user",
                       "events_history", "short_name", "proposal_name", "primary_investigator"]
