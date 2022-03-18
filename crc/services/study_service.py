@@ -108,6 +108,12 @@ class StudyService(object):
                     category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
                 category.workflows = workflow_metas
                 category.meta = category_meta
+
+        if study.primary_investigator is None:
+            associates = StudyService().get_study_associates(study.id)
+            for associate in associates:
+                if associate.role == "Primary Investigator":
+                    study.primary_investigator = associate.ldap_info.display_name
         return study
 
     @staticmethod
