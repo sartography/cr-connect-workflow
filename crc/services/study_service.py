@@ -105,28 +105,20 @@ class StudyService(object):
                     category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
                 category.workflows = workflow_metas
                 category.meta = category_meta
-        last_time = sincetime("categories", last_time)
 
-        if study.primary_investigator is None:
-            associates = StudyService().get_study_associates(study.id)
-            for associate in associates:
-                if associate.role == "Primary Investigator":
-                    study.primary_investigator = associate.ldap_info.display_name
         # Calculate study progress and return it as a integer out of a hundred
-        last_time = sincetime("PI", last_time)
-        completed_wfs = 0
-        total_wfs = 0
-        for category in study.categories:
-            for workflow in category.workflows:
-                total_wfs +=1
-                if workflow.status == WorkflowStatus.complete:
-                    completed_wfs += 1
-        if total_wfs > 0:
-            study.progress = int((completed_wfs/total_wfs)*100)
+        all_workflows = db.session.query(WorkflowModel).\
+            filter(WorkflowModel.study_id == study.id).\
+            count()
+        complete_workflows = db.session.query(WorkflowModel).\
+            filter(WorkflowModel.study_id == study.id).\
+            filter(WorkflowModel.status == WorkflowStatus.complete).\
+            count()
+        if all_workflows > 0:
+            study.progress = int((complete_workflows/all_workflows)*100)
         else:
             study.progress = 0
         return study
-        last_time = sincetime("progress", last_time)
 
 
     @staticmethod
