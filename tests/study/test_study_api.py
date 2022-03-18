@@ -54,7 +54,7 @@ class TestStudyApi(BaseTest):
         new_study = self.add_test_study()
         new_study = session.query(StudyModel).filter_by(id=new_study["id"]).first()
 
-        api_response = self.app.get('/v1.0/study/%i' % new_study.id,
+        api_response = self.app.get('/v1.0/study/%i?update_status=True' % new_study.id,
                                     headers=self.logged_in_headers(), content_type="application/json")
         self.assert_success(api_response)
         self.create_workflow('random_fact', study=new_study)
