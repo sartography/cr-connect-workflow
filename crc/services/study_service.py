@@ -72,7 +72,7 @@ class StudyService(object):
     @staticmethod
     @timeit
     def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
-                  master_workflow_results=None, process_categories=True):
+                  master_workflow_results=None, process_categories=False):
         """Returns a study model that contains all the workflows organized by category.
         Pass in the results of the master workflow spec, and the status of other workflows will be updated."""
         last_time = firsttime()
