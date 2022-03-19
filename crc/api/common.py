@@ -15,9 +15,11 @@ class ApiError(Exception):
     def __init__(self, code, message, status_code=400,
                  file_name="", task_id="", task_name="", tag="",
                  task_data=None, error_type="", error_line="", line_number=0, offset=0,
-                 task_trace=[]):
+                 task_trace=None):
         if task_data is None:
             task_data = {}
+        if task_trace is None:
+            task_trace = {}
         self.status_code = status_code
         self.code = code  # a short consistent string describing the error.
         self.message = message  # A detailed message that provides more information.
@@ -30,7 +32,7 @@ class ApiError(Exception):
         self.offset = offset
         self.error_type = error_type
         self.error_line = error_line
-        self.task_stack = task_trace
+        self.task_trace = task_trace
 
         try:
             user = g.user.uid

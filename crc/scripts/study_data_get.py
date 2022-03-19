@@ -7,7 +7,7 @@ class StudyDataGet(Script,DataStoreBase):
         return """Gets study data from the data store."""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.do_task(task, study_id, workflow_id, *args, **kwargs)
+        return self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         return self.get_data_common(study_id,

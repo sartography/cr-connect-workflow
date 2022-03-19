@@ -41,8 +41,15 @@ Cool Right?
             if ref in data.keys():
                 sub_content = JinjaService.get_content(data[ref], data)
                 templates[ref] = sub_content
-            else:
-                raise ApiError("missing_template", f"Your documentation imports a template that doest not exist: {ref}")
+            # This caused a problem with included templates that were wrapped by an if clause
+            # { % if isEmail_Variables %}
+            # { % include 'email_variables_template' %}
+            # { % endif %}
+            # The regex found them and tried to process them anyway
+            # We decided not to raise this error
+            # We may want to revisit this and find a better solution
+            # else:
+            #     raise ApiError("missing_template", f"Your documentation imports a template that doest not exist: {ref}")
         templates['main_template'] = input_template
         jinja2_env = Environment(loader=DictLoader(templates))
         # We just make a call here and let any errors percolate up to the calling method

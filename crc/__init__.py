@@ -160,9 +160,13 @@ def validate_all(study_id, category=None, spec_id=None):
                 print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
             else:
                 print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}. {e.message}")
+                for t in e.task_trace:
+                    print(f"---> {t}")
                 continue
         except WorkflowTaskExecException as e:
             print(f"Workflow Error, {e}, in Task {e.task.name} validate workflow {spec.id} in Category {spec.category.display_name}")
+            for t in e.task_trace:
+                print(f"---> {t}")
             continue
         except Exception as e:
             print(f"Unexpected Error ({e.__class__.__name__}), {e} validate workflow {spec.id} in Category {spec.category.display_name}")
