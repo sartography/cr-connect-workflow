@@ -210,16 +210,10 @@ class TestAuthentication(BaseTest):
         user_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(len(user_data), len(all_users))
 
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
-    def test_admin_can_impersonate_another_user(self, mock_details):
-        details_response = self.protocol_builder_response('study_details.json')
-        mock_details.return_value = json.loads(details_response)
+    def test_admin_can_impersonate_another_user(self):
         # Switch production mode on
         app.config['PRODUCTION'] = True
-
-
         self.load_test_spec('empty_workflow', master_spec=True)
-
         admin_user = self._login_as_admin()
         admin_token_headers = dict(Authorization='Bearer ' + admin_user.encode_auth_token())
 
@@ -272,8 +266,8 @@ class TestAuthentication(BaseTest):
             "title": "blah",
             "last_updated": datetime.utcnow(),
             "status": StudyStatus.in_progress,
-            "primary_investigator_id": uid,
             "user_uid": uid,
+            "review_type": 2
         }
 
     def _login_as_admin(self):

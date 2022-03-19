@@ -53,25 +53,33 @@ class StudyModel(db.Model):
     short_title = db.Column(db.String, nullable=True)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     status = db.Column(db.Enum(StudyStatus))
-    progress_status = db.Column(db.Enum(ProgressStatus))
     irb_status = db.Column(db.Enum(IrbStatus))
-    primary_investigator_id = db.Column(db.String, nullable=True)
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=False)
+    enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
+    review_type = db.Column(db.Integer, nullable=True)  # Nullable only because we are adding it late, always set in practice.
+    events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
+    primary_investigator = db.Column(db.String, nullable=True)
+
+    #fixme:  All of the fields below should likely be removed.
+    #events = db.relationship("TaskEventModel")
+    progress_status = db.Column(db.Enum(ProgressStatus))
     sponsor = db.Column(db.String, nullable=True)
     ind_number = db.Column(db.String, nullable=True)
-    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=False)
     investigator_uids = db.Column(db.ARRAY(db.String), nullable=True)
     requirements = db.Column(db.ARRAY(db.Integer), nullable=True)
     on_hold = db.Column(db.Boolean, default=False)
-    enrollment_date = db.Column(db.DateTime(timezone=True), nullable=True)
-    # events = db.relationship("TaskEventModel")
-    events_history = db.relationship("StudyEvent", cascade="all, delete, delete-orphan")
-    short_name = db.Column(db.String, nullable=True)
     proposal_name = db.Column(db.String, nullable=True)
+    short_name = db.Column(db.String, nullable=True)
+    progress = db.Column(db.Integer, nullable=True)
 
     def update_from_protocol_builder(self, study: ProtocolBuilderCreatorStudy, user_id):
         self.title = study.TITLE
         self.user_uid = user_id
-        self.last_updated = study.DATELASTMODIFIED
+        self.review_type = study.REVIEW_TYPE
+        if study.DATELASTMODIFIED:
+            self.last_updated = study.DATELASTMODIFIED
+        else:
+            self.last_updated = study.DATECREATED
 
         self.irb_status = IrbStatus.incomplete_in_protocol_builder
 
@@ -201,12 +209,13 @@ class CategorySchema(ma.Schema):
 
 class Study(object):
 
-    def __init__(self, title, short_title, last_updated, primary_investigator_id, user_uid,
+    def __init__(self, title, short_title, last_updated, user_uid,
                  id=None, status=None, progress_status=None, irb_status=None, short_name=None, proposal_name=None,
                  comment="",
                  sponsor="", ind_number="", categories=[],
                  files=[], approvals=[], enrollment_date=None, events_history=[],
-                 last_activity_user="", last_activity_date=None, create_user_display="", **argsv):
+                 primary_investigator="",
+                 last_activity_user="",last_activity_date =None,create_user_display="", progress=0, **argsv):
         self.id = id
         self.user_uid = user_uid
         self.create_user_display = create_user_display
@@ -219,7 +228,6 @@ class Study(object):
         self.progress_status = progress_status
         self.irb_status = irb_status
         self.comment = comment
-        self.primary_investigator_id = primary_investigator_id
         self.sponsor = sponsor
         self.ind_number = ind_number
         self.categories = categories
@@ -230,6 +238,8 @@ class Study(object):
         self.events_history = events_history
         self.short_name = short_name
         self.proposal_name = proposal_name
+        self.primary_investigator = primary_investigator
+        self.progress = progress
 
     @classmethod
     def from_model(cls, study_model: StudyModel):
@@ -291,13 +301,16 @@ class StudySchema(ma.Schema):
     events_history = fields.List(fields.Nested('StudyEventSchema'), dump_only=True)
     short_name = fields.String(allow_none=True)
     proposal_name = fields.String(allow_none=True)
+    review_type = fields.Integer(allow_none=True)
+    primary_investigator = fields.String(allow_none=True)
+    progress = fields.Integer(allow_none=True)
 
     class Meta:
         model = Study
-        additional = ["id", "title", "short_title", "last_updated", "primary_investigator_id", "user_uid",
+        additional = ["id", "title", "short_title", "last_updated", "user_uid",
                       "sponsor", "ind_number", "files", "enrollment_date",
                       "create_user_display", "last_activity_date", "last_activity_user",
-                      "events_history", "short_name", "proposal_name"]
+                      "events_history", "short_name", "proposal_name", "progress", "primary_investigator"]
         unknown = INCLUDE
 
     @marshmallow.post_load

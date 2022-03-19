@@ -26,7 +26,7 @@ class TestStudyService(BaseTest):
         self.workflow_spec_service.add_category(cat)
         self.load_test_spec("random_fact", category_id=cat.id)
         user = self.create_user()
-        study = StudyModel(title="My title", status=StudyStatus.in_progress, user_uid=user.uid)
+        study = StudyModel(title="My title", status=StudyStatus.in_progress, user_uid=user.uid, review_type=2)
         db.session.add(study)
         db.session.commit()
         self.assertIsNotNone(study.id)
@@ -38,7 +38,7 @@ class TestStudyService(BaseTest):
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
-    def test_total_tasks_updated(self, mock_docs, mock_details):
+    def test_study_progress(self, mock_docs, mock_details):
         """Assure that as a users progress is available when getting a list of studies for that user."""
         app.config['PB_ENABLED'] = True
         docs_response = self.protocol_builder_response('required_docs.json')
@@ -52,42 +52,26 @@ class TestStudyService(BaseTest):
         spec_service = WorkflowSpecService()
         categories = spec_service.get_categories()
         studies = StudyService().get_studies_for_user(user, categories)
+
         self.assertTrue(len(studies) == 1)
-        self.assertTrue(len(studies[0].categories) == 1)
-        self.assertEqual(1, len(studies[0].categories[0].workflows))
-
-        workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
-
-        # workflow should not be started, and it should have 0 completed tasks, and 0 total tasks.
-        self.assertEqual(WorkflowStatus.not_started, workflow.status)
-        self.assertEqual(0, workflow.total_tasks)
-        self.assertEqual(0, workflow.completed_tasks)
+        self.assertEqual(0, studies[0].progress)
 
         # Initialize the Workflow with the workflow processor.
-        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
+        workflow_model = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == studies[0].id).first()
         processor = WorkflowProcessor(workflow_model)
         processor.do_engine_steps()
 
-        # Assure the workflow is now started, and knows the total and completed tasks.
-        spec_service = WorkflowSpecService()
-        categories = spec_service.get_categories()
-        studies = StudyService().get_studies_for_user(user, categories)
-        workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
-        # self.assertEqual(WorkflowStatus.user_input_required, workflow.status)
-        self.assertTrue(workflow.total_tasks > 0)
-        self.assertEqual(0, workflow.completed_tasks)
-
         # Complete a task
         task = processor.next_task()
+        task.data = {"type":"norris"}
         processor.complete_task(task)
+        processor.do_engine_steps()
         processor.save()
 
-        # Assure the workflow has moved on to the next task.
-        studies = StudyService().get_studies_for_user(user, spec_service.get_categories())
-        workflow = next(iter(studies[0].categories[0].workflows)) # Workflows is a set.
-        self.assertEqual(1, workflow.completed_tasks)
+        # Assure the progress is now updated
+        studies = StudyService().get_studies_for_user(user, categories)
+        self.assertGreater(studies[0].progress, 0)
 
-        # Get approvals
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
@@ -238,14 +222,13 @@ class TestStudyService(BaseTest):
         # study_details has a valid REVIEW_TYPE, so we should get 1 study back
         self.assertEqual(1, len(studies))
 
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
-    def test_get_user_studies_bad_review_type(self, mock_details):
-        details_response = self.protocol_builder_response('study_details_bad_review_type.json')
-        mock_details.return_value = json.loads(details_response)
-
+    def test_get_user_studies_bad_review_type(self):
         spec_service = WorkflowSpecService()
         categories = spec_service.get_categories()
         user = self.create_user_with_study_and_workflow()
+        study = db.session.query(StudyModel).first()
+        study.review_type = 1984 # A particularly bad review type.
+        db.session.commit()
         studies = StudyService().get_studies_for_user(user, categories)
         # study_details has an invalid REVIEW_TYPE, so we should get 0 studies back
         self.assertEqual(0, len(studies))
@@ -271,7 +254,7 @@ class TestStudyService(BaseTest):
         x = WorkflowSpecCategorySchema().dump(wfscat)
         ####
 
-        s = StudyService.get_study(study.id, [wfscat], None, {'test_cat':{'status':'hidden', 'message': 'msg'}})
+        s = StudyService.get_study(study.id, [wfscat], None, {'test_cat':{'status':'hidden', 'message': 'msg'}}, process_categories=True)
         d = StudySchema().dump(s)
         self.assertEqual({'id': 'test_cat', 'message': 'msg', 'state': 'hidden'}, d['categories'][0]['meta'])
 

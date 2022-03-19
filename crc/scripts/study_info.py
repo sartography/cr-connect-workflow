@@ -24,7 +24,6 @@ class StudyInfo(Script):
             "info": {
                 "id": 12,
                 "title": "test",
-                "primary_investigator_id": 21,
                 "user_uid": "dif84",
                 "sponsor": "sponsor",
                 "ind_number": "1234",

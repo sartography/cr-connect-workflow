@@ -1,5 +1,7 @@
+import json
 from datetime import datetime
 
+from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from flask import g, send_file
 from sqlalchemy.exc import IntegrityError
 from crc import session
@@ -20,17 +22,19 @@ import io
 
 
 def add_study(body):
-    """Or any study like object. Body should include a title, and primary_investigator_id """
-    if 'primary_investigator_id' not in body:
-        raise ApiError("missing_pi", "Can't create a new study without a Primary Investigator.")
+    # fixme: Remove this method.  We don't add a study this way except in testing.
+    """
+    This method seems to be used by one test, and no where else!
+    Or any study like object. Body should include a title, and primary_investigator_id """
+    """Or any study like object. Body should include a title """
     if 'title' not in body:
         raise ApiError("missing_title", "Can't create a new study without a title.")
 
     study_model = StudyModel(user_uid=UserService.current_user().uid,
                              title=body['title'],
-                             primary_investigator_id=body['primary_investigator_id'],
                              last_updated=datetime.utcnow(),
-                             status=StudyStatus.in_progress)
+                             status=StudyStatus.in_progress,
+                             review_type=body['review_type'])
     session.add(study_model)
     StudyService.add_study_update_event(study_model,
                                         status=StudyStatus.in_progress,
@@ -44,7 +48,8 @@ def add_study(body):
     session.commit()
 
     master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)
-    study = StudyService().get_study(study_model.id, categories, master_workflow_results=master_workflow_results)
+    study = StudyService().get_study(study_model.id, categories, master_workflow_results=master_workflow_results,
+                                     process_categories=True)
     study_data = StudySchema().dump(study)
     study_data["errors"] = ApiErrorSchema(many=True).dump(errors)
     return study_data
@@ -105,7 +110,7 @@ def get_study(study_id, update_status=False):
     if update_status:
         study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
         master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)
-    study = StudyService().get_study(study_id, categories, master_workflow_results=master_workflow_results)
+    study = StudyService().get_study(study_id, categories, master_workflow_results=master_workflow_results, process_categories=True)
     if (study is None):
         raise ApiError("unknown_study",  'The study "' + study_id + '" is not recognized.', status_code=404)
     return StudySchema().dump(study)
