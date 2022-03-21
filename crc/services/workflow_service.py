@@ -33,6 +33,7 @@ from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.services.data_store_service import DataStoreBase
 from crc.services.document_service import DocumentService
 from crc.services.jinja_service import JinjaService
+from crc.services.ldap_service import LdapService
 from crc.services.lookup_service import LookupService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
@@ -164,7 +165,7 @@ class WorkflowService(object):
 
     @staticmethod
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
-        """Runs a spec through it's paces to see if it results in any errors.
+        """Runs a spec through its paces to see if it results in any errors.
           Not fool-proof, but a good sanity check.  Returns the final data
           output form the last task if successful.
 
@@ -195,6 +196,18 @@ class WorkflowService(object):
                                                  f"This task is in a lane called '{task.task_spec.lane}', The "
                                                  f" current task data must have information mapping this role to "
                                                  f" a unique user id.", task)
+                    if task.task_spec.lane is not None:
+                        if isinstance(task.data[task.task_spec.lane], str) and not LdapService().user_exists(task.data[task.task_spec.lane]):
+                            raise ApiError.from_task("missing_user",
+                                                     f"The user '{task.data[task.task_spec.lane]}' "
+                                                     f"could not be found in LDAP. ", task)
+                        elif isinstance(task.data[task.task_spec.lane], list):
+                            for uid in task.data[task.task_spec.lane]:
+                                if not LdapService().user_exists(uid):
+                                    raise ApiError.from_task("missing_user",
+                                                             f"The user '{uid}' "
+                                                             f"could not be found in LDAP. ", task)
+
                     task_api = WorkflowService.spiff_task_to_api_task(
                         task,
                         add_docs_and_forms=True)  # Assure we try to process the documentation, and raise those errors.
