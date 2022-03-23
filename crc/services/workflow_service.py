@@ -458,8 +458,6 @@ class WorkflowService(object):
     @staticmethod
     def evaluate_property(property_name, field, task, task_data=None):
         expression = field.get_property(property_name)
-        if field.id == 'DataTransmissionMethodEncrypted':
-            print("Here we are!")
         if not task_data:
             task_data = task.data
         data = copy.deepcopy(task_data)
