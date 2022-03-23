@@ -302,7 +302,7 @@ class WorkflowService(object):
             if field.label:
                 try:
                     # Assure that we can evaluate the field.label, but no need to save the resulting value.
-                    task.workflow.script_engine._evaluate(field.label, data, task)
+                    task.workflow.script_engine._evaluate(field.label, form_data, task)
                 except Exception as e:
                     raise ApiError.from_task("bad label", f'The label "{field.label}" in field {field.id} '
                                                           f'could not be understood or evaluated. ',
@@ -333,7 +333,8 @@ class WorkflowService(object):
 
             # If the field is hidden we can leave it as none.
             if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
-                if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task):
+
+                if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task, form_data):
                     continue
 
             # If we are only populating required fields, and this isn't required. stop here.
@@ -360,7 +361,7 @@ class WorkflowService(object):
                                              f'for repeat and group expressions that is not also used for a field name.'
                                              , task=task)
                 if field.has_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION):
-                    result = WorkflowService.evaluate_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION, field, task)
+                    result = WorkflowService.evaluate_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION, field, task, form_data)
                     if not result:
                         hide_groups.append(group)
                 if group not in form_data and group not in hide_groups:
@@ -455,10 +456,13 @@ class WorkflowService(object):
             DataStoreBase().set_data_common(task.id, None, None, None, None, None, file_id, *data_args)
 
     @staticmethod
-    def evaluate_property(property_name, field, task):
+    def evaluate_property(property_name, field, task, task_data=None):
         expression = field.get_property(property_name)
-
-        data = copy.deepcopy(task.data)
+        if field.id == 'DataTransmissionMethodEncrypted':
+            print("Here we are!")
+        if not task_data:
+            task_data = task.data
+        data = copy.deepcopy(task_data)
         # If there's a field key with no initial value, give it one (None)
         for other_field in task.task_spec.form.fields:
             if other_field.id not in data:
@@ -468,12 +472,12 @@ class WorkflowService(object):
             # Then you must evaluate the expression based on the data within the group, if that data exists.
             # There may not be data available in the group, if no groups were added
             group = field.get_property(Task.FIELD_PROP_REPEAT)
-            if group in task.data and len(task.data[group]) > 0:
+            if group in task_data and len(task_data[group]) > 0:
                 # Here we must make the current group data top level (as it would be in a repeat section) but
                 # make all other top level task data available as well.
-                new_data = copy.deepcopy(task.data)
+                new_data = copy.deepcopy(task_data)
                 del (new_data[group])
-                data = task.data[group][0]
+                data = task_data[group][0]
                 data.update(new_data)
             else:
                 return None  # We may not have enough information to process this
