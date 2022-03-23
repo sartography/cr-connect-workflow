@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_5261381" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_5261381" name="Unchecked Checkbox Default" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1b7cexb</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1b7cexb" sourceRef="StartEvent_1" targetRef="Activity_CheckYesNo" />
+    <bpmn:userTask id="Activity_CheckYesNo" name="Check Yes and No" camunda:formKey="asdf">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="var_a" label="&#39;Var A&#39;" type="boolean">
+            <camunda:properties>
+              <camunda:property id="boolean_type" value="checkbox" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1b7cexb</bpmn:incoming>
+      <bpmn:outgoing>Flow_1lbtmyk</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1lbtmyk" sourceRef="Activity_CheckYesNo" targetRef="Activity_1xg04x4" />
+    <bpmn:manualTask id="Activity_DisplayYesNo" name="Display Yes and No">
+      <bpmn:documentation>## Var A
+{{ var_a }}</bpmn:documentation>
+      <bpmn:incoming>Flow_1xgmz1p</bpmn:incoming>
+      <bpmn:outgoing>Flow_0k6g212</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_174uvkc">
+      <bpmn:incoming>Flow_0k6g212</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0k6g212" sourceRef="Activity_DisplayYesNo" targetRef="Event_174uvkc" />
+    <bpmn:scriptTask id="Activity_1xg04x4" name="Check Values">
+      <bpmn:incoming>Flow_1lbtmyk</bpmn:incoming>
+      <bpmn:outgoing>Flow_1xgmz1p</bpmn:outgoing>
+      <bpmn:script># print(var_a)
+# if var_a not in (True, False):
+#     failing_script()
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1xgmz1p" sourceRef="Activity_1xg04x4" targetRef="Activity_DisplayYesNo" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_5261381">
+      <bpmndi:BPMNEdge id="Flow_1xgmz1p_di" bpmnElement="Flow_1xgmz1p">
+        <di:waypoint x="804" y="117" />
+        <di:waypoint x="901" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0k6g212_di" bpmnElement="Flow_0k6g212">
+        <di:waypoint x="1001" y="117" />
+        <di:waypoint x="1092" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1lbtmyk_di" bpmnElement="Flow_1lbtmyk">
+        <di:waypoint x="607" y="117" />
+        <di:waypoint x="704" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1b7cexb_di" bpmnElement="Flow_1b7cexb">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="507" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0roa1lj_di" bpmnElement="Activity_CheckYesNo">
+        <dc:Bounds x="507" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1038tcc_di" bpmnElement="Activity_DisplayYesNo">
+        <dc:Bounds x="901" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_174uvkc_di" bpmnElement="Event_174uvkc">
+        <dc:Bounds x="1092" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0d4s8v5_di" bpmnElement="Activity_1xg04x4">
+        <dc:Bounds x="704" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
