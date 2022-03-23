@@ -3,6 +3,7 @@ from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.workflow import WorkflowModel
 from datetime import datetime
+from flask import g
 
 
 class DataStoreBase(object):
@@ -17,11 +18,19 @@ class DataStoreBase(object):
                 overwritten = True
         return overwritten
 
-
     def set_validate_common(self, study_id, workflow_id, user_id, script_name, file_id, *args):
+        # from crc import validation_data_store
         self.check_args_2(args, script_name)
-        workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
-        self.get_prev_value(study_id=study_id, user_id=user_id, file_id=file_id, key=args[0])
+        g.validation_data_store[args[0]] = args[1]
+        # workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
+        # self.get_prev_value(study_id=study_id, user_id=user_id, file_id=file_id, key=args[0])
+
+    def get_validate_common(self, study_id, user_id, script_name, file_id=None, *args):
+        # from crc import validation_data_store
+        value = g.validation_data_store[args[0]]
+
+        print('get_validate_common')
+        return value
 
     def check_args(self, args, maxlen=1, script_name='study_data_get'):
         if len(args) < 1 or len(args) > maxlen:
@@ -86,8 +95,7 @@ class DataStoreBase(object):
         study = session.query(DataStoreModel).filter_by(study_id=study_id,
                                                         user_id=user_id,
                                                         file_id=file_id,
-                                                        key=args[
-            0]).first()
+                                                        key=args[0]).first()
         if study:
             return study.value
         else:
