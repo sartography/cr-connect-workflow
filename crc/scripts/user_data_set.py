@@ -4,17 +4,18 @@ from crc.services.data_store_service import DataStoreBase
 from crc.scripts.script import Script
 
 
-class UserDataSet(Script,DataStoreBase):
+class UserDataSet(Script, DataStoreBase):
     def get_description(self):
         return """Sets user data to the data store these are positional arguments key and value.
-        example: user_data_set('mykey','myvalue')
+        example: user_data_set('my_key','my_value')
         """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.set_validate_common(None,
+        self.set_validate_common(task.id,
+                                 study_id,
                                  workflow_id,
-                                 g.user.uid,
                                  'user_data_set',
+                                 g.user.uid,
                                  None,
                                  *args)
 
@@ -28,6 +29,3 @@ class UserDataSet(Script,DataStoreBase):
                                     None,
                                     *args,
                                     **kwargs)
-
-
-
