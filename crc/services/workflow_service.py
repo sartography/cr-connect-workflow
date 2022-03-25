@@ -75,7 +75,7 @@ class WorkflowService(object):
             db.session.add(UserModel(uid="test"))
             db.session.commit()
             user = db.session.query(UserModel).filter_by(uid="test").first()
-        if validate_study_id:
+        if validate_study_id is not None:
             study = db.session.query(StudyModel).filter_by(id=validate_study_id).first()
         else:
             study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
