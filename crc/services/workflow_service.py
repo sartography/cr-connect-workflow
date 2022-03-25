@@ -177,7 +177,7 @@ class WorkflowService(object):
           spec, only completing the required fields, rather than everything.
           """
 
-        g.validation_data_store = {}
+        g.validation_data_store = []
 
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:
