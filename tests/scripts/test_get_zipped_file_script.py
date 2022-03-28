@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc import session
-from crc.models.file import FileDataModel
+from crc.models.file import FileModel, FileDataModel
 from crc.services.user_file_service import UserFileService
 
 import io
@@ -48,3 +48,15 @@ class TestGetZippedFiles(BaseTest):
                 self.assertIn(os.path.basename(info.filename), [f'{study_id} Protocol document_1.png', f'{study_id} Application document_2.txt', f'{study_id} Model document_3.pdf'])
                 file = zf.read(name)
                 self.assertEqual(b'1234', file)
+
+        # The workflow calls the get_zipped_files script a second time,
+        # but we set an IRB Doc Code the second time.
+        # So, we expect one to be set in the DB
+        self.complete_form(workflow, next_task, {})
+
+        file_1 = session.query(FileModel).filter(FileModel.task_spec == 'Activity_GetZip').first()
+        file_2 = session.query(FileModel).filter(FileModel.task_spec == 'Activity_GetZip_2').first()
+        # file 1 should *not* have an irb doc code
+        self.assertEqual(None, file_1.irb_doc_code)
+        # file 2 *should* have an irb doc code
+        self.assertEqual('CRC2_IRBSubmission_ZipFile', file_2.irb_doc_code)
