@@ -8,7 +8,7 @@
     <bpmn:userTask id="Activity_GetFileIDs" name="Get File IDs" camunda:formKey="GetName">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="file_id" label="'File ID'"  type="long">
+          <camunda:formField id="file_id" label="&#39;File ID&#39;" type="long">
             <camunda:properties>
               <camunda:property id="repeat" value="file_ids" />
             </camunda:properties>
@@ -38,19 +38,28 @@ zip_file = get_zipped_files(file_ids=to_zip)</bpmn:script>
 # Zip
 {{ zip_file }}</bpmn:documentation>
       <bpmn:incoming>Flow_1uyi5u2</bpmn:incoming>
-      <bpmn:outgoing>Flow_0l42ysq</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1i3xa3d</bpmn:outgoing>
     </bpmn:manualTask>
-    <bpmn:endEvent id="Event_1sfhw21">
-      <bpmn:incoming>Flow_0l42ysq</bpmn:incoming>
+    <bpmn:sequenceFlow id="Flow_1i3xa3d" sourceRef="Activity_DisplayZip" targetRef="Activity_GetZip_2" />
+    <bpmn:sequenceFlow id="Flow_0ic5xlg" sourceRef="Activity_GetZip_2" targetRef="Activity_04sw7a2" />
+    <bpmn:endEvent id="Event_1wpd34m">
+      <bpmn:incoming>Flow_0r9uogm</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_0l42ysq" sourceRef="Activity_DisplayZip" targetRef="Event_1sfhw21" />
+    <bpmn:sequenceFlow id="Flow_0r9uogm" sourceRef="Activity_04sw7a2" targetRef="Event_1wpd34m" />
+    <bpmn:scriptTask id="Activity_GetZip_2" name="Get Zip with Doc Code">
+      <bpmn:incoming>Flow_1i3xa3d</bpmn:incoming>
+      <bpmn:outgoing>Flow_0ic5xlg</bpmn:outgoing>
+      <bpmn:script>zip_file_2 = get_zipped_files(file_ids=to_zip, doc_code='CRC2_IRBSubmission_ZipFile')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:manualTask id="Activity_04sw7a2" name="Display Zip 2">
+      <bpmn:documentation># Zip 2
+{{ zip_file_2 }}</bpmn:documentation>
+      <bpmn:incoming>Flow_0ic5xlg</bpmn:incoming>
+      <bpmn:outgoing>Flow_0r9uogm</bpmn:outgoing>
+    </bpmn:manualTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_SayHello">
-      <bpmndi:BPMNEdge id="Flow_0l42ysq_di" bpmnElement="Flow_0l42ysq">
-        <di:waypoint x="662" y="117" />
-        <di:waypoint x="712" y="117" />
-      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1uyi5u2_di" bpmnElement="Flow_1uyi5u2">
         <di:waypoint x="500" y="117" />
         <di:waypoint x="562" y="117" />
@@ -63,20 +72,38 @@ zip_file = get_zipped_files(file_ids=to_zip)</bpmn:script>
         <di:waypoint x="188" y="117" />
         <di:waypoint x="240" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="Activity_1jh8vhm_di" bpmnElement="Activity_DisplayZip">
-        <dc:Bounds x="562" y="77" width="100" height="80" />
+      <bpmndi:BPMNEdge id="Flow_1i3xa3d_di" bpmnElement="Flow_1i3xa3d">
+        <di:waypoint x="662" y="117" />
+        <di:waypoint x="730" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ic5xlg_di" bpmnElement="Flow_0ic5xlg">
+        <di:waypoint x="830" y="117" />
+        <di:waypoint x="900" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0r9uogm_di" bpmnElement="Flow_0r9uogm">
+        <di:waypoint x="1000" y="117" />
+        <di:waypoint x="1072" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0ftuz3s_di" bpmnElement="Activity_GetFileIDs">
         <dc:Bounds x="240" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
-        <dc:Bounds x="152" y="99" width="36" height="36" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1qhfe35_di" bpmnElement="Activity_GetZip">
         <dc:Bounds x="400" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1sfhw21_di" bpmnElement="Event_1sfhw21">
-        <dc:Bounds x="712" y="99" width="36" height="36" />
+      <bpmndi:BPMNShape id="Activity_1jh8vhm_di" bpmnElement="Activity_DisplayZip">
+        <dc:Bounds x="562" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1wpd34m_di" bpmnElement="Event_1wpd34m">
+        <dc:Bounds x="1072" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1cbq5uo_di" bpmnElement="Activity_GetZip_2">
+        <dc:Bounds x="730" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1ev8rrj_di" bpmnElement="Activity_04sw7a2">
+        <dc:Bounds x="900" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

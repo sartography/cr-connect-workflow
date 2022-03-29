@@ -48,7 +48,11 @@ class GetZippedFiles(Script):
                             zfw.writestr(file_name, file_data.data)
 
                     with open(temp_file.name, mode='rb') as handle:
-                        file_model = UserFileService().add_workflow_file(workflow_id, None, task.get_name(),
+                        if 'doc_code' in kwargs:
+                            doc_code = kwargs['doc_code']
+                        else:
+                            doc_code = None
+                        file_model = UserFileService().add_workflow_file(workflow_id, doc_code, task.get_name(),
                                                                          zip_filename, 'application/zip', handle.read())
                         # return file_model
                         StudyService.get_documents_status(study_id=study_id, force=True)
