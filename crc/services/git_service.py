@@ -99,13 +99,16 @@ class GitService(object):
         if comment is None or comment.strip() == '':
             comment = f"Git commit: {datetime.now()}"
         repo = self._get_repo()
-        # get list of changed files
-        changes = [item.a_path for item in repo.index.diff(None)]
+        # get list of modified files
+        modified = [item.a_path for item in repo.index.diff(None) if item.change_type == 'M']
+        # get list of deleted files
+        deleted = [item.a_path for item in repo.index.diff(None) if item.change_type == 'D']
         # get list of untracked files
         untracked_files = repo.untracked_files
 
-        repo.index.add(changes)
+        repo.index.add(modified)
         repo.index.add(untracked_files)
+        repo.index.remove(deleted)
         repo.index.commit(comment)
         repo.remotes.origin.push()
 
