@@ -63,7 +63,7 @@ class TestGitService(BaseTest):
         self.assertIn(call.git.checkout('my_testing_branch'), method_calls)
         self.assertIn(call.index.add(['a_file.txt', 'b_file.txt']), method_calls)
         self.assertIn(call.index.add(['c_file.txt', 'd_file.txt']), method_calls)
-        self.assertIn(call.index.delete(['e_file.txt']), method_calls)
+        self.assertIn(call.index.remove(['e_file.txt']), method_calls)
         self.assertIn(call.index.commit('This is my comment'), method_calls)
         self.assertIn(call.remotes.origin.push(), method_calls)
 
