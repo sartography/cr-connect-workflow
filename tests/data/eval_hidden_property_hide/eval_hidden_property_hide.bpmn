@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1czc92c" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_0jnv7pf" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1afe16z</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1afe16z" sourceRef="StartEvent_1" targetRef="Activity_GetData" />
+    <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="field_a" label="&#39;Field A&#39;" type="boolean" defaultValue="False">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="field_b" label="&#39;Field B&#39;" type="enum">
+            <camunda:properties>
+              <camunda:property id="group" value="My Group" />
+              <camunda:property id="hide_expression" value="not field_a" />
+              <camunda:property id="enum_type" value="radio" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+            <camunda:value id="Yes" name="Yes, it will happen" />
+            <camunda:value id="No" name="No, it will not happen" />
+          </camunda:formField>
+          <camunda:formField id="field_c" label="&#39;Field C&#39; " type="boolean">
+            <camunda:properties>
+              <camunda:property id="group" value="My Group" />
+              <camunda:property id="hide_expression" value="not field_a" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1afe16z</bpmn:incoming>
+      <bpmn:outgoing>Flow_1rdirmd</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1rdirmd" sourceRef="Activity_GetData" targetRef="Activity_06vgshs" />
+    <bpmn:scriptTask id="Activity_06vgshs" name="Process Data">
+      <bpmn:incoming>Flow_1rdirmd</bpmn:incoming>
+      <bpmn:outgoing>Flow_1a0iaov</bpmn:outgoing>
+      <bpmn:script>val_b = 'None'
+val_c = 'None'
+if field_a:
+    val_b = field_b
+    val_c = field_c</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1a0iaov" sourceRef="Activity_06vgshs" targetRef="Activity_1oa7yli" />
+    <bpmn:endEvent id="Event_1hh5chb">
+      <bpmn:incoming>Flow_09i512s</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_09i512s" sourceRef="Activity_1oa7yli" targetRef="Event_1hh5chb" />
+    <bpmn:manualTask id="Activity_1oa7yli" name="Display Data">
+      <bpmn:documentation>## Values
+
+
+### B
+{{ val_b }}
+
+
+### C
+{{ val_c }}</bpmn:documentation>
+      <bpmn:incoming>Flow_1a0iaov</bpmn:incoming>
+      <bpmn:outgoing>Flow_09i512s</bpmn:outgoing>
+    </bpmn:manualTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0jnv7pf">
+      <bpmndi:BPMNEdge id="Flow_09i512s_di" bpmnElement="Flow_09i512s">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1a0iaov_di" bpmnElement="Flow_1a0iaov">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1rdirmd_di" bpmnElement="Flow_1rdirmd">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1afe16z_di" bpmnElement="Flow_1afe16z">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1erp6or_di" bpmnElement="Activity_GetData">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0q9ghf5_di" bpmnElement="Activity_06vgshs">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1hh5chb_di" bpmnElement="Event_1hh5chb">
+        <dc:Bounds x="752" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_010f8pg_di" bpmnElement="Activity_1oa7yli">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
