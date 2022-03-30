@@ -37,10 +37,10 @@ class StudyService(object):
     """Provides common tools for working with a Study"""
     INVESTIGATOR_LIST = "investigators.xlsx"  # A reference document containing details about what investigators to show, and when.
 
-    # The review types 2, 3, 23, 24 correspond to review type names
-    # `Full Committee`, `Expedited`, `Non-UVA IRB Full Board`, and `Non-UVA IRB Expedited`
+    # The review types 2, 3, 21 correspond to review type names
+    # `Full Committee`, `Expedited`, and `Review by Non-UVA IRB`
     # These are considered to be the valid review types that can be shown to users.
-    VALID_REVIEW_TYPES = [2, 3, 23, 24]
+    VALID_REVIEW_TYPES = [2, 3, 21]
     PB_MIN_DATE = parser.parse(app.config['PB_MIN_DATE'])
 
     def get_studies_for_user(self, user, categories, include_invalid=False):
