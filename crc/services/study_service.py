@@ -236,16 +236,19 @@ class StudyService(object):
         study = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
         if study is None:
             raise ApiError('study_id not found', "A study with id# %d was not found" % study_id)
-        db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id) & (StudyAssociated.uid ==
-                                                                                           uid)).delete()
 
-        newAssociate = StudyAssociated()
-        newAssociate.study_id = study_id
-        newAssociate.uid = uid
-        newAssociate.role = role
-        newAssociate.send_email = send_email
-        newAssociate.access = access
-        session.add(newAssociate)
+        assoc = db.session.query(StudyAssociated).filter((StudyAssociated.study_id == study_id) &
+                                                         (StudyAssociated.uid == uid) &
+                                                         (StudyAssociated.role == role)).first()
+        if not assoc:
+            assoc = StudyAssociated()
+
+        assoc.study_id = study_id
+        assoc.uid = uid
+        assoc.role = role
+        assoc.send_email = send_email
+        assoc.access = access
+        session.add(assoc)
         session.commit()
         return True
 
