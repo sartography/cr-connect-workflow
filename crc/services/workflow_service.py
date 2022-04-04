@@ -41,6 +41,8 @@ from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_spec_service import WorkflowSpecService
 
+from flask import g
+
 
 class WorkflowService(object):
     TASK_ACTION_COMPLETE = "COMPLETE"
@@ -73,7 +75,7 @@ class WorkflowService(object):
             db.session.add(UserModel(uid="test"))
             db.session.commit()
             user = db.session.query(UserModel).filter_by(uid="test").first()
-        if validate_study_id:
+        if validate_study_id is not None:
             study = db.session.query(StudyModel).filter_by(id=validate_study_id).first()
         else:
             study = db.session.query(StudyModel).filter_by(user_uid=user.uid).first()
@@ -174,6 +176,8 @@ class WorkflowService(object):
           required_only can be set to true, in which case this will run the
           spec, only completing the required fields, rather than everything.
           """
+
+        g.validation_data_store = []
 
         workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
         try:

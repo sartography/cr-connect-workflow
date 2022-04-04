@@ -9,7 +9,7 @@ class UserDataGet(Script, DataStoreBase):
         return """Gets user data from the data store - takes only one argument 'key' """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        self.do_task(task, study_id, workflow_id, *args, **kwargs)
+        return self.get_validate_common('user_data_get', None, g.user.uid, None, *args)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         return self.get_data_common(None,

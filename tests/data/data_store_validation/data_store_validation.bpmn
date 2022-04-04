@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_d24c44d" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_DataStoreValidation" name="Data Store Validation" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0nstzm8</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0nstzm8" sourceRef="StartEvent_1" targetRef="Activity_SetDataStore" />
+    <bpmn:scriptTask id="Activity_SetDataStore" name="Set Data Store">
+      <bpmn:incoming>Flow_0nstzm8</bpmn:incoming>
+      <bpmn:outgoing>Flow_08r3ga0</bpmn:outgoing>
+      <bpmn:script>study_data_set('study_data_key', 'study_data_value')
+file_data_set(file_id=1, key='file_data_key', value='file_data_value')
+user_data_set('user_data_key', 'user_data_value')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_08r3ga0" sourceRef="Activity_SetDataStore" targetRef="Activity_GetDataStore" />
+    <bpmn:scriptTask id="Activity_GetDataStore" name="Get Data Store">
+      <bpmn:incoming>Flow_08r3ga0</bpmn:incoming>
+      <bpmn:outgoing>Flow_02l0u2v</bpmn:outgoing>
+      <bpmn:script>
+previous_study_data_value = study_data_get('previous_study_data_key')
+previous_file_data_value = file_data_get(file_id=1, key='previous_file_data_key')
+previous_user_data_value = user_data_get('previous_user_data_key')
+
+study_data_value = study_data_get('study_data_key')
+file_data_value = file_data_get(file_id=1, key='file_data_key')
+user_data_value = user_data_get('user_data_key')
+
+bad_study_data_value = study_data_get('bad_study_data_key', 'bad_study_data_value')
+bad_file_data_value = file_data_get(file_id=1, key='bad_file_data_key', default='bad_file_data_value')
+bad_user_data_value = user_data_get('bad_user_data_key', 'bad_user_data_value')
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_02l0u2v" sourceRef="Activity_GetDataStore" targetRef="Activity_DisplayDataStore" />
+    <bpmn:manualTask id="Activity_DisplayDataStore" name="Display Data Store">
+      <bpmn:documentation>## Data
+# Study
+{{ study_data_value }}</bpmn:documentation>
+      <bpmn:incoming>Flow_02l0u2v</bpmn:incoming>
+      <bpmn:outgoing>Flow_047lt2r</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_1it98kr">
+      <bpmn:incoming>Flow_047lt2r</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_047lt2r" sourceRef="Activity_DisplayDataStore" targetRef="Event_1it98kr" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_DataStoreValidation">
+      <bpmndi:BPMNEdge id="Flow_047lt2r_di" bpmnElement="Flow_047lt2r">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_02l0u2v_di" bpmnElement="Flow_02l0u2v">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08r3ga0_di" bpmnElement="Flow_08r3ga0">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0nstzm8_di" bpmnElement="Flow_0nstzm8">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18fyqwb_di" bpmnElement="Activity_SetDataStore">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0u3tlod_di" bpmnElement="Activity_GetDataStore">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0s05yw5_di" bpmnElement="Activity_DisplayDataStore">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1it98kr_di" bpmnElement="Event_1it98kr">
+        <dc:Bounds x="752" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
