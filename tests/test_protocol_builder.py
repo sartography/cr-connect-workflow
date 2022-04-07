@@ -69,10 +69,9 @@ class TestProtocolBuilder(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('irb_info.json')
         response = ProtocolBuilderService.get_irb_info(self.test_study_id)
         self.assertIsNotNone(response)
-        self.assertEqual(3, len(response))
+        # IRB Info should always return 1 record
+        self.assertEqual(1, len(response))
         self.assertEqual('IRB Event 1', response[0]["IRBEVENT"])
-        self.assertEqual('IRB Event 2', response[1]["IRBEVENT"])
-        self.assertEqual('IRB Event 3', response[2]["IRBEVENT"])
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_check_study(self, mock_get):
