@@ -19,7 +19,10 @@ class IRBInfo(Script):
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         irb_info = self.pb.get_irb_info(study_id)
         if irb_info:
-            return irb_info
+            if isinstance(irb_info, dict):
+                return irb_info
+            elif isinstance(irb_info, list) and len(irb_info) > 0:
+                return irb_info[0]
         else:
             raise WorkflowTaskExecException(task, f'get_irb_info failed.  There was a problem retrieving IRB Info'
                                                   f' for study {study_id}.')
