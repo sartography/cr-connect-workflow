@@ -1,7 +1,7 @@
 from crc import session
 from crc.api.common import ApiError
 from crc.api.user import verify_token
-from crc.models.file import DocumentModel, DocumentModelSchema, File, FileSchemaRefactor
+from crc.models.file import DocumentModel, DocumentModelSchema, File, FileSchema
 from crc.models.workflow import WorkflowModel
 from crc.services.document_service import DocumentService
 from crc.services.study_service import StudyService
@@ -45,7 +45,7 @@ def add_file(workflow_id=None, task_spec_name=None, irb_doc_code=None, study_id=
     else:
         raise ApiError('missing_workflow_id', 'You must supply a workflow_id.')
 
-    return FileSchemaRefactor().dump(to_file_api(file_model))
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def delete_file(file_id):
@@ -58,7 +58,7 @@ def update_file_data(file_id):
     if file_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     file_model = UserFileService.update_file(file_model, file.stream.read(), file.content_type)
-    return FileSchemaRefactor().dump(to_file_api(file_model))
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def get_files(workflow_id=None, form_field_key=None, study_id=None):
@@ -73,7 +73,7 @@ def get_files(workflow_id=None, form_field_key=None, study_id=None):
                                             irb_doc_code=form_field_key)
 
     files = (to_file_api(model) for model in file_models)
-    return FileSchemaRefactor(many=True).dump(files)
+    return FileSchema(many=True).dump(files)
 
 
 def get_file_data_by_hash(md5_hash):
@@ -129,7 +129,7 @@ def get_file_info(file_id):
     file_model = session.query(DocumentModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist', status_code=404)
-    return FileSchemaRefactor().dump(to_file_api(file_model))
+    return FileSchema().dump(to_file_api(file_model))
 
 
 def update_file_info(file_id, body):
@@ -144,4 +144,4 @@ def update_file_info(file_id, body):
     file_model = DocumentModelSchema().load(body, session=session)
     session.add(file_model)
     session.commit()
-    return FileSchemaRefactor().dump(to_file_api(file_model))
+    return FileSchema().dump(to_file_api(file_model))
