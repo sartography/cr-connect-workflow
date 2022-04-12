@@ -1,14 +1,12 @@
 import json
 import os
-from json import JSONDecodeError
-from typing import List, Optional
+from typing import List
 
 import marshmallow
-import requests
 
 from crc import app, db, ma
 from crc.api.common import ApiError
-from crc.models.file import FileModel
+# TODO: fix these imports
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema, \
     WorkflowSpecModelSchema, WorkflowLibraryModel
 from crc.services.file_system_service import FileSystemService
