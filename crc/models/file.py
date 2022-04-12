@@ -179,11 +179,10 @@ class FileModelSchema(SQLAlchemyAutoSchema):
 class FileSchema(Schema):
     class Meta:
         model = File
-        fields = ["id", "name", "content_type", "workflow_spec_id", "workflow_id",
-                  "irb_doc_code", "last_modified", "latest_version", "type", "size", "data_store",
-                  "document", "user_uid", "url"]
+        fields = ["id", "name", "content_type", "workflow_id",
+                  "irb_doc_code", "last_modified", "type",
+                  "size", "data_store", "document", "user_uid", "url"]
         unknown = INCLUDE
-    type = EnumField(FileType)
     url = Method("get_url")
 
     def get_url(self, obj):
