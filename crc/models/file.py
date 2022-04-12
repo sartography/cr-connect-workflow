@@ -122,29 +122,22 @@ class File(object):
         self.data_store = {}
 
     @classmethod
-    def from_models(cls, model: FileModel, data_model, doc_dictionary):
+    def from_document_model(cls, document_model: DocumentModel, doc_dictionary):
+        if document_model.irb_doc_code and document_model.irb_doc_code in doc_dictionary:
+            document = doc_dictionary[document_model.irb_doc_code]
+        else:
+            document = {}
         instance = cls()
-        instance.id = model.id
-        instance.name = model.name
-        instance.content_type = model.content_type
-        instance.workflow_id = model.workflow_id
-        instance.irb_doc_code = model.irb_doc_code
-        instance.type = model.type
-        if model.irb_doc_code and model.irb_doc_code in doc_dictionary:
-            instance.document = doc_dictionary[model.irb_doc_code]
-        else:
-            instance.document = {}
-        if data_model:
-            instance.last_modified = data_model.date_created
-            instance.size = data_model.size
-            instance.user_uid = data_model.user_uid
-        else:
-            instance.last_modified = None
-            instance.latest_version = None
-
+        instance.id = document_model.id
+        instance.name = document_model.name
+        instance.content_type = document_model.content_type
+        instance.workflow_id = document_model.workflow_id
+        instance.irb_doc_code = document_model.irb_doc_code
+        instance.type = document_model.type
+        instance.document = document
+        instance.last_modified = document_model.date_modified
+        instance.size = None
         instance.data_store = {}
-        for ds in model.data_stores:
-            instance.data_store[ds.key] = ds.value
 
         return instance
 
