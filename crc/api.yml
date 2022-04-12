@@ -793,6 +793,76 @@ paths:
                 items:
                   $ref: "#/components/schemas/WorkflowSpecCategory"
 
+#  /document:
+#    parameters:
+#      - name: workflow_id
+#        in: query
+#        required: false
+#        description: ID of the associated workflow
+#        schema:
+#          type: integer
+#      - name: task_spec_name
+#        in: query
+#        required: false
+#        description: Name of the Task Spec
+#        schema:
+#          type: string
+#      - name: irb_doc_code
+#        in: query
+#        required: false
+#        description: IRB Document Code. Make sure this matches a document in the irb_documents.xslx reference sheet.
+#        schema:
+#          type: string
+#      - name: study_id
+#        in: query
+#        required: false
+#        description: ID of the associated Study
+#        schema:
+#          type: integer
+#    post:
+#      operationId: crc.api.file_refactor.add_file
+#      summary: Add a new document
+#      tags:
+#        - Documents
+#      requestBody:
+#        content:
+#          multipart/form-data:
+#            schema:
+#              type: object
+#              properties:
+#                file:
+#                  type: string
+#                  format: binary
+#      responses:
+#        '200':
+#          description: Document metadata
+#          content:
+#            application/json:
+#              schema:
+#                $ref: "#/components/schemas/File"
+#  /document/{document_id}/data:
+#    parameters:
+#      - name: document_id
+#        in: path
+#        required: true
+#        description: The id of the requested Document
+#        schema:
+#          type: integer
+#    get:
+#      operationId: crc.api.file_refactor.get_file_data
+#      summary: Returns only the file contents
+#      tags:
+#        - Documents
+#      responses:
+#        '200':
+#          description: Returns the actual file
+#          content:
+#            application/octet-stream:
+#              schema:
+#                type: string
+#                format: binary
+#                example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+
   /file:
     parameters:
       - name: workflow_id
@@ -820,7 +890,7 @@ paths:
         schema:
           type: integer
     get:
-      operationId: crc.api.file.get_files
+      operationId: crc.api.file_refactor.get_files
       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
       tags:
         - Files
@@ -835,7 +905,7 @@ paths:
                   $ref: "#/components/schemas/File"
 
     post:
-      operationId: crc.api.file.add_file
+      operationId: crc.api.file_refactor.add_file
       summary: Add a new file
       tags:
         - Files
@@ -860,11 +930,11 @@ paths:
       - name: file_id
         in: path
         required: true
-        description: The id of the File requested
+        description: The id of the File
         schema:
           type: integer
     get:
-      operationId: crc.api.file.get_file_info
+      operationId: crc.api.file_refactor.get_file_info
       summary: Returns metadata about a file.
       tags:
         - Files
@@ -876,7 +946,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/File"
     put:
-      operationId: crc.api.file.update_file_info
+      operationId: crc.api.file_refactor.update_file_info
       summary: Updates existing file info with the given parameters.
       tags:
         - Files
@@ -893,7 +963,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/File"
     delete:
-      operationId: crc.api.file.delete_file
+      operationId: crc.api.file_refactor.delete_file
       summary: Removes an existing file.
       tags:
         - Files
@@ -921,7 +991,7 @@ paths:
         schema :
           type : integer
     get :
-      operationId : crc.api.file.get_file_data_link
+      operationId : crc.api.file_refactor.get_file_data_link
       summary : Returns only the file contents
       security: []
       tags :
@@ -950,7 +1020,7 @@ paths:
         schema:
           type: integer
     get:
-      operationId: crc.api.file.get_file_data
+      operationId: crc.api.file_refactor.get_file_data
       summary: Returns only the file contents
       tags:
         - Files
@@ -964,7 +1034,7 @@ paths:
                 format: binary
                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
     put:
-      operationId: crc.api.file.update_file_data
+      operationId: crc.api.file_refactor.update_file_data
       summary: Update only the file contents for a given file
       tags:
         - Files
