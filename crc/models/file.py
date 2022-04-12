@@ -62,6 +62,27 @@ CONTENT_TYPES = {
 }
 
 
+class DocumentModel(db.Model):
+    __tablename__ = 'document'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    type = db.Column(db.String, nullable=False)
+    content_type = db.Column(db.String, nullable=False)
+    workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
+    task_spec = db.Column(db.String, nullable=True)
+    irb_doc_code = db.Column(db.String, nullable=False)  # Code reference to the documents.xlsx reference file.
+    # TODO: Fix relationship with data_store table, then add this back in
+    # data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
+    md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
+    data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
+    # TODO: Determine whether size is used (in frontend/bpmn)
+    # size = db.Column(db.Integer, default=0)  # Do we need this?
+    date_modified = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+    date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
+    archived = db.Column(db.Boolean, default=False)
+
+
 class FileDataModel(db.Model):
     __tablename__ = 'file_data'
     id = db.Column(db.Integer, primary_key=True)
@@ -141,6 +162,15 @@ class File(object):
         #fixme:  How to track the user id?
         instance.data_store = {}
         return instance
+
+
+class DocumentModelSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = DocumentModel
+        load_instance = True
+        include_relationships = True
+        include_fk = True  # Includes foreign keys
+        unknown = EXCLUDE
 
 
 class FileModelSchema(SQLAlchemyAutoSchema):
