@@ -246,5 +246,5 @@ class LookupDataSchema(ma.Schema):
 class SimpleFileSchema(ma.Schema):
 
     class Meta:
-        model = FileModel
+        model = DocumentModel
         fields = ["name"]
