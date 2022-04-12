@@ -24,7 +24,7 @@ from sqlalchemy.exc import InvalidRequestError
 from crc import db, app, session
 from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
-from crc.models.file import LookupDataModel, FileModel, File, FileSchema
+from crc.models.file import LookupDataModel, DocumentModel, File, FileSchema
 from crc.models.ldap import LdapModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel
@@ -457,7 +457,7 @@ class WorkflowService(object):
             # the doc_code was correctly set, so this is a stop gap measure to assure we still hit it correctly.
             file_id = data[field.id]["id"]
             doc_code = task.workflow.script_engine._evaluate(field.get_property(Task.FIELD_PROP_DOC_CODE), data, task)
-            file = db.session.query(FileModel).filter(FileModel.id == file_id).first()
+            file = db.session.query(DocumentModel).filter(DocumentModel.id == file_id).first()
             if (file):
                 file.irb_doc_code = doc_code
                 db.session.commit()
@@ -627,10 +627,10 @@ class WorkflowService(object):
             doc_code = field.id
             if field.has_property('doc_code'):
                 doc_code = WorkflowService.evaluate_property('doc_code', field, task)
-            file_model = FileModel(name="test.png",
+            file_model = DocumentModel(name="test.png",
                                    irb_doc_code=field.id)
             doc_dict = DocumentService.get_dictionary()
-            file = File.from_models(file_model, None, doc_dict)
+            file = File.from_document_model(file_model, doc_dict)
             return FileSchema().dump(file)
         elif field.type == 'files':
             return random.randrange(1, 100)
