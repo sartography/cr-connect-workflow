@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1412t5k" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_SetDataStore" name="Set Data Store" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0cb7y6c</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0cb7y6c" sourceRef="StartEvent_1" targetRef="Activity_GetData" />
+    <bpmn:sequenceFlow id="Flow_0cnvihm" sourceRef="Activity_GetData" targetRef="Activity_SetDataStore" />
+    <bpmn:endEvent id="Event_0ds6mpu">
+      <bpmn:incoming>Flow_10t9bdk</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_10t9bdk" sourceRef="Activity_SetDataStore" targetRef="Event_0ds6mpu" />
+    <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="key" label="Key" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="value" label="Value" type="string" />
+          <camunda:formField id="file_id" label="File ID" type="string" defaultValue="None" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0cb7y6c</bpmn:incoming>
+      <bpmn:outgoing>Flow_0cnvihm</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Activity_SetDataStore" name="Set Data Store">
+      <bpmn:incoming>Flow_0cnvihm</bpmn:incoming>
+      <bpmn:outgoing>Flow_10t9bdk</bpmn:outgoing>
+      <bpmn:script>study_data_set(key, value)
+user_data_set(key, value)
+if file_id:
+    file_data_set(file_id=file_id, key=key, value=value)
+</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_SetDataStore">
+      <bpmndi:BPMNEdge id="Flow_10t9bdk_di" bpmnElement="Flow_10t9bdk">
+        <di:waypoint x="533" y="117" />
+        <di:waypoint x="592" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0cnvihm_di" bpmnElement="Flow_0cnvihm">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="433" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0cb7y6c_di" bpmnElement="Flow_0cb7y6c">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ds6mpu_di" bpmnElement="Event_0ds6mpu">
+        <dc:Bounds x="592" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_18u7a8s_di" bpmnElement="Activity_GetData">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0rcc8ik_di" bpmnElement="Activity_SetDataStore">
+        <dc:Bounds x="433" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

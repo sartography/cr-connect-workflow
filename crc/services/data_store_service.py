@@ -4,18 +4,21 @@ from crc.models.data_store import DataStoreModel
 from crc.models.workflow import WorkflowModel
 
 from flask import g
+from sqlalchemy import desc
 
 
 class DataStoreBase(object):
 
     def set_validate_common(self, task_id, study_id, workflow_id, script_name, user_id, file_id, *args):
         self.check_args_2(args, script_name)
+        key = args[0]
+        value = args[1]
         if script_name == 'study_data_set':
-            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, args[0]: args[1]}
+            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, key: value}
         elif script_name == 'file_data_set':
-            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'file_id': file_id, args[0]: args[1]}
+            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'file_id': file_id, key: value}
         elif script_name == 'user_data_set':
-            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'user_id': user_id, args[0]: args[1]}
+            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'user_id': user_id, key: value}
         g.validation_data_store.append(record)
         return record
 
@@ -24,22 +27,23 @@ class DataStoreBase(object):
         # This allows us to set data_store values during validation that don't affect the real data_store.
         # For data_store `gets`, we first look in the temporary validation_data_store.
         # If we don't find an entry in validation_data_store, we look in the real data_store.
+        key = args[0]
         if script_name == 'study_data_get':
             # If it's in the validation data store, return it
             for record in g.validation_data_store:
-                if 'study_id' in record and record['study_id'] == study_id and args[0] in record:
-                    return record[args[0]]
-            # If not in validation_data_store, look for in the actual data_store
+                if 'study_id' in record and record['study_id'] == study_id and key in record:
+                    return record[key]
+            # If not in validation_data_store, look in the actual data_store
             return self.get_data_common(study_id, user_id, 'study_data_get', file_id, *args)
         elif script_name == 'file_data_get':
             for record in g.validation_data_store:
-                if 'file_id' in record and record['file_id'] == file_id and args[0] in record:
-                    return record[args[0]]
+                if 'file_id' in record and record['file_id'] == file_id and key in record:
+                    return record[key]
             return self.get_data_common(study_id, user_id, 'file_data_get', file_id, *args)
         elif script_name == 'user_data_get':
             for record in g.validation_data_store:
-                if 'user_id' in record and record['user_id'] == user_id and args[0] in record:
-                    return record[args[0]]
+                if 'user_id' in record and record['user_id'] == user_id and key in record:
+                    return record[key]
             return self.get_data_common(study_id, user_id, 'user_data_get', file_id, *args)
 
     @staticmethod
@@ -67,17 +71,45 @@ class DataStoreBase(object):
                         **kwargs):
 
         self.check_args_2(args, script_name=script_name)
+        if not args[1]:
+            # We delete the data store if the value is empty
+            self.delete_data_store(study_id, user_id, file_id, *args)
+            return
         if workflow_spec_id is None and workflow_id is not None:
             workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
             workflow_spec_id = workflow.workflow_spec_id
-        dsm = DataStoreModel(key=args[0],
-                             value=args[1],
-                             study_id=study_id,
-                             task_spec=task_spec,
-                             user_id=user_id,  # Make this available to any User
-                             file_id=file_id,
-                             workflow_id=workflow_id,
-                             spec_id=workflow_spec_id)
+
+        # Check if this data store is previously set
+        query = session.query(DataStoreModel).filter(DataStoreModel.key == args[0])
+        if study_id:
+            query = query.filter(DataStoreModel.study_id == study_id)
+        if file_id:
+            query = query.filter(DataStoreModel.file_id == file_id)
+        if user_id:
+            query = query.filter(DataStoreModel.user_id == user_id)
+        result = query.order_by(desc(DataStoreModel.last_updated)).all()
+        if result:
+            dsm = result[0]
+            dsm.value = args[1]
+            if task_spec:
+                dsm.task_spec = task_spec
+            if workflow_id:
+                dsm.workflow_id = workflow_id
+            if workflow_spec_id:
+                dsm.spec_id = workflow_spec_id
+            if len(result) > 1:
+                # We had a bug where we had created new records instead of updating values of existing records
+                # This just gets rid of all the old unused records
+                self.delete_extra_data_stores(result[1:])
+        else:
+            dsm = DataStoreModel(key=args[0],
+                                 value=args[1],
+                                 study_id=study_id,
+                                 task_spec=task_spec,
+                                 user_id=user_id,  # Make this available to any User
+                                 file_id=file_id,
+                                 workflow_id=workflow_id,
+                                 spec_id=workflow_spec_id)
         session.add(dsm)
         session.commit()
 
@@ -102,3 +134,27 @@ class DataStoreBase(object):
                                                           user_id=user_id,
                                                           file_id=file_id)
         return results
+
+    @staticmethod
+    def delete_data_store(study_id, user_id, file_id, *args):
+
+        query = session.query(DataStoreModel).filter(DataStoreModel.key == args[0])
+        if user_id:
+            query = query.filter(DataStoreModel.user_id == user_id)
+        elif file_id:
+            query = query.filter(DataStoreModel.file_id == file_id)
+        elif study_id:
+            query = query.filter(DataStoreModel.study_id == study_id)
+        record = query.first()
+        session.delete(record)
+        session.commit()
+        # return record
+
+    @staticmethod
+    def delete_extra_data_stores(records):
+        """We had a bug where we created new records instead of updating existing records.
+           We use this to clean up all the extra records.
+           We may remove this method in the future."""
+        for record in records:
+            session.query(DataStoreModel).filter(DataStoreModel.id == record.id).delete()
+        session.commit()
