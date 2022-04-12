@@ -86,8 +86,11 @@ GIT_REMOTE_SERVER = environ.get('GIT_REMOTE_SERVER', None)  # example: 'github.c
 GIT_REMOTE_PATH = environ.get('GIT_REMOTE_PATH', None)  # example: 'sartography/crconnect-workflow-specs
 GIT_BRANCH = environ.get('GIT_BRANCH', None)  # example: 'main'
 GIT_MERGE_BRANCH = environ.get('GIT_MERGE_BRANCH', None)  # Example: 'staging'
+GIT_USER_NAME = environ.get('GIT_USER_NAME', None)
+GIT_USER_PASS = environ.get('GIT_USER_PASS', None)
 GIT_DISPLAY_PUSH = environ.get('GIT_DISPLAY_PUSH', False)
 GIT_DISPLAY_MERGE = environ.get('GIT_DISPLAY_MERGE', False)
+
 
 # Email configuration
 DEFAULT_SENDER = 'crconnect2@virginia.edu'
