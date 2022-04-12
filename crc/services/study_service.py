@@ -94,8 +94,7 @@ class StudyService(object):
         last_time = sincetime("task_events", last_time)
         study.categories = categories
         files = UserFileService.get_files_for_study(study.id)
-        files = (File.from_models(model, UserFileService.get_file_data(model.id),
-                                  DocumentService.get_dictionary()) for model in files)
+        files = (File.from_document_model(model, DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
         last_time = sincetime("files", last_time)
         if process_categories and master_workflow_results:
@@ -346,7 +345,7 @@ class StudyService(object):
 
 
             for file_model in doc_files:
-                file = File.from_models(file_model, UserFileService.get_file_data(file_model.id), [])
+                file = File.from_document_model(file_model, [])
                 file_data = FileSchema().dump(file)
                 del file_data['document']
                 doc['files'].append(Box(file_data))
