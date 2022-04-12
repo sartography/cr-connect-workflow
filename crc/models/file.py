@@ -196,6 +196,7 @@ class FileSchema(Schema):
         else:
             return ""
 
+
 class LookupFileModel(db.Model):
     """Gives us a quick way to tell what kind of lookup is set on a form field."""
     __tablename__ = 'lookup_file'
@@ -204,10 +205,11 @@ class LookupFileModel(db.Model):
     task_spec_id = db.Column(db.String)
     field_id = db.Column(db.String)
     file_name = db.Column(db.String)
-    file_timestamp = db.Column(db.FLOAT) #The file systems time stamp, to check for changes to the file.
+    file_timestamp = db.Column(db.FLOAT)  # The file systems time stamp, to check for changes to the file.
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
     dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model",
                                    cascade="all, delete, delete-orphan")
+
 
 class LookupDataModel(db.Model):
     __tablename__ = 'lookup_data'
