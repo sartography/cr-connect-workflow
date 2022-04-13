@@ -9,8 +9,9 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.exc import IntegrityError
 
-from crc.models.file import FileModel, FileDataModel, DocumentModel
 from crc import app
+from crc.models.data_store import DataStoreModel
+from crc.models.file import FileModel, FileDataModel, DocumentModel
 
 
 
@@ -19,6 +20,13 @@ revision = '3489d5a6a2c0'
 down_revision = '92d554ab6e32'
 branch_labels = None
 depends_on = None
+
+
+def update_data_store(file_id, document_id, session):
+    data_stores = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id).all()
+    for data_store in data_stores:
+        data_store.document_id = document_id
+    session.commit()
 
 
 def upgrade():
@@ -67,4 +75,4 @@ def upgrade():
 
 
 def downgrade():
-    pass
+    op.execute('DELETE FROM document;')

@@ -15,6 +15,7 @@ class DataStoreModel(db.Model):
     spec_id = db.Column(db.String)
     user_id = db.Column(db.String, nullable=True)
     file_id = db.Column(db.Integer, db.ForeignKey('file.id'), nullable=True)
+    document_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=True)
     value = db.Column(db.String)
 
 

@@ -39,7 +39,11 @@ def upgrade():
         sa.ForeignKeyConstraint(['user_uid'], ['user.uid'], ),
         sa.ForeignKeyConstraint(['workflow_id'], ['workflow.id'], ),
     )
+    op.add_column('data_store', sa.Column('document_id', sa.Integer(), nullable=True))
+    op.create_foreign_key('document_id_key', 'data_store', 'document', ['document_id'], ['id'])
 
 
 def downgrade():
     op.drop_table('document')
+    # op.drop_column('data_store', 'document_id')
+    # op.drop_constraint('document_id_key', 'data_store', type_='foreignkey')

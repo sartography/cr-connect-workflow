@@ -72,7 +72,7 @@ class DocumentModel(db.Model):
     task_spec = db.Column(db.String, nullable=True)
     irb_doc_code = db.Column(db.String, nullable=False)  # Code reference to the documents.xlsx reference file.
     # TODO: Fix relationship with data_store table, then add this back in
-    # data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
+    data_stores = relationship(DataStoreModel, cascade="all,delete", backref="document")
     md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
     data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
     # TODO: Determine whether size is used (in frontend/bpmn)
