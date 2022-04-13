@@ -13,13 +13,13 @@
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="key" label="Key" type="string">
+          <camunda:formField id="key" label="&#39;Key&#39;" type="string">
             <camunda:validation>
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="value" label="Value" type="string" />
-          <camunda:formField id="file_id" label="File ID" type="string" defaultValue="None" />
+          <camunda:formField id="value" label="&#39;Value&#39;" type="string" />
+          <camunda:formField id="file_id" label="&#39;File ID&#39;" type="string" defaultValue="None" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0cb7y6c</bpmn:incoming>
@@ -28,10 +28,9 @@
     <bpmn:scriptTask id="Activity_SetDataStore" name="Set Data Store">
       <bpmn:incoming>Flow_0cnvihm</bpmn:incoming>
       <bpmn:outgoing>Flow_10t9bdk</bpmn:outgoing>
-      <bpmn:script>study_data_set(key, value)
-user_data_set(key, value)
-if file_id:
-    file_data_set(file_id=file_id, key=key, value=value)
+      <bpmn:script>data_store_set(type='study', key=key, value=value)
+data_store_set(type='user', key=key, value=value)
+data_store_set(type='file', key=key, value=value, file_id=file_id)
 </bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>
