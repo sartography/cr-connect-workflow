@@ -10,7 +10,7 @@ from unittest.mock import patch
 from crc.models.email import EmailModel
 from crc import session, app
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
-from crc.models.file import FileModel
+from crc.models.file import DocumentModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType, StudyAssociated
 from crc.models.workflow import WorkflowModel
@@ -268,7 +268,7 @@ class TestStudyApi(BaseTest):
                                           name="anything.png", content_type="text",
                                           binary_data=b'5678', irb_doc_code="UVACompl_PRCAppr" )
 
-        workflow_files = session.query(FileModel).filter_by(workflow_id=workflow.id)
+        workflow_files = session.query(DocumentModel).filter_by(workflow_id=workflow.id)
         self.assertEqual(workflow_files.count(), 1)
         workflow_files_ids = [file.id for file in workflow_files]
 
@@ -276,7 +276,7 @@ class TestStudyApi(BaseTest):
         self.assert_success(rv)
 
         # No files should have the deleted workflow id anymore
-        workflow_files = session.query(FileModel).filter_by(workflow_id=workflow.id)
+        workflow_files = session.query(DocumentModel).filter_by(workflow_id=workflow.id)
         self.assertEqual(workflow_files.count(), 0)
 
 

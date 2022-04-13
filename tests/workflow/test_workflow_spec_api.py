@@ -3,7 +3,6 @@ import os.path
 
 from tests.base_test import BaseTest
 from crc import session
-from crc.models.file import FileModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecInfoSchema, WorkflowSpecInfo, WorkflowSpecCategory, \
     WorkflowSpecCategorySchema
 from crc.services.spec_file_service import SpecFileService

@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 from crc import session
 from crc.models.data_store import DataStoreModel
-from crc.models.file import FileModel, FileType
+from crc.models.file import DocumentModel, FileType
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
 from crc.services.workflow_service import WorkflowService
@@ -14,14 +14,14 @@ class TestDataStoreValidation(BaseTest):
 
     @staticmethod
     def add_test_file():
-        file_model = FileModel(
+        file_model = DocumentModel(
             name='my_test_file',
             type=FileType.pdf,
             content_type='application/pdf'
         )
         session.add(file_model)
         session.commit()
-        file_id = session.query(FileModel.id).filter(FileModel.name == 'my_test_file').scalar()
+        file_id = session.query(DocumentModel.id).filter(DocumentModel.name == 'my_test_file').scalar()
         return file_id
 
     @staticmethod

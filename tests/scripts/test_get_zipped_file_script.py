@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc import session
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import DocumentModel
 from crc.services.user_file_service import UserFileService
 
 import io
@@ -38,10 +38,10 @@ class TestGetZippedFiles(BaseTest):
         next_task = workflow_api.next_task
         file_model_id = next_task.data['zip_file']['id']
 
-        file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == file_model_id).first()
+        file_model = session.query(DocumentModel).filter(DocumentModel.file_model_id == file_model_id).first()
 
         # Test what we get back in the zipped file
-        with zipfile.ZipFile(io.BytesIO(file_data.data), 'r') as zf:
+        with zipfile.ZipFile(io.BytesIO(file_model.data), 'r') as zf:
             self.assertIsInstance(zf, zipfile.ZipFile)
             for name in zf.namelist():
                 info = zf.getinfo(name)
@@ -54,8 +54,8 @@ class TestGetZippedFiles(BaseTest):
         # So, we expect one to be set in the DB
         self.complete_form(workflow, next_task, {})
 
-        file_1 = session.query(FileModel).filter(FileModel.task_spec == 'Activity_GetZip').first()
-        file_2 = session.query(FileModel).filter(FileModel.task_spec == 'Activity_GetZip_2').first()
+        file_1 = session.query(DocumentModel).filter(DocumentModel.task_spec == 'Activity_GetZip').first()
+        file_2 = session.query(DocumentModel).filter(DocumentModel.task_spec == 'Activity_GetZip_2').first()
         # file 1 should *not* have an irb doc code
         self.assertEqual(None, file_1.irb_doc_code)
         # file 2 *should* have an irb doc code
