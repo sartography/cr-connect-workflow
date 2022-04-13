@@ -1,6 +1,6 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import DocumentModel
 from crc.scripts.script import Script
 
 from io import BytesIO
@@ -44,19 +44,16 @@ class ModifySpreadsheet(Script):
         parameters = self.get_parameters(args, kwargs)
         if len(parameters) == 3:
 
-            spreadsheet = session.query(FileModel). \
-                filter(FileModel.workflow_id == workflow_id). \
-                filter(FileModel.irb_doc_code == parameters['irb_doc_code']).\
+            spreadsheet = session.query(DocumentModel). \
+                filter(DocumentModel.workflow_id == workflow_id). \
+                filter(DocumentModel.irb_doc_code == parameters['irb_doc_code']).\
                 first()
             if spreadsheet:
-                spreadsheet_data = session.query(FileDataModel).\
-                    filter(FileDataModel.file_model_id==spreadsheet.id).\
-                    first()
-                workbook = load_workbook(BytesIO(spreadsheet_data.data))
+                workbook = load_workbook(BytesIO(spreadsheet.data))
                 sheet = workbook.active
                 sheet[parameters['cell']] = parameters['text']
                 data_string = save_virtual_workbook(workbook)
-                spreadsheet_data.data = data_string
+                spreadsheet.data = data_string
                 session.commit()
             else:
                 raise ApiError(code='missing_spreadsheet',

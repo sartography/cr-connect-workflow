@@ -1,7 +1,7 @@
 from crc import session
 from crc.api.common import ApiError
 from crc.api.file import to_file_api
-from crc.models.file import FileModel, FileDataModel, FileSchema
+from crc.models.file import DocumentModel, FileSchema
 from crc.scripts.script import Script
 from crc.services.study_service import StudyService
 
@@ -36,7 +36,7 @@ class GetZippedFiles(Script):
                 zip_filename = 'attachments.zip'
 
             file_ids = kwargs['file_ids']
-            files = session.query(FileModel).filter(FileModel.id.in_(file_ids)).all()
+            files = session.query(DocumentModel).filter(DocumentModel.id.in_(file_ids)).all()
             if files:
                 # Create a temporary zipfile with the requested files
                 with tempfile.NamedTemporaryFile() as temp_file:
@@ -44,8 +44,8 @@ class GetZippedFiles(Script):
                         for file in files:
                             zip_key_words = doc_info[file.irb_doc_code]['zip_key_words']
                             file_name = f'{study_id} {zip_key_words} {file.name}'
-                            file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).first()
-                            zfw.writestr(file_name, file_data.data)
+                            # file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).first()
+                            zfw.writestr(file_name, file.data)
 
                     with open(temp_file.name, mode='rb') as handle:
                         if 'doc_code' in kwargs:
