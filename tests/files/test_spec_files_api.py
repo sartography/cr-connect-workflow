@@ -1,18 +1,11 @@
 import io
 import json
-import os
 
 from tests.base_test import BaseTest
 
-from crc import session, db, app
-from crc.models.file import FileModel, FileType, FileModelSchema
+from crc import session
+from crc.models.file import FileType, FileModelSchema
 from crc.services.spec_file_service import SpecFileService
-from crc.services.workflow_processor import WorkflowProcessor
-from crc.models.data_store import DataStoreModel
-from crc.services.document_service import DocumentService
-from example_data import ExampleDataLoader
-
-from sqlalchemy import column
 
 
 class TestFilesApi(BaseTest):

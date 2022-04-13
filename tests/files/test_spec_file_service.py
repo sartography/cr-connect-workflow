@@ -1,16 +1,9 @@
 import datetime
 
-from github import UnknownObjectException
-from sqlalchemy import desc, column
 from tests.base_test import BaseTest
-from unittest.mock import patch, Mock
 
-from crc import db, session
-from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES, FileType
+from crc.models.file import FileType
 from crc.services.spec_file_service import SpecFileService
-from crc.services.workflow_processor import WorkflowProcessor
-
 
 
 class TestSpecFileService(BaseTest):
