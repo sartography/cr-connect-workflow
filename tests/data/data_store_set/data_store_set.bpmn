@@ -28,10 +28,11 @@
     <bpmn:scriptTask id="Activity_SetDataStore" name="Set Data Store">
       <bpmn:incoming>Flow_0cnvihm</bpmn:incoming>
       <bpmn:outgoing>Flow_10t9bdk</bpmn:outgoing>
-      <bpmn:script>data_store_set(type='study', key=key, value=value)
+      <bpmn:script>if value == 'None':
+    value = None
+data_store_set(type='study', key=key, value=value)
 data_store_set(type='user', key=key, value=value)
-data_store_set(type='file', key=key, value=value, file_id=file_id)
-</bpmn:script>
+data_store_set(type='file', key=key, value=value, file_id=file_id)</bpmn:script>
     </bpmn:scriptTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
