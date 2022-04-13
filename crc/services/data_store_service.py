@@ -70,13 +70,11 @@ class DataStoreBase(object):
 
         self.check_args_2(args, script_name=script_name)
         key = args[0]
-        if args[1] is None:
-            value = ''
-        else:
-            value = args[1]
-        if value == '':
+        value = args[1]
+        if value == '' or value is None:
             # We delete the data store if the value is empty
             return self.delete_data_store(study_id, user_id, file_id, *args)
+        workflow_spec_id = None
         if workflow_id is not None:
             workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
             workflow_spec_id = workflow.workflow_spec_id
@@ -85,9 +83,9 @@ class DataStoreBase(object):
         query = session.query(DataStoreModel).filter(DataStoreModel.key == key)
         if study_id:
             query = query.filter(DataStoreModel.study_id == study_id)
-        if file_id:
+        elif file_id:
             query = query.filter(DataStoreModel.file_id == file_id)
-        if user_id:
+        elif user_id:
             query = query.filter(DataStoreModel.user_id == user_id)
         result = query.order_by(desc(DataStoreModel.last_updated)).all()
         if result:
