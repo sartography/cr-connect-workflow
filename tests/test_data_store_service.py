@@ -212,11 +212,12 @@ class TestDataStoreValidation(BaseTest):
         for record in result:
             self.assertEqual('some_value', record.value)
 
-    def test_delete_record_on_empty_value(self):
-        """If we set a data store with an empty string,
+    def test_delete_record_on_none_or_empty_string(self):
+        """If we set a data store with None or an empty string,
            assert that we delete the record."""
         file_id = self.add_test_file()
 
+        # Test for empty string
         form_data = {'key': 'my_key', 'value': 'my_value', 'file_id': file_id}
         result = self.run_data_store_set(form_data)
 
@@ -233,3 +234,23 @@ class TestDataStoreValidation(BaseTest):
 
         result = session.query(DataStoreModel).all()
         self.assertEqual(0, len(result))
+
+        # Test for None
+        form_data = {'key': 'my_second_key', 'value': 'my_second_value', 'file_id': file_id}
+        result = self.run_data_store_set(form_data)
+
+        self.assertEqual(3, len(result))
+        for record in result:
+            self.assertEqual('my_second_value', record.value)
+
+        workflow = self.create_workflow('data_store_set')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        # The workflow turns the string 'None' into the value None
+        re_form_data = {'key': 'my_second_key', 'value': 'None', 'file_id': file_id}
+        self.complete_form(workflow, task, re_form_data)
+
+        result = session.query(DataStoreModel).all()
+        self.assertEqual(0, len(result))
+
