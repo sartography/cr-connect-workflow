@@ -12,7 +12,7 @@ from crc.models.study import StudyModel
 from crc.scripts.study_info import StudyInfo
 from crc.services.study_service import StudyService
 from crc.services.workflow_processor import WorkflowProcessor
-from crc.scripts.file_data_set import FileDataSet
+from crc.scripts.data_store_set import DataStoreSet
 from crc.services.document_service import DocumentService
 from crc.services.user_file_service import UserFileService
 from crc.services.reference_file_service import ReferenceFileService
@@ -104,7 +104,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
                                                  binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
-        FileDataSet().do_task(task, study.id, workflow_model.id, key="ginger", value="doodle", file_id=file.id)
+        DataStoreSet().do_task(task, study.id, workflow_model.id, type='file', key="ginger", value="doodle", file_id=file.id)
         docs = StudyInfo().do_task(task, study.id, workflow_model.id, "documents")
         self.assertTrue(isinstance(docs, Box))
         docs = StudyService.get_documents_status(study.id, force=True)
@@ -127,7 +127,7 @@ class TestStudyDetailsDocumentsScript(BaseTest):
                                                  binary_data=b'1234', irb_doc_code=irb_code)
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
-        FileDataSet().do_task(task, study.id, workflow_model.id, key="irb_code", value="Study_App_Doc", file_id=file.id)
+        DataStoreSet().do_task(task, study.id, workflow_model.id, type='file', key="irb_code", value="Study_App_Doc", file_id=file.id)
         docs = StudyInfo().do_task(task, study.id, workflow_model.id, "documents")
         self.assertTrue(isinstance(docs, Box))
         self.assertEqual(1, len(docs.Study_App_Doc.files))
@@ -151,5 +151,5 @@ class TestStudyDetailsDocumentsScript(BaseTest):
         processor = WorkflowProcessor(workflow_model)
         task = processor.next_task()
         with self.assertRaises(ApiError):
-            FileDataSet().do_task(task, study.id, workflow_model.id, key="irb_code", value="My_Pretty_Pony",
-                                  file_id=file.id)
+            DataStoreSet().do_task(task, study.id, workflow_model.id, type='file',
+                                   key="irb_code", value="My_Pretty_Pony", file_id=file.id)
