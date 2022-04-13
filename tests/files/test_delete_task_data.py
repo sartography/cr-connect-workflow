@@ -36,8 +36,8 @@ class TestDeleteTaskData(BaseTest):
 
         # Upload Single File
         data = {'file': (BytesIO(b"abcdef"), 'test_file.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
-                           (workflow.study_id, workflow.id, first_task.name, doc_code_1), data=data, follow_redirects=True,
+        rv = self.app.post(f'/v1.0/file?study_id={workflow.study_id}&workflow_id={workflow.id}&task_spec_name={first_task.name}&irb_doc_code={doc_code_1}',
+                           data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_id = rv.json['id']
@@ -58,13 +58,13 @@ class TestDeleteTaskData(BaseTest):
 
         # Upload 2 Files
         data = {'file': (BytesIO(b"abcdef"), 'test_file_1.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (workflow.study_id, workflow.id, first_task.name, doc_code_2), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         file_id_1 = rv.json['id']
         data = {'file': (BytesIO(b"ghijk"), 'test_file_2.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (workflow.study_id, workflow.id, first_task.name, doc_code_2), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
