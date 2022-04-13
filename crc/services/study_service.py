@@ -15,7 +15,7 @@ from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
-from crc.models.file import FileModel, File, FileSchema, FileDataModel
+from crc.models.file import DocumentModel, File, FileSchema
 from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
@@ -272,10 +272,9 @@ class StudyService(object):
             return
 
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
-        files = session.query(FileModel).filter_by(workflow_id=workflow_id).all()
+        files = session.query(DocumentModel).filter_by(workflow_id=workflow_id).all()
         for file in files:
             session.query(DataStoreModel).filter(DataStoreModel.file_id == file.id).delete()
-            session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).delete()
             session.delete(file)
 
         session.delete(workflow)

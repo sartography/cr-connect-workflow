@@ -19,7 +19,7 @@ from SpiffWorkflow.specs import WorkflowSpec
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileType, File
+from crc.models.file import DocumentModel, FileType, File
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModelSchema
 from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecInfo
@@ -190,7 +190,7 @@ class WorkflowProcessor(object):
                 task_event.form_data = {}
                 session.add(task_event)
         if delete_files:
-            files = FileModel.query.filter(FileModel.workflow_id == workflow_model.id).all()
+            files = DocumentModel.query.filter(DocumentModel.workflow_id == workflow_model.id).all()
             for file in files:
                 UserFileService.delete_file(file.id)
         session.commit()
