@@ -64,23 +64,25 @@ class DataStoreBase(object):
                         study_id,
                         user_id,
                         workflow_id,
-                        workflow_spec_id,
                         script_name,
                         file_id,
-                        *args,
-                        **kwargs):
+                        *args):
 
         self.check_args_2(args, script_name=script_name)
-        if not args[1]:
+        key = args[0]
+        if args[1] is None:
+            value = ''
+        else:
+            value = args[1]
+        if value == '':
             # We delete the data store if the value is empty
-            self.delete_data_store(study_id, user_id, file_id, *args)
-            return
-        if workflow_spec_id is None and workflow_id is not None:
+            return self.delete_data_store(study_id, user_id, file_id, *args)
+        if workflow_id is not None:
             workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
             workflow_spec_id = workflow.workflow_spec_id
 
         # Check if this data store is previously set
-        query = session.query(DataStoreModel).filter(DataStoreModel.key == args[0])
+        query = session.query(DataStoreModel).filter(DataStoreModel.key == key)
         if study_id:
             query = query.filter(DataStoreModel.study_id == study_id)
         if file_id:
@@ -90,7 +92,7 @@ class DataStoreBase(object):
         result = query.order_by(desc(DataStoreModel.last_updated)).all()
         if result:
             dsm = result[0]
-            dsm.value = args[1]
+            dsm.value = value
             if task_spec:
                 dsm.task_spec = task_spec
             if workflow_id:
@@ -102,8 +104,8 @@ class DataStoreBase(object):
                 # This just gets rid of all the old unused records
                 self.delete_extra_data_stores(result[1:])
         else:
-            dsm = DataStoreModel(key=args[0],
-                                 value=args[1],
+            dsm = DataStoreModel(key=key,
+                                 value=value,
                                  study_id=study_id,
                                  task_spec=task_spec,
                                  user_id=user_id,  # Make this available to any User
