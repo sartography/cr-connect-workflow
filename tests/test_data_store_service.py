@@ -254,3 +254,24 @@ class TestDataStoreValidation(BaseTest):
         result = session.query(DataStoreModel).all()
         self.assertEqual(0, len(result))
 
+    def test_do_not_delete_record_on_false_value(self):
+        file_id = self.add_test_file()
+
+        form_data = {'key': 'my_key', 'value': 'my_value', 'file_id': file_id}
+        result = self.run_data_store_set(form_data)
+
+        self.assertEqual(3, len(result))
+        for record in result:
+            self.assertEqual('my_value', record.value)
+
+        workflow = self.create_workflow('data_store_set')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        re_form_data = {'key': 'my_key', 'value': False, 'file_id': file_id}
+        self.complete_form(workflow, task, re_form_data)
+
+        result = session.query(DataStoreModel).all()
+        self.assertEqual(3, len(result))
+        for record in result:
+            self.assertEqual('false', record.value)
