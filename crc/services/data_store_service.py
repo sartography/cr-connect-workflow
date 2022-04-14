@@ -146,9 +146,9 @@ class DataStoreBase(object):
         elif study_id:
             query = query.filter(DataStoreModel.study_id == study_id)
         record = query.first()
-        session.delete(record)
-        session.commit()
-        # return record
+        if record is not None:
+            session.delete(record)
+            session.commit()
 
     @staticmethod
     def delete_extra_data_stores(records):
