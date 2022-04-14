@@ -8,27 +8,25 @@
     <bpmn:scriptTask id="Activity_SetDataStore" name="Set Data Store">
       <bpmn:incoming>Flow_0nstzm8</bpmn:incoming>
       <bpmn:outgoing>Flow_08r3ga0</bpmn:outgoing>
-      <bpmn:script>study_data_set('study_data_key', 'study_data_value')
-file_data_set(file_id=1, key='file_data_key', value='file_data_value')
-user_data_set('user_data_key', 'user_data_value')</bpmn:script>
+      <bpmn:script>data_store_set(type='study', key='study_data_key', value='study_data_value')
+data_store_set(type='user', key='user_data_key', value='user_data_value')
+data_store_set(type='file', key='file_data_key', value='file_data_value', file_id=1)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_08r3ga0" sourceRef="Activity_SetDataStore" targetRef="Activity_GetDataStore" />
     <bpmn:scriptTask id="Activity_GetDataStore" name="Get Data Store">
       <bpmn:incoming>Flow_08r3ga0</bpmn:incoming>
       <bpmn:outgoing>Flow_02l0u2v</bpmn:outgoing>
-      <bpmn:script>
-previous_study_data_value = study_data_get('previous_study_data_key')
-previous_file_data_value = file_data_get(file_id=1, key='previous_file_data_key')
-previous_user_data_value = user_data_get('previous_user_data_key')
+      <bpmn:script>previous_study_data_value = data_store_get(type='study', key='previous_study_data_key')
+previous_file_data_value = data_store_get(type='file', file_id=1, key='previous_file_data_key')
+previous_user_data_value = data_store_get(type='user', key='previous_user_data_key')
 
-study_data_value = study_data_get('study_data_key')
-file_data_value = file_data_get(file_id=1, key='file_data_key')
-user_data_value = user_data_get('user_data_key')
+study_data_value = data_store_get(type='study', key='study_data_key')
+file_data_value = data_store_get(type='file', file_id=1, key='file_data_key')
+user_data_value = data_store_get(type='user', key='user_data_key')
 
-bad_study_data_value = study_data_get('bad_study_data_key', 'bad_study_data_value')
-bad_file_data_value = file_data_get(file_id=1, key='bad_file_data_key', default='bad_file_data_value')
-bad_user_data_value = user_data_get('bad_user_data_key', 'bad_user_data_value')
-</bpmn:script>
+bad_study_data_value = data_store_get(type='study', key='bad_study_data_key', default='bad_study_data_value')
+bad_file_data_value = data_store_get(type='file', file_id=1, key='bad_file_data_key', default='bad_file_data_value')
+bad_user_data_value = data_store_get(type='user', key='bad_user_data_key', default='bad_user_data_value')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_02l0u2v" sourceRef="Activity_GetDataStore" targetRef="Activity_DisplayDataStore" />
     <bpmn:manualTask id="Activity_DisplayDataStore" name="Display Data Store">

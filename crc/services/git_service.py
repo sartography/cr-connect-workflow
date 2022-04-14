@@ -106,9 +106,11 @@ class GitService(object):
         # get list of untracked files
         untracked_files = repo.untracked_files
 
-        repo.index.add(modified)
+        if len(modified) > 0:
+            repo.index.add(modified)
         repo.index.add(untracked_files)
-        repo.index.remove(deleted)
+        if len(deleted) > 0:
+            repo.index.remove(deleted)
         repo.index.commit(comment)
         repo.remotes.origin.push()
 
