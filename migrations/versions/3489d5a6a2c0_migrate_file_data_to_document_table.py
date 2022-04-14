@@ -62,17 +62,20 @@ def upgrade():
                     archived=archived
                 )
                 session.add(document_model)
+                session.commit()
                 count += 1
-        try:
-            session.commit()
-        except IntegrityError as ie:
-            app.logger.info(
-                f'Error migrating file data. File ID: {file_model.id}, File Data ID: {file_data_model.id}, Original error: {ie}')
-            session.rollback()
-        except Exception as e:
-            app.logger.info(
-                f'Error migrating file data. File ID: {file_model.id}, File Data ID: {file_data_model.id}, Original error: {e}')
+                update_data_store(file_model.id, document_model.id, session)
+        # try:
+        #     session.commit()
+        # except IntegrityError as ie:
+        #     app.logger.info(
+        #         f'Error migrating file data. File ID: {file_model.id}, File Data ID: {file_data_model.id}, Original error: {ie}')
+        #     session.rollback()
+        # except Exception as e:
+        #     app.logger.info(
+        #         f'Error migrating file data. File ID: {file_model.id}, File Data ID: {file_data_model.id}, Original error: {e}')
 
 
 def downgrade():
     op.execute('DELETE FROM document;')
+    op.execute('UPDATE data_store SET document_id = null')
