@@ -19,16 +19,16 @@ class TestDataStoreValidation(BaseTest):
     def add_test_file():
         binary_data = b'1234'
         md5_hash = UUID(hashlib.md5(binary_data).hexdigest())
-        file_model = DocumentModel(
+        model = DocumentModel(
             name='my_test_file',
             type=FileType.pdf.value,
             content_type='application/pdf',
-            irb_doc_code = 'Study_Protocol_Document',
+            irb_doc_code='Study_Protocol_Document',
             data=binary_data,
             md5_hash=md5_hash,
             archived=False
         )
-        session.add(file_model)
+        session.add(model)
         session.commit()
         file_id = session.query(DocumentModel.id).filter(DocumentModel.name == 'my_test_file').scalar()
         return file_id
@@ -42,7 +42,7 @@ class TestDataStoreValidation(BaseTest):
             task_spec=None,
             spec_id=spec_model.id,
             user_id=None,
-            file_id=None,
+            document_id=None,
             value='previous_study_data_value'
 
         )
@@ -54,7 +54,7 @@ class TestDataStoreValidation(BaseTest):
             task_spec=None,
             spec_id=spec_model.id,
             user_id=user.uid,
-            file_id=None,
+            document_id=None,
             value='previous_user_data_value'
         )
         session.add(dsm)
@@ -65,7 +65,7 @@ class TestDataStoreValidation(BaseTest):
             task_spec=None,
             spec_id=spec_model.id,
             user_id=None,
-            file_id=file_id,
+            document_id=file_id,
             value='previous_file_data_value'
         )
         session.add(dsm)
@@ -81,7 +81,7 @@ class TestDataStoreValidation(BaseTest):
             task_spec=None,
             spec_id=None,
             user_id=None,
-            file_id=file_id,
+            document_id=file_id,
             value='previous_file_data_value_1'
         )
         session.add(dsm)
@@ -95,7 +95,7 @@ class TestDataStoreValidation(BaseTest):
             task_spec=None,
             spec_id=None,
             user_id=None,
-            file_id=file_id,
+            document_id=file_id,
             value='previous_file_data_value_2'
         )
         session.add(dsm)
@@ -109,7 +109,7 @@ class TestDataStoreValidation(BaseTest):
             task_spec=None,
             spec_id=None,
             user_id=None,
-            file_id=file_id,
+            document_id=file_id,
             value='previous_file_data_value_3'
         )
         session.add(dsm)
@@ -208,7 +208,7 @@ class TestDataStoreValidation(BaseTest):
         file_id = self.add_test_file()
         self.add_multiple_records(file_id)
 
-        result = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id).all()
+        result = session.query(DataStoreModel).filter(DataStoreModel.document_id == file_id).all()
         self.assertEqual(3, len(result))
         previous_values = ['previous_file_data_value_1', 'previous_file_data_value_2', 'previous_file_data_value_3']
         for record in result:
