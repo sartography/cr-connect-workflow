@@ -275,3 +275,16 @@ class TestDataStoreValidation(BaseTest):
         self.assertEqual(3, len(result))
         for record in result:
             self.assertEqual('false', record.value)
+
+    def test_do_not_fail_deleting_record_that_does_not_exist(self):
+        file_id = self.add_test_file()
+
+        workflow = self.create_workflow('data_store_set')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        # The workflow turns the string 'None' into the value None
+        form_data = {'key': 'my_key', 'value': 'None', 'file_id': file_id}
+        workflow_api = self.complete_form(workflow, task, form_data)
+        task = workflow_api.next_task
+        self.assertEqual('Event_EndEvent', task.name)
