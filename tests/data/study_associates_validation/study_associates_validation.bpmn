@@ -32,7 +32,7 @@ for assoc in assoc_list:
         assoc_info = assoc
         assoc_status = "Found"
         assoc_cid = assoc_info["uid"]
-        if assoc_cid != study_data_get("sdsPI_ComputingID", False):
+        if assoc_cid != data_store_get(type='study', key="sdsPI_ComputingID", value=False):
             assoc_status = "New"
 </bpmn:script>
     </bpmn:scriptTask>
