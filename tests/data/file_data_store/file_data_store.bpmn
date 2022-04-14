@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1j7idla" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.10.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1j7idla" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
   <bpmn:process id="Process_18biih5" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_1pnq3kg</bpmn:outgoing>
@@ -22,7 +22,7 @@ fileurl = documents['UVACompl_PRCAppr'].files[0]['url']
 
 filename = documents['UVACompl_PRCAppr'].files[0]['name']
 
-file_data_set(file_id=fileid,key='test',value='me')</bpmn:script>
+data_store_set(type='file', file_id=fileid, key='test', value='me')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:endEvent id="Event_1pdyoyv">
       <bpmn:incoming>Flow_02bgcrp</bpmn:incoming>
@@ -32,54 +32,54 @@ file_data_set(file_id=fileid,key='test',value='me')</bpmn:script>
     <bpmn:scriptTask id="Activity_19x6e2e" name="get output">
       <bpmn:incoming>Flow_0z7kamo</bpmn:incoming>
       <bpmn:outgoing>Flow_15mmymi</bpmn:outgoing>
-      <bpmn:script>output=file_data_get(file_id=fileid,key='test')</bpmn:script>
+      <bpmn:script>output=data_store_get(type='file', file_id=fileid, key='test')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:scriptTask id="Activity_0oaeqxs" name="get output2">
       <bpmn:incoming>Flow_15mmymi</bpmn:incoming>
       <bpmn:outgoing>Flow_02bgcrp</bpmn:outgoing>
-      <bpmn:script>output2=file_data_get(file_id=fileid,key='unobtainium',default='nope')</bpmn:script>
+      <bpmn:script>output2=data_store_get(type='file', file_id=fileid, key='unobtainium', default='nope')</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_02bgcrp" sourceRef="Activity_0oaeqxs" targetRef="Event_1pdyoyv" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_18biih5">
       <bpmndi:BPMNEdge id="Flow_02bgcrp_di" bpmnElement="Flow_02bgcrp">
-        <di:waypoint x="860" y="117" />
+        <di:waypoint x="894" y="117" />
         <di:waypoint x="962" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_15mmymi_di" bpmnElement="Flow_15mmymi">
-        <di:waypoint x="690" y="117" />
-        <di:waypoint x="760" y="117" />
+        <di:waypoint x="723" y="117" />
+        <di:waypoint x="794" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0z7kamo_di" bpmnElement="Flow_0z7kamo">
-        <di:waypoint x="530" y="117" />
-        <di:waypoint x="590" y="117" />
+        <di:waypoint x="552" y="117" />
+        <di:waypoint x="623" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1xqewuk_di" bpmnElement="Flow_1xqewuk">
-        <di:waypoint x="370" y="117" />
-        <di:waypoint x="430" y="117" />
+        <di:waypoint x="381" y="117" />
+        <di:waypoint x="452" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="SequenceFlow_1pnq3kg_di" bpmnElement="SequenceFlow_1pnq3kg">
         <di:waypoint x="215" y="117" />
-        <di:waypoint x="270" y="117" />
+        <di:waypoint x="281" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_01ekdl8_di" bpmnElement="Task_Has_Bananas">
-        <dc:Bounds x="270" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_0g5namy_di" bpmnElement="Activity_0yikdu7">
-        <dc:Bounds x="430" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1pdyoyv_di" bpmnElement="Event_1pdyoyv">
         <dc:Bounds x="962" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_01ekdl8_di" bpmnElement="Task_Has_Bananas">
+        <dc:Bounds x="281" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0g5namy_di" bpmnElement="Activity_0yikdu7">
+        <dc:Bounds x="452" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0ma7ela_di" bpmnElement="Activity_19x6e2e">
-        <dc:Bounds x="590" y="77" width="100" height="80" />
+        <dc:Bounds x="623" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_0oaeqxs_di" bpmnElement="Activity_0oaeqxs">
-        <dc:Bounds x="760" y="77" width="100" height="80" />
+        <dc:Bounds x="794" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
