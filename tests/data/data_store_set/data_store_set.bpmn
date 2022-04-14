@@ -6,10 +6,10 @@
     </bpmn:startEvent>
     <bpmn:sequenceFlow id="Flow_0cb7y6c" sourceRef="StartEvent_1" targetRef="Activity_GetData" />
     <bpmn:sequenceFlow id="Flow_0cnvihm" sourceRef="Activity_GetData" targetRef="Activity_SetDataStore" />
-    <bpmn:endEvent id="Event_0ds6mpu">
+    <bpmn:endEvent id="Event_EndEvent">
       <bpmn:incoming>Flow_10t9bdk</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_10t9bdk" sourceRef="Activity_SetDataStore" targetRef="Event_0ds6mpu" />
+    <bpmn:sequenceFlow id="Flow_10t9bdk" sourceRef="Activity_SetDataStore" targetRef="Event_EndEvent" />
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
@@ -52,7 +52,7 @@ data_store_set(type='file', key=key, value=value, file_id=file_id)</bpmn:script>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_0ds6mpu_di" bpmnElement="Event_0ds6mpu">
+      <bpmndi:BPMNShape id="Event_0ds6mpu_di" bpmnElement="Event_EndEvent">
         <dc:Bounds x="592" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_18u7a8s_di" bpmnElement="Activity_GetData">
