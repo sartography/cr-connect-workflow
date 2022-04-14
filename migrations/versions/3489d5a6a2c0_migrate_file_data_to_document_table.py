@@ -74,8 +74,12 @@ def upgrade():
         # except Exception as e:
         #     app.logger.info(
         #         f'Error migrating file data. File ID: {file_model.id}, File Data ID: {file_data_model.id}, Original error: {e}')
+    op.drop_constraint('file_id_key', 'data_store', type_='foreignkey')
+    # op.drop_column('data_store', 'file_id')
 
 
 def downgrade():
-    op.execute('DELETE FROM document;')
+    # op.add_column('data_store', sa.Column('file_id', sa.Integer(), nullable=True))
+    # op.create_foreign_key('file_id_key', 'data_store', 'file', ['file_id'], ['id'])
     op.execute('UPDATE data_store SET document_id = null')
+    op.execute('DELETE FROM document;')

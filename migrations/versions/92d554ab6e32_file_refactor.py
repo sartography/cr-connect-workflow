@@ -44,6 +44,6 @@ def upgrade():
 
 
 def downgrade():
+    op.drop_constraint('document_id_key', 'data_store', type_='foreignkey')
+    op.drop_column('data_store', 'document_id')
     op.drop_table('document')
-    # op.drop_column('data_store', 'document_id')
-    # op.drop_constraint('document_id_key', 'data_store', type_='foreignkey')

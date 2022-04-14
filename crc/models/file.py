@@ -105,7 +105,7 @@ class FileModel(db.Model):
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     task_spec = db.Column(db.String, nullable=True)
     irb_doc_code = db.Column(db.String, nullable=True)  # Code reference to the documents.xlsx reference file.
-    data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
+    # data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
 
 
 class File(object):
