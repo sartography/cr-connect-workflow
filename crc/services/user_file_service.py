@@ -229,7 +229,7 @@ class UserFileService(object):
     @staticmethod
     def delete_file_data_stores(file_id):
         try:
-            session.query(DataStoreModel).filter_by(file_id=file_id).delete()
+            session.query(DataStoreModel).filter_by(document_id=file_id).delete()
         except IntegrityError as ie:
             session.rollback()
             app.logger.info(f"Failed to delete file data stores. Original error is {ie}")
