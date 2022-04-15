@@ -254,10 +254,10 @@ class WorkflowProcessor(object):
 
         for file in files:
             data = SpecFileService.get_data(workflow_spec_info, file.name)
-            if file.type == FileType.bpmn:
+            if file.type == FileType.bpmn.value:
                 bpmn: etree.Element = etree.fromstring(data)
                 parser.add_bpmn_xml(bpmn, filename=file.name)
-            elif file.type == FileType.dmn:
+            elif file.type == FileType.dmn.value:
                 dmn: etree.Element = etree.fromstring(data)
                 parser.add_dmn_xml(dmn, filename=file.name)
         if workflow_spec_info.primary_process_id is None or workflow_spec_info.primary_process_id == "":
