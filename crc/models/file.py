@@ -148,7 +148,7 @@ class File(object):
         instance = cls()
         instance.name = file_name
         instance.content_type = content_type
-        instance.type = file_type
+        instance.type = file_type.value
         instance.document = {}
         instance.last_modified = last_modified
         instance.size = file_size
