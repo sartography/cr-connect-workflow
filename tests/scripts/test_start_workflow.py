@@ -22,6 +22,7 @@ class TestStartWorkflow(BaseTest):
         return workflow
 
     def test_start_workflow_validation(self):
+        random_wf = self.create_workflow('random_fact') # Assure we have a workflow to start.
         spec_model = self.load_test_spec('start_workflow')
         rv = self.app.get('/v1.0/workflow-specification/%s/validate' % spec_model.id, headers=self.logged_in_headers())
         self.assertEqual([], rv.json)

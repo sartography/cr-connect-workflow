@@ -1,3 +1,5 @@
+import enum
+
 from marshmallow import INCLUDE, fields
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 
@@ -6,6 +8,13 @@ from crc.models.study import StudyModel, StudySchema, WorkflowMetadataSchema, Wo
 from crc.models.workflow import WorkflowModel
 from crc.services.ldap_service import LdapService
 from sqlalchemy import func
+
+class TaskAction(enum.Enum):
+    COMPLETE = "COMPLETE"
+    TOKEN_RESET = "TOKEN_RESET"
+    HARD_RESET = "HARD_RESET"
+    SOFT_RESET = "SOFT_RESET"
+    ASSIGNMENT = "ASSIGNMENT"  # Whenever the lane changes between tasks we assign the task to specific user.
 
 
 class TaskEventModel(db.Model):

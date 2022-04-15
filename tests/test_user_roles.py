@@ -6,7 +6,7 @@ from crc.models.api_models import NavigationItemSchema
 from crc.models.workflow import WorkflowStatus
 from crc import db
 from crc.api.common import ApiError
-from crc.models.task_event import TaskEventModel, TaskEventSchema
+from crc.models.task_event import TaskEventModel, TaskEventSchema, TaskAction
 from crc.services.workflow_service import WorkflowService
 
 
@@ -82,7 +82,7 @@ class TestUserRoles(BaseTest):
         # the supervisor.
         task_logs = db.session.query(TaskEventModel). \
             filter(TaskEventModel.user_uid == supervisor.uid). \
-            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).all()
+            filter(TaskEventModel.action == TaskAction.ASSIGNMENT.value).all()
         self.assertEqual(1, len(task_logs))
 
         # A call to the /task endpoint as the supervisor user should return a list of
@@ -213,7 +213,7 @@ class TestUserRoles(BaseTest):
     def get_assignment_task_events(self, uid):
         return db.session.query(TaskEventModel). \
             filter(TaskEventModel.user_uid == uid). \
-            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).all()
+            filter(TaskEventModel.action == TaskAction.ASSIGNMENT.value).all()
 
     def test_workflow_reset_correctly_resets_the_task_events(self):
 
