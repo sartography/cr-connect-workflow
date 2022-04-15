@@ -25,7 +25,7 @@ class TestFilesApi(BaseTest):
         correct_name = task.task_spec.form.fields[0].id
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data,
                            follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
@@ -132,7 +132,7 @@ class TestFilesApi(BaseTest):
         correct_name = task.task_spec.form.fields[0].id
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data,
                            follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
@@ -167,14 +167,14 @@ class TestFilesApi(BaseTest):
         correct_name = task.task_spec.form.fields[0].id
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data,
                            follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
 
         # Note:  this call can be made WITHOUT the task id.
-        rv = self.app.get('/v1.0/file?study_id=%i&workflow_id=%s&form_field_key=%s' %
+        rv = self.app.get('/v1.0/file?study_id=%i&workflow_id=%s&irb_doc_code=%s' %
                           (workflow.study_id, workflow.id, correct_name), follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -186,7 +186,7 @@ class TestFilesApi(BaseTest):
                                            'application/xcode', b"asdfasdf")
 
         # Note:  this call can be made WITHOUT the task spec name.
-        rv = self.app.get('/v1.0/file?study_id=%i&workflow_id=%s&form_field_key=%s' %
+        rv = self.app.get('/v1.0/file?study_id=%i&workflow_id=%s&irb_doc_code=%s' %
                           (workflow.study_id, workflow.id, correct_name), follow_redirects=True,
                           content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -202,7 +202,7 @@ class TestFilesApi(BaseTest):
         correct_name = task.task_spec.form.fields[0].id
 
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (workflow.study_id, workflow.id, task.get_name(), correct_name), data=data,
                            follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
