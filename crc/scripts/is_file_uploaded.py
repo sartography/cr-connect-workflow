@@ -18,4 +18,7 @@ class IsFileUploaded(Script):
 
         doc_code = args[0]
         files = UserFileService.get_files_for_study(study_id, irb_doc_code=doc_code)
-        return len(files) > 0
+        for file in files:
+            if file.archived is False:
+                return True
+        return False
