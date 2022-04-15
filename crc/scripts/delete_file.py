@@ -17,7 +17,7 @@ class DeleteFile(Script):
                 DocumentModel.workflow_id == workflow_id, DocumentModel.irb_doc_code == doc_code).all()
             if isinstance(result, list) and len(result) > 0 and isinstance(result[0], DocumentModel):
                 for file in result:
-                    UserFileService.delete_file(file.id)
+                    UserFileService().delete_file(file.id)
             else:
                 raise WorkflowTaskExecException(task, f'delete_file() failed. No document of type {doc_code}'
                                                       f' was found for this workflow.')
