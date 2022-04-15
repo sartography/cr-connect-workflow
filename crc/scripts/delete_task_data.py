@@ -2,7 +2,7 @@ from crc import session
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.file import FileModel
-from crc.models.task_event import TaskEventModel
+from crc.models.task_event import TaskEventModel, TaskAction
 from crc.scripts.script import Script
 from crc.services.document_service import DocumentService
 from crc.services.user_file_service import UserFileService
@@ -36,7 +36,7 @@ class DeleteTaskData(Script):
         # delete task events
         session.query(TaskEventModel).filter(TaskEventModel.workflow_id == workflow_id).filter(
             TaskEventModel.study_id == study_id).filter(TaskEventModel.task_name == task_spec_name).filter_by(
-            action=WorkflowService.TASK_ACTION_COMPLETE).delete()
+            action=TaskAction.COMPLETE.value).delete()
 
         files_to_delete = session.query(FileModel). \
             filter(FileModel.workflow_id == workflow_id). \
