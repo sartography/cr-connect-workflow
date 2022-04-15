@@ -2,7 +2,10 @@ import json
 from typing import List
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
+from SpiffWorkflow.bpmn.serializer import BpmnWorkflowSerializer
 from SpiffWorkflow.bpmn.specs.events import EndEvent, CancelEventDefinition
+from SpiffWorkflow.camunda.serializer import UserTaskConverter
+from SpiffWorkflow.dmn.serializer import BusinessRuleTaskConverter
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
@@ -92,11 +95,13 @@ class MyCustomParser(BpmnDmnParser):
     OVERRIDE_PARSER_CLASSES = BpmnDmnParser.OVERRIDE_PARSER_CLASSES
     OVERRIDE_PARSER_CLASSES.update(CamundaParser.OVERRIDE_PARSER_CLASSES)
 
-
 class WorkflowProcessor(object):
     _script_engine = CustomBpmnScriptEngine()
-    _serializer = BpmnSerializer()
-
+    SERIALIZER_VERSION = "1.0-CRC"
+    wf_spec_converter = BpmnWorkflowSerializer.configure_workflow_spec_converter(
+        [UserTaskConverter, BusinessRuleTaskConverter])
+    _serializer = BpmnWorkflowSerializer(wf_spec_converter, version=SERIALIZER_VERSION)
+    _old_serializer = BpmnSerializer()
     WORKFLOW_ID_KEY = "workflow_id"
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
@@ -150,8 +155,7 @@ class WorkflowProcessor(object):
                     # database model to which it is associated, and scripts running within the model
                     # can then load data as needed.
                 self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(
-                    self.bpmn_workflow, include_spec=True)
+                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_json(self.bpmn_workflow)
 
                 self.save()
 
@@ -199,8 +203,13 @@ class WorkflowProcessor(object):
     @staticmethod
     def __get_bpmn_workflow(workflow_model: WorkflowModel, spec: WorkflowSpec = None, validate_only=False):
         if workflow_model.bpmn_workflow_json:
-            bpmn_workflow = WorkflowProcessor._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
-                                                                  workflow_spec=spec)
+            version = WorkflowProcessor._serializer.get_version(workflow_model.bpmn_workflow_json)
+            if(version == WorkflowProcessor.SERIALIZER_VERSION):
+                bpmn_workflow = WorkflowProcessor._serializer.deserialize_json(workflow_model.bpmn_workflow_json)
+            else:
+                bpmn_workflow = WorkflowProcessor.\
+                    _old_serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
+                                                         workflow_spec=spec)
             bpmn_workflow.script_engine = WorkflowProcessor._script_engine
         else:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
@@ -310,9 +319,8 @@ class WorkflowProcessor(object):
         except WorkflowTaskExecException as we:
             raise ApiError.from_workflow_exception("task_error", str(we), we)
 
-
     def serialize(self):
-        return self._serializer.serialize_workflow(self.bpmn_workflow,include_spec=True)
+        return self._serializer.serialize_json(self.bpmn_workflow)
 
     def next_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()

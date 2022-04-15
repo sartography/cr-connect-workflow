@@ -863,6 +863,17 @@ class WorkflowService(object):
         return props
 
     @staticmethod
+    def workflow_id_from_spiff_task(spiff_task):
+        workflow = spiff_task.workflow
+        # Find the top level workflow
+        while WorkflowProcessor.WORKFLOW_ID_KEY not in workflow.data:
+            if workflow.outer_workflow != workflow:
+                workflow = workflow.outer_workflow
+            else:
+                break
+        return workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+
+    @staticmethod
     def _process_documentation(spiff_task):
         """Runs the given documentation string through the Jinja2 processor to inject data
         create loops, etc...  - If a markdown file exists with the same name as the task id,
@@ -872,9 +883,9 @@ class WorkflowService(object):
 
         try:
             doc_file_name = spiff_task.task_spec.name + ".md"
-            workflow_id = spiff_task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-            workflow = db.session.query(WorkflowModel). \
-                filter(WorkflowModel.id == spiff_task.workflow.data['workflow_id']).first()
+
+            workflow_id = WorkflowService.workflow_id_from_spiff_task(spiff_task)
+            workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
             spec_service = WorkflowSpecService()
             data = SpecFileService.get_data(spec_service.get_spec(workflow.workflow_spec_id), doc_file_name)
             raw_doc = data.decode("utf-8")

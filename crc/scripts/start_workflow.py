@@ -63,6 +63,7 @@ class StartWorkflow(Script):
                 filter(WorkflowModel.workflow_spec_id==workflow_spec_id).\
                 first()
 
+            # Optimization -> only do this if the workflow is not started.
             if workflow:
                 workflow_api = self.get_workflow(workflow.id)
                 return workflow_api
