@@ -47,7 +47,7 @@ class DataStoreTest(BaseTest):
 
     def add_test_file_data(self, file_id, value):
         file_data = DataStoreSchema().dump(self.TEST_FILE_ITEM)
-        file_data['file_id'] = file_id
+        file_data['document_id'] = file_id
         file_data['value'] = value
         rv = self.app.post('/v1.0/datastore',
                            content_type="application/json",
