@@ -83,12 +83,12 @@ def add_datastore(body):
     if 'value' not in body:
         raise ApiError('no_value', 'You need to specify a value to add a datastore item')
 
-    if ('user_id' not in body) and ('study_id' not in body)  and ('file_id' not in body):
-        raise ApiError('conflicting_values', 'A datastore item should have either a study_id, user_id or file_id ')
+    if ('user_id' not in body) and ('study_id' not in body)  and ('document_id' not in body):
+        raise ApiError('conflicting_values', 'A datastore item should have either a study_id, user_id or document_id ')
 
 
     present = 0
-    for field in ['user_id','study_id','file_id']:
+    for field in ['user_id', 'study_id', 'document_id']:
         if field in body:
             present = present+1
     if present > 1:
@@ -96,7 +96,7 @@ def add_datastore(body):
                                              'but not more than one of these')
 
     item = DataStoreSchema().load(body)
-    item.last_updated = datetime.utcnow()
+    # item.last_updated = datetime.utcnow()
     session.add(item)
     session.commit()
     return DataStoreSchema().dump(item)
