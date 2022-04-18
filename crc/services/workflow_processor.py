@@ -192,7 +192,7 @@ class WorkflowProcessor(object):
         if delete_files:
             files = DocumentModel.query.filter(DocumentModel.workflow_id == workflow_model.id).all()
             for file in files:
-                UserFileService.delete_file(file.id)
+                UserFileService().delete_file(file.id)
         session.commit()
         return WorkflowProcessor(workflow_model)
 
