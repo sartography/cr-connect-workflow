@@ -61,16 +61,16 @@ def update_file_data(file_id):
     return FileSchema().dump(to_file_api(file_model))
 
 
-def get_files(workflow_id=None, form_field_key=None, study_id=None):
+def get_files(workflow_id=None, irb_doc_code=None, study_id=None):
     if workflow_id is None:
         raise ApiError('missing_parameter',
                        'Please specify a workflow_id with an optional form_field_key')
 
     if study_id is not None:
-        file_models = UserFileService.get_files_for_study(study_id=study_id, irb_doc_code=form_field_key)
+        file_models = UserFileService.get_files_for_study(study_id=study_id, irb_doc_code=irb_doc_code)
     else:
         file_models = UserFileService.get_files(workflow_id=workflow_id,
-                                            irb_doc_code=form_field_key)
+                                            irb_doc_code=irb_doc_code)
 
     files = (to_file_api(model) for model in file_models)
     return FileSchema(many=True).dump(files)
