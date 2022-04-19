@@ -2,7 +2,7 @@ from SpiffWorkflow.exceptions import WorkflowTaskExecException
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import DocumentModel
+from crc.models.file import FileModel
 from crc.scripts.script import Script
 from crc.services.document_service import DocumentService
 from crc.services.user_file_service import UserFileService
@@ -13,9 +13,9 @@ class DeleteFile(Script):
     @staticmethod
     def process_document_deletion(doc_code, workflow_id, task):
         if DocumentService.is_allowed_document(doc_code):
-            result = session.query(DocumentModel).filter(
-                DocumentModel.workflow_id == workflow_id, DocumentModel.irb_doc_code == doc_code).all()
-            if isinstance(result, list) and len(result) > 0 and isinstance(result[0], DocumentModel):
+            result = session.query(FileModel).filter(
+                FileModel.workflow_id == workflow_id, FileModel.irb_doc_code == doc_code).all()
+            if isinstance(result, list) and len(result) > 0 and isinstance(result[0], FileModel):
                 for file in result:
                     UserFileService().delete_file(file.id)
             else:
@@ -50,8 +50,8 @@ class DeleteFile(Script):
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         doc_codes = self.get_codes(task, args, kwargs)
         for code in doc_codes:
-            result = session.query(DocumentModel).filter(
-                DocumentModel.workflow_id == workflow_id, DocumentModel.irb_doc_code == code).all()
+            result = session.query(FileModel).filter(
+                FileModel.workflow_id == workflow_id, FileModel.irb_doc_code == code).all()
             if not result:
                 return False
         return True

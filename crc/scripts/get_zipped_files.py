@@ -1,7 +1,7 @@
 from crc import session
 from crc.api.common import ApiError
 from crc.api.file_refactor import to_file_api
-from crc.models.file import DocumentModel, FileSchema
+from crc.models.file import FileModel, FileSchema
 from crc.scripts.script import Script
 from crc.services.study_service import StudyService
 
@@ -36,7 +36,7 @@ class GetZippedFiles(Script):
                 zip_filename = 'attachments.zip'
 
             file_ids = kwargs['file_ids']
-            files = session.query(DocumentModel).filter(DocumentModel.id.in_(file_ids)).all()
+            files = session.query(FileModel).filter(FileModel.id.in_(file_ids)).all()
             if files:
                 # Create a temporary zipfile with the requested files
                 with tempfile.NamedTemporaryFile() as temp_file:

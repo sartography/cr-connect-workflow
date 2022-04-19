@@ -16,7 +16,7 @@ class DataStoreBase(object):
         if script_name == 'study_data_set':
             record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, key: value}
         elif script_name == 'file_data_set':
-            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'document_id': file_id, key: value}
+            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'file_id': file_id, key: value}
         elif script_name == 'user_data_set':
             record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'user_id': user_id, key: value}
         g.validation_data_store.append(record)
@@ -37,7 +37,7 @@ class DataStoreBase(object):
             return self.get_data_common(study_id, user_id, 'study_data_get', file_id, *args)
         elif script_name == 'file_data_get':
             for record in g.validation_data_store:
-                if 'document_id' in record and record['document_id'] == file_id and key in record:
+                if 'file_id' in record and record['file_id'] == file_id and key in record:
                     return record[key]
             return self.get_data_common(study_id, user_id, 'file_data_get', file_id, *args)
         elif script_name == 'user_data_get':
@@ -84,7 +84,7 @@ class DataStoreBase(object):
         if study_id:
             query = query.filter(DataStoreModel.study_id == study_id)
         elif file_id:
-            query = query.filter(DataStoreModel.document_id == file_id)
+            query = query.filter(DataStoreModel.file_id == file_id)
         elif user_id:
             query = query.filter(DataStoreModel.user_id == user_id)
         result = query.order_by(desc(DataStoreModel.last_updated)).all()
@@ -107,7 +107,7 @@ class DataStoreBase(object):
                                  study_id=study_id,
                                  task_spec=task_spec,
                                  user_id=user_id,  # Make this available to any User
-                                 document_id=file_id,
+                                 file_id=file_id,
                                  workflow_id=workflow_id,
                                  spec_id=workflow_spec_id)
         session.add(dsm)
@@ -119,7 +119,7 @@ class DataStoreBase(object):
         self.check_args(args, 2, script_name)
         record = session.query(DataStoreModel).filter_by(study_id=study_id,
                                                          user_id=user_id,
-                                                         document_id=file_id,
+                                                         file_id=file_id,
                                                          key=args[0]).first()
         if record:
             return record.value
@@ -132,7 +132,7 @@ class DataStoreBase(object):
     def get_multi_common(study_id, user_id, file_id=None):
         results = session.query(DataStoreModel).filter_by(study_id=study_id,
                                                           user_id=user_id,
-                                                          document_id=file_id)
+                                                          file_id=file_id)
         return results
 
     @staticmethod
@@ -142,7 +142,7 @@ class DataStoreBase(object):
         if user_id:
             query = query.filter(DataStoreModel.user_id == user_id)
         elif file_id:
-            query = query.filter(DataStoreModel.document_id == file_id)
+            query = query.filter(DataStoreModel.file_id == file_id)
         elif study_id:
             query = query.filter(DataStoreModel.study_id == study_id)
         record = query.first()

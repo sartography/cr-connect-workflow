@@ -5,7 +5,7 @@ from SpiffWorkflow.exceptions import WorkflowTaskExecException
 
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import CONTENT_TYPES, DocumentModel
+from crc.models.file import CONTENT_TYPES, FileModel
 from crc.models.workflow import WorkflowModel
 from crc.scripts.script import Script
 from crc.services.jinja_service import JinjaService
@@ -99,7 +99,7 @@ Takes two arguments:
                     if file_id is not None and isinstance(file_id, int):
                         if not task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
                             # Get the actual image data
-                            image_file_model = session.query(DocumentModel).filter_by(id=file_id).first()
+                            image_file_model = session.query(FileModel).filter_by(id=file_id).first()
                             if image_file_model is not None:
                                 image_file_data.append(image_file_model)
 

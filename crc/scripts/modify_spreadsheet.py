@@ -1,6 +1,6 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.file import DocumentModel
+from crc.models.file import FileModel
 from crc.scripts.script import Script
 
 from io import BytesIO
@@ -44,9 +44,9 @@ class ModifySpreadsheet(Script):
         parameters = self.get_parameters(args, kwargs)
         if len(parameters) == 3:
 
-            spreadsheet = session.query(DocumentModel). \
-                filter(DocumentModel.workflow_id == workflow_id). \
-                filter(DocumentModel.irb_doc_code == parameters['irb_doc_code']).\
+            spreadsheet = session.query(FileModel). \
+                filter(FileModel.workflow_id == workflow_id). \
+                filter(FileModel.irb_doc_code == parameters['irb_doc_code']).\
                 first()
             if spreadsheet:
                 workbook = load_workbook(BytesIO(spreadsheet.data))

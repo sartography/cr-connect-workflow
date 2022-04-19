@@ -5,7 +5,7 @@ import datetime
 from crc import app, session
 from crc.api.common import ApiError
 from crc.models.email import EmailModel, EmailModelSchema
-from crc.models.file import DocumentModel, CONTENT_TYPES
+from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowModel
 from crc.services.document_service import DocumentService
 from crc.scripts.script import Script
@@ -173,9 +173,9 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 if DocumentService.is_allowed_document(code):
                     workflows = session.query(WorkflowModel).filter(WorkflowModel.study_id==study_id).all()
                     for workflow in workflows:
-                        workflow_files = session.query(DocumentModel).\
-                            filter(DocumentModel.workflow_id == workflow.id).\
-                            filter(DocumentModel.irb_doc_code == code).all()
+                        workflow_files = session.query(FileModel).\
+                            filter(FileModel.workflow_id == workflow.id).\
+                            filter(FileModel.irb_doc_code == code).all()
                         for file in workflow_files:
                             files.append({'id': file.id,
                                           'name': file.name,

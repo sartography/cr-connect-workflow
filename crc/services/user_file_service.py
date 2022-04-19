@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
-from crc.models.file import FileType, FileDataModel, FileModel, DocumentModel
+from crc.models.file import FileType, FileDataModel, FileModel, FileModel
 from crc.models.workflow import WorkflowModel
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
@@ -40,7 +40,7 @@ class UserFileService(object):
     @staticmethod
     @cache
     def is_workflow_review(workflow_spec_id):
-        files = session.query(DocumentModel).filter(DocumentModel.workflow_spec_id==workflow_spec_id).all()
+        files = session.query(FileModel).filter(FileModel.workflow_spec_id==workflow_spec_id).all()
         review = any([f.is_review for f in files])
         return review
 
@@ -48,8 +48,8 @@ class UserFileService(object):
     def update_irb_code(file_id, irb_doc_code):
         """Create a new file and associate it with the workflow
         Please note that the irb_doc_code MUST be a known file in the irb_documents.xslx reference document."""
-        file_model = session.query(DocumentModel)\
-            .filter(DocumentModel.id == file_id).first()
+        file_model = session.query(FileModel)\
+            .filter(FileModel.id == file_id).first()
         if file_model is None:
             raise ApiError("invalid_file_id",
                            "When updating the irb_doc_code for a file, that file_id must already exist "
@@ -67,12 +67,12 @@ class UserFileService(object):
             raise ApiError('unknown_extension',
                            'The file you provided does not have an accepted extension:' +
                            file_extension, status_code=404)
-        document_model = session.query(DocumentModel) \
-            .filter(DocumentModel.workflow_id == workflow_id) \
-            .filter(DocumentModel.name == name) \
-            .filter(DocumentModel.task_spec == task_spec_name) \
-            .filter(DocumentModel.irb_doc_code == irb_doc_code) \
-            .order_by(desc(DocumentModel.date_modified)).first()
+        document_model = session.query(FileModel) \
+            .filter(FileModel.workflow_id == workflow_id) \
+            .filter(FileModel.name == name) \
+            .filter(FileModel.task_spec == task_spec_name) \
+            .filter(FileModel.irb_doc_code == irb_doc_code) \
+            .order_by(desc(FileModel.date_modified)).first()
         if document_model:
             document_model.archived = True
         else:
@@ -81,7 +81,7 @@ class UserFileService(object):
                 user_uid = UserService.current_user().uid
             except ApiError as ae:
                 user_uid = None
-            document_model = DocumentModel(
+            document_model = FileModel(
                 name=name,
                 type=FileType[file_extension].value,
                 content_type=content_type,
@@ -102,14 +102,14 @@ class UserFileService(object):
 
     # @staticmethod
     # def add_workflow_file(workflow_id, irb_doc_code, task_spec_name, name, content_type, binary_data):
-    #     document_model = session.query(DocumentModel)\
-    #         .filter(DocumentModel.workflow_id == workflow_id)\
-    #         .filter(DocumentModel.name == name) \
-    #         .filter(DocumentModel.task_spec == task_spec_name) \
-    #         .filter(DocumentModel.irb_doc_code == irb_doc_code).first()
+    #     document_model = session.query(FileModel)\
+    #         .filter(FileModel.workflow_id == workflow_id)\
+    #         .filter(FileModel.name == name) \
+    #         .filter(FileModel.task_spec == task_spec_name) \
+    #         .filter(FileModel.irb_doc_code == irb_doc_code).first()
     #
     #     if not document_model:
-    #         document_model = DocumentModel(
+    #         document_model = FileModel(
     #             workflow_id=workflow_id,
     #             name=name,
     #             task_spec=task_spec_name,
@@ -120,8 +120,8 @@ class UserFileService(object):
     @staticmethod
     def get_workflow_files(workflow_id):
         """Returns all the file models associated with a running workflow."""
-        return session.query(DocumentModel).filter(DocumentModel.workflow_id == workflow_id).\
-            order_by(DocumentModel.id).all()
+        return session.query(FileModel).filter(FileModel.workflow_id == workflow_id).\
+            order_by(FileModel.id).all()
 
     @staticmethod
     def get_extension(file_name):
@@ -182,24 +182,24 @@ class UserFileService(object):
 
     @staticmethod
     def get_files_for_study(study_id, irb_doc_code=None):
-        query = session.query(DocumentModel).\
+        query = session.query(FileModel).\
                 join(WorkflowModel).\
                 filter(WorkflowModel.study_id == study_id)
         if irb_doc_code:
-            query = query.filter(DocumentModel.irb_doc_code == irb_doc_code)
+            query = query.filter(FileModel.irb_doc_code == irb_doc_code)
         return query.all()
 
     @staticmethod
     def get_files(workflow_id=None, name=None, irb_doc_code=None):
         if workflow_id is not None:
-            query = session.query(DocumentModel).filter_by(workflow_id=workflow_id)
+            query = session.query(FileModel).filter_by(workflow_id=workflow_id)
             if irb_doc_code:
                 query = query.filter_by(irb_doc_code=irb_doc_code)
 
             if name:
                 query = query.filter_by(name=name)
 
-            query = query.order_by(DocumentModel.id)
+            query = query.order_by(FileModel.id)
 
             results = query.all()
             return results
@@ -230,7 +230,7 @@ class UserFileService(object):
     @staticmethod
     def delete_file_data_stores(file_id):
         try:
-            session.query(DataStoreModel).filter_by(document_id=file_id).delete()
+            session.query(DataStoreModel).filter_by(file_id=file_id).delete()
         except IntegrityError as ie:
             session.rollback()
             app.logger.info(f"Failed to delete file data stores. Original error is {ie}")
@@ -241,7 +241,7 @@ class UserFileService(object):
     def delete_file(self, file_id):
         self.delete_file_data_stores(file_id)
         # We archive files so users can access previous versions
-        document_model = session.query(DocumentModel).filter_by(id=file_id).first()
+        document_model = session.query(FileModel).filter_by(id=file_id).first()
         document_model.archived = True
         session.commit()
 
