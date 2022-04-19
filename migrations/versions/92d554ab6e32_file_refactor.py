@@ -35,6 +35,7 @@ def upgrade():
         sa.Column('date_created', sa.DateTime(timezone=True), nullable=True, server_default=sa.func.now()),
         sa.Column('user_uid', sa.String(), nullable=True),
         sa.Column('archived', sa.Boolean(), default=False),
+        sa.Column('size', sa.Integer, default=0),
         sa.PrimaryKeyConstraint('id'),
         sa.ForeignKeyConstraint(['user_uid'], ['user.uid'], ),
         sa.ForeignKeyConstraint(['workflow_id'], ['workflow.id'], ),
