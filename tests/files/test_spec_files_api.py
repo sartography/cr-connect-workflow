@@ -3,8 +3,7 @@ import json
 
 from tests.base_test import BaseTest
 
-from crc import session
-from crc.models.file import FileType, FileModelSchema, FileSchema
+from crc.models.file import FileType
 from crc.services.spec_file_service import SpecFileService
 
 

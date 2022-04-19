@@ -8,7 +8,7 @@ from flask import g
 
 from crc import session, db, app
 from crc.api.common import ApiError
-from crc.models.file import DocumentModel
+from crc.models.file import FileModel
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowStatus
 from crc.models.user import UserModel
@@ -218,10 +218,10 @@ class TestWorkflowProcessor(BaseTest):
         self._populate_form_with_random_data(task)
         processor.complete_task(task)
 
-        files = session.query(DocumentModel).filter_by(workflow_id=processor.get_workflow_id()).all()
+        files = session.query(FileModel).filter_by(workflow_id=processor.get_workflow_id()).all()
         self.assertEqual(0, len(files))
         processor.do_engine_steps()
-        files = session.query(DocumentModel).filter_by(workflow_id=processor.get_workflow_id()).all()
+        files = session.query(FileModel).filter_by(workflow_id=processor.get_workflow_id()).all()
         self.assertEqual(1, len(files), "The task should create a new file.")
         self.assertIsNotNone(files[0].data)
         self.assertTrue(len(files[0].data) > 0)

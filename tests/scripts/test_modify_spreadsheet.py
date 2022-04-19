@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc import app, session
-from crc.models.file import DocumentModel
+from crc.models.file import FileModel
 from crc.services.user_file_service import UserFileService
 
 from io import BytesIO
@@ -27,9 +27,9 @@ class TestModifySpreadsheet(BaseTest):
 
     @staticmethod
     def get_sheet(workflow_id, irb_doc_code):
-        spreadsheet = session.query(DocumentModel). \
-            filter(DocumentModel.workflow_id == workflow_id). \
-            filter(DocumentModel.irb_doc_code == irb_doc_code). \
+        spreadsheet = session.query(FileModel). \
+            filter(FileModel.workflow_id == workflow_id). \
+            filter(FileModel.irb_doc_code == irb_doc_code). \
             first()
         workbook = load_workbook(BytesIO(spreadsheet.data))
         sheet = workbook.active

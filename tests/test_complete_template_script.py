@@ -7,7 +7,7 @@ from docxtpl import Listing
 from io import BytesIO
 
 from crc import session
-from crc.models.file import DocumentModel
+from crc.models.file import FileModel
 from crc.services.jinja_service import JinjaService
 
 
@@ -52,13 +52,10 @@ class TestEmbeddedTemplate(BaseTest):
         self.complete_form(workflow, task, data)
 
         # Get the file data created for us in the workflow
-        file_model = session.query(DocumentModel).\
-            filter(DocumentModel.workflow_id == workflow.id).\
-            filter(DocumentModel.irb_doc_code == 'Study_App_Doc').\
+        file_model = session.query(FileModel).\
+            filter(FileModel.workflow_id == workflow.id).\
+            filter(FileModel.irb_doc_code == 'Study_App_Doc').\
             first()
-        # file_data_model = session.query(FileDataModel). \
-        #     filter(FileDataModel.file_model_id == file_model.id).\
-        #     first()
 
         # read the data as a word document
         document = docx.Document(BytesIO(file_model.data))

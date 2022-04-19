@@ -5,7 +5,7 @@ from tests.base_test import BaseTest
 
 from crc.api.common import ApiError
 from crc import session, app
-from crc.models.file import DocumentModel, LookupFileModel, LookupDataModel
+from crc.models.file import FileModel, LookupFileModel, LookupDataModel
 from crc.services.lookup_service import LookupService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -17,7 +17,7 @@ class TestLookupService(BaseTest):
     def test_lookup_returns_good_error_on_bad_field(self):
         spec = self.load_test_spec('enum_options_with_search')
         workflow = self.create_workflow('enum_options_with_search')
-        file_model = session.query(DocumentModel).filter(DocumentModel.name == "customer_list.xlsx").first()
+        file_model = session.query(FileModel).filter(FileModel.name == "customer_list.xlsx").first()
         with self.assertRaises(ApiError):
             LookupService.lookup(workflow, "Task_Enum_Lookup", "not_the_right_field", "sam", limit=10)
 
