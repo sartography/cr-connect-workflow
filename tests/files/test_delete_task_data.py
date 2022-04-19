@@ -4,8 +4,7 @@ from crc import session
 
 from crc.models.data_store import DataStoreModel
 from crc.models.file import DocumentModel
-from crc.models.task_event import TaskEventModel
-from crc.services.workflow_service import WorkflowService
+from crc.models.task_event import TaskEventModel, TaskAction
 
 from io import BytesIO
 
@@ -100,7 +99,7 @@ class TestDeleteTaskData(BaseTest):
         # Make sure we have something in task_events
         task_events = session.query(TaskEventModel).\
             filter(TaskEventModel.workflow_id == workflow.id).\
-            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_COMPLETE).all()
+            filter(TaskEventModel.action == TaskAction.COMPLETE.value).all()
         for task_event in task_events:
             self.assertNotEqual({}, task_event.form_data)
 
@@ -117,7 +116,7 @@ class TestDeleteTaskData(BaseTest):
         files = session.query(DocumentModel).filter(DocumentModel.workflow_id == workflow.id).all()
         task_events = session.query(TaskEventModel).\
             filter(TaskEventModel.workflow_id == workflow.id).\
-            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_COMPLETE).all()
+            filter(TaskEventModel.action == TaskAction.COMPLETE.value).all()
 
         self.assertEqual(0, len(data_stores))
         self.assertEqual(0, len(data_stores_1))

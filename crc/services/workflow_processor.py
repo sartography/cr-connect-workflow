@@ -4,7 +4,6 @@ from typing import List
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
 from SpiffWorkflow.bpmn.specs.events import EndEvent, CancelEventDefinition
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
-from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
 from datetime import datetime
 
@@ -20,7 +19,7 @@ from SpiffWorkflow.specs import WorkflowSpec
 from crc import session
 from crc.api.common import ApiError
 from crc.models.file import DocumentModel, FileType, File
-from crc.models.task_event import TaskEventModel
+from crc.models.task_event import TaskEventModel, TaskAction
 from crc.models.user import UserModelSchema
 from crc.models.workflow import WorkflowStatus, WorkflowModel, WorkflowSpecInfo
 from crc.scripts.script import Script
@@ -171,7 +170,13 @@ class WorkflowProcessor(object):
                 task.data['current_user'] = current_user_data
 
     @staticmethod
-    def reset(workflow_model, clear_data=False, delete_files=False):
+    def reset(workflow_model, clear_data=False):
+        """Resets the workflow back to an unstarted state - where nothing has
+        happened yet.  If clear_data is set to false, then the information
+        previously used in forms will be re-populated when the form is re-
+        displayed, and any files that were updated will remain in place, otherwise
+        files will also be cleared out."""
+
         # Try to execute a cancel notify
         try:
             bpmn_workflow = WorkflowProcessor.__get_bpmn_workflow(workflow_model)
@@ -182,19 +187,27 @@ class WorkflowProcessor(object):
                              f" state. An %s error occured with the following information: %s" %
                              (workflow_model.id, e.__class__.__name__, str(e)))
         workflow_model.bpmn_workflow_json = None
+        workflow_model.status = WorkflowStatus.not_started
+
+        # clear out any task assignments
+        session.query(TaskEventModel). \
+            filter(TaskEventModel.workflow_id == workflow_model.id). \
+            filter(TaskEventModel.action == TaskAction.ASSIGNMENT.value).delete()
+
         if clear_data:
-            # Clear form_data from task_events
+            # Clear out data in previous task events
             task_events = session.query(TaskEventModel). \
                 filter(TaskEventModel.workflow_id == workflow_model.id).all()
             for task_event in task_events:
                 task_event.form_data = {}
                 session.add(task_event)
-        if delete_files:
+            # Remove any uploaded files.
             files = DocumentModel.query.filter(DocumentModel.workflow_id == workflow_model.id).all()
             for file in files:
                 UserFileService().delete_file(file.id)
         session.commit()
-        return WorkflowProcessor(workflow_model)
+
+
 
     @staticmethod
     def __get_bpmn_workflow(workflow_model: WorkflowModel, spec: WorkflowSpec = None, validate_only=False):
