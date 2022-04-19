@@ -151,7 +151,7 @@ class TestFilesApi(BaseTest):
 
     def test_get_file_contains_data_store_elements(self):
         file = self.create_user_file()
-        ds = DataStoreModel(key="my_key", value="my_value", file_id=file['id'])
+        ds = DataStoreModel(key="my_key", value="my_value", document_id=file['id'])
         db.session.add(ds)
         rv = self.app.get('/v1.0/file/%i' % file['id'], headers=self.logged_in_headers())
         self.assert_success(rv)

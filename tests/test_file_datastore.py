@@ -41,7 +41,7 @@ class TestFileDatastore(BaseTest):
         # upload the file
         correct_name = task.form['fields'][1]['id']
         data = {'file': (BytesIO(b"abcdef"), 'test_file.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (workflow.study_id, workflow.id, task.name, correct_name), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
@@ -57,7 +57,7 @@ class TestFileDatastore(BaseTest):
 
         # assert the data_store was set correctly
         data_store_keys = ['IRB_HSR_Application_Type', 'my_test_field', 'the_number', 'a_boolean', 'some_date']
-        data_store = db.session.query(DataStoreModel).filter(DataStoreModel.file_id==file_id).all()
+        data_store = db.session.query(DataStoreModel).filter(DataStoreModel.document_id==file_id).all()
         for item in data_store:
             self.assertIn(item.key, data_store_keys)
             if item.key == 'IRB_HSR_Application_Type':

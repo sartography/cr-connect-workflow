@@ -69,7 +69,7 @@ class TestFileService(BaseTest):
 
         file_data = UserFileService.get_workflow_data_files(workflow_id=workflow.id)
         self.assertEqual(1, len(file_data))
-        self.assertEqual(2, file_data[0].version)
+        self.assertTrue(file_data[0].archived)
         self.assertEqual(4, file_data[0].size) # File dat size is included.
 
     def test_add_file_from_form_increments_version_and_replaces_on_subsequent_add_with_same_name(self):

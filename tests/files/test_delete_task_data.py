@@ -49,7 +49,7 @@ class TestDeleteTaskData(BaseTest):
         self.assertEqual(1, len(files))
 
         # Make sure data store is set
-        data_store = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id).all()
+        data_store = session.query(DataStoreModel).filter(DataStoreModel.document_id == file_id).all()
         self.assertEqual('VerDate', data_store[0].key)
         self.assertEqual('20210721', data_store[0].value)
 
@@ -83,14 +83,14 @@ class TestDeleteTaskData(BaseTest):
         self.assertEqual(3, len(files))
 
         # Make sure data stores are set for new files
-        data_stores_1 = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id_1).all()
+        data_stores_1 = session.query(DataStoreModel).filter(DataStoreModel.document_id == file_id_1).all()
         for data_store in data_stores_1:
             if data_store.key == 'VerDate':
                 self.assertEqual('20210701', data_store.value)
             elif data_store.key == 'ShortDesc':
                 self.assertEqual('Short Description 1', data_store.value)
 
-        data_stores_2 = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id_2).all()
+        data_stores_2 = session.query(DataStoreModel).filter(DataStoreModel.document_id == file_id_2).all()
         for data_store in data_stores_2:
             if data_store.key == 'VerDate':
                 self.assertEqual('20210702', data_store.value)
@@ -111,9 +111,9 @@ class TestDeleteTaskData(BaseTest):
         self.get_workflow_api(workflow)
 
         # Make sure files, data_stores, and task_events are deleted
-        data_stores = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id).all()
-        data_stores_1 = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id_1).all()
-        data_stores_2 = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id_2).all()
+        data_stores = session.query(DataStoreModel).filter(DataStoreModel.document_id == file_id).all()
+        data_stores_1 = session.query(DataStoreModel).filter(DataStoreModel.document_id == file_id_1).all()
+        data_stores_2 = session.query(DataStoreModel).filter(DataStoreModel.document_id == file_id_2).all()
         files = session.query(DocumentModel).filter(DocumentModel.workflow_id == workflow.id).all()
         task_events = session.query(TaskEventModel).\
             filter(TaskEventModel.workflow_id == workflow.id).\
@@ -122,6 +122,8 @@ class TestDeleteTaskData(BaseTest):
         self.assertEqual(0, len(data_stores))
         self.assertEqual(0, len(data_stores_1))
         self.assertEqual(0, len(data_stores_2))
-        self.assertEqual(0, len(files))
+        self.assertEqual(3, len(files))
+        for file in files:
+            self.assertTrue(file.archived)
         for task_event in task_events:
             self.assertEqual({}, task_event.form_data)
