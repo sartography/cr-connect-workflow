@@ -12,7 +12,7 @@ def get_document_directory(study_id, workflow_id=None):
     """
     file_models = UserFileService.get_files_for_study(study_id=study_id)
     doc_dict = DocumentService.get_dictionary()
-    files = (File.from_models(model, UserFileService.get_file_data(model.id), doc_dict) for model in file_models)
+    files = (File.from_document_model(model, doc_dict) for model in file_models)
     directory = DocumentService.get_directory(doc_dict, files, workflow_id)
 
     return DocumentDirectorySchema(many=True).dump(directory)
