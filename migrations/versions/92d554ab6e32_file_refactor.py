@@ -18,10 +18,8 @@ depends_on = None
 
 
 def upgrade():
-    # TODO: Fix data_store references and include data_stores, decide whether to keep size
-    # data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
-    # size = db.Column(db.Integer, default=0)  # Do we need this?
-    op.create_table('document',
+    op.rename_table('file', 'old_file')
+    op.create_table('file',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(), nullable=True),
         sa.Column('type', sa.String, nullable=False),
@@ -40,11 +38,8 @@ def upgrade():
         sa.ForeignKeyConstraint(['user_uid'], ['user.uid'], ),
         sa.ForeignKeyConstraint(['workflow_id'], ['workflow.id'], ),
     )
-    op.add_column('data_store', sa.Column('document_id', sa.Integer(), nullable=True))
-    op.create_foreign_key('document_id_key', 'data_store', 'document', ['document_id'], ['id'])
 
 
 def downgrade():
-    op.drop_constraint('document_id_key', 'data_store', type_='foreignkey')
-    op.drop_column('data_store', 'document_id')
-    op.drop_table('document')
+    op.drop_table('file')
+    op.rename_table('old_file', 'file')

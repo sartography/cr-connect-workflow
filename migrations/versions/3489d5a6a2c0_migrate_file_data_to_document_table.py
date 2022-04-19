@@ -11,7 +11,7 @@ from sqlalchemy.exc import IntegrityError
 
 from crc import app
 from crc.models.data_store import DataStoreModel
-from crc.models.file import FileModel, FileDataModel, DocumentModel
+from crc.models.file import OldFileModel, FileModel, FileDataModel, FileModel
 
 
 
@@ -22,10 +22,11 @@ branch_labels = None
 depends_on = None
 
 
-def update_data_store(file_id, document_id, session):
-    data_stores = session.query(DataStoreModel).filter(DataStoreModel.file_id == file_id).all()
+def update_data_store(old_file_id, file_id, session):
+    # update data_store with new fie_ids
+    data_stores = session.query(DataStoreModel).filter(DataStoreModel.file_id == old_file_id).all()
     for data_store in data_stores:
-        data_store.document_id = document_id
+        data_store.file_id = file_id
     session.commit()
 
 
@@ -34,25 +35,25 @@ def upgrade():
     session = sa.orm.Session(bind=bind)
     # session.flush()
 
-    file_models = session.query(FileModel).all()
-    for file_model in file_models:
-        if file_model.irb_doc_code is not None:
+    # migrate data from old file table and file data table to new file table
+    old_file_models = session.query(OldFileModel).all()
+    for old_file_model in old_file_models:
+        if old_file_model.irb_doc_code is not None:
             file_data_models = session.query(FileDataModel).\
-                filter(FileDataModel.file_model_id == file_model.id).\
+                filter(FileDataModel.file_model_id == old_file_model.id).\
                 order_by(sa.desc(FileDataModel.date_created)).\
                 all()
             count = 0
             for file_data_model in file_data_models:
                 archived = count > 0
-                document_model = DocumentModel(
-                    # id=file_model.id,
-                    name=file_model.name,
-                    type=file_model.type.value,
-                    content_type=file_model.content_type,
-                    workflow_id=file_model.workflow_id,
-                    task_spec=file_model.task_spec,
-                    irb_doc_code=file_model.irb_doc_code,
-                    # data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
+                file_model = FileModel(
+                    # id=old_file_model.id,
+                    name=old_file_model.name,
+                    type=old_file_model.type.value,
+                    content_type=old_file_model.content_type,
+                    workflow_id=old_file_model.workflow_id,
+                    task_spec=old_file_model.task_spec,
+                    irb_doc_code=old_file_model.irb_doc_code,
                     md5_hash=file_data_model.md5_hash,
                     data=file_data_model.data,
                     size=file_data_model.size,
@@ -61,25 +62,17 @@ def upgrade():
                     user_uid=file_data_model.user_uid,
                     archived=archived
                 )
-                session.add(document_model)
+                session.add(file_model)
                 session.commit()
                 count += 1
-                update_data_store(file_model.id, document_model.id, session)
-        # try:
-        #     session.commit()
-        # except IntegrityError as ie:
-        #     app.logger.info(
-        #         f'Error migrating file data. File ID: {file_model.id}, File Data ID: {file_data_model.id}, Original error: {ie}')
-        #     session.rollback()
-        # except Exception as e:
-        #     app.logger.info(
-        #         f'Error migrating file data. File ID: {file_model.id}, File Data ID: {file_data_model.id}, Original error: {e}')
-    # op.drop_constraint('file_id_key', 'data_store', type_='foreignkey')
-    # op.drop_column('data_store', 'file_id')
+                # update data_store with new file_ids
+                update_data_store(old_file_model.id, file_model.id, session)
+    # Wait until data is migrated before adding foreign key restraint
+    # Otherwise, file_ids don't exist
+    op.create_foreign_key('file_id_key', 'data_store', 'file', ['file_id'], ['id'])
 
 
 def downgrade():
+    ...
     # op.add_column('data_store', sa.Column('file_id', sa.Integer(), nullable=True))
     # op.create_foreign_key('file_id_key', 'data_store', 'file', ['file_id'], ['id'])
-    op.execute('UPDATE data_store SET document_id = null')
-    op.execute('DELETE FROM document;')
