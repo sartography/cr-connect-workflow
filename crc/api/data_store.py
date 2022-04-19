@@ -83,12 +83,12 @@ def add_datastore(body):
     if 'value' not in body:
         raise ApiError('no_value', 'You need to specify a value to add a datastore item')
 
-    if ('user_id' not in body) and ('study_id' not in body)  and ('document_id' not in body):
-        raise ApiError('conflicting_values', 'A datastore item should have either a study_id, user_id or document_id ')
+    if ('user_id' not in body) and ('study_id' not in body)  and ('file_id' not in body):
+        raise ApiError('conflicting_values', 'A datastore item should have either a study_id, user_id or file_id ')
 
 
     present = 0
-    for field in ['user_id', 'study_id', 'document_id']:
+    for field in ['user_id', 'study_id', 'file_id']:
         if field in body:
             present = present+1
     if present > 1:

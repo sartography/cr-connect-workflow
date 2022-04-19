@@ -13,7 +13,7 @@ from jinja2 import Markup
 from crc import db, app
 from crc.api.common import ApiError
 from crc.api.user import verify_token, verify_token_admin
-from crc.models.file import DocumentModel
+from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel
@@ -84,5 +84,5 @@ admin = Admin(app)
 admin.add_view(StudyView(StudyModel, db.session))
 admin.add_view(UserView(UserModel, db.session))
 admin.add_view(WorkflowView(WorkflowModel, db.session))
-admin.add_view(FileView(DocumentModel, db.session))
+admin.add_view(FileView(FileModel, db.session))
 admin.add_view(TaskEventView(TaskEventModel, db.session))

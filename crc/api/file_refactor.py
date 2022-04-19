@@ -1,7 +1,7 @@
 from crc import session
 from crc.api.common import ApiError
 from crc.api.user import verify_token
-from crc.models.file import DocumentModel, DocumentModelSchema, File, FileSchema
+from crc.models.file import FileModel, FileModelSchema, File, FileSchema
 from crc.models.workflow import WorkflowModel
 from crc.services.document_service import DocumentService
 from crc.services.study_service import StudyService
@@ -53,7 +53,7 @@ def delete_file(file_id):
 
 
 def update_file_data(file_id):
-    file_model = session.query(DocumentModel).filter_by(id=file_id).with_for_update().first()
+    file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     file = connexion.request.files['file']
     if file_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
@@ -77,7 +77,7 @@ def get_files(workflow_id=None, irb_doc_code=None, study_id=None):
 
 
 def get_file_data_by_hash(md5_hash):
-    document_model = session.query(DocumentModel).filter(DocumentModel.md5_hash == md5_hash).first()
+    document_model = session.query(FileModel).filter(FileModel.md5_hash == md5_hash).first()
     if document_model is not None:
         return send_file(
             io.BytesIO(document_model.data),
@@ -89,8 +89,8 @@ def get_file_data_by_hash(md5_hash):
         raise ApiError('missing_file_model', f'Could not find a document_model with the hash you provided.')
 
 
-def get_file_data(document_id, version=None):
-    document_model = session.query(DocumentModel).filter(DocumentModel.id==document_id).first()
+def get_file_data(file_id, version=None):
+    document_model = session.query(FileModel).filter(FileModel.id==file_id).first()
     if document_model is not None:
         # file_data_model = UserFileService.get_file_data(file_id, version)
         # if file_data_model is not None:
@@ -103,13 +103,13 @@ def get_file_data(document_id, version=None):
         # else:
         #     raise ApiError('missing_data_model', f'The data model for file ({file_id}) does not exist')
     else:
-        raise ApiError('missing_file_model', f'The file id you provided ({document_id}) does not exist')
+        raise ApiError('missing_file_model', f'The file id you provided ({file_id}) does not exist')
 
 
 def get_file_data_link(file_id, auth_token, version=None):
     if not verify_token(auth_token):
         raise ApiError('not_authenticated', 'You need to include an authorization token in the URL with this')
-    file_model = session.query(DocumentModel).filter(DocumentModel.id==file_id).first()
+    file_model = session.query(FileModel).filter(FileModel.id==file_id).first()
     # file_data = UserFileService.get_file_data(file_id, version)
     # if file_data is None:
     #     raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
@@ -126,7 +126,7 @@ def get_file_data_link(file_id, auth_token, version=None):
 
 
 def get_file_info(file_id):
-    file_model = session.query(DocumentModel).filter_by(id=file_id).with_for_update().first()
+    file_model = session.query(FileModel).filter_by(id=file_id).with_for_update().first()
     if file_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist', status_code=404)
     return FileSchema().dump(to_file_api(file_model))
@@ -136,12 +136,12 @@ def update_file_info(file_id, body):
     if file_id is None:
         raise ApiError('no_such_file', 'Please provide a valid File ID.')
 
-    file_model = session.query(DocumentModel).filter_by(id=file_id).first()
+    file_model = session.query(FileModel).filter_by(id=file_id).first()
 
     if file_model is None:
         raise ApiError('unknown_file_model', 'The file_model "' + file_id + '" is not recognized.')
 
-    file_model = DocumentModelSchema().load(body, session=session)
+    file_model = FileModelSchema().load(body, session=session)
     session.add(file_model)
     session.commit()
     return FileSchema().dump(to_file_api(file_model))
