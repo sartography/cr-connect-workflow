@@ -4,7 +4,7 @@ import json
 from tests.base_test import BaseTest
 
 from crc import session
-from crc.models.file import FileType, FileModelSchema
+from crc.models.file import FileType, FileModelSchema, FileSchema
 from crc.services.spec_file_service import SpecFileService
 
 
@@ -19,8 +19,7 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(2, len(json_data))
-        files = FileModelSchema(many=True).load(json_data, session=session)
-        file_names = [f.name for f in files]
+        file_names = [f['name'] for f in json_data]
         self.assertTrue("%s.bpmn" % spec.id in file_names)
 
     def test_list_multiple_files_for_workflow_spec(self):
@@ -122,8 +121,6 @@ class TestFilesApi(BaseTest):
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
-        json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
 
         # get that mf.
         rv = self.app.get(f'/v1.0/workflow-specification/{spec.id}/file/random_fact.bpmn',

@@ -42,9 +42,8 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(FileType.xlsx, file.type)
-        self.assertEqual("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", file.content_type)
+        self.assertEqual(FileType.xlsx.value, json_data['type'])
+        self.assertEqual("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", json_data['content_type'])
         # self.assertEqual('dhf8r', json_data['user_uid'])
 
     def test_set_reference_file_bad_extension(self):
@@ -88,8 +87,7 @@ class TestFilesApi(BaseTest):
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assertIsNotNone(rv.get_data())
         json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
-        self.assertEqual(FileType.xlsx, file.type)
+        self.assertEqual(FileType.xlsx.value, json_data['type'])
 
     def test_delete_reference_file(self):
         ExampleDataLoader().load_reference_documents()
@@ -120,8 +118,7 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(1, len(json_data))
-        file = FileModelSchema(many=True).load(json_data, session=session)
-        self.assertEqual(file_name, file[0].name)
+        self.assertEqual(file_name, json_data[0]['name'])
 
     def create_user_file(self):
         self.create_reference_document()
