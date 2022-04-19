@@ -55,7 +55,7 @@ def upgrade():
                     # data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
                     md5_hash=file_data_model.md5_hash,
                     data=file_data_model.data,
-                    # size = db.Column(db.Integer, default=0)  # Do we need this?
+                    size=file_data_model.size,
                     date_modified=file_data_model.date_created,
                     date_created=file_data_model.date_created,
                     user_uid=file_data_model.user_uid,
@@ -74,7 +74,7 @@ def upgrade():
         # except Exception as e:
         #     app.logger.info(
         #         f'Error migrating file data. File ID: {file_model.id}, File Data ID: {file_data_model.id}, Original error: {e}')
-    op.drop_constraint('file_id_key', 'data_store', type_='foreignkey')
+    # op.drop_constraint('file_id_key', 'data_store', type_='foreignkey')
     # op.drop_column('data_store', 'file_id')
 
 
