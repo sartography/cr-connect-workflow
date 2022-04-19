@@ -138,7 +138,8 @@ class File(object):
         instance.last_modified = document_model.date_modified
         instance.size = None
         instance.data_store = {}
-
+        for ds in document_model.data_stores:
+            instance.data_store[ds.key] = ds.value
         return instance
 
     @classmethod
