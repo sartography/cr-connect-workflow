@@ -274,7 +274,7 @@ class StudyService(object):
         session.query(TaskEventModel).filter_by(workflow_id=workflow.id).delete()
         files = session.query(DocumentModel).filter_by(workflow_id=workflow_id).all()
         for file in files:
-            session.query(DataStoreModel).filter(DataStoreModel.file_id == file.id).delete()
+            session.query(DataStoreModel).filter(DataStoreModel.document_id == file.id).delete()
             session.delete(file)
 
         session.delete(workflow)
