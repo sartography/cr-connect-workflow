@@ -91,7 +91,8 @@ class UserFileService(object):
                 md5_hash=md5_checksum,
                 data=binary_data,
                 user_uid=user_uid,
-                archived=False
+                archived=False,
+                size=len(binary_data)
             )
             session.add(document_model)
         session.commit()
