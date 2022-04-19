@@ -62,8 +62,8 @@ CONTENT_TYPES = {
 }
 
 
-class DocumentModel(db.Model):
-    __tablename__ = 'document'
+class FileModel(db.Model):
+    __tablename__ = 'file'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     type = db.Column(db.String, nullable=False)
@@ -71,7 +71,7 @@ class DocumentModel(db.Model):
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     task_spec = db.Column(db.String, nullable=True)
     irb_doc_code = db.Column(db.String, nullable=False)  # Code reference to the documents.xlsx reference file.
-    data_stores = relationship(DataStoreModel, cascade="all,delete", backref="document")
+    data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
     md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
     data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
     size = db.Column(db.Integer, default=0)
@@ -79,6 +79,10 @@ class DocumentModel(db.Model):
     date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
     archived = db.Column(db.Boolean, default=False)
+
+
+class DocumentModel(FileModel):
+    ...
 
 
 class FileDataModel(db.Model):
@@ -94,8 +98,8 @@ class FileDataModel(db.Model):
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
-class FileModel(db.Model):
-    __tablename__ = 'file'
+class OldFileModel(db.Model):
+    __tablename__ = 'old_file'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.Enum(FileType))
@@ -120,7 +124,7 @@ class File(object):
         self.data_store = {}
 
     @classmethod
-    def from_document_model(cls, document_model: DocumentModel, doc_dictionary):
+    def from_document_model(cls, document_model: FileModel, doc_dictionary):
         if document_model.irb_doc_code and document_model.irb_doc_code in doc_dictionary:
             document = doc_dictionary[document_model.irb_doc_code]
         else:
@@ -172,7 +176,7 @@ class FileModelSchema(SQLAlchemyAutoSchema):
         include_relationships = True
         include_fk = True  # Includes foreign keys
         unknown = EXCLUDE
-    type = EnumField(FileType)
+    # type = EnumField(FileType)
 
 
 class FileSchema(Schema):
@@ -246,5 +250,5 @@ class LookupDataSchema(ma.Schema):
 class SimpleFileSchema(ma.Schema):
 
     class Meta:
-        model = DocumentModel
+        model = FileModel
         fields = ["name"]
