@@ -14,7 +14,7 @@ class IRBInfo(Script):
         return """Returns the IRB Info data for a Study"""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        return isinstance(study_id, int)
+        return self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         irb_info = self.pb.get_irb_info(study_id)
