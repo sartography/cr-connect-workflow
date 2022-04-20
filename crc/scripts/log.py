@@ -13,7 +13,7 @@ class TaskLog(Script):
         Example:
             log(level='info', code='missing_info', message='You must include the correct info!')
         
-        Level must be `debug`, `info`, `warning`, `error` or `critical`.
+        Level must be `debug`, `info`, `warning`, `error`, `critical`, `metrics`
         Code is a short string meant for searching the logs. By convention, it is lower case with underscores.
         Message is a more descriptive string, including any info you want to log.
         """
