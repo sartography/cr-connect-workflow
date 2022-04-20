@@ -46,13 +46,21 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
     def __get_augment_methods(task):
         methods = []
         if task:
-            study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-            if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
-                workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+            # Find the top level workflow, as this is where the study id etc... are stored.
+            workflow = task.workflow
+            while WorkflowProcessor.STUDY_ID_KEY not in workflow.data:
+                if workflow.outer_workflow != workflow:
+                    workflow = workflow.outer_workflow
+                else:
+                    break
+
+            study_id = workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+            if WorkflowProcessor.WORKFLOW_ID_KEY in workflow.data:
+                workflow_id = workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
             else:
                 workflow_id = None
 
-            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+            if workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
                 methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
                 methods = Script.generate_augmented_list(task, study_id, workflow_id)
