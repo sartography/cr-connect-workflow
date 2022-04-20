@@ -68,7 +68,7 @@ class TestWorkflowRestart(BaseTest):
         self.assertEqual(True, IsFileUploaded.do_task(
             IsFileUploaded, first_task, study_id, workflow.id, irb_code))
 
-        workflow_api = self.restart_workflow_api(workflow_api, delete_files=True)
+        workflow_api = self.restart_workflow_api(workflow_api, clear_data=True)
         first_task = workflow_api.next_task
 
         # Assert we do not have the file

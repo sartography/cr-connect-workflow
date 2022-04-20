@@ -272,7 +272,8 @@ class TestWorkflowProcessor(BaseTest):
         # self.assertFalse(processor2.is_latest_spec) # Still at version 1.
 
         # Do a hard reset, which should bring us back to the beginning, but retain the data.
-        processor2 = WorkflowProcessor.reset(processor2.workflow_model)
+        WorkflowProcessor.reset(processor2.workflow_model)
+        processor2 = WorkflowProcessor(processor2.workflow_model)
         processor3 = WorkflowProcessor(processor.workflow_model)
         processor3.do_engine_steps()
         self.assertEqual("Step 1", processor3.next_task().task_spec.description)

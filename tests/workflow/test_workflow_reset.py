@@ -23,7 +23,7 @@ class TestWorkflowReset(BaseTest):
         second_task = workflow_api.next_task
         self.assertEqual('Task_GetAge', second_task.name)
 
-        ResetWorkflow().do_task(second_task, workflow.study_id, workflow.id, reset_id='two_user_tasks')
+        ResetWorkflow().do_task(second_task, workflow.study_id, workflow.id, workflow_spec_id='two_user_tasks')
 
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
@@ -43,4 +43,12 @@ class TestWorkflowReset(BaseTest):
         first_task = workflow_api.next_task
 
         with self.assertRaises(ApiError):
-            ResetWorkflow().do_task(first_task, workflow.study_id, workflow.id, reset_id='bad_workflow_name')
+            ResetWorkflow().do_task(first_task, workflow.study_id, workflow.id, workflow_spec_id='bad_workflow_name')
+
+    def test_workflow_reset_no_start(self):
+        """Sometimes we want to reset the workflow, but not start it up (don't do the engine steps etc...)"""
+        workflow = self.create_workflow('two_user_tasks')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        ResetWorkflow().do_task(task, workflow.study_id, workflow.id, workflow_spec_id='two_user_tasks')

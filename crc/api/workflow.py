@@ -6,7 +6,7 @@ from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
-from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema
+from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema, TaskAction
 from crc.models.workflow import WorkflowModel, WorkflowSpecInfoSchema, WorkflowSpecCategorySchema
 from crc.services.error_service import ValidationErrorService
 from crc.services.lookup_service import LookupService
@@ -205,8 +205,10 @@ def get_workflow(workflow_id, do_engine_steps=True):
 def restart_workflow(workflow_id, clear_data=False, delete_files=False):
     """Restart a workflow with the latest spec.
        Clear data allows user to restart the workflow without previous data."""
+    # fixme: remove delete_files arg, clear_data is the only one respected.
     workflow_model: WorkflowModel = session.query(WorkflowModel).filter_by(id=workflow_id).first()
-    processor = WorkflowProcessor.reset(workflow_model, clear_data=clear_data, delete_files=delete_files)
+    WorkflowProcessor.reset(workflow_model, clear_data=clear_data)
+    processor = WorkflowProcessor(workflow_model)
     processor.do_engine_steps()
     processor.save()
     WorkflowService.update_task_assignments(processor)
@@ -269,7 +271,7 @@ def set_current_task(workflow_id, task_id):
         spiff_task.reset_token({}, reset_data=True)  # Don't try to copy the existing data back into this task.
 
     processor.save()
-    WorkflowService.log_task_action(user_uid, processor, spiff_task, WorkflowService.TASK_ACTION_TOKEN_RESET)
+    WorkflowService.log_task_action(user_uid, processor, spiff_task, TaskAction.TOKEN_RESET.value)
     WorkflowService.update_task_assignments(processor)
 
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor, spiff_task)
@@ -327,7 +329,7 @@ def __update_task(processor, task, data, user):
     # Log the action before doing the engine steps, as doing so could effect the state of the task
     # the workflow could wrap around in the ngine steps, and the task could jump from being completed to
     # another state.  What we are logging here is the completion.
-    WorkflowService.log_task_action(user.uid, processor, task, WorkflowService.TASK_ACTION_COMPLETE)
+    WorkflowService.log_task_action(user.uid, processor, task, TaskAction.COMPLETE.value)
     processor.do_engine_steps()
     processor.save()
 

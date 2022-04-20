@@ -27,7 +27,7 @@ from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.ldap import LdapModel
 from crc.models.study import StudyModel
-from crc.models.task_event import TaskEventModel
+from crc.models.task_event import TaskEventModel, TaskAction
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.services.data_store_service import DataStoreBase
@@ -45,11 +45,6 @@ from flask import g
 
 
 class WorkflowService(object):
-    TASK_ACTION_COMPLETE = "COMPLETE"
-    TASK_ACTION_TOKEN_RESET = "TOKEN_RESET"
-    TASK_ACTION_HARD_RESET = "HARD_RESET"
-    TASK_ACTION_SOFT_RESET = "SOFT_RESET"
-    TASK_ACTION_ASSIGNMENT = "ASSIGNMENT"  # Whenever the lane changes between tasks we assign the task to specifc user.
 
     TASK_STATE_LOCKED = "LOCKED"  # When the task belongs to a different user.
 
@@ -723,7 +718,7 @@ class WorkflowService(object):
         query = db.session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow_id) \
             .filter_by(task_name=spiff_task.task_spec.name) \
-            .filter_by(action=WorkflowService.TASK_ACTION_COMPLETE)
+            .filter_by(action=TaskAction.COMPLETE.value)
 
         if hasattr(spiff_task, 'internal_data') and 'runtimes' in spiff_task.internal_data:
             query = query.filter_by(mi_index=spiff_task.internal_data['runtimes'])
@@ -987,14 +982,14 @@ class WorkflowService(object):
         should be called whenever progress is made on a workflow."""
         db.session.query(TaskEventModel). \
             filter(TaskEventModel.workflow_id == processor.workflow_model.id). \
-            filter(TaskEventModel.action == WorkflowService.TASK_ACTION_ASSIGNMENT).delete()
+            filter(TaskEventModel.action == TaskAction.ASSIGNMENT.value).delete()
         db.session.commit()
 
         tasks = processor.get_current_user_tasks()
         for task in tasks:
             user_ids = WorkflowService.get_users_assigned_to_task(processor, task)
             for user_id in user_ids:
-                WorkflowService.log_task_action(user_id, processor, task, WorkflowService.TASK_ACTION_ASSIGNMENT)
+                WorkflowService.log_task_action(user_id, processor, task, TaskAction.ASSIGNMENT.value)
 
     @staticmethod
     def get_users_assigned_to_task(processor, spiff_task) -> List[str]:
@@ -1132,13 +1127,4 @@ class WorkflowService(object):
         db.session.commit()
         return workflow_model
 
-    @staticmethod
-    def delete_workflow_spec_task_events(spec_id):
-        session.query(TaskEventModel).filter(TaskEventModel.workflow_spec_id == spec_id).delete()
-        session.commit()
-
-    @staticmethod
-    def delete_workflow_spec_workflow_models(spec_id):
-        for workflow in session.query(WorkflowModel).filter_by(workflow_spec_id=spec_id):
-            StudyService.delete_workflow(workflow.id)
 
