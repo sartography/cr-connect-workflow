@@ -5,7 +5,6 @@ import flask
 from flask import url_for
 from marshmallow import INCLUDE, EXCLUDE, Schema
 from marshmallow.fields import Method
-from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
@@ -81,11 +80,12 @@ class FileModel(db.Model):
     archived = db.Column(db.Boolean, default=False)
 
 
-class DocumentModel(FileModel):
-    ...
+# class DocumentModel(FileModel):
+#     ...
 
 
 class FileDataModel(db.Model):
+    # TODO: remove when the file refactor is finished
     __tablename__ = 'file_data'
     id = db.Column(db.Integer, primary_key=True)
     md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
@@ -99,6 +99,7 @@ class FileDataModel(db.Model):
 
 
 class OldFileModel(db.Model):
+    # TODO: remove when the file refactor is finished
     __tablename__ = 'old_file'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
@@ -160,13 +161,13 @@ class File(object):
         return instance
 
 
-class DocumentModelSchema(SQLAlchemyAutoSchema):
-    class Meta:
-        model = DocumentModel
-        load_instance = True
-        include_relationships = True
-        include_fk = True  # Includes foreign keys
-        unknown = EXCLUDE
+# class DocumentModelSchema(SQLAlchemyAutoSchema):
+#     class Meta:
+#         model = DocumentModel
+#         load_instance = True
+#         include_relationships = True
+#         include_fk = True  # Includes foreign keys
+#         unknown = EXCLUDE
 
 
 class FileModelSchema(SQLAlchemyAutoSchema):

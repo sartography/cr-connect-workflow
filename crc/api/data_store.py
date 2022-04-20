@@ -96,7 +96,7 @@ def add_datastore(body):
                                              'but not more than one of these')
 
     item = DataStoreSchema().load(body)
-    # item.last_updated = datetime.utcnow()
+    # item.last_updated = datetime.utcnow()  # Do this in the database
     session.add(item)
     session.commit()
     return DataStoreSchema().dump(item)

@@ -6,7 +6,6 @@ import marshmallow
 
 from crc import app, db, ma
 from crc.api.common import ApiError
-# TODO: fix these imports
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema, \
     WorkflowSpecModelSchema, WorkflowLibraryModel
 from crc.services.file_system_service import FileSystemService

@@ -67,21 +67,21 @@ class UserFileService(object):
             raise ApiError('unknown_extension',
                            'The file you provided does not have an accepted extension:' +
                            file_extension, status_code=404)
-        document_model = session.query(FileModel) \
+        file_model = session.query(FileModel) \
             .filter(FileModel.workflow_id == workflow_id) \
             .filter(FileModel.name == name) \
             .filter(FileModel.task_spec == task_spec_name) \
             .filter(FileModel.irb_doc_code == irb_doc_code) \
             .order_by(desc(FileModel.date_modified)).first()
-        if document_model:
-            document_model.archived = True
+        if file_model:
+            file_model.archived = True
         else:
             md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
             try:
                 user_uid = UserService.current_user().uid
             except ApiError as ae:
                 user_uid = None
-            document_model = FileModel(
+            file_model = FileModel(
                 name=name,
                 type=FileType[file_extension].value,
                 content_type=content_type,
@@ -94,28 +94,10 @@ class UserFileService(object):
                 archived=False,
                 size=len(binary_data)
             )
-            session.add(document_model)
+            session.add(file_model)
         session.commit()
         session.flush()
-        return document_model
-        # return UserFileService.update_file_file_refactor(document_model, binary_data, content_type)
-
-    # @staticmethod
-    # def add_workflow_file(workflow_id, irb_doc_code, task_spec_name, name, content_type, binary_data):
-    #     document_model = session.query(FileModel)\
-    #         .filter(FileModel.workflow_id == workflow_id)\
-    #         .filter(FileModel.name == name) \
-    #         .filter(FileModel.task_spec == task_spec_name) \
-    #         .filter(FileModel.irb_doc_code == irb_doc_code).first()
-    #
-    #     if not document_model:
-    #         document_model = FileModel(
-    #             workflow_id=workflow_id,
-    #             name=name,
-    #             task_spec=task_spec_name,
-    #             irb_doc_code=irb_doc_code
-    #         )
-    #     return UserFileService.update_file(document_model, binary_data, content_type)
+        return file_model
 
     @staticmethod
     def get_workflow_files(workflow_id):
@@ -128,57 +110,10 @@ class UserFileService(object):
         basename, file_extension = os.path.splitext(file_name)
         return file_extension.lower().strip()[1:]
 
-    def update_file(self, document_model, binary_data, content_type):
-        self.delete_file(document_model.id)
+    def update_file(self, file_model, binary_data, content_type):
         # We do not update files, we delete (archive) the old one and add a new one
-
-        # session.flush()  # Assure the database is up-to-date before running this.
-        #
-        # # latest_data_model = session.query(FileDataModel). \
-        # #     filter(FileDataModel.file_model_id == file_model.id).\
-        # #     order_by(desc(FileDataModel.date_created)).first()
-        #
-        # md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
-        # size = len(binary_data)
-        #
-        # if (document_model.md5_hash is not None) and (md5_checksum == document_model.md5_hash):
-        #     # This file does not need to be updated, it's the same file.  If it is archived,
-        #     # then de-archive it.
-        #     if document_model.archived:
-        #         document_model.archived = False
-        #         session.add(document_model)
-        #         session.commit()
-        #         return document_model
-        #
-        # # Verify the extension
-        # file_extension = UserFileService.get_extension(document_model.name)
-        # if file_extension not in FileType._member_names_:
-        #     raise ApiError('unknown_extension',
-        #                    'The file you provided does not have an accepted extension:' +
-        #                    file_extension, status_code=404)
-        # else:
-        #     document_model.type = FileType[file_extension]
-        #     document_model.content_type = content_type
-        #
-        # if document_model is None:
-        #     version = 1
-        # else:
-        #     version = document_model.version + 1
-        #
-        # try:
-        #     user_uid = UserService.current_user().uid
-        # except ApiError as ae:
-        #     user_uid = None
-        # new_file_data_model = FileDataModel(
-        #     data=binary_data, file_model_id=document_model.id, file_model=document_model,
-        #     version=version, md5_hash=md5_checksum,
-        #     size=size, user_uid=user_uid
-        # )
-        # session.add_all([document_model, new_file_data_model])
-        # session.commit()
-        # session.flush()  # Assure the id is set on the model before returning it.
-
-        return document_model
+        self.delete_file(file_model.id)
+        return file_model
 
     @staticmethod
     def get_files_for_study(study_id, irb_doc_code=None):
@@ -211,10 +146,6 @@ class UserFileService(object):
         that go along with this workflow.  Not related to the spec in any way"""
         file_models = UserFileService.get_files(workflow_id=workflow_id)
         return file_models
-        # latest_data_files = []
-        # for file_model in file_models:
-        #     latest_data_files.append(UserFileService.get_file_data(file_model.id))
-        # return latest_data_files
 
     @staticmethod
     def get_file_data(file_id: int, version: int = None):

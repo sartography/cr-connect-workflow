@@ -41,8 +41,5 @@ class DeleteTaskData(Script):
 
         # delete files
         for file in files_to_delete:
+            # This also deletes the data stores
             UserFileService().delete_file(file.id)
-
-            # delete the data store
-            # session.query(DataStoreModel). \
-            #     filter(DataStoreModel.file_id == file.id).delete()
