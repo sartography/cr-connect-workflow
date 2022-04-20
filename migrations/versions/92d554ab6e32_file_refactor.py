@@ -41,5 +41,6 @@ def upgrade():
 
 
 def downgrade():
+
     op.drop_table('file')
     op.rename_table('old_file', 'file')
