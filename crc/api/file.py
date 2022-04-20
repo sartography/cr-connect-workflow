@@ -128,7 +128,7 @@ def update_file_info(file_id, body):
 
 
 def delete_file(file_id):
-    UserFileService.delete_file(file_id)
+    UserFileService().delete_file(file_id)
 
 
 def dmn_from_ss():
