@@ -1,5 +1,7 @@
 import os
 
+from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
+
 from tests.base_test import BaseTest
 
 from SpiffWorkflow.bpmn.specs.events import EndEvent
@@ -356,3 +358,23 @@ class TestWorkflowProcessor(BaseTest):
 
         results = WorkflowProcessor.run_master_spec(spec, study)
         self.assertIn('current_user', results.keys())
+
+    def test_ability_to_deserialize_old_workflows(self):
+        workflow_model = self.create_workflow("random_fact")
+        processor = WorkflowProcessor(workflow_model)
+        processor.do_engine_steps()  # Get the thing up and running.
+
+        # Use the old serializer to serialize the workflow and set it on the model.
+        old_school_serializer = BpmnSerializer()
+        old_school_json = old_school_serializer.serialize_workflow(processor.bpmn_workflow, include_spec=True)
+        workflow_model.bpmn_workflow_json = old_school_json
+        db.session.add(workflow_model)
+        db.session.commit()
+
+        self.assertIsNone(processor._serializer.get_version(processor.bpmn_workflow))
+
+        # assure there is no error when loading the workflpw up with the old style json.
+        processor = WorkflowProcessor(workflow_model)
+        new_json = processor.serialize()
+
+        self.assertIsNotNone(processor._serializer.get_version(new_json))
