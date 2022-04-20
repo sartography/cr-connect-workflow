@@ -63,7 +63,7 @@ def upgrade():
                 )
                 session.add(file_model)
                 session.commit()
-    sequence = FileModel.__tablename__ + '_id_seq'
+    sequence = FileModel.__tablename__ + '_id_seq1'
     new_start_id = largest_file_id + 1
     alter_sequence = f'ALTER SEQUENCE {sequence} RESTART WITH {new_start_id}'
     op.execute(alter_sequence)
