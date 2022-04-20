@@ -42,18 +42,10 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
     def evaluate(self, task, expression):
         return self._evaluate(expression, task.data, task)
 
-    @staticmethod
-    def __get_augment_methods(task):
+    def __get_augment_methods(self, task):
         methods = []
         if task:
-            # Find the top level workflow, as this is where the study id etc... are stored.
-            workflow = task.workflow
-            while WorkflowProcessor.STUDY_ID_KEY not in workflow.data:
-                if workflow.outer_workflow != workflow:
-                    workflow = workflow.outer_workflow
-                else:
-                    break
-
+            workflow = WorkflowProcessor.find_top_level_workflow(task)
             study_id = workflow.data[WorkflowProcessor.STUDY_ID_KEY]
             if WorkflowProcessor.WORKFLOW_ID_KEY in workflow.data:
                 workflow_id = workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
@@ -82,11 +74,6 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
                                             "'%s', %s" % (expression, str(e)))
 
     def execute(self, task: SpiffTask, script, data):
-        study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-        if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
-            workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-        else:
-            workflow_id = None
         try:
             augment_methods = self.__get_augment_methods(task)
             super().execute(task, script, data, external_methods=augment_methods)
@@ -94,7 +81,6 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
             raise e
         except Exception as e:
             raise WorkflowTaskExecException(task, f' {script}, {e}', e)
-
 
 class MyCustomParser(BpmnDmnParser):
     """
@@ -420,6 +406,17 @@ class WorkflowProcessor(object):
 
     def get_workflow_id(self):
         return self.workflow_model.id
+
+    @staticmethod
+    def find_top_level_workflow(task):
+        # Find the top level workflow, as this is where the study id etc... are stored.
+        workflow = task.workflow
+        while WorkflowProcessor.STUDY_ID_KEY not in workflow.data:
+            if workflow.outer_workflow != workflow:
+                workflow = workflow.outer_workflow
+            else:
+                break
+        return workflow
 
     def get_study_id(self):
         return self.bpmn_workflow.data[self.STUDY_ID_KEY]
