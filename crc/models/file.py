@@ -124,23 +124,23 @@ class File(object):
         self.data_store = {}
 
     @classmethod
-    def from_document_model(cls, document_model: FileModel, doc_dictionary):
-        if document_model.irb_doc_code and document_model.irb_doc_code in doc_dictionary:
-            document = doc_dictionary[document_model.irb_doc_code]
+    def from_file_model(cls, file_model: FileModel, doc_dictionary):
+        if file_model.irb_doc_code and file_model.irb_doc_code in doc_dictionary:
+            document = doc_dictionary[file_model.irb_doc_code]
         else:
             document = {}
         instance = cls()
-        instance.id = document_model.id
-        instance.name = document_model.name
-        instance.content_type = document_model.content_type
-        instance.workflow_id = document_model.workflow_id
-        instance.irb_doc_code = document_model.irb_doc_code
-        instance.type = document_model.type
+        instance.id = file_model.id
+        instance.name = file_model.name
+        instance.content_type = file_model.content_type
+        instance.workflow_id = file_model.workflow_id
+        instance.irb_doc_code = file_model.irb_doc_code
+        instance.type = file_model.type
         instance.document = document
-        instance.last_modified = document_model.date_modified
+        instance.last_modified = file_model.date_modified
         instance.size = None
         instance.data_store = {}
-        for ds in document_model.data_stores:
+        for ds in file_model.data_stores:
             instance.data_store[ds.key] = ds.value
         return instance
 
@@ -191,7 +191,7 @@ class FileSchema(Schema):
     def get_url(self, obj):
         token = 'not_available'
         if hasattr(obj, 'id') and obj.id is not None:
-            file_url = url_for("/v1_0.crc_api_file_refactor_get_file_data_link", file_id=obj.id, _external=True)
+            file_url = url_for("/v1_0.crc_api_file_get_file_data_link", file_id=obj.id, _external=True)
             if hasattr(flask.g, 'user'):
                 token = flask.g.user.encode_auth_token()
             url = file_url + '?auth_token=' + urllib.parse.quote_plus(token)
