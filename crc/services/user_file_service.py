@@ -120,7 +120,7 @@ class UserFileService(object):
         query = session.query(FileModel).\
                 join(WorkflowModel).\
                 filter(WorkflowModel.study_id == study_id)
-        if irb_doc_code:
+        if irb_doc_code is not None:
             query = query.filter(FileModel.irb_doc_code == irb_doc_code)
         return query.all()
 
