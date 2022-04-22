@@ -116,10 +116,13 @@ class UserFileService(object):
         return file_model
 
     @staticmethod
-    def get_files_for_study(study_id, irb_doc_code=None):
+    def get_files_for_study(study_id, irb_doc_code=None, include_archived=False):
         query = session.query(FileModel).\
                 join(WorkflowModel).\
                 filter(WorkflowModel.study_id == study_id)
+        if not include_archived:
+            # Current documents have an archived value of False
+            query = query.filter(FileModel.archived == False)
         if irb_doc_code is not None:
             query = query.filter(FileModel.irb_doc_code == irb_doc_code)
         return query.all()
