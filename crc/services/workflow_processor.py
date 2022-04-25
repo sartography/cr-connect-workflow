@@ -2,7 +2,10 @@ import json
 from typing import List
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
+from SpiffWorkflow.bpmn.serializer import BpmnWorkflowSerializer
 from SpiffWorkflow.bpmn.specs.events import EndEvent, CancelEventDefinition
+from SpiffWorkflow.camunda.serializer import UserTaskConverter
+from SpiffWorkflow.dmn.serializer import BusinessRuleTaskConverter
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from lxml import etree
 from datetime import datetime
@@ -38,17 +41,17 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
     def evaluate(self, task, expression):
         return self._evaluate(expression, task.data, task)
 
-    @staticmethod
-    def __get_augment_methods(task):
+    def __get_augment_methods(self, task):
         methods = []
         if task:
-            study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-            if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
-                workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
+            workflow = WorkflowProcessor.find_top_level_workflow(task)
+            study_id = workflow.data[WorkflowProcessor.STUDY_ID_KEY]
+            if WorkflowProcessor.WORKFLOW_ID_KEY in workflow.data:
+                workflow_id = workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
             else:
                 workflow_id = None
 
-            if task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
+            if workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
                 methods = Script.generate_augmented_validate_list(task, study_id, workflow_id)
             else:
                 methods = Script.generate_augmented_list(task, study_id, workflow_id)
@@ -70,11 +73,6 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
                                             "'%s', %s" % (expression, str(e)))
 
     def execute(self, task: SpiffTask, script, data):
-        study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
-        if WorkflowProcessor.WORKFLOW_ID_KEY in task.workflow.data:
-            workflow_id = task.workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY]
-        else:
-            workflow_id = None
         try:
             augment_methods = self.__get_augment_methods(task)
             super().execute(task, script, data, external_methods=augment_methods)
@@ -83,7 +81,6 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
         except Exception as e:
             raise WorkflowTaskExecException(task, f' {script}, {e}', e)
 
-
 class MyCustomParser(BpmnDmnParser):
     """
     A BPMN and DMN parser that can also parse Camunda forms.
@@ -91,11 +88,13 @@ class MyCustomParser(BpmnDmnParser):
     OVERRIDE_PARSER_CLASSES = BpmnDmnParser.OVERRIDE_PARSER_CLASSES
     OVERRIDE_PARSER_CLASSES.update(CamundaParser.OVERRIDE_PARSER_CLASSES)
 
-
 class WorkflowProcessor(object):
     _script_engine = CustomBpmnScriptEngine()
-    _serializer = BpmnSerializer()
-
+    SERIALIZER_VERSION = "1.0-CRC"
+    wf_spec_converter = BpmnWorkflowSerializer.configure_workflow_spec_converter(
+        [UserTaskConverter, BusinessRuleTaskConverter])
+    _serializer = BpmnWorkflowSerializer(wf_spec_converter, version=SERIALIZER_VERSION)
+    _old_serializer = BpmnSerializer()
     WORKFLOW_ID_KEY = "workflow_id"
     STUDY_ID_KEY = "study_id"
     VALIDATION_PROCESS_KEY = "validate_only"
@@ -118,21 +117,30 @@ class WorkflowProcessor(object):
             json_size = B/MB
             if json_size > 1:
                 wf_json = json.loads(workflow_model.bpmn_workflow_json)
-                task_tree = wf_json['task_tree']
-                test_spec = wf_json['wf_spec']
-                task_size = "{:.2f}".format(len(json.dumps(task_tree).encode('utf-8'))/MB)
-                spec_size = "{:.2f}".format(len(test_spec.encode('utf-8'))/MB)
-                task_specs = json.loads(test_spec)['task_specs']
-                sub_workflows = json.loads(test_spec)['sub_workflows']
-                message = 'Workflow ' + workflow_model.workflow_spec_id + ' JSON Size is over 1MB:{0:.2f} MB'.format(json_size)
-                message += f"\n  Task Size: {task_size}"
-                message += f"\n  Spec Size: {spec_size}"
-                message += f"\n   Largest Sub-Process Sizes:"
-                for sw_name, sw_data in sub_workflows.items():
-                    size = len(json.dumps(sw_data).encode('utf-8')) / MB
-                    if size > 0.1:
-                        message += "\n      " + sw_name + "  {:.2f}".format(size)
-                app.logger.warning(message)
+                if 'spec' in wf_json and 'tasks' in wf_json: #
+                    task_tree = wf_json['tasks']
+                    test_spec = wf_json['spec']
+                    task_size = "{:.2f}".format(len(json.dumps(task_tree).encode('utf-8'))/MB)
+                    spec_size = "{:.2f}".format(len(json.dumps(test_spec).encode('utf-8'))/MB)
+                    message = 'Workflow ' + workflow_model.workflow_spec_id + ' JSON Size is over 1MB:{0:.2f} MB'.format(json_size)
+                    message += f"\n  Task Size: {task_size}"
+                    message += f"\n  Spec Size: {spec_size}"
+                    app.logger.warning(message)
+
+                    def check_sub_specs(test_spec, indent=0, show_all=False):
+                        for my_spec_name in test_spec['task_specs']:
+                            my_spec = test_spec['task_specs'][my_spec_name]
+                            my_spec_size = len(json.dumps(my_spec).encode('utf-8')) / MB
+                            if my_spec_size > 0.1 or show_all:
+                                app.logger.warning((' ' * indent) + 'Sub-Spec ' + my_spec['name'] + ' :' + "{:.2f}".format(my_spec_size))
+                                if 'spec' in my_spec:
+                                    my_show_all = False
+                                    if my_spec['name'] == 'Call_Emails_Process_Email':
+                                        my_show_all = True
+                                    check_sub_specs(my_spec['spec'], indent + 5)
+                    check_sub_specs(test_spec, 5)
+
+
         self.workflow_spec_id = workflow_model.workflow_spec_id
 
         try:
@@ -149,8 +157,7 @@ class WorkflowProcessor(object):
                     # database model to which it is associated, and scripts running within the model
                     # can then load data as needed.
                 self.bpmn_workflow.data[WorkflowProcessor.WORKFLOW_ID_KEY] = workflow_model.id
-                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_workflow(
-                    self.bpmn_workflow, include_spec=True)
+                workflow_model.bpmn_workflow_json = WorkflowProcessor._serializer.serialize_json(self.bpmn_workflow)
 
                 self.save()
 
@@ -212,8 +219,13 @@ class WorkflowProcessor(object):
     @staticmethod
     def __get_bpmn_workflow(workflow_model: WorkflowModel, spec: WorkflowSpec = None, validate_only=False):
         if workflow_model.bpmn_workflow_json:
-            bpmn_workflow = WorkflowProcessor._serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
-                                                                  workflow_spec=spec)
+            version = WorkflowProcessor._serializer.get_version(workflow_model.bpmn_workflow_json)
+            if(version == WorkflowProcessor.SERIALIZER_VERSION):
+                bpmn_workflow = WorkflowProcessor._serializer.deserialize_json(workflow_model.bpmn_workflow_json)
+            else:
+                bpmn_workflow = WorkflowProcessor.\
+                    _old_serializer.deserialize_workflow(workflow_model.bpmn_workflow_json,
+                                                         workflow_spec=spec)
             bpmn_workflow.script_engine = WorkflowProcessor._script_engine
         else:
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
@@ -323,9 +335,8 @@ class WorkflowProcessor(object):
         except WorkflowTaskExecException as we:
             raise ApiError.from_workflow_exception("task_error", str(we), we)
 
-
     def serialize(self):
-        return self._serializer.serialize_workflow(self.bpmn_workflow,include_spec=True)
+        return self._serializer.serialize_json(self.bpmn_workflow)
 
     def next_user_tasks(self):
         return self.bpmn_workflow.get_ready_user_tasks()
@@ -409,6 +420,17 @@ class WorkflowProcessor(object):
 
     def get_workflow_id(self):
         return self.workflow_model.id
+
+    @staticmethod
+    def find_top_level_workflow(task):
+        # Find the top level workflow, as this is where the study id etc... are stored.
+        workflow = task.workflow
+        while WorkflowProcessor.STUDY_ID_KEY not in workflow.data:
+            if workflow.outer_workflow != workflow:
+                workflow = workflow.outer_workflow
+            else:
+                break
+        return workflow
 
     def get_study_id(self):
         return self.bpmn_workflow.data[self.STUDY_ID_KEY]
