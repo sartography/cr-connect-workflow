@@ -20,6 +20,7 @@ class EmailModel(db.Model):
     timestamp = db.Column(db.DateTime(timezone=True), default=func.now())
     workflow_spec_id = db.Column(db.String, nullable=True)
     study = db.relationship(StudyModel)
+    name = db.Column(db.String)
 
 
 class EmailModelSchema(ma.Schema):
