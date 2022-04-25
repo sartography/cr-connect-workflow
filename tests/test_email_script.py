@@ -1,5 +1,6 @@
 from tests.base_test import BaseTest
-from crc import mail
+from crc import mail, session
+from crc.models.email import EmailModel
 from crc.services.study_service import StudyService
 from crc.services.user_file_service import UserFileService
 
@@ -21,9 +22,11 @@ class TestEmailScript(BaseTest):
 
             workflow = self.create_workflow('email_script')
             first_task = self.get_workflow_api(workflow).next_task
-            self.complete_form(workflow, first_task, {'subject': 'My Email Subject', 'recipients': 'test@example.com',
-                                                      'cc': 'cc@example.com', 'bcc': 'bcc@example.com',
-                                                      'reply_to': 'reply_to@example.com'})
+            workflow_api = self.complete_form(workflow, first_task, {'subject': 'My Email Subject', 'recipients': 'test@example.com',
+                                                                     'cc': 'cc@example.com', 'bcc': 'bcc@example.com',
+                                                                     'reply_to': 'reply_to@example.com', 'name': 'My Email Name'})
+            task = workflow_api.next_task
+            email_id = task.data['email_model']['id']
 
             self.assertEqual(1, len(outbox))
             self.assertEqual('My Email Subject', outbox[0].subject)
@@ -32,6 +35,9 @@ class TestEmailScript(BaseTest):
             self.assertEqual(['bcc@example.com'], outbox[0].bcc)
             self.assertEqual('reply_to@example.com', outbox[0].reply_to)
             self.assertIn('Thank you for using this email example', outbox[0].body)
+
+            email_name = session.query(EmailModel.name).filter(EmailModel.id == email_id).scalar()
+            self.assertEqual('My Email Name', email_name)
 
     def test_email_script_multiple(self):
         self.create_reference_document()
