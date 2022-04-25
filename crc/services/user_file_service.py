@@ -125,7 +125,7 @@ class UserFileService(object):
             query = query.filter(FileModel.archived == False)
         if irb_doc_code is not None:
             query = query.filter(FileModel.irb_doc_code == irb_doc_code)
-        return query.all()
+        return query.order_by(desc(FileModel.date_modified)).all()
 
     @staticmethod
     def get_files(workflow_id=None, name=None, irb_doc_code=None):
