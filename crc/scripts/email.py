@@ -63,6 +63,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
             bcc = []
             reply_to = None
             files = None
+            name = None
             if 'cc' in kwargs and kwargs['cc'] is not None:
                 cc = self.get_email_addresses(kwargs['cc'], study_id)
             if 'bcc' in kwargs and kwargs['bcc'] is not None:
@@ -72,6 +73,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
             # Don't process if attachments is None or ''
             if 'attachments' in kwargs and kwargs['attachments'] is not None and kwargs['attachments'] != '':
                 files = self.get_files(kwargs['attachments'], study_id)
+            if 'name' in kwargs and kwargs['name'] is not None:
+                name = kwargs['name']
 
         else:
             raise ApiError(code="missing_argument",
@@ -95,7 +98,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                     study_id=study_id,
                     reply_to=reply_to,
                     attachment_files=files,
-                    workflow_spec_id=workflow_spec_id
+                    workflow_spec_id=workflow_spec_id,
+                    name=name
                 )
             except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
