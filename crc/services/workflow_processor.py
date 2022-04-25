@@ -127,6 +127,21 @@ class WorkflowProcessor(object):
                     message += f"\n  Task Size: {task_size}"
                     message += f"\n  Spec Size: {spec_size}"
                     app.logger.warning(message)
+
+                    def check_sub_specs(test_spec, indent=0, show_all=False):
+                        for my_spec_name in test_spec['task_specs']:
+                            my_spec = test_spec['task_specs'][my_spec_name]
+                            my_spec_size = len(json.dumps(my_spec).encode('utf-8')) / MB
+                            if my_spec_size > 0.1 or show_all:
+                                app.logger.warning((' ' * indent) + 'Sub-Spec ' + my_spec['name'] + ' :' + "{:.2f}".format(my_spec_size))
+                                if 'spec' in my_spec:
+                                    my_show_all = False
+                                    if my_spec['name'] == 'Call_Emails_Process_Email':
+                                        my_show_all = True
+                                    check_sub_specs(my_spec['spec'], indent + 5)
+                    check_sub_specs(test_spec, 5)
+
+
         self.workflow_spec_id = workflow_model.workflow_spec_id
 
         try:
