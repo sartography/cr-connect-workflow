@@ -1,6 +1,6 @@
 from tests.base_test import BaseTest
 from crc import session
-from crc.models.study import StudyModel, StudyStatus, StudySchema
+from crc.models.study import StudyModel, StudyStatus, StudySchema, ProgressStatus
 import json
 from unittest.mock import patch
 
@@ -69,4 +69,4 @@ class TestStudyActionsStatus(BaseTest):
 
         study_result = self.update_study_status(study, study_schema)
         self.assertEqual(StudyStatus.open_for_enrollment, study_result.status)
-
+        self.assertEqual(ProgressStatus.finance_in_progress, study_result.progress_status)
