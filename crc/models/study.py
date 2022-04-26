@@ -34,6 +34,7 @@ class ProgressStatus(enum.Enum):
     disapproved = 'disapproved'
     ready_for_pre_review = 'ready_for_pre_review'
     resubmitted_for_pre_review = 'resubmitted_for_pre_review'
+    finance_in_progress = 'finance_in_progress'
 
 
 class IrbStatus(enum.Enum):
