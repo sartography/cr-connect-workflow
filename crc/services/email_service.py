@@ -19,7 +19,7 @@ class EmailService(object):
 
     @staticmethod
     def add_email(subject, sender, recipients, content, content_html,
-                  cc=None, bcc=None, study_id=None, reply_to=None, attachment_files=None, workflow_spec_id=None):
+                  cc=None, bcc=None, study_id=None, reply_to=None, attachment_files=None, workflow_spec_id=None, name=None):
         """We will receive all data related to an email and store it"""
 
         # Find corresponding study - if any
@@ -30,7 +30,7 @@ class EmailService(object):
         # Create EmailModel
         email_model = EmailModel(subject=subject, sender=sender, recipients=str(recipients),
                                  content=content, content_html=content_html, study=study,
-                                 cc=cc, bcc=bcc, workflow_spec_id=workflow_spec_id)
+                                 cc=cc, bcc=bcc, workflow_spec_id=workflow_spec_id, name=name)
 
         # Send mail
         try:

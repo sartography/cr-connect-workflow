@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_bd39673" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_bd39673" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
   <bpmn:process id="Process_fe6205f" isExecutable="true">
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0scd96e</bpmn:outgoing>
@@ -8,24 +8,25 @@
     <bpmn:userTask id="Activity_EmailForm" name="Email Form" camunda:formKey="email_form">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="subject" label="'Subject'"  type="string" defaultValue="&#39;My Email Subject&#39;">
+          <camunda:formField id="subject" label="&#39;Subject&#39;" type="string" defaultValue="&#39;My Email Subject&#39;">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="recipients" label="'Enter Email'"  type="string" defaultValue="&#39;user@example.com&#39;">
+          <camunda:formField id="recipients" label="&#39;Enter Email&#39;" type="string" defaultValue="&#39;user@example.com&#39;">
             <camunda:validation>
               <camunda:constraint name="required" config="true" />
             </camunda:validation>
           </camunda:formField>
-          <camunda:formField id="cc" label="'CC'"  type="string" />
-          <camunda:formField id="bcc" label="'Bcc'"  type="string" />
-          <camunda:formField id="reply_to" label="'Reply To'"  type="string" />
-          <camunda:formField id="doc_code" label="'Doc Code'"  type="string">
+          <camunda:formField id="cc" label="&#39;CC&#39;" type="string" />
+          <camunda:formField id="bcc" label="&#39;Bcc&#39;" type="string" />
+          <camunda:formField id="reply_to" label="&#39;Reply To&#39;" type="string" />
+          <camunda:formField id="doc_code" label="&#39;Doc Code&#39;" type="string">
             <camunda:properties>
               <camunda:property id="repeat" value="doc_codes" />
             </camunda:properties>
           </camunda:formField>
+          <camunda:formField id="name" label="&#39;Name&#39;" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0scd96e</bpmn:incoming>
@@ -55,12 +56,14 @@ if not 'bcc' in globals():
     bcc=None
 if not 'reply_to' in globals():
     reply_to=None
+if not 'name' in globals():
+   name = None
 
 attachments = []
 if 'doc_codes' in globals():
     for item in globals()['doc_codes']:
         attachments.append(item['doc_code'])
-email(subject=subject, recipients=recipients, cc=cc, bcc=bcc, reply_to=reply_to, attachments=attachments)</bpmn:script>
+email_model = email(subject=subject, recipients=recipients, cc=cc, bcc=bcc, reply_to=reply_to, attachments=attachments, name=name)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0xrm7iw" sourceRef="Activity_SendEmail" targetRef="Activity_1lnjeej" />
     <bpmn:sequenceFlow id="Flow_0wv0swo" sourceRef="Activity_1lnjeej" targetRef="Event_EndEvent" />
