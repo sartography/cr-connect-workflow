@@ -55,13 +55,7 @@ Takes two arguments:
                                    "the name of the docx template to use.  The second "
                                    "argument is a code for the document, as "
                                    "set in the reference document.")
-        task_study_id = task.workflow.data[WorkflowProcessor.STUDY_ID_KEY]
         file_name = args[0]
-
-        if task_study_id != study_id:
-            raise ApiError(code="invalid_argument",
-                           message="The given task does not match the given study.")
-
         file_data = None
         if workflow is not None:
             workflow_spec_service = WorkflowSpecService()

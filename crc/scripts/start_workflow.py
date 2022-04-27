@@ -41,6 +41,8 @@ class StartWorkflow(Script):
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         workflow_model = self.get_workflow(study_id, *args, **kwargs)
+        if workflow_model.status != WorkflowStatus.not_started:
+            return  # This workflow has al ready started, don't execute these next very expensive lines.
         processor = WorkflowProcessor(workflow_model)
         processor.do_engine_steps()
         processor.save()
