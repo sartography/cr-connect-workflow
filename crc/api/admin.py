@@ -12,7 +12,7 @@ from jinja2.utils import markupsafe
 from crc import db, app
 from crc.api.common import ApiError
 from crc.api.user import verify_token, verify_token_admin
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
 from crc.models.user import UserModel

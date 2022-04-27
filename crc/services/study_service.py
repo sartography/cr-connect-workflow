@@ -15,7 +15,7 @@ from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
-from crc.models.file import FileModel, File, FileSchema, FileDataModel
+from crc.models.file import FileModel, File, FileSchema
 from crc.models.ldap import LdapSchema
 
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy
@@ -94,8 +94,7 @@ class StudyService(object):
         last_time = sincetime("task_events", last_time)
         study.categories = categories
         files = UserFileService.get_files_for_study(study.id)
-        files = (File.from_models(model, UserFileService.get_file_data(model.id),
-                                  DocumentService.get_dictionary()) for model in files)
+        files = (File.from_file_model(model, DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
         last_time = sincetime("files", last_time)
         if process_categories and master_workflow_results:
@@ -276,7 +275,6 @@ class StudyService(object):
         files = session.query(FileModel).filter_by(workflow_id=workflow_id).all()
         for file in files:
             session.query(DataStoreModel).filter(DataStoreModel.file_id == file.id).delete()
-            session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).delete()
             session.delete(file)
 
         session.delete(workflow)
@@ -346,7 +344,7 @@ class StudyService(object):
 
 
             for file_model in doc_files:
-                file = File.from_models(file_model, UserFileService.get_file_data(file_model.id), [])
+                file = File.from_file_model(file_model, [])
                 file_data = FileSchema().dump(file)
                 del file_data['document']
                 doc['files'].append(Box(file_data))

@@ -1,7 +1,5 @@
-from crc import session
 from crc.api.common import ApiError
-from crc.api.file import to_file_api
-from crc.models.file import FileModel, FileSchema, CONTENT_TYPES
+from crc.models.file import FileSchema, CONTENT_TYPES
 from crc.services.reference_file_service import ReferenceFileService
 
 from flask import send_file
@@ -27,6 +25,7 @@ def get_reference_file_data(name):
         cache_timeout=-1  # Don't cache these files on the browser.
     )
 
+
 def get_reference_file_info(name):
     """Return metadata for a reference file"""
     return FileSchema().dump(ReferenceFileService.get_reference_file(name))
@@ -48,6 +47,7 @@ def update_reference_file_data(name):
 
     return_file = ReferenceFileService.update_reference_file(file_name=name, binary_data=file.stream.read())
     return FileSchema().dump(return_file)
+
 
 def add_reference_file():
     file = connexion.request.files['file']

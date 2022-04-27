@@ -1,11 +1,6 @@
-import time
-
-from crc import session
 from crc.api.common import ApiError
 from crc.models.api_models import DocumentDirectory
-from crc.models.file import FileModel
 from crc.services.lookup_service import LookupService
-from crc.services.reference_file_service import ReferenceFileService
 
 
 class DocumentService(object):

@@ -7,6 +7,9 @@ from crc.models.user import UserModel
 from crc.services.workflow_service import WorkflowService
 from flask import g
 
+from uuid import UUID
+
+import hashlib
 import time
 
 
@@ -14,12 +17,18 @@ class TestDataStoreValidation(BaseTest):
 
     @staticmethod
     def add_test_file():
-        file_model = FileModel(
+        binary_data = b'1234'
+        md5_hash = UUID(hashlib.md5(binary_data).hexdigest())
+        model = FileModel(
             name='my_test_file',
-            type=FileType.pdf,
-            content_type='application/pdf'
+            type=FileType.pdf.value,
+            content_type='application/pdf',
+            irb_doc_code='Study_Protocol_Document',
+            data=binary_data,
+            md5_hash=md5_hash,
+            archived=False
         )
-        session.add(file_model)
+        session.add(model)
         session.commit()
         file_id = session.query(FileModel.id).filter(FileModel.name == 'my_test_file').scalar()
         return file_id

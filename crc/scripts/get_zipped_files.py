@@ -1,7 +1,7 @@
 from crc import session
 from crc.api.common import ApiError
 from crc.api.file import to_file_api
-from crc.models.file import FileModel, FileDataModel, FileSchema
+from crc.models.file import FileModel, FileSchema
 from crc.scripts.script import Script
 from crc.services.study_service import StudyService
 
@@ -26,7 +26,7 @@ class GetZippedFiles(Script):
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
-        if 'file_ids' in kwargs.keys():
+        if 'file_ids' in kwargs.keys() and 'doc_code' in kwargs.keys():
 
             doc_info = StudyService().get_documents_status(study_id)
 
@@ -44,19 +44,16 @@ class GetZippedFiles(Script):
                         for file in files:
                             zip_key_words = doc_info[file.irb_doc_code]['zip_key_words']
                             file_name = f'{study_id} {zip_key_words} {file.name}'
-                            file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).first()
-                            zfw.writestr(file_name, file_data.data)
+                            # file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).first()
+                            zfw.writestr(file_name, file.data)
 
                     with open(temp_file.name, mode='rb') as handle:
-                        if 'doc_code' in kwargs:
-                            doc_code = kwargs['doc_code']
-                        else:
-                            doc_code = None
+                        doc_code = kwargs['doc_code']
                         file_model = UserFileService().add_workflow_file(workflow_id, doc_code, task.get_name(),
                                                                          zip_filename, 'application/zip', handle.read())
                         # return file_model
                         StudyService.get_documents_status(study_id=study_id, force=True)
                         return FileSchema().dump(to_file_api(file_model))
         else:
-            raise ApiError(code='missing_file_ids',
-                           message='You must include a list of file_ids.')
+            raise ApiError(code='missing_parameter',
+                           message='The get_zipped_files script requires a list of file_ids and a doc_code.')

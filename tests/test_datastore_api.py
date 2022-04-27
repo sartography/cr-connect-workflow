@@ -2,7 +2,6 @@ from tests.base_test import BaseTest
 
 from crc.models.data_store import DataStoreModel, DataStoreSchema
 from crc.services.user_file_service import UserFileService
-from crc.models.file import FileModel
 from crc import session
 
 import json

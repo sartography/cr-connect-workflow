@@ -1,12 +1,9 @@
 from crc import session
 from crc.api.common import ApiError
-from crc.models.data_store import DataStoreModel
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel, TaskAction
 from crc.scripts.script import Script
-from crc.services.document_service import DocumentService
 from crc.services.user_file_service import UserFileService
-from crc.services.workflow_service import WorkflowService
 
 
 class DeleteTaskData(Script):
@@ -44,8 +41,5 @@ class DeleteTaskData(Script):
 
         # delete files
         for file in files_to_delete:
+            # This also deletes the data stores
             UserFileService().delete_file(file.id)
-
-            # delete the data store
-            session.query(DataStoreModel). \
-                filter(DataStoreModel.file_id == file.id).delete()

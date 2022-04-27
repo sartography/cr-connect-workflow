@@ -94,9 +94,8 @@ Takes two arguments:
                         if not task.workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY]:
                             # Get the actual image data
                             image_file_model = session.query(FileModel).filter_by(id=file_id).first()
-                            image_file_data_model = UserFileService.get_file_data(file_id, image_file_model)
-                            if image_file_data_model is not None:
-                                image_file_data.append(image_file_data_model)
+                            if image_file_model is not None:
+                                image_file_data.append(image_file_model)
 
                     else:
                         raise ApiError(

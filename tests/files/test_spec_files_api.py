@@ -1,18 +1,10 @@
 import io
 import json
-import os
 
 from tests.base_test import BaseTest
 
-from crc import session, db, app
-from crc.models.file import FileModel, FileType, FileModelSchema
+from crc.models.file import FileType
 from crc.services.spec_file_service import SpecFileService
-from crc.services.workflow_processor import WorkflowProcessor
-from crc.models.data_store import DataStoreModel
-from crc.services.document_service import DocumentService
-from example_data import ExampleDataLoader
-
-from sqlalchemy import column
 
 
 class TestFilesApi(BaseTest):
@@ -26,8 +18,7 @@ class TestFilesApi(BaseTest):
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
         self.assertEqual(2, len(json_data))
-        files = FileModelSchema(many=True).load(json_data, session=session)
-        file_names = [f.name for f in files]
+        file_names = [f['name'] for f in json_data]
         self.assertTrue("%s.bpmn" % spec.id in file_names)
 
     def test_list_multiple_files_for_workflow_spec(self):
@@ -129,8 +120,6 @@ class TestFilesApi(BaseTest):
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)
         self.assertIsNotNone(rv.get_data())
-        json_data = json.loads(rv.get_data(as_text=True))
-        file = FileModelSchema().load(json_data, session=session)
 
         # get that mf.
         rv = self.app.get(f'/v1.0/workflow-specification/{spec.id}/file/random_fact.bpmn',

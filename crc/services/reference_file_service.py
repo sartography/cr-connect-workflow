@@ -1,18 +1,12 @@
-import datetime
-import hashlib
 import os
 
-from crc import app, session
+from crc import app
 from crc.api.common import ApiError
-from crc.models.file import FileModel, FileModelSchema, FileDataModel, FileType, File
+from crc.models.file import File
 from crc.services.file_system_service import FileSystemService
-
-from uuid import UUID
-from sqlalchemy.exc import IntegrityError
 
 
 class ReferenceFileService(FileSystemService):
-
 
     @staticmethod
     def root_path():

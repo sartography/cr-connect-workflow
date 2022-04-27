@@ -177,7 +177,10 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                             filter(FileModel.workflow_id == workflow.id).\
                             filter(FileModel.irb_doc_code == code).all()
                         for file in workflow_files:
-                            files.append({'id': file.id, 'name': file.name, 'type': CONTENT_TYPES[file.type.value]})
+                            files.append({'id': file.id,
+                                          'name': file.name,
+                                          'type': CONTENT_TYPES[file.type],
+                                          'data': file.data})
                 else:
                     raise ApiError(code='bad_doc_code',
                                    message=f'The doc_code {code} is not valid.')

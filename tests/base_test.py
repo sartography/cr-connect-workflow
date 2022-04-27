@@ -14,7 +14,6 @@ from flask import g
 
 from crc import app, db, session
 from crc.models.api_models import WorkflowApiSchema, MultiInstanceType
-from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.task_event import TaskEventModel, TaskAction
 from crc.models.study import StudyModel, StudyStatus, ProgressStatus
 from crc.models.user import UserModel
@@ -24,7 +23,6 @@ from crc.services.reference_file_service import ReferenceFileService
 from crc.services.spec_file_service import SpecFileService
 from crc.services.study_service import StudyService
 from crc.services.user_service import UserService
-from crc.services.workflow_service import WorkflowService
 from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
 from crc.services.workflow_spec_service import WorkflowSpecService

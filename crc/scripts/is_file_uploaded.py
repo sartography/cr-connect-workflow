@@ -11,11 +11,13 @@ class IsFileUploaded(Script):
                   Pass in the IRB Doc Code for the file."""
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
-        doc_code = args[0]
-        files = UserFileService.get_files_for_study(study_id)
+        return self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
 
         doc_code = args[0]
         files = UserFileService.get_files_for_study(study_id, irb_doc_code=doc_code)
-        return len(files) > 0
+        for file in files:
+            if file.archived is False:
+                return True
+        return False

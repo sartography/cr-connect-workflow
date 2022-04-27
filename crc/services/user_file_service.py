@@ -15,7 +15,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
-from crc.models.file import FileType, FileDataModel, FileModel, LookupFileModel, LookupDataModel
+from crc.models.file import FileType, FileDataModel, FileModel, FileModel
 from crc.models.workflow import WorkflowModel
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
@@ -59,23 +59,45 @@ class UserFileService(object):
         session.commit()
         return True
 
-
     @staticmethod
     def add_workflow_file(workflow_id, irb_doc_code, task_spec_name, name, content_type, binary_data):
-        file_model = session.query(FileModel)\
-            .filter(FileModel.workflow_id == workflow_id)\
+        # Verify the extension
+        file_extension = UserFileService.get_extension(name)
+        if file_extension not in FileType._member_names_:
+            raise ApiError('unknown_extension',
+                           'The file you provided does not have an accepted extension:' +
+                           file_extension, status_code=404)
+        file_model = session.query(FileModel) \
+            .filter(FileModel.workflow_id == workflow_id) \
             .filter(FileModel.name == name) \
             .filter(FileModel.task_spec == task_spec_name) \
-            .filter(FileModel.irb_doc_code == irb_doc_code).first()
-
-        if not file_model:
+            .filter(FileModel.irb_doc_code == irb_doc_code) \
+            .order_by(desc(FileModel.date_modified)).first()
+        if file_model:
+            file_model.archived = True
+        else:
+            md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
+            try:
+                user_uid = UserService.current_user().uid
+            except ApiError as ae:
+                user_uid = None
             file_model = FileModel(
-                workflow_id=workflow_id,
                 name=name,
+                type=FileType[file_extension].value,
+                content_type=content_type,
+                workflow_id=workflow_id,
                 task_spec=task_spec_name,
-                irb_doc_code=irb_doc_code
+                irb_doc_code=irb_doc_code,
+                md5_hash=md5_checksum,
+                data=binary_data,
+                user_uid=user_uid,
+                archived=False,
+                size=len(binary_data)
             )
-        return UserFileService.update_file(file_model, binary_data, content_type)
+            session.add(file_model)
+        session.commit()
+        session.flush()
+        return file_model
 
     @staticmethod
     def get_workflow_files(workflow_id):
@@ -88,52 +110,9 @@ class UserFileService(object):
         basename, file_extension = os.path.splitext(file_name)
         return file_extension.lower().strip()[1:]
 
-    @staticmethod
-    def update_file(file_model, binary_data, content_type):
-        session.flush()  # Assure the database is up-to-date before running this.
-
-        latest_data_model = session.query(FileDataModel). \
-            filter(FileDataModel.file_model_id == file_model.id).\
-            order_by(desc(FileDataModel.date_created)).first()
-
-        md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
-        size = len(binary_data)
-
-        if (latest_data_model is not None) and (md5_checksum == latest_data_model.md5_hash):
-            # This file does not need to be updated, it's the same file.  If it is arhived,
-            # then de-arvhive it.
-            session.add(file_model)
-            session.commit()
-            return file_model
-
-        # Verify the extension
-        file_extension = UserFileService.get_extension(file_model.name)
-        if file_extension not in FileType._member_names_:
-            raise ApiError('unknown_extension',
-                           'The file you provided does not have an accepted extension:' +
-                           file_extension, status_code=404)
-        else:
-            file_model.type = FileType[file_extension]
-            file_model.content_type = content_type
-
-        if latest_data_model is None:
-            version = 1
-        else:
-            version = latest_data_model.version + 1
-
-        try:
-            user_uid = UserService.current_user().uid
-        except ApiError as ae:
-            user_uid = None
-        new_file_data_model = FileDataModel(
-            data=binary_data, file_model_id=file_model.id, file_model=file_model,
-            version=version, md5_hash=md5_checksum,
-            size=size, user_uid=user_uid
-        )
-        session.add_all([file_model, new_file_data_model])
-        session.commit()
-        session.flush()  # Assure the id is set on the model before returning it.
-
+    def update_file(self, file_model, binary_data, content_type):
+        # We do not update files, we delete (archive) the old one and add a new one
+        self.delete_file(file_model.id)
         return file_model
 
     @staticmethod
@@ -141,7 +120,7 @@ class UserFileService(object):
         query = session.query(FileModel).\
                 join(WorkflowModel).\
                 filter(WorkflowModel.study_id == study_id)
-        if irb_doc_code:
+        if irb_doc_code is not None:
             query = query.filter(FileModel.irb_doc_code == irb_doc_code)
         return query.all()
 
@@ -166,10 +145,7 @@ class UserFileService(object):
         So these are the latest data files that were uploaded or generated
         that go along with this workflow.  Not related to the spec in any way"""
         file_models = UserFileService.get_files(workflow_id=workflow_id)
-        latest_data_files = []
-        for file_model in file_models:
-            latest_data_files.append(UserFileService.get_file_data(file_model.id))
-        return latest_data_files
+        return file_models
 
     @staticmethod
     def get_file_data(file_id: int, version: int = None):
@@ -183,17 +159,22 @@ class UserFileService(object):
         return query.first()
 
     @staticmethod
-    def delete_file(file_id):
+    def delete_file_data_stores(file_id):
         try:
-            session.query(FileDataModel).filter_by(file_model_id=file_id).delete()
             session.query(DataStoreModel).filter_by(file_id=file_id).delete()
-            session.query(FileModel).filter_by(id=file_id).delete()
-            session.commit()
         except IntegrityError as ie:
             session.rollback()
+            app.logger.info(f"Failed to delete file data stores. Original error is {ie}")
+            raise ApiError('failed_delete_data_stores', f"Unable to delete file data stores for file {file_id}.")
+        finally:
             session.commit()
-            app.logger.info("Failed to delete file, so archiving it instead. %i, due to %s" % (file_id, str(ie)))
-            raise ApiError('Delete Failed', "Unable to delete file. ")
+
+    def delete_file(self, file_id):
+        self.delete_file_data_stores(file_id)
+        # We archive files so users can access previous versions
+        document_model = session.query(FileModel).filter_by(id=file_id).first()
+        document_model.archived = True
+        session.commit()
 
     @staticmethod
     def dmn_from_spreadsheet(ss_data):

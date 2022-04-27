@@ -625,7 +625,7 @@ class WorkflowService(object):
             file_model = FileModel(name="test.png",
                                    irb_doc_code=field.id)
             doc_dict = DocumentService.get_dictionary()
-            file = File.from_models(file_model, None, doc_dict)
+            file = File.from_file_model(file_model, doc_dict)
             return FileSchema().dump(file)
         elif field.type == 'files':
             return random.randrange(1, 100)

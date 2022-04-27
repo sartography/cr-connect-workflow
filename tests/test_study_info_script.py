@@ -95,7 +95,7 @@ class TestStudyInfoScript(BaseTest):
         self.assertEqual(0, len(study_info['Grant_App']['files']), "Grant_App has not files yet.")
         # Add a grant app file
         data = {'file': (io.BytesIO(b"abcdef"), 'random_fact.svg')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (self.workflow.study_id, self.workflow.id, second_task.name, 'Grant_App'), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)

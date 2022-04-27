@@ -41,7 +41,7 @@ class TestFileDatastore(BaseTest):
         # upload the file
         correct_name = task.form['fields'][1]['id']
         data = {'file': (BytesIO(b"abcdef"), 'test_file.txt')}
-        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&form_field_key=%s' %
+        rv = self.app.post('/v1.0/file?study_id=%i&workflow_id=%s&task_spec_name=%s&irb_doc_code=%s' %
                            (workflow.study_id, workflow.id, task.name, correct_name), data=data, follow_redirects=True,
                            content_type='multipart/form-data', headers=self.logged_in_headers())
         self.assert_success(rv)

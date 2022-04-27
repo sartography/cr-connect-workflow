@@ -5,7 +5,6 @@ import flask
 from flask import url_for
 from marshmallow import INCLUDE, EXCLUDE, Schema
 from marshmallow.fields import Method
-from marshmallow_enum import EnumField
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
 from sqlalchemy import func, Index
 from sqlalchemy.dialects.postgresql import UUID
@@ -62,7 +61,31 @@ CONTENT_TYPES = {
 }
 
 
+class FileModel(db.Model):
+    __tablename__ = 'file'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    type = db.Column(db.String, nullable=False)
+    content_type = db.Column(db.String, nullable=False)
+    workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
+    task_spec = db.Column(db.String, nullable=True)
+    irb_doc_code = db.Column(db.String, nullable=False)  # Code reference to the documents.xlsx reference file.
+    data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
+    md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
+    data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
+    size = db.Column(db.Integer, default=0)
+    date_modified = db.Column(db.DateTime(timezone=True), onupdate=func.now())
+    date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
+    archived = db.Column(db.Boolean, default=False)
+
+
+# class DocumentModel(FileModel):
+#     ...
+
+
 class FileDataModel(db.Model):
+    # TODO: remove when the file refactor is finished
     __tablename__ = 'file_data'
     id = db.Column(db.Integer, primary_key=True)
     md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
@@ -75,8 +98,9 @@ class FileDataModel(db.Model):
     user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
 
 
-class FileModel(db.Model):
-    __tablename__ = 'file'
+class OldFileModel(db.Model):
+    # TODO: remove when the file refactor is finished
+    __tablename__ = 'old_file'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     type = db.Column(db.Enum(FileType))
@@ -84,7 +108,7 @@ class FileModel(db.Model):
     workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
     task_spec = db.Column(db.String, nullable=True)
     irb_doc_code = db.Column(db.String, nullable=True)  # Code reference to the documents.xlsx reference file.
-    data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
+    # data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
 
 
 class File(object):
@@ -101,30 +125,24 @@ class File(object):
         self.data_store = {}
 
     @classmethod
-    def from_models(cls, model: FileModel, data_model, doc_dictionary):
+    def from_file_model(cls, file_model: FileModel, doc_dictionary):
+        if file_model.irb_doc_code and file_model.irb_doc_code in doc_dictionary:
+            document = doc_dictionary[file_model.irb_doc_code]
+        else:
+            document = {}
         instance = cls()
-        instance.id = model.id
-        instance.name = model.name
-        instance.content_type = model.content_type
-        instance.workflow_id = model.workflow_id
-        instance.irb_doc_code = model.irb_doc_code
-        instance.type = model.type
-        if model.irb_doc_code and model.irb_doc_code in doc_dictionary:
-            instance.document = doc_dictionary[model.irb_doc_code]
-        else:
-            instance.document = {}
-        if data_model:
-            instance.last_modified = data_model.date_created
-            instance.size = data_model.size
-            instance.user_uid = data_model.user_uid
-        else:
-            instance.last_modified = None
-            instance.latest_version = None
-
+        instance.id = file_model.id
+        instance.name = file_model.name
+        instance.content_type = file_model.content_type
+        instance.workflow_id = file_model.workflow_id
+        instance.irb_doc_code = file_model.irb_doc_code
+        instance.type = file_model.type
+        instance.document = document
+        instance.last_modified = file_model.date_modified
+        instance.size = None
         instance.data_store = {}
-        for ds in model.data_stores:
+        for ds in file_model.data_stores:
             instance.data_store[ds.key] = ds.value
-
         return instance
 
     @classmethod
@@ -134,13 +152,22 @@ class File(object):
         instance = cls()
         instance.name = file_name
         instance.content_type = content_type
-        instance.type = file_type
+        instance.type = file_type.value
         instance.document = {}
         instance.last_modified = last_modified
         instance.size = file_size
         #fixme:  How to track the user id?
         instance.data_store = {}
         return instance
+
+
+# class DocumentModelSchema(SQLAlchemyAutoSchema):
+#     class Meta:
+#         model = DocumentModel
+#         load_instance = True
+#         include_relationships = True
+#         include_fk = True  # Includes foreign keys
+#         unknown = EXCLUDE
 
 
 class FileModelSchema(SQLAlchemyAutoSchema):
@@ -150,17 +177,16 @@ class FileModelSchema(SQLAlchemyAutoSchema):
         include_relationships = True
         include_fk = True  # Includes foreign keys
         unknown = EXCLUDE
-    type = EnumField(FileType)
+    # type = EnumField(FileType)
 
 
 class FileSchema(Schema):
     class Meta:
         model = File
-        fields = ["id", "name", "content_type", "workflow_spec_id", "workflow_id",
-                  "irb_doc_code", "last_modified", "latest_version", "type", "size", "data_store",
-                  "document", "user_uid", "url"]
+        fields = ["id", "name", "content_type", "workflow_id",
+                  "irb_doc_code", "last_modified", "type",
+                  "size", "data_store", "document", "user_uid", "url"]
         unknown = INCLUDE
-    type = EnumField(FileType)
     url = Method("get_url")
 
     def get_url(self, obj):
@@ -174,6 +200,7 @@ class FileSchema(Schema):
         else:
             return ""
 
+
 class LookupFileModel(db.Model):
     """Gives us a quick way to tell what kind of lookup is set on a form field."""
     __tablename__ = 'lookup_file'
@@ -182,10 +209,11 @@ class LookupFileModel(db.Model):
     task_spec_id = db.Column(db.String)
     field_id = db.Column(db.String)
     file_name = db.Column(db.String)
-    file_timestamp = db.Column(db.FLOAT) #The file systems time stamp, to check for changes to the file.
+    file_timestamp = db.Column(db.FLOAT)  # The file systems time stamp, to check for changes to the file.
     is_ldap = db.Column(db.Boolean)  # Allows us to run an ldap query instead of a db lookup.
     dependencies = db.relationship("LookupDataModel", lazy="select", backref="lookup_file_model",
                                    cascade="all, delete, delete-orphan")
+
 
 class LookupDataModel(db.Model):
     __tablename__ = 'lookup_data'

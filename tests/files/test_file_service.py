@@ -1,13 +1,8 @@
 from github import UnknownObjectException
-from sqlalchemy import desc, column
 
 from tests.base_test import BaseTest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock
 
-from crc import db, session
-from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES
-from crc.models.workflow import WorkflowModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.user_file_service import UserFileService
 
@@ -74,7 +69,7 @@ class TestFileService(BaseTest):
 
         file_data = UserFileService.get_workflow_data_files(workflow_id=workflow.id)
         self.assertEqual(1, len(file_data))
-        self.assertEqual(2, file_data[0].version)
+        self.assertTrue(file_data[0].archived)
         self.assertEqual(4, file_data[0].size) # File dat size is included.
 
     def test_add_file_from_form_increments_version_and_replaces_on_subsequent_add_with_same_name(self):

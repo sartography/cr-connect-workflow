@@ -16,6 +16,11 @@
               <camunda:constraint name="required" config="True" />
             </camunda:validation>
           </camunda:formField>
+          <camunda:formField id="doc_code" label="&#39;Doc Code&#39;" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1o4d6ut</bpmn:incoming>
@@ -28,7 +33,7 @@
       <bpmn:script>to_zip = []
 for file_id in file_ids:
     to_zip.append(file_id['file_id'])
-zip_file = get_zipped_files(file_ids=to_zip)</bpmn:script>
+zip_file = get_zipped_files(file_ids=to_zip, doc_code=doc_code)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_1uyi5u2" sourceRef="Activity_GetZip" targetRef="Activity_DisplayZip" />
     <bpmn:manualTask id="Activity_DisplayZip" name="Display Zipped Files">
@@ -46,10 +51,10 @@ zip_file = get_zipped_files(file_ids=to_zip)</bpmn:script>
       <bpmn:incoming>Flow_0r9uogm</bpmn:incoming>
     </bpmn:endEvent>
     <bpmn:sequenceFlow id="Flow_0r9uogm" sourceRef="Activity_04sw7a2" targetRef="Event_1wpd34m" />
-    <bpmn:scriptTask id="Activity_GetZip_2" name="Get Zip with Doc Code">
+    <bpmn:scriptTask id="Activity_GetZip_2" name="Get Zip 2">
       <bpmn:incoming>Flow_1i3xa3d</bpmn:incoming>
       <bpmn:outgoing>Flow_0ic5xlg</bpmn:outgoing>
-      <bpmn:script>zip_file_2 = get_zipped_files(file_ids=to_zip, doc_code='CRC2_IRBSubmission_ZipFile')</bpmn:script>
+      <bpmn:script>zip_file_2 = get_zipped_files(file_ids=to_zip, doc_code=doc_code)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:manualTask id="Activity_04sw7a2" name="Display Zip 2">
       <bpmn:documentation># Zip 2
@@ -60,6 +65,18 @@ zip_file = get_zipped_files(file_ids=to_zip)</bpmn:script>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_SayHello">
+      <bpmndi:BPMNEdge id="Flow_0r9uogm_di" bpmnElement="Flow_0r9uogm">
+        <di:waypoint x="1000" y="117" />
+        <di:waypoint x="1072" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ic5xlg_di" bpmnElement="Flow_0ic5xlg">
+        <di:waypoint x="830" y="117" />
+        <di:waypoint x="900" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1i3xa3d_di" bpmnElement="Flow_1i3xa3d">
+        <di:waypoint x="662" y="117" />
+        <di:waypoint x="730" y="117" />
+      </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_1uyi5u2_di" bpmnElement="Flow_1uyi5u2">
         <di:waypoint x="500" y="117" />
         <di:waypoint x="562" y="117" />
@@ -71,18 +88,6 @@ zip_file = get_zipped_files(file_ids=to_zip)</bpmn:script>
       <bpmndi:BPMNEdge id="Flow_1o4d6ut_di" bpmnElement="Flow_1o4d6ut">
         <di:waypoint x="188" y="117" />
         <di:waypoint x="240" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_1i3xa3d_di" bpmnElement="Flow_1i3xa3d">
-        <di:waypoint x="662" y="117" />
-        <di:waypoint x="730" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0ic5xlg_di" bpmnElement="Flow_0ic5xlg">
-        <di:waypoint x="830" y="117" />
-        <di:waypoint x="900" y="117" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_0r9uogm_di" bpmnElement="Flow_0r9uogm">
-        <di:waypoint x="1000" y="117" />
-        <di:waypoint x="1072" y="117" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="152" y="99" width="36" height="36" />

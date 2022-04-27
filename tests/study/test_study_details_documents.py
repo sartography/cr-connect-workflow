@@ -4,9 +4,8 @@ from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from tests.base_test import BaseTest
 from unittest.mock import patch
 
-from crc import db, session
+from crc import session
 from crc.api.common import ApiError
-from crc.models.file import FileDataModel, FileModel
 from crc.models.protocol_builder import ProtocolBuilderRequiredDocumentSchema
 from crc.models.study import StudyModel
 from crc.scripts.study_info import StudyInfo

@@ -45,8 +45,7 @@ class EmailService(object):
 
             if attachment_files is not None:
                 for file in attachment_files:
-                    file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id==file['id']).first()
-                    msg.attach(file['name'], file['type'], file_data.data)
+                    msg.attach(file['name'], file['type'], file['data'])
 
             mail.send(msg)
 

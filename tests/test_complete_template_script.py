@@ -7,7 +7,7 @@ from docxtpl import Listing
 from io import BytesIO
 
 from crc import session
-from crc.models.file import FileModel, FileDataModel
+from crc.models.file import FileModel
 from crc.services.jinja_service import JinjaService
 
 
@@ -56,11 +56,8 @@ class TestEmbeddedTemplate(BaseTest):
             filter(FileModel.workflow_id == workflow.id).\
             filter(FileModel.irb_doc_code == 'Study_App_Doc').\
             first()
-        file_data_model = session.query(FileDataModel). \
-            filter(FileDataModel.file_model_id == file_model.id).\
-            first()
 
         # read the data as a word document
-        document = docx.Document(BytesIO(file_data_model.data))
+        document = docx.Document(BytesIO(file_model.data))
         # Make sure 'Hello World!' is there
         self.assertEqual('Hello World!', document.paragraphs[4].text)

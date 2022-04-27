@@ -807,7 +807,7 @@ paths:
         description: The name of the task spec
         schema:
           type: string
-      - name: form_field_key
+      - name: irb_doc_code
         in: query
         required: false
         description: The unique key of a workflow task form field.  Make sure this matches a document in the irb_documents.xslx reference sheet.
@@ -860,7 +860,7 @@ paths:
       - name: file_id
         in: path
         required: true
-        description: The id of the File requested
+        description: The id of the File
         schema:
           type: integer
     get:

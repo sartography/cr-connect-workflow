@@ -39,8 +39,6 @@ class TestDeleteIRBDocument(BaseTest):
         self.assertEqual(False, IsFileUploaded.do_task(
             IsFileUploaded, second_task, study_id, workflow.id, irb_code))
 
-        print('test_delete_irb_document')
-
     def test_delete_irb_document_list(self):
         # try deleting a list of files
         self.create_reference_document()

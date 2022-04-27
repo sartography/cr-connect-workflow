@@ -7,7 +7,6 @@ from SpiffWorkflow.bpmn.specs.events import EndEvent, CancelEventDefinition
 from SpiffWorkflow.camunda.serializer import UserTaskConverter
 from SpiffWorkflow.dmn.serializer import BusinessRuleTaskConverter
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
-from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from lxml import etree
 from datetime import datetime
 
@@ -212,7 +211,7 @@ class WorkflowProcessor(object):
             # Remove any uploaded files.
             files = FileModel.query.filter(FileModel.workflow_id == workflow_model.id).all()
             for file in files:
-                UserFileService.delete_file(file.id)
+                UserFileService().delete_file(file.id)
         session.commit()
 
 
@@ -280,10 +279,10 @@ class WorkflowProcessor(object):
 
         for file in files:
             data = SpecFileService.get_data(workflow_spec_info, file.name)
-            if file.type == FileType.bpmn:
+            if file.type == FileType.bpmn.value:
                 bpmn: etree.Element = etree.fromstring(data)
                 parser.add_bpmn_xml(bpmn, filename=file.name)
-            elif file.type == FileType.dmn:
+            elif file.type == FileType.dmn.value:
                 dmn: etree.Element = etree.fromstring(data)
                 parser.add_dmn_xml(dmn, filename=file.name)
         if workflow_spec_info.primary_process_id is None or workflow_spec_info.primary_process_id == "":

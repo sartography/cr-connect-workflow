@@ -1,16 +1,9 @@
 import datetime
 
-from github import UnknownObjectException
-from sqlalchemy import desc, column
 from tests.base_test import BaseTest
-from unittest.mock import patch, Mock
 
-from crc import db, session
-from crc.api.common import ApiError
-from crc.models.file import FileModel, FileDataModel, CONTENT_TYPES, FileType
+from crc.models.file import FileType
 from crc.services.spec_file_service import SpecFileService
-from crc.services.workflow_processor import WorkflowProcessor
-
 
 
 class TestSpecFileService(BaseTest):
@@ -24,7 +17,7 @@ class TestSpecFileService(BaseTest):
         self.assertEqual("text/xml", spec_files[0].content_type)
         self.assertEqual("random_fact.bpmn", spec_files[0].name)
         self.assertTrue(spec_files[0].size > 0)
-        self.assertEqual(FileType.bpmn, spec_files[0].type)
+        self.assertEqual(FileType.bpmn.value, spec_files[0].type)
         self.assertIsInstance(spec_files[0].last_modified, datetime.datetime)
 
     def test_add_file(self):
