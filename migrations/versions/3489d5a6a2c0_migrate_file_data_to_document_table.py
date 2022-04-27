@@ -70,9 +70,11 @@ def upgrade():
 
     # Wait until data is migrated before adding foreign key restraint
     # Otherwise, file_ids don't exist
+    op.drop_constraint('file_id_key', 'data_store', type_='foreignkey')
     op.create_foreign_key('file_id_key', 'data_store', 'file', ['file_id'], ['id'])
 
 
 def downgrade():
     # Instead of deleting the new records here, we just drop the table in revision 92d554ab6e32
     op.drop_constraint('file_id_key', 'data_store', type_='foreignkey')
+    op.create_foreign_key('file_id_key', 'data_store', 'old_file', ['file_id'], ['id'])
