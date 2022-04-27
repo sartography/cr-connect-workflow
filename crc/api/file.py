@@ -67,7 +67,7 @@ def update_file_data(file_id):
     file = connexion.request.files['file']
     if file_model is None:
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
-    file_model = UserFileService.update_file(file_model, file.stream.read(), file.content_type)
+    file_model = UserFileService().update_file(file_model, file.stream.read(), file.content_type)
     return FileSchema().dump(to_file_api(file_model))
 
 
