@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session
 from crc.api.common import ApiError, ApiErrorSchema
 from crc.models.study import Study, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
-    StudyStatus, StudyAssociatedSchema, Category
+    StudyStatus, StudyAssociatedSchema, ProgressStatus, Category
 from crc.models.task_log import TaskLogQuery, TaskLogQuerySchema
 from crc.services.spreadsheet_service import SpreadsheetService
 from crc.services.study_service import StudyService
@@ -91,6 +91,7 @@ def update_study(study_id, body):
 
     if status == StudyStatus.open_for_enrollment:
         study_model.enrollment_date = study.enrollment_date
+        study_model.progress_status = ProgressStatus.finance_in_progress
 
     session.add(study_model)
     session.commit()
