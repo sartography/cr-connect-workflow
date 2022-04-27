@@ -123,6 +123,8 @@ class File(object):
         self.last_modified = None
         self.size = None
         self.data_store = {}
+        self.user_uid = None
+        self.archived = None
 
     @classmethod
     def from_file_model(cls, file_model: FileModel, doc_dictionary):
@@ -140,6 +142,8 @@ class File(object):
         instance.document = document
         instance.last_modified = file_model.date_modified
         instance.size = None
+        instance.user_uid = file_model.user_uid
+        instance.archived = file_model.archived
         instance.data_store = {}
         for ds in file_model.data_stores:
             instance.data_store[ds.key] = ds.value
@@ -184,7 +188,7 @@ class FileSchema(Schema):
     class Meta:
         model = File
         fields = ["id", "name", "content_type", "workflow_id",
-                  "irb_doc_code", "last_modified", "type",
+                  "irb_doc_code", "last_modified", "type", "archived",
                   "size", "data_store", "document", "user_uid", "url"]
         unknown = INCLUDE
     url = Method("get_url")
