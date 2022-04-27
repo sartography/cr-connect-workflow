@@ -8,8 +8,7 @@ from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import ModelView
 from sqlalchemy import desc
 from werkzeug.utils import redirect
-from jinja2 import Markup
-
+from jinja2.utils import markupsafe
 from crc import db, app
 from crc.api.common import ApiError
 from crc.api.user import verify_token, verify_token_admin
@@ -69,7 +68,7 @@ class FileView(AdminModelView):
 def json_formatter(view, context, model, name):
     value = getattr(model, name)
     json_value = json.dumps(value, ensure_ascii=False, indent=2)
-    return Markup(f'<pre>{json_value}</pre>')
+    return markupsafe.Markup(f'<pre>{json_value}</pre>')
 
 class TaskEventView(AdminModelView):
     column_filters = ['workflow_id', 'action']
