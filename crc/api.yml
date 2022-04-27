@@ -83,6 +83,11 @@ paths:
         required : false
         schema :
           type : integer
+      - name : include_archived
+        in : query
+        required : false
+        schema :
+          type : boolean
     get:
       operationId: crc.api.document.get_document_directory
       summary: Returns a directory of all files for study in a nested structure
