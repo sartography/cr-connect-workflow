@@ -21,6 +21,7 @@ class TestGetEmailData(BaseTest):
             email_model = EmailService.add_email(subject='My Email Subject',
                                                  sender='sender@example.com',
                                                  recipients=['joe@example.com'],
+                                                 name='My Email Name',
                                                  content='asdf', content_html=None, study_id=study.id)
 
             workflow_api = self.get_workflow_api(workflow)
@@ -38,6 +39,7 @@ class TestGetEmailData(BaseTest):
             self.assertEqual('My Email Subject', email_data[0]['subject'])
             self.assertEqual('sender@example.com', email_data[0]['sender'])
             self.assertEqual('[\'joe@example.com\']', email_data[0]['recipients'])
+            self.assertEqual('My Email Name', email_data[0]['name'])
             # Make sure we remove content_html from email_data
             self.assertNotIn('content_html', email_data[0])
 
@@ -52,6 +54,7 @@ class TestGetEmailData(BaseTest):
             email_model_one = EmailService.add_email(subject='My Email Subject',
                                                      sender='sender@example.com',
                                                      recipients=['joe@example.com'],
+                                                     name='My Email Name',
                                                      content='asdf',
                                                      content_html=None,
                                                      study_id=study.id,
@@ -59,6 +62,7 @@ class TestGetEmailData(BaseTest):
             email_model_two = EmailService.add_email(subject='My Other Email Subject',
                                                      sender='sender2@example.com',
                                                      recipients=['joanne@example.com'],
+                                                     name='My Email Name',
                                                      content='xyzpdq',
                                                      content_html=None,
                                                      study_id=study.id,
@@ -79,7 +83,9 @@ class TestGetEmailData(BaseTest):
             self.assertEqual('My Email Subject', email_data[0]['subject'])
             self.assertEqual('sender@example.com', email_data[0]['sender'])
             self.assertEqual('[\'joe@example.com\']', email_data[0]['recipients'])
+            self.assertEqual('My Email Name', email_data[0]['name'])
 
             self.assertEqual('My Other Email Subject', email_data[1]['subject'])
             self.assertEqual('sender2@example.com', email_data[1]['sender'])
             self.assertEqual('[\'joanne@example.com\']', email_data[1]['recipients'])
+            self.assertEqual('My Email Name', email_data[1]['name'])
