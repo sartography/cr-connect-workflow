@@ -34,7 +34,7 @@ def all_specifications(libraries=False,standalone=False):
     specs = spec_service.get_specs()
     master_spec = spec_service.get_master_spec()
     if master_spec:
-        specs.append(spec_service.get_master_spec())
+        specs.append(master_spec)
     return WorkflowSpecInfoSchema(many=True).dump(specs)
 
 
