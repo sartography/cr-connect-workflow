@@ -81,11 +81,13 @@ class WorkflowSpecInfoSchema(ma.Schema):
     def make_spec(self, data, **kwargs):
         return WorkflowSpecInfo(**data)
 
+
 class WorkflowState(enum.Enum):
     hidden = "hidden"
     disabled = "disabled"
     required = "required"
     optional = "optional"
+    locked = "locked"
 
     @classmethod
     def has_value(cls, value):
@@ -116,3 +118,4 @@ class WorkflowModel(db.Model):
     completed_tasks = db.Column(db.Integer, default=0)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_id = db.Column(db.String, default=None)
+    workflow_state = db.Column(db.String)
