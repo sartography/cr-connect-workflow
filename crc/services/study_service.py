@@ -506,6 +506,9 @@ class StudyService(object):
 
     @staticmethod
     def _update_status_of_workflow_meta(workflow_metas, status):
+        # TODO: Remove
+        #  This code is moving to WorkflowService.update_workflow_state_from_master_workflow
+
         # Update the status on each workflow
         warnings = []
         unused_statuses = status.copy()  # A list of all the statuses that are not used.
