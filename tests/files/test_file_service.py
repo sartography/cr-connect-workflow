@@ -49,7 +49,7 @@ class FakeGithub(Mock):
 class TestFileService(BaseTest):
     """Largely tested via the test_file_api, and time is tight, but adding new tests here."""
 
-    def test_add_file_from_task_increments_version_and_replaces_on_subsequent_add(self):
+    def test_add_file_from_task_archives_original_on_subsequent_add(self):
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -65,29 +65,14 @@ class TestFileService(BaseTest):
                                           binary_data=b'5678', irb_doc_code=irb_code)
 
         file_models = UserFileService.get_workflow_files(workflow_id=workflow.id)
-        self.assertEqual(1, len(file_models))
+        # Both models should exist
+        self.assertEqual(2, len(file_models))
 
         file_data = UserFileService.get_workflow_data_files(workflow_id=workflow.id)
-        self.assertEqual(1, len(file_data))
+        self.assertEqual(2, len(file_data))
         self.assertTrue(file_data[0].archived)
-        self.assertEqual(4, file_data[0].size) # File dat size is included.
-
-    def test_add_file_from_form_increments_version_and_replaces_on_subsequent_add_with_same_name(self):
-        workflow = self.create_workflow('file_upload_form')
-        processor = WorkflowProcessor(workflow)
-        task = processor.next_task()
-        irb_code = "UVACompl_PRCAppr"  # The first file referenced in pb required docs.
-        UserFileService.add_workflow_file(workflow_id=workflow.id,
-                                      irb_doc_code=irb_code,
-                                      task_spec_name=task.get_name(),
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'1234')
-        # Add the file again with different data
-        UserFileService.add_workflow_file(workflow_id=workflow.id,
-                                      irb_doc_code=irb_code,
-                                      task_spec_name=task.get_name(),
-                                      name="anything.png", content_type="text",
-                                      binary_data=b'5678')
+        self.assertFalse(file_data[1].archived)
+        self.assertEqual(4, file_data[0].size)  # File data size is included.
 
     def test_add_file_from_form_allows_multiple_files_with_different_names(self):
         workflow = self.create_workflow('file_upload_form')
