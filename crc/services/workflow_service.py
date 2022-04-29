@@ -1127,4 +1127,7 @@ class WorkflowService(object):
         db.session.commit()
         return workflow_model
 
-
+    def update_workflow_state_from_master_workflow(self, study_id, master_workflow_results):
+        workflows = session.query(WorkflowModel).filter(WorkflowModel.study_id == study_id).all()
+        for item in master_workflow_results:
+            print(f'update_workflow_state_from_master_workflow: item: {item}')
