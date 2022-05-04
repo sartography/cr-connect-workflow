@@ -67,37 +67,38 @@ class UserFileService(object):
             raise ApiError('unknown_extension',
                            'The file you provided does not have an accepted extension:' +
                            file_extension, status_code=404)
-        file_model = session.query(FileModel) \
+        # archive, if we already have one with same workflow_id, task_spec_name, and irb_doc_code
+        old_file_model = session.query(FileModel) \
             .filter(FileModel.workflow_id == workflow_id) \
-            .filter(FileModel.name == name) \
             .filter(FileModel.task_spec == task_spec_name) \
             .filter(FileModel.irb_doc_code == irb_doc_code) \
             .order_by(desc(FileModel.date_modified)).first()
-        if file_model:
-            file_model.archived = True
-        else:
-            md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
-            try:
-                user_uid = UserService.current_user().uid
-            except ApiError as ae:
-                user_uid = None
-            file_model = FileModel(
-                name=name,
-                type=FileType[file_extension].value,
-                content_type=content_type,
-                workflow_id=workflow_id,
-                task_spec=task_spec_name,
-                irb_doc_code=irb_doc_code,
-                md5_hash=md5_checksum,
-                data=binary_data,
-                user_uid=user_uid,
-                archived=False,
-                size=len(binary_data)
-            )
-            session.add(file_model)
+        if old_file_model:
+            old_file_model.archived = True
+            session.commit()
+
+        md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
+        try:
+            user_uid = UserService.current_user().uid
+        except ApiError as ae:
+            user_uid = None
+        new_file_model = FileModel(
+            name=name,
+            type=FileType[file_extension].value,
+            content_type=content_type,
+            workflow_id=workflow_id,
+            task_spec=task_spec_name,
+            irb_doc_code=irb_doc_code,
+            md5_hash=md5_checksum,
+            data=binary_data,
+            user_uid=user_uid,
+            archived=False,
+            size=len(binary_data)
+        )
+        session.add(new_file_model)
         session.commit()
         session.flush()
-        return file_model
+        return new_file_model
 
     @staticmethod
     def get_workflow_files(workflow_id):
