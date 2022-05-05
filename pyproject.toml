@@ -5,7 +5,7 @@ description = ""
 authors = ["jasquat <jasquat@users.noreply.github.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 alembic = "*"
 coverage = "*"
 docxtpl = "*"
