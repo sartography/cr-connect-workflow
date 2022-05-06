@@ -412,11 +412,9 @@ class TestTasksApi(BaseTest):
 
     def test_update_task_when_locked(self):
         workflow = self.create_workflow('simple_form')
-        # workflow_model = session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
-        # self.assertEqual(None, workflow_model.workflow_state)
-        self.assertEqual(None, workflow.workflow_state)
         workflow_model = session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
-        self.assertEqual(None, workflow_model.workflow_state)
+        self.assertEqual(None, workflow.state)
+        self.assertEqual(None, workflow_model.state)
 
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
@@ -429,12 +427,12 @@ class TestTasksApi(BaseTest):
         workflow = self.create_workflow('simple_form')
         workflow_api = self.get_workflow_api(workflow)
 
-        workflow.workflow_state = 'locked'
+        workflow.state = 'locked'
         session.commit()
 
-        self.assertEqual('locked', workflow.workflow_state)
+        self.assertEqual('locked', workflow.state)
         workflow_model = session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
-        self.assertEqual('locked', workflow_model.workflow_state)
+        self.assertEqual('locked', workflow_model.state)
 
         task = workflow_api.next_task
 
