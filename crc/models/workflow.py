@@ -118,4 +118,4 @@ class WorkflowModel(db.Model):
     completed_tasks = db.Column(db.Integer, default=0)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_id = db.Column(db.String, default=None)
-    workflow_state = db.Column(db.String)
+    workflow_state = db.Column(db.String, nullable=True)
