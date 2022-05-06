@@ -2,15 +2,35 @@ name: Create and publish a Docker image
 
 on:
   push:
-    branches: ['master']
+    branches: ['master', 'feature/*']
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  TESTING: true
+  PB_ENABLED: false
+  SQLALCHEMY_DATABASE_URI: "postgresql://postgres:@localhost:5432/crc_test"
 
 jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+      - uses: harmon758/postgresql-action@v1
+        with:
+          postgresql version: '11' # See https://hub.docker.com/_/postgres for available versions
+
+      - run: psql -c 'create database crc_test;' -U postgres
+      - run: pipenv install --dev
+      - run: pipenv run coverage run -m pytest
+      - run: pipenv run coverage xml -i
+
   build-and-push-image:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     permissions:
       contents: read
       packages: write
