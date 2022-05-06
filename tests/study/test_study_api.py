@@ -15,6 +15,8 @@ from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType, StudyAssociated
 from crc.models.workflow import WorkflowModel
 from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.workflow_service import WorkflowService
+from crc.services.workflow_spec_service import WorkflowSpecService
 from crc.services.user_file_service import UserFileService
 
 
@@ -74,6 +76,34 @@ class TestStudyApi(BaseTest):
         self.assertEqual("not_started", workflow["status"])
         self.assertEqual(0, workflow["total_tasks"])
         self.assertEqual(0, workflow["completed_tasks"])
+
+    def test_get_study_updates_workflow_state(self):
+        self.load_test_spec('test_master_workflow', master_spec=True)
+        self.load_test_spec('simple_workflow')
+        self.load_test_spec('empty_workflow')
+
+        study = self.add_test_study()
+        study_model = session.query(StudyModel).filter_by(id=study["id"]).first()
+
+        # We should not have a state yet
+        workflows = session.query(WorkflowModel).all()
+        self.assertEqual('simple_workflow', workflows[0].workflow_spec_id)
+        self.assertEqual('empty_workflow', workflows[1].workflow_spec_id)
+        self.assertEqual(None, workflows[0].state)
+        self.assertEqual(None, workflows[1].state)
+
+        spec_service = WorkflowSpecService()
+        master_spec = spec_service.master_spec
+        master_workflow_results = WorkflowProcessor.run_master_spec(master_spec, study_model)
+
+        # This should set the state for simple_workflow to required, and empty_workflow to locked
+        WorkflowService().update_workflow_state_from_master_workflow(study_model.id, master_workflow_results)
+
+        workflows = session.query(WorkflowModel).all()
+        self.assertEqual('simple_workflow', workflows[0].workflow_spec_id)
+        self.assertEqual('empty_workflow', workflows[1].workflow_spec_id)
+        self.assertEqual('required', workflows[0].state)
+        self.assertEqual('locked', workflows[1].state)
 
     def test_get_study_has_details_about_files(self):
 
