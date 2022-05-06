@@ -9,7 +9,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   TESTING: true
   PB_ENABLED: false
-  SQLALCHEMY_DATABASE_URI: "postgresql://postgres:@postgres:5432/crc_test"
+  SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@postgres:5432/crc_test"
 
 jobs:
   run_tests:
@@ -18,13 +18,15 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_PASSWORD: ''
+          POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
     steps:
+      - env:
+          PGPASSWORD: postgres_password
       - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
