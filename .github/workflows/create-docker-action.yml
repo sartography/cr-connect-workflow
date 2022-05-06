@@ -9,7 +9,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   TESTING: true
   PB_ENABLED: false
-  SQLALCHEMY_DATABASE_URI: "postgresql://postgres:@localhost:5432/crc_test"
+  SQLALCHEMY_DATABASE_URI: "postgresql://postgres:@postgres:5432/crc_test"
 
 jobs:
   run_tests:
@@ -18,7 +18,7 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: ''
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -30,7 +30,7 @@ jobs:
           python-version: '3.9'
           architecture: 'x64'
 
-      - run: psql -c 'create database crc_test;' -U postgres
+      - run: psql -h postgres -c 'create database crc_test;' -U postgres
       - run: pipenv install --dev
       - run: pipenv run coverage run -m pytest
       - run: pipenv run coverage xml -i
