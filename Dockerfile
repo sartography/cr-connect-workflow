@@ -1,4 +1,4 @@
-FROM quay.io/sartography/python:3.8
+FROM ghcr.io/sartography/python:3.9
 
 RUN pip install pipenv
 RUN useradd _gunicorn --no-create-home --user-group
