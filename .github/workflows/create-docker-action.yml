@@ -35,6 +35,7 @@ jobs:
       - run: psql -h localhost -c 'create database crc_test;' -U postgres
       - run: pip install pipenv
       - run: pipenv install --dev
+      - run: pipenv run coverage
       - run: pipenv run coverage run -m pytest
       - run: pipenv run coverage xml -i
 
