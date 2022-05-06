@@ -62,7 +62,9 @@ jobs:
       # - run: pipenv run coverage xml -i
 
   build-and-push-image:
-    needs: run_tests
+    needs:
+      - run_tests
+      - sonarcloud
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     permissions:
