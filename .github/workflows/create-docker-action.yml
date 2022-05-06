@@ -30,6 +30,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      - uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
       - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
@@ -37,7 +40,6 @@ jobs:
       - run: psql -h localhost -c 'create database crc_test;' -U postgres
       - run: pip install pipenv
       - run: pipenv install --dev
-      - run: pipenv graph
       - run: pipenv run coverage run -m pytest
       - run: pipenv run coverage xml -i
 
