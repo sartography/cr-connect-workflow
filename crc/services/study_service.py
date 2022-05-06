@@ -45,6 +45,7 @@ class StudyService(object):
 
     def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
+
         associated = session.query(StudyAssociated).filter_by(uid=user.uid, access=True).all()
         associated_studies = [x.study_id for x in associated]
         db_studies = session.query(StudyModel).filter((StudyModel.user_uid == user.uid) |
@@ -128,7 +129,6 @@ class StudyService(object):
             study.progress = int((complete_workflows/all_workflows)*100)
 
         return study
-
 
     @staticmethod
     def _get_workflow_metas(study_id, category):
