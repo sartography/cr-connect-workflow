@@ -50,7 +50,7 @@ sentry-sdk = {extras = [ "flask",], version = "==0.14.4"}
 dateparser = "*"
 # TIP:  If you want to test local changes to SpiffWorkflow, do:
 # pipenv install --editable ../SpiffWorkflow (but fix things back before commiting!)
-spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow"}
+spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow", ref = "e47072ff88d7121c01861b08851e5b6f6fbf6609"}
 
 [requires]
 python_version = "3.9"
