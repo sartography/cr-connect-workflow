@@ -29,7 +29,7 @@ from crc.models.ldap import LdapModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel, TaskAction
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowModel, WorkflowStatus
+from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowState
 from crc.services.data_store_service import DataStoreBase
 from crc.services.document_service import DocumentService
 from crc.services.jinja_service import JinjaService
@@ -674,7 +674,8 @@ class WorkflowService(object):
             last_updated=processor.workflow_model.last_updated,
             is_review=spec.is_review,
             title=spec.display_name,
-            study_id=processor.workflow_model.study_id or None
+            study_id=processor.workflow_model.study_id or None,
+            workflow_state=processor.workflow_model.workflow_state
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
@@ -1127,7 +1128,23 @@ class WorkflowService(object):
         db.session.commit()
         return workflow_model
 
-    def update_workflow_state_from_master_workflow(self, study_id, master_workflow_results):
+    @staticmethod
+    def update_workflow_state_from_master_workflow(study_id, master_workflow_results):
+        # Create a dictionary of workflows for this study, keyed by workflow_spec_id
+        wf_by_workflow_spec_id = {}
         workflows = session.query(WorkflowModel).filter(WorkflowModel.study_id == study_id).all()
+        for workflow in workflows:
+            wf_by_workflow_spec_id[workflow.workflow_spec_id] = workflow
+        # Update the workflow_states with results from master workflow
         for item in master_workflow_results:
-            print(f'update_workflow_state_from_master_workflow: item: {item}')
+            # only process the workflows (there are other things in master_workflow_results)
+            if item in wf_by_workflow_spec_id:
+                workflow_state = master_workflow_results[item]['status']
+                # Make sure we have a valid state
+                if WorkflowState.has_value(workflow_state):
+                    # Get the workflow from our dictionary and set the state
+                    workflow = wf_by_workflow_spec_id[item]
+                    workflow.workflow_state = workflow_state
+                    session.add(workflow)
+
+        session.commit()
