@@ -26,7 +26,6 @@ jobs:
         with:
           args: >
             -Dsonar.organization=sartography
-            # -Dsonar.projectKey=sartography
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
