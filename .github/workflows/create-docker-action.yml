@@ -10,6 +10,7 @@ env:
   TESTING: true
   PB_ENABLED: false
   SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@postgres:5432/crc_test"
+  PGPASSWORD: postgres
 
 jobs:
   run_tests:
@@ -25,8 +26,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     steps:
-      - env:
-          PGPASSWORD: postgres_password
       - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
