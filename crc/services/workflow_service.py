@@ -1136,14 +1136,14 @@ class WorkflowService(object):
         for workflow in workflows:
             wf_by_workflow_spec_id[workflow.workflow_spec_id] = workflow
         # Update the workflow states with results from master workflow
-        for item in master_workflow_results:
+        for workflow_spec_id in master_workflow_results:
             # only process the workflows (there are other things in master_workflow_results)
-            if item in wf_by_workflow_spec_id:
-                workflow_state = master_workflow_results[item]['status']
+            if workflow_spec_id in wf_by_workflow_spec_id:
+                workflow_state = master_workflow_results[workflow_spec_id]['status']
                 # Make sure we have a valid state
                 if WorkflowState.has_value(workflow_state):
                     # Get the workflow from our dictionary and set the state
-                    workflow = wf_by_workflow_spec_id[item]
+                    workflow = wf_by_workflow_spec_id[workflow_spec_id]
                     workflow.state = workflow_state
                     session.add(workflow)
 
