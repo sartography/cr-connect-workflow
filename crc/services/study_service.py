@@ -497,7 +497,7 @@ class StudyService(object):
         unused_statuses = status.copy()
         if unused_statuses.get(cat.id):
             cat_meta.id = cat.id
-            cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']]
+            cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']].value
             cat_meta.message = unused_statuses.get(cat.id)['message']
             cat_meta.message = unused_statuses.get(cat.id)['message'] \
                 if unused_statuses.get(cat.id)['message'] else ''
@@ -538,7 +538,7 @@ class StudyService(object):
     #                                      )))
     #             continue
     #
-    #         wfm.state = WorkflowState[status[wfm.workflow_spec_id]['status']]
+    #         wfm.state = WorkflowState[status[wfm.workflow_spec_id]['status']].value
     #
     #     for status in unused_statuses:
     #         if isinstance(unused_statuses[status], dict) and 'status' in unused_statuses[status]:
