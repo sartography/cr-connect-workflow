@@ -13,6 +13,22 @@ env:
   PGPASSWORD: postgres
 
 jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.organization=sartography
+            -Dsonar.projectKey=sartography
+
   run_tests:
     runs-on: ubuntu-latest
     services:
@@ -38,12 +54,13 @@ jobs:
           python-version: '3.9'
           architecture: 'x64'
       - run: psql -h localhost -c 'create database crc_test;' -U postgres
-      - run: pip install pipenv
-      - run: pipenv install --dev
-      - run: pipenv run coverage run -m pytest
-      - run: pipenv run coverage xml -i
+      # - run: pip install pipenv
+      # - run: pipenv install --dev
+      # - run: pipenv run coverage run -m pytest
+      # - run: pipenv run coverage xml -i
 
   build-and-push-image:
+    needs: run_tests
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     permissions:
