@@ -283,7 +283,7 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     if workflow_model is None:
         raise ApiError("invalid_workflow_id", "The given workflow id is not valid.", status_code=404)
-    if workflow_model.workflow_state in ('hidden', 'disabled', 'locked'):
+    if workflow_model.state in ('hidden', 'disabled', 'locked'):
         raise ApiError(code='locked_workflow',
                        message='You tried to update a task for a workflow that is hidden, locked, or disabled.')
 

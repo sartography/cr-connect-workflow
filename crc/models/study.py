@@ -142,7 +142,7 @@ class CategoryMetadataSchema(ma.Schema):
 class WorkflowMetadata(object):
     def __init__(self, id, display_name=None, description=None, spec_version=None,
                  category_id=None, category_display_name=None,
-                 state: WorkflowState = None, workflow_state: str = None,
+                 state: WorkflowState = None,
                  status: WorkflowStatus = None, total_tasks=None, completed_tasks=None,
                  is_review=None, display_order=None, state_message=None, workflow_spec_id=None):
         self.id = id
@@ -152,7 +152,6 @@ class WorkflowMetadata(object):
         self.category_id = category_id
         self.category_display_name = category_display_name
         self.state = state
-        self.workflow_state = workflow_state
         self.state_message = state_message
         self.status = status
         self.total_tasks = total_tasks
@@ -170,7 +169,6 @@ class WorkflowMetadata(object):
             category_id=spec.category_id,
             category_display_name=spec.category.display_name,
             state=WorkflowState.optional,
-            workflow_state=workflow.workflow_state,
             status=workflow.status,
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,

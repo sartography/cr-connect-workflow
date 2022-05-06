@@ -675,7 +675,7 @@ class WorkflowService(object):
             is_review=spec.is_review,
             title=spec.display_name,
             study_id=processor.workflow_model.study_id or None,
-            workflow_state=processor.workflow_model.workflow_state
+            state=processor.workflow_model.state
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
@@ -1135,7 +1135,7 @@ class WorkflowService(object):
         workflows = session.query(WorkflowModel).filter(WorkflowModel.study_id == study_id).all()
         for workflow in workflows:
             wf_by_workflow_spec_id[workflow.workflow_spec_id] = workflow
-        # Update the workflow_states with results from master workflow
+        # Update the workflow states with results from master workflow
         for item in master_workflow_results:
             # only process the workflows (there are other things in master_workflow_results)
             if item in wf_by_workflow_spec_id:
@@ -1144,7 +1144,7 @@ class WorkflowService(object):
                 if WorkflowState.has_value(workflow_state):
                     # Get the workflow from our dictionary and set the state
                     workflow = wf_by_workflow_spec_id[item]
-                    workflow.workflow_state = workflow_state
+                    workflow.state = workflow_state
                     session.add(workflow)
 
         session.commit()

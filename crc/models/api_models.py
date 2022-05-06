@@ -214,7 +214,7 @@ class DocumentDirectory(object):
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,
                  workflow_spec_id, total_tasks, completed_tasks,
-                 last_updated, is_review, title, study_id, workflow_state):
+                 last_updated, is_review, title, study_id, state):
         self.id = id
         self.status = status
         self.next_task = next_task  # The next task that requires user input.
@@ -226,7 +226,7 @@ class WorkflowApi(object):
         self.title = title
         self.is_review = is_review
         self.study_id = study_id or ''
-        self.workflow_state = workflow_state
+        self.state = state
 
 
 class WorkflowApiSchema(ma.Schema):
@@ -234,19 +234,19 @@ class WorkflowApiSchema(ma.Schema):
         model = WorkflowApi
         fields = ["id", "status", "next_task", "navigation",
                   "workflow_spec_id", "total_tasks", "completed_tasks",
-                  "last_updated", "is_review", "title", "study_id", "workflow_state"]
+                  "last_updated", "is_review", "title", "study_id", "state"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
     next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
     navigation = marshmallow.fields.List(marshmallow.fields.Nested(NavigationItemSchema, dump_only=True))
-    workflow_state = marshmallow.fields.Mapping(data_key="workflow_state", allow_none=True)
+    state = marshmallow.fields.Mapping(data_key="state", allow_none=True)
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
         keys = ['id', 'status', 'next_task', 'navigation',
                 'workflow_spec_id', "total_tasks", "completed_tasks",
-                "last_updated", "is_review", "title", "study_id", "workflow_state"]
+                "last_updated", "is_review", "title", "study_id", "state"]
         filtered_fields = {key: data[key] for key in keys}
         filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])
         return WorkflowApi(**filtered_fields)
