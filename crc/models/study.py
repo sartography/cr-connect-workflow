@@ -140,8 +140,7 @@ class CategoryMetadataSchema(ma.Schema):
 
 class WorkflowMetadata(object):
     def __init__(self, id, display_name=None, description=None, spec_version=None,
-                 category_id=None, category_display_name=None,
-                 state=None,
+                 category_id=None, category_display_name=None, state=None,
                  status: WorkflowStatus = None, total_tasks=None, completed_tasks=None,
                  is_review=None, display_order=None, state_message=None, workflow_spec_id=None):
         self.id = id
