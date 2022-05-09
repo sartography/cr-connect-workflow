@@ -104,6 +104,8 @@ class TestStudyApi(BaseTest):
         self.assertEqual('empty_workflow', workflows[1].workflow_spec_id)
         self.assertEqual('required', workflows[0].state)
         self.assertEqual('locked', workflows[1].state)
+        self.assertEqual('Completion of this workflow is required.', workflows[0].state_message)
+        self.assertEqual('This workflow is locked', workflows[1].state_message)
 
     def test_get_study_has_details_about_files(self):
 
