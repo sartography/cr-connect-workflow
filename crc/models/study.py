@@ -264,7 +264,7 @@ class Study(object):
 class StudyForUpdateSchema(ma.Schema):
     id = fields.Integer(required=False, allow_none=True)
     status = EnumField(StudyStatus, by_value=True)
-    progress_status = EnumField(ProgressStatus, by_value=True)
+    progress_status = EnumField(ProgressStatus, by_value=True, allow_none=True)
     sponsor = fields.String(allow_none=True)
     ind_number = fields.String(allow_none=True)
     enrollment_date = fields.DateTime(allow_none=True)
