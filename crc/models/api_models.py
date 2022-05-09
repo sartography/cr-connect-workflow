@@ -93,7 +93,7 @@ class Task(object):
 
     def __init__(self, id, name, title, type, state, lane, form, documentation, data,
                  multi_instance_type, multi_instance_count, multi_instance_index,
-                 process_name, properties, is_locked=False):
+                 process_name, properties):
         self.id = id
         self.name = name
         self.title = title
@@ -108,7 +108,6 @@ class Task(object):
         self.multi_instance_index = multi_instance_index  # And the index of the currently repeating task.
         self.process_name = process_name
         self.properties = properties  # Arbitrary extension properties from BPMN editor.
-        self.is_locked = is_locked
 
     @classmethod
     def valid_property_names(cls):
