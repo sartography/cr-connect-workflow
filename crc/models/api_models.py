@@ -240,7 +240,7 @@ class WorkflowApiSchema(ma.Schema):
     status = EnumField(WorkflowStatus)
     next_task = marshmallow.fields.Nested(TaskSchema, dump_only=True, required=False)
     navigation = marshmallow.fields.List(marshmallow.fields.Nested(NavigationItemSchema, dump_only=True))
-    state = marshmallow.fields.Mapping(data_key="state", allow_none=True)
+    state = marshmallow.fields.String(allow_none=True)
 
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
