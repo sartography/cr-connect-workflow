@@ -10,7 +10,8 @@ from sqlalchemy import desc
 from werkzeug.utils import redirect
 from jinja2.utils import markupsafe
 from crc import db, app
-from crc.api.common import ApiError
+# from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.api.user import verify_token, verify_token_admin
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel

@@ -60,9 +60,11 @@ from crc import api
 from crc.api import admin
 from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
-connexion_app.add_api('api_v2.yml', base_path='/v2.0')
+# connexion_app.add_api('api_v2.yml', base_path='/v2.0')
 
-from crc.shared.test_blueprint import test_blueprint
+# from crc.shared.test_blueprint import test_blueprint
+# app.register_blueprint(test_blueprint)
+from flask_bpmn.test_blueprint_file import test_blueprint
 app.register_blueprint(test_blueprint)
 
 # needed function to avoid circular import
