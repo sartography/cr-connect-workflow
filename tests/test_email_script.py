@@ -26,7 +26,7 @@ class TestEmailScript(BaseTest):
                                                                      'cc': 'cc@example.com', 'bcc': 'bcc@example.com',
                                                                      'reply_to': 'reply_to@example.com', 'name': 'My Email Name'})
             task = workflow_api.next_task
-            email_id = task.data['email_model']['id']
+            self.assertEqual('My Email Name', task.data['email_model']['name'])
 
             self.assertEqual(1, len(outbox))
             self.assertEqual('My Email Subject', outbox[0].subject)
@@ -36,6 +36,7 @@ class TestEmailScript(BaseTest):
             self.assertEqual('reply_to@example.com', outbox[0].reply_to)
             self.assertIn('Thank you for using this email example', outbox[0].body)
 
+            email_id = task.data['email_model']['id']
             email_name = session.query(EmailModel.name).filter(EmailModel.id == email_id).scalar()
             self.assertEqual('My Email Name', email_name)
 

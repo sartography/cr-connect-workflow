@@ -140,7 +140,7 @@ class File(object):
         instance.irb_doc_code = file_model.irb_doc_code
         instance.type = file_model.type
         instance.document = document
-        instance.last_modified = file_model.date_modified
+        instance.last_modified = file_model.date_created
         instance.size = None
         instance.user_uid = file_model.user_uid
         instance.archived = file_model.archived
