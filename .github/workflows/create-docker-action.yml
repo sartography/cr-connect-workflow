@@ -1,16 +1,71 @@
-name: Create and publish a Docker image
+name: run_ci
 
 on:
   push:
-    branches: ['master']
+    branches: ['master', 'feature/*']
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  TESTING: true
+  PB_ENABLED: false
+  SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@localhost:5432/crc_test"
+  PGPASSWORD: postgres
 
 jobs:
-  build-and-push-image:
+  sonarcloud:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@master
+        with:
+          args: >
+            -Dsonar.organization=sartography
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  run_tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - uses: browser-actions/setup-chrome@latest
+        with:
+          chrome-version: stable
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+      - run: psql -h localhost -c 'create database crc_test;' -U postgres
+      # - run: pip install pipenv
+      # - run: pipenv install --dev
+      # - run: pipenv run coverage run -m pytest
+      # - run: pipenv run coverage xml -i
+
+  build-and-push-image:
+    needs:
+      - run_tests
+      - sonarcloud
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
     permissions:
       contents: read
       packages: write
