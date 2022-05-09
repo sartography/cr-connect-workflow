@@ -18,7 +18,9 @@ depends_on = None
 
 def upgrade():
     op.add_column('workflow', sa.Column('state', sa.String(), nullable=True))
+    op.add_column('workflow', sa.Column('state_message', sa.String(), nullable=True))
 
 
 def downgrade():
     op.drop_column('workflow', 'state')
+    op.drop_column('workflow', 'state_message')

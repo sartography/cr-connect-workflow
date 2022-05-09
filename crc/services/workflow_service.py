@@ -1140,11 +1140,13 @@ class WorkflowService(object):
             # only process the workflows (there are other things in master_workflow_results)
             if workflow_spec_id in wf_by_workflow_spec_id:
                 workflow_state = master_workflow_results[workflow_spec_id]['status']
+                workflow_state_message = master_workflow_results[workflow_spec_id]['message']
                 # Make sure we have a valid state
                 if WorkflowState.has_value(workflow_state):
                     # Get the workflow from our dictionary and set the state
                     workflow = wf_by_workflow_spec_id[workflow_spec_id]
                     workflow.state = workflow_state
+                    workflow.state_message = workflow_state_message
                     session.add(workflow)
 
         session.commit()

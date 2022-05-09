@@ -119,3 +119,4 @@ class WorkflowModel(db.Model):
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_id = db.Column(db.String, default=None)
     state = db.Column(db.String, nullable=True)
+    state_message = db.Column(db.String, nullable=True)

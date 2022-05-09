@@ -168,6 +168,7 @@ class WorkflowMetadata(object):
             category_id=spec.category_id,
             category_display_name=spec.category.display_name,
             state=workflow.state or WorkflowState.optional.value,
+            state_message=workflow.state_message,
             status=workflow.status,
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,
