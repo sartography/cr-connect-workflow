@@ -128,6 +128,9 @@ def get_all_users():
         return UserModelSchema(many=True).dump(all_users)
 
 
+def login_v2():
+    return "WE LOGGED IN!!!!!"
+
 def login(
         uid=None,
         redirect_url=None,

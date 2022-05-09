@@ -1,0 +1,2414 @@
+openapi: "3.0.2"
+info:
+  version: 1.0.0
+  title: Workflow Microservice
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:5000/v1.0
+security:
+  - jwt: ['secret']
+paths:
+  /login:
+    get:
+      # operationId: crc.api.user.login_v2
+      operationId: crc.shared.test_blueprint.show
+      summary: In production, logs the user in via SSO. If not in production, logs in as a specific user for testing.
+      security: []  # Disable security for this endpoint only.
+      parameters:
+        - name: uid
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: redirect_url
+          in: query
+          required: false
+          schema:
+            type: string
+      tags:
+        - Users
+      responses:
+        '304':
+          description: Redirection to the hosted frontend with an auth_token header.
+#   /login:
+#     get:
+#       operationId: crc.api.user.login
+#       summary: In production, logs the user in via SSO. If not in production, logs in as a specific user for testing.
+#       security: []  # Disable security for this endpoint only.
+#       parameters:
+#         - name: uid
+#           in: query
+#           required: false
+#           schema:
+#             type: string
+#         - name: redirect_url
+#           in: query
+#           required: false
+#           schema:
+#             type: string
+#       tags:
+#         - Users
+#       responses:
+#         '304':
+#           description: Redirection to the hosted frontend with an auth_token header.
+#
+#   /user:
+#     parameters:
+#       - name: admin_impersonate_uid
+#         in: query
+#         required: false
+#         description: For admins, the unique uid of an existing user to impersonate.
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.user.get_current_user
+#       summary: Returns the current user.
+#       tags:
+#         - Users
+#       responses:
+#         '200':
+#           description: The currently-authenticated user, or, if the current user is an admin and admin_impersonate_uid is provided, this will be the user with the given uid.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/User"
+#
+#   /list_users:
+#     get:
+#       operationId: crc.api.user.get_all_users
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Returns a list of all users in the database.
+#       tags:
+#         - Users
+#       responses:
+#         '200':
+#           description: All users in the database.
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/User"
+#   # /v1.0/document_directory/{study_id}
+#   /document_directory/{study_id}:
+#     parameters :
+#       - name : study_id
+#         required : true
+#         in : path
+#         description : The unique id of a study.
+#         schema :
+#           type : integer
+#       - name : workflow_id
+#         in : query
+#         required : false
+#         schema :
+#           type : integer
+#       - name : include_archived
+#         in : query
+#         required : false
+#         schema :
+#           type : boolean
+#     get:
+#       operationId: crc.api.document.get_document_directory
+#       summary: Returns a directory of all files for study in a nested structure
+#       tags:
+#         - Document Categories
+#       responses:
+#         '200':
+#           description: All IRB Categories defined in the file document.
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/DocumentDirectory"
+#
+#   # Context-less LDAP Lookup
+#   /ldap:
+#     parameters:
+#       - name: query
+#         in: query
+#         required: false
+#         description: The string to search for in the Value column of the lookup table.
+#         schema:
+#           type: string
+#       - name: limit
+#         in: query
+#         required: false
+#         description: The total number of records to return, defaults to 10.
+#         schema:
+#           type: integer
+#
+#     get:
+#       operationId: crc.api.workflow.lookup_ldap
+#       summary: Returns a list of LDAP users, with a given query.
+#       tags:
+#         - Users
+#       responses:
+#         '200':
+#           description: An array of all LDAP users.
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#
+#   # /v1.0/study
+#   /study:
+#     get:
+#       operationId: crc.api.study.user_studies
+#       summary: Provides a list of studies related to the current user.
+#       tags:
+#         - Studies
+#       responses:
+#         '200':
+#           description: An array of studies, ordered by the last modified date.
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/Study"
+#     post:
+#       operationId: crc.api.study.add_study
+#       summary: Creates a new study with the given parameters.
+#       tags:
+#         - Studies
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/Study'
+#       responses:
+#         '200':
+#           description: Study created successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/Study"
+#   /study/all:
+#     get:
+#       operationId: crc.api.study.all_studies
+#       summary: Provides a list of studies
+#       tags:
+#         - Studies
+#       responses:
+#         '200':
+#           description: An array of studies, with submitted files, ordered by the last modified date.
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/Study"
+#   /study/{study_id}:
+#     parameters:
+#       - name: study_id
+#         in: path
+#         required: true
+#         description: The id of the study for which workflows should be returned.
+#         schema:
+#           type: integer
+#           format: int32
+#       - name: update_status
+#         in: query
+#         required: false
+#         description: If set to true, will synch the study with protocol builder and assure the status of all workflows is up to date (expensive).
+#         schema:
+#           type: boolean
+#     get:
+#       operationId: crc.api.study.get_study
+#       summary: Provides a single study
+#       tags:
+#         - Studies
+#       responses:
+#         '200':
+#           description: An Study Object
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/Study"
+#     delete:
+#       operationId: crc.api.study.delete_study
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Removes the given study completely.
+#       tags:
+#         - Studies
+#       responses:
+#         '204':
+#           description: The study has been removed.
+#     put:
+#       operationId: crc.api.study.update_study
+#       summary: Updates an existing study with the given parameters.
+#       tags:
+#         - Studies
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/Study'
+#       responses:
+#         '200':
+#           description: Study updated successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/Study"
+#   /study/{study_id}/associates:
+#     parameters:
+#       - name: study_id
+#         in: path
+#         required: true
+#         description: The id of the study for which associates should be returned.
+#         schema:
+#           type: integer
+#           format: int32
+#     get:
+#       operationId: crc.api.study.get_study_associates
+#       summary: Provides a list of associates for a particular study
+#       tags:
+#         - Studies
+#       responses:
+#         '200':
+#           description: list of Study Associate Objects
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/StudyAssociate"
+#   /study/{study_id}/log:
+#     parameters:
+#       - name: study_id
+#         in: path
+#         required: true
+#         description: The id of the study for which logs should be returned.
+#         schema:
+#           type: integer
+#           format: int32
+#     put:
+#       operationId: crc.api.study.get_logs_for_study
+#       summary: Provides a list of logged events that occured within a study
+#       tags:
+#         - Studies
+#       requestBody:
+#         description: Log Pagination Request
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               $ref: "#/components/schemas/PaginatedTaskLog"
+#       responses:
+#         '200':
+#           description: list of Study logs - events that have occured within a study.
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/TaskLog"
+#   /study/{study_id}/log/download:
+#     parameters:
+#       - name: study_id
+#         in: path
+#         required: true
+#         description: The id of the study for which logs should be returned.
+#         schema:
+#           type: integer
+#           format: int32
+#       - name : auth_token
+#         in : query
+#         required : true
+#         description : User Auth Toeken
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.study.download_logs_for_study
+#       summary: Returns a csv file of logged events that occured within a study
+#       security: [] # Will verify manually with provided Auth Token.
+#       tags:
+#         - Studies
+#       responses:
+#         '200':
+#           description: Returns the spreadsheet file of logged events
+#           content:
+#             application/octet-stream:
+#               schema:
+#                 type: string
+#                 format: binary
+#
+#   /workflow-specification:
+#     get:
+#       operationId: crc.api.workflow.all_specifications
+#       summary: Provides a list of workflows specifications that can be added to a study manually. Please note that Protocol Builder will handle this most of the time.
+#       tags:
+#         - Workflow Specifications
+#       parameters :
+#         - name : libraries
+#           in : query
+#           required : false
+#           description : True if we should return just library schemas
+#           schema :
+#             type : boolean
+#         - name : standalone
+#           in : query
+#           required : false
+#           description : True if we should return just standalone schemas
+#           schema :
+#             type : boolean
+#       responses:
+#         '200':
+#           description: An array of workflow specifications
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/WorkflowSpec"
+#     post:
+#       operationId: crc.api.workflow.add_workflow_specification
+#       summary: Creates a new workflow specification with the given parameters.
+#       tags:
+#         - Workflow Specifications
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/WorkflowSpec'
+#       responses:
+#         '200':
+#           description: Workflow specification created successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/WorkflowSpec"
+#
+#   /workflow-specification/{spec_id}/library/{library_id}:
+#     parameters:
+#       - name: spec_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow specification.
+#         schema:
+#           type: string
+#       - name: library_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing library specification.
+#         schema:
+#           type: string
+#
+#
+#     post:
+#       operationId: crc.api.workflow.add_workflow_spec_library
+#       summary: Adds a library to a workflow spec
+#       tags:
+#         - Workflow Specifications
+#       responses:
+#         '200':
+#           description: Workflow specification.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/WorkflowSpec"
+#     delete:
+#       operationId: crc.api.workflow.drop_workflow_spec_library
+#       summary: Delete a library from a workflow
+#       tags:
+#         - Workflow Specifications
+#       responses:
+#         '200':
+#           description: Workflow specification.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/WorkflowSpec"
+#
+#   /workflow-specification/{spec_id}:
+#     parameters:
+#       - name: spec_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow specification.
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.workflow.get_workflow_specification
+#       summary: Returns a single workflow specification
+#       tags:
+#         - Workflow Specifications
+#       responses:
+#         '200':
+#           description: Workflow specification.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/WorkflowSpec"
+#     post:
+#       operationId: crc.api.workflow.get_workflow_from_spec
+#       summary: Creates a workflow from a workflow spec and returns the workflow
+#       tags:
+#         - Workflow Specifications
+#       responses:
+#         '200':
+#           description: Workflow generated successfully
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/Workflow"
+#     put:
+#       operationId: crc.api.workflow.update_workflow_specification
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Modifies an existing workflow specification with the given parameters.
+#       tags:
+#         - Workflow Specifications
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/WorkflowSpec'
+#       responses:
+#         '200':
+#           description: Workflow specification created successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/WorkflowSpec"
+#     delete:
+#       operationId: crc.api.workflow.delete_workflow_specification
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Removes an existing workflow specification
+#       tags:
+#         - Workflow Specifications
+#       responses:
+#         '204':
+#           description: The workflow specification has been removed.
+#   /workflow-specification/{spec_id}/reorder:
+#     parameters:
+#       - name: spec_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow specification to validate.
+#         schema:
+#           type: string
+#       - name: direction
+#         in: query
+#         required: true
+#         description: The direction we want to move the spec - `up` or `down`
+#         schema:
+#           type: string
+#           example: up
+#     put:
+#       operationId: crc.api.workflow.reorder_workflow_specification
+#       summary: Move the workflow spec up or down in the display order
+#       tags:
+#         - Workflow Specifications
+#       responses:
+#         '200':
+#           description: An array of workflow specifications
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/WorkflowSpec"
+#
+#   /workflow-specification/{spec_id}/validate:
+#     parameters:
+#       - name: spec_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow specification to validate.
+#         schema:
+#           type: string
+#       - name: study_id
+#         in: query
+#         required: false
+#         description: Optional id of study to test under different scenarios
+#         schema:
+#           type: string
+#       - name: test_until
+#         in: query
+#         required: false
+#         description: Optional name of task to stop validating at
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.workflow.validate_workflow_specification
+#       summary: Loads and attempts to execute a Workflow Specification, returning a list of errors encountered
+#       tags:
+#         - Workflow Specifications
+#       responses:
+#         '200':
+#           description: Workflow specification.
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/Error"
+#   /workflow-specification/{spec_id}/file:
+#     parameters:
+#       - name: spec_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow specification to validate.
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.spec_file.get_files
+#       summary: Provide a list of workflow spec files for the given workflow_spec_id. IMPORTANT, only includes metadata, not the file content.
+#       tags:
+#         - Spec Files
+#       responses:
+#         '200':
+#           description: An array of file descriptions (not the file content)
+#           content:
+#             application/json:
+#              schema:
+#                type: array
+#                items:
+#                  $ref: "#/components/schemas/File"
+#     post:
+#       operationId: crc.api.spec_file.add_file
+#       summary: Add a new workflow spec file
+#       tags:
+#         - Spec Files
+#       requestBody:
+#         content:
+#           multipart/form-data:
+#             schema:
+#               type: object
+#               properties:
+#                 file:
+#                   type: string
+#                   format: binary
+#       responses:
+#         '200':
+#           description: Metadata about the uploaded file, but not the file content.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#components/schemas/File"
+#   /workflow-specification/{spec_id}/file/{file_name}:
+#     parameters:
+#       - name: spec_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow specification to validate.
+#         schema:
+#           type: string
+#       - name: file_name
+#         in: path
+#         required: true
+#         description: The id of the spec file
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.spec_file.get_file
+#       summary: Returns metadata about the file
+#       tags:
+#         - Spec Files
+#       responses:
+#         '200':
+#           description: Returns the file information requested.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#components/schemas/File"
+#     put:
+#       operationId: crc.api.spec_file.update
+#       summary: updates the given file to be the primary file and process, if so specified.
+#       tags:
+#         - Spec Files
+#       parameters:
+#         - name: is_primary
+#           in: query
+#           required: true
+#           description: Whether to make this the primary file for the workflow.
+#           schema:
+#             type: boolean
+#       requestBody:
+#         description: Log Pagination Request
+#         required: false
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/File'
+#       responses:
+#         '200':
+#           description: Returns the file information.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#components/schemas/File"
+#     delete:
+#       operationId: crc.api.spec_file.delete
+#       summary: Removes an existing workflow spec file.
+#       tags:
+#         - Spec Files
+#       responses:
+#         '204':
+#           description: The file was removed.
+#   /workflow-specification/{spec_id}/file/{file_name}/data:
+#     parameters:
+#       - name: spec_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow specification to validate.
+#         schema:
+#           type: string
+#       - name: file_name
+#         in: path
+#         required: true
+#         description: The id of the requested file
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.spec_file.get_data
+#       summary: Returns only the spec file content
+#       tags:
+#         - Spec Files
+#       responses:
+#         '200':
+#           description: Returns the actual spec file
+#           content:
+#             application/octet-stream:
+#               schema:
+#                 type: string
+#                 format: binary
+#     put:
+#       operationId: crc.api.spec_file.update_data
+#       summary: Update the contents of a spec file
+#       tags:
+#         - Spec Files
+#       requestBody:
+#         content:
+#           multipart/form-data:
+#             schema:
+#               x-body-name: file
+#               type: object
+#               properties:
+#                 file:
+#                   type: string
+#                   format: binary
+#               required:
+#                 - file
+#       responses:
+#         '200':
+#           description: Returns the updated file model
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/File"
+#   /workflow-specification-category:
+#     get:
+#       operationId: crc.api.workflow.list_workflow_spec_categories
+#       summary: Provides a list of categories that can be added to a workflow spec.
+#       tags:
+#         - Workflow Specification Category
+#       responses:
+#         '200':
+#           description: An array of workflow specification categories
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/WorkflowSpecCategory"
+#     post:
+#       operationId: crc.api.workflow.add_workflow_spec_category
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Creates a new workflow spec category with the given parameters.
+#       tags:
+#         - Workflow Specification Category
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/WorkflowSpecCategory'
+#       responses:
+#         '200':
+#           description: Workflow spec category created successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/WorkflowSpecCategory"
+#   /workflow-specification-category/{cat_id}:
+#     parameters:
+#       - name: cat_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow spec category to modify.
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.workflow.get_workflow_spec_category
+#       summary: Returns a single workflow spec category
+#       tags:
+#         - Workflow Specification Category
+#       responses:
+#         '200':
+#           description: Workflow spec category.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/WorkflowSpecCategory"
+#     put:
+#       operationId: crc.api.workflow.update_workflow_spec_category
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Modifies an existing workflow spec category with the given parameters.
+#       tags:
+#         - Workflow Specification Category
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/WorkflowSpecCategory'
+#       responses:
+#         '200':
+#           description: Workflow spec category created successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/WorkflowSpecCategory"
+#     delete:
+#       operationId: crc.api.workflow.delete_workflow_spec_category
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Removes an existing workflow spec category
+#       tags:
+#         - Workflow Specification Category
+#       responses:
+#         '204':
+#           description: The workflow spec category has been removed.
+#   /workflow-specification-category/{cat_id}/reorder:
+#     parameters:
+#       - name: cat_id
+#         in: path
+#         required: true
+#         description: The unique id of an existing workflow spec category to modify.
+#         schema:
+#           type: string
+#       - name: direction
+#         in: query
+#         required: true
+#         description: The direction you want to move the category - `up` or `down`
+#         schema:
+#           type: string
+#           example: up
+#     put:
+#       operationId: crc.api.workflow.reorder_workflow_spec_category
+#       summary: Move the workflow spec category up or down in the display order
+#       tags:
+#         - Workflow Specification Category
+#       responses:
+#         '200':
+#           description: An array of workflow spec categories
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/WorkflowSpecCategory"
+#
+#   /file:
+#     parameters:
+#       - name: workflow_id
+#         in: query
+#         required: false
+#         description: The unique id of a workflow instance
+#         schema:
+#           type: integer
+#       - name: task_spec_name
+#         in: query
+#         required: false
+#         description: The name of the task spec
+#         schema:
+#           type: string
+#       - name: irb_doc_code
+#         in: query
+#         required: false
+#         description: The unique key of a workflow task form field.  Make sure this matches a document in the irb_documents.xslx reference sheet.
+#         schema:
+#           type: string
+#       - name: study_id
+#         in: query
+#         required: false
+#         description: The study that the files are related to
+#         schema:
+#           type: integer
+#     get:
+#       operationId: crc.api.file.get_files
+#       summary: Provides a list of files that match the given parameters (such as a spec id) IMPORTANT, only includes metadata, not the file content.
+#       tags:
+#         - Files
+#       responses:
+#         '200':
+#           description: An array of file descriptions (not the file content)
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/File"
+#
+#     post:
+#       operationId: crc.api.file.add_file
+#       summary: Add a new file
+#       tags:
+#         - Files
+#       requestBody:
+#         content:
+#           multipart/form-data:
+#             schema:
+#               type: object
+#               properties:
+#                 file:
+#                   type: string
+#                   format: binary
+#       responses:
+#         '200':
+#           description: Metadata about the uploaded file, but not the file content.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/File"
+#   /file/{file_id}:
+#     parameters:
+#       - name: file_id
+#         in: path
+#         required: true
+#         description: The id of the File
+#         schema:
+#           type: integer
+#     get:
+#       operationId: crc.api.file.get_file_info
+#       summary: Returns metadata about a file.
+#       tags:
+#         - Files
+#       responses:
+#         '200':
+#           description: Returns the file information requested.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/File"
+#     put:
+#       operationId: crc.api.file.update_file_info
+#       summary: Updates existing file info with the given parameters.
+#       tags:
+#         - Files
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/File'
+#       responses:
+#         '200':
+#           description: File info updated successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/File"
+#     delete:
+#       operationId: crc.api.file.delete_file
+#       summary: Removes an existing file.
+#       tags:
+#         - Files
+#       responses:
+#         '204':
+#           description: The file has been removed.
+#   /file/{file_id}/download :
+#     parameters :
+#       - name : file_id
+#         in : path
+#         required : true
+#         description : The id of the File requested
+#         schema :
+#           type : integer
+#       - name : auth_token
+#         in : query
+#         required : true
+#         description : User Auth Toeken
+#         schema :
+#           type : string
+#       - name : version
+#         in : query
+#         required : false
+#         description : The version of the file, or none for latest version
+#         schema :
+#           type : integer
+#     get :
+#       operationId : crc.api.file.get_file_data_link
+#       summary : Returns only the file contents
+#       security: []
+#       tags :
+#         - Files
+#       responses :
+#         '200' :
+#           description : Returns the actual file
+#           content :
+#             application/octet-stream :
+#               schema :
+#                 type : string
+#                 format : binary
+#                 example : '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+#   /file/{file_id}/data:
+#     parameters:
+#       - name: file_id
+#         in: path
+#         required: true
+#         description: The id of the File requested
+#         schema:
+#           type: integer
+#       - name: version
+#         in: query
+#         required: false
+#         description: The version of the file, or none for latest version
+#         schema:
+#           type: integer
+#     get:
+#       operationId: crc.api.file.get_file_data
+#       summary: Returns only the file contents
+#       tags:
+#         - Files
+#       responses:
+#         '200':
+#           description: Returns the actual file
+#           content:
+#             application/octet-stream:
+#               schema:
+#                 type: string
+#                 format: binary
+#                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+#     put:
+#       operationId: crc.api.file.update_file_data
+#       summary: Update only the file contents for a given file
+#       tags:
+#         - Files
+#       requestBody:
+#         content:
+#           multipart/form-data:
+#             schema:
+#               x-body-name: file
+#               type: object
+#               properties:
+#                 file:
+#                   type: string
+#                   format: binary
+#               required:
+#                 - file
+#       responses:
+#         '200':
+#           description: Returns the updated file model with the new version information.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/File"
+#
+#   /reference_file:
+#     get:
+#       operationId: crc.api.reference_file.get_reference_files
+#       summary: Provides a list of existing reference files that are available in the system.
+#       tags:
+#         - Reference Files
+#       responses:
+#         '200':
+#           description: An array of file descriptions (not the file content)
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/File"
+#     post:
+#       operationId: crc.api.reference_file.add_reference_file
+#       security:
+#         - auth_admin: [ 'secret' ]
+#       summary: Add a new reference file.
+#       tags:
+#         - Reference Files
+#       requestBody:
+#         content:
+#           multipart/form-data:
+#             schema:
+#               type: object
+#               properties:
+#                 file:
+#                   type: string
+#                   format: binary
+#       responses:
+#         '200':
+#           description: Metadata about the new reference file, but not the file content.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/File"
+#   /reference_file/{name}:
+#     parameters:
+#       - name: name
+#         in: path
+#         required: true
+#         description: The special name of the reference file.
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.reference_file.get_reference_file_info
+#       summary: Returns the file info for a reference file
+#       tags:
+#         - Reference Files
+#       responses:
+#         '200':
+#           description: Returns the info for a reference file
+#           content:
+#             application/octet-stream:
+#               schema:
+#                 type: string
+#                 format: binary
+#                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+#     delete:
+#       operationId: crc.api.reference_file.delete_reference_file
+#       summary: Remove an existing reference file.
+#       tags:
+#         - Reference Files
+#       responses:
+#         '204':
+#           description: The reference file was removed.
+#   /reference_file/{name}/data:
+#     parameters:
+#       - name: name
+#         in: path
+#         required: true
+#         description: The special name of the reference file.
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.reference_file.get_reference_file_data
+#       summary: Returns only the reference file content
+#       tags:
+#         - Reference Files
+#       responses:
+#         '200':
+#           description: Returns the actual reference file
+#           content:
+#             application/octet-stream:
+#               schema:
+#                 type: string
+#                 format: binary
+#     put:
+#       operationId: crc.api.reference_file.update_reference_file_data
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Update the contents of a reference file
+#       tags:
+#         - Reference Files
+#       requestBody:
+#         content:
+#           multipart/form-data:
+#             schema:
+#               x-body-name: file
+#               type: object
+#               properties:
+#                 file:
+#                   type: string
+#                   format: binary
+#               required:
+#                 - file
+#       responses:
+#         '200':
+#           description: Returns the updated file model
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/File"
+#   /dmn_from_ss:
+#     post:
+#       operationId: crc.api.file.dmn_from_ss
+#       summary: Create a DMN table from a spreadsheet
+#       tags:
+#         - Files
+#       requestBody:
+#         content:
+#           multipart/form-data:
+#             schema:
+#               type: object
+#               properties:
+#                 file:
+#                   type: string
+#                   format: binary
+#       responses:
+#         '200':
+#           description: DMN file for workflow spec
+#           content:
+#             application/octet-stream:
+#               schema:
+#                 type: string
+#                 format: binary
+#                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+#   /task_events:
+#     parameters:
+#       - name: action
+#         in: query
+#         required: false
+#         description: The type of action the event documents, options include "ASSIGNMENT" for tasks that are waiting on you, "COMPLETE" for things have completed.
+#         schema:
+#           type: string
+#       - name: workflow
+#         in: query
+#         required: false
+#         description: Restrict results to the given workflow.
+#         schema:
+#           type: number
+#       - name: study
+#         in: query
+#         required: false
+#         description: Restrict results to the given study.
+#         schema:
+#           type: number
+#     get:
+#       operationId: crc.api.workflow.get_task_events
+#       summary: Returns a list of task events related to the current user.  Can be filtered by type.
+#       tags:
+#         - Workflows and Tasks
+#       responses:
+#         '200':
+#           description: Returns details about tasks that are waiting on the current user.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/TaskEvent"
+#   # /v1.0/workflow/0
+#   /workflow/{workflow_id}:
+#     parameters:
+#         - name: workflow_id
+#           in: path
+#           required: true
+#           description: The id of the workflow
+#           schema:
+#             type: integer
+#             format: int32
+#     get:
+#       operationId: crc.api.workflow.get_workflow
+#       summary: Returns a workflow.
+#       parameters:
+#         - name: do_engine_steps
+#           in: query
+#           required: false
+#           description: Defaults to true, can be set to false if you are just looking at the workflow not completeing it.
+#           schema:
+#             type: boolean
+#       tags:
+#         - Workflows and Tasks
+#       responses:
+#         '200':
+#           description: Returns details about the workflows state and current task
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/Workflow"
+#     delete:
+#       operationId: crc.api.workflow.delete_workflow
+#       security:
+#         - auth_admin: ['secret']
+#       summary: Removes an existing workflow
+#       tags:
+#         - Workflows and Tasks
+#       responses:
+#         '204':
+#           description: The workflow was removed
+#   /workflow/{workflow_id}/restart:
+#     parameters:
+#       - name: workflow_id
+#         in: path
+#         required: true
+#         description: The id of the workflow
+#         schema:
+#           type: integer
+#           format: int32
+#     get:
+#       operationId: crc.api.workflow.restart_workflow
+#       summary: Restarts a workflow with the latest spec. Can also clear data.
+#       parameters:
+#         - name: clear_data
+#           in: query
+#           required: false
+#           description: Set this to true to clear data when starting workflow.
+#           schema:
+#             type: boolean
+#         - name: delete_files
+#           in: query
+#           required: false
+#           description: Set this to true to delete associated files when starting workflow.
+#           schema:
+#             type: boolean
+#       tags:
+#         - Workflows and Tasks
+#       responses:
+#         '200':
+#           description: Returns updated workflow, possibly without data.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/Workflow"
+#   /workflow/{workflow_id}/task/{task_id}/data:
+#     parameters:
+#       - name: workflow_id
+#         in: path
+#         required: true
+#         description: The id of the workflow
+#         schema:
+#           type: integer
+#           format: int32
+#       - name: task_id
+#         in: path
+#         required: true
+#         description: The id of the task
+#         schema:
+#           type: string
+#           format: uuid
+#       - name: terminate_loop
+#         in: query
+#         required: false
+#         description: Terminate the loop on a looping task
+#         schema:
+#           type: boolean
+#       - name: update_all
+#         in: query
+#         required: false
+#         description: In the case of a multi-instance user task, update all tasks with the submitted values.
+#         schema:
+#           type: boolean
+#     put:
+#       operationId: crc.api.workflow.update_task
+#       summary: Exclusively for User Tasks, submits form data as a flat set of key/values.
+#       tags:
+#         - Workflows and Tasks
+#       requestBody:
+#         description: Key / Value pairs in JSON format.
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#               example:
+#                 favorite_color: blue
+#                 capital_assyria: Assur
+#       responses:
+#         '201':
+#           description: Returns the updated workflow with this task as the current task.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/Workflow"
+#   /workflow/{workflow_id}/task/{task_id}/set_token:
+#     parameters:
+#       - name: workflow_id
+#         in: path
+#         required: true
+#         description: The id of the workflow
+#         schema:
+#           type: integer
+#           format: int32
+#       - name: task_id
+#         in: path
+#         required: true
+#         description: The id of the task
+#         schema:
+#           type: string
+#           format: uuid
+#     put:
+#       operationId: crc.api.workflow.set_current_task
+#       summary: Attempts to make the given task the Current Active Task
+#       tags:
+#         - Workflows and Tasks
+#       responses:
+#         '201':
+#           description: Returns the updated workflow with this task as the current task.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/Workflow"
+#   /workflow/{workflow_id}/lookup/{task_spec_name}/{field_id}:
+#     parameters:
+#       - name: workflow_id
+#         in: path
+#         required: true
+#         description: The id of the workflow
+#         schema:
+#           type: integer
+#           format: int32
+#       - name: task_spec_name
+#         in: path
+#         required: true
+#         description: The name of the current task
+#         schema:
+#           type: string
+#       - name: field_id
+#         in: path
+#         required: true
+#         description: The id of the field (as set in the bpmn editor) on which to do a lookup.
+#         schema:
+#           type: string
+#       - name: query
+#         in: query
+#         required: false
+#         description: The string to search for in the Value column of the lookup table.
+#         schema:
+#           type: string
+#       - name: value
+#         in: query
+#         required: false
+#         description: An alternative to query, this accepts the specific value or id selected in a dropdown list or auto-complete, and will return the one matching record. Useful for getting additional details about an item selected in a dropdown.
+#         schema:
+#           type: string
+#       - name: limit
+#         in: query
+#         required: false
+#         description: The total number of records to return, defaults to 10.
+#         schema:
+#           type: integer
+#
+#     get:
+#       operationId: crc.api.workflow.lookup
+#       summary: Provides type-ahead search against a lookup table associted with a form field.
+#       tags:
+#         - Workflows and Tasks
+#       responses:
+#         '201':
+#           description: Returns the a list of values and labels for a lookup form.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/LookupItem"
+#   /render_markdown:
+#     parameters:
+#       - name: data
+#         in: query
+#         required: true
+#         description: The json data to use in populating the template
+#         schema:
+#           type: string
+#       - name: template
+#         in: query
+#         required: true
+#         description: The markdown template to process.
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.tools.render_markdown
+#       security: []  # Disable security for this endpoint only.
+#       summary: Processes the markdown template using the data provided.
+#       tags:
+#         - Configurator Tools
+#       responses:
+#         '201':
+#           description: Returns the updated workflow with the task completed.
+#           content:
+#             text/plain:
+#               schema:
+#                 type: string
+#   /send_email:
+#     parameters:
+#       - in: query
+#         name: subject
+#         required: true
+#         description: The subject of the email.
+#         schema:
+#           type: string
+#       - in: query
+#         name: address
+#         required: true
+#         description: The address to send a test email to.
+#         schema:
+#           type: string
+#       - in: query
+#         name: data
+#         required: false
+#         description:
+#           The data to use in populating the message.
+#         schema:
+#           type: string
+#         example: {"id_1": "value_1", "id_2": "value_2"}
+#     put:
+#       operationId: crc.api.tools.send_email
+#       summary: Sends an email so we can see what the message will look like.
+#       tags:
+#         - Configurator Tools
+#       requestBody:
+#         required: true
+#         content:
+#           text/plain:
+#             schema:
+#               type: string
+#       responses:
+#         '201':
+#           description: Returns any error messages that might come back from sending the email.
+#           content:
+#             text/plain:
+#               schema:
+#                 type: string
+#   /render_docx:
+#     put:
+#       operationId: crc.api.tools.render_docx
+#       security: []  # Disable security for this endpoint only.
+#       summary: Renders a docx template with embedded jinja2 markup.
+#       tags:
+#         - Configurator Tools
+#       requestBody:
+#         content:
+#           multipart/form-data:
+#             schema:
+#               type: object
+#               properties:
+#                 file:
+#                   type: string
+#                   format: binary
+#                 data:
+#                   type: string
+#                   format: json
+#       responses:
+#         '200':
+#           description: Returns the generated document.
+#           content:
+#             application/octet-stream:
+#               schema:
+#                 type: string
+#                 format: binary
+#                 example: '<?xml version="1.0" encoding="UTF-8"?><bpmn:definitions></bpmn:definitions>'
+#   /list_scripts:
+#     get:
+#       operationId: crc.api.tools.list_scripts
+#       security: []  # Disable security for this endpoint only.
+#       summary: Returns an list of scripts, along with their descriptions
+#       tags:
+#         - Configurator Tools
+#       responses:
+#         '201':
+#           description: The list of scripts
+#           content:
+#             application/json:
+#               schema:
+#                 type: array
+#                 items:
+#                   $ref: "#/components/schemas/Script"
+#   /eval:
+#     put:
+#       operationId: crc.api.tools.evaluate_python_expression
+#       summary: Execute the given python expression, with the given json data structure used as local variables, returns the result of the evaluation.
+#       tags:
+#         - Configurator Tools
+#       requestBody:
+#         description: The expression and the json data to use as local variables when evaluating the expresson.
+#         required: true
+#         content:
+#           application/json:
+#             schema:
+#               type: object
+#       responses:
+#         '200':
+#           description: Returns the result of executing the given python script.
+#           content:
+#             text/plain:
+#               schema:
+#                 type: string
+#
+#   /datastore:
+#     post:
+#       operationId: crc.api.data_store.add_datastore
+#       summary: Add datastore item with the given parameters.
+#       tags:
+#         - DataStore
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/DataStore'
+#       responses:
+#         '200':
+#           description: Datastore updated successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/DataStore"
+#   /datastore/{id}:
+#     parameters:
+#       - name: id
+#         in: path
+#         required: true
+#         description: The key to lookup.
+#         schema:
+#           type: string
+#           format: string
+#
+#     get:
+#       operationId: crc.api.data_store.datastore_get
+#       summary: Get a datastore item by id
+#       tags:
+#         - DataStore
+#       responses:
+#         '200':
+#           description: A value from the data store, or a default if provided, or None if not found.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/DataStore"
+#     put:
+#       operationId: crc.api.data_store.update_datastore
+#       summary: Updates an existing datastore item with the given parameters.
+#       tags:
+#         - DataStore
+#       requestBody:
+#         content:
+#           application/json:
+#             schema:
+#               $ref: '#/components/schemas/DataStore'
+#       responses:
+#         '200':
+#           description: Datastore updated successfully.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/DataStore"
+#
+#
+#     delete:
+#       operationId: crc.api.data_store.datastore_del
+#       summary: Deletes a value from the data store by id
+#       tags:
+#         - DataStore
+#       responses:
+#         '200':
+#           description: Deletes a value from a data store.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/DataStore"
+#   /datastore/study/{study_id}:
+#     parameters:
+#       - name: study_id
+#         in: path
+#         required: true
+#         description: The study id we are concerned with .
+#         schema:
+#           type: integer
+#           format: int32
+#     get:
+#       operationId: crc.api.data_store.study_multi_get
+#       summary: Gets all datastore items for a study_id
+#       tags:
+#         - DataStore
+#       responses:
+#         '200':
+#           description: Get all values from the data store for a study_id
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/DataStore"
+#   /datastore/user/{user_id}:
+#     parameters:
+#       - name: user_id
+#         in: path
+#         required: true
+#         description: The user id we are concerned with .
+#         schema:
+#           type: string
+#           format: string
+#     get:
+#       operationId: crc.api.data_store.user_multi_get
+#       summary: Gets all datastore items by user_id
+#       tags:
+#         - DataStore
+#       responses:
+#         '200':
+#           description: Get all values from the data store for a user_id.
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/DataStore"
+#   /datastore/file/{file_id}:
+#     parameters:
+#       - name: file_id
+#         in: path
+#         required: true
+#         description: The file id we are concerned with
+#         schema:
+#           type: string
+#           format: string
+#     get:
+#       operationId: crc.api.data_store.file_multi_get
+#       summary: Gets all datastore items by file_id
+#       tags:
+#         - DataStore
+#       responses:
+#         '200':
+#           description: Get all values from the data store for a file_id
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/DataStore"
+#
+#   /git_repo:
+#     get:
+#       operationId: crc.api.git_repo.get_repo
+#       summary: get current state of the git repo
+#       tags:
+#         - Git Repo
+#       responses:
+#         '200':
+#           description: Current state of the git repo
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/GitRepo"
+#   /git_repo/merge:
+#     parameters:
+#       - name: branch
+#         in: query
+#         required: true
+#         description: The branch to merge with
+#         schema:
+#           type: string
+#           example: staging
+#     get:
+#       operationId: crc.api.git_repo.merge_with_branch
+#       summary: merge with given branch
+#       tags:
+#         - Git Repo
+#       responses:
+#         '200':
+#           description: Current state of the git repo
+#           content:
+#             application/json:
+#               schema:
+#                 $ref: "#/components/schemas/GitRepo"
+#   /git_repo/push:
+#     parameters:
+#       - name: comment
+#         in: query
+#         required: false
+#         description: The comment we want to pass along with the push commit
+#         schema:
+#           type: string
+#     get:
+#       operationId: crc.api.git_repo.push_to_remote
+#       summary: Push local changes to remote
+#       tags:
+#         - Git Repo
+#       responses:
+#         '200':
+#           description: Local changes were pushed successfully
+#   /git_repo/pull:
+#     get:
+#       operationId: crc.api.git_repo.pull_from_remote
+#       summary: Pull current code from remote
+#       tags:
+#         - Git Repo
+#       responses:
+#         '200':
+#           description: Remote code was pulled successfully
+#
+# components:
+#   securitySchemes:
+#     jwt:
+#       type: http
+#       scheme: bearer
+#       bearerFormat: JWT
+#       x-bearerInfoFunc: crc.api.user.verify_token
+#     auth_admin:
+#       type: http
+#       scheme: bearer
+#       bearerFormat: JWT
+#       x-bearerInfoFunc: crc.api.user.verify_token_admin
+#
+#   schemas:
+#     User:
+#       properties:
+#         uid:
+#           type: string
+#         email_address:
+#           type: string
+#         display_name:
+#           type: string
+#         affiliation:
+#           type: string
+#         eppn:
+#           type: string
+#         first_name:
+#           type: string
+#         last_name:
+#           type: string
+#         title:
+#           type: string
+#     DataModel:
+#       properties:
+#         id:
+#           type: string
+#     WorkflowSpecDiffList:
+#       properties:
+#         workflow_spec_id:
+#           type: string
+#           example : top_level_workflow
+#         date_created :
+#           type: string
+#           example : 2020-12-09 16:55:12.951500+00:00
+#         location :
+#           type : string
+#           example : remote
+#         new :
+#           type : boolean
+#           example : false
+#     WorkflowSpecFilesList:
+#       properties:
+#         file_model_id:
+#           type : integer
+#           example : 171
+#         workflow_spec_id :
+#           type: string
+#           example : top_level_workflow
+#         filename :
+#           type: string
+#           example : data_security_plan.dmn
+#         date_created :
+#           type: string
+#           example : 2020-12-01 13:58:12.420333+00:00
+#         type:
+#           type : string
+#           example : dmn
+#         primary :
+#           type : boolean
+#           example : false
+#         content_type:
+#           type: string
+#           example : text/xml
+#         primary_process_id:
+#           type : string
+#           example : null
+#         md5_hash:
+#           type: string
+#           example: f12e2bbd-a20c-673b-ccb8-a8a1ea9c5b7b
+#
+#
+#     WorkflowSpecFilesDiff:
+#       properties:
+#         filename :
+#           type: string
+#           example : data_security_plan.dmn
+#         date_created :
+#           type: string
+#           example : 2020-12-01 13:58:12.420333+00:00
+#         type:
+#           type : string
+#           example : dmn
+#         primary :
+#           type : boolean
+#           example : false
+#         content_type:
+#           type: string
+#           example : text/xml
+#         primary_process_id:
+#           type : string
+#           example : null
+#         md5_hash:
+#           type: string
+#           example: f12e2bbd-a20c-673b-ccb8-a8a1ea9c5b7b
+#         location:
+#           type : string
+#           example : remote
+#         new:
+#           type: boolean
+#           example : false
+#     WorkflowSpecAll:
+#       properties:
+#         workflow_spec_id :
+#           type: string
+#           example : acaf1258-43b4-437e-8846-f612afa66811
+#         date_created :
+#           type: string
+#           example : 2020-12-01 13:58:12.420333+00:00
+#         md5_hash:
+#           type: string
+#           example: c30fd597f21715018eab12f97f9d4956
+#     Study:
+#       properties:
+#         id:
+#           type: integer
+#           example: 1234
+#         title:
+#           type: string
+#           example: The impact of fried pickles on beer consumption in bipedal software developers.
+#         last_updated:
+#           type: string
+#           format: date_time
+#           example: "2019-12-25T09:12:33.001Z"
+#         user_uid:
+#           type: string
+#           example: dhf8r
+#         status:
+#           type: string
+#           enum: ['in_progress', 'hold', 'open_for_enrollment', 'abandoned']
+#           example: done
+#         sponsor:
+#           type: string
+#           x-nullable: true
+#           example: "Sartography Pharmaceuticals"
+#         ind_number:
+#           type: string
+#           x-nullable: true
+#           example: "27b-6-42"
+#     StudyAssociate:
+#       properties:
+#         uid:
+#           type: string
+#           example: "dhf8r"
+#         access:
+#           type: boolean
+#           example: False
+#         role:
+#           type: string
+#           example: "TODO"
+#     DocumentDirectory:
+#       properties:
+#         level:
+#           type: string
+#           x-nullable: true
+#           example: "Ancillary Document"
+#         description:
+#           type: string
+#           x-nullable: true
+#           example: "Documents that are ancillary to the study"
+#         file:
+#           $ref: "#/components/schemas/File"
+#           x-nullable: true
+#         expanded:
+#           type: boolean
+#           example: False
+#         filecount:
+#           type: integer
+#           example: 1
+#         children:
+#           type: array
+#           items:
+#             $ref: "#/components/schemas/File"
+#     DataStore:
+#       properties:
+#         id:
+#           type: integer
+#           example: 1234
+#         key:
+#           type: string
+#           example: MyKey
+#         workflow_id:
+#           type: integer
+#           x-nullable: true
+#           example: 12
+#         study_id:
+#           type: integer
+#           x-nullable: true
+#           example: 42
+#         user_id:
+#           type: string
+#           x-nullable: true
+#           example: dhf8r
+#         task_id:
+#           type: string
+#           x-nullable: true
+#           example: MyTask
+#         spec_id:
+#           type: string
+#           x-nullable: true
+#           example: My Spec Name
+#         value:
+#           type: string
+#           x-nullable: true
+#           example: Some Value
+#
+#     WorkflowSpec:
+#       properties:
+#         id:
+#           type: string
+#         name:
+#           type: string
+#         display_name:
+#           type: string
+#         description:
+#           type: string
+#         primary_process_id:
+#           type: string
+#           nullable: true
+#         category_id:
+#           type: string
+#           nullable: true
+#         standalone:
+#           type: boolean
+#           example: false
+#           default: false
+#         workflow_spec_category:
+#           $ref: "#/components/schemas/WorkflowSpecCategory"
+#         is_status:
+#           type: boolean
+#           nullable: true
+#     WorkflowSpecCategory:
+#       properties:
+#         id:
+#           type: string
+#         name:
+#           type: string
+#         display_name:
+#           type: string
+#         display_order:
+#           type: integer
+#         workflows:
+#           type: array
+#           items:
+#             $ref: "#/components/schemas/Workflow"
+#     File:
+#       properties:
+#         id:
+#           type: number
+#         name:
+#           type: string
+#           example: "random_fact.bpmn"
+#         version:
+#           type: integer
+#         last_updated:
+#           type: string
+#           format: date_time
+#           example: "2019-12-25T09:12:33.001Z"
+#         type:
+#           type: string
+#         primary:
+#           type: boolean
+#         content_type:
+#           type: string
+#           example: "application/xml"
+#         workflow_spec_id:
+#           type: string
+#           example: "random_fact"
+#           x-nullable: true
+#         file:
+#           type: string
+#     Workflow:
+#       properties:
+#         id:
+#           readOnly: true
+#           type: integer
+#           format: int64
+#         status:
+#           type: string
+#           enum: ['new','user_input_required','waiting','complete']
+#         navigation:
+#           type: array
+#           items:
+#             $ref: "#/components/schemas/NavigationItem"
+#         next_task:
+#           $ref: "#/components/schemas/Task"
+#         workflow_spec_id:
+#           type: string
+#         spec_version:
+#           type: string
+#         is_latest_spec:
+#           type: boolean
+#         num_tasks_total:
+#           type: integer
+#         num_tasks_complete:
+#           type: integer
+#         num_tasks_incomplete:
+#           type: integer
+#         study_id:
+#           type: integer
+#
+#       example:
+#         id: 291234
+#         status: 'user_input_required'
+#         workflow_spec_id: 'random_fact'
+#         spec_version: 'v1.1 [22,23]'
+#         is_latest_spec: True
+#         next_task:
+#           id: study_identification
+#           name: Study Identification
+#           title: IRB Review
+#           documentation: "# Heading 1\n\nMarkdown documentation text goes here"
+#           type: form
+#           state: ready
+#     Task:
+#       properties:
+#         id:
+#           readOnly: true
+#           type: string
+#         name:
+#           type: string
+#         title:
+#           type: string
+#         type:
+#           type: string
+#         state:
+#           type: string
+#         form:
+#           $ref: "#/components/schemas/Form"
+#         documentation:
+#           type: string
+#         data:
+#           type: object
+#         multi_instance_type:
+#           type: string
+#           enum: ['none', 'looping', 'parallel', 'sequential']
+#         multi_instance_count:
+#           type: number
+#         multi_instance_index:
+#           type: number
+#         process_name:
+#           type: string
+#         properties:
+#           type: object
+#       example:
+#         id: study_identification
+#         name: Study Identification
+#         title: IRB Review
+#         documentation: "# Heading 1\n\nMarkdown documentation text goes here"
+#         type: form
+#         state: ready
+#         form:
+#           "key": "irb_review_form"
+#           "fields":
+#             - "id": "irb_review_type"
+#               "type": "enum"
+#               "label": "Select IRB Review Type"
+#               "options":
+#                 - id: "emergency_use"
+#                   name: "Emergency Use"
+#                 - id: "humanitarian_device"
+#                   name: "Humanitarian Device"
+#                 - id: "non_human"
+#                   name: "Non-Human"
+#                 - id: "non_uva_agent"
+#                   name: "Non-UVA Agent"
+#                 - id: "exempt"
+#                   name: "Exempt"
+#                 - id: "non_engaged"
+#                   name: "Non-Engaged"
+#                 - id: "expedited"
+#                   name: "Expedited"
+#                 - id: "full_board"
+#                   name: "Full Board"
+#               "default_value": "Full Board"
+#               "validation":
+#                 - name: "required"
+#                   config: "true"
+#               "properties":
+#                 - id: "description"
+#                   value: "Description text goes here"
+#                 - id: "help"
+#                   value: "# Heading 1\n\nMarkdown help text goes here"
+#                 - id: "required_expression"
+#                   value: "model.my_boolean_field_id && model.my_enum_field_value !== 'something'"
+#                 - id: "hide_expression"
+#                   value: "model.my_enum_field_value === 'something'"
+#     PaginatedTaskLog:
+#       properties:
+#           code:
+#             example: "email_sent"
+#             type: string
+#           level:
+#             example: "warning"
+#             type: string
+#           user:
+#             example: "email_sent"
+#             type: string
+#           page:
+#             type: integer
+#             example: 0
+#           per_page:
+#             type: integer
+#             example: 10
+#           sort_column:
+#             type: string
+#             example: "timestamp"
+#           sort_reverse:
+#             type: boolean
+#             example: false
+#           items:
+#             type: array
+#             items:
+#               $ref: "#/components/schemas/TaskLog"
+#           has_next:
+#             type: boolean
+#             example: true
+#           has_prev:
+#             type: boolean
+#             example: false
+#     TaskLog:
+#       properties:
+#           level:
+#             type: string
+#             example: "info"
+#           code:
+#             example: "email_sent"
+#             type: string
+#           message:
+#             example: "Approval email set to Jake in Accounting"
+#             type: string
+#           workflow_id:
+#             example: 42
+#             type: integer
+#           study_id:
+#             example: 187
+#             type: integer
+#           user_uid:
+#             example: "dhf8r"
+#             type: string
+#           timestamp:
+#             type: string
+#             format: date_time
+#             example: "2021-01-07T11:36:40.001Z"
+#     TaskEvent:
+#       properties:
+#           workflow:
+#             $ref: "#/components/schemas/Workflow"
+#           study:
+#             $ref: "#/components/schemas/Study"
+#           workflow_sec:
+#             $ref: "#/components/schemas/WorkflowSpec"
+#           spec_version:
+#             type: string
+#           action:
+#             type: string
+#           task_id:
+#             type: string
+#           task_type:
+#             type: string
+#           task_lane:
+#             type: string
+#           form_data:
+#             type: object
+#           mi_type:
+#             type: string
+#           mi_count:
+#             type: integer
+#           mi_index:
+#             type: integer
+#           process_name:
+#             type: string
+#           date:
+#             type: string
+#     Form:
+#       properties:
+#         key:
+#           type: string
+#         fields:
+#           type: array
+#           items:
+#             $ref: "#/components/schemas/Field"
+#       example:
+#         "key": "irb_review_form"
+#         "fields":
+#           - "id": "irb_review_type"
+#             "type": "enum"
+#             "label": "Select IRB Review Type"
+#             "options":
+#               - id: "emergency_use"
+#                 name: "Emergency Use"
+#               - id: "humanitarian_device"
+#                 name: "Humanitarian Device"
+#               - id: "non_human"
+#                 name: "Non-Human"
+#               - id: "non_uva_agent"
+#                 name: "Non-UVA Agent"
+#               - id: "exempt"
+#                 name: "Exempt"
+#               - id: "non_engaged"
+#                 name: "Non-Engaged"
+#               - id: "expedited"
+#                 name: "Expedited"
+#               - id: "full_board"
+#                 name: "Full Board"
+#             "default_value": "Full Board"
+#             "validation":
+#               - name: "required"
+#                 config: "true"
+#             "properties":
+#               - id: "description"
+#                 value: "Description text goes here"
+#               - id: "help"
+#                 value: "# Heading 1\n\nMarkdown help text goes here"
+#               - id: "required_expression"
+#                 value: "model.my_boolean_field_id && model.my_enum_field_value !== 'something'"
+#               - id: "hide_expression"
+#                 value: "model.my_enum_field_value === 'something'"
+#     Field:
+#       properties:
+#         id:
+#           type: string
+#           readOnly: true
+#         type:
+#           type: string
+#           enum: ['string', 'long', 'boolean', 'date', 'enum']
+#           readOnly: true
+#         label:
+#           type: string
+#           readOnly: true
+#         options:
+#           type: array
+#           items:
+#             $ref: "#/components/schemas/EnumFieldOption"
+#           readOnly: true
+#         default_value:
+#           type: string
+#           readOnly: true
+#         validation:
+#           type: array
+#           items:
+#             $ref: "#/components/schemas/FieldValidation"
+#           readOnly: true
+#         "properties":
+#           type: array
+#           items:
+#             $ref: "#/components/schemas/FieldProperty"
+#           readOnly: true
+#     EnumFieldOption:
+#       properties:
+#         id:
+#           type: string
+#         name:
+#           type: string
+#     FieldValidation:
+#       properties:
+#         name:
+#           type: string
+#         config:
+#           type: string
+#     FieldProperty:
+#       properties:
+#         id:
+#           type: string
+#         value:
+#           type: string
+#       example:
+#         id: "required_expression"
+#         value: "model.should_require"
+#     Error:
+#       required:
+#         - code
+#         - message
+#       properties:
+#         code:
+#           type: string
+#           format: string
+#           example: "access_denied"
+#         message:
+#           type: string
+#           example: "You do not have permission to view the requested study."
+#     Script:
+#       properties:
+#         name:
+#           type: string
+#           format: string
+#           example: "random_fact"
+#         description:
+#           type: string
+#           example: "Returns a random fact about a topic.  Provide an argument of either 'cat', 'norris', or 'buzzword'"
+#     LookupItem:
+#       properties:
+#         value:
+#           type: string
+#           format: string
+#           example: "1000"
+#         label:
+#           type: string
+#           example: "Chuck Norris"
+#         data:
+#           type: string
+#     NavigationItem:
+#       properties:
+#         id:
+#           type: number
+#           format: integer
+#           example: 5
+#         task_id:
+#           type: string
+#           format: uuid
+#           example: "1234123uuid1234"
+#         name:
+#           type: string
+#           example: "Task_Has_bananas"
+#         description:
+#           type: string
+#           example: "Has Bananas?"
+#         backtracks:
+#           type: boolean
+#           example: false
+#         level:
+#           type: integer
+#           example: 1
+#         indent:
+#           type: integer
+#           example: 2
+#         child_count:
+#           type: integer
+#           example: 4
+#         state:
+#           type: string
+#           enum: ['FUTURE', 'WAITING', 'READY', 'CANCELLED', 'COMPLETED','LIKELY','MAYBE']
+#           readOnly: true
+#         is_decision:
+#           type: boolean
+#           example: False
+#           readOnly: true
+#         task:
+#           $ref: "#/components/schemas/Task"
+#     Approval:
+#       properties:
+#         id:
+#           type: number
+#           format: integer
+#           example: 5
+#     ApprovalCounts:
+#       properties:
+#         PENDING:
+#           type: number
+#           format: integer
+#           example: 5
+#         APPROVED:
+#           type: number
+#           format: integer
+#           example: 5
+#         DECLINED:
+#           type: number
+#           format: integer
+#           example: 5
+#         CANCELED:
+#           type: number
+#           format: integer
+#           example: 5
+#         AWAITING:
+#           type: number
+#           format: integer
+#           example: 5
+#     GitRepo:
+#       properties:
+# #        remote:
+# #          type: string
+# #          example: sartography/crconnect-workflow-specs
+#         directory:
+#           type: string
+#           example: /home/cr-connect/sync_files
+#         branch:
+#           type: string
+#           example: dev
+#         merge_branch:
+#           type: string
+#           example: staging
+#         changes:
+#           type: array
+#           example: ['file_1.txt', 'file_2.txt']
+#         untracked:
+#           type: array
+#           example: ['a_file.txt', 'b_file.txt']

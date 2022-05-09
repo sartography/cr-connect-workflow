@@ -45,6 +45,9 @@ session = db.session
 """:type: sqlalchemy.orm.Session"""
 scheduler = BackgroundScheduler()
 
+import logging
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 # Mail settings
 mail = Mail(app)
@@ -57,6 +60,10 @@ from crc import api
 from crc.api import admin
 from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
+connexion_app.add_api('api_v2.yml', base_path='/v2.0')
+
+from crc.shared.test_blueprint import test_blueprint
+app.register_blueprint(test_blueprint)
 
 # needed function to avoid circular import
 def process_waiting_tasks():
