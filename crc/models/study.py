@@ -124,24 +124,23 @@ class StudyEvent(db.Model):
 
 
 class CategoryMetadata(object):
-    def __init__(self, id=None, state: WorkflowState = None, message=None):
+    def __init__(self, id=None, state=None, message=None):
         self.id = id
         self.state = state
         self.message = message
 
 
 class CategoryMetadataSchema(ma.Schema):
-    state = EnumField(WorkflowState)
 
     class Meta:
         model = CategoryMetadata
-        additional = ["id", "message"]
+        additional = ["id", "message", "state"]
         unknown = INCLUDE
 
 
 class WorkflowMetadata(object):
     def __init__(self, id, display_name=None, description=None, spec_version=None,
-                 category_id=None, category_display_name=None, state: WorkflowState = None,
+                 category_id=None, category_display_name=None, state=None,
                  status: WorkflowStatus = None, total_tasks=None, completed_tasks=None,
                  is_review=None, display_order=None, state_message=None, workflow_spec_id=None):
         self.id = id
@@ -167,7 +166,8 @@ class WorkflowMetadata(object):
             description=spec.description,
             category_id=spec.category_id,
             category_display_name=spec.category.display_name,
-            state=WorkflowState.optional,
+            state=workflow.state or WorkflowState.optional.value,
+            state_message=workflow.state_message,
             status=workflow.status,
             total_tasks=workflow.total_tasks,
             completed_tasks=workflow.completed_tasks,
@@ -179,12 +179,11 @@ class WorkflowMetadata(object):
 
 
 class WorkflowMetadataSchema(ma.Schema):
-    state = EnumField(WorkflowState)
     status = EnumField(WorkflowStatus)
 
     class Meta:
         model = WorkflowMetadata
-        additional = ["id", "display_name", "description",
+        additional = ["id", "display_name", "description", "state",
                       "total_tasks", "completed_tasks", "display_order",
                       "category_id", "is_review", "category_display_name", "state_message"]
         unknown = INCLUDE

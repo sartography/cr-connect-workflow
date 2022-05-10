@@ -34,7 +34,7 @@ def all_specifications(libraries=False,standalone=False):
     specs = spec_service.get_specs()
     master_spec = spec_service.get_master_spec()
     if master_spec:
-        specs.append(spec_service.get_master_spec())
+        specs.append(master_spec)
     return WorkflowSpecInfoSchema(many=True).dump(specs)
 
 
@@ -202,6 +202,7 @@ def get_workflow(workflow_id, do_engine_steps=True):
     workflow_api_model = WorkflowService.processor_to_workflow_api(processor)
     return WorkflowApiSchema().dump(workflow_api_model)
 
+
 def restart_workflow(workflow_id, clear_data=False, delete_files=False):
     """Restart a workflow with the latest spec.
        Clear data allows user to restart the workflow without previous data."""
@@ -282,6 +283,9 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
     workflow_model = session.query(WorkflowModel).filter_by(id=workflow_id).first()
     if workflow_model is None:
         raise ApiError("invalid_workflow_id", "The given workflow id is not valid.", status_code=404)
+    if workflow_model.state in ('hidden', 'disabled', 'locked'):
+        raise ApiError(code='locked_workflow',
+                       message='You tried to update a task for a workflow that is hidden, locked, or disabled.')
 
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)

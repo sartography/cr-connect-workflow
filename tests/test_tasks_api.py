@@ -6,7 +6,7 @@ from tests.base_test import BaseTest
 from crc import session, app
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModelSchema
-from crc.models.workflow import WorkflowStatus
+from crc.models.workflow import WorkflowModel, WorkflowState, WorkflowStatus
 from crc.models.task_event import TaskEventModel
 
 
@@ -410,3 +410,33 @@ class TestTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('Task_Why_No_Bananas', workflow_api.next_task.name)
 
+    def test_update_task_when_locked(self):
+        workflow = self.create_workflow('simple_form')
+        workflow_model = session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
+        self.assertEqual(None, workflow.state)
+        self.assertEqual(None, workflow_model.state)
+
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+        form_data = {'yes': True,
+                     'no': True}
+        # Make sure we can run the workflow when it is *not* locked
+        self.complete_form(workflow, task, form_data)
+
+        # Do it again, but lock the workflow
+        workflow = self.create_workflow('simple_form')
+        workflow_api = self.get_workflow_api(workflow)
+
+        workflow.state = 'locked'
+        session.commit()
+
+        self.assertEqual('locked', workflow.state)
+        workflow_model = session.query(WorkflowModel).filter(WorkflowModel.id == workflow.id).first()
+        self.assertEqual('locked', workflow_model.state)
+
+        task = workflow_api.next_task
+
+        # Make sure we get the `locked_workflow` error
+        self.complete_form(workflow, task, form_data, error_code='locked_workflow')
+
+        print('test_update_task_when_locked')
