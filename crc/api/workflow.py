@@ -1,5 +1,6 @@
 import uuid
 
+from SpiffWorkflow import TaskState
 from flask import g
 
 from crc import session
@@ -15,7 +16,6 @@ from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 from crc.services.workflow_spec_service import WorkflowSpecService
-
 
 def all_specifications(libraries=False,standalone=False):
     spec_service = WorkflowSpecService()
@@ -255,14 +255,15 @@ def set_current_task(workflow_id, task_id):
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
-    cancel_notify = (spiff_task.state == spiff_task.COMPLETED and
+    cancel_notify = (spiff_task.state == TaskState.COMPLETED and
                      spiff_task.task_spec.__class__.__name__ != 'EndEvent')
     if not spiff_task:
         # An invalid task_id was requested.
         raise ApiError("invalid_task", "The Task you requested no longer exists as a part of this workflow.")
     _verify_user_and_role(processor, spiff_task)
     user_uid = UserService.current_user(allow_admin_impersonate=True).uid
-    if spiff_task.state != spiff_task.COMPLETED and spiff_task.state != spiff_task.READY:
+
+    if spiff_task.state != TaskState.COMPLETED and spiff_task.state != TaskState.READY:
         raise ApiError("invalid_state", "You may not move the token to a task who's state is not "
                                         "currently set to COMPLETE or READY.")
 
@@ -295,7 +296,7 @@ def update_task(workflow_id, task_id, body, terminate_loop=None, update_all=Fals
 
     if not spiff_task:
         raise ApiError("empty_task", "Processor failed to obtain task.", status_code=404)
-    if spiff_task.state != spiff_task.READY:
+    if spiff_task.state != TaskState.READY:
         raise ApiError("invalid_state", "You may not update a task unless it is in the READY state. "
                                         "Consider calling a token reset to make this task Ready.")
 

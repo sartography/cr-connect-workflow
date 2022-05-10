@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List
 
 import jinja2
-from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem, TaskState
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
@@ -188,7 +188,7 @@ class WorkflowService(object):
                                              f"The validation has been exited early on task '{exit_task.task_spec.id}' "
                                              f"and was parented by ",
                                              exit_task.parent)
-                tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
+                tasks = processor.bpmn_workflow.get_tasks(TaskState.READY)
                 for task in tasks:
                     if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
                         raise ApiError.from_task("invalid_role",
@@ -805,7 +805,7 @@ class WorkflowService(object):
         # All ready tasks should have a valid name, and this can be computed for
         # some tasks, particularly multi-instance tasks that all have the same spec
         # but need different labels.
-        if spiff_task.state == SpiffTask.READY:
+        if spiff_task.state == TaskState.READY:
             task.properties = WorkflowService._process_properties(spiff_task, props)
 
         task.title = WorkflowService.__calculate_title(spiff_task)
@@ -838,7 +838,7 @@ class WorkflowService(object):
                 # if the task is ready, we should raise an error, but if it is in the future or the past, we may not
                 # have the information we need to properly set the title, so don't error out, and just use what is
                 # provided.
-                if spiff_task.state == spiff_task.READY:
+                if spiff_task.state == TaskState.READY:
                     raise ApiError.from_task(code="task_title_error",
                                              message="Could not set task title on task %s with '%s' property because %s" %
                                                      (spiff_task.task_spec.name, Task.PROP_EXTENSIONS_TITLE, str(e)),

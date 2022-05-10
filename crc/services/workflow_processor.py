@@ -10,7 +10,7 @@ from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from lxml import etree
 from datetime import datetime
 
-from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task, TaskState
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
@@ -172,7 +172,7 @@ class WorkflowProcessor(object):
         if UserService.has_user():
             current_user = UserService.current_user(allow_admin_impersonate=True)
             current_user_data = UserModelSchema().dump(current_user)
-            tasks = bpmn_workflow.get_tasks(SpiffTask.READY)
+            tasks = bpmn_workflow.get_tasks(TaskState.READY)
             for task in tasks:
                 task.data['current_user'] = current_user_data
 
@@ -236,7 +236,7 @@ class WorkflowProcessor(object):
     def save(self):
         """Saves the current state of this processor to the database """
         self.workflow_model.bpmn_workflow_json = self.serialize()
-        complete_states = [SpiffTask.CANCELLED, SpiffTask.COMPLETED]
+        complete_states = [TaskState.CANCELLED, TaskState.COMPLETED]
         tasks = list(self.get_all_user_tasks())
         self.workflow_model.status = self.get_status()
         self.workflow_model.total_tasks = len(tasks)
@@ -304,7 +304,7 @@ class WorkflowProcessor(object):
         if bpmn_workflow.is_completed():
             return WorkflowStatus.complete
         user_tasks = bpmn_workflow.get_ready_user_tasks()
-        waiting_tasks = bpmn_workflow.get_tasks(Task.WAITING)
+        waiting_tasks = bpmn_workflow.get_tasks(TaskState.WAITING)
         if len(waiting_tasks) > 0:
             return WorkflowStatus.waiting
         if len(user_tasks) > 0:
@@ -355,7 +355,7 @@ class WorkflowProcessor(object):
 
         endtasks = []
         if self.bpmn_workflow.is_completed():
-            for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.ANY_MASK):
+            for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, TaskState.ANY_MASK):
                 # Assure that we find the end event for this workflow, and not for any sub-workflows.
                 if isinstance(task.task_spec, EndEvent) and task.workflow == self.bpmn_workflow:
                     endtasks.append(task)
@@ -366,11 +366,11 @@ class WorkflowProcessor(object):
         # a parallel gateway with multiple tasks, so prefer ones that share a parent.
 
         # Get a list of all ready tasks
-        ready_tasks = self.bpmn_workflow.get_tasks(SpiffTask.READY)
+        ready_tasks = self.bpmn_workflow.get_tasks(TaskState.READY)
 
         if len(ready_tasks) == 0:
             # If no ready tasks exist, check for a waiting task.
-            waiting_tasks = self.bpmn_workflow.get_tasks(SpiffTask.WAITING)
+            waiting_tasks = self.bpmn_workflow.get_tasks(TaskState.WAITING)
             if len(waiting_tasks) > 0:
                 return waiting_tasks[0]
             else:
@@ -398,12 +398,12 @@ class WorkflowProcessor(object):
         # If there are no ready tasks, but the thing isn't complete yet, find the first non-complete task
         # and return that
         next_task = None
-        for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, SpiffTask.NOT_FINISHED_MASK):
+        for task in SpiffTask.Iterator(self.bpmn_workflow.task_tree, TaskState.NOT_FINISHED_MASK):
             next_task = task
         return next_task
 
     def completed_user_tasks(self):
-        completed_user_tasks = self.bpmn_workflow.get_tasks(SpiffTask.COMPLETED)
+        completed_user_tasks = self.bpmn_workflow.get_tasks(TaskState.COMPLETED)
         completed_user_tasks.reverse()
         completed_user_tasks = list(
         filter(lambda task: not self.bpmn_workflow._is_engine_task(task.task_spec), completed_user_tasks))
@@ -445,18 +445,19 @@ class WorkflowProcessor(object):
         additional_tasks = []
         if len(ready_tasks) > 0:
             for child in ready_tasks[0].parent.children:
-                if child.state == SpiffTask.COMPLETED:
+                if child.state == TaskState.COMPLETED:
                     additional_tasks.append(child)
         return ready_tasks + additional_tasks
 
     def get_all_user_tasks(self):
-        all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
+        all_tasks = self.bpmn_workflow.get_tasks(TaskState.ANY_MASK)
         return [t for t in all_tasks if not self.bpmn_workflow._is_engine_task(t.task_spec)]
 
     def get_all_completed_tasks(self):
-        all_tasks = self.bpmn_workflow.get_tasks(SpiffTask.ANY_MASK)
+        all_tasks = self.bpmn_workflow.get_tasks(TaskState.ANY_MASK)
         return [t for t in all_tasks
-                if not self.bpmn_workflow._is_engine_task(t.task_spec) and t.state in [t.COMPLETED, t.CANCELLED]]
+                if not self.bpmn_workflow._is_engine_task(t.task_spec) and
+                    t.state in [TaskState.COMPLETED, TaskState.CANCELLED]]
 
     def get_nav_item(self, task):
         for nav_item in self.bpmn_workflow.get_nav_list():
