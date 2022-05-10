@@ -1,5 +1,6 @@
 import os
 
+from SpiffWorkflow import TaskState
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 
 from tests.base_test import BaseTest
@@ -177,7 +178,7 @@ class TestWorkflowProcessor(BaseTest):
         processor.do_engine_steps()
         task = processor.next_task()
         self.assertIsNotNone(task)
-        self.assertEqual(task.state, task.WAITING)
+        self.assertEqual(task.state, TaskState.WAITING)
 
     def test_workflow_validation_error_is_properly_raised(self):
 

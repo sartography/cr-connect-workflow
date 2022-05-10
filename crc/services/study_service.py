@@ -45,6 +45,7 @@ class StudyService(object):
 
     def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
+
         associated = session.query(StudyAssociated).filter_by(uid=user.uid, access=True).all()
         associated_studies = [x.study_id for x in associated]
         db_studies = session.query(StudyModel).filter((StudyModel.user_uid == user.uid) |
@@ -103,8 +104,6 @@ class StudyService(object):
                     workflow_metas = StudyService._get_workflow_metas(study_id, category)
                     category_meta = []
                     if master_workflow_results:
-                        study.warnings = StudyService._update_status_of_workflow_meta(workflow_metas,
-                                                                                      master_workflow_results)
                         category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
                     category.workflows = workflow_metas
                     category.meta = category_meta
@@ -128,7 +127,6 @@ class StudyService(object):
             study.progress = int((complete_workflows/all_workflows)*100)
 
         return study
-
 
     @staticmethod
     def _get_workflow_metas(study_id, category):
@@ -497,54 +495,10 @@ class StudyService(object):
         unused_statuses = status.copy()
         if unused_statuses.get(cat.id):
             cat_meta.id = cat.id
-            cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']]
-            cat_meta.message = unused_statuses.get(cat.id)['message']
+            cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']].value
             cat_meta.message = unused_statuses.get(cat.id)['message'] \
                 if unused_statuses.get(cat.id)['message'] else ''
         return cat_meta
-
-
-    @staticmethod
-    def _update_status_of_workflow_meta(workflow_metas, status):
-        # Update the status on each workflow
-        warnings = []
-        unused_statuses = status.copy()  # A list of all the statuses that are not used.
-        for wfm in workflow_metas:
-            unused_statuses.pop(wfm.workflow_spec_id, None)
-            wfm.state_message = ''
-            # do we have a status for you
-            if wfm.workflow_spec_id not in status.keys():
-                warnings.append(ApiError("missing_status",
-                                         "No status information provided about workflow %s" % wfm.workflow_spec_id))
-                continue
-            if not isinstance(status[wfm.workflow_spec_id], dict):
-                warnings.append(ApiError(code='invalid_status',
-                                         message=f'Status must be a dictionary with "status" and "message" keys. '
-                                                 f'Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
-                continue
-            if 'message' in status[wfm.workflow_spec_id].keys():
-                wfm.state_message = status[wfm.workflow_spec_id]['message']
-            if 'status' not in status[wfm.workflow_spec_id].keys():
-                warnings.append(ApiError("missing_status_key",
-                                         "Workflow '%s' is present in master workflow, but doesn't have a status" % wfm.workflow_spec_id))
-                continue
-            if not WorkflowState.has_value(status[wfm.workflow_spec_id]['status']):
-                warnings.append(ApiError("invalid_state",
-                                         "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'],
-                                             ",".join(WorkflowState.list())
-                                         )))
-                continue
-
-            wfm.state = WorkflowState[status[wfm.workflow_spec_id]['status']]
-
-        for status in unused_statuses:
-            if isinstance(unused_statuses[status], dict) and 'status' in unused_statuses[status]:
-                warnings.append(ApiError("unmatched_status", "The master workflow provided a status for '%s' a "
-                                                             "workflow that doesn't seem to exist." %
-                                         status))
-
-        return warnings
 
     @staticmethod
     def add_all_workflow_specs_to_study(study_model: StudyModel, specs: List[WorkflowSpecInfo]):

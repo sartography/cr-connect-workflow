@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List
 
 import jinja2
-from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem, TaskState
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
@@ -29,7 +29,7 @@ from crc.models.ldap import LdapModel
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel, TaskAction
 from crc.models.user import UserModel
-from crc.models.workflow import WorkflowModel, WorkflowStatus
+from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowState
 from crc.services.data_store_service import DataStoreBase
 from crc.services.document_service import DocumentService
 from crc.services.jinja_service import JinjaService
@@ -188,7 +188,7 @@ class WorkflowService(object):
                                              f"The validation has been exited early on task '{exit_task.task_spec.id}' "
                                              f"and was parented by ",
                                              exit_task.parent)
-                tasks = processor.bpmn_workflow.get_tasks(SpiffTask.READY)
+                tasks = processor.bpmn_workflow.get_tasks(TaskState.READY)
                 for task in tasks:
                     if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
                         raise ApiError.from_task("invalid_role",
@@ -674,7 +674,8 @@ class WorkflowService(object):
             last_updated=processor.workflow_model.last_updated,
             is_review=spec.is_review,
             title=spec.display_name,
-            study_id=processor.workflow_model.study_id or None
+            study_id=processor.workflow_model.study_id or None,
+            state=processor.workflow_model.state
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
@@ -804,7 +805,7 @@ class WorkflowService(object):
         # All ready tasks should have a valid name, and this can be computed for
         # some tasks, particularly multi-instance tasks that all have the same spec
         # but need different labels.
-        if spiff_task.state == SpiffTask.READY:
+        if spiff_task.state == TaskState.READY:
             task.properties = WorkflowService._process_properties(spiff_task, props)
 
         task.title = WorkflowService.__calculate_title(spiff_task)
@@ -837,7 +838,7 @@ class WorkflowService(object):
                 # if the task is ready, we should raise an error, but if it is in the future or the past, we may not
                 # have the information we need to properly set the title, so don't error out, and just use what is
                 # provided.
-                if spiff_task.state == spiff_task.READY:
+                if spiff_task.state == TaskState.READY:
                     raise ApiError.from_task(code="task_title_error",
                                              message="Could not set task title on task %s with '%s' property because %s" %
                                                      (spiff_task.task_spec.name, Task.PROP_EXTENSIONS_TITLE, str(e)),
@@ -1127,4 +1128,25 @@ class WorkflowService(object):
         db.session.commit()
         return workflow_model
 
+    @staticmethod
+    def update_workflow_state_from_master_workflow(study_id, master_workflow_results):
+        # Create a dictionary of workflows for this study, keyed by workflow_spec_id
+        wf_by_workflow_spec_id = {}
+        workflows = session.query(WorkflowModel).filter(WorkflowModel.study_id == study_id).all()
+        for workflow in workflows:
+            wf_by_workflow_spec_id[workflow.workflow_spec_id] = workflow
+        # Update the workflow states with results from master workflow
+        for workflow_spec_id in master_workflow_results:
+            # only process the workflows (there are other things in master_workflow_results)
+            if workflow_spec_id in wf_by_workflow_spec_id:
+                workflow_state = master_workflow_results[workflow_spec_id]['status']
+                workflow_state_message = master_workflow_results[workflow_spec_id]['message']
+                # Make sure we have a valid state
+                if WorkflowState.has_value(workflow_state):
+                    # Get the workflow from our dictionary and set the state
+                    workflow = wf_by_workflow_spec_id[workflow_spec_id]
+                    workflow.state = workflow_state
+                    workflow.state_message = workflow_state_message
+                    session.add(workflow)
 
+        session.commit()

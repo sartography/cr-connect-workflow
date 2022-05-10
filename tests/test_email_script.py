@@ -27,6 +27,9 @@ class TestEmailScript(BaseTest):
                                                                      'reply_to': 'reply_to@example.com', 'name': 'My Email Name'})
             task = workflow_api.next_task
             self.assertEqual('My Email Name', task.data['email_model']['name'])
+            self.assertEqual('[\'test@example.com\']', task.data['email_model']['recipients'])
+            self.assertEqual('[\'cc@example.com\']', task.data['email_model']['cc'])
+            self.assertEqual('[\'bcc@example.com\']', task.data['email_model']['bcc'])
 
             self.assertEqual(1, len(outbox))
             self.assertEqual('My Email Subject', outbox[0].subject)
