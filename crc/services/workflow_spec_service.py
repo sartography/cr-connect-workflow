@@ -3,7 +3,7 @@ import os
 import shutil
 from typing import List
 
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.workflow import WorkflowSpecCategory, WorkflowSpecCategorySchema, WorkflowSpecInfo, \
     WorkflowSpecInfoSchema
 from crc.services.file_system_service import FileSystemService

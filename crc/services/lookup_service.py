@@ -11,7 +11,7 @@ from sqlalchemy import desc
 from sqlalchemy.sql.functions import GenericFunction
 
 from crc import db
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.api_models import Task
 from crc.models.file import LookupFileModel, LookupDataModel
 from crc.models.ldap import LdapSchema

@@ -4,7 +4,7 @@ import time
 from tests.base_test import BaseTest
 from crc.models.workflow import WorkflowStatus, WorkflowModel
 from crc import db
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.task_event import TaskEventModel, TaskEventSchema
 from crc.services.workflow_service import WorkflowService
 from crc.services.workflow_processor import WorkflowProcessor

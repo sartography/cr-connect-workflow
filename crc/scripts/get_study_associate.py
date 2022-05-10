@@ -1,4 +1,4 @@
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.study import StudyAssociatedSchema
 from crc.scripts.script import Script
 from crc.services.study_service import StudyService

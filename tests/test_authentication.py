@@ -6,7 +6,7 @@ import jwt
 
 from tests.base_test import BaseTest
 from crc import app, session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.protocol_builder import ProtocolBuilderStatus
 from crc.models.study import StudySchema, StudyModel, StudyStatus
 from crc.services.ldap_service import LdapService

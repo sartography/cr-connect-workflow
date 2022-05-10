@@ -1,7 +1,7 @@
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 
 from crc import session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.workflow import WorkflowModel, WorkflowStatus
 from crc.scripts.script import Script
 

@@ -4,7 +4,7 @@ import pkgutil
 
 from SpiffWorkflow.util.metrics import timeit
 
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 
 
 # Generally speaking, having some global in a flask app is TERRIBLE.

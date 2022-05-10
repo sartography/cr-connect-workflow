@@ -2,7 +2,7 @@ import requests
 from SpiffWorkflow.exceptions import WorkflowTaskExecException
 
 from crc import db
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.study import StudyModel
 from crc.scripts.script import Script
 

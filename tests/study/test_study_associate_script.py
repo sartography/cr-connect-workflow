@@ -3,7 +3,7 @@ import json
 from unittest.mock import patch
 import flask
 
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 
 from crc import session, app
 from crc.models.study import StudyModel

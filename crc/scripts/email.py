@@ -3,7 +3,7 @@ import traceback
 import datetime
 
 from crc import app, session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.email import EmailModel, EmailModelSchema
 from crc.models.file import FileModel, CONTENT_TYPES
 from crc.models.workflow import WorkflowModel

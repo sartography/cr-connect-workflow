@@ -5,7 +5,7 @@ from typing import List
 import marshmallow
 
 from crc import app, db, ma
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.workflow import WorkflowSpecModel, WorkflowSpecCategoryModel, WorkflowSpecCategoryModelSchema, \
     WorkflowSpecModelSchema, WorkflowLibraryModel
 from crc.services.file_system_service import FileSystemService

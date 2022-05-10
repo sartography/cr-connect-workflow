@@ -3,7 +3,7 @@ import copy
 from flask import g
 
 from crc import app
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.scripts.script import Script
 from crc.services.ldap_service import LdapService
 from crc.services.user_service import UserService

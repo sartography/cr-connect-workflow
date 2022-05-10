@@ -5,7 +5,7 @@ from tests.base_test import BaseTest
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 from crc.services.jinja_service import JinjaService
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 
 from crc import mail, app
 

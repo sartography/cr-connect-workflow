@@ -1,5 +1,5 @@
 from tests.base_test import BaseTest
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.scripts.is_file_uploaded import IsFileUploaded
 from crc.services.user_file_service import UserFileService
 

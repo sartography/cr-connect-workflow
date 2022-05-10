@@ -1,6 +1,6 @@
 from tests.base_test import BaseTest
 from crc.scripts.reset_workflow import ResetWorkflow
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 
 
 class TestWorkflowReset(BaseTest):

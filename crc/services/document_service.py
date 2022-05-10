@@ -1,4 +1,4 @@
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.api_models import DocumentDirectory
 from crc.services.lookup_service import LookupService
 

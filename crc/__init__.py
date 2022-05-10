@@ -62,10 +62,8 @@ from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 # connexion_app.add_api('api_v2.yml', base_path='/v2.0')
 
-# from crc.shared.test_blueprint import test_blueprint
-# app.register_blueprint(test_blueprint)
-from flask_bpmn.test_blueprint_file import test_blueprint
-app.register_blueprint(test_blueprint)
+from flask_bpmn.api.common import common_blueprint
+app.register_blueprint(common_blueprint)
 
 # needed function to avoid circular import
 def process_waiting_tasks():
@@ -96,7 +94,7 @@ if app.config['SENTRY_ENVIRONMENT']:
 
 # Connexion Error handling
 def render_errors(exception):
-    from crc.api.common import ApiError, ApiErrorSchema
+    from flask_bpmn.api.common import ApiError, ApiErrorSchema
     error = ApiError(code=exception.title, message=exception.detail, status_code=exception.status)
     return Response(ApiErrorSchema().dumps(error), status=500, mimetype="text/json")
 
@@ -135,7 +133,7 @@ def validate_all(study_id, category=None, spec_id=None):
     from crc.services.workflow_service import WorkflowService
     from crc.services.workflow_processor import WorkflowProcessor
     from crc.services.workflow_spec_service import WorkflowSpecService
-    from crc.api.common import ApiError
+    from flask_bpmn.api.common import ApiError
     from crc.models.study import StudyModel
     from crc.models.user import UserModel
     from flask import g

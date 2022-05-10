@@ -1,5 +1,5 @@
 from crc import session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.workflow import WorkflowModel
 

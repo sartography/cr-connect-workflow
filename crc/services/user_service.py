@@ -2,7 +2,7 @@ from flask import g
 
 import crc.api.user
 from crc import session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.services.ldap_service import LdapService
 from crc.models.user import UserModel, AdminSessionModel
 

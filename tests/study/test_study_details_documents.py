@@ -5,7 +5,7 @@ from tests.base_test import BaseTest
 from unittest.mock import patch
 
 from crc import session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.protocol_builder import ProtocolBuilderRequiredDocumentSchema
 from crc.models.study import StudyModel
 from crc.scripts.study_info import StudyInfo

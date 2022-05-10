@@ -9,7 +9,7 @@ from jinja2 import Environment, DictLoader, TemplateSyntaxError
 
 import copy
 
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 
 
 class JinjaService:

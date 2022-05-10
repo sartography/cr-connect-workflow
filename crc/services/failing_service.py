@@ -1,4 +1,4 @@
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 
 
 class FailingService(object):

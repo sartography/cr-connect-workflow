@@ -1,5 +1,5 @@
 from crc import session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.api.file import to_file_api
 from crc.models.file import FileModel, FileSchema
 from crc.scripts.script import Script

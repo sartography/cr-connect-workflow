@@ -1,5 +1,5 @@
 from crc import session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.file import FileSchema, FileType
 from crc.services.spec_file_service import SpecFileService
 

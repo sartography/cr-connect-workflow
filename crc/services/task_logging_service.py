@@ -1,5 +1,5 @@
 from crc import app, session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.task_log import TaskLogModel, TaskLogLevels, TaskLogQuery, TaskLogModelSchema
 from crc.models.workflow import WorkflowModel
 from crc.services.user_service import UserService

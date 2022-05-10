@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc import session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.workflow import WorkflowModel
 from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService

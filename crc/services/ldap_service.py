@@ -5,7 +5,7 @@ import datetime as dt
 from crc import app, db
 from ldap3 import Connection, Server, MOCK_SYNC, RESTARTABLE
 
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.ldap import LdapModel, LdapSchema
 
 

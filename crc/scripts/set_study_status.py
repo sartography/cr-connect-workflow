@@ -1,5 +1,5 @@
 from crc import session
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.study import StudyModel, StudyStatus
 from crc.scripts.script import Script
 

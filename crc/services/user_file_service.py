@@ -13,7 +13,7 @@ from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 
 from crc import session, app
-from crc.api.common import ApiError
+from flask_bpmn.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.file import FileType, FileDataModel, FileModel, FileModel
 from crc.models.workflow import WorkflowModel
