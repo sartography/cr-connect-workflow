@@ -30,7 +30,7 @@ class EmailService(object):
         # Create EmailModel
         email_model = EmailModel(subject=subject, sender=sender, recipients=str(recipients),
                                  content=content, content_html=content_html, study=study,
-                                 cc=cc, bcc=bcc, workflow_spec_id=workflow_spec_id, name=name)
+                                 cc=str(cc), bcc=str(bcc), workflow_spec_id=workflow_spec_id, name=name)
 
         # Send mail
         try:
