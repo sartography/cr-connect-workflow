@@ -11,8 +11,7 @@ RUN apt-get update && \
 
 WORKDIR /app
 COPY Pipfile Pipfile.lock /app/
-RUN cd /app && pipenv lock --keep-outdated --requirements > requirements.txt
-RUN pip install -r /app/requirements.txt
+RUN pipenv install
 
 RUN set -xe \
   && apt-get remove -y gcc python3-dev libssl-dev \
