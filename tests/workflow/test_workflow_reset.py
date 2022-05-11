@@ -52,3 +52,30 @@ class TestWorkflowReset(BaseTest):
         task = workflow_api.next_task
 
         ResetWorkflow().do_task(task, workflow.study_id, workflow.id, workflow_spec_id='two_user_tasks')
+
+    def test_reset_workflow_clear_data(self):
+        workflow = self.create_workflow('two_user_tasks')
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
+        self.assertEqual('Task_GetName', first_task.name)
+
+        workflow_api = self.complete_form(workflow, first_task, {'name': 'Mona'})
+        second_task = workflow_api.next_task
+        self.assertEqual('Task_GetAge', second_task.name)
+        self.assertEqual('Mona', second_task.data['name'])
+
+        # Reset the workflow, do not clear the data
+        ResetWorkflow().do_task(second_task, workflow.study_id, workflow.id,
+                                workflow_spec_id='two_user_tasks', clear_data=False)
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
+        self.assertEqual('Task_GetName', first_task.name)
+        self.assertEqual('Mona', first_task.data['name'])
+
+        # Reset the workflow and clear the data
+        ResetWorkflow().do_task(second_task, workflow.study_id, workflow.id,
+                                workflow_spec_id='two_user_tasks', clear_data=True)
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
+        self.assertEqual('Task_GetName', first_task.name)
+        self.assertNotIn('name', first_task.data)
