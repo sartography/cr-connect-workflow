@@ -12,7 +12,7 @@ from flask import g
 from ldap3.core.exceptions import LDAPSocketOpenError
 
 from crc import db, session, app
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
 from crc.models.file import FileModel, File, FileSchema

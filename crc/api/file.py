@@ -5,7 +5,7 @@ import connexion
 from flask import send_file
 
 from crc import session
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.api.user import verify_token
 from crc.models.file import File, FileSchema, FileModel, FileModelSchema
 from crc.models.workflow import WorkflowModel

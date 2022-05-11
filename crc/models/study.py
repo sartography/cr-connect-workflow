@@ -6,7 +6,7 @@ from marshmallow_enum import EnumField
 from sqlalchemy import func
 
 from crc import db, ma
-from flask_bpmn.api.common import ApiErrorSchema, ApiError
+from flask_bpmn.api.api_error import ApiErrorSchema, ApiError
 from crc.models.file import FileSchema
 from crc.models.ldap import LdapModel, LdapSchema
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudy

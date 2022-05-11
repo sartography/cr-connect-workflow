@@ -22,7 +22,7 @@ from sentry_sdk import capture_message, push_scope
 from sqlalchemy.exc import InvalidRequestError
 
 from crc import db, app, session
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.ldap import LdapModel

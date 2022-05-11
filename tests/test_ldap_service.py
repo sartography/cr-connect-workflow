@@ -1,6 +1,6 @@
 from tests.base_test import BaseTest
 
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.services.ldap_service import LdapService
 
 

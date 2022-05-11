@@ -7,7 +7,7 @@ from unittest.mock import patch
 from tests.base_test import BaseTest
 
 from crc import session, app
-from flask_bpmn.api.common import ApiErrorSchema
+from flask_bpmn.api.api_error import ApiErrorSchema
 from crc.models.study import StudyModel
 from crc.models.workflow import WorkflowModel, WorkflowSpecInfo
 from crc.services.workflow_service import WorkflowService

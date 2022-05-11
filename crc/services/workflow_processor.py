@@ -20,7 +20,7 @@ from SpiffWorkflow.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import WorkflowSpec
 
 from crc import session
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.file import FileModel, FileType, File
 from crc.models.task_event import TaskEventModel, TaskAction
 from crc.models.user import UserModelSchema

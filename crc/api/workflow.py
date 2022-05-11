@@ -4,7 +4,7 @@ from SpiffWorkflow import TaskState
 from flask import g
 
 from crc import session
-from flask_bpmn.api.common import ApiError, ApiErrorSchema
+from flask_bpmn.api.api_error import ApiError, ApiErrorSchema
 from crc.models.api_models import WorkflowApiSchema
 from crc.models.study import StudyModel, WorkflowMetadata, StudyStatus
 from crc.models.task_event import TaskEventModel, TaskEvent, TaskEventSchema, TaskAction

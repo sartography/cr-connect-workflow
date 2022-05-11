@@ -5,7 +5,7 @@ from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from flask import g, send_file
 from sqlalchemy.exc import IntegrityError
 from crc import session
-from flask_bpmn.api.common import ApiError, ApiErrorSchema
+from flask_bpmn.api.api_error import ApiError, ApiErrorSchema
 from crc.models.study import Study, StudyEventType, StudyModel, StudySchema, StudyForUpdateSchema, \
     StudyStatus, StudyAssociatedSchema, ProgressStatus, Category
 from crc.models.task_log import TaskLogQuery, TaskLogQuerySchema

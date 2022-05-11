@@ -3,7 +3,7 @@ import json
 from tests.base_test import BaseTest
 from crc.models.workflow import WorkflowStatus
 from crc import db
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.task_event import TaskEventModel, TaskEventSchema
 from crc.services.workflow_service import WorkflowService
 

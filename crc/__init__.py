@@ -94,7 +94,7 @@ if app.config['SENTRY_ENVIRONMENT']:
 
 # Connexion Error handling
 def render_errors(exception):
-    from flask_bpmn.api.common import ApiError, ApiErrorSchema
+    from flask_bpmn.api.api_error import ApiError, ApiErrorSchema
     error = ApiError(code=exception.title, message=exception.detail, status_code=exception.status)
     return Response(ApiErrorSchema().dumps(error), status=500, mimetype="text/json")
 
@@ -133,7 +133,7 @@ def validate_all(study_id, category=None, spec_id=None):
     from crc.services.workflow_service import WorkflowService
     from crc.services.workflow_processor import WorkflowProcessor
     from crc.services.workflow_spec_service import WorkflowSpecService
-    from flask_bpmn.api.common import ApiError
+    from flask_bpmn.api.api_error import ApiError
     from crc.models.study import StudyModel
     from crc.models.user import UserModel
     from flask import g

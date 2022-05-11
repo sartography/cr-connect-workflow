@@ -1,7 +1,7 @@
 from tests.base_test import BaseTest
 from crc import app
 from crc.services.workflow_service import WorkflowService
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from unittest.mock import patch
 
 

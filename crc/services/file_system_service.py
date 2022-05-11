@@ -5,7 +5,7 @@ from typing import List
 import pytz
 
 from crc import app
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.file import FileType, CONTENT_TYPES, File
 from crc.models.workflow import WorkflowSpecInfo
 

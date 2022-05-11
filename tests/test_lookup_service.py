@@ -3,7 +3,7 @@ from time import sleep
 
 from tests.base_test import BaseTest
 
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc import session, app
 from crc.models.file import FileModel, LookupFileModel, LookupDataModel
 from crc.services.lookup_service import LookupService

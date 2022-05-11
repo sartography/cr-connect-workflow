@@ -1,7 +1,7 @@
 import os
 
 from crc import app
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.git_models import GitRepo
 from git import Repo, InvalidGitRepositoryError, NoSuchPathError, GitCommandError
 

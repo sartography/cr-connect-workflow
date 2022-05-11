@@ -1,4 +1,4 @@
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.file import FileSchema, CONTENT_TYPES
 from crc.services.reference_file_service import ReferenceFileService
 

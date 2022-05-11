@@ -1,5 +1,5 @@
 from crc import db
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.api_models import Task
 from crc.models.workflow import WorkflowModel
 from crc.scripts.script import Script

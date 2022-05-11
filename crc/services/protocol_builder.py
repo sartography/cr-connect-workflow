@@ -6,7 +6,7 @@ import requests
 from SpiffWorkflow.util.metrics import timeit
 
 from crc import app
-from flask_bpmn.api.common import ApiError
+from flask_bpmn.api.api_error import ApiError
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema, ProtocolBuilderRequiredDocument
 
 
