@@ -237,10 +237,10 @@ class TestStudyService(BaseTest):
         user = self.create_user_with_study_and_workflow()
         study = db.session.query(StudyModel).first()
         associates = StudyService.get_study_associates(study.id)
-        self.assertEquals(1, len(associates))
+        self.assertEqual(1, len(associates))
         assoc_json = StudyAssociatedSchema(many=True).dump(associates)
         print(assoc_json)
-        self.assertEquals("Dan", assoc_json[0]['ldap_info']['given_name'])
+        self.assertEqual("Dan", assoc_json[0]['ldap_info']['given_name'])
 
     def test_set_category_metadata(self):
         user = self.create_user_with_study_and_workflow()

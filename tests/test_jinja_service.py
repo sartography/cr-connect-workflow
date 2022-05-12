@@ -90,8 +90,8 @@ class TestJinjaService(BaseTest):
         with self.assertRaises(ApiError) as ae:
             result = JinjaService().make_template(file_data, context)
         self.assertIn('{{% no_such_variable_error ! @ __ %}}', ae.exception.error_line)
-        self.assertEquals("Word Document creation error : unexpected '%'", ae.exception.message)
-        self.assertEquals(14, ae.exception.line_number)
+        self.assertEqual("Word Document creation error : unexpected '%'", ae.exception.message)
+        self.assertEqual(14, ae.exception.line_number)
 
     def test_find_template_references(self):
         test_string = """

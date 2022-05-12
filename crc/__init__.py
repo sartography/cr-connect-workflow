@@ -80,7 +80,7 @@ def init_scheduler():
 
 
 # Convert list of allowed origins to list of regexes
-origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
+origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\\.') for o in app.config['CORS_ALLOW_ORIGINS']]
 cors = CORS(connexion_app.app, origins=origins_re)
 
 # Sentry error handling
