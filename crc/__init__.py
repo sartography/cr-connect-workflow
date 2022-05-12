@@ -62,8 +62,8 @@ from crc.services.workflow_service import WorkflowService
 connexion_app.add_api('api.yml', base_path='/v1.0')
 # connexion_app.add_api('api_v2.yml', base_path='/v2.0')
 
-from flask_bpmn.api.common import common_blueprint
-app.register_blueprint(common_blueprint)
+from flask_bpmn.api.api_error import api_error_blueprint
+app.register_blueprint(api_error_blueprint)
 
 # needed function to avoid circular import
 def process_waiting_tasks():
