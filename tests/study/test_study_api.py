@@ -92,12 +92,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(None, workflows[0].state)
         self.assertEqual(None, workflows[1].state)
 
-        spec_service = WorkflowSpecService()
-        master_spec = spec_service.master_spec
-        master_workflow_results = WorkflowProcessor.run_master_spec(master_spec, study_model)
-
-        # This should set the state for simple_workflow to required, and empty_workflow to locked
-        WorkflowService().update_workflow_state_from_master_workflow(study_model.id, master_workflow_results)
+        self.run_master_spec(study_model)
 
         workflows = session.query(WorkflowModel).all()
         self.assertEqual('simple_workflow', workflows[0].workflow_spec_id)

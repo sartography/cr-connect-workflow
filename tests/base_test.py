@@ -26,6 +26,8 @@ from crc.services.user_service import UserService
 from crc.services.document_service import DocumentService
 from example_data import ExampleDataLoader
 from crc.services.workflow_spec_service import WorkflowSpecService
+from crc.services.workflow_service import WorkflowService
+from crc.services.workflow_processor import WorkflowProcessor
 
 # UNCOMMENT THIS FOR DEBUGGING SQL ALCHEMY QUERIES
 import logging
@@ -407,7 +409,15 @@ class BaseTest(unittest.TestCase):
         if 'impersonate_user' in g:
             del g.impersonate_user
 
-    def minimal_bpmn(self, content):
+    @staticmethod
+    def minimal_bpmn(content):
         """Returns a bytesIO object of a well formed BPMN xml file with some string content of your choosing."""
         minimal_dbpm = "<x><process id='1' isExecutable='false'><startEvent id='a'/></process>%s</x>"
         return (minimal_dbpm % content).encode()
+
+    @staticmethod
+    def run_master_spec(study_model):
+        spec_service = WorkflowSpecService()
+        master_spec = spec_service.master_spec
+        master_workflow_results = WorkflowProcessor.run_master_spec(master_spec, study_model)
+        WorkflowService().update_workflow_state_from_master_workflow(study_model.id, master_workflow_results)
