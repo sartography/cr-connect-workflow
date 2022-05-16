@@ -77,7 +77,6 @@ class StudyService(object):
         unused_statuses = status.copy()  # A list of all the statuses that are not used.
         for wfm in workflow_metas:
             unused_statuses.pop(wfm.workflow_spec_id, None)
-            wfm.state_message = ''
             # do we have a status for you
             if wfm.workflow_spec_id not in status.keys():
                 warnings.append(ApiError("missing_status",
@@ -534,12 +533,11 @@ class StudyService(object):
     @staticmethod
     def _update_status_of_category_meta(status, cat):
         cat_meta = CategoryMetadata()
-        unused_statuses = status.copy()
-        if unused_statuses.get(cat.id):
+        if status.get(cat.id):
             cat_meta.id = cat.id
-            cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']].value
-            cat_meta.message = unused_statuses.get(cat.id)['message'] \
-                if unused_statuses.get(cat.id)['message'] else ''
+            cat_meta.state = WorkflowState[status.get(cat.id)['status']].value
+            if 'message' in status.get(cat.id):
+                cat_meta.message = status.get(cat.id)['message']
         return cat_meta
 
     @staticmethod
