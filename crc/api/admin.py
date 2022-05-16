@@ -4,22 +4,22 @@ import json
 from flask import url_for
 from flask_admin import Admin
 from flask_admin.actions import action
-from flask_admin.contrib import sqla
 from flask_admin.contrib.sqla import ModelView
-from sqlalchemy import desc
 from werkzeug.utils import redirect
 from jinja2.utils import markupsafe
 from crc import db, app
 from crc.api.common import ApiError
 from crc.api.user import verify_token, verify_token_admin
+from crc.models.email import EmailModel
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyModel
+from crc.models.task_log import TaskLogModel
 from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel
 
 
-class AdminModelView(sqla.ModelView):
+class AdminModelView(ModelView):
     can_create = False
     can_edit = False
     can_delete = False
@@ -55,6 +55,7 @@ class WorkflowView(AdminModelView):
 
 class FileView(AdminModelView):
     column_filters = ['workflow_id', 'type']
+    column_exclude_list = ['data']
 
     @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
     def action_publish(self, ids):
@@ -63,6 +64,22 @@ class FileView(AdminModelView):
     @action('update', 'Update', 'Are you sure you want to update this file(s)?')
     def action_update(self, ids):
         raise ApiError("not_implemented", "This method is not yet implemented.")
+
+
+class EmailView(AdminModelView):
+    column_exclude_list = ['id', 'content_html']
+    column_searchable_list = ['name', 'subject']
+    column_filters = ['subject', 'name', 'study_id']
+    can_create = True
+    can_edit = True
+    can_delete = True
+
+
+class TaskLogView(AdminModelView):
+    column_exclude_list = ['id']
+    can_create = True
+    can_edit = True
+    can_delete = True
 
 
 def json_formatter(view, context, model, name):
@@ -85,3 +102,5 @@ admin.add_view(UserView(UserModel, db.session))
 admin.add_view(WorkflowView(WorkflowModel, db.session))
 admin.add_view(FileView(FileModel, db.session))
 admin.add_view(TaskEventView(TaskEventModel, db.session))
+admin.add_view(EmailView(EmailModel, db.session))
+admin.add_view(TaskLogView(TaskLogModel, db.session))
