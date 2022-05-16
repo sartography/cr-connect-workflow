@@ -138,14 +138,17 @@ class StudyService(object):
         last_time = sincetime("files", last_time)
         if process_categories and master_workflow_results:
             if study.status != StudyStatus.abandoned:
+                workflow_metas = []
                 for category in study.categories:
-                    workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                    cat_workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                    workflow_metas.extend(cat_workflow_metas)
                     category_meta = []
                     if master_workflow_results:
-                        study.warnings = StudyService.get_study_warnings(workflow_metas, master_workflow_results)
                         category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
-                    category.workflows = workflow_metas
+                    category.workflows = cat_workflow_metas
                     category.meta = category_meta
+                study.warnings = StudyService.get_study_warnings(workflow_metas, master_workflow_results)
+
             last_time = sincetime("categories", last_time)
 
         if study.primary_investigator is None:
