@@ -2,7 +2,7 @@ name: run_ci
 
 on:
   push:
-    branches: ['main', 'feature/*']
+    branches: ['main', 'chore/*', 'feature/*', 'bug/*']
 
 env:
   REGISTRY: ghcr.io
