@@ -67,16 +67,7 @@ class UserFileService(object):
             raise ApiError('unknown_extension',
                            'The file you provided does not have an accepted extension:' +
                            file_extension, status_code=404)
-        # archive, if we already have one with same workflow_id, task_spec_name, and irb_doc_code
-        old_file_model = session.query(FileModel) \
-            .filter(FileModel.workflow_id == workflow_id) \
-            .filter(FileModel.task_spec == task_spec_name) \
-            .filter(FileModel.irb_doc_code == irb_doc_code) \
-            .order_by(desc(FileModel.date_modified)).first()
-        if old_file_model:
-            old_file_model.archived = True
-            session.commit()
-
+        # NOTE: Do not archive files with the same doc code, as it is possible to upload many files of the same type.
         md5_checksum = UUID(hashlib.md5(binary_data).hexdigest())
         try:
             user_uid = UserService.current_user().uid
