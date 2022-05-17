@@ -2,7 +2,7 @@ name: run_ci
 
 on:
   push:
-    branches: ['master', 'feature/*']
+    branches: ['main', 'chore/*', 'feature/*', 'bug/*']
 
 env:
   REGISTRY: ghcr.io
@@ -65,7 +65,7 @@ jobs:
       - run_tests
       - sonarcloud
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write

@@ -69,6 +69,43 @@ class StudyService(object):
             studies.append(study)
         return studies
 
+    @staticmethod
+    def get_study_warnings(workflow_metas, status):
+
+        # Grab warnings generated from the master workflow for debugging
+        warnings = []
+        unused_statuses = status.copy()  # A list of all the statuses that are not used.
+        for wfm in workflow_metas:
+            unused_statuses.pop(wfm.workflow_spec_id, None)
+            # do we have a status for you
+            if wfm.workflow_spec_id not in status.keys():
+                warnings.append(ApiError("missing_status",
+                                         "No status information provided about workflow %s" % wfm.workflow_spec_id))
+                continue
+            if not isinstance(status[wfm.workflow_spec_id], dict):
+                warnings.append(ApiError(code='invalid_status',
+                                         message=f'Status must be a dictionary with "status" and "message" keys. '
+                                                 f'Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
+                continue
+            if 'status' not in status[wfm.workflow_spec_id].keys():
+                warnings.append(ApiError("missing_status_key",
+                                         "Workflow '%s' is present in master workflow, but doesn't have a status" % wfm.workflow_spec_id))
+                continue
+            if not WorkflowState.has_value(status[wfm.workflow_spec_id]['status']):
+                warnings.append(ApiError("invalid_state",
+                                         "Workflow '%s' can not be set to '%s', should be one of %s" % (
+                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'],
+                                             ",".join(WorkflowState.list())
+                                         )))
+                continue
+
+        for status in unused_statuses:
+            if isinstance(unused_statuses[status], dict) and 'status' in unused_statuses[status]:
+                warnings.append(ApiError("unmatched_status", "The master workflow provided a status for '%s' a "
+                                                             "workflow that doesn't seem to exist." %
+                                         status))
+
+        return warnings
 
     @staticmethod
     @timeit
@@ -100,13 +137,17 @@ class StudyService(object):
         last_time = sincetime("files", last_time)
         if process_categories and master_workflow_results:
             if study.status != StudyStatus.abandoned:
+                workflow_metas = []
                 for category in study.categories:
-                    workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                    cat_workflow_metas = StudyService._get_workflow_metas(study_id, category)
+                    workflow_metas.extend(cat_workflow_metas)
                     category_meta = []
                     if master_workflow_results:
                         category_meta = StudyService._update_status_of_category_meta(master_workflow_results, category)
-                    category.workflows = workflow_metas
+                    category.workflows = cat_workflow_metas
                     category.meta = category_meta
+                study.warnings = StudyService.get_study_warnings(workflow_metas, master_workflow_results)
+
             last_time = sincetime("categories", last_time)
 
         if study.primary_investigator is None:
@@ -492,12 +533,11 @@ class StudyService(object):
     @staticmethod
     def _update_status_of_category_meta(status, cat):
         cat_meta = CategoryMetadata()
-        unused_statuses = status.copy()
-        if unused_statuses.get(cat.id):
+        if status.get(cat.id):
             cat_meta.id = cat.id
-            cat_meta.state = WorkflowState[unused_statuses.get(cat.id)['status']].value
-            cat_meta.message = unused_statuses.get(cat.id)['message'] \
-                if unused_statuses.get(cat.id)['message'] else ''
+            cat_meta.state = WorkflowState[status.get(cat.id)['status']].value
+            if 'message' in status.get(cat.id):
+                cat_meta.message = status.get(cat.id)['message']
         return cat_meta
 
     @staticmethod

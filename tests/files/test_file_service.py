@@ -1,4 +1,5 @@
 from github import UnknownObjectException
+from sqlalchemy.testing.config import skip_test
 
 from tests.base_test import BaseTest
 from unittest.mock import Mock
@@ -49,7 +50,7 @@ class FakeGithub(Mock):
 class TestFileService(BaseTest):
     """Largely tested via the test_file_api, and time is tight, but adding new tests here."""
 
-    def test_add_file_from_task_archives_original_on_subsequent_add(self):
+    def test_add_file_from_task_never_archives_original_on_subsequent_add(self):
         workflow = self.create_workflow('file_upload_form')
         processor = WorkflowProcessor(workflow)
         task = processor.next_task()
@@ -70,7 +71,7 @@ class TestFileService(BaseTest):
 
         file_data = UserFileService.get_workflow_data_files(workflow_id=workflow.id)
         self.assertEqual(2, len(file_data))
-        self.assertTrue(file_data[0].archived)
+        self.assertFalse(file_data[0].archived)
         self.assertFalse(file_data[1].archived)
         self.assertEqual(4, file_data[0].size)  # File data size is included.
 

@@ -57,7 +57,7 @@ def verify_token(token=None):
             # If the user is valid, store the user and token for this session
             if db_user is not None:
                 g.user = db_user
-                token = g.user.encode_auth_token().decode()
+                token = g.user.encode_auth_token()
                 g.token = token
                 token_info = UserModel.decode_auth_token(token)
                 return token_info
