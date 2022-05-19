@@ -189,6 +189,7 @@ class WorkflowProcessor(object):
             bpmn_workflow = WorkflowProcessor.__get_bpmn_workflow(workflow_model)
             WorkflowProcessor.__cancel_notify(bpmn_workflow)
         except Exception as e:
+            session.rollback()  # in case the above left the database with a bad transaction
             app.logger.error(f"Unable to send a cancel notify for workflow %s during a reset."
                              f" Continuing with the reset anyway so we don't get in an unresolvable"
                              f" state. An %s error occured with the following information: %s" %

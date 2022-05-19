@@ -114,6 +114,7 @@ class WorkflowService(object):
                 processor.bpmn_workflow.do_engine_steps()
                 processor.save()
             except Exception as e:
+                db.session.rollback()  # in case the above left the database with a bad transaction
                 workflow_model.status = WorkflowStatus.erroring
                 db.session.add(workflow_model)
                 db.session.commit()
