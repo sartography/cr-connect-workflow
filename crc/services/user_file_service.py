@@ -5,7 +5,6 @@ import random
 import string
 
 import pandas as pd
-from github import Github, GithubObject, UnknownObjectException
 from uuid import UUID
 from lxml import etree
 
@@ -15,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from crc import session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
-from crc.models.file import FileType, FileDataModel, FileModel, FileModel
+from crc.models.file import FileType, FileModel
 from crc.models.workflow import WorkflowModel
 from crc.services.cache_service import cache
 from crc.services.user_service import UserService
@@ -136,22 +135,11 @@ class UserFileService(object):
 
     @staticmethod
     def get_workflow_data_files(workflow_id=None):
-        """Returns all the FileDataModels related to a running workflow -
+        """Returns all the FileModels related to a running workflow -
         So these are the latest data files that were uploaded or generated
         that go along with this workflow.  Not related to the spec in any way"""
         file_models = UserFileService.get_files(workflow_id=workflow_id)
         return file_models
-
-    @staticmethod
-    def get_file_data(file_id: int, version: int = None):
-        """Returns the file data with the given version, or the lastest file, if version isn't provided."""
-        query = session.query(FileDataModel) \
-            .filter(FileDataModel.file_model_id == file_id)
-        if version:
-            query = query.filter(FileDataModel.version == version)
-        else:
-            query = query.order_by(desc(FileDataModel.date_created))
-        return query.first()
 
     @staticmethod
     def delete_file_data_stores(file_id):

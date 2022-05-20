@@ -80,37 +80,6 @@ class FileModel(db.Model):
     archived = db.Column(db.Boolean, default=False)
 
 
-# class DocumentModel(FileModel):
-#     ...
-
-
-class FileDataModel(db.Model):
-    # TODO: remove when the file refactor is finished
-    __tablename__ = 'file_data'
-    id = db.Column(db.Integer, primary_key=True)
-    md5_hash = db.Column(UUID(as_uuid=True), unique=False, nullable=False)
-    data = deferred(db.Column(db.LargeBinary))  # Don't load it unless you have to.
-    version = db.Column(db.Integer, default=0)
-    size = db.Column(db.Integer, default=0)
-    date_created = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    file_model_id = db.Column(db.Integer, db.ForeignKey('file.id'))
-    file_model = db.relationship("FileModel", foreign_keys=[file_model_id])
-    user_uid = db.Column(db.String, db.ForeignKey('user.uid'), nullable=True)
-
-
-class OldFileModel(db.Model):
-    # TODO: remove when the file refactor is finished
-    __tablename__ = 'old_file'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    type = db.Column(db.Enum(FileType))
-    content_type = db.Column(db.String)
-    workflow_id = db.Column(db.Integer, db.ForeignKey('workflow.id'), nullable=True)
-    task_spec = db.Column(db.String, nullable=True)
-    irb_doc_code = db.Column(db.String, nullable=True)  # Code reference to the documents.xlsx reference file.
-    # data_stores = relationship(DataStoreModel, cascade="all,delete", backref="file")
-
-
 class File(object):
     def __init__(self):
         self.content_type = None
@@ -165,15 +134,6 @@ class File(object):
         return instance
 
 
-# class DocumentModelSchema(SQLAlchemyAutoSchema):
-#     class Meta:
-#         model = DocumentModel
-#         load_instance = True
-#         include_relationships = True
-#         include_fk = True  # Includes foreign keys
-#         unknown = EXCLUDE
-
-
 class FileModelSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = FileModel
@@ -193,7 +153,8 @@ class FileSchema(Schema):
         unknown = INCLUDE
     url = Method("get_url")
 
-    def get_url(self, obj):
+    @staticmethod
+    def get_url(obj):
         token = 'not_available'
         if hasattr(obj, 'id') and obj.id is not None:
             file_url = url_for("/v1_0.crc_api_file_get_file_data_link", file_id=obj.id, _external=True)
