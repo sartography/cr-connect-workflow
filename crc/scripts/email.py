@@ -1,6 +1,5 @@
 import sys
 import traceback
-import datetime
 
 from crc import app, session
 from crc.api.common import ApiError
@@ -18,8 +17,9 @@ import datetime
 
 class Email(Script):
     """Send an email from a script task, as part of a workflow.
-       You must specify recipients and content.
-       You can also specify cc, bcc, reply_to, and attachments"""
+       You must specify recipients and subject.
+       You can also specify cc, bcc, reply_to, and attachments.
+       The email content must be in the Element Documentation for the task."""
 
     def get_description(self):
         return """Creates an email, using the provided `subject` and `recipients` arguments, which are required.
@@ -32,14 +32,18 @@ The recipients, cc, and bcc arguments can contain an email address or list of em
 In place of an email address, we accept the string 'associated', in which case we
 look up the users associated with the study who have send_email set to True. 
 The reply_to argument can contain an email address.
-The attachments arguments can contain a doc_code or list of doc_codes.
+
+The attachments arguments can contain a doc_code tuple or list of doc_code tuples.
+A doc_code tuple is a two-item tuple containing a doc_code and optional list of files.
+Normally, we include *all* files for each doc_code. The optional list of files allows 
+a configurator to limit the files we include to only the files in the list. 
 
 Examples:
 email(subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email, 'associated'])
 email(subject="My Subject", recipients="user@example.com", cc='associated', bcc='test_user@example.com)
 email(subject="My Subject", recipients="user@example.com", reply_to="reply_to@example.com")
-email(subject="My Subject", recipients="user@example.com", attachments='Study_App_Doc')
-email(subject="My Subject", recipients="user@example.com", attachments=['Study_App_Doc','Study_Protocol_Document'])
+email(subject="My Subject", recipients="user@example.com", attachments=('Study_App_Doc', []))
+email(subject="My Subject", recipients="user@example.com", attachments=[('Study_App_Doc', ['some_file_name']),('Study_Protocol_Document',[])])
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
@@ -166,20 +170,27 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
     @staticmethod
     def get_files(attachments, study_id):
         files = []
-        codes = None
-        if isinstance(attachments, str):
-            codes = [attachments]
+        code_items = None
+        if isinstance(attachments, tuple):
+            code_items = [attachments]
         elif isinstance(attachments, list):
-            codes = attachments
+            code_items = attachments
 
-        if codes is not None:
-            for code in codes:
-                if DocumentService.is_allowed_document(code):
+        if code_items is not None:
+            for code_item in code_items:
+                doc_code = code_item[0]
+                file_names = code_item[1]
+                if DocumentService.is_allowed_document(doc_code):
                     workflows = session.query(WorkflowModel).filter(WorkflowModel.study_id==study_id).all()
                     for workflow in workflows:
-                        workflow_files = session.query(FileModel).\
+
+                        query = session.query(FileModel).\
                             filter(FileModel.workflow_id == workflow.id).\
-                            filter(FileModel.irb_doc_code == code).all()
+                            filter(FileModel.irb_doc_code == doc_code)
+                        if isinstance(file_names, list) and len(file_names) > 0:
+                            query = query.filter(FileModel.name.in_(file_names))
+
+                        workflow_files = query.all()
                         for file in workflow_files:
                             files.append({'id': file.id,
                                           'name': file.name,
@@ -187,7 +198,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                                           'data': file.data})
                 else:
                     raise ApiError(code='bad_doc_code',
-                                   message=f'The doc_code {code} is not valid.')
+                                   message=f'The doc_code {doc_code} is not valid.')
         else:
             raise ApiError(code='bad_argument_type',
                            message='The attachments argument must be a string or list of strings')
