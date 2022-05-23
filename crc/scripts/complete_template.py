@@ -22,9 +22,11 @@ class CompleteTemplate(Script):
         return """Using the Jinja template engine, takes data available in the current task, and uses it to populate 
 a word document that contains Jinja markup.  Please see https://docxtpl.readthedocs.io/en/latest/ 
 for more information on exact syntax.
+
 Takes two required arguments:
 1. The name of a MS Word docx file to use as a template.
 2. The 'code' of the IRB Document as set in the documents.xlsx file.
+
 And one optional argument:
 1. The name for the generated file. Otherwise, we use the first argument.
 """
