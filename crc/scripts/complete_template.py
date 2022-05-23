@@ -37,7 +37,6 @@ And one optional argument:
         self.process_template(task, study_id, workflow, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        # workflow_spec_service = WorkflowSpecService()
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
         final_document_stream = self.process_template(task, study_id, workflow, *args, **kwargs)
         template_file_name = args[0]
