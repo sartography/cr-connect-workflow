@@ -7,6 +7,27 @@ from crc.services.user_file_service import UserFileService
 
 class TestEmailScript(BaseTest):
 
+    def setup_attachments(self, irb_code_1, irb_code_2):
+        self.create_reference_document()
+
+        workflow = self.create_workflow('email_script')
+        workflow_api = self.get_workflow_api(workflow)
+        first_task = workflow_api.next_task
+
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="something.png", content_type="text",
+                                          binary_data=b'1234', irb_doc_code=irb_code_1)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="another.png", content_type="text",
+                                          binary_data=b'67890', irb_doc_code=irb_code_1)
+        UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                          task_spec_name=first_task.name,
+                                          name="anything.png", content_type="text",
+                                          binary_data=b'5678', irb_doc_code=irb_code_2)
+        return workflow, workflow_api, first_task
+
     def test_email_script_validation(self):
         # This validates scripts.email.do_task_validate_only
         # It also tests that we don't overwrite the default email_address with random text during validation
@@ -95,32 +116,36 @@ class TestEmailScript(BaseTest):
             self.assertIn(outbox[0].recipients[2], ['user@example.com', 'dhf8r@virginia.edu', 'lb3dp@virginia.edu'])
 
     def test_email_script_attachments(self):
-        self.create_reference_document()
+
         irb_code_1 = 'Study_App_Doc'
         irb_code_2 = 'Study_Protocol_Document'
+        workflow, workflow_api, first_task = self.setup_attachments(irb_code_1, irb_code_2)
 
-        workflow = self.create_workflow('email_script')
-        workflow_api = self.get_workflow_api(workflow)
-        first_task = workflow_api.next_task
-
-        UserFileService.add_workflow_file(workflow_id=workflow.id,
-                                          task_spec_name=first_task.name,
-                                          name="something.png", content_type="text",
-                                          binary_data=b'1234', irb_doc_code=irb_code_1)
-        UserFileService.add_workflow_file(workflow_id=workflow.id,
-                                          task_spec_name=first_task.name,
-                                          name="another.png", content_type="text",
-                                          binary_data=b'67890', irb_doc_code=irb_code_1)
-        UserFileService.add_workflow_file(workflow_id=workflow.id,
-                                          task_spec_name=first_task.name,
-                                          name="anything.png", content_type="text",
-                                          binary_data=b'5678', irb_doc_code=irb_code_2)
-
+        form_data = {'subject': 'My Test Subject',
+                     'recipients': 'user@example.com',
+                     'doc_codes': [(irb_code_1, []), (irb_code_2, [])]
+                     }
         with mail.record_messages() as outbox:
-            self.complete_form(workflow, first_task, {'subject': 'My Test Subject', 'recipients': 'user@example.com',
-                                                      'doc_codes': [{'doc_code': irb_code_1}, {'doc_code': irb_code_2}]})
+            self.complete_form(workflow, first_task, form_data)
             self.assertEqual(1, len(outbox))
             self.assertEqual(3, len(outbox[0].attachments))
             self.assertEqual('image/png', outbox[0].attachments[0].content_type)
             self.assertEqual('something.png', outbox[0].attachments[0].filename)
             self.assertEqual(b'1234', outbox[0].attachments[0].data)
+
+    def test_email_script_attachments_with_filter(self):
+        irb_code_1 = 'Study_App_Doc'
+        irb_code_2 = 'Study_Protocol_Document'
+        workflow, workflow_api, first_task = self.setup_attachments(irb_code_1, irb_code_2)
+
+        form_data = {'subject': 'My Test Subject',
+                     'recipients': 'user@example.com',
+                     'doc_codes': [(irb_code_1, ['another.png']), (irb_code_2, [])]
+                     }
+        with mail.record_messages() as outbox:
+            self.complete_form(workflow, first_task, form_data)
+            self.assertEqual(1, len(outbox))
+            # We should only get 2 files because we filtered one out
+            self.assertEqual(2, len(outbox[0].attachments))
+
+            print('test_email_script_attachments_with_filter')
