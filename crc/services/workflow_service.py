@@ -1146,8 +1146,25 @@ class WorkflowService(object):
                 if WorkflowState.has_value(workflow_state):
                     # Get the workflow from our dictionary and set the state
                     workflow = wf_by_workflow_spec_id[workflow_spec_id]
-                    workflow.state = workflow_state
-                    workflow.state_message = workflow_state_message
+                    # Don't let the master workflow change the state for admin workflows
+                    if WorkflowService.is_in_admin_category(workflow_spec_id):
+                        workflow.state = 'optional'
+                        workflow.state_message = 'This is an Admin workflow'
+                    else:
+                        workflow.state = workflow_state
+                        workflow.state_message = workflow_state_message
                     session.add(workflow)
 
         session.commit()
+
+    @staticmethod
+    def get_workflow_spec_category(workflow_spec_id):
+        workflow_spec = WorkflowSpecService().get_spec(workflow_spec_id)
+        category_id = workflow_spec.category_id
+        category = WorkflowSpecService().get_category(category_id)
+        return category
+
+    @staticmethod
+    def is_in_admin_category(workflow_spec_id):
+        category = WorkflowService.get_workflow_spec_category(workflow_spec_id)
+        return category.admin
