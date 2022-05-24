@@ -102,6 +102,24 @@ class TestStudyApi(BaseTest):
         self.assertEqual('Completion of this workflow is required.', workflows[0].state_message)
         self.assertEqual('This workflow is locked', workflows[1].state_message)
 
+    def test_admin_workflows_not_locked(self):
+        """Admin category workflows should not be locked by the master workflow"""
+        # Add an admin category
+        self.assure_category_exists('test_admin_category', admin=True)
+        # Add a workflow to the admin category
+        self.load_test_spec('empty_workflow', category_id='test_admin_category')
+        # Add a master workflow that tries to lock the workflow
+        self.load_test_spec('test_master_workflow', master_spec=True)
+
+        study = self.add_test_study()
+        study_model = session.query(StudyModel).filter_by(id=study["id"]).first()
+        self.run_master_spec(study_model)
+
+        workflows = session.query(WorkflowModel).all()
+        self.assertEqual(1, len(workflows))
+        # The master workflow tries to lock this, but we don't lock if Admin category
+        self.assertEqual('optional', workflows[0].state)
+
     def test_get_study_has_details_about_files(self):
 
         # Set up the study and attach a file to it.
