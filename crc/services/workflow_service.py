@@ -664,6 +664,7 @@ class WorkflowService(object):
         WorkflowService.update_navigation(navigation, processor)
         spec_service = WorkflowSpecService()
         spec = spec_service.get_spec(processor.workflow_spec_id)
+        is_admin_workflow = WorkflowService.is_in_admin_category(processor.workflow_spec_id)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
             status=processor.get_status(),
@@ -676,7 +677,8 @@ class WorkflowService(object):
             is_review=spec.is_review,
             title=spec.display_name,
             study_id=processor.workflow_model.study_id or None,
-            state=processor.workflow_model.state
+            state=processor.workflow_model.state,
+            is_admin_workflow=is_admin_workflow
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
             # This may or may not work, sometimes there is no next task to complete.
