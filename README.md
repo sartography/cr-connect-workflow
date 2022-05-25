@@ -128,6 +128,7 @@ define the Docker Container, as /config/default.py offers a good example of the 
       - PB_ENABLED=true   # Generally true, we should connect to Protocol Builder
       - PREFERRED_URL_SCHEME=https   # Generally you want to run on SSL, should be https 
       - SERVER_NAME=testing.crconnect.uvadcos.io  # The url used to access this app.
+      - INSTANCE_NAME=testing  # This is the informal name of the server, used in BPMN documents
       - TOKEN_AUTH_SECRET_KEY=-0-0-0- TESTING SUPER SECURE -0-0-0- # Some random characters that seed our key gen.
       - APPLICATION_ROOT=/api # Appended to SERVER_NAME, is the full path to this service
       - ADMIN_UIDS=dhf8r,cah3us  # A comma delimited list of people who can preform administrative tasks.
