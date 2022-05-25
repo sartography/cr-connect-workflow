@@ -664,7 +664,7 @@ class WorkflowService(object):
         WorkflowService.update_navigation(navigation, processor)
         spec_service = WorkflowSpecService()
         spec = spec_service.get_spec(processor.workflow_spec_id)
-        is_admin_workflow = WorkflowService.is_in_admin_category(processor.workflow_spec_id)
+        is_admin_workflow = WorkflowService.is_admin_workflow(processor.workflow_spec_id)
         workflow_api = WorkflowApi(
             id=processor.get_workflow_id(),
             status=processor.get_status(),
@@ -1149,7 +1149,7 @@ class WorkflowService(object):
                     # Get the workflow from our dictionary and set the state
                     workflow = wf_by_workflow_spec_id[workflow_spec_id]
                     # Don't let the master workflow change the state for admin workflows
-                    if WorkflowService.is_in_admin_category(workflow_spec_id):
+                    if WorkflowService.is_admin_workflow(workflow_spec_id):
                         workflow.state = 'optional'
                         workflow.state_message = 'This is an Admin workflow'
                     else:
@@ -1167,6 +1167,6 @@ class WorkflowService(object):
         return category
 
     @staticmethod
-    def is_in_admin_category(workflow_spec_id):
+    def is_admin_workflow(workflow_spec_id):
         category = WorkflowService.get_workflow_spec_category(workflow_spec_id)
         return category.admin
