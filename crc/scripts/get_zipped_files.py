@@ -44,7 +44,6 @@ class GetZippedFiles(Script):
                         for file in files:
                             zip_key_words = doc_info[file.irb_doc_code]['zip_key_words']
                             file_name = f'{study_id} {zip_key_words} {file.name}'
-                            # file_data = session.query(FileDataModel).filter(FileDataModel.file_model_id == file.id).first()
                             zfw.writestr(file_name, file.data)
 
                     with open(temp_file.name, mode='rb') as handle:

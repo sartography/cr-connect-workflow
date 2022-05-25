@@ -8,7 +8,6 @@ from jinja2 import Template
 from crc import app, db, mail, session
 
 from crc.models.email import EmailModel
-from crc.models.file import FileDataModel
 from crc.models.study import StudyModel
 
 from crc.services.jinja_service import JinjaService

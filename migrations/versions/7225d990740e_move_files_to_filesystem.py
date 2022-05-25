@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # import crc
 from crc import app, session
-from crc.models.file import FileModel, FileModelSchema, FileDataModel, LookupFileModel, CONTENT_TYPES
+from crc.models.file import FileModel, FileModelSchema, LookupFileModel, CONTENT_TYPES  # , FileDataModel
 from crc.services.spec_file_service import SpecFileService
 from crc.services.reference_file_service import ReferenceFileService
 from crc.services.workflow_service import WorkflowService
