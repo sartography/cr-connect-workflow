@@ -22,9 +22,13 @@ class CompleteTemplate(Script):
         return """Using the Jinja template engine, takes data available in the current task, and uses it to populate 
 a word document that contains Jinja markup.  Please see https://docxtpl.readthedocs.io/en/latest/ 
 for more information on exact syntax.
-Takes two arguments:
+
+Takes two required arguments:
 1. The name of a MS Word docx file to use as a template.
-2. The 'code' of the IRB Document as set in the documents.xlsx file."
+2. The 'code' of the IRB Document as set in the documents.xlsx file.
+
+And one optional argument:
+1. The name for the generated file. Otherwise, we use the first argument.
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
@@ -33,14 +37,16 @@ Takes two arguments:
         self.process_template(task, study_id, workflow, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        workflow_spec_service = WorkflowSpecService()
         workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
         final_document_stream = self.process_template(task, study_id, workflow, *args, **kwargs)
-        file_name = args[0]
+        template_file_name = args[0]
         irb_doc_code = args[1]
+        file_name = None
+        if len(args) > 2:
+            file_name = args[2]
         UserFileService.add_workflow_file(workflow_id=workflow_id,
                                           task_spec_name=task.get_name(),
-                                          name=file_name,
+                                          name=file_name if file_name else template_file_name,
                                           content_type=CONTENT_TYPES['docx'],
                                           binary_data=final_document_stream.read(),
                                           irb_doc_code=irb_doc_code)
@@ -77,7 +83,8 @@ Takes two arguments:
             raise WorkflowTaskExecException(task, ae.message, exception=ae, line_number=ae.line_number,
                                             error_line=ae.error_line)
 
-    def get_image_file_data(self, fields_str, task):
+    @staticmethod
+    def get_image_file_data(fields_str, task):
         image_file_data = []
         images_field_str = re.sub(r'[\[\]]', '', fields_str)
         images_field_keys = [v.strip() for v in images_field_str.strip().split(',')]
