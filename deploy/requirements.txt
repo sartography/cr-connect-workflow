@@ -54,7 +54,7 @@ pyasn1==0.4.8
 pycparser==2.20
 pygithub==1.53
 pygments==2.7.4
-pyjwt==1.7.1
+pyjwt==2.4.0
 pyparsing==2.4.7
 pyrsistent==0.17.3
 python-box==5.2.0
