@@ -43,6 +43,9 @@ class UserView(AdminModelView):
 class StudyView(AdminModelView):
     column_filters = ['id']
     column_searchable_list = ['title']
+    can_create = True
+    can_edit = True
+    can_delete = True
 
 
 class ApprovalView(AdminModelView):
@@ -56,6 +59,9 @@ class WorkflowView(AdminModelView):
 class FileView(AdminModelView):
     column_filters = ['workflow_id', 'type']
     column_exclude_list = ['data']
+    can_create = True
+    can_edit = True
+    can_delete = True
 
     @action('publish', 'Publish', 'Are you sure you want to publish this file(s)?')
     def action_publish(self, ids):
@@ -77,6 +83,8 @@ class EmailView(AdminModelView):
 
 class TaskLogView(AdminModelView):
     column_exclude_list = ['id']
+    column_searchable_list = ['code', 'message', 'task']
+    column_filters = ['level', 'code', 'study_id', 'workflow_id', 'workflow_spec_id']
     can_create = True
     can_edit = True
     can_delete = True
@@ -86,6 +94,7 @@ def json_formatter(view, context, model, name):
     value = getattr(model, name)
     json_value = json.dumps(value, ensure_ascii=False, indent=2)
     return markupsafe.Markup(f'<pre>{json_value}</pre>')
+
 
 class TaskEventView(AdminModelView):
     column_filters = ['workflow_id', 'action']

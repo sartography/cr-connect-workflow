@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 from crc.models.data_store import DataStoreModel
-from crc.models.file import OldFileModel, FileModel, FileDataModel
+from crc.models.file import FileModel  # OldFileModel, , FileDataModel
 
 
 
