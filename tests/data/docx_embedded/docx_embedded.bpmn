@@ -8,13 +8,14 @@
     <bpmn:userTask id="Activity_GetData" name="Get Data" camunda:formKey="DataForm">
       <bpmn:extensionElements>
         <camunda:formData>
-          <camunda:formField id="file_name" label="'File Name'"  type="string" />
-          <camunda:formField id="irb_doc_code" label="'IRB Doc Code'"  type="enum">
+          <camunda:formField id="template_file_name" label="&#39;File Name&#39;" type="string" />
+          <camunda:formField id="irb_doc_code" label="&#39;IRB Doc Code&#39;" type="enum">
             <camunda:value id="Study_App_Doc" name="Study_App_Doc" />
             <camunda:value id="Study_Protocol" name="Study_Protocol" />
           </camunda:formField>
-          <camunda:formField id="name" label="'Name'"  type="string" defaultValue="World" />
+          <camunda:formField id="name" label="&#39;Name&#39;" type="string" defaultValue="World" />
           <camunda:formField id="include_me" type="string" />
+          <camunda:formField id="file_name" label="&#39;File Name&#39;" type="string" />
         </camunda:formData>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1lthj06</bpmn:incoming>
@@ -26,7 +27,10 @@
       <bpmn:outgoing>Flow_0ltznd4</bpmn:outgoing>
       <bpmn:script>print(f'name is {name}.')
 print(f'include_me is {include_me}')
-result = complete_template(file_name, irb_doc_code)</bpmn:script>
+if 'file_name' in globals():
+    result = complete_template(template_file_name, irb_doc_code, file_name)
+else:
+    result = complete_template(template_file_name, irb_doc_code)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0ltznd4" sourceRef="Activity_CompleteTemplate" targetRef="Activity_DisplayData" />
     <bpmn:manualTask id="Activity_DisplayData" name="Display Data">
@@ -61,17 +65,17 @@ result = complete_template(file_name, irb_doc_code)</bpmn:script>
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
         <dc:Bounds x="179" y="99" width="36" height="36" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_10trg2t_di" bpmnElement="Activity_GetData">
+        <dc:Bounds x="273" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1u6kbns_di" bpmnElement="Activity_CompleteTemplate">
+        <dc:Bounds x="432" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_14dp1gz_di" bpmnElement="Activity_DisplayData">
         <dc:Bounds x="590" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_0edltir_di" bpmnElement="Event_0edltir">
         <dc:Bounds x="752" y="99" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1u6kbns_di" bpmnElement="Activity_CompleteTemplate">
-        <dc:Bounds x="432" y="77" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_10trg2t_di" bpmnElement="Activity_GetData">
-        <dc:Bounds x="273" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
