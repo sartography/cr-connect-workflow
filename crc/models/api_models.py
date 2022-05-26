@@ -228,23 +228,6 @@ class WorkflowApi(object):
         self.state = state
         self.is_admin_workflow = is_admin_workflow
 
-    @classmethod
-    def from_workflow_model(cls, workflow: WorkflowModel):
-        instance = cls()
-        cls.id = workflow.id
-        cls.status = workflow.status
-        cls.next_task = workflow.next_task  # The next task that requires user input.
-        cls.navigation = workflow.navigation
-        cls.workflow_spec_id = workflow.workflow_spec_id
-        cls.total_tasks = workflow.total_tasks
-        cls.completed_tasks = workflow.completed_tasks
-        cls.last_updated = workflow.last_updated
-        cls.title = workflow.title
-        cls.is_review = workflow.is_review
-        cls.study_id = workflow.study_id or ''
-        cls.state = workflow.state
-        cls.is_admin_workflow = workflow.is_admin_workflow
-
 
 class WorkflowApiSchema(ma.Schema):
     class Meta:
