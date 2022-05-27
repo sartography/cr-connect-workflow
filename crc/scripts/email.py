@@ -193,9 +193,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=[('Study_
             doc_code_tuple = (attachments, [])
 
         # if we have a doc_code and a filter list
-        elif len(attachments) == 2 and \
-                isinstance(attachments[0], str) and \
-                isinstance(attachments[1], list):
+        elif is_filter_tuple(attachments):
             doc_code_tuple = (attachments[0], attachments[1])
 
         elif isinstance(attachments, list):
@@ -203,10 +201,6 @@ email(subject="My Subject", recipients="user@example.com", attachments=[('Study_
             # if everything in the list is a string
             if all(isinstance(x, str) for x in attachments):
                 return_list = [(doc_code, []) for doc_code in attachments]
-
-            # if we have a doc_code and a filter list--should get caught above
-            elif is_filter_tuple(attachments):
-                doc_code_tuple = (attachments[0], attachments[1])
 
             else:
                 return_list = []
