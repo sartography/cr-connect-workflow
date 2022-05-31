@@ -171,6 +171,9 @@ class WorkflowProcessor(object):
     def add_user_info_to_workflow(bpmn_workflow):
         if UserService.has_user():
             current_user = UserService.current_user(allow_admin_impersonate=True)
+            if UserService.user_is_admin() and UserService.admin_is_impersonating():
+                impersonator = UserService.get_impersonator()
+                current_user.impersonator = impersonator
             current_user_data = UserModelSchema().dump(current_user)
             tasks = bpmn_workflow.get_tasks(TaskState.READY)
             for task in tasks:
