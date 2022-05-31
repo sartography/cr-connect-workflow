@@ -103,6 +103,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual('This workflow is locked', workflows[1].state_message)
 
     def test_get_study_has_details_about_files(self):
+        self.load_test_spec('empty_workflow', master_spec=True)
 
         # Set up the study and attach a file to it.
         self.create_reference_document()
@@ -115,7 +116,7 @@ class TestStudyApi(BaseTest):
                                           name="anything.png", content_type="png",
                                           binary_data=b'1234', irb_doc_code=irb_code)
 
-        api_response = self.app.get('/v1.0/study/%i' % workflow.study_id,
+        api_response = self.app.get('/v1.0/study/%i?update_status=True' % workflow.study_id,
                                     headers=self.logged_in_headers(), content_type="application/json")
         self.assert_success(api_response)
         study = StudySchema().loads(api_response.get_data(as_text=True))
