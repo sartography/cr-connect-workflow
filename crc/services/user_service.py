@@ -98,6 +98,12 @@ class UserService(object):
             session.commit()
 
     @staticmethod
+    def get_impersonator():
+        if UserService.user_is_admin() and UserService.admin_is_impersonating():
+            impersonator = UserService.current_user(allow_admin_impersonate=False)
+            return impersonator
+
+    @staticmethod
     def in_list(uids, allow_admin_impersonate=False):
         """Returns true if the current user's id is in the given list of ids.  False if there
         is no user, or the user is not in the list."""
