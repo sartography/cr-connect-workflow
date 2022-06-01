@@ -22,3 +22,6 @@ class GetCurrentUser(Script):
                 current_user.impersonator = impersonator
             current_user_data = UserModelSchema().dump(current_user)
             return current_user_data
+        else:
+            raise ApiError(code='no_has_user',
+                           message='The current user is not logged in.')
