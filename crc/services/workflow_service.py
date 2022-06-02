@@ -705,7 +705,7 @@ class WorkflowService(object):
                 if (isinstance(spiff_task.task_spec, UserTask) or isinstance(spiff_task.task_spec, ManualTask)) \
                         and not UserService.in_list(user_uids, allow_admin_impersonate=True):
                     nav_item.state = WorkflowService.TASK_STATE_LOCKED
-                if isinstance(spiff_task.task_spec, StartEvent):
+                if isinstance(spiff_task.task_spec, StartEvent) and nav_item.lane:
                     in_list = UserService.in_list(user_uids, allow_admin_impersonate=True)
                     impersonator_is_admin = UserService.user_is_admin(allow_admin_impersonate=True)
                     if not in_list and not impersonator_is_admin:
