@@ -705,6 +705,12 @@ class WorkflowService(object):
                 if (isinstance(spiff_task.task_spec, UserTask) or isinstance(spiff_task.task_spec, ManualTask)) \
                         and not UserService.in_list(user_uids, allow_admin_impersonate=True):
                     nav_item.state = WorkflowService.TASK_STATE_LOCKED
+                if isinstance(spiff_task.task_spec, StartEvent):
+                    in_list = UserService.in_list(user_uids, allow_admin_impersonate=True)
+                    impersonator_is_admin = UserService.user_is_admin(allow_admin_impersonate=True)
+                    if not in_list and not impersonator_is_admin:
+                        nav_item.state = WorkflowService.TASK_STATE_LOCKED
+                    print('StartEvent: ')
             else:
                 # Strip off the first word in the description, to meet guidlines for BPMN.
                 if nav_item.description:
