@@ -20,8 +20,12 @@ class UserService(object):
 
     # Returns true if the current user is an admin.
     @staticmethod
-    def user_is_admin():
-        return UserService.has_user() and g.user.is_admin()
+    def user_is_admin(allow_admin_impersonate=False):
+        if allow_admin_impersonate:
+            user = UserService.current_user(allow_admin_impersonate)
+        else:
+            user = g.user
+        return UserService.has_user() and user.is_admin()
 
     # Returns true if the current admin user is impersonating another user.
     @staticmethod
