@@ -11,10 +11,13 @@ from crc.services.user_file_service import UserFileService
 class DeleteFile(Script):
 
     @staticmethod
-    def process_document_deletion(doc_code, workflow_id, task):
+    def process_document_deletion(doc_code, workflow_id, task, study_wide=True):
         if DocumentService.is_allowed_document(doc_code):
-            result = session.query(FileModel).filter(
-                FileModel.workflow_id == workflow_id, FileModel.irb_doc_code == doc_code).all()
+            query = session.query(FileModel)\
+                .filter(FileModel.irb_doc_code == doc_code)
+            if not study_wide:
+                query = query.filter(FileModel.workflow_id == workflow_id)
+            result = query.all()
             if isinstance(result, list) and len(result) > 0 and isinstance(result[0], FileModel):
                 for file in result:
                     UserFileService().delete_file(file.id)
@@ -57,6 +60,10 @@ class DeleteFile(Script):
         return True
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
+        study_wide = True
+        if 'study_wide' in kwargs:
+            study_wide = kwargs['study_wide']
+            del kwargs['study_wide']
         doc_codes = self.get_codes(task, args, kwargs)
         for doc_code in doc_codes:
-            self.process_document_deletion(doc_code, workflow_id, task)
+            self.process_document_deletion(doc_code, workflow_id, task, study_wide)
