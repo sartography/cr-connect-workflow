@@ -61,8 +61,11 @@ if not 'name' in globals():
 
 attachments = []
 if 'doc_codes' in globals():
-    for item in globals()['doc_codes']:
-        attachments.append(item['doc_code'])
+    if isinstance(globals()['doc_codes'], str):
+        attachments = globals()['doc_codes']
+    else:
+        for doc_code in globals()['doc_codes']:
+            attachments.append(doc_code)
 email_model = email(subject=subject, recipients=recipients, cc=cc, bcc=bcc, reply_to=reply_to, attachments=attachments, name=name)</bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_0xrm7iw" sourceRef="Activity_SendEmail" targetRef="Activity_1lnjeej" />

@@ -1,6 +1,5 @@
 import sys
 import traceback
-import datetime
 
 from crc import app, session
 from crc.api.common import ApiError
@@ -18,8 +17,9 @@ import datetime
 
 class Email(Script):
     """Send an email from a script task, as part of a workflow.
-       You must specify recipients and content.
-       You can also specify cc, bcc, reply_to, and attachments"""
+       You must specify recipients and subject.
+       You can also specify cc, bcc, reply_to, and attachments.
+       The email content must be in the Element Documentation for the task."""
 
     def get_description(self):
         return """Creates an email, using the provided `subject` and `recipients` arguments, which are required.
@@ -32,14 +32,20 @@ The recipients, cc, and bcc arguments can contain an email address or list of em
 In place of an email address, we accept the string 'associated', in which case we
 look up the users associated with the study who have send_email set to True. 
 The reply_to argument can contain an email address.
-The attachments arguments can contain a doc_code or list of doc_codes.
+
+The attachments argument can contain a doc_code string, a doc_code tuple or list of doc_code strings and tuples.
+A doc_code tuple contains a doc_code and list (of file_names).
+
+Normally, we include *all* files for each doc_code. The optional list of file_names allows 
+us to limit the files we include to only the files in the list. 
 
 Examples:
 email(subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email, 'associated'])
 email(subject="My Subject", recipients="user@example.com", cc='associated', bcc='test_user@example.com)
 email(subject="My Subject", recipients="user@example.com", reply_to="reply_to@example.com")
-email(subject="My Subject", recipients="user@example.com", attachments='Study_App_Doc')
-email(subject="My Subject", recipients="user@example.com", attachments=['Study_App_Doc','Study_Protocol_Document'])
+email(subject="My Subject", recipients="user@example.com", attachments=('Study_App_Doc', []))
+email(subject="My Subject", recipients="user@example.com", attachments=[('Study_App_Doc', ['some_file_name']),('Study_Protocol_Document',[])])
+email(subject="My Subject", recipients="user@example.com", attachments=[('Study_App_Doc', ['some_file_name']), 'Study_Protocol_Document'])
 """
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
@@ -163,23 +169,81 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                 associated_emails.append(user_info.email_address)
         return associated_emails
 
-    @staticmethod
-    def get_files(attachments, study_id):
-        files = []
-        codes = None
-        if isinstance(attachments, str):
-            codes = [attachments]
-        elif isinstance(attachments, list):
-            codes = attachments
+    def __process_attachments(self, attachments):
+        """Return either a doc_code_tuple or a list of doc_code_tuples
 
-        if codes is not None:
-            for code in codes:
-                if DocumentService.is_allowed_document(code):
+           attachments can be a string, a tuple, or a list
+
+           if attachments is a string, build a tuple with an empty list
+           if attachments is a tuple, make sure it is a string and a list
+
+           if attachments is a list, each of the items can be a string or a tuple
+           process each of them accordingly"""
+
+        doc_code_tuple = None
+        return_list = None
+
+        def is_filter_tuple(candidate):
+            return len(candidate) == 2 and \
+                   isinstance(candidate[0], str) and \
+                   isinstance(candidate[1], list)
+
+        # one doc_code, no filtering
+        if isinstance(attachments, str):
+            doc_code_tuple = (attachments, [])
+
+        # if we have a doc_code and a filter list
+        elif is_filter_tuple(attachments):
+            doc_code_tuple = (attachments[0], attachments[1])
+
+        elif isinstance(attachments, list):
+
+            # if everything in the list is a string
+            if all(isinstance(x, str) for x in attachments):
+                return_list = [(doc_code, []) for doc_code in attachments]
+
+            else:
+                return_list = []
+                for item in attachments:
+                    attachment = self.process_attachments(item)
+                    if len(attachment) == 2:
+                        return_list.append(attachment)
+                    else:
+                        if len(attachment) == 1 and len(attachment[0]) == 2:
+                            return_list.append((attachment[0]))
+        return doc_code_tuple, return_list
+
+    def process_attachments(self, attachments):
+        """Return a list of tuples like [(doc_code, ['some_file']), (another_doc_code, [])]
+           built from the attachments list"""
+
+        doc_code_tuple, return_list = self.__process_attachments(attachments)
+
+        # One of these should be None and the other should not
+        if return_list is None and doc_code_tuple is not None:
+            return [doc_code_tuple]
+        if doc_code_tuple is None and return_list is not None:
+            return return_list
+
+    def get_files(self, attachments, study_id):
+        attachments = self.process_attachments(attachments)
+        files = []
+
+        if attachments is not None:
+            for attachment in attachments:
+                doc_code = attachment[0]
+                file_filter = attachment[1]
+                if DocumentService.is_allowed_document(doc_code):
                     workflows = session.query(WorkflowModel).filter(WorkflowModel.study_id==study_id).all()
                     for workflow in workflows:
-                        workflow_files = session.query(FileModel).\
+
+                        query = session.query(FileModel).\
                             filter(FileModel.workflow_id == workflow.id).\
-                            filter(FileModel.irb_doc_code == code).all()
+                            filter(FileModel.irb_doc_code == doc_code)
+                        if isinstance(file_filter, list) and len(file_filter) > 0:
+                            query = query.filter(FileModel.name.in_(file_filter))
+
+                        workflow_files = query.all()
                         for file in workflow_files:
                             files.append({'id': file.id,
                                           'name': file.name,
@@ -187,7 +251,7 @@ email(subject="My Subject", recipients="user@example.com", attachments=['Study_A
                                           'data': file.data})
                 else:
                     raise ApiError(code='bad_doc_code',
-                                   message=f'The doc_code {code} is not valid.')
+                                   message=f'The doc_code {doc_code} is not valid.')
         else:
             raise ApiError(code='bad_argument_type',
                            message='The attachments argument must be a string or list of strings')
