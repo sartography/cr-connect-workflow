@@ -255,7 +255,7 @@ def set_current_task(workflow_id, task_id):
     processor = WorkflowProcessor(workflow_model)
     task_id = uuid.UUID(task_id)
     spiff_task = processor.bpmn_workflow.get_task(task_id)
-    cancel_notify = (hasattr(spiff_task, 'state') and spiff_task.state == TaskState.COMPLETED and
+    cancel_notify = (spiff_task.state == TaskState.COMPLETED and
                      spiff_task.task_spec.__class__.__name__ != 'EndEvent')
     if not spiff_task:
         # An invalid task_id was requested.

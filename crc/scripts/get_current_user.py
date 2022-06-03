@@ -17,9 +17,8 @@ class GetCurrentUser(Script):
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         if UserService.has_user():
             current_user = UserService.current_user(allow_admin_impersonate=True)
-            if UserService.user_is_admin() and UserService.admin_is_impersonating():
-                impersonator = UserService.get_impersonator()
-                current_user.impersonator = impersonator
+            if UserService.admin_is_impersonating():
+                current_user.impersonator = UserService.current_user(allow_admin_impersonate=False)
             current_user_data = UserModelSchema().dump(current_user)
             return current_user_data
         else:
