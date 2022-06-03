@@ -1,6 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc import session
+from crc.models.study import StudyStatus
 from crc.models.task_event import TaskEventModel
 from crc.models.user import UserModel
 from crc.services.workflow_service import WorkflowService
@@ -132,4 +133,34 @@ class TestWorkflowApi(BaseTest):
         spec1 = self.workflow_spec_service.get_spec('hello_world')
         self.assertNotIn('hello_world_lib', spec1.libraries)
 
+    def test_workflow_api_model(self):
+        """Create 2 workflow specs, one of them in an admin sandbox
+           Make sure we pass the correct information through the api """
+        self.assure_category_exists('test_admin_category', admin=True)
+        self.load_test_spec('simple_form')
+        self.load_test_spec('hello_world', category_id='test_admin_category')
+
+        simple_form_workflow = self.create_workflow('simple_form')
+        hello_world_workflow = self.create_workflow('hello_world')
+        # Make sure both workflows use the same study
+        self.assertEqual(hello_world_workflow.study.id, simple_form_workflow.study.id)
+        study = hello_world_workflow.study
+        # Make sure the study status is in_progress
+        self.assertEqual(StudyStatus.in_progress, study.status)
+
+        rv_simple_form_1 = self.app.get('/v1.0/workflow/%s' % simple_form_workflow.id,
+                                        follow_redirects=True,
+                                        content_type="application/json",
+                                        headers=self.logged_in_headers())
+        self.assert_success(rv_simple_form_1)
+        json_data_simple_1 = json.loads(rv_simple_form_1.get_data(as_text=True))
+        self.assertFalse(json_data_simple_1['is_admin_workflow'])
+
+        rv_hello_world_1 = self.app.get('/v1.0/workflow/%s' % hello_world_workflow.id,
+                                        follow_redirects=True,
+                                        content_type="application/json",
+                                        headers=self.logged_in_headers())
+        self.assert_success(rv_hello_world_1)
+        json_data_hello_1 = json.loads(rv_hello_world_1.get_data(as_text=True))
+        self.assertTrue(json_data_hello_1['is_admin_workflow'])
 

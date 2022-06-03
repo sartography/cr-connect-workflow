@@ -169,12 +169,14 @@ class BaseTest(unittest.TestCase):
             self.workflow_spec_service.add_category(category)
         return category
 
-    def assure_category_exists(self, category_id=None):
+    def assure_category_exists(self, category_id=None, display_name="Test Workflows", admin=False):
         category = None
         if category_id is not None:
             category = self.workflow_spec_service.get_category(category_id)
         if category is None:
-            category = WorkflowSpecCategory(id="test_category", display_name="Test Workflows", admin=False, display_order=0)
+            if category_id is None:
+                category_id = 'test_category'
+            category = WorkflowSpecCategory(id=category_id, display_name=display_name, admin=admin, display_order=0)
             self.workflow_spec_service.add_category(category)
         return category
 
