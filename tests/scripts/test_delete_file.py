@@ -112,3 +112,41 @@ class TestDeleteFile(BaseTest):
         simple_form_files = self.get_files_for_workflow(simple_form)
         self.assertEqual(1, len(simple_form_files))
         self.assertFalse(simple_form_files[0].archived)
+
+    def test_delete_file_current_study_only(self):
+        hello_world, simple_form = self.setup_workflows()
+
+        # separate study, this file should be unaffected
+        study = self.create_study(title='Yet Another Test Study')
+        workflow = self.create_workflow('empty_workflow', study=study)
+        self.upload_document(workflow, self.doc_code, 'file_name.svg', b'xyzpdq')
+
+        # nothing is archived
+        workflow_files = self.get_files_for_workflow(workflow)
+        self.assertFalse(workflow_files[0].archived)
+
+        hello_world_files = self.get_files_for_workflow(hello_world)
+        self.assertFalse(hello_world_files[0].archived)
+
+        simple_form_files = self.get_files_for_workflow(simple_form)
+        self.assertFalse(simple_form_files[0].archived)
+
+        # delete files, should be limited to this study
+        delete_file_script = self.create_workflow('delete_file_script')
+        workflow_api = self.get_workflow_api(delete_file_script)
+        task = workflow_api.next_task
+        form_data = {'doc_codes': self.doc_code}
+        self.complete_form(delete_file_script, task, form_data)
+
+        # files from other study are unaffected
+        workflow_files = self.get_files_for_workflow(workflow)
+        self.assertFalse(workflow_files[0].archived)
+
+        # files for this study are archived
+        hello_world_files = self.get_files_for_workflow(hello_world)
+        self.assertTrue(hello_world_files[0].archived)
+
+        simple_form_files = self.get_files_for_workflow(simple_form)
+        self.assertTrue(simple_form_files[0].archived)
+
+        print('test_delete_file_current_study_only')
