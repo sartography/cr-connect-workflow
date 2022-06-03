@@ -61,9 +61,11 @@ class UserModelSchema(SQLAlchemyAutoSchema):
     uid = fields.String()
     is_admin = fields.Method('get_is_admin', dump_only=True)
     ldap_info = fields.Nested(LdapSchema)
+    impersonator = fields.Nested('self', many=False, allow_none=True)
 
-    def get_is_admin(self, obj):
-        return obj.is_admin()
+    @staticmethod
+    def get_is_admin(user):
+        return user.is_admin()
 
 
 class AdminSessionModel(db.Model):

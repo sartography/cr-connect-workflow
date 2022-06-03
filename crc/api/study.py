@@ -107,7 +107,7 @@ def update_study(study_id, body):
 def get_study(study_id, update_status=False):
     spec_service = WorkflowSpecService()
     categories = spec_service.get_categories()
-    master_workflow_results = []
+    master_workflow_results = {}
     if update_status:
         study_model = session.query(StudyModel).filter(StudyModel.id == study_id).first()
         master_workflow_results = __run_master_spec(study_model, spec_service.master_spec)

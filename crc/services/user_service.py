@@ -20,8 +20,11 @@ class UserService(object):
 
     # Returns true if the current user is an admin.
     @staticmethod
-    def user_is_admin():
-        return UserService.has_user() and g.user.is_admin()
+    def user_is_admin(allow_admin_impersonate=False):
+        if UserService.has_user():
+            return UserService.current_user(allow_admin_impersonate).is_admin()
+        else:
+            return False
 
     # Returns true if the current admin user is impersonating another user.
     @staticmethod
@@ -29,9 +32,8 @@ class UserService(object):
         if UserService.user_is_admin():
             adminSession: AdminSessionModel = UserService.get_admin_session()
             return adminSession is not None
-
         else:
-            raise ApiError("unauthorized", "You do not have permissions to do this.", status_code=403)
+            return False
 
     # Returns true if the given user uid is different from the current user's uid.
     @staticmethod
@@ -45,7 +47,7 @@ class UserService(object):
 
         # Admins can pretend to be different users and act on a user's behalf in
         # some circumstances.
-        if UserService.user_is_admin() and allow_admin_impersonate and UserService.admin_is_impersonating():
+        if allow_admin_impersonate and UserService.admin_is_impersonating():
             return UserService.get_admin_session_user()
         else:
             return g.user

@@ -140,14 +140,11 @@ class WorkflowProcessor(object):
                                     check_sub_specs(my_spec['spec'], indent + 5)
                     check_sub_specs(test_spec, 5)
 
-
         self.workflow_spec_id = workflow_model.workflow_spec_id
 
         try:
             self.bpmn_workflow = self.__get_bpmn_workflow(workflow_model, spec, validate_only)
             self.bpmn_workflow.script_engine = self._script_engine
-
-            self.add_user_info_to_workflow(self.bpmn_workflow)
 
             if self.WORKFLOW_ID_KEY not in self.bpmn_workflow.data:
                 if not workflow_model.id:
@@ -166,15 +163,6 @@ class WorkflowProcessor(object):
                            message="Failed to deserialize workflow"
                                    " '%s'  due to a mis-placed or missing task '%s'" %
                                    (self.workflow_spec_id, str(ke)))
-
-    @staticmethod
-    def add_user_info_to_workflow(bpmn_workflow):
-        if UserService.has_user():
-            current_user = UserService.current_user(allow_admin_impersonate=True)
-            current_user_data = UserModelSchema().dump(current_user)
-            tasks = bpmn_workflow.get_tasks(TaskState.READY)
-            for task in tasks:
-                task.data['current_user'] = current_user_data
 
     @staticmethod
     def reset(workflow_model, clear_data=False):
@@ -256,7 +244,6 @@ class WorkflowProcessor(object):
             bpmn_workflow = BpmnWorkflow(spec, script_engine=WorkflowProcessor._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
-            WorkflowProcessor.add_user_info_to_workflow(bpmn_workflow)
             bpmn_workflow.do_engine_steps()
         except WorkflowException as we:
             raise ApiError.from_task_spec("error_running_master_spec", str(we), we.sender)

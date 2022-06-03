@@ -347,18 +347,6 @@ class TestWorkflowProcessor(BaseTest):
         supervisor_task = processor.next_user_tasks()[0]
         self.assertEqual("supervisor", supervisor_task.task_spec.lane)
 
-    def test_run_master_spec_knows_about_current_user(self):
-        """Master spec should have access to the current user."""
-        spec = self.load_test_spec('empty_workflow', "Master", master_spec=True)
-        study = self.create_study()
-
-        # Make it seem like we are logged in
-        g.user = UserModel.query.filter_by(uid=study.user_uid).first()
-        g.token = 'my_fake_token'
-
-        results = WorkflowProcessor.run_master_spec(spec, study)
-        self.assertIn('current_user', results.keys())
-
     def test_ability_to_deserialize_old_workflows(self):
         workflow_model = self.create_workflow("random_fact")
         processor = WorkflowProcessor(workflow_model)

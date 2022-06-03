@@ -135,7 +135,7 @@ class StudyService(object):
         files = (File.from_file_model(model, DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
         last_time = sincetime("files", last_time)
-        if process_categories and master_workflow_results:
+        if process_categories and master_workflow_results is not None:
             if study.status != StudyStatus.abandoned:
                 workflow_metas = []
                 for category in study.categories:
