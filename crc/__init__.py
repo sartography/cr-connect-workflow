@@ -27,7 +27,6 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)  # respect the X-Forwarded-Prot
 app.config.from_object('config.default')
 
 if "TESTING" in os.environ and os.environ["TESTING"] == "true":
-    app.config.from_object('config.testing')
     app.config.from_pyfile('../config/testing.py')
     import logging
     logging.basicConfig(level=logging.INFO)
