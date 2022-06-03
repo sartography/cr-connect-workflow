@@ -64,8 +64,8 @@ class UserModelSchema(SQLAlchemyAutoSchema):
     impersonator = fields.Nested('self', many=False, allow_none=True)
 
     @staticmethod
-    def get_is_admin(obj):
-        return obj.is_admin()
+    def get_is_admin(user):
+        return user.is_admin()
 
 
 class AdminSessionModel(db.Model):
