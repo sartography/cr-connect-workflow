@@ -248,7 +248,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=[('Study_
                             files.append({'id': file.id,
                                           'name': file.name,
                                           'type': CONTENT_TYPES[file.type],
-                                          'data': file.data})
+                                          'data': file.data,
+                                          'doc_code': doc_code})
                 else:
                     raise ApiError(code='bad_doc_code',
                                    message=f'The doc_code {doc_code} is not valid.')
