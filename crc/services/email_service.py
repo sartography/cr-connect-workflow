@@ -3,11 +3,10 @@ import re
 
 from flask import render_template
 from flask_mail import Message
-from jinja2 import Template
 
-from crc import app, db, mail, session
+from crc import app, mail, session
 
-from crc.models.email import EmailModel
+from crc.models.email import EmailModel, EmailDocCodesModel
 from crc.models.study import StudyModel
 
 from crc.services.jinja_service import JinjaService
@@ -24,13 +23,14 @@ class EmailService(object):
         # Find corresponding study - if any
         study = None
         if type(study_id) == int:
-            study = db.session.query(StudyModel).get(study_id)
+            study = session.query(StudyModel).get(study_id)
 
         # Create EmailModel
         email_model = EmailModel(subject=subject, sender=sender, recipients=str(recipients),
                                  content=content, content_html=content_html, study=study,
                                  cc=str(cc), bcc=str(bcc), workflow_spec_id=workflow_spec_id, name=name)
 
+        doc_codes = []
         # Send mail
         try:
             msg = Message(subject,
@@ -44,6 +44,8 @@ class EmailService(object):
 
             if attachment_files is not None:
                 for file in attachment_files:
+                    if file['doc_code'] not in doc_codes:
+                        doc_codes.append(file['doc_code'])
                     msg.attach(file['name'], file['type'], file['data'])
 
             mail.send(msg)
@@ -53,8 +55,12 @@ class EmailService(object):
             app.logger.error(str(e))
             raise e
 
-        db.session.add(email_model)
-        db.session.commit()
+        session.add(email_model)
+        session.commit()
+        for doc_code in doc_codes:
+            email_doc_code = EmailDocCodesModel(email_id=email_model.id, doc_code=doc_code)
+            session.add(email_doc_code)
+        session.commit()
         return email_model
 
     @staticmethod
