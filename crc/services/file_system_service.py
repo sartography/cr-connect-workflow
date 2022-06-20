@@ -1,5 +1,6 @@
 import datetime
 import os
+import shutil
 from typing import List
 
 import pytz
@@ -140,3 +141,14 @@ class FileSystemService(object):
         last_modified = FileSystemService._last_modified(item.path)
         return File.from_file_system(item.name, file_type, content_type, last_modified, file_size)
 
+    def move_spec_files(self, spec, old_category):
+        new_spec_path = self.workflow_path(spec)
+        old_category_path = self.category_path(old_category)
+        old_spec_path = os.path.join(old_category_path, spec.id)
+        os.makedirs(new_spec_path, exist_ok=True)
+
+        file_names = os.listdir(old_spec_path)
+        for file_name in file_names:
+            shutil.move(os.path.join(old_spec_path, file_name), new_spec_path)
+
+        os.rmdir(old_spec_path)

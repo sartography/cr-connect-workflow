@@ -58,29 +58,75 @@ class TestWorkflowSpec(BaseTest):
         self.assertEqual(WorkflowSpecInfoSchema().dump(fs_spec), json_data)
 
     def test_update_workflow_specification(self):
+        """Make sure we update, and clean up the old spec if we change category"""
 
-        self.load_test_spec('random_fact')
-        category_id = 'a_trap'
-        category = WorkflowSpecCategory(id=category_id, display_name="It's a trap!", display_order=0, admin=False)
-        self.workflow_spec_service.add_category(category)
+        categories_0 = self.workflow_spec_service.get_categories()
+        self.assertEqual(0, len(categories_0))
 
-        spec_before: WorkflowSpecInfo = self.workflow_spec_service.get_spec('random_fact')
-        self.assertNotEqual(spec_before.category_id, category_id)
+        # create spec
+        random_spec = self.load_test_spec('random_fact')
+        self.assertEqual('random_fact', random_spec.id)
+        self.assertEqual('test_category', random_spec.category_id)
+        self.assertEqual('', random_spec.description)
+        self.assertEqual('random_fact', random_spec.display_name)
 
-        spec_before.category_id = category_id
+        # we have 1 category (test_category) and it has 1 spec (random_spec)
+        categories_1 = self.workflow_spec_service.get_categories()
+        self.assertEqual(1, len(categories_1))
+        self.assertEqual('test_category', categories_1[0].id)
+        self.assertEqual(1, len(categories_1[0].specs))
+        self.assertEqual(random_spec, categories_1[0].specs[0])
+
+        # create a new category
+        new_category_id = 'new_category'
+        new_category_model = WorkflowSpecCategory(id=new_category_id, display_name="It's a trap!", display_order=0, admin=False)
+        new_category = self.workflow_spec_service.add_category(new_category_model)
+
+        # we now have 2 categories, and the new one does not have a spec
+        categories_2 = self.workflow_spec_service.get_categories()
+        self.assertEqual(2, len(categories_2))
+        for category in categories_2:
+            if category.id == 'test_category':
+                self.assertEqual(len(category.specs), 1)
+                self.assertEqual(random_spec, category.specs[0])
+            elif category.id == 'new_category':
+                self.assertEqual(len(category.specs), 0)
+
+        # update random_spec
+        self.assertNotEqual(random_spec.category_id, new_category_id)
+        random_spec.category_id = new_category_id
+        random_spec.display_name = 'My New Display Name'
+        random_spec.description = 'My New Description'
         rv = self.app.put('/v1.0/workflow-specification/random_fact',
                           content_type="application/json",
                           headers=self.logged_in_headers(),
-                          data=json.dumps(WorkflowSpecInfoSchema().dump(spec_before)))
+                          data=json.dumps(WorkflowSpecInfoSchema().dump(random_spec)))
         self.assert_success(rv)
+
+        # make sure we have the expected data
         json_data = json.loads(rv.get_data(as_text=True))
-        api_spec = WorkflowSpecInfoSchema().load(json_data)
-        self.assertEqual(WorkflowSpecInfoSchema().dump(spec_before), json_data)
+        self.assertEqual(WorkflowSpecInfoSchema().dump(random_spec), json_data)
+        self.assertEqual('random_fact', json_data['id'])
+        self.assertEqual('new_category', json_data['category_id'])
+        self.assertEqual('My New Display Name', json_data['display_name'])
+        self.assertEqual('My New Description', json_data['description'])
 
-
+        # make sure we persisted the expected data
         spec_after: WorkflowSpecInfo = self.workflow_spec_service.get_spec('random_fact')
-        self.assertIsNotNone(spec_after.category_id)
-        self.assertIsNotNone(spec_after.category_id, category_id)
+        self.assertEqual('random_fact', spec_after.id)
+        self.assertEqual('new_category', spec_after.category_id)
+        self.assertEqual('My New Display Name', spec_after.display_name)
+        self.assertEqual('My New Description', spec_after.description)
+
+        # we still have 2 categories, but now test_category is empty, and new_category has the spec
+        categories_3 = self.workflow_spec_service.get_categories()
+        self.assertEqual(2, len(categories_3))
+        for category in categories_3:
+            if category.id == 'new_category':
+                self.assertEqual(len(category.specs), 1)
+                self.assertEqual(random_spec, category.specs[0])
+            elif category.id == 'test_category':
+                self.assertEqual(len(category.specs), 0)
 
     def test_delete_workflow_specification(self):
 

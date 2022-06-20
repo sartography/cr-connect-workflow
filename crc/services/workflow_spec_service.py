@@ -25,7 +25,9 @@ class WorkflowSpecService(FileSystemService):
         spec.display_order = display_order
         self.update_spec(spec)
 
-    def update_spec(self, spec:WorkflowSpecInfo):
+    def update_spec(self, spec: WorkflowSpecInfo, old_category_id=None):
+        if old_category_id is not None and spec.category_id != old_category_id:
+            FileSystemService().move_spec_files(spec, old_category_id)
         spec_path = self.workflow_path(spec)
         if spec.is_master_spec or spec.library or spec.standalone:
             spec.category_id = ""

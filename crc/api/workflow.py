@@ -133,6 +133,7 @@ def update_workflow_specification(spec_id, body):
     if spec_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Workflow Spec ID.')
     spec = spec_service.get_spec(spec_id)
+    old_category_id = spec.category_id
 
     if spec is None:
         raise ApiError('unknown_study', 'The spec "' + spec_id + '" is not recognized.')
@@ -145,7 +146,7 @@ def update_workflow_specification(spec_id, body):
     if body['library'] is True or body['standalone'] is True:
         body['category_id'] = None
     spec = WorkflowSpecInfoSchema().load(body)
-    spec_service.update_spec(spec)
+    spec_service.update_spec(spec, old_category_id)
     return WorkflowSpecInfoSchema().dump(spec)
 
 
