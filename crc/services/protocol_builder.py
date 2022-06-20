@@ -18,6 +18,7 @@ class ProtocolBuilderService(object):
     SPONSORS_URL = app.config['PB_SPONSORS_URL']
     IRB_INFO_URL = app.config['PB_IRB_INFO_URL']
     CHECK_STUDY_URL = app.config['PB_CHECK_STUDY_URL']
+    PRE_REVIEW_URL = app.config['PB_PRE_REVIEW_URL']
 
     @staticmethod
     def is_enabled():
@@ -70,6 +71,10 @@ class ProtocolBuilderService(object):
     @staticmethod
     def check_study(study_id) -> {}:
         return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.CHECK_STUDY_URL)
+
+    @staticmethod
+    def get_pre_reviews(study_id) -> {}:
+        return ProtocolBuilderService.__make_request(study_id, ProtocolBuilderService.PRE_REVIEW_URL)
 
     @staticmethod
     def __enabled_or_raise():
