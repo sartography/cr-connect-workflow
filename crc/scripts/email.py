@@ -43,6 +43,8 @@ Examples:
 email(subject="My Subject", recipients=["dhf8r@virginia.edu", pi.email, 'associated'])
 email(subject="My Subject", recipients="user@example.com", cc='associated', bcc='test_user@example.com)
 email(subject="My Subject", recipients="user@example.com", reply_to="reply_to@example.com")
+email(subject="My Subject", recipients="user@example.com", attachments='Study_App_Doc')
+email(subject="My Subject", recipients="user@example.com", attachments=['Study_App_Doc', Study_Protocol_Document])
 email(subject="My Subject", recipients="user@example.com", attachments=('Study_App_Doc', []))
 email(subject="My Subject", recipients="user@example.com", attachments=[('Study_App_Doc', ['some_file_name']),('Study_Protocol_Document',[])])
 email(subject="My Subject", recipients="user@example.com", attachments=[('Study_App_Doc', ['some_file_name']), 'Study_Protocol_Document'])
@@ -248,7 +250,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=[('Study_
                             files.append({'id': file.id,
                                           'name': file.name,
                                           'type': CONTENT_TYPES[file.type],
-                                          'data': file.data})
+                                          'data': file.data,
+                                          'doc_code': doc_code})
                 else:
                     raise ApiError(code='bad_doc_code',
                                    message=f'The doc_code {doc_code} is not valid.')
