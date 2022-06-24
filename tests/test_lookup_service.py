@@ -159,7 +159,8 @@ class TestLookupService(BaseTest):
 
         results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "reaction design", limit=10)
         self.assertEqual(3, len(results), "all results come back for two terms.")
-        self.assertEqual("Reaction Design", results[0]['CUSTOMER_NAME'], "Exact matches come first.")
+        result_names = [r['CUSTOMER_NAME'] for r in results]
+        self.assertIn("Reaction Design", result_names)
 
         results = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", "1 Something", limit=10)
         self.assertEqual("1 Something", results[0]['CUSTOMER_NAME'], "Exact matches are preferred")
