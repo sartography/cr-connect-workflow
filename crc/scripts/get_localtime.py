@@ -29,7 +29,8 @@ class GetLocaltime(Script):
                 timezone = args[1]
             else:
                 timezone = 'US/Eastern'
-            parsed_timestamp = dateparser.parse(timestamp)
+            # with Python 3.9, not passing the timezone resuls in a  PytzUsageWarning usage warning.
+            parsed_timestamp = dateparser.parse(timestamp, settings={'TIMEZONE': 'UTC'})
             localtime = parsed_timestamp.astimezone(pytz.timezone(timezone))
             return localtime
 
