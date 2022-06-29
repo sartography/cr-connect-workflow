@@ -7,7 +7,7 @@
 ### Tools
 These instructions assume you're using these development and tools:
 - IDE: PyCharm Professional Edition
-- Operating System: Ubuntu
+- Operating System: Ubuntu 
 
 ### Environment Setup
 Make sure all of the following are properly installed on your system:
