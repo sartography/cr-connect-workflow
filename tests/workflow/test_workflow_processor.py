@@ -1,3 +1,4 @@
+import json
 import os
 
 from SpiffWorkflow import TaskState
@@ -352,10 +353,10 @@ class TestWorkflowProcessor(BaseTest):
         processor = WorkflowProcessor(workflow_model)
         processor.do_engine_steps()  # Get the thing up and running.
 
-        # Use the old serializer to serialize the workflow and set it on the model.
-        old_school_serializer = BpmnSerializer()
-        old_school_json = old_school_serializer.serialize_workflow(processor.bpmn_workflow, include_spec=True)
-        workflow_model.bpmn_workflow_json = old_school_json
+        # Serlialize the workflow normally, but alter the version number, so we can exercise that older code
+        old_school_json = json.loads(processor.serialize())
+        old_school_json['serializer_version'] = "1.0-CRC"
+        workflow_model.bpmn_workflow_json = json.dumps(old_school_json)
         db.session.add(workflow_model)
         db.session.commit()
 
@@ -365,4 +366,4 @@ class TestWorkflowProcessor(BaseTest):
         processor = WorkflowProcessor(workflow_model)
         new_json = processor.serialize()
 
-        self.assertIsNotNone(processor._serializer.get_version(new_json))
+        self.assertEqual(processor.SERIALIZER_VERSION, processor._serializer.get_version(new_json))
