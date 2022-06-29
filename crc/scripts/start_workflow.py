@@ -1,3 +1,5 @@
+from SpiffWorkflow.exceptions import WorkflowTaskExecException
+
 from crc import session
 from crc.api.common import ApiError
 from crc.models.api_models import WorkflowApi, WorkflowApiSchema
@@ -25,14 +27,14 @@ class StartWorkflow(Script):
             raise ApiError(code='missing_parameter',
                            message=f'The start_workflow script requires a workflow id')
 
-        workflow = session.query(WorkflowModel).\
-            filter(WorkflowModel.study_id==study_id).\
-            filter(WorkflowModel.workflow_spec_id==workflow_spec_id).\
+        workflow = session.query(WorkflowModel). \
+            filter(WorkflowModel.study_id == study_id). \
+            filter(WorkflowModel.workflow_spec_id == workflow_spec_id). \
             first()
 
-        if not(workflow):
+        if not (workflow):
             raise ApiError(code='unknown_workflow',
-                   message=f"We could not find a workflow with workflow_spec_id '{workflow_spec_id}'.")
+                           message=f"We could not find a workflow with workflow_spec_id '{workflow_spec_id}'.")
 
         return workflow
 
@@ -43,8 +45,12 @@ class StartWorkflow(Script):
         workflow_model = self.get_workflow(study_id, *args, **kwargs)
         if workflow_model.status != WorkflowStatus.not_started:
             return  # This workflow has al ready started, don't execute these next very expensive lines.
-        processor = WorkflowProcessor(workflow_model)
-        processor.do_engine_steps()
-        processor.save()
-        WorkflowService.update_task_assignments(processor)
-
+        try:
+            processor = WorkflowProcessor(workflow_model)
+            processor.do_engine_steps()
+            processor.save()
+            WorkflowService.update_task_assignments(processor)
+        except ApiError as e:
+            msg = f"Failed to execute start_workflow('{workflow_model.workflow_spec_id}'). " + e.message
+            te = WorkflowTaskExecException(task, msg)
+            raise te
