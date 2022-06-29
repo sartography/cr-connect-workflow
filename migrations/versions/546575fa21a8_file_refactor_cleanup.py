@@ -17,10 +17,10 @@ depends_on = None
 
 
 def upgrade():
-    op.drop_constraint('document_id_key', 'data_store', type_='foreignkey')
-    op.drop_table('document')
-    op.drop_table('file_data')
-    op.drop_table('old_file')
+    op.execute("ALTER TABLE data_store DROP CONSTRAINT IF EXISTS document_id_key")
+    op.execute("DROP TABLE IF EXISTS document")
+    op.execute("DROP TABLE IF EXISTS file_data")
+    op.execute("DROP TABLE IF EXISTS old_file")
 
 
 def downgrade():
