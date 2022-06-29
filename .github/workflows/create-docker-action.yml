@@ -3,6 +3,8 @@ name: run_ci
 on:
   push:
     branches: ['main', 'chore/*', 'feature/*', 'bug/*']
+  workflow_dispatch:
+
 
 env:
   REGISTRY: ghcr.io
