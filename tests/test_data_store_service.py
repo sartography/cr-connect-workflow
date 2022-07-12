@@ -297,3 +297,33 @@ class TestDataStoreValidation(BaseTest):
         workflow_api = self.complete_form(workflow, task, form_data)
         task = workflow_api.next_task
         self.assertEqual('Event_EndEvent', task.name)
+
+    def test_get_data_store_default(self):
+        file_id = self.add_test_file()
+
+        form_data = {'key': 'my_key', 'value': 'my_value', 'file_id': file_id}
+        result = self.run_data_store_set(form_data)
+
+        workflow = self.create_workflow('data_store_get')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        form_data = {'type': 'study',
+                     'key': 'my_key',
+                     'file_id': 'None',
+                     'default': 'None'}
+        workflow_api = self.complete_form(workflow, task, form_data)
+        task = workflow_api.next_task
+        self.assertEqual('my_value', task.data['data_store'])
+
+        workflow = self.create_workflow('data_store_get')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        form_data = {'type': 'study',
+                     'key': 'my_bad_key',
+                     'file_id': 'None',
+                     'default': 'My Default Data'}
+        workflow_api = self.complete_form(workflow, task, form_data)
+        task = workflow_api.next_task
+        self.assertEqual('My Default Data', task.data['data_store'])
