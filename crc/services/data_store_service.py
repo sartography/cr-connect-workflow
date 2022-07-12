@@ -22,29 +22,29 @@ class DataStoreBase(object):
         g.validation_data_store.append(record)
         return record
 
-    def get_validate_common(self, script_name, study_id=None, user_id=None, file_id=None, *args):
+    def get_validate_common(self, ds_type, ds_key, study_id=None, user_id=None, file_id=None, ds_default=None):
         # This method uses a temporary validation_data_store that is only available for the current validation request.
         # This allows us to set data_store values during validation that don't affect the real data_store.
         # For data_store `gets`, we first look in the temporary validation_data_store.
         # If we don't find an entry in validation_data_store, we look in the real data_store.
-        key = args[0]
-        if script_name == 'study_data_get':
+        # key = args[0]
+        if ds_type == 'study':
             # If it's in the validation data store, return it
             for record in g.validation_data_store:
-                if 'study_id' in record and record['study_id'] == study_id and key in record:
-                    return record[key]
+                if 'study_id' in record and record['study_id'] == study_id and ds_key in record:
+                    return record[ds_key]
             # If not in validation_data_store, look in the actual data_store
-            return self.get_data_common(study_id, user_id, 'study_data_get', file_id, *args)
-        elif script_name == 'file_data_get':
+            return self.get_data_common('study', ds_key, study_id, user_id, file_id, ds_default)
+        elif ds_type == 'file':
             for record in g.validation_data_store:
-                if 'file_id' in record and record['file_id'] == file_id and key in record:
-                    return record[key]
-            return self.get_data_common(study_id, user_id, 'file_data_get', file_id, *args)
-        elif script_name == 'user_data_get':
+                if 'file_id' in record and record['file_id'] == file_id and ds_key in record:
+                    return record[ds_key]
+            return self.get_data_common('file', ds_key, study_id, user_id, file_id, ds_default)
+        elif ds_type == 'user':
             for record in g.validation_data_store:
-                if 'user_id' in record and record['user_id'] == user_id and key in record:
-                    return record[key]
-            return self.get_data_common(study_id, user_id, 'user_data_get', file_id, *args)
+                if 'user_id' in record and record['user_id'] == user_id and ds_key in record:
+                    return record[ds_key]
+            return self.get_data_common('user', ds_key, study_id, user_id, file_id, ds_default)
 
     @staticmethod
     def check_args(args, maxlen=1, script_name='study_data_get'):
@@ -57,7 +57,16 @@ class DataStoreBase(object):
     def check_args_2(args, script_name='study_data_set'):
         if len(args) != 2:
             raise ApiError(code="missing_argument",
-                           message=f"The {script_name} script takes two arguments, key and value, in that order.")
+                           message=f"The {script_name} script takes two arguments; key and value.")
+
+    @staticmethod
+    def check_args_get(dstore_type, dstore_key, file_id):
+        if dstore_type is None or dstore_key is None:
+            raise ApiError(code="missing_argument",
+                           message=f"The data store service requires a `type` and `key`")
+        if dstore_type == 'file' and file_id is None:
+            raise ApiError(code="missing_argument",
+                           message="The file data store service requires a `file_id`.")
 
     def set_data_common(self,
                         task_spec,
@@ -115,18 +124,20 @@ class DataStoreBase(object):
 
         return dsm.value
 
-    def get_data_common(self, study_id, user_id, script_name, file_id=None, *args):
-        self.check_args(args, 2, script_name)
-        record = session.query(DataStoreModel).filter_by(study_id=study_id,
-                                                         user_id=user_id,
-                                                         file_id=file_id,
-                                                         key=args[0]).first()
-        if record:
+    def get_data_common(self, dstore_type, dstore_key, study_id, user_id, file_id=None, dstore_default=None):
+        self.check_args_get(dstore_type, dstore_key, file_id)
+        record = session.query(DataStoreModel).\
+            filter_by(study_id=study_id,
+                      user_id=user_id,
+                      file_id=file_id,
+                      key=dstore_key).\
+            first()
+        if record is not None:
             return record.value
         else:
             # This is a possible default value passed in from the data_store get methods
-            if len(args) == 2:
-                return args[1]
+            if dstore_default is not None:
+                return dstore_default
 
     @staticmethod
     def get_multi_common(study_id, user_id, file_id=None):
