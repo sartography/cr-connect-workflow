@@ -8,34 +8,32 @@ from flask import g
 
 
 class DataStoreSet(Script):
-    script_name = None
-    data_store_args = None
     data_store_type = None
     data_store_file_id = None
     data_store_study_id = None
     data_store_user_id = None
+    data_store_key = None
+    data_store_value = None
 
     def set_args(self, study_id, **kwargs):
         self.validate_kw_args(**kwargs)
-        self.data_store_args = [kwargs['key'], kwargs['value']]
+        self.data_store_key = kwargs['key']
         self.data_store_type = kwargs['type']
+        self.data_store_value = kwargs['value']
         if self.data_store_type == 'file':
             try:
                 file_id = int(kwargs['file_id'])
             except Exception:
                 raise ApiError("invalid_file_id",
                                f"The file_id must be an integer. You passed {kwargs['file_id']}.")
-            self.script_name = 'file_data_set'
             self.data_store_file_id = file_id
             self.data_store_study_id = None
             self.data_store_user_id = None
         elif self.data_store_type == 'study':
-            self.script_name = 'study_data_set'
             self.data_store_study_id = study_id
             self.data_store_file_id = None
             self.data_store_user_id = None
         elif self.data_store_type == 'user':
-            self.script_name = 'user_data_set'
             self.data_store_user_id = g.user.uid
             self.data_store_file_id = None
             self.data_store_study_id = None
@@ -48,29 +46,32 @@ class DataStoreSet(Script):
 
     def do_task_validate_only(self, task, study_id, workflow_id, *args, **kwargs):
         self.set_args(study_id, **kwargs)
-        result = DataStoreBase().set_validate_common(task.id,
-                                                   self.data_store_study_id,
-                                                   workflow_id,
-                                                   self.script_name,
-                                                   self.data_store_user_id,
-                                                   self.data_store_file_id,
-                                                   *self.data_store_args)
+        result = DataStoreBase().set_validate_common(self.data_store_type,
+                                                     self.data_store_key,
+                                                     self.data_store_value,
+                                                     task.id,
+                                                     workflow_id,
+                                                     self.data_store_study_id,
+                                                     self.data_store_user_id,
+                                                     self.data_store_file_id)
         return result
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         self.set_args(study_id, **kwargs)
 
-        if self.data_store_type == 'file' and self.data_store_args[0] == 'irb_code':
+        if self.data_store_type == 'file' and self.data_store_key == 'irb_code':
             irb_doc_code = kwargs['value']
             UserFileService.update_irb_code(self.data_store_file_id, irb_doc_code)
 
-        return DataStoreBase().set_data_common(task.id,
-                                             self.data_store_study_id,
-                                             self.data_store_user_id,
-                                             workflow_id,
-                                             self.script_name,
-                                             self.data_store_file_id,
-                                             *self.data_store_args)
+        return DataStoreBase().set_data_common(
+            self.data_store_type,
+            self.data_store_key,
+            self.data_store_value,
+            task.id,
+            self.data_store_study_id,
+            self.data_store_user_id,
+            workflow_id,
+            self.data_store_file_id)
 
     @staticmethod
     def validate_kw_args(**kwargs):

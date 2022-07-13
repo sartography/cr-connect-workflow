@@ -9,16 +9,16 @@ from sqlalchemy import desc
 
 class DataStoreBase(object):
 
-    def set_validate_common(self, task_id, study_id, workflow_id, script_name, user_id, file_id, *args):
-        self.check_args_2(args, script_name)
-        key = args[0]
-        value = args[1]
-        if script_name == 'study_data_set':
-            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, key: value}
-        elif script_name == 'file_data_set':
-            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'file_id': file_id, key: value}
-        elif script_name == 'user_data_set':
-            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'user_id': user_id, key: value}
+    def set_validate_common(
+            self, ds_type, ds_key, ds_value, task_id, workflow_id, study_id=None, user_id=None, file_id=None
+    ):
+        self.check_args_set(ds_type, ds_key, file_id)
+        if ds_type == 'study':
+            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, ds_key: ds_value}
+        elif ds_type == 'file':
+            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'file_id': file_id, ds_key: ds_value}
+        elif ds_type == 'user':
+            record = {'task_id': task_id, 'study_id': study_id, 'workflow_id': workflow_id, 'user_id': user_id, ds_key: ds_value}
         g.validation_data_store.append(record)
         return record
 
@@ -27,7 +27,6 @@ class DataStoreBase(object):
         # This allows us to set data_store values during validation that don't affect the real data_store.
         # For data_store `gets`, we first look in the temporary validation_data_store.
         # If we don't find an entry in validation_data_store, we look in the real data_store.
-        # key = args[0]
         if ds_type == 'study':
             # If it's in the validation data store, return it
             for record in g.validation_data_store:
@@ -47,17 +46,16 @@ class DataStoreBase(object):
             return self.get_data_common('user', ds_key, study_id, user_id, file_id, ds_default)
 
     @staticmethod
-    def check_args(args, maxlen=1, script_name='study_data_get'):
-        if len(args) < 1 or len(args) > maxlen:
+    def check_args_set(ds_type, ds_key, file_id):
+        if ds_type is None or ds_key is None:
             raise ApiError(code="missing_argument",
-                           message=f"The {script_name} script takes either one or two arguments, "
-                                   f"starting with the key and an optional default")
-
-    @staticmethod
-    def check_args_2(args, script_name='study_data_set'):
-        if len(args) != 2:
+                           message="Setting a data store requires `type` and `key` keyword arguments")
+        if ds_type not in ('study', 'user', 'file'):
+            raise ApiError(code='bad_ds_type',
+                           message=f"The data store service `type` must be `study`, `user`, or `file`. We received {ds_type}")
+        if ds_type == 'file' and file_id is None:
             raise ApiError(code="missing_argument",
-                           message=f"The {script_name} script takes two arguments; key and value.")
+                           message="The file data store service requires a `file_id`.")
 
     @staticmethod
     def check_args_get(dstore_type, dstore_key, file_id):
@@ -68,38 +66,23 @@ class DataStoreBase(object):
             raise ApiError(code="missing_argument",
                            message="The file data store service requires a `file_id`.")
 
-    def set_data_common(self,
-                        task_spec,
-                        study_id,
-                        user_id,
-                        workflow_id,
-                        script_name,
-                        file_id,
-                        *args):
+    def set_data_common(
+            self, ds_type, ds_key, ds_value, task_spec, study_id, user_id, workflow_id, file_id
+    ):
+        self.check_args_set(ds_type, ds_key, file_id)
 
-        self.check_args_2(args, script_name=script_name)
-        key = args[0]
-        value = args[1]
-        if value == '' or value is None:
+        if ds_value == '' or ds_value is None:
             # We delete the data store if the value is empty
-            return self.delete_data_store(study_id, user_id, file_id, *args)
+            return self.delete_data_store(study_id, user_id, file_id, ds_key)
         workflow_spec_id = None
         if workflow_id is not None:
             workflow = session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
             workflow_spec_id = workflow.workflow_spec_id
 
-        # Check if this data store is previously set
-        query = session.query(DataStoreModel).filter(DataStoreModel.key == key)
-        if study_id:
-            query = query.filter(DataStoreModel.study_id == study_id)
-        elif file_id:
-            query = query.filter(DataStoreModel.file_id == file_id)
-        elif user_id:
-            query = query.filter(DataStoreModel.user_id == user_id)
-        result = query.order_by(desc(DataStoreModel.last_updated)).all()
+        result = self.get_previous_data_store(ds_key, study_id, user_id, file_id)
         if result:
             dsm = result[0]
-            dsm.value = value
+            dsm.value = ds_value
             if task_spec:
                 dsm.task_spec = task_spec
             if workflow_id:
@@ -111,8 +94,8 @@ class DataStoreBase(object):
                 # This just gets rid of all the old unused records
                 self.delete_extra_data_stores(result[1:])
         else:
-            dsm = DataStoreModel(key=key,
-                                 value=value,
+            dsm = DataStoreModel(key=ds_key,
+                                 value=ds_value,
                                  study_id=study_id,
                                  task_spec=task_spec,
                                  user_id=user_id,  # Make this available to any User
@@ -146,19 +129,11 @@ class DataStoreBase(object):
                                                           file_id=file_id)
         return results
 
-    @staticmethod
-    def delete_data_store(study_id, user_id, file_id, *args):
-
-        query = session.query(DataStoreModel).filter(DataStoreModel.key == args[0])
-        if user_id:
-            query = query.filter(DataStoreModel.user_id == user_id)
-        elif file_id:
-            query = query.filter(DataStoreModel.file_id == file_id)
-        elif study_id:
-            query = query.filter(DataStoreModel.study_id == study_id)
-        record = query.first()
-        if record is not None:
-            session.delete(record)
+    def delete_data_store(self, study_id, user_id, file_id, ds_key):
+        records = self.get_previous_data_store(ds_key, study_id, user_id, file_id)
+        if records is not None:
+            for record in records:
+                session.delete(record)
             session.commit()
 
     @staticmethod
@@ -169,3 +144,15 @@ class DataStoreBase(object):
         for record in records:
             session.query(DataStoreModel).filter(DataStoreModel.id == record.id).delete()
         session.commit()
+
+    @staticmethod
+    def get_previous_data_store(ds_key, study_id, user_id, file_id):
+        query = session.query(DataStoreModel).filter(DataStoreModel.key == ds_key)
+        if study_id:
+            query = query.filter(DataStoreModel.study_id == study_id)
+        elif file_id:
+            query = query.filter(DataStoreModel.file_id == file_id)
+        elif user_id:
+            query = query.filter(DataStoreModel.user_id == user_id)
+        result = query.order_by(desc(DataStoreModel.last_updated)).all()
+        return result
