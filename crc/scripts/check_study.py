@@ -1,4 +1,4 @@
-from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 
 from crc.scripts.script import Script
 from crc.api.common import ApiError

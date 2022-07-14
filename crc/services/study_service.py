@@ -6,7 +6,7 @@ from typing import List
 import requests
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
-from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime, LOG
 from flask import g
 from ldap3.core.exceptions import LDAPSocketOpenError

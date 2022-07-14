@@ -1,7 +1,7 @@
 import json
 
 from SpiffWorkflow import WorkflowException
-from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 from flask import g
 from jinja2 import TemplateError
 from werkzeug.exceptions import InternalServerError

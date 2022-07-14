@@ -1,5 +1,5 @@
 import requests
-from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 
 from crc import db
 from crc.api.common import ApiError

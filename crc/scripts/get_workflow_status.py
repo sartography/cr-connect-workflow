@@ -1,4 +1,4 @@
-from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 
 from crc import session
 from crc.api.common import ApiError

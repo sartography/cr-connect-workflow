@@ -1,4 +1,4 @@
-from SpiffWorkflow.exceptions import WorkflowTaskExecException
+from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 
 from crc.models.task_log import TaskLogModel, TaskLogModelSchema, TaskLogLevels
 from crc.scripts.script import Script
