@@ -7,7 +7,7 @@ from crc.services.ldap_service import LdapService
 from datetime import datetime
 from unittest.mock import patch
 
-from crc.models.email import EmailModel
+from crc.models.email import EmailModel, EmailDocCodesModel
 from crc import session, app
 from crc.models.protocol_builder import ProtocolBuilderCreatorStudySchema
 from crc.models.file import FileModel
@@ -280,9 +280,40 @@ class TestStudyApi(BaseTest):
 
     def test_delete_study(self):
         self.add_studies()
+        self.create_reference_document()
         study = session.query(StudyModel).first()
+        workflow = self.create_workflow('file_and_email', study=study)
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+        file_model = UserFileService.add_workflow_file(workflow_id=workflow.id,
+                                                       irb_doc_code='Study_Protocol_Document',
+                                                       task_spec_name=task.name,
+                                                       name="anything.png", content_type="text",
+                                                       binary_data=b'1234')
+        form_data = {'Study_Protocol_Document': {'id': file_model.id},
+                     'ShortDesc': 'My Short Description'}
+        self.complete_form(workflow, task, form_data)
+
+        task_events = session.query(TaskEventModel).filter(TaskEventModel.study_id == study.id).all()
+        self.assertEqual(2, len(task_events))
+        files = session.query(FileModel).all()
+        self.assertEqual(1, len(files))
+        emails = session.query(EmailModel).all()
+        self.assertEqual(1, len(emails))
+        email_doc_codes = session.query(EmailDocCodesModel).all()
+        self.assertEqual(1, len(email_doc_codes))
+
         rv = self.app.delete('/v1.0/study/%i' % study.id, headers=self.logged_in_headers())
         self.assert_success(rv)
+
+        task_events = session.query(TaskEventModel).filter(TaskEventModel.study_id == study.id).all()
+        self.assertEqual(0, len(task_events))
+        files = session.query(FileModel).all()
+        self.assertEqual(0, len(files))
+        emails = session.query(EmailModel).all()
+        self.assertEqual(0, len(emails))
+        email_doc_codes = session.query(EmailDocCodesModel).all()
+        self.assertEqual(0, len(email_doc_codes))
 
     def test_delete_workflow(self):
 

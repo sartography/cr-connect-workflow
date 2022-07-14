@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0cvu7nl" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_0bigqna" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1d1a6o0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1d1a6o0" sourceRef="StartEvent_1" targetRef="Activity_UploadFile" />
+    <bpmn:userTask id="Activity_UploadFile" name="Upload File" camunda:formKey="FileForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="Study_Protocol_Document" label="Upload FIle" type="file">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="ShortDesc" label="Short Description" type="string">
+            <camunda:properties>
+              <camunda:property id="file_data" value="Study_Protocol_Document" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1d1a6o0</bpmn:incoming>
+      <bpmn:outgoing>Flow_0d4ys4t</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0d4ys4t" sourceRef="Activity_UploadFile" targetRef="Activity_SendEmail" />
+    <bpmn:scriptTask id="Activity_SendEmail" name="Send Email">
+      <bpmn:documentation>This is my email message</bpmn:documentation>
+      <bpmn:incoming>Flow_0d4ys4t</bpmn:incoming>
+      <bpmn:outgoing>Flow_106zub2</bpmn:outgoing>
+      <bpmn:script>email_model = email(subject='Test Email', recipients='user@company.com', attachments=['Study_Protocol_Document'], name='my_email_name')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_106zub2" sourceRef="Activity_SendEmail" targetRef="Activity_DisplayStuff" />
+    <bpmn:manualTask id="Activity_DisplayStuff" name="Display Stuff">
+      <bpmn:documentation>## Stuff
+
+### Email
+{{ email_model }}</bpmn:documentation>
+      <bpmn:incoming>Flow_106zub2</bpmn:incoming>
+      <bpmn:outgoing>Flow_13hpnyx</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_12y4baw">
+      <bpmn:incoming>Flow_13hpnyx</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_13hpnyx" sourceRef="Activity_DisplayStuff" targetRef="Event_12y4baw" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0bigqna">
+      <bpmndi:BPMNEdge id="Flow_1d1a6o0_di" bpmnElement="Flow_1d1a6o0">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="272" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d4ys4t_di" bpmnElement="Flow_0d4ys4t">
+        <di:waypoint x="372" y="117" />
+        <di:waypoint x="430" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_106zub2_di" bpmnElement="Flow_106zub2">
+        <di:waypoint x="530" y="117" />
+        <di:waypoint x="590" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13hpnyx_di" bpmnElement="Flow_13hpnyx">
+        <di:waypoint x="690" y="117" />
+        <di:waypoint x="752" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0fsdfiv_di" bpmnElement="Activity_SendEmail">
+        <dc:Bounds x="430" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1os739j_di" bpmnElement="Activity_DisplayStuff">
+        <dc:Bounds x="590" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_12y4baw_di" bpmnElement="Event_12y4baw">
+        <dc:Bounds x="752" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_19ylm40_di" bpmnElement="Activity_UploadFile">
+        <dc:Bounds x="272" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -15,6 +15,7 @@ from crc import db, session, app
 from crc.api.common import ApiError
 from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
+from crc.models.email import EmailDocCodesModel
 from crc.models.file import FileModel, File, FileSchema
 from crc.models.ldap import LdapSchema
 
@@ -295,6 +296,8 @@ class StudyService(object):
         session.query(TaskEventModel).filter_by(study_id=study_id).delete()
         session.query(TaskLogModel).filter_by(study_id=study_id).delete()
         session.query(StudyAssociated).filter_by(study_id=study_id).delete()
+        for email in session.query(EmailModel).filter_by(study_id=study_id):
+            session.query(EmailDocCodesModel).filter_by(email_id=email.id).delete()
         session.query(EmailModel).filter_by(study_id=study_id).delete()
         session.query(StudyEvent).filter_by(study_id=study_id).delete()
         session.query(DataStoreModel).filter_by(study_id=study_id).delete()

@@ -10,6 +10,7 @@ from jinja2.utils import markupsafe
 from crc import db, app
 from crc.api.common import ApiError
 from crc.api.user import verify_token, verify_token_admin
+from crc.models.data_store import DataStoreModel
 from crc.models.email import EmailModel
 from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
@@ -104,6 +105,11 @@ class TaskEventView(AdminModelView):
     }
 
 
+class DataStoreView(AdminModelView):
+    column_filters = ['key', 'study_id', 'user_id', 'file_id']
+    column_list = ['key', 'value', 'study_id', 'user_id', 'file_id', 'workflow_id']
+
+
 admin = Admin(app)
 
 admin.add_view(StudyView(StudyModel, db.session))
@@ -113,3 +119,4 @@ admin.add_view(FileView(FileModel, db.session))
 admin.add_view(TaskEventView(TaskEventModel, db.session))
 admin.add_view(EmailView(EmailModel, db.session))
 admin.add_view(TaskLogView(TaskLogModel, db.session))
+admin.add_view(DataStoreView(DataStoreModel, db.session))
