@@ -8,6 +8,7 @@ from crc.models.api_models import WorkflowApiSchema
 from crc.models.file import FileModelSchema
 from crc.models.workflow import WorkflowModel, WorkflowState, WorkflowStatus
 from crc.models.task_event import TaskEventModel
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class TestTasksApi(BaseTest):
@@ -60,7 +61,7 @@ class TestTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual('two_forms', workflow_api.workflow_spec_id)
-        self.assertEqual(5, len(workflow_api.navigation))
+        self.assertEqual(3, len(workflow_api.navigation)) # start and 2 forms
         self.assertIsNotNone(workflow_api.next_task.form)
         self.assertEqual("UserTask", workflow_api.next_task.type)
         self.assertEqual("StepOne", workflow_api.next_task.name)
@@ -99,43 +100,36 @@ class TestTasksApi(BaseTest):
 
     def test_navigation_with_parallel_forms(self):
         workflow = self.create_workflow('exclusive_gateway')
-
-        # get the first form in the two form workflow.
-        workflow_api = self.get_workflow_api(workflow)
-
-        self.assertIsNotNone(workflow_api.navigation)
-        nav = workflow_api.navigation
+        processor = WorkflowProcessor(workflow)
+        nav = processor.bpmn_workflow.get_deep_nav_list()
         self.assertEqual(4, len(nav))
-        self.assertEqual("Do You Have Bananas", nav[1].description)
-        self.assertEqual("Bananas?", nav[2].description)
-        self.assertEqual("MAYBE", nav[2].state)
+        self.assertEqual("Enter Do You Have Bananas", nav[1].description)
+        self.assertEqual("Has Bananas?", nav[2].description)
 
         self.assertEqual("yes", nav[2].children[0].description)
         self.assertEqual("MAYBE", nav[2].children[0].state)
-        self.assertEqual("of Bananas", nav[2].children[0].children[0].description)
+        self.assertEqual("Number of Bananas", nav[2].children[0].children[0].description)
         self.assertEqual("EndEvent", nav[2].children[0].children[1].spec_type)
 
         self.assertEqual("no", nav[2].children[1].description)
         self.assertEqual("MAYBE", nav[2].children[1].state)
-        self.assertEqual("no bananas", nav[2].children[1].children[0].description)
+        self.assertEqual("Why no bananas", nav[2].children[1].children[0].description)
         self.assertEqual("EndEvent", nav[2].children[1].children[1].spec_type)
 
     def test_navigation_with_exclusive_gateway(self):
         workflow = self.create_workflow('exclusive_gateway_2')
-
+        processor = WorkflowProcessor(workflow)
         # get the first form in the two form workflow.
-        workflow_api = self.get_workflow_api(workflow)
-        self.assertIsNotNone(workflow_api.navigation)
-        nav = workflow_api.navigation
+        nav = processor.bpmn_workflow.get_deep_nav_list()
         self.assertEqual(7, len(nav))
-        self.assertEqual("Task 1", nav[1].description)
-        self.assertEqual("Which Branch?", nav[2].description)
+        self.assertEqual("Enter Task 1", nav[1].description)
+        self.assertEqual("Decide Which Branch?", nav[2].description)
         self.assertEqual("a", nav[2].children[0].description)
-        self.assertEqual("Task 2a", nav[2].children[0].children[0].description)
+        self.assertEqual("Enter Task 2a", nav[2].children[0].children[0].description)
         self.assertEqual("b", nav[2].children[1].description)
-        self.assertEqual("Task 2b", nav[2].children[1].children[0].description)
+        self.assertEqual("Enter Task 2b", nav[2].children[1].children[0].description)
         self.assertEqual(None, nav[3].description)
-        self.assertEqual("Task 3", nav[4].description)
+        self.assertEqual("Enter Task 3", nav[4].description)
         self.assertEqual("EndEvent", nav[5].spec_type)
 
     def test_document_added_to_workflow_shows_up_in_file_list(self):
@@ -356,7 +350,7 @@ class TestTasksApi(BaseTest):
         navigation = workflow_api.navigation
         task = workflow_api.next_task
 
-        self.assertEqual(5, len(navigation))
+        self.assertEqual(4, len(navigation)) # 2 start events + 2 user tasks
         self.assertEqual("UserTask", task.type)
         self.assertEqual("Activity_A", task.name)
         self.assertEqual("My Sub Process", task.process_name)

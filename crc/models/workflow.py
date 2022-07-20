@@ -114,8 +114,6 @@ class WorkflowModel(db.Model):
     study_id = db.Column(db.Integer, db.ForeignKey('study.id'))
     study = db.relationship("StudyModel", backref='workflow', lazy='select')
     workflow_spec_id = db.Column(db.String)
-    total_tasks = db.Column(db.Integer, default=0)
-    completed_tasks = db.Column(db.Integer, default=0)
     last_updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
     user_id = db.Column(db.String, default=None)
     state = db.Column(db.String, nullable=True)

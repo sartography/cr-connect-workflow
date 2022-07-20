@@ -30,7 +30,7 @@ class TestMultiinstanceTasksApi(BaseTest):
         # get the first form in the two form workflow.
         workflow_api = self.get_workflow_api(workflow)
         navigation = self.get_workflow_api(workflow_api).navigation
-        self.assertEqual(5, len(navigation)) # Start task, form_task, multi_task, end task
+        self.assertEqual(2, len(navigation)) # Start task, multi-instance/user task
         self.assertEqual("UserTask", workflow_api.next_task.type)
         self.assertEqual(MultiInstanceType.sequential.value, workflow_api.next_task.multi_instance_type)
         self.assertEqual(5, workflow_api.next_task.multi_instance_count)
@@ -52,9 +52,9 @@ class TestMultiinstanceTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance_parallel')
 
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual(9, len(workflow_api.navigation))
+        self.assertEqual(6, len(workflow_api.navigation)) # Start event + 5 investigators
         ready_items = [nav for nav in workflow_api.navigation if nav.state == "READY"]
-        self.assertEqual(5, len(ready_items))
+        self.assertEqual(5, len(ready_items)) # Just the 5 investigators.
 
         self.assertEqual("UserTask", workflow_api.next_task.type)
         self.assertEqual("MultiInstanceTask",workflow_api.next_task.name)
@@ -90,7 +90,7 @@ class TestMultiinstanceTasksApi(BaseTest):
         workflow = self.create_workflow('multi_instance_parallel')
 
         workflow_api = self.get_workflow_api(workflow)
-        self.assertEqual(9, len(workflow_api.navigation))
+        self.assertEqual(6, len(workflow_api.navigation)) # Start + 5 multi-instance investigators
         ready_items = [nav for nav in workflow_api.navigation if nav.state == "READY"]
         self.assertEqual(5, len(ready_items))
 
