@@ -357,14 +357,6 @@ class BaseTest(unittest.TestCase):
 
         # Assure task events are updated on the model
         workflow = WorkflowApiSchema().load(json_data)
-        # The total number of tasks may change over time, as users move through gateways
-        # branches may be pruned. As we hit parallel Multi-Instance new tasks may be created...
-        self.assertIsNotNone(workflow.total_tasks)
-        # presumably, we also need to deal with sequential items here too . .
-        # You may loop back to a previous task, which would actually reduce the number of
-        # completed tasks.  So this test doesn't seem correct.
-        # if not task_in.multi_instance_type == 'looping' and not update_all:
-        #    self.assertEqual(prev_completed_task_count + 1, workflow.completed_tasks)
 
         # Assure a record exists in the Task Events
         task_events = session.query(TaskEventModel) \

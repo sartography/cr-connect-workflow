@@ -52,6 +52,7 @@ dateparser = "*"
 # pipenv install --editable ../SpiffWorkflow (but fix things back before commiting!)
 # Merged Commit https://github.com/sartography/SpiffWorkflow/pull/178 broke usage of SpiffWorkflow
 # References to task states will need to be updated to allow using newest version
+#spiffworkflow = {editable = true, path = "./../SpiffWorkflow"}
 spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow"}
 
 [requires]

@@ -212,15 +212,13 @@ class DocumentDirectory(object):
 
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,
-                 workflow_spec_id, total_tasks, completed_tasks,
+                 workflow_spec_id,
                  last_updated, is_review, title, study_id, state, is_admin_workflow=False):
         self.id = id
         self.status = status
         self.next_task = next_task  # The next task that requires user input.
         self.navigation = navigation
         self.workflow_spec_id = workflow_spec_id
-        self.total_tasks = total_tasks
-        self.completed_tasks = completed_tasks
         self.last_updated = last_updated
         self.title = title
         self.is_review = is_review
@@ -245,7 +243,7 @@ class WorkflowApiSchema(ma.Schema):
     @marshmallow.post_load
     def make_workflow(self, data, **kwargs):
         keys = ['id', 'status', 'next_task', 'navigation',
-                'workflow_spec_id', "total_tasks", "completed_tasks",
+                'workflow_spec_id',
                 "last_updated", "is_review", "title", "study_id", "state", "is_admin_workflow"]
         filtered_fields = {key: data[key] for key in keys}
         filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])

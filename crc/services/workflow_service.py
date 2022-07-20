@@ -126,7 +126,7 @@ class WorkflowService(object):
 
     @staticmethod
     def get_erroring_workflows():
-        workflows = session.query(WorkflowModel).filter(WorkflowModel.status==WorkflowStatus.erroring).all()
+        workflows = session.query(WorkflowModel).filter(WorkflowModel.status == WorkflowStatus.erroring).all()
         return workflows
 
     @staticmethod
@@ -181,8 +181,6 @@ class WorkflowService(object):
             count = 0
 
             while not processor.bpmn_workflow.is_completed():
-                processor.bpmn_workflow.get_deep_nav_list()  # Assure no errors with navigation.
-
                 exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until)
                 if (exit_task != None):
                     raise ApiError.from_task("validation_break",
@@ -197,7 +195,8 @@ class WorkflowService(object):
                                                  f" current task data must have information mapping this role to "
                                                  f" a unique user id.", task)
                     if task.task_spec.lane is not None:
-                        if isinstance(task.data[task.task_spec.lane], str) and not LdapService().user_exists(task.data[task.task_spec.lane]):
+                        if isinstance(task.data[task.task_spec.lane], str) and not LdapService().user_exists(
+                                task.data[task.task_spec.lane]):
                             raise ApiError.from_task("missing_user",
                                                      f"The user '{task.data[task.task_spec.lane]}' "
                                                      f"could not be found in LDAP. ", task)
@@ -215,9 +214,9 @@ class WorkflowService(object):
                     if hasattr(task_api, 'form') and task_api.form is not None:
                         if task_api.form.key == '':
                             raise ApiError(code='missing_form_key',
-                                       message='Forms must include a Form Key.',
-                                       task_id=task.id,
-                                       task_name=task.get_name())
+                                           message='Forms must include a Form Key.',
+                                           task_id=task.id,
+                                           task_name=task.get_name())
                         WorkflowService.populate_form_with_random_data(task, task_api, required_only)
                         if not WorkflowService.validate_form(task, task_api):
                             # In the process of completing the form, it is possible for fields to become required
@@ -247,7 +246,8 @@ class WorkflowService(object):
             raise
         except Exception as e:
             # Catch generic exceptions so that the finally clause always executes
-            app.logger.error(f'Unexpected exception caught during validation. Original exception: {str(e)}', exc_info=True)
+            app.logger.error(f'Unexpected exception caught during validation. Original exception: {str(e)}',
+                             exc_info=True)
             raise ApiError(code='unknown_exception',
                            message=f'We caught an unexpected exception during validation. Original exception is: {str(e)}')
         finally:
@@ -335,8 +335,9 @@ class WorkflowService(object):
                 try:
                     form_data[field.id] = WorkflowService.get_default_value(field, task, data)
                 except Exception as e:
-                    raise ApiError.from_task("bad default value", f'The default value "{field.default_value}" in field {field.id} '
-                                                          f'could not be understood or evaluated. ',
+                    raise ApiError.from_task("bad default value",
+                                             f'The default value "{field.default_value}" in field {field.id} '
+                                             f'could not be understood or evaluated. ',
                                              task=task)
                 # If we have a good default value, and we aren't dealing with a repeat, we can stop here.
                 if form_data[field.id] is not None and not field.has_property(Task.FIELD_PROP_REPEAT):
@@ -374,7 +375,8 @@ class WorkflowService(object):
                                              f'for repeat and group expressions that is not also used for a field name.'
                                              , task=task)
                 if field.has_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION):
-                    result = WorkflowService.evaluate_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION, field, task, form_data)
+                    result = WorkflowService.evaluate_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION, field, task,
+                                                               form_data)
                     if not result:
                         hide_groups.append(group)
                 if group not in form_data and group not in hide_groups:
@@ -554,7 +556,7 @@ class WorkflowService(object):
                 return default
             else:
                 raise ApiError.from_task("unknown_lookup_option", "The settings for this auto complete field "
-                                                                 "are incorrect: %s " % field.id, task)
+                                                                  "are incorrect: %s " % field.id, task)
         elif field.type == 'boolean':
             default = str(default).lower()
             if default == 'true' or default == 't':
@@ -656,6 +658,30 @@ class WorkflowService(object):
         return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
+    def get_navigation(processor):
+        """Finds all the ready, completed, and future tasks and created nav_item objects for them."""
+        tasks = []
+        navigation = []
+        # Get ready, completed, and fuiture tasks
+        tasks.extend(processor.bpmn_workflow.get_tasks(TaskState.READY | TaskState.COMPLETED | TaskState.FUTURE))
+
+        # Filter this out to just the user tasks and the start task
+        user_tasks = list(filter(lambda task: isinstance(task.task_spec, UserTask)
+                                              or isinstance(task.task_spec, ManualTask)
+                                              or isinstance(task.task_spec, StartEvent), tasks))
+
+        for user_task in user_tasks:
+            if any(nav.name == user_task.task_spec.name and user_task.state == TaskState.FUTURE for nav in navigation):
+                continue  # Don't re-add the same spec for future items
+            nav_item = NavItem.from_spec(spec=user_task.task_spec)
+            nav_item.state = user_task.state.name
+            nav_item.task_id = user_task.id
+            nav_item.indent = 0  # we should remove indent, this is not nested now.
+            navigation.append(nav_item)
+        WorkflowService.update_navigation(navigation, processor)
+        return navigation
+
+    @staticmethod
     def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
@@ -668,10 +694,8 @@ class WorkflowService(object):
             id=processor.get_workflow_id(),
             status=processor.get_status(),
             next_task=None,
-            navigation=navigation,
+            navigation=WorkflowService.get_navigation(processor),
             workflow_spec_id=processor.workflow_spec_id,
-            total_tasks=len(navigation),
-            completed_tasks=processor.workflow_model.completed_tasks,
             last_updated=processor.workflow_model.last_updated,
             is_review=spec.is_review,
             title=spec.display_name,
@@ -711,7 +735,6 @@ class WorkflowService(object):
                     impersonator_is_admin = UserService.user_is_admin(allow_admin_impersonate=True)
                     if not in_list and not impersonator_is_admin:
                         nav_item.state = WorkflowService.TASK_STATE_LOCKED
-                    print('StartEvent: ')
             else:
                 # Strip off the first word in the description, to meet guidlines for BPMN.
                 if nav_item.description:
@@ -806,7 +829,7 @@ class WorkflowService(object):
                 for i, field in enumerate(task.form.fields):
                     task.form.fields[i] = WorkflowService.process_options(spiff_task, field)
                     # If there is a default value, set it.
-                    #if field.id not in task.data and WorkflowService.get_default_value(field, spiff_task) is not None:
+                    # if field.id not in task.data and WorkflowService.get_default_value(field, spiff_task) is not None:
                     #    task.data[field.id] = WorkflowService.get_default_value(field, spiff_task)
             task.documentation = WorkflowService._process_documentation(spiff_task)
 
@@ -844,8 +867,9 @@ class WorkflowService(object):
                 title = spiff_task.workflow.script_engine.evaluate(spiff_task, title)
             except Exception as e:
                 # if the task is ready, we should raise an error, but if it is in the future or the past, we may not
-                # have the information we need to properly set the title, so don't error out, and just use what is
-                # provided.
+                # have the information we need to properly set the title, so don't error out, and just use the base
+                # description for now.
+                title = spiff_task.task_spec.description
                 if spiff_task.state == TaskState.READY:
                     raise ApiError.from_task(code="task_title_error",
                                              message="Could not set task title on task %s with '%s' property because %s" %
@@ -854,7 +878,6 @@ class WorkflowService(object):
         elif title and ' ' in title:
             title = title.partition(' ')[2]
         return title
-
 
     @staticmethod
     def _process_properties(spiff_task, props):

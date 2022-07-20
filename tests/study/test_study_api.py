@@ -72,8 +72,6 @@ class TestStudyApi(BaseTest):
         self.assertEqual("random_fact", workflow["display_name"])
         self.assertEqual("optional", workflow["state"])
         self.assertEqual("not_started", workflow["status"])
-        self.assertEqual(0, workflow["total_tasks"])
-        self.assertEqual(0, workflow["completed_tasks"])
 
     def test_get_study_updates_workflow_state(self):
         self.load_test_spec('test_master_workflow', master_spec=True)

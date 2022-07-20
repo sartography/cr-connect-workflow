@@ -121,7 +121,7 @@ class WorkflowProcessor(object):
             try:
                 parser = self.get_spec_parser(self.spec_files, spec_info)
                 top_level = parser.get_spec(spec_info.primary_process_id)
-                subprocesses = parser.get_process_specs()
+                subprocesses = parser.get_subprocess_specs(spec_info.primary_process_id)
                 self.bpmn_workflow = BpmnWorkflow(top_level, subprocesses, script_engine=self._script_engine)
                 self.bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = workflow_model.study_id
                 self.bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = validate_only
@@ -152,31 +152,21 @@ class WorkflowProcessor(object):
         json_size = B / MB
         if json_size > 1:
             wf_json = json.loads(workflow_model.bpmn_workflow_json)
-            if 'spec' in wf_json and 'tasks' in wf_json:  #
-                task_tree = wf_json['tasks']
-                test_spec = wf_json['spec']
-                task_size = "{:.2f}".format(len(json.dumps(task_tree).encode('utf-8')) / MB)
-                spec_size = "{:.2f}".format(len(json.dumps(test_spec).encode('utf-8')) / MB)
-                message = 'Workflow ' + workflow_model.workflow_spec_id + ' JSON Size is over 1MB:{0:.2f} MB'.format(
-                    json_size)
-                message += f"\n  Task Size: {task_size}"
-                message += f"\n  Spec Size: {spec_size}"
-                app.logger.warning(message)
+            message = 'Workflow ' + workflow_model.workflow_spec_id + ' JSON Size is over 1MB:{0:.2f} MB'.format(
+                json_size)
+            for k,v in wf_json.items():
+                size = len(json.dumps(v).encode('utf-8')) / MB
+                if size > 0.2:
+                    size_str = "{:.2f}".format(size)
+                    message += f"\n  {k} Size: {size_str}"
+            sub_size = len(json.dumps(wf_json['subprocesses']).encode('utf-8')) / MB
+            message += f"\n TOTAL Subprocesses: { len(wf_json['subprocesses']) }"
+            for sp in wf_json['subprocesses'].values():
+                sp_size = len(json.dumps(sp).encode('utf-8')) / MB
+                message += f"\n         {list(sp['tasks'].values())[0]['workflow_name']} :: {sp_size}"
 
-                def check_sub_specs(test_spec, indent=0, show_all=False):
-                    for my_spec_name in test_spec['task_specs']:
-                        my_spec = test_spec['task_specs'][my_spec_name]
-                        my_spec_size = len(json.dumps(my_spec).encode('utf-8')) / MB
-                        if my_spec_size > 0.1 or show_all:
-                            app.logger.warning(
-                                (' ' * indent) + 'Sub-Spec ' + my_spec['name'] + ' :' + "{:.2f}".format(my_spec_size))
-                            if 'spec' in my_spec:
-                                my_show_all = False
-                                if my_spec['name'] == 'Call_Emails_Process_Email':
-                                    my_show_all = True
-                                check_sub_specs(my_spec['spec'], indent + 5)
 
-                check_sub_specs(test_spec, 5)
+            app.logger.warning(message)
 
     @staticmethod
     def reset(workflow_model, clear_data=False):
@@ -261,7 +251,7 @@ class WorkflowProcessor(object):
         parser = WorkflowProcessor.get_spec_parser(spec_files, spec_model)
         try:
             top_level = parser.get_spec(spec_model.primary_process_id)
-            subprocesses = parser.get_process_specs()
+            subprocesses = parser.get_subprocess_specs(spec_model.primary_process_id)
             bpmn_workflow = BpmnWorkflow(top_level, subprocesses, script_engine=WorkflowProcessor._script_engine)
             bpmn_workflow.data[WorkflowProcessor.STUDY_ID_KEY] = study.id
             bpmn_workflow.data[WorkflowProcessor.VALIDATION_PROCESS_KEY] = False
