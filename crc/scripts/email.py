@@ -241,7 +241,8 @@ email(subject="My Subject", recipients="user@example.com", attachments=[('Study_
 
                         query = session.query(FileModel).\
                             filter(FileModel.workflow_id == workflow.id).\
-                            filter(FileModel.irb_doc_code == doc_code)
+                            filter(FileModel.irb_doc_code == doc_code).\
+                            filter(FileModel.archived == False)
                         if isinstance(file_filter, list) and len(file_filter) > 0:
                             query = query.filter(FileModel.name.in_(file_filter))
 

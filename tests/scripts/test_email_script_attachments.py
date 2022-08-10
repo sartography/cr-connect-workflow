@@ -2,6 +2,7 @@ from tests.base_test import BaseTest
 
 from crc import mail
 
+from crc.models.file import FileModel
 from crc.services.user_file_service import UserFileService
 
 
@@ -105,3 +106,24 @@ class TestEmailAttachments(BaseTest):
             # We should only get 2 files because we filtered one out
             self.assertEqual(2, len(outbox[0].attachments))
 
+    def test_email_attachments_no_archived(self):
+        """Update a user file.
+        Make sure we don't add the archived file as an attachment.
+        """
+
+        workflow, first_task = self.setup_attachments()
+
+        file_model = FileModel.query.first()
+        new_data = b'NewData'
+
+        UserFileService().update_file(file_model, new_data, file_model.content_type)
+        UserFileService().add_workflow_file(file_model.workflow_id, file_model.irb_doc_code, file_model.task_spec, file_model.name, file_model.content_type, new_data)
+
+        form_data = {'subject': 'My Test Subject',
+                     'recipients': 'user@example.com',
+                     'doc_codes': [self.irb_code_1, self.irb_code_2]
+                     }
+        with mail.record_messages() as outbox:
+            self.complete_form(workflow, first_task, form_data)
+            self.assertEqual(1, len(outbox))
+            self.assertEqual(3, len(outbox[0].attachments))
