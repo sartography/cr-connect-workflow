@@ -470,11 +470,12 @@ class StudyService(object):
             # has a reference to every available workflow (though some may not have started yet)
             for pb_study in pb_studies:
                 try:
-                    if pb_study.DATELASTMODIFIED:
-                        last_modified = parser.parse(pb_study.DATELASTMODIFIED)
+                    if pb_study.DATECREATED:
+                        created_date = parser.parse(pb_study.DATECREATED)
                     else:
-                        last_modified = parser.parse(pb_study.DATECREATED)
-                    if last_modified.date() < StudyService.PB_MIN_DATE.date():
+                        continue
+                        # last_modified = parser.parse(pb_study.DATECREATED)
+                    if created_date.date() < StudyService.PB_MIN_DATE.date():
                         continue
                 except Exception as e:
                     # Last modified is null or undefined.  Don't import it.
