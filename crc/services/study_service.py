@@ -475,7 +475,7 @@ class StudyService(object):
                     else:
                         continue
                         # last_modified = parser.parse(pb_study.DATECREATED)
-                    if created_date.date() < StudyService.PB_MIN_DATE.date():
+                    if created_date.date() <= StudyService.PB_MIN_DATE.date():
                         continue
                 except Exception as e:
                     # Last modified is null or undefined.  Don't import it.
