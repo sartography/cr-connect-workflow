@@ -1,3 +1,5 @@
+import os
+
 from tests.base_test import BaseTest
 from unittest.mock import patch
 
@@ -84,18 +86,24 @@ class TestProtocolBuilder(BaseTest):
         self.assertIn('STATUS', response[0].keys())
 
     @patch('crc.services.protocol_builder.requests.get')
-    def test_pb_startdate(self, mock_get):
-        # self.add_users()
-        # user = session.query(UserModel).first()
-        # ProtocolBuilderService.get_studies(user.uid)
+    def test_pb_older_creation_date_filter(self, mock_get):
+        """filter by older creation date
+            should get all studies back (4)"""
         app.config['PB_ENABLED'] = True
-        # app.config['PB_MIN_DATE'] = "2000-01-01T00:00:00.000Z"
+        app.config['PB_MIN_DATE'] = "2000-01-01T00:00:00.000Z"
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
-        # api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
-        # self.assertEqual(4, len(api_response.json))
+        api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
+        self.assertEqual(4, len(api_response.json))
+        print("Hi")
 
-        app.config['PB_MIN_DATE'] = "2020-06-01T00:00:00.000Z"
+    @patch('crc.services.protocol_builder.requests.get')
+    def test_pb_recent_creation_date_filter(self, mock_get):
+        """filter by recent creation date
+            should only get more recent studies (3) """
+        app.config['PB_ENABLED'] = True
+        mock_get.return_value.ok = True
+        mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
         api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
         self.assertEqual(3, len(api_response.json))
         print("Hi")
