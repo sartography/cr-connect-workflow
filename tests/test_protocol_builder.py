@@ -95,7 +95,6 @@ class TestProtocolBuilder(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
         api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
         self.assertEqual(4, len(api_response.json))
-        print("Hi")
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_pb_recent_creation_date_filter(self, mock_get):
@@ -106,4 +105,3 @@ class TestProtocolBuilder(BaseTest):
         mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
         api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
         self.assertEqual(3, len(api_response.json))
-        print("Hi")
