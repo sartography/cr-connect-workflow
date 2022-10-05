@@ -1,9 +1,6 @@
 import importlib
 import os
 import pkgutil
-
-from SpiffWorkflow.util.metrics import timeit
-
 from crc.api.common import ApiError
 
 

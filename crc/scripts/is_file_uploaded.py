@@ -1,5 +1,3 @@
-from SpiffWorkflow.util.metrics import timeit
-
 from crc.scripts.script import Script
 from crc.services.user_file_service import UserFileService
 

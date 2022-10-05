@@ -80,9 +80,9 @@ def get_data(spec_id, file_name):
         file_info = SpecFileService.get_files(workflow_spec, file_name)[0]
         return send_file(
             io.BytesIO(file_data),
-            attachment_filename=file_name,
+            download_name=file_name,
             mimetype=file_info.content_type,
-            cache_timeout=-1  # Don't cache these files on the browser.
+            max_age=-1  # Don't cache these files on the browser.
         )
     else:
         raise ApiError(code='missing_data_model',

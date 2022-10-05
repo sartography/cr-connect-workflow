@@ -1,7 +1,5 @@
 import json
 import time
-
-from SpiffWorkflow.util.metrics import timeit
 from unittest.mock import patch
 
 from tests.base_test import BaseTest

@@ -7,7 +7,6 @@ import requests
 from SpiffWorkflow import WorkflowException
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
-from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime, LOG
 from flask import g
 from ldap3.core.exceptions import LDAPSocketOpenError
 
@@ -109,18 +108,14 @@ class StudyService(object):
         return warnings
 
     @staticmethod
-    @timeit
     def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
                   master_workflow_results=None, process_categories=False):
         """Returns a study model that contains all the workflows organized by category.
         Pass in the results of the master workflow spec, and the status of other workflows will be updated."""
-        last_time = firsttime()
         if not study_model:
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
         study = Study.from_model(study_model)
-        last_time = sincetime("from model", last_time)
         study.create_user_display = LdapService.user_info(study.user_uid).display_name
-        last_time = sincetime("user", last_time)
         last_event: TaskEventModel = session.query(TaskEventModel) \
             .filter_by(study_id=study_id, action='COMPLETE') \
             .order_by(TaskEventModel.date.desc()).first()
@@ -130,12 +125,10 @@ class StudyService(object):
         else:
             study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
             study.last_activity_date = last_event.date
-        last_time = sincetime("task_events", last_time)
         study.categories = categories
         files = UserFileService.get_files_for_study(study.id)
         files = (File.from_file_model(model, DocumentService.get_dictionary()) for model in files)
         study.files = list(files)
-        last_time = sincetime("files", last_time)
         if process_categories and master_workflow_results is not None:
             if study.status != StudyStatus.abandoned:
                 workflow_metas = []
@@ -148,8 +141,6 @@ class StudyService(object):
                     category.workflows = cat_workflow_metas
                     category.meta = category_meta
                 study.warnings = StudyService.get_study_warnings(workflow_metas, master_workflow_results)
-
-            last_time = sincetime("categories", last_time)
 
         if study.primary_investigator is None:
             associates = StudyService().get_study_associates(study.id)
@@ -449,7 +440,6 @@ class StudyService(object):
             return {}
 
     @staticmethod
-    @timeit
     def synch_with_protocol_builder_if_enabled(user, specs):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """

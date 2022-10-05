@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List
 
 import jinja2
-from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem, TaskState
+from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem, TaskState, TaskStateNames
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
@@ -674,7 +674,7 @@ class WorkflowService(object):
             if any(nav.name == user_task.task_spec.name and user_task.state == TaskState.FUTURE for nav in navigation):
                 continue  # Don't re-add the same spec for future items
             nav_item = NavItem.from_spec(spec=user_task.task_spec)
-            nav_item.state = user_task.state.name
+            nav_item.state = TaskStateNames[user_task.state]
             nav_item.task_id = user_task.id
             nav_item.indent = 0  # we should remove indent, this is not nested now.
             navigation.append(nav_item)

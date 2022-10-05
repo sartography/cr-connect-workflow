@@ -81,9 +81,9 @@ def get_file_data(file_id):
     if file_model is not None:
         return send_file(
             io.BytesIO(file_model.data),
-            attachment_filename=file_model.name,
+            download_name=file_model.name,
             mimetype=file_model.content_type,
-            cache_timeout=-1  # Don't cache these files on the browser.
+            max_age=-1  # Don't cache these files on the browser.
         )
     else:
         raise ApiError('missing_file_model', f'The file id you provided ({file_id}) does not exist')
@@ -97,9 +97,9 @@ def get_file_data_link(file_id, auth_token):
         raise ApiError('no_such_file', f'The file id you provided ({file_id}) does not exist')
     return send_file(
         io.BytesIO(file_model.data),
-        attachment_filename=file_model.name,
+        download_name=file_model.name,
         mimetype=file_model.content_type,
-        cache_timeout=-1,  # Don't cache these files on the browser.
+        max_age=-1,  # Don't cache these files on the browser.
         last_modified=file_model.date_created,
         as_attachment=True
     )
@@ -136,8 +136,8 @@ def dmn_from_ss():
     result = UserFileService.dmn_from_spreadsheet(file)
     return send_file(
         io.BytesIO(result),
-        attachment_filename='temp_dmn.dmn',
+        download_name='temp_dmn.dmn',
         mimetype='text/xml',
-        cache_timeout=-1,  # Don't cache these files on the browser.
+        max_age=-1,  # Don't cache these files on the browser.
         last_modified=datetime.now()
     )
