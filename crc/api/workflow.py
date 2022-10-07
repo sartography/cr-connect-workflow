@@ -1,6 +1,6 @@
 import uuid
 
-from SpiffWorkflow import TaskState
+from SpiffWorkflow.task import TaskState
 from flask import g
 
 from crc import session

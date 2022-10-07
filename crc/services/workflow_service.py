@@ -8,7 +8,8 @@ from datetime import datetime
 from typing import List
 
 import jinja2
-from SpiffWorkflow import Task as SpiffTask, WorkflowException, NavItem, TaskState, TaskStateNames
+from SpiffWorkflow.task import Task as SpiffTask,  TaskState, TaskStateNames
+from SpiffWorkflow.exceptions import WorkflowException
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
@@ -26,6 +27,7 @@ from crc.api.common import ApiError
 from crc.models.api_models import Task, MultiInstanceType, WorkflowApi
 from crc.models.file import LookupDataModel, FileModel, File, FileSchema
 from crc.models.ldap import LdapModel
+from crc.models.nav_item import NavItem
 from crc.models.study import StudyModel
 from crc.models.task_event import TaskEventModel, TaskAction
 from crc.models.user import UserModel
@@ -685,8 +687,8 @@ class WorkflowService(object):
     def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
-        navigation = processor.bpmn_workflow.get_deep_nav_list()
-        WorkflowService.update_navigation(navigation, processor)
+        # navigation = processor.bpmn_workflow.get_deep_nav_list()
+        # WorkflowService.update_navigation(navigation, processor)
         spec_service = WorkflowSpecService()
         spec = spec_service.get_spec(processor.workflow_spec_id)
         is_admin_workflow = WorkflowService.is_admin_workflow(processor.workflow_spec_id)
@@ -772,16 +774,7 @@ class WorkflowService(object):
 
     @staticmethod
     def spiff_task_to_api_task(spiff_task, add_docs_and_forms=False):
-        task_type = spiff_task.task_spec.__class__.__name__
-
-        task_types = [UserTask, ManualTask, BusinessRuleTask, CancelTask, ScriptTask, StartTask, EndEvent, StartEvent]
-
-        for t in task_types:
-            if isinstance(spiff_task.task_spec, t):
-                task_type = t.__name__
-                break
-            else:
-                task_type = "NoneTask"
+        task_type = spiff_task.task_spec.spec_type
 
         info = spiff_task.task_info()
         if info["is_looping"]:
@@ -802,7 +795,6 @@ class WorkflowService(object):
             lane = spiff_task.task_spec.lane
         else:
             lane = None
-
         task = Task(spiff_task.id,
                     spiff_task.task_spec.name,
                     spiff_task.task_spec.description,

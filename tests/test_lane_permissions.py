@@ -73,5 +73,5 @@ class TestLanePermissions(BaseTest):
         # Complete the workflow as lje5u
         workflow_api = self.complete_form(workflow, third_task, {},
                                           user_uid='lje5u')
-        self.assertEqual('EndEvent', workflow_api.next_task.type)
+        self.assertEqual('End Event', workflow_api.next_task.type)
         self.assertEqual('COMPLETED', workflow_api.next_task.state)

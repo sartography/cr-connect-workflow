@@ -1,6 +1,8 @@
 import importlib
 import os
 import pkgutil
+from types import ModuleType
+
 from crc.api.common import ApiError
 
 
@@ -28,6 +30,17 @@ class Script(object):
                        "This is an internal error. The script you are trying to execute '%s' " % self.__class__.__name__ +
                        "does must provide a validate_only option that mimics the do_task, " +
                        "but does not make external calls or database updates." )
+
+    @staticmethod
+    def just_the_data(task_data):
+        """Task Data can include the full context during execution - such as libraries, builtins,  and embedded functions, things you
+        don't generally want to be working with, this will strip out all of those details, so you are just getting
+        the serializable data from the Task."""
+        result = {k: v for (k, v) in task_data.items()
+                  if not hasattr(v, '__call__')
+                  and not isinstance(v, ModuleType)
+                  and not k == '__builtins__'}
+        return result
 
     @staticmethod
     def generate_augmented_list(task, study_id, workflow_id):

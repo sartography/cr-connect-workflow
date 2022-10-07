@@ -74,14 +74,19 @@ And one optional argument:
         else:
             image_file_data = None
 
+        # Just pass along the data in task.data -- not any of the executables.
+        data = self.just_the_data(task.data)
+
         try:
-            return JinjaService().make_template(BytesIO(file_data), task.data, image_file_data)
+            return JinjaService().make_template(BytesIO(file_data), data, image_file_data)
         except ApiError as ae:
             # In some cases we want to provide a very specific error, that does not get obscured when going
             # through the python expression engine. We can do that by throwing a WorkflowTaskExecException,
             # which the expression engine should just pass through.
             raise WorkflowTaskExecException(task, ae.message, exception=ae, line_number=ae.line_number,
                                             error_line=ae.error_line)
+
+
 
     @staticmethod
     def get_image_file_data(fields_str, task):

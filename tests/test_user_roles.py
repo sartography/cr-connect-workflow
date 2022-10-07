@@ -189,7 +189,7 @@ class TestUserRoles(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow, user_uid=submitter.uid)
         self.assertEqual('COMPLETED', workflow_api.next_task.state)
-        self.assertEqual('EndEvent', workflow_api.next_task.type) # Are are at the end.
+        self.assertEqual('End Event', workflow_api.next_task.type) # Are are at the end.
         self.assertEqual(WorkflowStatus.complete, workflow_api.status)
 
     def get_assignment_task_events(self, uid):
@@ -245,7 +245,7 @@ class TestUserRoles(BaseTest):
         data["approval"] = True
         workflow_api = self.complete_form(workflow, workflow_api.next_task, data, user_uid=supervisor.uid)
         self.assertEqual(WorkflowStatus.complete, workflow_api.status)
-        self.assertEqual('EndEvent', workflow_api.next_task.type) # Are are at the end.
+        self.assertEqual('End Event', workflow_api.next_task.type) # Are are at the end.
         self.assertEqual(0, len(self.get_assignment_task_events(submitter.uid)))
         self.assertEqual(0, len(self.get_assignment_task_events(supervisor.uid)))
 

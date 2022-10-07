@@ -4,7 +4,7 @@ from dateutil import parser
 from typing import List
 
 import requests
-from SpiffWorkflow import WorkflowException
+from SpiffWorkflow.exceptions import WorkflowException
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 from flask import g

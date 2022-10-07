@@ -44,7 +44,6 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         # This depends on getting a list of investigators back from the protocol builder.
         mock_study_service.return_value = self.mock_investigator_response
 
-
         workflow_spec_model = self.create_workflow("irb_api_personnel")
         study = session.query(StudyModel).first()
         processor = WorkflowProcessor(workflow_spec_model)
@@ -52,12 +51,13 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         task_list = processor.get_ready_user_tasks()
         processor.complete_task(task_list[0])
         processor.do_engine_steps()
-        nav_list = processor.bpmn_workflow.get_flat_nav_list()
         processor.save()
         # reload after save
         processor = WorkflowProcessor(workflow_spec_model)
-        nav_list2 = processor.bpmn_workflow.get_flat_nav_list()
-        self.assertEqual(nav_list,nav_list2)
+        task_list = processor.get_ready_user_tasks()
+        data = task_list[0].data
+        self.assertIn('investigators', data)
+        self.assertEqual(data['investigators'], self.mock_investigator_response)
 
     @patch('crc.services.study_service.StudyService.get_investigators')
     def test_create_and_complete_workflow(self, mock_study_service):
@@ -156,9 +156,6 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         # In the Parallel instance, there should be three tasks, all of them in the ready state.
         next_user_tasks = processor.next_user_tasks()
         self.assertEqual(3, len(next_user_tasks))
-        # There should be six tasks in the navigation: start event, the script task, end event, and three tasks
-        # for the three executions of hte multi-instance.
-        self.assertEqual(7, len(processor.bpmn_workflow.get_flat_nav_list()))
 
         # We can complete the tasks out of order.
         task = next_user_tasks[2]
@@ -176,7 +173,6 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         task.update_data({"investigator": {"email": "dhf8r@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
-        self.assertEqual(7, len(processor.bpmn_workflow.get_flat_nav_list()))
 
         task = next_user_tasks[0]
         api_task = WorkflowService.spiff_task_to_api_task(task)
@@ -184,7 +180,6 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         task.update_data({"investigator":{"email":"asd3v@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
-        self.assertEqual(7, len(processor.bpmn_workflow.get_flat_nav_list()))
 
         task = next_user_tasks[1]
         api_task = WorkflowService.spiff_task_to_api_task(task)
@@ -192,7 +187,6 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
         task.update_data({"investigator":{"email":"asdf32@virginia.edu"}})
         processor.complete_task(task)
         processor.do_engine_steps()
-        self.assertEqual(7, len(processor.bpmn_workflow.get_flat_nav_list()))
 
         # Completing the tasks out of order, still provides the correct information.
         expected = self.mock_investigator_response
@@ -203,4 +197,3 @@ class TestWorkflowProcessorMultiInstance(BaseTest):
             task.data['StudyInfo']['investigators'])
 
         self.assertEqual(WorkflowStatus.complete, processor.get_status())
-        self.assertEqual(7, len(processor.bpmn_workflow.get_flat_nav_list()))

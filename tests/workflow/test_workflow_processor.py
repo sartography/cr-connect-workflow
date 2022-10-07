@@ -1,7 +1,7 @@
 import json
 import os
 
-from SpiffWorkflow import TaskState
+from SpiffWorkflow.task import TaskState
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 
 from tests.base_test import BaseTest

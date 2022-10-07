@@ -10,7 +10,9 @@ from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from lxml import etree
 from datetime import datetime
 
-from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task, TaskState
+from SpiffWorkflow.task import Task as SpiffTask, Task, TaskState
+from SpiffWorkflow.exceptions import WorkflowException
+
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
@@ -40,7 +42,7 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
      scripts directory available for execution. """
 
     def evaluate(self, task, expression):
-        return self._evaluate(expression, task.data)
+        return self._evaluate(expression, task.data, task=task)
 
     def __get_augment_methods(self, task):
         methods = []
