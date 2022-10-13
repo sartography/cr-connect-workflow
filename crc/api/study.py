@@ -1,7 +1,6 @@
 import json
 from datetime import datetime
 
-from SpiffWorkflow.util.metrics import timeit, firsttime, sincetime
 from flask import g, send_file
 from sqlalchemy.exc import IntegrityError
 from crc import session
@@ -140,9 +139,9 @@ def download_logs_for_study(study_id, auth_token):
 
     return send_file(
         io.BytesIO(spreadsheet),
-        attachment_filename='logs.xlsx',
+        download_name='logs.xlsx',
         mimetype='xlsx',
-        cache_timeout=-1,  # Don't cache these files on the browser.
+        max_age=-1,  # Don't cache these files on the browser.
         last_modified=datetime.now(),
         as_attachment=True
     )

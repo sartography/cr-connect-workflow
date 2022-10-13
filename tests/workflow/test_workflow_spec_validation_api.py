@@ -1,7 +1,5 @@
 import json
 import time
-
-from SpiffWorkflow.util.metrics import timeit
 from unittest.mock import patch
 
 from tests.base_test import BaseTest
@@ -54,7 +52,7 @@ class TestWorkflowSpecValidation(BaseTest):
         self.assertEqual("ExclusiveGateway_003amsm", errors[0]['task_id'])
         self.assertEqual("Has Bananas Gateway", errors[0]['task_name'])
         self.assertEqual("invalid_expression.bpmn", errors[0]['file_name'])
-        self.assertEqual('ExclusiveGateway_003amsm: Error evaluating expression \'this_value_does_not_exist==true\', '
+        self.assertEqual('Error evaluating expression \'this_value_does_not_exist==true\', '
                          'name \'this_value_does_not_exist\' is not defined', errors[0]["message"])
         self.assertIsNotNone(errors[0]['task_data'])
         self.assertIn("has_bananas", errors[0]['task_data'])

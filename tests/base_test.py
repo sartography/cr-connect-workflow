@@ -94,8 +94,9 @@ class BaseTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.ctx.pop()
+        db.session.commit()
         db.drop_all()
+        cls.ctx.pop()
 
     def setUp(self):
         pass
@@ -212,14 +213,18 @@ class BaseTest(unittest.TestCase):
         return data
 
     def assert_success(self, rv, msg=""):
+        error_message = ""
         try:
             data = json.loads(rv.get_data(as_text=True))
-            self.assertTrue(200 <= rv.status_code < 300,
-                            "BAD Response: %i. \n %s" %
-                            (rv.status_code, data['message']) + ". " + msg + ". ")
-        except:
-            self.assertTrue(200 <= rv.status_code < 300,
-                            "BAD Response: %i." % rv.status_code + ". " + msg)
+            if 'message' in data:
+                error_message = data['message']
+        except Exception as e:
+            # Can't get an error message from the body.
+            error_message = "unparsable response"
+
+        self.assertTrue(200 <= rv.status_code < 300,
+                        "BAD Response: %i. \n %s" %
+                        (rv.status_code, error_message + ". " + msg + ". "))
 
     def assert_failure(self, rv, status_code=0, error_code=""):
         self.assertFalse(200 <= rv.status_code < 300,

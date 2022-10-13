@@ -31,7 +31,7 @@ class TestMultiinstanceTasksApi(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         navigation = self.get_workflow_api(workflow_api).navigation
         self.assertEqual(2, len(navigation)) # Start task, multi-instance/user task
-        self.assertEqual("UserTask", workflow_api.next_task.type)
+        self.assertEqual("User Task", workflow_api.next_task.type)
         self.assertEqual(MultiInstanceType.sequential.value, workflow_api.next_task.multi_instance_type)
         self.assertEqual(5, workflow_api.next_task.multi_instance_count)
 
@@ -56,7 +56,7 @@ class TestMultiinstanceTasksApi(BaseTest):
         ready_items = [nav for nav in workflow_api.navigation if nav.state == "READY"]
         self.assertEqual(5, len(ready_items)) # Just the 5 investigators.
 
-        self.assertEqual("UserTask", workflow_api.next_task.type)
+        self.assertEqual("User Task", workflow_api.next_task.type)
         self.assertEqual("MultiInstanceTask",workflow_api.next_task.name)
         self.assertEqual("Primary Investigator", workflow_api.next_task.title)
 
@@ -94,7 +94,7 @@ class TestMultiinstanceTasksApi(BaseTest):
         ready_items = [nav for nav in workflow_api.navigation if nav.state == "READY"]
         self.assertEqual(5, len(ready_items))
 
-        self.assertEqual("UserTask", workflow_api.next_task.type)
+        self.assertEqual("User Task", workflow_api.next_task.type)
         self.assertEqual("MultiInstanceTask",workflow_api.next_task.name)
         self.assertEqual("Primary Investigator", workflow_api.next_task.title)
 
