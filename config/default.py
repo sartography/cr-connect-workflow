@@ -70,7 +70,7 @@ PB_CHECK_STUDY_URL = environ.get('PB_CHECK_STUDY_URL', default=PB_BASE_URL + "ch
 PB_PRE_REVIEW_URL = environ.get('PB_PRE_REVIEW_URL', default=PB_BASE_URL + "pre_reviews/%i")
 
 # Only studies with a creation date greater than or equal to PB_MIN_DATE will be imported.
-PB_MIN_DATE = environ.get('PB_MIN_DATE', default="2020-05-01T00:00:00.000Z")
+PB_MIN_DATE = environ.get('PB_MIN_DATE', default="2020-01-01T00:00:00.000Z")
 
 # Ldap Configuration
 LDAP_URL = environ.get('LDAP_URL', default="ldap.virginia.edu").strip('/')  # No trailing slash or http://
