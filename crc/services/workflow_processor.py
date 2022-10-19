@@ -3,14 +3,16 @@ from typing import List
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
 from SpiffWorkflow.bpmn.serializer import BpmnWorkflowSerializer
-from SpiffWorkflow.bpmn.specs.events import EndEvent, CancelEventDefinition
+from SpiffWorkflow.bpmn.specs.events import EndEvent, SignalEventDefinition
 from SpiffWorkflow.camunda.serializer import UserTaskConverter
 from SpiffWorkflow.dmn.serializer import BusinessRuleTaskConverter
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from lxml import etree
 from datetime import datetime
 
-from SpiffWorkflow import Task as SpiffTask, WorkflowException, Task, TaskState
+from SpiffWorkflow.task import Task as SpiffTask, Task, TaskState
+from SpiffWorkflow.exceptions import WorkflowException
+
 from SpiffWorkflow.bpmn.parser.ValidationException import ValidationException
 from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 from SpiffWorkflow.bpmn.workflow import BpmnWorkflow
@@ -40,7 +42,7 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
      scripts directory available for execution. """
 
     def evaluate(self, task, expression):
-        return self._evaluate(expression, task.data, task)
+        return self._evaluate(expression, task.data, task=task)
 
     def __get_augment_methods(self, task):
         methods = []
@@ -67,16 +69,16 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
         if(external_methods):
             methods.update(external_methods)
         try:
-            return super()._evaluate(expression, context, task, methods)
+            return super()._evaluate(expression, context, methods)
         except Exception as e:
             raise WorkflowTaskExecException(task,
                                             "Error evaluating expression "
                                             "'%s', %s" % (expression, str(e)))
 
-    def execute(self, task: SpiffTask, script, data):
+    def execute(self, task: SpiffTask, script):
         try:
             augment_methods = self.__get_augment_methods(task)
-            super().execute(task, script, data, external_methods=augment_methods)
+            super().execute(task, script, external_methods=augment_methods)
         except WorkflowException as e:
             raise e
         except Exception as e:
@@ -326,8 +328,7 @@ class WorkflowProcessor(object):
     def __cancel_notify(bpmn_workflow):
         try:
             # A little hackly, but make the bpmn_workflow catch a cancel event.
-            bpmn_workflow.signal('cancel')  # generate a cancel signal.
-            bpmn_workflow.catch(CancelEventDefinition())
+            bpmn_workflow.catch(SignalEventDefinition('cancel'))
             bpmn_workflow.do_engine_steps()
         except WorkflowTaskExecException as we:
             raise ApiError.from_workflow_exception("task_error", str(we), we)

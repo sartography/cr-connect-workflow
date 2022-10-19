@@ -6,8 +6,6 @@ import click
 import sentry_sdk
 
 import connexion
-from SpiffWorkflow import WorkflowException
-from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 from connexion import ProblemException
 from flask import Response
 from flask_cors import CORS

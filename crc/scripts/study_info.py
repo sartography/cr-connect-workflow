@@ -1,8 +1,6 @@
 import json
 
 from SpiffWorkflow.bpmn.PythonScriptEngine import Box
-from SpiffWorkflow.util.metrics import timeit
-
 from crc import session
 from crc.api.common import ApiError
 from crc.models.protocol_builder import ProtocolBuilderInvestigatorType

@@ -63,7 +63,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual('two_forms', workflow_api.workflow_spec_id)
         self.assertEqual(3, len(workflow_api.navigation)) # start and 2 forms
         self.assertIsNotNone(workflow_api.next_task.form)
-        self.assertEqual("UserTask", workflow_api.next_task.type)
+        self.assertEqual("User Task", workflow_api.next_task.type)
         self.assertEqual("StepOne", workflow_api.next_task.name)
         self.assertEqual(1, len(workflow_api.next_task.form['fields']))
 
@@ -97,40 +97,6 @@ class TestTasksApi(BaseTest):
         # Get the next Task
         workflow_api = self.get_workflow_api(workflow)
         self.assertEqual("Task_Num_Bananas", workflow_api.next_task.name)
-
-    def test_navigation_with_parallel_forms(self):
-        workflow = self.create_workflow('exclusive_gateway')
-        processor = WorkflowProcessor(workflow)
-        nav = processor.bpmn_workflow.get_deep_nav_list()
-        self.assertEqual(4, len(nav))
-        self.assertEqual("Enter Do You Have Bananas", nav[1].description)
-        self.assertEqual("Has Bananas?", nav[2].description)
-
-        self.assertEqual("yes", nav[2].children[0].description)
-        self.assertEqual("MAYBE", nav[2].children[0].state)
-        self.assertEqual("Number of Bananas", nav[2].children[0].children[0].description)
-        self.assertEqual("EndEvent", nav[2].children[0].children[1].spec_type)
-
-        self.assertEqual("no", nav[2].children[1].description)
-        self.assertEqual("MAYBE", nav[2].children[1].state)
-        self.assertEqual("Why no bananas", nav[2].children[1].children[0].description)
-        self.assertEqual("EndEvent", nav[2].children[1].children[1].spec_type)
-
-    def test_navigation_with_exclusive_gateway(self):
-        workflow = self.create_workflow('exclusive_gateway_2')
-        processor = WorkflowProcessor(workflow)
-        # get the first form in the two form workflow.
-        nav = processor.bpmn_workflow.get_deep_nav_list()
-        self.assertEqual(7, len(nav))
-        self.assertEqual("Enter Task 1", nav[1].description)
-        self.assertEqual("Decide Which Branch?", nav[2].description)
-        self.assertEqual("a", nav[2].children[0].description)
-        self.assertEqual("Enter Task 2a", nav[2].children[0].children[0].description)
-        self.assertEqual("b", nav[2].children[1].description)
-        self.assertEqual("Enter Task 2b", nav[2].children[1].children[0].description)
-        self.assertEqual(None, nav[3].description)
-        self.assertEqual("Enter Task 3", nav[4].description)
-        self.assertEqual("EndEvent", nav[5].spec_type)
 
     def test_document_added_to_workflow_shows_up_in_file_list(self):
         self.create_reference_document()
@@ -226,7 +192,7 @@ class TestTasksApi(BaseTest):
 
         workflow = self.get_workflow_api(workflow)
         self.assertEqual('Task_Manual_One', workflow.next_task.name)
-        self.assertEqual('ManualTask', workflow_api.next_task.type)
+        self.assertEqual('Manual Task', workflow_api.next_task.type)
         self.assertTrue('Markdown' in workflow_api.next_task.documentation)
         self.assertTrue('Dan' in workflow_api.next_task.documentation)
 
@@ -351,7 +317,7 @@ class TestTasksApi(BaseTest):
         task = workflow_api.next_task
 
         self.assertEqual(4, len(navigation)) # 2 start events + 2 user tasks
-        self.assertEqual("UserTask", task.type)
+        self.assertEqual("User Task", task.type)
         self.assertEqual("Activity_A", task.name)
         self.assertEqual("My Sub Process", task.process_name)
         workflow_api = self.complete_form(workflow, task, {"FieldA": "Dan"})

@@ -46,10 +46,7 @@ class TestStudyInfoScript(BaseTest):
 
         workflow_api = self.complete_form(workflow, task, {'short_name': short_name, 'proposal_name': proposal_name})
         task = workflow_api.next_task
-        # The workflow calls study_info('info') and puts the result in Element Documentation
-        # I create a dictionary of that info with `eval` to make the asserts easier to read
-        study_info = eval(task.documentation)
-
+        study_info = task.data['my_study_info']
         self.assertIn('short_name', study_info.keys())
         self.assertEqual(short_name, study_info['short_name'])
         self.assertIn('proposal_name', study_info.keys())

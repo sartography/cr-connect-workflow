@@ -1,6 +1,6 @@
 import time
 
-from SpiffWorkflow import Task
+from SpiffWorkflow.task import Task
 
 cache_store = {}
 

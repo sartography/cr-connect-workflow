@@ -20,9 +20,9 @@ def get_reference_file_data(name):
     file_data = ReferenceFileService().get_data(name)
     return send_file(
         io.BytesIO(file_data),
-        attachment_filename=name,
+        download_name=name,
         mimetype=content_type,
-        cache_timeout=-1  # Don't cache these files on the browser.
+        max_age=-1  # Don't cache these files on the browser.
     )
 
 
