@@ -41,7 +41,11 @@ class StudyService(object):
     # `Full Committee`, `Expedited`, and `Review by Non-UVA IRB`
     # These are considered to be the valid review types that can be shown to users.
     VALID_REVIEW_TYPES = [2, 3, 21]
-    PB_MIN_DATE = parser.parse(app.config['PB_MIN_DATE'])
+
+    @staticmethod
+    def get_pb_min_date():
+        pb_min_date = parser.parse(app.config['PB_MIN_DATE'])
+        return pb_min_date
 
     def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
@@ -459,20 +463,18 @@ class StudyService(object):
             # Further assures that every active study (that does exist in the protocol builder)
             # has a reference to every available workflow (though some may not have started yet)
             for pb_study in pb_studies:
-                try:
-                    if pb_study.DATELASTMODIFIED:
-                        last_modified = parser.parse(pb_study.DATELASTMODIFIED)
-                    else:
-                        last_modified = parser.parse(pb_study.DATECREATED)
-                    if last_modified.date() < StudyService.PB_MIN_DATE.date():
-                        continue
-                except Exception as e:
-                    # Last modified is null or undefined.  Don't import it.
+                if pb_study.DATECREATED:
+                    created_date = parser.parse(pb_study.DATECREATED)
+                else:
+                    # we don't import studies that don't have a DATECREATED
+                    continue
+                if created_date.timestamp() < StudyService.get_pb_min_date().timestamp():
+                    # we don't import old studies
                     continue
                 new_status = None
                 new_progress_status = None
                 db_study = session.query(StudyModel).filter(StudyModel.id == pb_study.STUDYID).first()
-                #db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
+                # db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
 
                 add_study = False
                 if not db_study:
@@ -498,7 +500,7 @@ class StudyService(object):
                                                         status=new_status,
                                                         event_type=StudyEventType.automatic)
                 # we moved session.add here so that it comes after we update the study
-                # we only add if it doesnt already exist in the DB
+                # we only add if it doesn't already exist in the DB
                 if add_study:
                     session.add(db_study)
 
