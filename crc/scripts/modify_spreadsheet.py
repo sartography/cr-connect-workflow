@@ -47,6 +47,7 @@ class ModifySpreadsheet(Script):
             spreadsheet = session.query(FileModel). \
                 filter(FileModel.workflow_id == workflow_id). \
                 filter(FileModel.irb_doc_code == parameters['irb_doc_code']).\
+                filter(FileModel.archived == False).\
                 first()
             if spreadsheet:
                 workbook = load_workbook(BytesIO(spreadsheet.data))
