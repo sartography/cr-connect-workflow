@@ -6,7 +6,7 @@ from SpiffWorkflow.bpmn.serializer.BpmnSerializer import BpmnSerializer
 
 from tests.base_test import BaseTest
 
-from SpiffWorkflow.bpmn.specs.events import EndEvent
+from SpiffWorkflow.bpmn.specs.events.EndEvent import EndEvent
 from SpiffWorkflow.camunda.specs.UserTask import FormField
 from flask import g
 

@@ -14,7 +14,8 @@ from SpiffWorkflow.bpmn.PythonScriptEngine import Box
 from SpiffWorkflow.bpmn.specs.ManualTask import ManualTask
 from SpiffWorkflow.bpmn.specs.ScriptTask import ScriptTask
 from SpiffWorkflow.bpmn.specs.UserTask import UserTask
-from SpiffWorkflow.bpmn.specs.events import EndEvent, StartEvent
+from SpiffWorkflow.bpmn.specs.events.EndEvent import EndEvent
+from SpiffWorkflow.bpmn.specs.events.StartEvent import StartEvent
 from SpiffWorkflow.dmn.specs.BusinessRuleTask import BusinessRuleTask
 from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 from SpiffWorkflow.specs import CancelTask, StartTask

@@ -1,14 +1,17 @@
 import json
 from typing import List
 
+import dateparser
+import pytz
 from SpiffWorkflow.bpmn.PythonScriptEngine import PythonScriptEngine
-from SpiffWorkflow.bpmn.serializer import BpmnWorkflowSerializer
-from SpiffWorkflow.bpmn.specs.events import EndEvent, SignalEventDefinition
-from SpiffWorkflow.camunda.serializer import UserTaskConverter
-from SpiffWorkflow.dmn.serializer import BusinessRuleTaskConverter
+from SpiffWorkflow.bpmn.serializer.workflow import BpmnWorkflowSerializer
+from SpiffWorkflow.bpmn.specs.events.EndEvent import EndEvent
+from SpiffWorkflow.bpmn.specs.events.event_definitions import SignalEventDefinition
+from SpiffWorkflow.camunda.serializer.task_spec_converters import UserTaskConverter
+from SpiffWorkflow.dmn.serializer.task_spec_converters import BusinessRuleTaskConverter
 from SpiffWorkflow.serializer.exceptions import MissingSpecError
 from lxml import etree
-from datetime import datetime
+import datetime
 
 from SpiffWorkflow.task import Task as SpiffTask, Task, TaskState
 from SpiffWorkflow.exceptions import WorkflowException
@@ -41,11 +44,21 @@ class CustomBpmnScriptEngine(PythonScriptEngine):
     It will execute python code read in from the bpmn.  It will also make any scripts in the
      scripts directory available for execution. """
 
+    def __init__(self):
+        super().__init__()
+        self.globals = {
+            'timedelta': datetime.timedelta,
+            'datetime': datetime,
+            'dateparser': dateparser,
+            'pytz': pytz,
+        }
+
     def evaluate(self, task, expression):
         return self._evaluate(expression, task.data, task=task)
 
     def __get_augment_methods(self, task):
         methods = []
+
         if task:
             workflow = WorkflowProcessor.find_top_level_workflow(task)
             study_id = workflow.data[WorkflowProcessor.STUDY_ID_KEY]
@@ -241,7 +254,7 @@ class WorkflowProcessor(object):
         self.workflow_model.status = self.get_status()
         self.workflow_model.total_tasks = len(tasks)
         self.workflow_model.completed_tasks = sum(1 for t in tasks if t.state in complete_states)
-        self.workflow_model.last_updated = datetime.utcnow()
+        self.workflow_model.last_updated = datetime.datetime.utcnow()
         session.add(self.workflow_model)
         session.commit()
 
