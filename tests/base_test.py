@@ -257,7 +257,7 @@ class BaseTest(unittest.TestCase):
         """Replaces a stored file with the given name with the contents of the file at the given path."""
         file = open(file_path, "rb")
         data = file.read()
-        SpecFileService().update_file(spec, name, data)
+        SpecFileService().update_file_data(spec, name, data)
 
     def create_user(self, uid="dhf8r", email="daniel.h.funk@gmail.com", display_name="Hoopy Frood"):
         user = session.query(UserModel).filter(UserModel.uid == uid).first()

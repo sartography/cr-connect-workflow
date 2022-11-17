@@ -36,10 +36,10 @@ class SpecFileService(FileSystemService):
     @staticmethod
     def add_file(workflow_spec: WorkflowSpecInfo, file_name: str, binary_data: bytearray) -> File:
         # Same as update
-        return SpecFileService.update_file(workflow_spec, file_name, binary_data)
+        return SpecFileService.update_file_data(workflow_spec, file_name, binary_data)
 
     @staticmethod
-    def update_file(workflow_spec: WorkflowSpecInfo, file_name: str, binary_data) -> File:
+    def update_file_data(workflow_spec: WorkflowSpecInfo, file_name: str, binary_data) -> File:
         SpecFileService.assert_valid_file_name(file_name)
         file_path = SpecFileService.file_path(workflow_spec, file_name)
         SpecFileService.write_file_data_to_system(file_path, binary_data)
@@ -47,8 +47,23 @@ class SpecFileService(FileSystemService):
         if file_name == workflow_spec.primary_file_name:
             SpecFileService.set_primary_bpmn(workflow_spec, file_name, binary_data)
         elif workflow_spec.primary_file_name is None and file.type == FileType.bpmn:
-            # If no primary process exists, make this pirmary process.
+            # If no primary process exists, make this primary process.
             SpecFileService.set_primary_bpmn(workflow_spec, file_name, binary_data)
+        return file
+
+    @staticmethod
+    def update_file_name(workflow_spec: WorkflowSpecInfo, old_file_name: str, new_file_name: str) -> File:
+        SpecFileService.assert_valid_file_name(new_file_name)
+        old_file_path = SpecFileService.file_path(workflow_spec, old_file_name)
+        new_file_path = SpecFileService.file_path(workflow_spec, new_file_name)
+        os.rename(old_file_path, new_file_path)
+        file = SpecFileService.to_file_object(new_file_name, new_file_path)
+        binary_data = SpecFileService.get_data(workflow_spec, new_file_name)
+        if old_file_name == workflow_spec.primary_file_name:
+            SpecFileService.set_primary_bpmn(workflow_spec, new_file_name, binary_data)
+        elif workflow_spec.primary_file_name is None and file.type == FileType.bpmn:
+            # If no primary process exists, make this primary process.
+            SpecFileService.set_primary_bpmn(workflow_spec, new_file_name, binary_data)
         return file
 
     @staticmethod
