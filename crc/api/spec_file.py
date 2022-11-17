@@ -61,6 +61,13 @@ def update(spec_id, file_name, is_primary):
     return FileSchema().dump(file)
 
 
+def update_filename(spec_id, file_name, new_filename):
+    workflow_spec_service = WorkflowSpecService()
+    workflow_spec_model = workflow_spec_service.get_spec(spec_id)
+    file = SpecFileService.update_file_name(workflow_spec_model, file_name, new_filename)
+    return FileSchema().dump(file)
+
+
 def update_data(spec_id, file_name):
     workflow_spec_service = WorkflowSpecService()
     workflow_spec_model = workflow_spec_service.get_spec(spec_id)
@@ -68,7 +75,7 @@ def update_data(spec_id, file_name):
         raise ApiError(code='missing_spec',
                        message=f'The workflow spec for id {spec_id} does not exist.')
     file_data = connexion.request.files['file']
-    file = SpecFileService.update_file(workflow_spec_model, file_name, file_data.stream.read())
+    file = SpecFileService.update_file_data(workflow_spec_model, file_name, file_data.stream.read())
     return FileSchema().dump(file)
 
 
