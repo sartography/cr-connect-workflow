@@ -58,7 +58,7 @@ class TestLookupService(BaseTest):
                                  'enum_options_with_search', 'sponsors_modified.xlsx')
         file = open(file_path, 'rb')
         workflow_spec_model = self.workflow_spec_service.get_spec(workflow.workflow_spec_id)
-        SpecFileService().update_file(workflow_spec_model, "sponsors.xlsx", file.read())
+        SpecFileService().update_file_data(workflow_spec_model, "sponsors.xlsx", file.read())
         file.close()
 
         # restart the workflow, so it can pick up the changes.

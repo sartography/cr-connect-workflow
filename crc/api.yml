@@ -634,6 +634,39 @@ paths:
       responses:
         '204':
           description: The file was removed.
+  /workflow-specification/{spec_id}/file/{file_name}/filename:
+    parameters:
+      - name: spec_id
+        in: path
+        required: true
+        description: The unique id of an existing workflow specification to validate.
+        schema:
+          type: string
+      - name: file_name
+        in: path
+        required: true
+        description: The id of the requested file
+        schema:
+          type: string
+      - name: new_filename
+        in: query
+        required: true
+        description: The new name for this file
+        schema:
+          type: string
+    put:
+      operationId: crc.api.spec_file.update_filename
+      summary: Update the filename of a spec file
+      tags:
+        - Spec Files
+      responses:
+        '200':
+          description: Returns the updated file model
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/File"
+
   /workflow-specification/{spec_id}/file/{file_name}/data:
     parameters:
       - name: spec_id
