@@ -306,6 +306,7 @@ class BaseTest(unittest.TestCase):
                           content_type="application/json")
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
+        json_data['user_id'] = user.uid
         workflow_api = WorkflowApiSchema().load(json_data)
         return workflow_api
 
@@ -361,6 +362,7 @@ class BaseTest(unittest.TestCase):
         json_data = json.loads(rv.get_data(as_text=True))
 
         # Assure task events are updated on the model
+        json_data['user_id'] = user_uid
         workflow = WorkflowApiSchema().load(json_data)
 
         # Assure a record exists in the Task Events

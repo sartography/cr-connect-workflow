@@ -41,6 +41,7 @@ class TestMultiinstanceTasksApi(BaseTest):
 
     @patch('crc.services.protocol_builder.requests.get')
     def test_parallel_multi_instance(self, mock_get):
+        user = self.create_user()
 
         # Assure we get nine investigators back from the API Call, as set in the investigators.json file.
         app.config['PB_ENABLED'] = True
@@ -63,10 +64,11 @@ class TestMultiinstanceTasksApi(BaseTest):
         for i in random.sample(range(5), 5):
             task_id = ready_items[i].task_id
             rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, task_id),
-                              headers=self.logged_in_headers(),
+                              headers=self.logged_in_headers(user),
                               content_type="application/json")
             self.assert_success(rv)
             json_data = json.loads(rv.get_data(as_text=True))
+            json_data['user_id'] = user.uid
             workflow_api = WorkflowApiSchema().load(json_data)
             data = workflow_api.next_task.data
             data['investigator']['email'] = "dhf8r@virginia.edu"
