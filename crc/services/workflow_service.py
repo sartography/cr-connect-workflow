@@ -685,6 +685,12 @@ class WorkflowService(object):
         return navigation
 
     @staticmethod
+    def get_workflow_user_id(workflow_id):
+        user_id = db.session.query(WorkflowModel.user_id).\
+            filter(WorkflowModel.id == workflow_id).scalar()
+        return user_id
+
+    @staticmethod
     def processor_to_workflow_api(processor: WorkflowProcessor, next_task=None):
         """Returns an API model representing the state of the current workflow, if requested, and
         possible, next_task is set to the current_task."""
@@ -693,8 +699,10 @@ class WorkflowService(object):
         spec_service = WorkflowSpecService()
         spec = spec_service.get_spec(processor.workflow_spec_id)
         is_admin_workflow = WorkflowService.is_admin_workflow(processor.workflow_spec_id)
+        workflow_id = processor.get_workflow_id()
+        user_id = WorkflowService.get_workflow_user_id(workflow_id)
         workflow_api = WorkflowApi(
-            id=processor.get_workflow_id(),
+            id=workflow_id,
             status=processor.get_status(),
             next_task=None,
             navigation=WorkflowService.get_navigation(processor),
@@ -704,6 +712,7 @@ class WorkflowService(object):
             title=spec.display_name,
             study_id=processor.workflow_model.study_id or None,
             state=processor.workflow_model.state,
+            user_id=user_id,
             is_admin_workflow=is_admin_workflow
         )
         if not next_task:  # The Next Task can be requested to be a certain task, useful for parallel tasks.
