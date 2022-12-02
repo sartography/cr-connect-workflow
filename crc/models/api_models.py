@@ -188,6 +188,7 @@ class NavigationItemSchema(ma.Schema):
         item.children = children
         return item
 
+
 class DocumentDirectorySchema(ma.Schema):
     level = marshmallow.fields.String()
     file = marshmallow.fields.Nested(FileSchema)
@@ -212,7 +213,7 @@ class DocumentDirectory(object):
 class WorkflowApi(object):
     def __init__(self, id, status, next_task, navigation,
                  workflow_spec_id,
-                 last_updated, is_review, title, study_id, state, is_admin_workflow=False):
+                 last_updated, is_review, title, study_id, state, user_id, is_admin_workflow=False):
         self.id = id
         self.status = status
         self.next_task = next_task  # The next task that requires user input.
@@ -223,6 +224,7 @@ class WorkflowApi(object):
         self.is_review = is_review
         self.study_id = study_id or ''
         self.state = state
+        self.user_id = user_id
         self.is_admin_workflow = is_admin_workflow
 
 
@@ -231,7 +233,7 @@ class WorkflowApiSchema(ma.Schema):
         model = WorkflowApi
         fields = ["id", "status", "next_task", "navigation",
                   "workflow_spec_id", "total_tasks", "completed_tasks",
-                  "last_updated", "is_review", "title", "study_id", "state", "is_admin_workflow"]
+                  "last_updated", "is_review", "title", "study_id", "state", "user_id", "is_admin_workflow"]
         unknown = INCLUDE
 
     status = EnumField(WorkflowStatus)
@@ -243,7 +245,7 @@ class WorkflowApiSchema(ma.Schema):
     def make_workflow(self, data, **kwargs):
         keys = ['id', 'status', 'next_task', 'navigation',
                 'workflow_spec_id',
-                "last_updated", "is_review", "title", "study_id", "state", "is_admin_workflow"]
+                "last_updated", "is_review", "title", "study_id", "state", "user_id", "is_admin_workflow"]
         filtered_fields = {key: data[key] for key in keys}
         filtered_fields['next_task'] = TaskSchema().make_task(data['next_task'])
         return WorkflowApi(**filtered_fields)
