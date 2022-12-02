@@ -330,6 +330,7 @@ class TestTasksApi(BaseTest):
         self.assertEqual(WorkflowStatus.complete, workflow_api.status)
 
     def test_update_task_resets_token(self):
+        user = self.create_user()
         workflow = self.create_workflow('exclusive_gateway')
 
         # Start the workflow.
@@ -350,10 +351,11 @@ class TestTasksApi(BaseTest):
 
         # Make the old task the current task.
         rv = self.app.put('/v1.0/workflow/%i/task/%s/set_token' % (workflow.id, first_task.id),
-                          headers=self.logged_in_headers(),
+                          headers=self.logged_in_headers(user),
                           content_type="application/json")
         self.assert_success(rv)
         json_data = json.loads(rv.get_data(as_text=True))
+        json_data['user_id'] = user.uid
         workflow_api = WorkflowApiSchema().load(json_data)
 
         # Assure the Next Task is the one we just reset the token to be on.
