@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_3707ce7" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.2.0">
+  <bpmn:process id="Process_GetUserStudies" name="Get User Studies" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_08r5407</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_08r5407" sourceRef="StartEvent_1" targetRef="Activity_GetUserID" />
+    <bpmn:sequenceFlow id="Flow_1vgba29" sourceRef="Activity_GetUserStudies" targetRef="Activity_MungeUserStudiesData" />
+    <bpmn:endEvent id="Event_EndEvent" name="End Event">
+      <bpmn:documentation>## Study IDs for User
+
+
+### User ID
+{{ user_id }}
+
+
+### Study IDs
+{{ study_ids }}
+
+</bpmn:documentation>
+      <bpmn:incoming>Flow_1hwgons</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1hwgons" sourceRef="Activity_MungeUserStudiesData" targetRef="Event_EndEvent" />
+    <bpmn:scriptTask id="Activity_GetUserStudies" name="Get User Studies">
+      <bpmn:incoming>Flow_0z6i1ms</bpmn:incoming>
+      <bpmn:outgoing>Flow_1vgba29</bpmn:outgoing>
+      <bpmn:script>user_studies = get_user_studies(user_id)</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:scriptTask id="Activity_MungeUserStudiesData" name="Munge User Studies Data">
+      <bpmn:incoming>Flow_1vgba29</bpmn:incoming>
+      <bpmn:outgoing>Flow_1hwgons</bpmn:outgoing>
+      <bpmn:script>study_ids = [x.STUDYID for x in user_studies]</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0z6i1ms" sourceRef="Activity_GetUserID" targetRef="Activity_GetUserStudies" />
+    <bpmn:userTask id="Activity_GetUserID" name="Get User ID" camunda:formKey="UserIDForm">
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="user_id" label="&#34;User ID&#34;" type="string">
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_08r5407</bpmn:incoming>
+      <bpmn:outgoing>Flow_0z6i1ms</bpmn:outgoing>
+    </bpmn:userTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_GetUserStudies">
+      <bpmndi:BPMNEdge id="Flow_0z6i1ms_di" bpmnElement="Flow_0z6i1ms">
+        <di:waypoint x="360" y="117" />
+        <di:waypoint x="410" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1hwgons_di" bpmnElement="Flow_1hwgons">
+        <di:waypoint x="670" y="117" />
+        <di:waypoint x="732" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1vgba29_di" bpmnElement="Flow_1vgba29">
+        <di:waypoint x="510" y="117" />
+        <di:waypoint x="570" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08r5407_di" bpmnElement="Flow_08r5407">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="260" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1e0tdg0_di" bpmnElement="Event_EndEvent">
+        <dc:Bounds x="732" y="99" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="725" y="142" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_13xjak5_di" bpmnElement="Activity_GetUserStudies">
+        <dc:Bounds x="410" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_07ebui5_di" bpmnElement="Activity_MungeUserStudiesData">
+        <dc:Bounds x="570" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_109i10f_di" bpmnElement="Activity_GetUserID">
+        <dc:Bounds x="260" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
