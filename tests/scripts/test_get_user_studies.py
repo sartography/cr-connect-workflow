@@ -21,4 +21,6 @@ class TestGetUserStudies(BaseTest):
         workflow_api = self.complete_form(workflow, task, form_data)
         task = workflow_api.next_task
         assert task.name == "Event_EndEvent"
+        # The script returns the whole study object, but
+        # the workflow pulls out the study ids and creates a list of study ids
         assert "[11111, 54321, 65432, 1]" in task.documentation
