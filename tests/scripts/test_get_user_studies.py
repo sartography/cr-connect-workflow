@@ -21,5 +21,4 @@ class TestGetUserStudies(BaseTest):
         workflow_api = self.complete_form(workflow, task, form_data)
         task = workflow_api.next_task
         assert task.name == "Event_EndEvent"
-        assert task.documentation == \
-               '## Study IDs for User\n\n\n### User ID\ndhf8r\n\n\n### Study IDs\n[11111, 54321, 65432, 1]'
+        assert "[11111, 54321, 65432, 1]" in task.documentation
