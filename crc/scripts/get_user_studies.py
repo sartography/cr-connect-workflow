@@ -4,7 +4,7 @@ from crc.scripts.script import Script
 from crc.services.protocol_builder import ProtocolBuilderService
 
 
-class ScriptGetUserStudies(Script):
+class GetUserStudies(Script):
 
     def get_description(self):
         return """Returns a list of study ids for a user"""
