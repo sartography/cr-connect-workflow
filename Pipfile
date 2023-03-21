@@ -46,7 +46,7 @@ pygithub = "*"
 gitpython = "*"
 apscheduler = "*"
 connexion = {extras = [ "swagger-ui",], version = "*"}
-sentry-sdk = {extras = [ "flask",], version = "==0.14.4"}
+sentry-sdk = {extras = [ "flask",], version = "==1.14.0"}
 dateparser = "*"
 # TIP:  If you want to test local changes to SpiffWorkflow, do:
 # pipenv install --editable ../SpiffWorkflow (but fix things back before commiting!)
