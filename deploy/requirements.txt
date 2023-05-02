@@ -18,7 +18,7 @@ deprecated==1.2.10
 docutils==0.16
 docxtpl==0.11.2
 et-xmlfile==1.0.1
-flask==1.1.2
+flask==2.2.5
 flask-admin==1.5.7
 flask-bcrypt==0.7.1
 flask-cors==3.0.9
