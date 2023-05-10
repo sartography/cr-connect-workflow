@@ -17,6 +17,16 @@ logging_config = {
       'level': 'ERROR',
       'propagate': False
     },
+    'spiff': {
+      'handlers': ['console', 'file'],
+      'level': 'ERROR',
+      'propagate': False
+    },
+    'werkzeug': {
+      'handlers': ['console', 'file'],
+      'level': 'ERROR',
+      'propagate': False
+    },
   },
   "formatters": {
     "simple": {
