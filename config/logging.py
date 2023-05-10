@@ -3,27 +3,27 @@ logging_config = {
   'disable_existing_loggers': False,
   "loggers": {
     '': {  # root logger
-      'handlers': ['console', 'file'],
+      'handlers': ['console'],
       'level': 'INFO',
       'propagate': True
     },
     'alembic.runtime.migration': {
-      'handlers': ['console', 'file'],
+      'handlers': ['console'],
       'level': 'ERROR',
       'propagate': False
     },
     'urllib3.connectionpool': {
-      'handlers': ['console', 'file'],
+      'handlers': ['console'],
       'level': 'ERROR',
       'propagate': False
     },
     'spiff': {
-      'handlers': ['console', 'file'],
+      'handlers': ['console'],
       'level': 'ERROR',
       'propagate': False
     },
     'werkzeug': {
-      'handlers': ['console', 'file'],
+      'handlers': ['console'],
       'level': 'ERROR',
       'propagate': False
     },
@@ -37,7 +37,6 @@ logging_config = {
     "level": "INFO",
     "handlers": [
       "console",
-      "file",
     ]
   },
   "handlers": {
