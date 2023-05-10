@@ -34,37 +34,37 @@ def upgrade():
     # session.flush()
 
     # migrate data from old file table and file data table to new file table
-    old_file_models = session.query(OldFileModel).all()
-    largest_file_id = 0
-    for old_file_model in old_file_models:
-        if old_file_model.irb_doc_code is not None:
-            largest_file_id = max(largest_file_id, old_file_model.id)
-            file_data_models = session.query(FileDataModel).\
-                filter(FileDataModel.file_model_id == old_file_model.id).\
-                order_by(sa.desc(FileDataModel.date_created)).\
-                all()
-            if len(file_data_models) > 0:
-                file_data_model = file_data_models[0]
-                file_model = FileModel(
-                    id=old_file_model.id,
-                    name=old_file_model.name,
-                    type=old_file_model.type.value,
-                    content_type=old_file_model.content_type,
-                    workflow_id=old_file_model.workflow_id,
-                    task_spec=old_file_model.task_spec,
-                    irb_doc_code=old_file_model.irb_doc_code,
-                    md5_hash=file_data_model.md5_hash,
-                    data=file_data_model.data,
-                    size=file_data_model.size,
-                    date_modified=file_data_model.date_created,
-                    date_created=file_data_model.date_created,
-                    user_uid=file_data_model.user_uid,
-                    archived=False
-                )
-                session.add(file_model)
-                session.commit()
+    # old_file_models = session.query(OldFileModel).all()
+    # largest_file_id = 0
+    # for old_file_model in old_file_models:
+    #     if old_file_model.irb_doc_code is not None:
+    #         largest_file_id = max(largest_file_id, old_file_model.id)
+    #         file_data_models = session.query(FileDataModel).\
+    #             filter(FileDataModel.file_model_id == old_file_model.id).\
+    #             order_by(sa.desc(FileDataModel.date_created)).\
+    #             all()
+    #         if len(file_data_models) > 0:
+    #             file_data_model = file_data_models[0]
+    #             file_model = FileModel(
+    #                 id=old_file_model.id,
+    #                 name=old_file_model.name,
+    #                 type=old_file_model.type.value,
+    #                 content_type=old_file_model.content_type,
+    #                 workflow_id=old_file_model.workflow_id,
+    #                 task_spec=old_file_model.task_spec,
+    #                 irb_doc_code=old_file_model.irb_doc_code,
+    #                 md5_hash=file_data_model.md5_hash,
+    #                 data=file_data_model.data,
+    #                 size=file_data_model.size,
+    #                 date_modified=file_data_model.date_created,
+    #                 date_created=file_data_model.date_created,
+    #                 user_uid=file_data_model.user_uid,
+    #                 archived=False
+    #             )
+    #             session.add(file_model)
+    #             session.commit()
     sequence = FileModel.__tablename__ + '_id_seq1'
-    new_start_id = largest_file_id + 1
+    new_start_id = 1
     alter_sequence = f'ALTER SEQUENCE {sequence} RESTART WITH {new_start_id}'
     op.execute(alter_sequence)
 
