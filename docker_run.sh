@@ -23,6 +23,9 @@ if [ "$RESET_DB_RRT" = "true" ]; then
   pipenv run flask load-example-rrt-data
 fi
 
+# Assure that git doesn't flake out about a mounted volume
+git config --global --add safe.directory /var/lib/cr-connect/specs
+
 # THIS MUST BE THE LAST COMMAND!
 if [ "$APPLICATION_ROOT" = "/" ]; then
   exec pipenv run gunicorn --bind "0.0.0.0:$PORT0" wsgi:app
