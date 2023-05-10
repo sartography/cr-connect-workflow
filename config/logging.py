@@ -46,12 +46,6 @@ logging_config = {
       "class": "logging.StreamHandler",
       "stream": "ext://sys.stdout",
       "level": "INFO"
-    },
-    "file": {
-      "level": "INFO",
-      "formatter": "simple",
-      "class": "logging.FileHandler",
-      "filename": "cr_connect.log"
     }
   }
 }
