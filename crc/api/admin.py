@@ -47,6 +47,9 @@ class StudyView(AdminModelView):
     can_create = True
     can_edit = True
     can_delete = True
+    column_exclude_list = ['primary_investigator_id', 'primary_investigator', 'sponsor', 'ind_number',
+                           'investigator_id', 'investigator_uids', 'requirements', 'enrollment_date', 'short_name',
+                           'proposal_name', 'progress']
 
 
 class ApprovalView(AdminModelView):

@@ -54,13 +54,15 @@ class TaskLogModelSchema(ma.Schema):
         if hasattr(obj, 'workflow_spec_id') and obj.workflow_spec_id is not None:
             workflow_spec = WorkflowSpecService().get_spec(obj.workflow_spec_id)
             category = WorkflowSpecService().get_category(workflow_spec.category_id)
-            return category.display_name
+            if category:
+                return category.display_name
 
     @staticmethod
     def get_workflow(obj):
         if hasattr(obj, 'workflow_spec_id') and obj.workflow_spec_id is not None:
             workflow_spec = WorkflowSpecService().get_spec(obj.workflow_spec_id)
-            return workflow_spec.display_name
+            if workflow_spec:
+                return workflow_spec.display_name
 
 
 class TaskLogQuery:
