@@ -44,7 +44,10 @@ class StudyService(object):
 
     @staticmethod
     def get_pb_min_date():
-        pb_min_date = parser.parse(app.config['PB_MIN_DATE'])
+        try:
+            pb_min_date = parser.parse(app.config['PB_MIN_DATE'])
+        except Exception as e:
+            pb_min_date = datetime(2019, 1, 1)
         return pb_min_date
 
     def get_studies_for_user(self, user, categories, include_invalid=False):
