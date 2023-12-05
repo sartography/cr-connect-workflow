@@ -217,7 +217,7 @@ class TestStudyApi(BaseTest):
                     num_open += 1
                 if study['id'] == 65432:
                     # This study has `null` for DATELASTMODIFIED, so we should use the value in DATECREATED
-                    self.assertEqual('2020-02-19T14:24:55.101695-05:00', study['last_updated'])
+                    self.assertEqual('2020-02-19T14:24:55.101695+00:00', study['last_updated'])
                 if study['id'] == 11111:
                     self.assertTrue(False,"Study 11111 is too old to be processed and imported, it should be ignored.")
             db_studies_after = session.query(StudyModel).all()
