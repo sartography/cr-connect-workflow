@@ -164,11 +164,13 @@ def user_studies():
     cats = spec_service.get_categories()
     StudyService.synch_with_protocol_builder_if_enabled(user, specs)
     studies = StudyService().get_studies_for_user(user, categories=cats)
-    if len(studies) == 0:
-        studies = StudyService().get_studies_for_user(user, categories=cats, include_invalid=True)
-        if len(studies) > 0:
-            message = f"All studies associated with User: {user.uid} failed study validation"
-            raise ApiError(code="study_integrity_error", message=message)
+ 
+    # Disable this check - we don't want to raise this error.
+    # if len(studies) == 0:
+    #     studies = StudyService().get_studies_for_user(user, categories=cats, include_invalid=True)
+    #     if len(studies) > 0:
+    #         message = f"All studies associated with User: {user.uid} failed study validation"
+    #         raise ApiError(code="study_integrity_error", message=message)
 
     results = StudySchema(many=True).dump(studies)
     return results
