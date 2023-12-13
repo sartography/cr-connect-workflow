@@ -61,8 +61,7 @@ def process_waiting_tasks():
         WorkflowService.do_waiting()
 
 
-@app.before_first_request
-def init_scheduler():
+with app.app_context():
     if app.config['PROCESS_WAITING_TASKS']:
         scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
         scheduler.add_job(WorkflowService().process_erroring_workflows, 'interval', minutes=1440)

@@ -6,8 +6,8 @@ from flask import url_for
 from marshmallow import INCLUDE, EXCLUDE, Schema
 from marshmallow.fields import Method
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema
-from sqlalchemy import func, Index
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import func, Index, cast, literal
+from sqlalchemy.dialects.postgresql import UUID, REGCONFIG
 from sqlalchemy.orm import deferred, relationship
 
 from crc import db, ma
@@ -193,7 +193,8 @@ class LookupDataModel(db.Model):
     # query with:
     # search_results = LookupDataModel.query.filter(LookupDataModel.label.match("INTERNAL")).all()
 
-    __ts_vector__ = func.to_tsvector('simple', label)
+    __ts_vector__ = func.to_tsvector(cast(literal('simple'),type_=REGCONFIG), label)
+
 
     __table_args__ = (
         Index(
