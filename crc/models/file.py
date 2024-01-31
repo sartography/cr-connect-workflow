@@ -20,9 +20,11 @@ class FileType(enum.Enum):
     dmn = "dmn"
     doc = "doc"
     docx = "docx"
+    eml = "eml"
     gif = 'gif'
     jpg = 'jpg'
     md = 'md'
+    msg = 'msg'
     pdf = 'pdf'
     png = 'png'
     ppt = 'ppt'
@@ -43,9 +45,11 @@ CONTENT_TYPES = {
     "dmn": "text/xml",
     "doc": "application/msword",
     "docx":  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "eml": "application/octet-stream",
     "gif": "image/gif",
     "jpg": "image/jpeg",
     "md": "text/plain",
+    "msg": "application/vnd.ms-outlook",
     "pdf": "application/pdf",
     "png": "image/png",
     "ppt": "application/vnd.ms-powerpoint",
