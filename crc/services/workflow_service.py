@@ -139,31 +139,30 @@ class WorkflowService(object):
         return workflow_url
 
     def process_erroring_workflows(self):
-        with app.app_context():    
-            workflows = self.get_erroring_workflows()
-            if len(workflows) > 0:
-                workflow_urls = []
-                if len(workflows) == 1:
-                    workflow = workflows[0]
+        workflows = self.get_erroring_workflows()
+        if len(workflows) > 0:
+            workflow_urls = []
+            if len(workflows) == 1:
+                workflow = workflows[0]
+                workflow_url_link = self.get_workflow_url(workflow)
+                workflow_urls.append(workflow_url_link)
+                message = 'There is one workflow in an error state.'
+                message += f'\n You can restart the workflow at {workflow_url_link}.'
+            else:
+                message = f'There are {len(workflows)} workflows in an error state.'
+                message += '\nYou can restart the workflows at these URLs:'
+                for workflow in workflows:
                     workflow_url_link = self.get_workflow_url(workflow)
                     workflow_urls.append(workflow_url_link)
-                    message = 'There is one workflow in an error state.'
-                    message += f'\n You can restart the workflow at {workflow_url_link}.'
-                else:
-                    message = f'There are {len(workflows)} workflows in an error state.'
-                    message += '\nYou can restart the workflows at these URLs:'
-                    for workflow in workflows:
-                        workflow_url_link = self.get_workflow_url(workflow)
-                        workflow_urls.append(workflow_url_link)
-                        message += f'\n{workflow_url_link}'
-    
-                with push_scope() as scope:
-                    scope.user = {"urls": workflow_urls}
-                    scope.set_extra("workflow_urls", workflow_urls)
-                    # this sends a message through sentry
-                    capture_message(message)
-                # We return message so we can use it in a test
-                return message
+                    message += f'\n{workflow_url_link}'
+
+            with push_scope() as scope:
+                scope.user = {"urls": workflow_urls}
+                scope.set_extra("workflow_urls", workflow_urls)
+                # this sends a message through sentry
+                capture_message(message)
+            # We return message so we can use it in a test
+            return message
 
     @staticmethod
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
