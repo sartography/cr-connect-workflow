@@ -2,7 +2,7 @@ name: build_test_image
 
 on:
   push:
-    branches: ['test']
+    branches: ['testing']
   workflow_dispatch:
 
 
@@ -67,7 +67,7 @@ jobs:
       - run_tests
       - sonarcloud
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/testing'
     permissions:
       contents: read
       packages: write
