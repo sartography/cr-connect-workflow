@@ -1,3 +1,5 @@
+# example data for testing
+
 import glob
 import os
 
