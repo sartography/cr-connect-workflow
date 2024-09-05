@@ -265,6 +265,7 @@ class StudyService(object):
         if uid is None:
             raise ApiError('uid not specified', "This function requires a uva uid parameter")
 
+        uid = uid.lower()
         if not LdapService.user_exists(uid):
             raise ApiError('trying_to_grant_access_to_user_not_found_in_ldap', "You are trying to grant access to "
                                                                                "%s but they were not found in ldap "
