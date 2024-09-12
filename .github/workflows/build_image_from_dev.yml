@@ -73,6 +73,10 @@ jobs:
       packages: write
 
     steps:
+      - run: echo "This job was triggered by a ${{ github.event_name }} event."
+      - run: echo "The branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
+      - run: echo "Tags are ${{ steps.meta.outputs.tags }} "
+      - run: echo "Labes are ${{ steps.meta.outputs.labels }} "
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -96,6 +100,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
+          ref: dev
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
