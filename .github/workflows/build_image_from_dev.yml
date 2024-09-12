@@ -1,8 +1,9 @@
-name: build_test_image
+name: build_image_from_dev
 
 on:
   push:
-    branches: ['testing']
+    branches: [ 'dev' ]
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 
@@ -67,14 +68,13 @@ jobs:
       - run_tests
       - sonarcloud
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/testing'
     permissions:
       contents: read
       packages: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Log in to the Container registry
         uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
@@ -90,7 +90,8 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        id: push
+        uses: docker/build-push-action@v4
         with:
           context: .
           push: true

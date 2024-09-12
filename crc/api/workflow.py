@@ -17,6 +17,10 @@ from crc.services.workflow_processor import WorkflowProcessor
 from crc.services.workflow_service import WorkflowService
 from crc.services.workflow_spec_service import WorkflowSpecService
 
+
+PLEASE_PROVIDE_STRING = 'Please provide a valid Workflow Specification ID.'
+
+
 def all_specifications(libraries=False,standalone=False):
     spec_service = WorkflowSpecService()
     if libraries and standalone:
@@ -53,7 +57,7 @@ def add_workflow_specification(body):
 def get_workflow_specification(spec_id):
     spec_service = WorkflowSpecService()
     if spec_id is None:
-        raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
+        raise ApiError('unknown_spec', PLEASE_PROVIDE_STRING)
     spec = spec_service.get_spec(spec_id)
 
     if spec is None:
@@ -65,7 +69,7 @@ def validate_spec_and_library(spec_id,library_id):
     spec_service = WorkflowSpecService()
 
     if spec_id is None:
-        raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
+        raise ApiError('unknown_spec', PLEASE_PROVIDE_STRING)
     if library_id is None:
         raise ApiError('unknown_spec', 'Please provide a valid Library Specification ID.')
 
@@ -152,7 +156,7 @@ def update_workflow_specification(spec_id, body):
 
 def delete_workflow_specification(spec_id):
     if spec_id is None:
-        raise ApiError('unknown_spec', 'Please provide a valid Workflow Specification ID.')
+        raise ApiError('unknown_spec', PLEASE_PROVIDE_STRING)
     spec_service = WorkflowSpecService()
     spec = spec_service.get_spec(spec_id)
     if spec is None:
@@ -224,6 +228,7 @@ def get_task_events(action = None, workflow = None, study = None):
     user = UserService.current_user(allow_admin_impersonate=True)
     studies = session.query(StudyModel).filter(StudyModel.user_uid==user.uid)
     studyids = [s.id for s in studies]
+    # Get task_events for studies created by the user, or where the user is assigned to the task_event
     query = session.query(TaskEventModel).filter((TaskEventModel.study_id.in_(studyids)) | \
                                                  (TaskEventModel.user_uid==user.uid))
     if action:
