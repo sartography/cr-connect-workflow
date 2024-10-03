@@ -5,7 +5,7 @@ from crc.scripts.script import Script
 
 from io import BytesIO
 from openpyxl import load_workbook
-from openpyxl.writer.excel import save_virtual_workbook
+from tempfile import NamedTemporaryFile
 
 
 class ModifySpreadsheet(Script):
@@ -53,9 +53,12 @@ class ModifySpreadsheet(Script):
                 workbook = load_workbook(BytesIO(spreadsheet.data))
                 sheet = workbook.active
                 sheet[parameters['cell']] = parameters['text']
-                data_string = save_virtual_workbook(workbook)
-                spreadsheet.data = data_string
-                session.commit()
+                with NamedTemporaryFile() as tmp:
+                    workbook.save(tmp.name)
+                    tmp.seek(0)
+                    data_string = tmp.read()
+                    spreadsheet.data = data_string
+                    session.commit()
             else:
                 raise ApiError(code='missing_spreadsheet',
                                message=f"The spreadshhet you want to modify does not exist. Workflow ID is {workflow_id}, and IRB Doc Code is {parameters['irb_doc_code']}")
