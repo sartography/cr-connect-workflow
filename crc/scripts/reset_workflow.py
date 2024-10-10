@@ -9,7 +9,7 @@ from crc.services.workflow_spec_service import WorkflowSpecService
 class ResetWorkflow(Script):
 
     def get_description(self):
-        return """Reset a workflow. Run by mas vftgv ter workflow.
+        return """Reset a workflow. Run by top level workflow.
             Designed for completed workflows where we need to force rerunning the workflow.
             I.e., a new PI"""
 

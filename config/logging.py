@@ -3,7 +3,7 @@ logging_config = {
   'disable_existing_loggers': False,
   "loggers": {
     '': {  # root logger
-      'handlers': ['console'],
+      'handlers': ['console', 'file'],
       'level': 'INFO',
       'propagate': True
     },
@@ -36,7 +36,7 @@ logging_config = {
   "root": {
     "level": "INFO",
     "handlers": [
-      "console",
+      "console", "file"
     ]
   },
   "handlers": {
@@ -45,6 +45,12 @@ logging_config = {
       "class": "logging.StreamHandler",
       "stream": "ext://sys.stdout",
       "level": "INFO"
+    },
+    "file": {
+      "level": "INFO",
+      "formatter": "simple",
+      "class": "logging.FileHandler",
+      "filename": "cr_connect.log"
     }
   }
 }

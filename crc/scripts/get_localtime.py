@@ -1,3 +1,4 @@
+from crc import app
 from crc.api.common import ApiError
 from crc.scripts.script import Script
 
@@ -31,7 +32,16 @@ class GetLocaltime(Script):
                 timezone = 'US/Eastern'
             # with Python 3.9, not passing the timezone resuls in a  PytzUsageWarning usage warning.
             parsed_timestamp = dateparser.parse(timestamp, settings={'TIMEZONE': 'UTC'})
-            localtime = parsed_timestamp.astimezone(pytz.timezone(timezone))
+            try:
+                localtime = parsed_timestamp.astimezone(pytz.timezone(timezone))
+            except AttributeError as ae:
+                # In general, we want this script to succeed. It is called during the document assembly process.
+                # We want to generate the zip file and submit to the IRB, even if it has minor errors
+                app.logger.info(f'Could not convert the timestamp to a localtime. Original error: {ae}')
+                localtime = None
+                # TODO: When we fix the frontend to no display errors on production, we can raise an error here.
+                # raise ApiError(code='invalid_date_or_timestamp',
+                #                message=f'We could not process the timestamp into a localtime. Original error: {ae}')
             return localtime
 
         else:
