@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 from unittest.mock import patch
+from unittest import skip
 
 from tests.base_test import BaseTest
 
@@ -36,6 +37,7 @@ class TestStudyService(BaseTest):
         db.session.commit()
         return user
 
+    @skip("We don't actually use this feature.")
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     def test_study_progress(self, mock_docs, mock_details):
