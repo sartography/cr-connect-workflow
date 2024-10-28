@@ -236,13 +236,18 @@ class TestStudyService(BaseTest):
         self.assertEqual(0, len(studies))
 
     def test_study_associates(self):
-        user = self.create_user_with_study_and_workflow()
+        self.create_user_with_study_and_workflow()
         study = db.session.query(StudyModel).first()
+        self.create_user(uid='lb3dp', email='lb3dp@example.com', display_name='lb3dp')
+        StudyService.update_study_associate(study_id=study.id, uid='lb3dp', role='Primary Investigator', send_email=True, access=True)
         associates = StudyService.get_study_associates(study.id)
-        self.assertEquals(1, len(associates))
+        # get_study_associates always returns the owner of the study.
+        # so we should get 2 associates back.
+        self.assertEquals(2, len(associates))
         assoc_json = StudyAssociatedSchema(many=True).dump(associates)
-        print(assoc_json)
-        self.assertEquals("Dan", assoc_json[0]['ldap_info']['given_name'])
+        self.assertEquals("Dan", assoc_json[1]['ldap_info']['given_name'])
+        self.assertEqual('Primary Investigator', assoc_json[0]['role'])
+        self.assertEqual('Laura Barnes', assoc_json[0]['ldap_info']['display_name'])
 
     def test_set_category_metadata(self):
         user = self.create_user_with_study_and_workflow()
