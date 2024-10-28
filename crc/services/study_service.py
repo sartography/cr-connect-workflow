@@ -53,16 +53,22 @@ class StudyService(object):
     def get_studies_for_user(self, user, categories, include_invalid=False):
         """Returns a list of all studies for the given user."""
 
+        # gets studies for the user
         associated = session.query(StudyAssociated).filter_by(uid=user.uid, access=True).all()
         associated_studies = [x.study_id for x in associated]
         db_studies = session.query(StudyModel).filter((StudyModel.user_uid == user.uid) |
                                                       (StudyModel.id.in_(associated_studies))).all()
 
+        # add extra data to display in home page table
         studies = []
-        for study_model in db_studies:
-            if include_invalid or study_model.review_type in self.VALID_REVIEW_TYPES:
-                studies.append(StudyService.get_study(study_model.id, categories, study_model=study_model,
-                                                      process_categories=False))
+        for row in db_studies:
+            study_model = row
+            if study_model.review_type in self.VALID_REVIEW_TYPES:
+                primary_investigator = session.query(StudyAssociated).filter_by(study_id=study_model.id, role='Primary Investigator').first()
+                study_model.primary_investigator = primary_investigator.ldap_info.display_name if primary_investigator and primary_investigator.ldap_info else ''
+                study_model.last_activity_user, study_model.last_activity_date = self.get_last_user_and_date(study_model.id)
+                study_model.create_user_display = LdapService.user_info(study_model.user_uid).display_name
+                studies.append(study_model)
         return studies
 
     @staticmethod
@@ -115,6 +121,30 @@ class StudyService(object):
         return warnings
 
     @staticmethod
+    def get_progress_percent(study_id):
+        # Calculate study progress and return it as a integer out of a hundred
+        all_workflows = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study_id).count()
+        complete_workflows = db.session.query(WorkflowModel).filter(WorkflowModel.study_id == study_id).filter(WorkflowModel.status == WorkflowStatus.complete).count()
+        if all_workflows > 0:
+            return int((complete_workflows/all_workflows)*100)
+        else:
+            return 0
+
+    @staticmethod
+    def get_last_user_and_date(study_id):
+        last_event: TaskEventModel = session.query(TaskEventModel) \
+            .filter_by(study_id=study_id, action='COMPLETE') \
+            .order_by(TaskEventModel.date.desc()).first()
+        if last_event is None:
+            last_activity_user = 'Not Started'
+            last_activity_date = ""
+        else:
+            last_activity_user = LdapService.user_info(last_event.user_uid).display_name
+            last_activity_date = last_event.date
+
+        return last_activity_user, last_activity_date
+
+    @staticmethod
     def get_study(study_id, categories: List[WorkflowSpecCategory], study_model: StudyModel = None,
                   master_workflow_results=None, process_categories=False):
         """Returns a study model that contains all the workflows organized by category.
@@ -123,15 +153,9 @@ class StudyService(object):
             study_model = session.query(StudyModel).filter_by(id=study_id).first()
         study = Study.from_model(study_model)
         study.create_user_display = LdapService.user_info(study.user_uid).display_name
-        last_event: TaskEventModel = session.query(TaskEventModel) \
-            .filter_by(study_id=study_id, action='COMPLETE') \
-            .order_by(TaskEventModel.date.desc()).first()
-        if last_event is None:
-            study.last_activity_user = 'Not Started'
-            study.last_activity_date = ""
-        else:
-            study.last_activity_user = LdapService.user_info(last_event.user_uid).display_name
-            study.last_activity_date = last_event.date
+        last_activity_user, last_activity_date = StudyService.get_last_user_and_date(study_id)
+        study.last_activity_user = last_activity_user
+        study.last_activity_date = last_activity_date
         study.categories = categories
         files = UserFileService.get_files_for_study(study.id)
         files = (File.from_file_model(model, DocumentService.get_dictionary()) for model in files)
@@ -155,16 +179,8 @@ class StudyService(object):
                 if associate.role == "Primary Investigator":
                     study.primary_investigator = associate.ldap_info.display_name
 
-        # Calculate study progress and return it as a integer out of a hundred
-        all_workflows = db.session.query(WorkflowModel).\
-            filter(WorkflowModel.study_id == study.id).\
-            count()
-        complete_workflows = db.session.query(WorkflowModel).\
-            filter(WorkflowModel.study_id == study.id).\
-            filter(WorkflowModel.status == WorkflowStatus.complete).\
-            count()
-        if all_workflows > 0:
-            study.progress = int((complete_workflows/all_workflows)*100)
+        # TODO: We don't use the progress bar. This should be removed.
+        # study.progress = StudyService.get_progress_percent(study.id)
 
         return study
 
