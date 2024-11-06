@@ -93,7 +93,7 @@ sphinxcontrib-htmlhelp==2.1.0
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
-spiffworkflow
+spiffworkflow @ git+https://github.com/sartography/SpiffWorkflow@dd0eba278dc61438aea7cfb51e67c9f00b3f2db7
 sqlalchemy==1.4.54
 swagger-ui-bundle==0.0.9
 tomli==2.0.2
