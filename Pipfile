@@ -54,6 +54,7 @@ dateparser = "*"
 # TIP:  If you want to test local changes to SpiffWorkflow, do:
 # pipenv install --editable ../SpiffWorkflow (but fix things back before commiting!)
 spiffworkflow = {git = "https://github.com/sartography/SpiffWorkflow@dd0eba278dc61438aea7cfb51e67c9f00b3f2db7"}
+waitress = "*"
 
 [requires]
 python_version = "3.9"
