@@ -1,13 +1,15 @@
 from tests.base_test import BaseTest
+from crc.api.common import ApiError
 from crc.scripts.get_localtime import GetLocaltime
 import dateparser
 import datetime
+from unittest.mock import patch
 
 
 class TestGetLocaltime(BaseTest):
 
     def test_get_localtime(self):
-        timestamp = datetime.datetime.utcnow()
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
         workflow = self.create_workflow('get_localtime')
 
         workflow_api = self.get_workflow_api(workflow)
@@ -27,7 +29,7 @@ class TestGetLocaltime(BaseTest):
 
     def test_get_localtime_with_timezone(self):
 
-        timestamp = datetime.datetime.utcnow()
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
         workflow = self.create_workflow('get_localtime')
 
         workflow_api = self.get_workflow_api(workflow)
@@ -53,3 +55,23 @@ class TestGetLocaltime(BaseTest):
 
         with self.assertRaises(AssertionError):
             self.complete_form(workflow, task, {'with_timestamp': False, 'with_timezone': False})
+
+    @patch('dateparser.parse')  # mock_timestamp
+    def test_get_localtime_bad_timestamp(self, mock_timestamp):
+        # If we have a bad timestamp, we want the script to run, but return None
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
+        mock_timestamp.return_value = None
+        workflow = self.create_workflow('get_localtime')
+        workflow_api = self.get_workflow_api(workflow)
+        task = workflow_api.next_task
+
+        workflow_api = self.complete_form(workflow, task, {'with_timestamp': True,
+                                                           'with_timezone': True,
+                                                           'timestamp': str(timestamp),
+                                                           'timezone': 'US/Eastern'})
+        next_task = workflow_api.next_task
+        localtime_with = next_task.data['localtime_with']
+        localtime_without = next_task.data['localtime_without']
+
+        self.assertIsNone(localtime_with)
+        self.assertIsNone(localtime_without)

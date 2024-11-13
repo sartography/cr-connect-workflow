@@ -1,8 +1,9 @@
-name: build_test_image
+name: build_image_from_dev
 
 on:
   push:
-    branches: ['testing']
+    branches: [ 'dev' ]
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 
@@ -19,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
@@ -48,11 +49,11 @@ jobs:
           - 5432:5432
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - uses: browser-actions/setup-chrome@latest
         with:
           chrome-version: stable
-      - uses: actions/setup-python@v3
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.9'
           architecture: 'x64'
@@ -67,17 +68,22 @@ jobs:
       - run_tests
       - sonarcloud
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/testing'
     permissions:
       contents: read
       packages: write
 
     steps:
+      - run: echo "This job was triggered by a ${{ github.event_name }} event."
+      - run: echo "The branch is ${{ github.ref }} and the repository is ${{ github.repository }}."
+      - run: echo "Tags are ${{ steps.meta.outputs.tags }} "
+      - run: echo "Labes are ${{ steps.meta.outputs.labels }} "
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+        with:
+          ref: dev
 
       - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -85,12 +91,13 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        id: push
+        uses: docker/build-push-action@v6
         with:
           context: .
           push: true
