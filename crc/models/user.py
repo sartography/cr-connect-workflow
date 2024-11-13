@@ -73,7 +73,8 @@ class UserModelSchema(SQLAlchemyAutoSchema):
     def get_is_admin(user):
         return user.is_admin()
 
-    def get_is_superuser(self, user):
+    @staticmethod
+    def get_is_superuser(user):
         return user.is_superuser()
 
 
