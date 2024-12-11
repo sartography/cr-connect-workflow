@@ -37,10 +37,10 @@ class StudyService(object):
     """Provides common tools for working with a Study"""
     INVESTIGATOR_LIST = "investigators.xlsx"  # A reference document containing details about what investigators to show, and when.
 
-    # The review types 2, 3, 21, 24 correspond to review type names
-    # `Full Committee`, `Expedited`, `Review by Non-UVA IRB` and `Non-UVA IRB - Full Board`
+    # The review types 2, 3, 21, 23, 24 correspond to review type names
+    # `Full Committee`, `Expedited`, `Review by Non-UVA IRB`, `Non-UVA IRB - Expedited`, and `Non-UVA IRB - Full Board`
     # These are considered to be the valid review types that can be shown to users.
-    VALID_REVIEW_TYPES = [2, 3, 21, 24]
+    VALID_REVIEW_TYPES = [2, 3, 21, 23, 24]
 
     @staticmethod
     def get_pb_min_date():
