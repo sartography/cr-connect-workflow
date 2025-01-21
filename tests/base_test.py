@@ -55,6 +55,9 @@ class BaseTest(unittest.TestCase):
         },
         {
             'uid': 'lb3dp',
+        },
+        {
+            'uid': 'kcm4zc',
         }
     ]
 
