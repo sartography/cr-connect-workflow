@@ -39,11 +39,11 @@ class TestSpecFileService(BaseTest):
     def test_set_primary_bpmn(self):
         spec_random = self.load_test_spec("random_fact")
         SpecFileService.set_primary_bpmn(spec_random, 'random_fact.bpmn')
-        self.assertEquals('random_fact.bpmn', spec_random.primary_file_name)
-        self.assertEquals('Process_1ds61df', spec_random.primary_process_id)
+        self.assertEqual('random_fact.bpmn', spec_random.primary_file_name)
+        self.assertEqual('Process_1ds61df', spec_random.primary_process_id)
         SpecFileService.set_primary_bpmn(spec_random, 'random_fact2.bpmn')
-        self.assertEquals('random_fact2.bpmn', spec_random.primary_file_name)
-        self.assertEquals('Process_SecondFact', spec_random.primary_process_id)
+        self.assertEqual('random_fact2.bpmn', spec_random.primary_file_name)
+        self.assertEqual('Process_SecondFact', spec_random.primary_process_id)
 
     def test_delete_workflow_spec_file(self):
         spec = self.load_test_spec("random_fact")

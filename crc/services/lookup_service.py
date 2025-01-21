@@ -189,7 +189,7 @@ class LookupService(object):
         df = df.convert_dtypes()
         df = df.loc[:, ~df.columns.str.contains('^Unnamed')]  # Drop unnamed columns.
         df = pd.DataFrame(df).dropna(how='all')  # Drop null rows
-        for (column_name, column_data) in df.iteritems():
+        for (column_name, column_data) in df.items():
             data_type = df.dtypes[column_name].name
             if data_type == 'string':
                 df[column_name] = df[column_name].fillna('')
