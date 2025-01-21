@@ -15,7 +15,6 @@ class TestCheckStudy(BaseTest):
     @patch('crc.services.protocol_builder.requests.get')
     def test_check_study(self, mock_get):
         app.config['PB_ENABLED'] = True
-        app.config['PB_ENABLED'] = True
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('check_study.json')
         workflow = self.create_workflow('check_study_script')
