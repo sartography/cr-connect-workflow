@@ -8,7 +8,6 @@ from sqlalchemy import text
 
 
 class AddAdminUser(Script):
-    scripts = {}
 
     def get_description(self):
         return """Add a user to the study_associated_user table (for all studies)"""
@@ -19,10 +18,9 @@ class AddAdminUser(Script):
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
         associated_user = kwargs.get('associated_user', None)
         associated_group = kwargs.get('associated_group', None)
-        scripts = self.generate_augmented_list(task, study_id, workflow_id)
-        self.scripts = scripts
+
         try:
-            ldap_user = self.scripts['ldap'](associated_user)
+            ldap_user = task.data['ldap'](associated_user)
         except ApiError as ae:
             return {"error": str(ae), 'message': f"User {associated_user} not found in LDAP"}
 
