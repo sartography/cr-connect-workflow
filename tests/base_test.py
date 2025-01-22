@@ -150,6 +150,13 @@ class BaseTest(unittest.TestCase):
         """
         ExampleDataLoader.clean_db()
 
+    @staticmethod
+    def add_user(ldap_model):
+        db.session.add(ldap_model)
+        db.session.commit()
+        db.session.add(UserModel(uid=ldap_model.uid, ldap_info=ldap_model))
+
+
     def add_users(self):
         for user_json in self.users:
             ldap_info = LdapService.user_info(user_json['uid'])
