@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_8932653" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_Test_Set_PB_Associates" name="Test Set PB Associates" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0fecplz</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0fecplz" sourceRef="StartEvent_1" targetRef="Activity_Review_Before_Load_IRB" />
+    <bpmn:manualTask id="Activity_Review_Before_Load_IRB" name="Review Before Load IRB">
+      <bpmn:documentation>Before Load IRB Personnel</bpmn:documentation>
+      <bpmn:incoming>Flow_0fecplz</bpmn:incoming>
+      <bpmn:outgoing>Flow_0x87xqh</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0x87xqh" sourceRef="Activity_Review_Before_Load_IRB" targetRef="Activity_Call_Load_IRB_Personnel" />
+    <bpmn:scriptTask id="Activity_Call_Load_IRB_Personnel" name="Call Load IRB Personnel">
+      <bpmn:incoming>Flow_0x87xqh</bpmn:incoming>
+      <bpmn:outgoing>Flow_03mr6dl</bpmn:outgoing>
+      <bpmn:script>current_user = get_current_user()
+irb_personnel_data = load_irb_personnel()
+
+pi = irb_personnel_data['pi']
+dc = irb_personnel_data['dc']
+pcs = irb_personnel_data['pcs']
+pcpb = irb_personnel_data['pcpb']
+subs = irb_personnel_data['subs']
+subpb = irb_personnel_data['subpb']
+subx = irb_personnel_data['subx']
+is_pbc_pi = irb_personnel_data['is_pbc_pi']
+is_pbc_dc = irb_personnel_data['is_pbc_dc']
+is_pbc_pc = irb_personnel_data['is_pbc_pc']
+is_pbc_subs = irb_personnel_data['is_pbc_subs']
+cnt_pcs = irb_personnel_data['cnt_pcs']
+cnt_pcpb = irb_personnel_data['cnt_pcpb']
+cnt_subs = irb_personnel_data['cnt_subs']
+cnt_subpb = irb_personnel_data['cnt_subpb']
+# newPI = irb_personnel_data['newPI']
+# newDC = irb_personnel_data['newDC']
+hasPI = irb_personnel_data['hasPI']
+hasDC = irb_personnel_data['hasDC']
+pi_invalid_uid = irb_personnel_data['pi_invalid_uid']
+dc_invalid_uid = irb_personnel_data['dc_invalid_uid']
+pcs_invalid_uid = irb_personnel_data['pcs_invalid_uid']
+subs_invalid_uid = irb_personnel_data['subs_invalid_uid']
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_03mr6dl" sourceRef="Activity_Call_Load_IRB_Personnel" targetRef="Activity_0cttist" />
+    <bpmn:manualTask id="Activity_Review_Before_Add_Additional" name="Review Before Add Additional">
+      <bpmn:documentation>Before Add Additional Personnel</bpmn:documentation>
+      <bpmn:incoming>Flow_18pe9ct</bpmn:incoming>
+      <bpmn:outgoing>Flow_11jvw1w</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_11jvw1w" sourceRef="Activity_Review_Before_Add_Additional" targetRef="Activity_Add_Additional_Personnel" />
+    <bpmn:scriptTask id="Activity_Call_Set_PB_Associates" name="Call Set PB Associates">
+      <bpmn:incoming>Flow_1p9n9sz</bpmn:incoming>
+      <bpmn:outgoing>Flow_17v95od</bpmn:outgoing>
+      <bpmn:script># Add Additional Personnel
+# Reset the study_associated_user table
+update_study_associates()
+# Add the new associates
+set_pb_associates()
+</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_17v95od" sourceRef="Activity_Call_Set_PB_Associates" targetRef="Activity_Review_Before_End" />
+    <bpmn:manualTask id="Activity_Review_Before_End" name="Review Before End">
+      <bpmn:incoming>Flow_17v95od</bpmn:incoming>
+      <bpmn:outgoing>Flow_1il2g6d</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_1j1ncfe">
+      <bpmn:incoming>Flow_1il2g6d</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1il2g6d" sourceRef="Activity_Review_Before_End" targetRef="Event_1j1ncfe" />
+    <bpmn:sequenceFlow id="Flow_1lanqjl" sourceRef="Activity_Add_Additional_Personnel" targetRef="Activity_Review_Before_Set_PB" />
+    <bpmn:userTask id="Activity_Add_Additional_Personnel" name="Add Additional Personnel">
+      <bpmn:documentation>This is mt documentation</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:formData>
+          <camunda:formField id="cid" label="&#39;UVA Computing ID&#39;" type="string">
+            <camunda:properties>
+              <camunda:property id="repeat" value="AP" />
+              <camunda:property id="repeat_title" value="Add Additional Personnel" />
+              <camunda:property id="repeat_button_label" value="Additional Personnel" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="role" label="&#39;Enter the Role this addional personnel has for the study&#39;" type="string">
+            <camunda:properties>
+              <camunda:property id="repeat" value="AP" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+          </camunda:formField>
+          <camunda:formField id="access" label="&#39;Should this Additional Personnel have full editing access in the system?&#39;" type="boolean" defaultValue="False">
+            <camunda:properties>
+              <camunda:property id="repeat" value="AP" />
+            </camunda:properties>
+          </camunda:formField>
+          <camunda:formField id="emails" label="&#39;Should this Additional Personnel receive automated email notifications?&#39;" type="boolean" defaultValue="False">
+            <camunda:properties>
+              <camunda:property id="repeat" value="AP" />
+            </camunda:properties>
+          </camunda:formField>
+        </camunda:formData>
+        <camunda:properties>
+          <camunda:property name="display_name" value="&#39;Additional Personnel&#39;" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_11jvw1w</bpmn:incoming>
+      <bpmn:outgoing>Flow_1lanqjl</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_1p9n9sz" sourceRef="Activity_Review_Before_Set_PB" targetRef="Activity_Call_Set_PB_Associates" />
+    <bpmn:manualTask id="Activity_Review_Before_Set_PB" name="Review Before Set PB">
+      <bpmn:incoming>Flow_1lanqjl</bpmn:incoming>
+      <bpmn:outgoing>Flow_1p9n9sz</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_18pe9ct" sourceRef="Activity_0cttist" targetRef="Activity_Review_Before_Add_Additional" />
+    <bpmn:scriptTask id="Activity_0cttist" name="Add Access and Email Parameters">
+      <bpmn:incoming>Flow_03mr6dl</bpmn:incoming>
+      <bpmn:outgoing>Flow_18pe9ct</bpmn:outgoing>
+      <bpmn:script># add_access_and_email_parameters()
+for assoc_type in [pi, dc,]:
+    if assoc_type:
+        assoc_type['access'] = False
+        assoc_type['emails'] = True
+for assoc_type in [pcs, subs,]:
+    if assoc_type:
+        for assoc in assoc_type:
+            if assoc_type[assoc]:
+                assoc_type[assoc]['access'] = False
+                assoc_type[assoc]['emails'] = True
+delete_variables('assoc')
+delete_variables('assoc_type')
+</bpmn:script>
+    </bpmn:scriptTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_Test_Set_PB_Associates">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0kaklre_di" bpmnElement="Activity_Review_Before_Load_IRB">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0n4aa30_di" bpmnElement="Activity_Call_Load_IRB_Personnel">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_08mohnt_di" bpmnElement="Activity_Review_Before_Add_Additional">
+        <dc:Bounds x="750" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_06ps1qu_di" bpmnElement="Activity_Add_Additional_Personnel">
+        <dc:Bounds x="910" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_15s55ev_di" bpmnElement="Activity_Call_Set_PB_Associates">
+        <dc:Bounds x="1230" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_039ybct_di" bpmnElement="Activity_Review_Before_End">
+        <dc:Bounds x="1390" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1j1ncfe_di" bpmnElement="Event_1j1ncfe">
+        <dc:Bounds x="1552" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1iybpm7_di" bpmnElement="Activity_Review_Before_Set_PB">
+        <dc:Bounds x="1070" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0kzclnm_di" bpmnElement="Activity_0cttist">
+        <dc:Bounds x="590" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0fecplz_di" bpmnElement="Flow_0fecplz">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0x87xqh_di" bpmnElement="Flow_0x87xqh">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03mr6dl_di" bpmnElement="Flow_03mr6dl">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="590" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11jvw1w_di" bpmnElement="Flow_11jvw1w">
+        <di:waypoint x="850" y="177" />
+        <di:waypoint x="910" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17v95od_di" bpmnElement="Flow_17v95od">
+        <di:waypoint x="1330" y="177" />
+        <di:waypoint x="1390" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1il2g6d_di" bpmnElement="Flow_1il2g6d">
+        <di:waypoint x="1490" y="177" />
+        <di:waypoint x="1552" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1lanqjl_di" bpmnElement="Flow_1lanqjl">
+        <di:waypoint x="1010" y="177" />
+        <di:waypoint x="1070" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1p9n9sz_di" bpmnElement="Flow_1p9n9sz">
+        <di:waypoint x="1170" y="177" />
+        <di:waypoint x="1230" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18pe9ct_di" bpmnElement="Flow_18pe9ct">
+        <di:waypoint x="690" y="177" />
+        <di:waypoint x="750" y="177" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
