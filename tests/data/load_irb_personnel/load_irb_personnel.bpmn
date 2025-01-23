@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_feb5810" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:process id="Process_feb5810" name="Test Load IRB Personnel Script" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_1wgunfv</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_1wgunfv" sourceRef="StartEvent_1" targetRef="Activity_Call_Load_IRB_Personnel" />
+    <bpmn:scriptTask id="Activity_Call_Load_IRB_Personnel" name="Call load_irb_personnel">
+      <bpmn:incoming>Flow_1wgunfv</bpmn:incoming>
+      <bpmn:outgoing>Flow_1m6xf2u</bpmn:outgoing>
+      <bpmn:script>current_user = get_current_user()
+irb_personnel_data = load_irb_personnel()</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_1m6xf2u" sourceRef="Activity_Call_Load_IRB_Personnel" targetRef="Activity_LandingPage" />
+    <bpmn:manualTask id="Activity_LandingPage" name="Landing Page">
+      <bpmn:incoming>Flow_1m6xf2u</bpmn:incoming>
+      <bpmn:outgoing>Flow_08mzwej</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_0a82jc4">
+      <bpmn:incoming>Flow_08mzwej</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_08mzwej" sourceRef="Activity_LandingPage" targetRef="Event_0a82jc4" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_feb5810">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_13k20l4_di" bpmnElement="Activity_Call_Load_IRB_Personnel">
+        <dc:Bounds x="270" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_05igk93_di" bpmnElement="Activity_LandingPage">
+        <dc:Bounds x="430" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0a82jc4_di" bpmnElement="Event_0a82jc4">
+        <dc:Bounds x="592" y="159" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="587" y="202" width="48" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1wgunfv_di" bpmnElement="Flow_1wgunfv">
+        <di:waypoint x="215" y="177" />
+        <di:waypoint x="270" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1m6xf2u_di" bpmnElement="Flow_1m6xf2u">
+        <di:waypoint x="370" y="177" />
+        <di:waypoint x="430" y="177" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_08mzwej_di" bpmnElement="Flow_08mzwej">
+        <di:waypoint x="530" y="177" />
+        <di:waypoint x="592" y="177" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

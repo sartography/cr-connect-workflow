@@ -80,6 +80,46 @@
         ]
       }
     },
+    {
+      "dn": "uid=kcm4zc,ou=People,o=University of Virginia,c=US",
+      "raw": {
+        "cn": [
+          "Mike Cullerton (kcm4zc)"
+        ],
+        "displayName": [
+          "Mike Cullerton"
+        ],
+        "givenName": [
+          "Mike"
+        ],
+        "mail": [
+          "kcm4zc@virginia.edu"
+        ],
+        "objectClass": [
+          "top",
+          "person",
+          "organizationalPerson",
+          "inetOrgPerson",
+          "uvaPerson",
+          "uidObject"
+        ],
+        "telephoneNumber": [
+          "+1 (434) 924-1723"
+        ],
+        "title": [
+          "E42:Maintainer CR Connect 2"
+        ],
+        "uvaDisplayDepartment": [
+          "E0:EN-Eng Maintainer of the Universe"
+        ],
+        "uvaPersonIAMAffiliation": [
+          "faculty"
+        ],
+        "uvaPersonSponsoredType": [
+          "Staff"
+        ]
+      }
+    },
       {
       "dn": "uid=lje5u,ou=People,o=University of Virginia,c=US",
       "raw": {

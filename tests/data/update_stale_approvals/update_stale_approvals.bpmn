@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_91364e8" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.0.0-dev">
+  <bpmn:collaboration id="Collaboration_10ean5u">
+    <bpmn:documentation>This workflow is used to test the update_stale_approvals script.</bpmn:documentation>
+    <bpmn:participant id="Participant_1a2gzv3" processRef="Process_91364e8" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_91364e8" name="Test Update Stale Script Task" isExecutable="true">
+    <bpmn:documentation>This workflow is used to test the update_stale_approvals script</bpmn:documentation>
+    <bpmn:laneSet id="LaneSet_0c14d9x">
+      <bpmn:lane id="Lane_1c45bg6">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReviewBeforeForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_1i2lim0</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_1f0l0ni</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReviewBeforeUpdate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReviewAfterUpdate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_UpdateStaleTaskEvents</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_0tl4blv" name="Approvers">
+        <bpmn:flowNodeRef>Activity_DisplayApproverForm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReviewAfterForm</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0onhdq0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0onhdq0" sourceRef="StartEvent_1" targetRef="Activity_1f0l0ni" />
+    <bpmn:manualTask id="Activity_ReviewBeforeForm" name="Review Before Form">
+      <bpmn:documentation>This task gives the test an opportunity to pause and make any assertions</bpmn:documentation>
+      <bpmn:incoming>Flow_15ak41i</bpmn:incoming>
+      <bpmn:outgoing>Flow_0et4uef</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:endEvent id="Event_1i2lim0">
+      <bpmn:incoming>Flow_0r7k8b7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_15ak41i" sourceRef="Activity_1f0l0ni" targetRef="Activity_ReviewBeforeForm" />
+    <bpmn:scriptTask id="Activity_1f0l0ni" name="Set Test Parameters">
+      <bpmn:incoming>Flow_0onhdq0</bpmn:incoming>
+      <bpmn:outgoing>Flow_15ak41i</bpmn:outgoing>
+      <bpmn:script>Approvers = ['kcm4zc', 'lb3dp']</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="Activity_DisplayApproverForm" name="Display Approver Form">
+      <bpmn:documentation>Do you want to approve?
+You can leave a comment</bpmn:documentation>
+      <bpmn:extensionElements>
+        <camunda:inputOutput />
+        <camunda:formData>
+          <camunda:formField id="approver_response" label="&#34;Do you want to approve the request?&#34;" type="enum">
+            <camunda:properties>
+              <camunda:property id="enum_type" value="radio" />
+            </camunda:properties>
+            <camunda:validation>
+              <camunda:constraint name="required" config="True" />
+            </camunda:validation>
+            <camunda:value id="yes" name="Yes" />
+            <camunda:value id="no" name="No" />
+          </camunda:formField>
+          <camunda:formField id="comment" label="&#34;Comment&#34;" type="string" />
+        </camunda:formData>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0et4uef</bpmn:incoming>
+      <bpmn:outgoing>Flow_1108ib8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:manualTask id="Activity_ReviewAfterForm" name="Review After Form">
+      <bpmn:documentation>This task gives the test an opportunity to pause and make any assertions</bpmn:documentation>
+      <bpmn:incoming>Flow_1108ib8</bpmn:incoming>
+      <bpmn:outgoing>Flow_1tjxlau</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Activity_ReviewBeforeUpdate" name="Review Before Update">
+      <bpmn:documentation>This task gives the test an opportunity to pause and make any assertions</bpmn:documentation>
+      <bpmn:incoming>Flow_1tjxlau</bpmn:incoming>
+      <bpmn:outgoing>Flow_18ylj3k</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Activity_ReviewAfterUpdate" name="Review After Update">
+      <bpmn:documentation>This task gives the test an opportunity to pause and make any assertions</bpmn:documentation>
+      <bpmn:incoming>Flow_1x4wccb</bpmn:incoming>
+      <bpmn:outgoing>Flow_0r7k8b7</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:scriptTask id="Activity_UpdateStaleTaskEvents" name="Update Stale Task Events">
+      <bpmn:documentation>Call the update_stale_approvals script</bpmn:documentation>
+      <bpmn:incoming>Flow_18ylj3k</bpmn:incoming>
+      <bpmn:outgoing>Flow_1x4wccb</bpmn:outgoing>
+      <bpmn:script>update_stale_approvals(workflow='api_approval', document='UVACompl_IDSNotification')</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_0et4uef" sourceRef="Activity_ReviewBeforeForm" targetRef="Activity_DisplayApproverForm" />
+    <bpmn:sequenceFlow id="Flow_1108ib8" sourceRef="Activity_DisplayApproverForm" targetRef="Activity_ReviewAfterForm" />
+    <bpmn:sequenceFlow id="Flow_1tjxlau" sourceRef="Activity_ReviewAfterForm" targetRef="Activity_ReviewBeforeUpdate" />
+    <bpmn:sequenceFlow id="Flow_18ylj3k" sourceRef="Activity_ReviewBeforeUpdate" targetRef="Activity_UpdateStaleTaskEvents" />
+    <bpmn:sequenceFlow id="Flow_1x4wccb" sourceRef="Activity_UpdateStaleTaskEvents" targetRef="Activity_ReviewAfterUpdate" />
+    <bpmn:sequenceFlow id="Flow_0r7k8b7" sourceRef="Activity_ReviewAfterUpdate" targetRef="Event_1i2lim0" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_10ean5u">
+      <bpmndi:BPMNShape id="Participant_1a2gzv3_di" bpmnElement="Participant_1a2gzv3" isHorizontal="true">
+        <dc:Bounds x="145" y="180" width="1065" height="300" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_0tl4blv_di" bpmnElement="Lane_0tl4blv" isHorizontal="true">
+        <dc:Bounds x="175" y="360" width="1035" height="120" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_1c45bg6_di" bpmnElement="Lane_1c45bg6" isHorizontal="true">
+        <dc:Bounds x="175" y="180" width="1035" height="180" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="195" y="242" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_03qim42_di" bpmnElement="Activity_ReviewBeforeForm">
+        <dc:Bounds x="446" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1i2lim0_di" bpmnElement="Event_1i2lim0">
+        <dc:Bounds x="1112" y="242" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0wk7neh_di" bpmnElement="Activity_1f0l0ni">
+        <dc:Bounds x="290" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1j82cyv_di" bpmnElement="Activity_DisplayApproverForm">
+        <dc:Bounds x="446" y="383" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1am8y9z_di" bpmnElement="Activity_ReviewAfterForm">
+        <dc:Bounds x="600" y="383" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_19lru23_di" bpmnElement="Activity_ReviewBeforeUpdate">
+        <dc:Bounds x="600" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1rs4tm8_di" bpmnElement="Activity_ReviewAfterUpdate">
+        <dc:Bounds x="920" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1vlsvgc_di" bpmnElement="Activity_UpdateStaleTaskEvents">
+        <dc:Bounds x="760" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0onhdq0_di" bpmnElement="Flow_0onhdq0">
+        <di:waypoint x="231" y="260" />
+        <di:waypoint x="290" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15ak41i_di" bpmnElement="Flow_15ak41i">
+        <di:waypoint x="390" y="260" />
+        <di:waypoint x="446" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0et4uef_di" bpmnElement="Flow_0et4uef">
+        <di:waypoint x="496" y="300" />
+        <di:waypoint x="496" y="383" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1108ib8_di" bpmnElement="Flow_1108ib8">
+        <di:waypoint x="546" y="423" />
+        <di:waypoint x="600" y="423" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1tjxlau_di" bpmnElement="Flow_1tjxlau">
+        <di:waypoint x="650" y="383" />
+        <di:waypoint x="650" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_18ylj3k_di" bpmnElement="Flow_18ylj3k">
+        <di:waypoint x="700" y="260" />
+        <di:waypoint x="760" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1x4wccb_di" bpmnElement="Flow_1x4wccb">
+        <di:waypoint x="860" y="260" />
+        <di:waypoint x="920" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0r7k8b7_di" bpmnElement="Flow_0r7k8b7">
+        <di:waypoint x="1020" y="260" />
+        <di:waypoint x="1112" y="260" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

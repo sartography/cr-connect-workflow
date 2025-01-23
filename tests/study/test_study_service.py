@@ -243,9 +243,9 @@ class TestStudyService(BaseTest):
         associates = StudyService.get_study_associates(study.id)
         # get_study_associates always returns the owner of the study.
         # so we should get 2 associates back.
-        self.assertEquals(2, len(associates))
+        self.assertEqual(2, len(associates))
         assoc_json = StudyAssociatedSchema(many=True).dump(associates)
-        self.assertEquals("Dan", assoc_json[1]['ldap_info']['given_name'])
+        self.assertEqual("Dan", assoc_json[1]['ldap_info']['given_name'])
         self.assertEqual('Primary Investigator', assoc_json[0]['role'])
         self.assertEqual('Laura Barnes', assoc_json[0]['ldap_info']['display_name'])
 

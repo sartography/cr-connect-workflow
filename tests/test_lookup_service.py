@@ -186,8 +186,8 @@ class TestLookupService(BaseTest):
 
         result = LookupService.lookup(workflow, "TaskEnumLookup", "AllTheNames", None, value="1000")
         first_result = result[0]
-        self.assertEquals(1000, first_result['CUSTOMER_NUMBER'])
-        self.assertEquals('UVA - INTERNAL - GM USE ONLY', first_result['CUSTOMER_NAME'])
+        self.assertEqual(1000, first_result['CUSTOMER_NUMBER'])
+        self.assertEqual('UVA - INTERNAL - GM USE ONLY', first_result['CUSTOMER_NAME'])
 
     def test_lookup_fails_for_xls(self):
         spec = self.load_test_spec('enum_options_with_search')

@@ -285,6 +285,8 @@ class WorkflowService(object):
 
         # Here we serialize and deserialize the task data, just as we would if sending it to the front end.
         data = json.loads(app.json_encoder().encode(o=task_api.data))
+        # TODO: above is deprecated, below is correct but breaks a couple encodings. I.e., it doesn't work on dates
+        # data = json.loads(json.JSONEncoder().encode(o=task_api.data))
 
         # Just like with the front end, we start with what was already there, and modify it.
         form_data = data
@@ -397,6 +399,8 @@ class WorkflowService(object):
         # we aren't generating something that can't be serialized.
         try:
             form_data_string = app.json_encoder().encode(o=form_data)
+            # TODO: above is deprecated, below is correct but breaks a couple encodings. I.e., it doesn't work on dates
+            # form_data_string = json.JSONEncoder().encode(o=form_data)
         except TypeError as te:
             raise ApiError.from_task(code='serialize_error',
                                      message=f'Something cannot be serialized. Message is: {te}',
@@ -1008,6 +1012,16 @@ class WorkflowService(object):
         return options
 
     @staticmethod
+    def delete_stale_assignments(study_id, workflow_spec_id):
+        """Removes any task assignments that are no longer valid."""
+        query = (db.session.query(TaskEventModel)
+                 .filter(TaskEventModel.study_id == study_id)
+                 .filter(TaskEventModel.action == TaskAction.ASSIGNMENT.value)
+                 .filter(TaskEventModel.workflow_spec_id == workflow_spec_id))
+        query.delete()
+        db.session.commit()
+
+    @staticmethod
     def update_task_assignments(processor):
         """For every upcoming user task, log a task action
         that connects the assigned user(s) to that task.  All
@@ -1032,6 +1046,7 @@ class WorkflowService(object):
                                      message='A workflow must have either a study_id or a user_id.',
                                      task=spiff_task)
         # Standalone workflow - we only care about the current user
+        # Note: We don't actually use standalone workflows in crc2
         elif processor.workflow_model.study_id is None and processor.workflow_model.user_id is not None:
             return [processor.workflow_model.user_id]
         # Workflow associated with a study - get all the users
