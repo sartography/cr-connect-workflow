@@ -2,31 +2,38 @@ from tests.base_test import BaseTest
 from crc import app
 from crc.models.ldap import LdapModel
 from unittest.mock import patch
-import os
-import random
 from unittest import skip
+import random
+import json
 
 
 class TestSetPBAssociates(BaseTest):
 
+    user_data = {'PI': ('Alice Thompson', 'ghg3qe'), 'SC_I': ('Brian Edwards', 'zxriuk'), 'DEPT_CH': ('Catherine Wilson', '80vn'),
+                 'AS_C': ('Daniel Martinez', '676pe'), 'AS_C_2': ('Emily Johnson', 'tl5h'), 'SI': ('Franklin Harris', 'y4suzz'),
+                 'SI_2': ('Georgia Clarke', 'jci60'), 'SI_3': ('Henry Robinson', 'ouvhr'), 'IRBC': ('Isabel Carter', 'dxigow')}
+
+    def get_associated_users(self, study_id):
+        rv = self.app.get(f'/v1.0/study/{study_id}/associates',
+                          headers=self.logged_in_headers(),
+                          content_type="application/json")
+        self.assert_success(rv)
+        return json.loads(rv.get_data(as_text=True))
+
+    def get_mock_investigators(self):
+        investigators = {}
+        for (role, (name, uid)) in self.user_data.items():
+            investigators[role] = {'code': role, 'label': role, 'display': 'Always', 'unique': 'Yes', 'user_id': uid,
+                                   'uid': uid, 'display_name': name, 'given_name': name.split()[0],
+                                   'email_address': f'{uid}@virginia.edu',
+                                   'telephone_number': ''.join([random.choice('0123456789') for _ in range(10)]),
+                                   'title': 'E0:Staff', 'department': 'EN:Engineering', 'affiliation': 'staff',
+                                   'sponsor_type': '', 'date_cached': '2024-04-11T19:24:35.980782-04:00'}
+        return investigators
+
     def create_additional_users(self):
-        data = [('Alice Thompson', 'ghg3qe'), ('Brian Edwards', 'zxriuk'), ('Catherine Wilson', '80vn'),
-             ('Daniel Martinez', '676pe'), ('Emily Johnson', 'tl5h'), ('Franklin Harris', 'y4suzz'),
-             ('Georgia Clarke', 'jci60'), ('Henry Robinson', 'ouvhr'), ('Isabel Carter', 'dxigow'),
-             ('Jack Peterson', 'w11ei'), ('Karen Bennett', 'jlzglh'), ('Louis Fisher', 'kump0'),
-             ('Megan Richardson', 'xiai4c'), ('Nathan Cooper', '999hdr'), ('Olivia Scott', 'k8f6'),
-             ('Patrick Howard', '51wqn0'), ('Quincy Parker', '934no'), ('Rachel Turner', 'd3cj0'),
-             ('Samuel Baker', 'qmn3w8'), ('Teresa Mitchell', 'zcj7r'),]
-        for (name, uid) in data:
-            """LdapModel(uid=entry.uid.value,
-                         display_name=entry.displayName.value,
-                         given_name=", ".join(entry.givenName),
-                         email_address=entry.mail.value,
-                         telephone_number=entry.telephoneNumber.value,
-                         title=", ".join(entry.title),
-                         department=", ".join(entry.uvaDisplayDepartment),
-                         affiliation=", ".join(entry.uvaPersonIAMAffiliation),
-                         sponsor_type=", ".join(entry.uvaPersonSponsoredType))"""
+        user_data = self.user_data
+        for key, (name, uid) in user_data.items():
             ldap_model = LdapModel(uid=uid,
                                    display_name=name,
                                    given_name=name.split()[0],
@@ -46,55 +53,7 @@ class TestSetPBAssociates(BaseTest):
         self.create_additional_users()
 
         mock_investigators.return_value.ok = True
-        mock_investigators.return_value = \
-            {'PI': {'code': 'PI', 'label': 'Primary Investigator', 'display': 'Always', 'unique': 'Yes',
-                    'user_id': 'cm4r', 'uid': 'cm4r', 'display_name': 'Carol A Manning', 'given_name': 'Carol',
-                    'email_address': 'cm4r@virginia.edu', 'telephone_number': '4349821012',
-                    'title': 'E1:Clinician Physician, E0:Professor',
-                    'department': 'E1:UPG-MD-NEUR Neurology, E0:MD-NEUR Neurology', 'affiliation': 'faculty, staff',
-                    'sponsor_type': '', 'date_cached': '2024-04-11T19:24:35.980782-04:00'},
-             'SC_I': {'code': 'SC_I', 'label': 'Study Coordinator I', 'display': 'Always', 'unique': 'Yes',
-                      'user_id': 'cdn4q', 'uid': 'cdn4q', 'display_name': 'Courtney Nightengale',
-                      'given_name': 'Courtney', 'email_address': 'cdn4q@virginia.edu', 'telephone_number': '4342431927',
-                      'title': 'E1:Temp D, E0:Compliance Analyst',
-                      'department': 'E1:MD-OBGY Gyn Oncology, E0:MD-DMED Clinical Research Unit',
-                      'affiliation': 'staff', 'sponsor_type': '', 'date_cached': '2024-04-23T14:50:11.759861-04:00'},
-             'DEPT_CH': {'code': 'DEPT_CH', 'label': 'Department Chair', 'display': 'Always', 'unique': 'Yes',
-                         'user_id': 'jpn2r', 'uid': 'jpn2r', 'display_name': 'James P Nataro', 'given_name': 'James',
-                         'email_address': 'jpn2r@virginia.edu', 'telephone_number': '4349245093',
-                         'title': 'E1:Clinician Physician, E0:Professor',
-                         'department': 'E1:UPG-MD-PEDT Infectious Diseases, E0:MD-PEDT Pediatrics-Admin',
-                         'affiliation': 'faculty, staff', 'sponsor_type': '',
-                         'date_cached': '2024-04-11T19:26:17.849182-04:00'},
-             'AS_C': {'code': 'AS_C', 'label': 'Additional Study Coordinators', 'display': 'Optional', 'unique': 'No',
-                      'user_id': 'kcu5hm', 'uid': 'kcu5hm', 'display_name': 'Pat Junhasavasdikul', 'given_name': 'Pat',
-                      'email_address': 'kcu5hm@virginia.edu', 'telephone_number': None, 'title': '',
-                      'department': 'U1:Arts & Sciences Undergraduate', 'affiliation': 'student', 'sponsor_type': '',
-                      'date_cached': '2025-01-08T08:50:23.340718-05:00'},
-             'AS_C_2': {'code': 'AS_C', 'label': 'Additional Study Coordinators', 'display': 'Optional', 'unique': 'No',
-                        'user_id': 'lmw2d', 'uid': 'lmw2d', 'display_name': 'Lindsey Sites', 'given_name': 'Lindsey',
-                        'email_address': 'lmw2d@virginia.edu', 'telephone_number': '4349823500',
-                        'title': 'E1:APP - CRNA Saturday Elective, E0:Lead RN Anesthetist',
-                        'department': "E1:Anesthesia CRNA's, E0:Anesthesia CRNA's",
-                        'affiliation': 'alumni, staff, former_student', 'sponsor_type': '',
-                        'date_cached': '2025-01-08T09:06:07.004507-05:00'},
-             'SI': {'code': 'SI', 'label': 'Sub Investigator', 'display': 'Optional', 'unique': 'No',
-                    'user_id': 'ghg3qe', 'uid': 'ghg3qe', 'display_name': 'Jessica L Morris', 'given_name': 'Jessica',
-                    'email_address': 'ghg3qe@virginia.edu', 'telephone_number': '4349821058',
-                    'title': 'E0:Compliance Manager-CMPL74', 'department': 'E0:MD-DMED Clinical Research Unit',
-                    'affiliation': 'staff', 'sponsor_type': '', 'date_cached': '2024-04-23T12:47:09.643532-04:00'},
-             'SI_2': {'code': 'SI', 'label': 'Sub Investigator', 'display': 'Optional', 'unique': 'No',
-                      'user_id': 'pdb7u', 'uid': 'pdb7u', 'display_name': 'Penny D Baker', 'given_name': 'Penny',
-                      'email_address': 'pdb7u@virginia.edu', 'telephone_number': '4349245078',
-                      'title': 'E0:Patient Care Technician', 'department': 'E0:Perianesthesia Main',
-                      'affiliation': 'staff', 'sponsor_type': '', 'date_cached': '2025-01-08T09:25:37.002183-05:00'},
-             'SI_3': {'code': 'SI', 'label': 'Sub Investigator', 'display': 'Optional', 'unique': 'No',
-                      'user_id': 'zzzz', 'error': 'ApiError: Unable to locate a user with id zzzz in LDAP. '},
-             'IRBC': {'code': 'IRBC', 'label': 'IRB Coordinator', 'display': 'Optional', 'unique': 'Yes',
-                      'user_id': 'jp2pz', 'uid': 'jp2pz', 'display_name': 'Jeff Pitts', 'given_name': 'Jeff',
-                      'email_address': 'jp2pz@virginia.edu', 'telephone_number': '4349248590',
-                      'title': 'E0:Software Engineer 4', 'department': 'E0:MD-DMED Research & Clinical Trial Analytics',
-                      'affiliation': 'staff', 'sponsor_type': '', 'date_cached': '2024-04-17T12:31:02.593919-04:00'}}
+        mock_investigators.return_value = self.get_mock_investigators()
 
         workflow = self.create_workflow('set_pb_associates')
 
@@ -103,6 +62,9 @@ class TestSetPBAssociates(BaseTest):
 
         assert task.name == 'Activity_Review_Before_Load_IRB'
         assert task.data == {}
+
+        associated_users = self.get_associated_users(workflow_api.study_id)
+        assert len(associated_users) == 1
 
         self.complete_form(workflow, task, {})
 
@@ -118,8 +80,8 @@ class TestSetPBAssociates(BaseTest):
         assert len(task.data['pi']) == 14
         assert len(task.data['dc']) == 14
         assert len(task.data['pcs']) == 4
-        assert len(task.data['subs']) == 2
-        assert len(task.data['subx']) == 1
+        assert len(task.data['subs']) == 3
+        assert len(task.data['subx']) == 0
 
         self.complete_form(workflow, task, {})
 
@@ -155,9 +117,16 @@ class TestSetPBAssociates(BaseTest):
         assert len(task.data) == 24
         assert task.data['AP'] == form_data['AP']
 
+        associated_users = self.get_associated_users(workflow_api.study_id)
+        assert len(associated_users) == 1
+
         self.complete_form(workflow, task, {})
 
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
 
-        print('here')
+        assert task.name == 'Activity_Review_Before_End'
+        assert len(task.data) == 24
+
+        associated_users = self.get_associated_users(workflow_api.study_id)
+        assert len(associated_users) == 10

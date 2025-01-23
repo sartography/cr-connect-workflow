@@ -161,6 +161,7 @@ class LoadIRBPersonnel(Script):
                 'dc_invalid_uid': dc_invalid_uid,
                 'pcs_invalid_uid': pcs_invalid_uid,
                 'subs_invalid_uid': subs_invalid_uid,
+                'pb_create_uid': pb_create_uid,
                 }
 
         return data
