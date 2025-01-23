@@ -40,6 +40,7 @@ pi_invalid_uid = irb_personnel_data['pi_invalid_uid']
 dc_invalid_uid = irb_personnel_data['dc_invalid_uid']
 pcs_invalid_uid = irb_personnel_data['pcs_invalid_uid']
 subs_invalid_uid = irb_personnel_data['subs_invalid_uid']
+pb_create_uid = irb_personnel_data['pb_create_uid']
 </bpmn:script>
     </bpmn:scriptTask>
     <bpmn:sequenceFlow id="Flow_03mr6dl" sourceRef="Activity_Call_Load_IRB_Personnel" targetRef="Activity_0cttist" />
@@ -151,10 +152,6 @@ delete_variables('assoc_type')
         <dc:Bounds x="750" y="137" width="100" height="80" />
         <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_06ps1qu_di" bpmnElement="Activity_Add_Additional_Personnel">
-        <dc:Bounds x="910" y="137" width="100" height="80" />
-        <bpmndi:BPMNLabel />
-      </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_15s55ev_di" bpmnElement="Activity_Call_Set_PB_Associates">
         <dc:Bounds x="1230" y="137" width="100" height="80" />
         <bpmndi:BPMNLabel />
@@ -165,6 +162,10 @@ delete_variables('assoc_type')
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1j1ncfe_di" bpmnElement="Event_1j1ncfe">
         <dc:Bounds x="1552" y="159" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_06ps1qu_di" bpmnElement="Activity_Add_Additional_Personnel">
+        <dc:Bounds x="910" y="137" width="100" height="80" />
+        <bpmndi:BPMNLabel />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Activity_1iybpm7_di" bpmnElement="Activity_Review_Before_Set_PB">
         <dc:Bounds x="1070" y="137" width="100" height="80" />

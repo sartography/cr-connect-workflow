@@ -2,7 +2,6 @@ from tests.base_test import BaseTest
 from crc import app
 from crc.models.ldap import LdapModel
 from unittest.mock import patch
-from unittest import skip
 import random
 import json
 
@@ -45,7 +44,6 @@ class TestSetPBAssociates(BaseTest):
                                    sponsor_type='')
             self.add_user(ldap_model)
 
-    @skip
     @patch('crc.services.study_service.StudyService.get_investigators')  # mock_investigators
     def test_set_pb_associates(self, mock_investigators):
         app.config['PB_ENABLED'] = True
@@ -72,7 +70,7 @@ class TestSetPBAssociates(BaseTest):
         task = workflow_api.next_task
 
         assert task.name == 'Activity_Review_Before_Add_Additional'
-        assert len(task.data) == 23
+        assert len(task.data) == 24
 
         for assoc_type in ['pi', 'dc', 'pcs', 'subs', 'subx']:
             assert assoc_type in task.data
@@ -89,7 +87,7 @@ class TestSetPBAssociates(BaseTest):
         task = workflow_api.next_task
 
         assert task.name == 'Activity_Add_Additional_Personnel'
-        assert len(task.data) == 23
+        assert len(task.data) == 24
 
         form_data = {
             "AP": [
@@ -114,7 +112,7 @@ class TestSetPBAssociates(BaseTest):
         task = workflow_api.next_task
 
         assert task.name == 'Activity_Review_Before_Set_PB'
-        assert len(task.data) == 24
+        assert len(task.data) == 25
         assert task.data['AP'] == form_data['AP']
 
         associated_users = self.get_associated_users(workflow_api.study_id)
@@ -126,7 +124,7 @@ class TestSetPBAssociates(BaseTest):
         task = workflow_api.next_task
 
         assert task.name == 'Activity_Review_Before_End'
-        assert len(task.data) == 24
+        assert len(task.data) == 25
 
         associated_users = self.get_associated_users(workflow_api.study_id)
         assert len(associated_users) == 10
