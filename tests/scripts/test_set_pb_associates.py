@@ -2,15 +2,22 @@ from tests.base_test import BaseTest
 from crc import app
 from crc.models.ldap import LdapModel
 from unittest.mock import patch
+from unittest import skip
 import random
 import json
 
 
 class TestSetPBAssociates(BaseTest):
 
-    user_data = {'PI': ('Alice Thompson', 'ghg3qe'), 'SC_I': ('Brian Edwards', 'zxriuk'), 'DEPT_CH': ('Catherine Wilson', '80vn'),
-                 'AS_C': ('Daniel Martinez', '676pe'), 'AS_C_2': ('Emily Johnson', 'tl5h'), 'SI': ('Franklin Harris', 'y4suzz'),
-                 'SI_2': ('Georgia Clarke', 'jci60'), 'SI_3': ('Henry Robinson', 'ouvhr'), 'IRBC': ('Isabel Carter', 'dxigow')}
+    user_data = {'PI': ('Alice Thompson', 'ghg3qe'),
+                 'SC_I': ('Brian Edwards', 'zxriuk'),
+                 'DEPT_CH': ('Catherine Wilson', '80vn'),
+                 'AS_C': ('Daniel Martinez', '676pe'),
+                 'AS_C_2': ('Emily Johnson', 'tl5h'),
+                 'SI': ('Franklin Harris', 'y4suzz'),
+                 'SI_2': ('Georgia Clarke', 'jci60'),
+                 'SI_3': ('Henry Robinson', 'ouvhr'),
+                 'IRBC': ('Isabel Carter', 'dxigow')}
 
     def get_associated_users(self, study_id):
         rv = self.app.get(f'/v1.0/study/{study_id}/associates',
@@ -44,6 +51,7 @@ class TestSetPBAssociates(BaseTest):
                                    sponsor_type='')
             self.add_user(ldap_model)
 
+    # @skip
     @patch('crc.services.study_service.StudyService.get_investigators')  # mock_investigators
     def test_set_pb_associates(self, mock_investigators):
         app.config['PB_ENABLED'] = True
