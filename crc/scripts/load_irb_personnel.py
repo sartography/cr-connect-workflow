@@ -108,9 +108,13 @@ class LoadIRBPersonnel(Script):
         pi = investigators.get('PI', None)
         if pi is not None:
             has_pi = True
-        pi_invalid_uid, is_pbc_pi = self.process_pi_dc(pi, pb_create_uid)
-        if pi_invalid_uid:
-            pi['uid'] = ''
+            pi_invalid_uid, is_pbc_pi = self.process_pi_dc(pi, pb_create_uid)
+            if pi_invalid_uid:
+                pi['uid'] = ''
+        else:
+            pi_invalid_uid = True
+            is_pbc_pi = False
+            has_pi = False
 
         # Department Chair
         dc = investigators.get('DEPT_CH', None)
@@ -119,6 +123,10 @@ class LoadIRBPersonnel(Script):
             dc_invalid_uid, is_pbc_dc = self.process_pi_dc(dc, pb_create_uid)
             if dc_invalid_uid:
                 dc['uid'] = ''
+        else:
+            dc_invalid_uid = True
+            is_pbc_dc = False
+            has_dc = False
 
         # Primary Coordinators
         is_pbc_pc = pb_create_uid in [investigators[k]["user_id"] for k in investigators.keys() if
