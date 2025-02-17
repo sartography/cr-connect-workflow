@@ -6,6 +6,7 @@ import click
 import sentry_sdk
 
 import connexion
+from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 from connexion import ProblemException
 from flask import Response
 from flask_cors import CORS
@@ -17,23 +18,26 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+def do_config(app):
+    import logging
+    app.config.from_object('config.default')
+
+    if "TESTING" in os.environ and os.environ["TESTING"] == "true":
+        app.config.from_pyfile('../config/testing.py')
+        logging.basicConfig(level=logging.INFO)
+    else:
+        app.config.root_path = app.instance_path
+        app.config.from_pyfile('config.py', silent=True)
+        from config.logging import logging_config
+        logging.config.dictConfig(logging_config)
+
 
 connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)  # respect the X-Forwarded-Proto if behind a proxy.
-app.config.from_object('config.default')
 
-if "TESTING" in os.environ and os.environ["TESTING"] == "true":
-    app.config.from_pyfile('../config/testing.py')
-    import logging
-    logging.basicConfig(level=logging.INFO)
-else:
-    app.config.root_path = app.instance_path
-    app.config.from_pyfile('config.py', silent=True)
-    from config.logging import logging_config
-    logging.config.dictConfig(logging_config)
-
+do_config(app)
 
 db = SQLAlchemy(app)
 """:type: sqlalchemy.orm.SQLAlchemy"""
@@ -130,11 +134,16 @@ def validate_all(study_id, category=None, spec_id=None):
 
     logging.root.removeHandler(logging.root.handlers[0])
 
-    study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
-    g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
-    g.token = "anything_is_fine_just_need_something."
-    specs = WorkflowSpecService().get_specs()
-    statuses = WorkflowProcessor.run_master_spec(WorkflowSpecService().master_spec, study)
+    def pre_process_study():
+        study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
+        g.token = "anything_is_fine_just_need_something."
+        specs = WorkflowSpecService().get_specs()
+        statuses = WorkflowProcessor.run_master_spec(WorkflowSpecService().master_spec, study)
+
+        return specs, statuses
+
+    specs, statuses = pre_process_study()
 
     for spec in specs:
         if spec_id and spec_id != spec.id:
