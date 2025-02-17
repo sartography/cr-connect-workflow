@@ -51,7 +51,7 @@ class TestSetPBAssociates(BaseTest):
                                    sponsor_type='')
             self.add_user(ldap_model)
 
-    @skip
+    @skip("This script is not implemented yet.")
     @patch('crc.services.study_service.StudyService.get_investigators')  # mock_investigators
     def test_set_pb_associates(self, mock_investigators):
         app.config['PB_ENABLED'] = True
