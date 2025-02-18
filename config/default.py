@@ -29,6 +29,7 @@ TEST_UID = environ.get('TEST_UID', default="dhf8r")
 ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,kcm4zc,cah3us"))
 SUPERUSER_UIDS = re.split(r',\s*', environ.get('SUPERUSER_UIDS', default="dhf8r,kcm4zc,cah3us"))
 DEFAULT_UID = environ.get('DEFAULT_UID', default="dhf8r")
+CRC_SUPPORT_EMAIL = environ.get('CRC_SUPPORT_EMAIL', default="CRCONNECTSUPPORT@uvahealth.org")
 
 # Sentry flag
 ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"  # To be removed soon

@@ -35,6 +35,7 @@ from crc.models.user import UserModel
 from crc.models.workflow import WorkflowModel, WorkflowStatus, WorkflowState
 from crc.services.data_store_service import DataStoreBase
 from crc.services.document_service import DocumentService
+from crc.services.email_service import EmailService
 from crc.services.jinja_service import JinjaService
 from crc.services.ldap_service import LdapService
 from crc.services.lookup_service import LookupService
@@ -128,7 +129,7 @@ class WorkflowService(object):
                                   str(e)))
 
     @staticmethod
-    def get_erroring_workflows():
+    def get_failing_workflows():
         workflows = session.query(WorkflowModel).filter(WorkflowModel.status == WorkflowStatus.erroring).all()
         return workflows
 
@@ -138,31 +139,54 @@ class WorkflowService(object):
         workflow_url = f'https://{base_url}/workflow/{workflow.id}'
         return workflow_url
 
-    def process_erroring_workflows(self):
-        workflows = self.get_erroring_workflows()
-        if len(workflows) > 0:
-            workflow_urls = []
-            if len(workflows) == 1:
-                workflow = workflows[0]
-                workflow_url_link = self.get_workflow_url(workflow)
-                workflow_urls.append(workflow_url_link)
-                message = 'There is one workflow in an error state.'
-                message += f'\n You can restart the workflow at {workflow_url_link}.'
-            else:
-                message = f'There are {len(workflows)} workflows in an error state.'
-                message += '\nYou can restart the workflows at these URLs:'
-                for workflow in workflows:
+    @staticmethod
+    def send_message_to_helpdesk(message):
+        content, content_html = EmailService().get_rendered_content(message, {})
+        EmailService.add_email(
+            subject="CRC Workflows in Error State",
+            sender=app.config['DEFAULT_SENDER'],
+            recipients=[app.config['CRC_SUPPORT_EMAIL']],
+            content=content,
+            content_html=content_html,
+            cc=None,
+            bcc=None,
+            study_id=None,
+            reply_to=None,
+            attachment_files=None,
+            workflow_spec_id=None,
+            name="failing_workflows",
+        )
+
+    def process_failing_workflows(self):
+        with app.app_context():
+            workflows = self.get_failing_workflows()
+            if len(workflows) > 0:
+                workflow_urls = []
+                if len(workflows) == 1:
+                    workflow = workflows[0]
                     workflow_url_link = self.get_workflow_url(workflow)
                     workflow_urls.append(workflow_url_link)
-                    message += f'\n{workflow_url_link}'
+                    message = 'There is one workflow in an error state.'
+                    message += f'\n You can restart the workflow at {workflow_url_link}.'
+                else:
+                    message = f'There are {len(workflows)} workflows in an error state.'
+                    message += '\nYou can restart the workflows at these URLs:'
+                    for workflow in workflows:
+                        workflow_url_link = self.get_workflow_url(workflow)
+                        workflow_urls.append(workflow_url_link)
+                        message += f'\n{workflow_url_link}'
 
-            with push_scope() as scope:
-                scope.user = {"urls": workflow_urls}
-                scope.set_extra("workflow_urls", workflow_urls)
-                # this sends a message through sentry
-                capture_message(message)
-            # We return message so we can use it in a test
-            return message
+                # this is for sentry
+                with push_scope() as scope:
+                    # scope.user = {"urls": workflow_urls}
+                    scope.set_extra("workflow_urls", workflow_urls)
+                    # this sends a message through sentry
+                    capture_message(message)
+
+                self.send_message_to_helpdesk(message)
+
+                # We return message so we can use it in a test
+                return message
 
     @staticmethod
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
@@ -187,16 +211,18 @@ class WorkflowService(object):
                 exit_task = processor.bpmn_workflow.do_engine_steps(exit_at=test_until)
                 if (exit_task != None):
                     raise ApiError.from_task("validation_break",
-                                             f"The validation has been exited early on task '{exit_task.task_spec.id}' "
+                                             f"The validation has been exited early on task"
+                                             f" '{exit_task.task_spec.id}' "
                                              f"and was parented by ",
                                              exit_task.parent)
                 tasks = processor.bpmn_workflow.get_tasks(TaskState.READY)
                 for task in tasks:
                     if task.task_spec.lane is not None and task.task_spec.lane not in task.data:
                         raise ApiError.from_task("invalid_role",
-                                                 f"This task is in a lane called '{task.task_spec.lane}', The "
-                                                 f" current task data must have information mapping this role to "
-                                                 f" a unique user id.", task)
+                                                 f"This task is in a lane called "
+                                                 f"'{task.task_spec.lane}', The current task "
+                                                 f" data must have information mapping this role "
+                                                 f" to a unique user id.", task)
                     if task.task_spec.lane is not None:
                         if isinstance(task.data[task.task_spec.lane], str) and not LdapService().user_exists(
                                 task.data[task.task_spec.lane]):

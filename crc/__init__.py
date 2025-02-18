@@ -69,13 +69,13 @@ def process_waiting_tasks():
 def init_scheduler():
     if app.config['PROCESS_WAITING_TASKS']:
         scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
-        scheduler.add_job(WorkflowService().process_erroring_workflows, 'interval', minutes=1440)
+        scheduler.add_job(WorkflowService().process_failing_workflows, 'interval', minutes=1440)
         scheduler.start()
 
 
 # Convert list of allowed origins to list of regexes
-origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
-cors = CORS(connexion_app.app, origins=origins_re)
+origins = [r"^https?:\/\/%s(.*)" % o.replace('.', r'\.') for o in app.config['CORS_ALLOW_ORIGINS']]
+cors = CORS(connexion_app.app, origins=origins)
 
 # Sentry error handling
 if app.config['SENTRY_ENVIRONMENT']:
