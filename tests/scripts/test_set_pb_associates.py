@@ -9,9 +9,15 @@ import json
 
 class TestSetPBAssociates(BaseTest):
 
-    user_data = {'PI': ('Alice Thompson', 'ghg3qe'), 'SC_I': ('Brian Edwards', 'zxriuk'), 'DEPT_CH': ('Catherine Wilson', '80vn'),
-                 'AS_C': ('Daniel Martinez', '676pe'), 'AS_C_2': ('Emily Johnson', 'tl5h'), 'SI': ('Franklin Harris', 'y4suzz'),
-                 'SI_2': ('Georgia Clarke', 'jci60'), 'SI_3': ('Henry Robinson', 'ouvhr'), 'IRBC': ('Isabel Carter', 'dxigow')}
+    user_data = {'PI': ('Alice Thompson', 'ghg3qe'),
+                 'SC_I': ('Brian Edwards', 'zxriuk'),
+                 'DEPT_CH': ('Catherine Wilson', '80vn'),
+                 'AS_C': ('Daniel Martinez', '676pe'),
+                 'AS_C_2': ('Emily Johnson', 'tl5h'),
+                 'SI': ('Franklin Harris', 'y4suzz'),
+                 'SI_2': ('Georgia Clarke', 'jci60'),
+                 'SI_3': ('Henry Robinson', 'ouvhr'),
+                 'IRBC': ('Isabel Carter', 'dxigow')}
 
     def get_associated_users(self, study_id):
         rv = self.app.get(f'/v1.0/study/{study_id}/associates',
@@ -45,7 +51,7 @@ class TestSetPBAssociates(BaseTest):
                                    sponsor_type='')
             self.add_user(ldap_model)
 
-    @skip
+    @skip("This script is not implemented yet.")
     @patch('crc.services.study_service.StudyService.get_investigators')  # mock_investigators
     def test_set_pb_associates(self, mock_investigators):
         app.config['PB_ENABLED'] = True
@@ -72,7 +78,7 @@ class TestSetPBAssociates(BaseTest):
         task = workflow_api.next_task
 
         assert task.name == 'Activity_Review_Before_Add_Additional'
-        assert len(task.data) == 23
+        assert len(task.data) == 24
 
         for assoc_type in ['pi', 'dc', 'pcs', 'subs', 'subx']:
             assert assoc_type in task.data
@@ -89,7 +95,7 @@ class TestSetPBAssociates(BaseTest):
         task = workflow_api.next_task
 
         assert task.name == 'Activity_Add_Additional_Personnel'
-        assert len(task.data) == 23
+        assert len(task.data) == 24
 
         form_data = {
             "AP": [
@@ -114,7 +120,7 @@ class TestSetPBAssociates(BaseTest):
         task = workflow_api.next_task
 
         assert task.name == 'Activity_Review_Before_Set_PB'
-        assert len(task.data) == 24
+        assert len(task.data) == 25
         assert task.data['AP'] == form_data['AP']
 
         associated_users = self.get_associated_users(workflow_api.study_id)
@@ -126,7 +132,7 @@ class TestSetPBAssociates(BaseTest):
         task = workflow_api.next_task
 
         assert task.name == 'Activity_Review_Before_End'
-        assert len(task.data) == 24
+        assert len(task.data) == 25
 
         associated_users = self.get_associated_users(workflow_api.study_id)
         assert len(associated_users) == 10

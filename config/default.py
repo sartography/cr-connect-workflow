@@ -29,6 +29,7 @@ TEST_UID = environ.get('TEST_UID', default="dhf8r")
 ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,kcm4zc,cah3us"))
 SUPERUSER_UIDS = re.split(r',\s*', environ.get('SUPERUSER_UIDS', default="dhf8r,kcm4zc,cah3us"))
 DEFAULT_UID = environ.get('DEFAULT_UID', default="dhf8r")
+CRC_SUPPORT_EMAIL = environ.get('CRC_SUPPORT_EMAIL', default="CRCONNECTSUPPORT@uvahealth.org")
 
 # Sentry flag
 ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"  # To be removed soon
@@ -57,7 +58,7 @@ SQLALCHEMY_DATABASE_URI = environ.get(
 
 TOKEN_AUTH_TTL_HOURS = float(environ.get('TOKEN_AUTH_TTL_HOURS', default=24))
 SECRET_KEY = environ.get('SECRET_KEY', default="Shhhh!!! This is secret!  And better darn well not show up in prod.")
-SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
+# SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 # %s/%i placeholders expected for uva_id and study_id in various calls.
 PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
 PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/v2.0/").strip('/') + '/'  # Trailing slash required
