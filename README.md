@@ -194,6 +194,16 @@ To run the tests within PyCharm set up a run configuration using pytest (Go to R
 plus icon, select Python Tests, and under this select pytest, defaults should work good-a-plenty with no
 additional edits required.) 
 
+### Running Flask CLI Commands
+Flask allows you to define custom commands that can be run from the command line. To run these commands, use the
+following syntax:
+```pipenv run flask <command>```
+
+One command in particular--validate-all, is very useful for testing all the workflows.
+
+Usage: flask validate-all [OPTIONS] STUDY_ID [CATEGORY] [SPEC_ID]
+Try 'flask validate-all --help' for help.
+
 
 ## Documentation
 Additional Documentation is available on [ReadTheDocs](https://cr-connect-workflow.readthedocs.io/en/latest/#)
