@@ -1,6 +1,7 @@
 from tests.base_test import BaseTest
 
 from crc import session
+from crc.models.email import EmailModel
 from crc.models.workflow import WorkflowStatus
 from crc.services.workflow_service import WorkflowService
 
@@ -17,7 +18,13 @@ class TestFailingWorkflows(BaseTest):
         workflow_2 = self.create_workflow('random_fact')
         workflow_2.status = WorkflowStatus.erroring
         session.commit()
-        message = WorkflowService().process_failing_workflows()
-        self.assertIn('There are 2 workflows in an error state.', message)
-        self.assertIn(f'workflow/{workflow_1.id}', message)
-        self.assertIn(f'workflow/{workflow_2.id}', message)
+        WorkflowService().process_failing_workflows()
+
+        mail_messages = EmailModel.query.filter(EmailModel.name == 'failing_workflows').all()
+        assert len(mail_messages) == 1
+        assert mail_messages[0].subject == 'CRC Workflows in Error State'
+        assert (mail_messages[0].content ==
+                "There are workflows in an error state."
+                "\nYou can restart them at these URLs:"
+                "\n[https://localhost:4200/workflow/1](https://localhost:4200/workflow/1)"
+                "\n[https://localhost:4200/workflow/2](https://localhost:4200/workflow/2)")

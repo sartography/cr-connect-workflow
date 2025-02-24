@@ -48,9 +48,7 @@ from crc.services.workflow_spec_service import WorkflowSpecService
 from flask import g
 
 
-class WorkflowService(object):
-
-    TASK_STATE_LOCKED = "LOCKED"  # When the task belongs to a different user.
+class WorkflowService():
 
     """Provides tools for processing workflows and tasks.  This
      should at some point, be the only way to work with Workflows, and
@@ -61,8 +59,10 @@ class WorkflowService(object):
      handles the testing of a workflow specification by completing it with
      random selections, attempting to mimic a front end as much as possible. """
 
+    TASK_STATE_LOCKED = "LOCKED"  # When the task belongs to a different user.
+
     @staticmethod
-    def make_test_workflow(spec_id, validate_study_id=None):
+    def __make_test_workflow(spec_id, validate_study_id=None):
         try:
             user = UserService.current_user()
         except ApiError:
@@ -91,7 +91,7 @@ class WorkflowService(object):
         return workflow_model
 
     @staticmethod
-    def delete_test_data(workflow: WorkflowModel):
+    def __delete_test_data(workflow: WorkflowModel):
         try:
             db.session.delete(workflow)
         except InvalidRequestError:
@@ -109,10 +109,14 @@ class WorkflowService(object):
 
     @staticmethod
     def do_waiting():
-        records = db.session.query(WorkflowModel).filter(WorkflowModel.status == WorkflowStatus.waiting).all()
+        """Process waiting tasks.
+        This is for timers and status checks"""
+        records = (db.session.query(WorkflowModel).
+                   filter(WorkflowModel.status == WorkflowStatus.waiting).
+                   all())
         for workflow_model in records:
             try:
-                app.logger.info('Processing workflow %s' % workflow_model.id)
+                app.logger.info(f'Processing workflow {workflow_model.id}')
                 processor = WorkflowProcessor(workflow_model)
                 processor.bpmn_workflow.refresh_waiting_tasks()
                 processor.bpmn_workflow.do_engine_steps()
@@ -122,30 +126,33 @@ class WorkflowService(object):
                 workflow_model.status = WorkflowStatus.erroring
                 db.session.add(workflow_model)
                 db.session.commit()
-                app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
-                                 (workflow_model.id,
-                                  workflow_model.workflow_spec_id,
-                                  workflow_model.study_id,
-                                  str(e)))
+                app.logger.error(
+                    f"Error running waiting task "
+                    f"for workflow #{workflow_model.id} ({workflow_model.workflow_spec_id}) "
+                    f"for study #{workflow_model.study_id}.  \n"
+                    f"{str(e)}")
 
     @staticmethod
-    def get_failing_workflows():
-        workflows = session.query(WorkflowModel).filter(WorkflowModel.status == WorkflowStatus.erroring).all()
-        return workflows
+    def __get_failing_workflows():
+        return (session.query(WorkflowModel).
+                filter(WorkflowModel.status == WorkflowStatus.erroring).
+                all())
 
     @staticmethod
-    def get_workflow_url(workflow):
+    def __get_workflow_url(workflow):
         base_url = app.config['FRONTEND']
+        if app.config['INSTANCE_NAME'] != 'development':
+            base_url += '/app'
         workflow_url = f'https://{base_url}/workflow/{workflow.id}'
         return workflow_url
 
     @staticmethod
-    def send_message_to_helpdesk(message):
+    def __send_message(recipient, message):
         content, content_html = EmailService().get_rendered_content(message, {})
         EmailService.add_email(
             subject="CRC Workflows in Error State",
             sender=app.config['DEFAULT_SENDER'],
-            recipients=[app.config['CRC_SUPPORT_EMAIL']],
+            recipients=[recipient],
             content=content,
             content_html=content_html,
             cc=None,
@@ -157,36 +164,52 @@ class WorkflowService(object):
             name="failing_workflows",
         )
 
+    def __send_message_to_admin_user(self, message):
+        admin_email = app.config['CRC_SYSTEM_ADMIN_EMAIL']
+        self.__send_message(admin_email, message)
+
+    def __send_message_to_helpdesk(self, message):
+        self.__send_message(app.config['CRC_SUPPORT_EMAIL'], message)
+
+    def __get_failing_and_admin_message(self, workflows):
+
+        workflow_urls = []
+        send_status_message = False
+        failing_message = \
+            'There are workflows in an error state.\nYou can restart them at these URLs:'
+        status_message = failing_message
+        status_check = ['irb_agenda_date_status_check', 'irb_approved_with_conditions_status_check',
+                        'irb_committee_review_status_check', 'irb_in_pre_review_status_check',
+                        'irb_investigator_agreement_status_check', 'irb_non_uva_irb_status_check',
+                        'irb_submitted_for_pre_review_status_check']
+
+        for workflow in workflows:
+            workflow_url_link = self.__get_workflow_url(workflow)
+            workflow_urls.append(workflow_url_link)
+            if workflow.workflow_spec_id in status_check:
+                send_status_message = True
+                status_message += f'\n[{workflow_url_link}]({workflow_url_link})'
+
+            failing_message += f'\n[{workflow_url_link}]({workflow_url_link})'
+        return workflow_urls, failing_message, status_message, send_status_message
+
     def process_failing_workflows(self):
         with app.app_context():
-            workflows = self.get_failing_workflows()
+            workflows = self.__get_failing_workflows()
             if len(workflows) > 0:
-                workflow_urls = []
-                if len(workflows) == 1:
-                    workflow = workflows[0]
-                    workflow_url_link = self.get_workflow_url(workflow)
-                    workflow_urls.append(workflow_url_link)
-                    message = 'There is one workflow in an error state.'
-                    message += f'\n You can restart the workflow at {workflow_url_link}.'
-                else:
-                    message = f'There are {len(workflows)} workflows in an error state.'
-                    message += '\nYou can restart the workflows at these URLs:'
-                    for workflow in workflows:
-                        workflow_url_link = self.get_workflow_url(workflow)
-                        workflow_urls.append(workflow_url_link)
-                        message += f'\n{workflow_url_link}'
+                workflow_urls, failing_message, status_message, send_status_message = \
+                    self.__get_failing_and_admin_message(workflows)
 
                 # this is for sentry
                 with push_scope() as scope:
                     # scope.user = {"urls": workflow_urls}
                     scope.set_extra("workflow_urls", workflow_urls)
                     # this sends a message through sentry
-                    capture_message(message)
+                    capture_message(failing_message)
 
-                self.send_message_to_helpdesk(message)
-
-                # We return message so we can use it in a test
-                return message
+                if send_status_message:
+                    self.__send_message_to_helpdesk(status_message)
+                self.__send_message_to_admin_user(failing_message)
 
     @staticmethod
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):
@@ -202,7 +225,7 @@ class WorkflowService(object):
 
         g.validation_data_store = []
 
-        workflow_model = WorkflowService.make_test_workflow(spec_id, validate_study_id)
+        workflow_model = WorkflowService.__make_test_workflow(spec_id, validate_study_id)
         try:
             processor = WorkflowProcessor(workflow_model, validate_only=True)
             count = 0
@@ -247,7 +270,7 @@ class WorkflowService(object):
                                            task_id=task.id,
                                            task_name=task.get_name())
                         WorkflowService.populate_form_with_random_data(task, task_api, required_only)
-                        if not WorkflowService.validate_form(task, task_api):
+                        if not WorkflowService.__validate_form(task, task_api):
                             # In the process of completing the form, it is possible for fields to become required
                             # based on later fields.  If the form has incomplete, but required fields (validate_form)
                             # then try to populate the form again, with this new information.
@@ -280,26 +303,26 @@ class WorkflowService(object):
             raise ApiError(code='unknown_exception',
                            message=f'We caught an unexpected exception during validation. Original exception is: {str(e)}')
         finally:
-            WorkflowService.delete_test_data(workflow_model)
+            WorkflowService.__delete_test_data(workflow_model)
         return processor.bpmn_workflow.last_task.data
 
     @staticmethod
-    def validate_form(task, task_api):
+    def __validate_form(task, task_api):
         for field in task_api.form.fields:
-            if WorkflowService.is_required_field(field, task):
+            if WorkflowService.__is_required_field(field, task):
                 if not field.id in task.data or task.data[field.id] is None:
                     return False
         return True
 
     @staticmethod
-    def is_required_field(field, task):
+    def __is_required_field(field, task):
         # Get Required State
         is_required = False
         if (field.has_validation(Task.FIELD_CONSTRAINT_REQUIRED) and
                 field.get_validation(Task.FIELD_CONSTRAINT_REQUIRED)):
             is_required = True
         if (field.has_property(Task.FIELD_PROP_REQUIRED_EXPRESSION) and
-                WorkflowService.evaluate_property(Task.FIELD_PROP_REQUIRED_EXPRESSION, field, task)):
+                WorkflowService.__evaluate_property(Task.FIELD_PROP_REQUIRED_EXPRESSION, field, task)):
             is_required = True
         return is_required
 
@@ -323,7 +346,7 @@ class WorkflowService(object):
             form_data[field.id] = None
 
         for field in task_api.form.fields:
-            is_required = WorkflowService.is_required_field(field, task)
+            is_required = WorkflowService.__is_required_field(field, task)
 
             # Assure we have a field type
             if field.type is None:
@@ -332,15 +355,15 @@ class WorkflowService(object):
                                task_id=task.id,
                                task_name=task.get_name())
                 # Assure we have valid ids
-            if not WorkflowService.check_field_id(field.id):
+            if not WorkflowService.__check_field_id(field.id):
                 raise ApiError(code='invalid_form_id',
                                message=f'Invalid Field name: "{field.id}".  A field ID must begin with a letter, '
                                        f'and can only contain letters, numbers, and "_"',
                                task_id=task.id,
                                task_name=task.get_name())
             # Assure field has valid properties
-            WorkflowService.check_field_properties(field, task)
-            WorkflowService.check_field_type(field, task)
+            WorkflowService.__check_field_properties(field, task)
+            WorkflowService.__check_field_type(field, task)
 
             # If we have a label, try to set the label
             if field.label:
@@ -379,7 +402,7 @@ class WorkflowService(object):
             # If the field is hidden we can leave it as none.
             if field.has_property(Task.FIELD_PROP_HIDE_EXPRESSION):
 
-                if WorkflowService.evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task, form_data):
+                if WorkflowService.__evaluate_property(Task.FIELD_PROP_HIDE_EXPRESSION, field, task, form_data):
                     continue
 
             # If we are only populating required fields, and this isn't required. stop here.
@@ -406,17 +429,17 @@ class WorkflowService(object):
                                              f'for repeat and group expressions that is not also used for a field name.'
                                              , task=task)
                 if field.has_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION):
-                    result = WorkflowService.evaluate_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION, field, task,
-                                                               form_data)
+                    result = WorkflowService.__evaluate_property(Task.FIELD_PROP_REPEAT_HIDE_EXPRESSION, field, task,
+                                                                 form_data)
                     if not result:
                         hide_groups.append(group)
                 if group not in form_data and group not in hide_groups:
                     form_data[group] = [{}, {}, {}]
                 if group in form_data and group not in hide_groups:
                     for i in range(3):
-                        form_data[group][i][field.id] = WorkflowService.get_random_data_for_field(field, task)
+                        form_data[group][i][field.id] = WorkflowService.__get_random_data_for_field(field, task)
             else:
-                form_data[field.id] = WorkflowService.get_random_data_for_field(field, task)
+                form_data[field.id] = WorkflowService.__get_random_data_for_field(field, task)
 
         if task.data is None:
             task.data = {}
@@ -435,7 +458,7 @@ class WorkflowService(object):
         task.update_data(extracted_form_data)
 
     @staticmethod
-    def check_field_id(id):
+    def __check_field_id(id):
         """Assures that field names are valid Python and Javascript names."""
         if not id[0].isalpha():
             return False
@@ -447,7 +470,7 @@ class WorkflowService(object):
         return True
 
     @staticmethod
-    def check_field_properties(field, task):
+    def __check_field_properties(field, task):
         """Assures that all properties are valid on a given workflow."""
         field_prop_names = list(map(lambda fp: fp.id, field.properties))
         valid_names = Task.valid_property_names()
@@ -458,7 +481,7 @@ class WorkflowService(object):
                                          f'property: {name}', task=task)
 
     @staticmethod
-    def check_field_type(field, task):
+    def __check_field_type(field, task):
         """Assures that the field type is valid."""
         valid_types = Task.valid_field_types()
         if field.type not in valid_types:
@@ -503,7 +526,7 @@ class WorkflowService(object):
             DataStoreBase().set_data_common('file', field.id, data[field.id], task.id, None, None, None, file_id)
 
     @staticmethod
-    def evaluate_property(property_name, field, task, task_data=None):
+    def __evaluate_property(property_name, field, task, task_data=None):
         expression = field.get_property(property_name)
         if not task_data:
             task_data = task.data
@@ -537,9 +560,9 @@ class WorkflowService(object):
             raise ApiError.from_task(f'invalid_{property_name}', message, task=task)
 
     @staticmethod
-    def has_lookup(field):
-        """Returns true if this is a lookup field."""
-        """Note, this does not include enums based on task data, that
+    def __has_lookup(field):
+        """Returns true if this is a lookup field.
+        Note, this does not include enums based on task data, that
         is populated when the form is created, not as a lookup from a data table. """
         has_ldap_lookup = field.has_property(Task.FIELD_PROP_LDAP_LOOKUP)
         has_file_lookup = field.has_property(Task.FIELD_PROP_SPREADSHEET_NAME)
@@ -547,7 +570,7 @@ class WorkflowService(object):
 
     @staticmethod
     def get_default_value(field, task, data):
-        has_lookup = WorkflowService.has_lookup(field)
+        has_lookup = WorkflowService.__has_lookup(field)
         # default = WorkflowService.evaluate_property(Task.FIELD_PROP_VALUE_EXPRESSION, field, task)
         default = None
         if field.default_value is not None:
@@ -601,10 +624,10 @@ class WorkflowService(object):
             return default
 
     @staticmethod
-    def get_random_data_for_field(field, task):
+    def __get_random_data_for_field(field, task):
         """Randomly populates the field,  mainly concerned with getting enums correct, as
         the rest are pretty easy."""
-        has_lookup = WorkflowService.has_lookup(field)
+        has_lookup = WorkflowService.__has_lookup(field)
 
         if field.type == "enum" and not has_lookup:
             # If it's a normal enum field with no lookup,
@@ -630,7 +653,7 @@ class WorkflowService(object):
             # from the lookup model
             lookup_model = LookupService.get_lookup_model(task, field)
             if field.has_property(Task.FIELD_PROP_LDAP_LOOKUP):  # All ldap records get the same person.
-                random_value = WorkflowService._random_ldap_record()
+                random_value = WorkflowService.__random_ldap_record()
             elif lookup_model:
                 data = db.session.query(LookupDataModel).filter(
                     LookupDataModel.lookup_file_model == lookup_model).limit(10).all()
@@ -656,7 +679,7 @@ class WorkflowService(object):
         elif field.type == 'file':
             doc_code = field.id
             if field.has_property('doc_code'):
-                doc_code = WorkflowService.evaluate_property('doc_code', field, task)
+                doc_code = WorkflowService.__evaluate_property('doc_code', field, task)
             file_model = FileModel(name="test.png",
                                    irb_doc_code=field.id)
             doc_dict = DocumentService.get_dictionary()
@@ -667,10 +690,10 @@ class WorkflowService(object):
         elif field.type == 'date':
             return datetime.utcnow()
         else:
-            return WorkflowService._random_string()
+            return WorkflowService.__random_string()
 
     @staticmethod
-    def _random_ldap_record():
+    def __random_ldap_record():
         return {
             "label": "dhf8r",
             "value": "Dan Funk",
@@ -685,13 +708,13 @@ class WorkflowService(object):
         }
 
     @staticmethod
-    def _random_string(string_length=10):
+    def __random_string(string_length=10):
         """Generate a random string of fixed length """
         letters = string.ascii_lowercase
         return ''.join(random.choice(letters) for i in range(string_length))
 
     @staticmethod
-    def get_navigation(processor):
+    def __get_navigation(processor):
         """Finds all the ready, completed, and future tasks and created nav_item objects for them."""
         tasks = []
         navigation = []
@@ -711,11 +734,11 @@ class WorkflowService(object):
             nav_item.task_id = user_task.id
             nav_item.indent = 0  # we should remove indent, this is not nested now.
             navigation.append(nav_item)
-        WorkflowService.update_navigation(navigation, processor)
+        WorkflowService.__update_navigation(navigation, processor)
         return navigation
 
     @staticmethod
-    def get_workflow_user_id(workflow_id):
+    def __get_workflow_user_id(workflow_id):
         user_id = db.session.query(WorkflowModel.user_id).\
             filter(WorkflowModel.id == workflow_id).scalar()
         return user_id
@@ -728,14 +751,14 @@ class WorkflowService(object):
         # WorkflowService.update_navigation(navigation, processor)
         spec_service = WorkflowSpecService()
         spec = spec_service.get_spec(processor.workflow_spec_id)
-        is_admin_workflow = WorkflowService.is_admin_workflow(processor.workflow_spec_id)
+        is_admin_workflow = WorkflowService.__is_admin_workflow(processor.workflow_spec_id)
         workflow_id = processor.get_workflow_id()
-        user_id = WorkflowService.get_workflow_user_id(workflow_id)
+        user_id = WorkflowService.__get_workflow_user_id(workflow_id)
         workflow_api = WorkflowApi(
             id=workflow_id,
             status=processor.get_status(),
             next_task=None,
-            navigation=WorkflowService.get_navigation(processor),
+            navigation=WorkflowService.__get_navigation(processor),
             workflow_spec_id=processor.workflow_spec_id,
             last_updated=processor.workflow_model.last_updated,
             is_review=spec.is_review,
@@ -749,7 +772,7 @@ class WorkflowService(object):
             # This may or may not work, sometimes there is no next task to complete.
             next_task = processor.next_task()
         if next_task:
-            previous_form_data = WorkflowService.get_previously_submitted_data(processor.workflow_model.id, next_task)
+            previous_form_data = WorkflowService.__get_previously_submitted_data(processor.workflow_model.id, next_task)
             #            DeepMerge.merge(next_task.data, previous_form_data)
             next_task.data = DeepMerge.merge(previous_form_data, next_task.data)
 
@@ -762,7 +785,7 @@ class WorkflowService(object):
         return workflow_api
 
     @staticmethod
-    def update_navigation(navigation: List[NavItem], processor: WorkflowProcessor):
+    def __update_navigation(navigation: List[NavItem], processor: WorkflowProcessor):
         # Recursive function to walk down through children, and clean up descriptions, and statuses
         for nav_item in navigation:
             spiff_task = processor.bpmn_workflow.get_task(nav_item.task_id)
@@ -784,10 +807,10 @@ class WorkflowService(object):
                         nav_item.description = nav_item.description.partition(' ')[2]
 
             # Recurse here
-            WorkflowService.update_navigation(nav_item.children, processor)
+            WorkflowService.__update_navigation(nav_item.children, processor)
 
     @staticmethod
-    def get_previously_submitted_data(workflow_id, spiff_task):
+    def __get_previously_submitted_data(workflow_id, spiff_task):
         """ If the user has completed this task previously, find the form data for the last submission."""
         query = db.session.query(TaskEventModel) \
             .filter_by(workflow_id=workflow_id) \
@@ -869,7 +892,7 @@ class WorkflowService(object):
         # some tasks, particularly multi-instance tasks that all have the same spec
         # but need different labels.
         if spiff_task.state == TaskState.READY:
-            task.properties = WorkflowService._process_properties(spiff_task, props)
+            task.properties = WorkflowService.__process_properties(spiff_task, props)
 
         task.title = WorkflowService.__calculate_title(spiff_task)
 
@@ -912,7 +935,7 @@ class WorkflowService(object):
         return title
 
     @staticmethod
-    def _process_properties(spiff_task, props):
+    def __process_properties(spiff_task, props):
         """Runs all the property values through the Jinja2 processor to inject data."""
         for k, v in props.items():
             try:
@@ -922,7 +945,7 @@ class WorkflowService(object):
         return props
 
     @staticmethod
-    def workflow_id_from_spiff_task(spiff_task):
+    def __workflow_id_from_spiff_task(spiff_task):
         workflow = spiff_task.workflow
         # Find the top level workflow
         while WorkflowProcessor.WORKFLOW_ID_KEY not in workflow.data:
@@ -943,7 +966,7 @@ class WorkflowService(object):
         try:
             doc_file_name = spiff_task.task_spec.name + ".md"
 
-            workflow_id = WorkflowService.workflow_id_from_spiff_task(spiff_task)
+            workflow_id = WorkflowService.__workflow_id_from_spiff_task(spiff_task)
             workflow = db.session.query(WorkflowModel).filter(WorkflowModel.id == workflow_id).first()
             spec_service = WorkflowSpecService()
             data = SpecFileService.get_data(spec_service.get_spec(workflow.workflow_spec_id), doc_file_name)
@@ -1008,12 +1031,12 @@ class WorkflowService(object):
             for d in data:
                 field.add_option(d.value, d.label)
         elif field.has_property(Task.FIELD_PROP_DATA_NAME):
-            field.options = WorkflowService.get_options_from_task_data(spiff_task, field)
+            field.options = WorkflowService.__get_options_from_task_data(spiff_task, field)
 
         return field
 
     @staticmethod
-    def get_options_from_task_data(spiff_task, field):
+    def __get_options_from_task_data(spiff_task, field):
         prop = field.get_property(Task.FIELD_PROP_DATA_NAME)
         if prop not in spiff_task.data:
             raise ApiError.from_task("invalid_enum", f"For enumerations based on task data, task data must have "
@@ -1226,13 +1249,13 @@ class WorkflowService(object):
         session.commit()
 
     @staticmethod
-    def get_workflow_spec_category(workflow_spec_id):
+    def __get_workflow_spec_category(workflow_spec_id):
         workflow_spec = WorkflowSpecService().get_spec(workflow_spec_id)
         category_id = workflow_spec.category_id
         category = WorkflowSpecService().get_category(category_id)
         return category
 
     @staticmethod
-    def is_admin_workflow(workflow_spec_id):
-        category = WorkflowService.get_workflow_spec_category(workflow_spec_id)
+    def __is_admin_workflow(workflow_spec_id):
+        category = WorkflowService.__get_workflow_spec_category(workflow_spec_id)
         return category.admin

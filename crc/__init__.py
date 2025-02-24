@@ -67,9 +67,14 @@ def process_waiting_tasks():
 
 @app.before_first_request
 def init_scheduler():
+    """This is how we check the process of studies that are in IRB Submission"""
     if app.config['PROCESS_WAITING_TASKS']:
-        scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
-        scheduler.add_job(WorkflowService().process_failing_workflows, 'interval', minutes=1440)
+        scheduler.add_job(process_waiting_tasks,
+                          'interval',
+                          minutes=app.config['WAITING_CHECK_INTERVAL'])
+        scheduler.add_job(WorkflowService().process_failing_workflows,
+                          'interval',
+                          minutes=app.config['FAILING_CHECK_INTERVAL'])
         scheduler.start()
 
 
@@ -88,7 +93,8 @@ if app.config['SENTRY_ENVIRONMENT']:
 
 # Connexion Error handling
 def render_errors(exception):
-    from crc.api.common import ApiError, ApiErrorSchema
+    """Render errors with information about the task."""
+    from crc.api.common import ApiError, ApiErrorSchema  # noqa
     error = ApiError(code=exception.title, message=exception.detail, status_code=exception.status)
     return Response(ApiErrorSchema().dumps(error), status=500, mimetype="text/json")
 
@@ -121,9 +127,11 @@ def clear_db():
 @click.argument("category", required=False)
 @click.argument("spec_id", required=False)
 def validate_all(study_id, category=None, spec_id=None):
-    """Step through all the local workflows and validate them, returning any errors. This make take forever.
-    Please provide a real study id to use for validation, an optional category can be specified to only validate
-    that category, and you can further specify a specific spec, if needed."""
+    """Step through all the local workflows and validate them, returning any errors.
+    This make take forever.
+    Please provide a real study id to use for validation,
+    an optional category can be specified to only validate that category, and
+    you can further specify a specific spec, if needed."""
     from crc.services.workflow_service import WorkflowService
     from crc.services.workflow_processor import WorkflowProcessor
     from crc.services.workflow_spec_service import WorkflowSpecService
@@ -143,6 +151,12 @@ def validate_all(study_id, category=None, spec_id=None):
 
         return specs, statuses
 
+    def print_header():
+        print("-----------------------------------------")
+        print(f"{spec.category.display_name} / {spec.id}")
+        print("-----------------------------------------")
+
+
     specs, statuses = pre_process_study()
 
     for spec in specs:
@@ -151,31 +165,34 @@ def validate_all(study_id, category=None, spec_id=None):
         if category and (not spec.category or spec.category.display_name != category):
             continue
 
-        print("-----------------------------------------")
-        print(f"{spec.category.display_name} / {spec.id}")
-        print("-----------------------------------------")
+        print_header()
 
         if spec.id in statuses and statuses[spec.id]['status'] == 'disabled':
-            print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
+            print(f"Skipping {spec.id} in category "
+                  f"{spec.category.display_name}, it is disabled for this study.")
             continue
         try:
             WorkflowService.test_spec(spec.id, validate_study_id=study_id)
             print('Success!')
         except ApiError as e:
             if e.code == 'disabled_workflow':
-                print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
+                print(f"Skipping {spec.id} in category {spec.category.display_name}, "
+                      f"it is disabled for this study.")
             else:
-                print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}. {e.message}")
+                print(f"API Error {e.code}, validate workflow {spec.id} "
+                      f"in Category {spec.category.display_name}. {e.message}")
                 for t in e.task_trace:
                     print(f"---> {t}")
                 continue
         except WorkflowTaskExecException as e:
-            print(f"Workflow Error, {e}, in Task {e.task.name} validate workflow {spec.id} in Category {spec.category.display_name}")
+            print(f"Workflow Error, {e}, in Task {e.task.name} "
+                  f"validate workflow {spec.id} in Category {spec.category.display_name}")
             for t in e.task_trace:
                 print(f"---> {t}")
             continue
         except Exception as e:
-            print(f"Unexpected Error ({e.__class__.__name__}), {e} validate workflow {spec.id} in Category {spec.category.display_name}")
+            print(f"Unexpected Error ({e.__class__.__name__}), {e} "
+                  f"validate workflow {spec.id} in Category {spec.category.display_name}")
             # printing stack trace
             traceback.print_exc()
             print(e)
