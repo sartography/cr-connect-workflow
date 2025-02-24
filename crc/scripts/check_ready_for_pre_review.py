@@ -189,7 +189,7 @@ class CheckReadyForPreReview(Script):
         is_cto_ready = self.get_is_cto_ready(is_cto_required, task)
         is_compliance_reviews_ready = self.get_is_compliance_reviews_ready(is_uva_irb_of_record, task)
 
-        app.logger.info(f"CheckReadyForPreReview: is_documents_ready: {is_documents_ready}")
+        # app.logger.info(f"CheckReadyForPreReview: is_documents_ready: {is_documents_ready}")
         
         return {'isDocumentsReady': is_documents_ready,
                 'isCTORequired': is_cto_required,

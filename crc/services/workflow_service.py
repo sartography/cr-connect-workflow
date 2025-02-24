@@ -109,10 +109,14 @@ class WorkflowService():
 
     @staticmethod
     def do_waiting():
-        records = db.session.query(WorkflowModel).filter(WorkflowModel.status == WorkflowStatus.waiting).all()
+        """Process waiting tasks.
+        This is for timers and status checks"""
+        records = (db.session.query(WorkflowModel).
+                   filter(WorkflowModel.status == WorkflowStatus.waiting).
+                   all())
         for workflow_model in records:
             try:
-                app.logger.info('Processing workflow %s' % workflow_model.id)
+                app.logger.info(f'Processing workflow {workflow_model.id}')
                 processor = WorkflowProcessor(workflow_model)
                 processor.bpmn_workflow.refresh_waiting_tasks()
                 processor.bpmn_workflow.do_engine_steps()
@@ -122,16 +126,17 @@ class WorkflowService():
                 workflow_model.status = WorkflowStatus.erroring
                 db.session.add(workflow_model)
                 db.session.commit()
-                app.logger.error(f"Error running waiting task for workflow #%i (%s) for study #%i.  %s" %
-                                 (workflow_model.id,
-                                  workflow_model.workflow_spec_id,
-                                  workflow_model.study_id,
-                                  str(e)))
+                app.logger.error(
+                    f"Error running waiting task "
+                    f"for workflow #{workflow_model.id} ({workflow_model.workflow_spec_id}) "
+                    f"for study #{workflow_model.study_id}.  \n"
+                    f"{str(e)}")
 
     @staticmethod
     def __get_failing_workflows():
-        workflows = session.query(WorkflowModel).filter(WorkflowModel.status == WorkflowStatus.erroring).all()
-        return workflows
+        return (session.query(WorkflowModel).
+                filter(WorkflowModel.status == WorkflowStatus.erroring).
+                all())
 
     @staticmethod
     def __get_workflow_url(workflow):
@@ -140,12 +145,12 @@ class WorkflowService():
         return workflow_url
 
     @staticmethod
-    def __send_message_to_helpdesk(message):
+    def __send_message(recipient, message):
         content, content_html = EmailService().get_rendered_content(message, {})
         EmailService.add_email(
             subject="CRC Workflows in Error State",
             sender=app.config['DEFAULT_SENDER'],
-            recipients=[app.config['CRC_SUPPORT_EMAIL']],
+            recipients=[recipient],
             content=content,
             content_html=content_html,
             cc=None,
@@ -157,36 +162,52 @@ class WorkflowService():
             name="failing_workflows",
         )
 
+    def __send_message_to_admin_user(self, message):
+        admin_email = app.config['CRC_SYSTEM_ADMIN_EMAIL']
+        self.__send_message(admin_email, message)
+
+    def __send_message_to_helpdesk(self, message):
+        self.__send_message(app.config['CRC_SUPPORT_EMAIL'], message)
+
+    def __get_failing_and_admin_message(self, workflows):
+
+        workflow_urls = []
+        send_status_message = False
+        failing_message = \
+            'There are workflows in an error state.\nYou can restart them at these URLs:'
+        status_message = failing_message
+        status_check = ['irb_agenda_date_status_check', 'irb_approved_with_conditions_status_check',
+                        'irb_committee_review_status_check', 'irb_in_pre_review_status_check',
+                        'irb_investigator_agreement_status_check', 'irb_non_uva_irb_status_check',
+                        'irb_submitted_for_pre_review_status_check']
+
+        for workflow in workflows:
+            workflow_url_link = self.__get_workflow_url(workflow)
+            workflow_urls.append(workflow_url_link)
+            if workflow.workflow_spec_id in status_check:
+                send_status_message = True
+                status_message += f'\n[{workflow_url_link}]({workflow_url_link})'
+
+            failing_message += f'\n[{workflow_url_link}]({workflow_url_link})'
+        return workflow_urls, failing_message, status_message, send_status_message
+
     def process_failing_workflows(self):
         with app.app_context():
             workflows = self.__get_failing_workflows()
             if len(workflows) > 0:
-                workflow_urls = []
-                if len(workflows) == 1:
-                    workflow = workflows[0]
-                    workflow_url_link = self.__get_workflow_url(workflow)
-                    workflow_urls.append(workflow_url_link)
-                    message = 'There is one workflow in an error state.'
-                    message += f'\n You can restart the workflow at {workflow_url_link}.'
-                else:
-                    message = f'There are {len(workflows)} workflows in an error state.'
-                    message += '\nYou can restart the workflows at these URLs:'
-                    for workflow in workflows:
-                        workflow_url_link = self.__get_workflow_url(workflow)
-                        workflow_urls.append(workflow_url_link)
-                        message += f'\n{workflow_url_link}'
+                workflow_urls, failing_message, status_message, send_status_message = \
+                    self.__get_failing_and_admin_message(workflows)
 
                 # this is for sentry
                 with push_scope() as scope:
                     # scope.user = {"urls": workflow_urls}
                     scope.set_extra("workflow_urls", workflow_urls)
                     # this sends a message through sentry
-                    capture_message(message)
+                    capture_message(failing_message)
 
-                self.__send_message_to_helpdesk(message)
-
-                # We return message so we can use it in a test
-                return message
+                if send_status_message:
+                    self.__send_message_to_helpdesk(status_message)
+                self.__send_message_to_admin_user(failing_message)
 
     @staticmethod
     def test_spec(spec_id, validate_study_id=None, test_until=None, required_only=False):

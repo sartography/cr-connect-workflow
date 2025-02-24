@@ -30,6 +30,7 @@ ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,kcm4zc,c
 SUPERUSER_UIDS = re.split(r',\s*', environ.get('SUPERUSER_UIDS', default="dhf8r,kcm4zc,cah3us"))
 DEFAULT_UID = environ.get('DEFAULT_UID', default="dhf8r")
 CRC_SUPPORT_EMAIL = environ.get('CRC_SUPPORT_EMAIL', default="CRCONNECTSUPPORT@uvahealth.org")
+CRC_SYSTEM_ADMIN_EMAIL = environ.get('CRC_SYSTEM_ADMIN_EMAIL', default="kcm4zc@uvahealth.org")
 WAITING_CHECK_INTERVAL = int(environ.get('WAITING_CHECK_INTERVAL', default=1))  # in minutes
 FAILING_CHECK_INTERVAL = int(environ.get('FAILING_CHECK_INTERVAL', default=1440))  # in minutes
 
