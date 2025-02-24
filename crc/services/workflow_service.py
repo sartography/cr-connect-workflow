@@ -141,6 +141,8 @@ class WorkflowService():
     @staticmethod
     def __get_workflow_url(workflow):
         base_url = app.config['FRONTEND']
+        if app.config['INSTANCE_NAME'] != 'development':
+            base_url += '/app'
         workflow_url = f'https://{base_url}/workflow/{workflow.id}'
         return workflow_url
 
