@@ -43,6 +43,20 @@ class StudyService(object):
     VALID_REVIEW_TYPES = [2, 3, 21, 23, 24]
 
     @staticmethod
+    def get_study_url(study_id):
+        """Returns the URL for a study."""
+        base_url = app.config['FRONTEND']
+        # TODO: This is a hack to get around the fact that
+        #  the backend doesn't know the real url of the frontend.
+        #  FRONTEND does not have /app appended to it.
+        #  The linux boxes have 2 environment variables for the frontend;
+        #  DEPLOY_URL=/app and BASE_HREF=/app.
+        #  I don't know how those are used yet
+        if app.config['INSTANCE_NAME'] != 'development':
+            base_url += '/app'
+        return f'https://{base_url}/study/{study_id}'
+
+    @staticmethod
     def get_pb_min_date():
         try:
             pb_min_date = parser.parse(app.config['PB_MIN_DATE'])
