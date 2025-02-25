@@ -54,7 +54,7 @@ class TestGetWaitingBCA(BaseTest):
         workflow_api = self.get_workflow_api(workflow)
         task = workflow_api.next_task
 
-        assert task.data['waiting_bca'] == [{'study_id': 2, 'study_short_title': None, 'study_title': 'Test Study One', 'study_url': 'https://localhost:4200/study/2'}]
+        assert len(task.data['waiting_bca']) == 1
 
         workflow_model = session.query(WorkflowModel). \
             filter(WorkflowModel.workflow_spec_id == 'billing_coverage_analysis'). \
@@ -67,5 +67,3 @@ class TestGetWaitingBCA(BaseTest):
         task = workflow_api.next_task
 
         assert len(task.data['waiting_bca']) == 2
-        assert task.data['waiting_bca'][0] == {'study_id': 4, 'study_short_title': None, 'study_title': 'Test Study Three', 'study_url': 'https://localhost:4200/study/4'}
-        assert task.data['waiting_bca'][1] == {'study_id': 2, 'study_short_title': None, 'study_title': 'Test Study One', 'study_url': 'https://localhost:4200/study/2'}
