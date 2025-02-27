@@ -478,7 +478,7 @@ class StudyService(object):
             return {}
 
     @staticmethod
-    def synch_with_protocol_builder_if_enabled(user, specs):
+    def sync_with_protocol_builder_if_enabled(user, specs):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
 

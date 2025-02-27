@@ -208,7 +208,7 @@ Try 'flask validate-all --help' for help.
 ## Documentation
 Additional Documentation is available on [ReadTheDocs](https://cr-connect-workflow.readthedocs.io/en/latest/#)
 
-## Manual Synch
+## Manual Sync
 You can move all the BPMN diagrams from one system to another (upgrading and replacing as needed)  This is how
 we will transfer files from staging to production. 
 Eventually we will connect this into the front end code for the BPMN Editor, but for now, you can do so by:
@@ -221,7 +221,7 @@ to get an exact replica of production/testing whatever)
 3. Set the API Token under authentication.  This token must match what is on the testing server.  This might
 match what is in the default config, at least, that will work for staging.
 
-4. Run the workflow_synch/pullall in swagger, using the url for the site you want to pull from:
+4. Run the workflow_sync/pullall in swagger, using the url for the site you want to pull from:
    something like "https://testing.crconnect.uvadcos.io/api"
 
 5. Be patient.  It may take a minute or more to pull everything down.
