@@ -554,7 +554,9 @@ class StudyService(object):
             # Process studies in the DB that are no longer in Protocol Builder
             for study in db_studies:
                 # we don't manage Exempt studies
-                if ProtocolBuilderService.get_irb_info(study.id)[0]['IRB_REVIEW_TYPE'] == 'Exempt':
+                if ('IRB_REVIEW_TYPE' in ProtocolBuilderService.get_irb_info(study.id)[0] and
+                        ProtocolBuilderService.get_irb_info(study.id)[0]['IRB_REVIEW_TYPE'] ==
+                        'Exempt'):
                     self.__delete_exempt_study(study.id)
 
                 else:
