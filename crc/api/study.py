@@ -162,7 +162,7 @@ def user_studies():
     spec_service = WorkflowSpecService()
     specs = spec_service.get_specs()
     cats = spec_service.get_categories()
-    StudyService.sync_with_protocol_builder_if_enabled(user, specs)
+    StudyService().sync_with_protocol_builder_if_enabled(user, specs)
     studies = StudyService().get_studies_for_user(user, categories=cats)
  
     # Disable this check - we don't want to raise this error.
