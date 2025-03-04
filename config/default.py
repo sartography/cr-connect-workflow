@@ -7,7 +7,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values to the front end.
 
 # The API_TOKEN is used to ensure that the
-# workflow synch can work without a lot of
+# workflow sync can work without a lot of
 # back and forth.
 # you may want to change this to something simple for testing!!
 # NB, if you change this in the local endpoint,

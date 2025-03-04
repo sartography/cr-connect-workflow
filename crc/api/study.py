@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import g, send_file
 from sqlalchemy.exc import IntegrityError
@@ -31,7 +31,7 @@ def add_study(body):
 
     study_model = StudyModel(user_uid=UserService.current_user().uid,
                              title=body['title'],
-                             last_updated=datetime.utcnow(),
+                             last_updated=datetime.now(timezone.utc),
                              status=StudyStatus.in_progress,
                              review_type=body['review_type'])
     session.add(study_model)
@@ -79,7 +79,7 @@ def update_study(study_id, body):
     study: Study = StudyForUpdateSchema().load(body)
 
     status = StudyStatus(study.status)
-    study_model.last_updated = datetime.utcnow()
+    study_model.last_updated = datetime.now(timezone.utc)
 
     if study_model.status != status:
         study_model.status = status
@@ -162,7 +162,7 @@ def user_studies():
     spec_service = WorkflowSpecService()
     specs = spec_service.get_specs()
     cats = spec_service.get_categories()
-    StudyService.synch_with_protocol_builder_if_enabled(user, specs)
+    StudyService().sync_with_protocol_builder_if_enabled(user, specs)
     studies = StudyService().get_studies_for_user(user, categories=cats)
  
     # Disable this check - we don't want to raise this error.

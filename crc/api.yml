@@ -196,7 +196,7 @@ paths:
       - name: update_status
         in: query
         required: false
-        description: If set to true, will synch the study with protocol builder and assure the status of all workflows is up to date (expensive).
+        description: If set to true, will sync the study with protocol builder and assure the status of all workflows is up to date (expensive).
         schema:
           type: boolean
     get:

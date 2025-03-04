@@ -1,5 +1,5 @@
 from copy import copy
-from datetime import datetime
+from datetime import datetime, timezone
 from dateutil import parser
 from typing import List
 
@@ -477,8 +477,60 @@ class StudyService(object):
             app.logger.info("Failed to connect to LDAP Server.")
             return {}
 
+    def __delete_exempt_study(self, study_id):
+        """Remove studies when IRB Review Type is 'Exempt'"""
+        self.delete_study(study_id)
+
     @staticmethod
-    def synch_with_protocol_builder_if_enabled(user, specs):
+    def __process_pb_study(pb_study, db_studies, user, specs):
+        """Process the information from PB"""
+        new_status = None
+        new_progress_status = None
+        db_study = session.query(StudyModel).filter(StudyModel.id == pb_study.STUDYID).first()
+
+        add_study = False
+        if not db_study:
+            db_study = StudyModel(id=pb_study.STUDYID)
+            db_study.status = None  # Force a new sa
+            new_status = StudyStatus.in_progress
+            new_progress_status = ProgressStatus.in_progress
+
+            # we use add_study below to determine whether we add the study to the session
+            add_study = True
+            db_studies.append(db_study)
+
+        db_study.update_from_protocol_builder(pb_study, user.uid)
+        StudyService.add_all_workflow_specs_to_study(db_study, specs)
+
+        # If there is a new automatic status change and no manual change in place, record it.
+        if new_status and db_study.status != StudyStatus.hold:
+            db_study.status = new_status
+            # make sure status is `in_progress`, before processing new automatic progress_status.
+            if new_progress_status and db_study.status == StudyStatus.in_progress:
+                db_study.progress_status = new_progress_status
+            StudyService.add_study_update_event(db_study,
+                                                status=new_status,
+                                                event_type=StudyEventType.automatic)
+        # we moved session.add here so that it comes after we update the study
+        # we only add if it doesn't already exist in the DB
+        if add_study:
+            session.add(db_study)
+            session.commit()
+
+    def __process_pb_studies(self, pb_studies, db_studies, user, specs):
+        for pb_study in pb_studies:
+            if pb_study.DATECREATED:
+                created_date = parser.parse(pb_study.DATECREATED)
+            else:
+                # we don't import studies that don't have a DATECREATED
+                continue
+            if created_date.timestamp() < StudyService.get_pb_min_date().timestamp():
+                # we don't import old studies
+                continue
+
+            self.__process_pb_study(pb_study, db_studies, user, specs)
+
+    def sync_with_protocol_builder_if_enabled(self, user, specs):
         """Assures that the studies we have locally for the given user are
         in sync with the studies available in protocol builder. """
 
@@ -488,7 +540,8 @@ class StudyService(object):
                             str(app.config['PB_ENABLED']))
 
             # Get studies matching this user from Protocol Builder
-            pb_studies: List[ProtocolBuilderCreatorStudy] = ProtocolBuilderService.get_studies(user.uid)
+            pb_studies: List[ProtocolBuilderCreatorStudy] = (
+                ProtocolBuilderService.get_studies(user.uid))
 
             # Get studies from the database
             db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
@@ -496,56 +549,23 @@ class StudyService(object):
             # Update all studies from the protocol builder, create new studies as needed.
             # Further assures that every active study (that does exist in the protocol builder)
             # has a reference to every available workflow (though some may not have started yet)
-            for pb_study in pb_studies:
-                if pb_study.DATECREATED:
-                    created_date = parser.parse(pb_study.DATECREATED)
-                else:
-                    # we don't import studies that don't have a DATECREATED
-                    continue
-                if created_date.timestamp() < StudyService.get_pb_min_date().timestamp():
-                    # we don't import old studies
-                    continue
-                new_status = None
-                new_progress_status = None
-                db_study = session.query(StudyModel).filter(StudyModel.id == pb_study.STUDYID).first()
-                # db_study = next((s for s in db_studies if s.id == pb_study.STUDYID), None)
+            self.__process_pb_studies(pb_studies, db_studies, user, specs)
 
-                add_study = False
-                if not db_study:
-                    db_study = StudyModel(id=pb_study.STUDYID)
-                    db_study.status = None  # Force a new sa
-                    new_status = StudyStatus.in_progress
-                    new_progress_status = ProgressStatus.in_progress
-
-                    # we use add_study below to determine whether we add the study to the session
-                    add_study = True
-                    db_studies.append(db_study)
-
-                db_study.update_from_protocol_builder(pb_study, user.uid)
-                StudyService.add_all_workflow_specs_to_study(db_study, specs)
-
-                # If there is a new automatic status change and there isn't a manual change in place, record it.
-                if new_status and db_study.status != StudyStatus.hold:
-                    db_study.status = new_status
-                    # make sure status is `in_progress`, before processing new automatic progress_status.
-                    if new_progress_status and db_study.status == StudyStatus.in_progress:
-                        db_study.progress_status = new_progress_status
-                    StudyService.add_study_update_event(db_study,
-                                                        status=new_status,
-                                                        event_type=StudyEventType.automatic)
-                # we moved session.add here so that it comes after we update the study
-                # we only add if it doesn't already exist in the DB
-                if add_study:
-                    session.add(db_study)
-
-            # Mark studies as inactive that are no longer in Protocol Builder
+            # Process studies in the DB that are no longer in Protocol Builder
             for study in db_studies:
-                pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
-                if not pb_study and study.status != StudyStatus.abandoned:
-                    study.status = StudyStatus.abandoned
-                    StudyService.add_study_update_event(study,
-                                                        status=StudyStatus.abandoned,
-                                                        event_type=StudyEventType.automatic)
+                # we don't manage Exempt studies
+                if ('IRB_REVIEW_TYPE' in ProtocolBuilderService.get_irb_info(study.id)[0] and
+                        ProtocolBuilderService.get_irb_info(study.id)[0]['IRB_REVIEW_TYPE'] ==
+                        'Exempt'):
+                    self.__delete_exempt_study(study.id)
+
+                else:
+                    pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
+                    if not pb_study and study.status != StudyStatus.abandoned:
+                        study.status = StudyStatus.abandoned
+                        StudyService.add_study_update_event(study,
+                                                            status=StudyStatus.abandoned,
+                                                            event_type=StudyEventType.automatic)
 
             db.session.commit()
 
@@ -589,7 +609,7 @@ class StudyService(object):
                                        study=study,
                                        user_id=None,
                                        workflow_spec_id=spec.id,
-                                       last_updated=datetime.utcnow())
+                                       last_updated=datetime.now(timezone.utc))
         session.add(workflow_model)
         session.commit()
         return workflow_model

@@ -168,11 +168,12 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study_event.comment, update_comment)
         self.assertEqual(study_event.user_uid, self.test_uid)
 
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_irb_info')  # mock_info
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_investigators
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
-    def test_get_all_studies(self, mock_studies, mock_details, mock_docs, mock_investigators):
+    def test_get_all_studies(self, mock_studies, mock_details, mock_docs, mock_investigators, mock_info):
         # Enable the protocol builder for these tests, as the master_workflow and other workflows
         # depend on using the PB for data.
         app.config['PB_ENABLED'] = True
@@ -198,6 +199,7 @@ class TestStudyApi(BaseTest):
             mock_docs.return_value = json.loads(docs_response)
             investigators_response = self.protocol_builder_response('investigators.json')
             mock_investigators.return_value = json.loads(investigators_response)
+            mock_info.return_value = json.loads(self.protocol_builder_response('irb_info.json'))
 
             # Make the api call to get all studies
             api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
@@ -245,6 +247,16 @@ class TestStudyApi(BaseTest):
             # when we implement a new way to set Open for Enrollment
             # open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
             # self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
+
+            # We don't manage Exempt studies, so these should get deleted
+            mock_info.return_value = json.loads(self.protocol_builder_response('irb_info_exempt.json'))
+            # Make the api call to get all studies
+            api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
+            self.assert_success(api_response)
+            json_data = json.loads(api_response.get_data(as_text=True))
+
+            assert json_data == []
+
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
