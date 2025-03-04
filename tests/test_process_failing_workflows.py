@@ -22,9 +22,8 @@ class TestFailingWorkflows(BaseTest):
 
         mail_messages = EmailModel.query.filter(EmailModel.name == 'failing_workflows').all()
         assert len(mail_messages) == 1
-        assert mail_messages[0].subject == 'CRC Workflows in Error State'
+        assert mail_messages[0].subject == 'Failing CRC Workflows'
         assert (mail_messages[0].content ==
-                "There are workflows in an error state."
-                "\nYou can restart them at these URLs:"
-                "\n[https://localhost:4200/workflow/1](https://localhost:4200/workflow/1)"
-                "\n[https://localhost:4200/workflow/2](https://localhost:4200/workflow/2)")
+                "There are 2 failing workflows.\n\n"
+                "[https://localhost:4200/workflow/1](https://localhost:4200/workflow/1)\n"
+                "[https://localhost:4200/workflow/2](https://localhost:4200/workflow/2)")

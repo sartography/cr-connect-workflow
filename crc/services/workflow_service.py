@@ -147,10 +147,10 @@ class WorkflowService():
         return workflow_url
 
     @staticmethod
-    def __send_message(recipient, message):
+    def __send_message(recipient, message, subject):
         content, content_html = EmailService().get_rendered_content(message, {})
         EmailService.add_email(
-            subject="CRC Workflows in Error State",
+            subject=subject,
             sender=app.config['DEFAULT_SENDER'],
             recipients=[recipient],
             content=content,
@@ -166,18 +166,17 @@ class WorkflowService():
 
     def __send_message_to_admin_user(self, message):
         admin_email = app.config['CRC_SYSTEM_ADMIN_EMAIL']
-        self.__send_message(admin_email, message)
+        self.__send_message(admin_email, message, "Failing CRC Workflows")
 
     def __send_message_to_helpdesk(self, message):
-        self.__send_message(app.config['CRC_SUPPORT_EMAIL'], message)
+        self.__send_message(app.config['CRC_SUPPORT_EMAIL'], message, "Failing CRC Status Checks")
 
-    def __get_failing_and_admin_message(self, workflows):
+    def __get_messages(self, workflows):
 
         workflow_urls = []
+        status_count = 0
         send_status_message = False
-        failing_message = \
-            'There are workflows in an error state.\nYou can restart them at these URLs:'
-        status_message = failing_message
+        status_message = failing_message = ''
         status_check = ['irb_agenda_date_status_check', 'irb_approved_with_conditions_status_check',
                         'irb_committee_review_status_check', 'irb_in_pre_review_status_check',
                         'irb_investigator_agreement_status_check', 'irb_non_uva_irb_status_check',
@@ -187,18 +186,30 @@ class WorkflowService():
             workflow_url_link = self.__get_workflow_url(workflow)
             workflow_urls.append(workflow_url_link)
             if workflow.workflow_spec_id in status_check:
+                status_count += 1
                 send_status_message = True
                 status_message += f'\n[{workflow_url_link}]({workflow_url_link})'
 
             failing_message += f'\n[{workflow_url_link}]({workflow_url_link})'
+        status_message_start = ''
+        if status_count > 1:
+            status_message_start = (f"There are {status_count} failing status checks.\n "
+                                    f"You can restart them at these URLs.\n")
+        elif status_count == 1:
+            status_message_start = ("There is 1 failing status check.\n "
+                                    "You can restart it at this URL.\n")
+        if status_message_start:
+            status_message = status_message_start + status_message
+        failing_message = f"There are {len(workflow_urls)} failing workflows.\n" + failing_message
         return workflow_urls, failing_message, status_message, send_status_message
 
     def process_failing_workflows(self):
+        """Send a message to admin user and CRC Help Desk about failing workflows."""
         with app.app_context():
             workflows = self.__get_failing_workflows()
             if len(workflows) > 0:
                 workflow_urls, failing_message, status_message, send_status_message = \
-                    self.__get_failing_and_admin_message(workflows)
+                    self.__get_messages(workflows)
 
                 # this is for sentry
                 with push_scope() as scope:
