@@ -1,5 +1,5 @@
 from copy import copy
-from datetime import datetime
+from datetime import datetime, timezone
 from dateutil import parser
 from typing import List
 
@@ -609,7 +609,7 @@ class StudyService(object):
                                        study=study,
                                        user_id=None,
                                        workflow_spec_id=spec.id,
-                                       last_updated=datetime.utcnow())
+                                       last_updated=datetime.now(timezone.utc))
         session.add(workflow_model)
         session.commit()
         return workflow_model
