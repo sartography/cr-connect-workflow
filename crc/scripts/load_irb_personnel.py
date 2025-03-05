@@ -6,10 +6,14 @@ class LoadIRBPersonnel(Script):
 
     @staticmethod
     def clean_record(record):
-        del record["display"]
-        del record["unique"]
-        del record["telephone_number"]
-        del record["date_cached"]
+        if 'display' in record:
+            del record["display"]
+        if 'unique' in record:
+            del record["unique"]
+        if 'telephone_number' in record:
+            del record["telephone_number"]
+        if 'date_cached' in record:
+            del record["date_cached"]
 
     def get_pb_create_uid(self, study_id, current_user_uid, task):
         user_studies = task.data['get_user_studies'](current_user_uid)
