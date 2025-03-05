@@ -554,18 +554,20 @@ class StudyService(object):
             # Process studies in the DB that are no longer in Protocol Builder
             for study in db_studies:
                 # we don't manage Exempt studies
-                if ('IRB_REVIEW_TYPE' in ProtocolBuilderService.get_irb_info(study.id)[0] and
-                        ProtocolBuilderService.get_irb_info(study.id)[0]['IRB_REVIEW_TYPE'] ==
-                        'Exempt'):
-                    self.__delete_exempt_study(study.id)
+                pb_study_info = ProtocolBuilderService.get_irb_info(study.id)
+                if len(pb_study_info) > 0:
+                    if ('IRB_REVIEW_TYPE' in ProtocolBuilderService.get_irb_info(study.id)[0] and
+                            ProtocolBuilderService.get_irb_info(study.id)[0]['IRB_REVIEW_TYPE'] ==
+                            'Exempt'):
+                        self.__delete_exempt_study(study.id)
 
-                else:
-                    pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
-                    if not pb_study and study.status != StudyStatus.abandoned:
-                        study.status = StudyStatus.abandoned
-                        StudyService.add_study_update_event(study,
-                                                            status=StudyStatus.abandoned,
-                                                            event_type=StudyEventType.automatic)
+                    else:
+                        pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
+                        if not pb_study and study.status != StudyStatus.abandoned:
+                            study.status = StudyStatus.abandoned
+                            StudyService.add_study_update_event(study,
+                                                                status=StudyStatus.abandoned,
+                                                                event_type=StudyEventType.automatic)
 
             db.session.commit()
 
