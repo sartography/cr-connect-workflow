@@ -55,6 +55,9 @@ class BaseTest(unittest.TestCase):
         },
         {
             'uid': 'lb3dp',
+        },
+        {
+            'uid': 'kcm4zc',
         }
     ]
 
@@ -99,7 +102,7 @@ class BaseTest(unittest.TestCase):
         cls.ctx.pop()
 
     def setUp(self):
-        pass
+        self.clear_test_sync_files()
 
     def tearDown(self):
         ExampleDataLoader.clean_db()
@@ -147,10 +150,22 @@ class BaseTest(unittest.TestCase):
         """
         ExampleDataLoader.clean_db()
 
+    @staticmethod
+    def add_user(ldap_model):
+        db.session.add(ldap_model)
+        db.session.commit()
+        db.session.add(UserModel(uid=ldap_model.uid, ldap_info=ldap_model))
+
+
     def add_users(self):
+        added_user = False
         for user_json in self.users:
             ldap_info = LdapService.user_info(user_json['uid'])
-            session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
+            already_user = session.query(UserModel).filter_by(uid=user_json['uid']).first()
+            if not already_user:
+                added_user = True
+                session.add(UserModel(uid=user_json['uid'], ldap_info=ldap_info))
+        if added_user:
             session.commit()
 
     def add_studies(self):

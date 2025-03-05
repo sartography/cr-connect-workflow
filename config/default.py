@@ -7,7 +7,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 JSON_SORT_KEYS = False  # CRITICAL.  Do not sort the data when returning values to the front end.
 
 # The API_TOKEN is used to ensure that the
-# workflow synch can work without a lot of
+# workflow sync can work without a lot of
 # back and forth.
 # you may want to change this to something simple for testing!!
 # NB, if you change this in the local endpoint,
@@ -27,7 +27,12 @@ TESTING = environ.get('TESTING', default="false") == "true"
 PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")
 TEST_UID = environ.get('TEST_UID', default="dhf8r")
 ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,kcm4zc,cah3us"))
+SUPERUSER_UIDS = re.split(r',\s*', environ.get('SUPERUSER_UIDS', default="dhf8r,kcm4zc,cah3us"))
 DEFAULT_UID = environ.get('DEFAULT_UID', default="dhf8r")
+CRC_SUPPORT_EMAIL = environ.get('CRC_SUPPORT_EMAIL', default="CRCONNECTSUPPORT@uvahealth.org")
+CRC_SYSTEM_ADMIN_EMAIL = environ.get('CRC_SYSTEM_ADMIN_EMAIL', default="kcm4zc@uvahealth.org")
+WAITING_CHECK_INTERVAL = int(environ.get('WAITING_CHECK_INTERVAL', default=1))  # in minutes
+FAILING_CHECK_INTERVAL = int(environ.get('FAILING_CHECK_INTERVAL', default=1440))  # in minutes
 
 # Sentry flag
 ENABLE_SENTRY = environ.get('ENABLE_SENTRY', default="false") == "true"  # To be removed soon
@@ -56,7 +61,7 @@ SQLALCHEMY_DATABASE_URI = environ.get(
 
 TOKEN_AUTH_TTL_HOURS = float(environ.get('TOKEN_AUTH_TTL_HOURS', default=24))
 SECRET_KEY = environ.get('SECRET_KEY', default="Shhhh!!! This is secret!  And better darn well not show up in prod.")
-SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
+# SWAGGER_AUTH_KEY = environ.get('SWAGGER_AUTH_KEY', default="SWAGGER")
 # %s/%i placeholders expected for uva_id and study_id in various calls.
 PB_ENABLED = environ.get('PB_ENABLED', default="false") == "true"
 PB_BASE_URL = environ.get('PB_BASE_URL', default="http://localhost:5001/v2.0/").strip('/') + '/'  # Trailing slash required

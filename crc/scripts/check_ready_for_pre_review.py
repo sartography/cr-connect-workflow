@@ -5,10 +5,9 @@ from crc.scripts.script import Script
 
 class CheckReadyForPreReview(Script):
     
-    scripts = {}
     documents = {}
 
-    def get_is_documents_ready(self, is_uva_irb_of_rec):
+    def get_is_documents_ready(self, is_uva_irb_of_rec, task):
         doc_list = ['protocol_application_and_coversheet', 'data_security_plan', 'study_documents',
                     'consent_documents', 'drug_device_documents', 'ancillary_documents', 'form_documents']
         if not is_uva_irb_of_rec:
@@ -17,7 +16,7 @@ class CheckReadyForPreReview(Script):
                         'non_uva_irb']
 
         for doc in doc_list:
-            get_workflow_status = self.scripts['get_workflow_status']
+            get_workflow_status = task.data['get_workflow_status']
             workflow_status = get_workflow_status(doc)
             if workflow_status == "complete":
                 is_documents_ready = True
@@ -25,11 +24,11 @@ class CheckReadyForPreReview(Script):
                 is_documents_ready = False
                 break
 
-        self.scripts['data_store_set'](type='study', key='sds_isDocumentsReady', value=is_documents_ready)
+        task.data['data_store_set'](type='study', key='sds_isDocumentsReady', value=is_documents_ready)
         return is_documents_ready
 
-    def get_is_cto_required(self):
-        study_info = self.scripts['study_info']
+    def get_is_cto_required(self, task):
+        study_info = task.data['study_info']
         # Get Documents
         documents = study_info('documents')
         self.documents = documents
@@ -41,33 +40,33 @@ class CheckReadyForPreReview(Script):
             if d["workflow"] == "CTO Review" and d["required"]:
                 is_cto_required = True
                 break
-        self.scripts['data_store_set'](type='study', key='sds_isCTORequired', value=is_cto_required)
+        task.data['data_store_set'](type='study', key='sds_isCTORequired', value=is_cto_required)
         return is_cto_required
 
-    def get_is_cto_ready(self, is_cto_required):
+    def get_is_cto_ready(self, is_cto_required, task):
 
         if not is_cto_required:
             is_cto_ready = True
         else:
-            get_workflow_status = self.scripts['get_workflow_status']
+            get_workflow_status = task.data['get_workflow_status']
             workflow_status = get_workflow_status("cto_review")
             if workflow_status == "complete":
                 is_cto_ready = True
             else:
                 is_cto_ready = False
 
-        self.scripts['data_store_set'](type='study', key='sds_isCTOReady', value=is_cto_ready)
+        task.data['data_store_set'](type='study', key='sds_isCTOReady', value=is_cto_ready)
         return is_cto_ready
 
-    def get_is_department_chair_approval_ready(self):
+    def get_is_department_chair_approval_ready(self, task):
         is_dept_chair_approval_ready = False
         # Check if Department Chair Approval is complete
-        get_workflow_status = self.scripts['get_workflow_status']
+        get_workflow_status = task.data['get_workflow_status']
         dept_chair_status = get_workflow_status("department_chair")
         if dept_chair_status == "complete":
             is_dept_chair_approval_ready = True
 
-        self.scripts['data_store_set'](type='study',
+        task.data['data_store_set'](type='study',
                                        key='sds_isDeptChairApprovalReady',
                                        value=is_dept_chair_approval_ready)
         return is_dept_chair_approval_ready
@@ -85,7 +84,7 @@ class CheckReadyForPreReview(Script):
                 is_zip_doc = False
         return is_zip_doc
 
-    def check_required_documents(self, is_uva_irb_of_rec):
+    def check_required_documents(self, is_uva_irb_of_rec, task):
         req_doc_cnt = 0
         is_required_document_reviews_complete = False
 
@@ -94,8 +93,8 @@ class CheckReadyForPreReview(Script):
                     "new_medical_device_approval", "prc_approval", "prc_waiver", "rdrc_approval",
                     "ferpa_sbs_approval", "neonatal_icu_committee_approval"]
 
-        data_store_set = self.scripts['data_store_set']
-        get_workflow_status = self.scripts['get_workflow_status']
+        data_store_set = task.data['data_store_set']
+        get_workflow_status = task.data['get_workflow_status']
 
         # Loop through UVA Compliance documents to determine whether all
         # workflows associated with required documents have been completed
@@ -112,10 +111,10 @@ class CheckReadyForPreReview(Script):
                         break
         return req_doc_cnt, is_required_document_reviews_complete
 
-    def get_is_compliance_reviews_ready(self, is_uva_irb_of_rec):
-        data_store_set = self.scripts['data_store_set']
+    def get_is_compliance_reviews_ready(self, is_uva_irb_of_rec, task):
+        data_store_set = task.data['data_store_set']
         is_compliance_reviews_ready = False
-        is_dept_chair_approval_ready = self.get_is_department_chair_approval_ready()
+        is_dept_chair_approval_ready = self.get_is_department_chair_approval_ready(task)
         if is_dept_chair_approval_ready:
             # # Loop through UVA Compliance documents to determine whether all
             # # workflows associated with required documents have been completed
@@ -125,7 +124,7 @@ class CheckReadyForPreReview(Script):
             #             "ferpa_sbs_approval", "neonatal_icu_committee_approval"]
             # req_doc_cnt = 0
             #
-            # get_workflow_status = self.scripts['get_workflow_status']
+            # get_workflow_status = task.data['get_workflow_status']
             # for key, d in self.documents.items():
             #     if d['workflow_spec_id'] in rev_list:
             #         # if is_uva_irb_of_rec:
@@ -147,7 +146,7 @@ class CheckReadyForPreReview(Script):
             #                 is_required_document_reviews_complete = False
             #                 data_store_set(type='study', key='sds_required_document_false', value=d['workflow_spec_id'])
             #                 break
-            req_doc_cnt, is_required_document_reviews_complete = self.check_required_documents(is_uva_irb_of_rec)
+            req_doc_cnt, is_required_document_reviews_complete = self.check_required_documents(is_uva_irb_of_rec, task)
             if req_doc_cnt == 0 or is_required_document_reviews_complete:
                 is_required_document_reviews_ready = True
             else:
@@ -157,9 +156,9 @@ class CheckReadyForPreReview(Script):
             if is_required_document_reviews_ready:
                 # Check if Marketing Materials Approval is required
                 # sdsMarMat_get = data_store_get(type='study', key="sdsMarMat", default=None)
-                data_store_get = self.scripts['data_store_get']
+                data_store_get = task.data['data_store_get']
                 if data_store_get(type='study', key="sdsMarMat", default=None) == "true":
-                    get_workflow_status = self.scripts['get_workflow_status']
+                    get_workflow_status = task.data['get_workflow_status']
                     workflow_status = get_workflow_status("marketing_materials_approval")
                     if workflow_status == "complete":
                         is_compliance_reviews_ready = True
@@ -185,17 +184,12 @@ class CheckReadyForPreReview(Script):
         We should at least break it into multiple tasks."""
         # TODO: move this all back into the top_level_workflow, into a call activity, sub process, etc
         is_uva_irb_of_record = args[0]
-        # this is grey magic. I'm stealing code from the CustomBpmnScriptEngine class in workflow_processor.py
-        # ultimately, this comes from the Script class we inherit from
-        # this gives me access to all the scripts available to the workflows (in the scripts directory)
-        scripts = self.generate_augmented_list(task, study_id, workflow_id)
-        self.scripts = scripts
-        is_documents_ready = self.get_is_documents_ready(is_uva_irb_of_record)
-        is_cto_required = self.get_is_cto_required()
-        is_cto_ready = self.get_is_cto_ready(is_cto_required)
-        is_compliance_reviews_ready = self.get_is_compliance_reviews_ready(is_uva_irb_of_record)
+        is_documents_ready = self.get_is_documents_ready(is_uva_irb_of_record, task)
+        is_cto_required = self.get_is_cto_required(task)
+        is_cto_ready = self.get_is_cto_ready(is_cto_required, task)
+        is_compliance_reviews_ready = self.get_is_compliance_reviews_ready(is_uva_irb_of_record, task)
 
-        app.logger.info(f"CheckReadyForPreReview: is_documents_ready: {is_documents_ready}")
+        # app.logger.info(f"CheckReadyForPreReview: is_documents_ready: {is_documents_ready}")
         
         return {'isDocumentsReady': is_documents_ready,
                 'isCTORequired': is_cto_required,

@@ -85,24 +85,30 @@ class TestProtocolBuilder(BaseTest):
         self.assertIn('DETAIL', response[0].keys())
         self.assertIn('STATUS', response[0].keys())
 
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_irb_info')  # mock_info
     @patch('crc.services.protocol_builder.requests.get')
-    def test_pb_recent_creation_date_filter(self, mock_get):
+    def test_pb_recent_creation_date_filter(self, mock_get, mock_info):
         """filter by recent creation date
             should only get more recent studies (3) """
         app.config['PB_ENABLED'] = True
         app.config['PB_MIN_DATE'] = "2020-01-01T00:00:00.000Z"
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
+        mock_info.return_value.ok = True
+        mock_info.return_value.text = self.protocol_builder_response('irb_info.json')
         api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
         self.assertEqual(3, len(api_response.json))
 
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_irb_info')  # mock_info
     @patch('crc.services.protocol_builder.requests.get')
-    def test_pb_older_creation_date_filter(self, mock_get):
+    def test_pb_older_creation_date_filter(self, mock_get, mock_info):
         """filter by older creation date
             should get all studies back (4)"""
         app.config['PB_ENABLED'] = True
         app.config['PB_MIN_DATE'] = "2000-01-01T00:00:00.000Z"
         mock_get.return_value.ok = True
         mock_get.return_value.text = self.protocol_builder_response('user_studies.json')
+        mock_info.return_value.ok = True
+        mock_info.return_value.text = self.protocol_builder_response('irb_info.json')
         api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
         self.assertEqual(4, len(api_response.json))

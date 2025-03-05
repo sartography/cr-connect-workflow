@@ -15,21 +15,21 @@ class TestFormFieldName(BaseTest):
 
         workflow_api = self.get_workflow_api(workflow)
         task_1 = workflow_api.next_task
-        self.assertEquals('pick_letter', task_1.name)
+        self.assertEqual('pick_letter', task_1.name)
         workflow_api = self.complete_form(workflow, task_1, {'template':'a'})
         task_2 = workflow_api.next_task
-        self.assertEquals('complete_word', task_2.name)
-        self.assertEquals('a', task_2.data['template'])
+        self.assertEqual('complete_word', task_2.name)
+        self.assertEqual('a', task_2.data['template'])
         workflow_api = self.complete_form(workflow, task_2, {'template':'a'})
 
         self.restart_workflow_api(workflow_api, clear_data=False)
         workflow_api = self.get_workflow_api(workflow)
         task_1 = workflow_api.next_task
-        self.assertEquals('pick_letter', task_1.name)
+        self.assertEqual('pick_letter', task_1.name)
         workflow_api = self.complete_form(workflow, task_1, {'template':'b'})
         task_2 = workflow_api.next_task
-        self.assertEquals('complete_word', task_2.name)
+        self.assertEqual('complete_word', task_2.name)
         # HERE is the real test,  if we use the task data, then template is set to "b", but if we
         # overwrite the task_data with the last form submission, it ends up being "a".  If
         # the value is already set in task_data, it should not be overwitten.
-        self.assertEquals('b', task_2.data['template'])
+        self.assertEqual('b', task_2.data['template'])

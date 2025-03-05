@@ -6,6 +6,7 @@ import click
 import sentry_sdk
 
 import connexion
+from SpiffWorkflow.bpmn.exceptions import WorkflowTaskExecException
 from connexion import ProblemException
 from flask import Response
 from flask_cors import CORS
@@ -17,23 +18,26 @@ from sentry_sdk.integrations.flask import FlaskIntegration
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+def do_config(app):
+    import logging
+    app.config.from_object('config.default')
+
+    if "TESTING" in os.environ and os.environ["TESTING"] == "true":
+        app.config.from_pyfile('../config/testing.py')
+        logging.basicConfig(level=logging.INFO)
+    else:
+        app.config.root_path = app.instance_path
+        app.config.from_pyfile('config.py', silent=True)
+        from config.logging import logging_config
+        logging.config.dictConfig(logging_config)
+
 
 connexion_app = connexion.FlaskApp(__name__)
 
 app = connexion_app.app
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)  # respect the X-Forwarded-Proto if behind a proxy.
-app.config.from_object('config.default')
 
-if "TESTING" in os.environ and os.environ["TESTING"] == "true":
-    app.config.from_pyfile('../config/testing.py')
-    import logging
-    logging.basicConfig(level=logging.INFO)
-else:
-    app.config.root_path = app.instance_path
-    app.config.from_pyfile('config.py', silent=True)
-    from config.logging import logging_config
-    logging.config.dictConfig(logging_config)
-
+do_config(app)
 
 db = SQLAlchemy(app)
 """:type: sqlalchemy.orm.SQLAlchemy"""
@@ -63,15 +67,20 @@ def process_waiting_tasks():
 
 @app.before_first_request
 def init_scheduler():
+    """This is how we check the process of studies that are in IRB Submission"""
     if app.config['PROCESS_WAITING_TASKS']:
-        scheduler.add_job(process_waiting_tasks, 'interval', minutes=1)
-        scheduler.add_job(WorkflowService().process_erroring_workflows, 'interval', minutes=1440)
+        scheduler.add_job(process_waiting_tasks,
+                          'interval',
+                          minutes=app.config['WAITING_CHECK_INTERVAL'])
+        scheduler.add_job(WorkflowService().process_failing_workflows,
+                          'interval',
+                          minutes=app.config['FAILING_CHECK_INTERVAL'])
         scheduler.start()
 
 
 # Convert list of allowed origins to list of regexes
-origins_re = [r"^https?:\/\/%s(.*)" % o.replace('.', '\.') for o in app.config['CORS_ALLOW_ORIGINS']]
-cors = CORS(connexion_app.app, origins=origins_re)
+origins = [r"^https?:\/\/%s(.*)" % o.replace('.', r'\.') for o in app.config['CORS_ALLOW_ORIGINS']]
+cors = CORS(connexion_app.app, origins=origins)
 
 # Sentry error handling
 if app.config['SENTRY_ENVIRONMENT']:
@@ -84,7 +93,8 @@ if app.config['SENTRY_ENVIRONMENT']:
 
 # Connexion Error handling
 def render_errors(exception):
-    from crc.api.common import ApiError, ApiErrorSchema
+    """Render errors with information about the task."""
+    from crc.api.common import ApiError, ApiErrorSchema  # noqa
     error = ApiError(code=exception.title, message=exception.detail, status_code=exception.status)
     return Response(ApiErrorSchema().dumps(error), status=500, mimetype="text/json")
 
@@ -117,9 +127,11 @@ def clear_db():
 @click.argument("category", required=False)
 @click.argument("spec_id", required=False)
 def validate_all(study_id, category=None, spec_id=None):
-    """Step through all the local workflows and validate them, returning any errors. This make take forever.
-    Please provide a real study id to use for validation, an optional category can be specified to only validate
-    that category, and you can further specify a specific spec, if needed."""
+    """Step through all the local workflows and validate them, returning any errors.
+    This make take forever.
+    Please provide a real study id to use for validation,
+    an optional category can be specified to only validate that category, and
+    you can further specify a specific spec, if needed."""
     from crc.services.workflow_service import WorkflowService
     from crc.services.workflow_processor import WorkflowProcessor
     from crc.services.workflow_spec_service import WorkflowSpecService
@@ -130,11 +142,22 @@ def validate_all(study_id, category=None, spec_id=None):
 
     logging.root.removeHandler(logging.root.handlers[0])
 
-    study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
-    g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
-    g.token = "anything_is_fine_just_need_something."
-    specs = WorkflowSpecService().get_specs()
-    statuses = WorkflowProcessor.run_master_spec(WorkflowSpecService().master_spec, study)
+    def pre_process_study():
+        study = session.query(StudyModel).filter(StudyModel.id == study_id).first()
+        g.user = session.query(UserModel).filter(UserModel.uid == study.user_uid).first()
+        g.token = "anything_is_fine_just_need_something."
+        specs = WorkflowSpecService().get_specs()
+        statuses = WorkflowProcessor.run_master_spec(WorkflowSpecService().master_spec, study)
+
+        return specs, statuses
+
+    def print_header():
+        print("-----------------------------------------")
+        print(f"{spec.category.display_name} / {spec.id}")
+        print("-----------------------------------------")
+
+
+    specs, statuses = pre_process_study()
 
     for spec in specs:
         if spec_id and spec_id != spec.id:
@@ -142,31 +165,34 @@ def validate_all(study_id, category=None, spec_id=None):
         if category and (not spec.category or spec.category.display_name != category):
             continue
 
-        print("-----------------------------------------")
-        print(f"{spec.category.display_name} / {spec.id}")
-        print("-----------------------------------------")
+        print_header()
 
         if spec.id in statuses and statuses[spec.id]['status'] == 'disabled':
-            print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
+            print(f"Skipping {spec.id} in category "
+                  f"{spec.category.display_name}, it is disabled for this study.")
             continue
         try:
             WorkflowService.test_spec(spec.id, validate_study_id=study_id)
             print('Success!')
         except ApiError as e:
             if e.code == 'disabled_workflow':
-                print(f"Skipping {spec.id} in category {spec.category.display_name}, it is disabled for this study.")
+                print(f"Skipping {spec.id} in category {spec.category.display_name}, "
+                      f"it is disabled for this study.")
             else:
-                print(f"API Error {e.code}, validate workflow {spec.id} in Category {spec.category.display_name}. {e.message}")
+                print(f"API Error {e.code}, validate workflow {spec.id} "
+                      f"in Category {spec.category.display_name}. {e.message}")
                 for t in e.task_trace:
                     print(f"---> {t}")
                 continue
         except WorkflowTaskExecException as e:
-            print(f"Workflow Error, {e}, in Task {e.task.name} validate workflow {spec.id} in Category {spec.category.display_name}")
+            print(f"Workflow Error, {e}, in Task {e.task.name} "
+                  f"validate workflow {spec.id} in Category {spec.category.display_name}")
             for t in e.task_trace:
                 print(f"---> {t}")
             continue
         except Exception as e:
-            print(f"Unexpected Error ({e.__class__.__name__}), {e} validate workflow {spec.id} in Category {spec.category.display_name}")
+            print(f"Unexpected Error ({e.__class__.__name__}), {e} "
+                  f"validate workflow {spec.id} in Category {spec.category.display_name}")
             # printing stack trace
             traceback.print_exc()
             print(e)

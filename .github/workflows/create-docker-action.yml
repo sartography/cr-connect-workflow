@@ -11,8 +11,8 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   TESTING: true
   PB_ENABLED: false
-  SQLALCHEMY_DATABASE_URI: "postgresql://postgres:postgres@localhost:5432/crc_test"
-  PGPASSWORD: postgres
+  SQLALCHEMY_DATABASE_URI: "postgresql://postgres:${{ secrets.PG_PASSWORD }}@localhost:5432/crc_test"
+  PGPASSWORD: ${{ secrets.PG_PASSWORD }}
 
 jobs:
   sonarcloud:
@@ -24,7 +24,7 @@ jobs:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
       - name: SonarCloud Scan
-        uses: sonarsource/sonarcloud-github-action@master
+        uses: sonarsource/sonarqube-scan-action@v4.2.0
         with:
           args: >
             -Dsonar.organization=sartography
