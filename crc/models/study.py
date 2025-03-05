@@ -210,8 +210,8 @@ class Study(object):
     def __init__(self, title, short_title, last_updated, user_uid,
                  id=None, status=None, progress_status=None, irb_status=None, short_name=None, proposal_name=None,
                  comment="",
-                 sponsor="", ind_number="", categories=[],
-                 files=[], approvals=[], enrollment_date=None, events_history=[],
+                 sponsor="", ind_number="", categories=None,
+                 files=None, approvals=None, enrollment_date=None, events_history=None,
                  primary_investigator="",
                  last_activity_user="",last_activity_date =None,create_user_display="", progress=0, **argsv):
         self.id = id
@@ -228,12 +228,12 @@ class Study(object):
         self.comment = comment
         self.sponsor = sponsor
         self.ind_number = ind_number
-        self.categories = categories
-        self.approvals = approvals
+        self.categories = categories if categories else []
+        self.approvals = approvals if approvals else []
         self.warnings = []
-        self.files = files
+        self.files = files if files else []
         self.enrollment_date = enrollment_date
-        self.events_history = events_history
+        self.events_history = events_history if events_history else []
         self.short_name = short_name
         self.proposal_name = proposal_name
         self.primary_investigator = primary_investigator
