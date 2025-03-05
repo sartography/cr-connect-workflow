@@ -555,7 +555,7 @@ class StudyService(object):
             for study in db_studies:
                 # we don't manage Exempt studies
                 pb_study_info = ProtocolBuilderService.get_irb_info(study.id)
-                if len(pb_study_info) > 0:
+                if isinstance(pb_study_info, list)  and len(pb_study_info) > 0:
                     if ('IRB_REVIEW_TYPE' in pb_study_info[0] and
                             pb_study_info[0]['IRB_REVIEW_TYPE'] ==
                             'Exempt'):
