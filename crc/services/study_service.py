@@ -556,8 +556,8 @@ class StudyService(object):
                 # we don't manage Exempt studies
                 pb_study_info = ProtocolBuilderService.get_irb_info(study.id)
                 if len(pb_study_info) > 0:
-                    if ('IRB_REVIEW_TYPE' in ProtocolBuilderService.get_irb_info(study.id)[0] and
-                            ProtocolBuilderService.get_irb_info(study.id)[0]['IRB_REVIEW_TYPE'] ==
+                    if ('IRB_REVIEW_TYPE' in pb_study_info[0] and
+                            pb_study_info[0]['IRB_REVIEW_TYPE'] ==
                             'Exempt'):
                         self.__delete_exempt_study(study.id)
 
