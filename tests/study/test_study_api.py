@@ -2,8 +2,6 @@ import json
 
 from tests.base_test import BaseTest
 
-from crc.services.ldap_service import LdapService
-
 from datetime import datetime
 from unittest.mock import patch
 
@@ -14,8 +12,9 @@ from crc.models.file import FileModel
 from crc.models.task_event import TaskEventModel
 from crc.models.study import StudyEvent, StudyModel, StudySchema, StudyStatus, StudyEventType, StudyAssociated
 from crc.models.workflow import WorkflowModel
-from crc.services.workflow_processor import WorkflowProcessor
+from crc.services.ldap_service import LdapService
 from crc.services.user_file_service import UserFileService
+from crc.services.workflow_processor import WorkflowProcessor
 
 
 class TestStudyApi(BaseTest):
@@ -173,7 +172,8 @@ class TestStudyApi(BaseTest):
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_studies')  # mock_studies
-    def test_get_all_studies(self, mock_studies, mock_details, mock_docs, mock_investigators, mock_info):
+    def test_get_all_studies(self, mock_studies, mock_details, mock_docs,
+                             mock_investigators, mock_info):
         # Enable the protocol builder for these tests, as the master_workflow and other workflows
         # depend on using the PB for data.
         app.config['PB_ENABLED'] = True
@@ -192,7 +192,8 @@ class TestStudyApi(BaseTest):
 
             # Mock Protocol Builder responses
             studies_response = self.protocol_builder_response('user_studies.json')
-            mock_studies.return_value = ProtocolBuilderCreatorStudySchema(many=True).loads(studies_response)
+            mock_studies.return_value = \
+                ProtocolBuilderCreatorStudySchema(many=True).loads(studies_response)
             details_response = self.protocol_builder_response('study_details.json')
             mock_details.return_value = json.loads(details_response)
             docs_response = self.protocol_builder_response('required_docs.json')
@@ -202,7 +203,9 @@ class TestStudyApi(BaseTest):
             mock_info.return_value = json.loads(self.protocol_builder_response('irb_info.json'))
 
             # Make the api call to get all studies
-            api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
+            api_response = self.app.get('/v1.0/study',
+                                        headers=self.logged_in_headers(),
+                                        content_type="application/json")
             self.assert_success(api_response)
             json_data = json.loads(api_response.get_data(as_text=True))
 
@@ -211,22 +214,29 @@ class TestStudyApi(BaseTest):
             num_open = 0
 
             for study in json_data:
-                if study['status'] == 'abandoned': # One study does not exist in user_studies.json
+                # One study does not exist in user_studies.json
+                if study['status'] == 'abandoned':
                     num_abandoned += 1
-                if study['status'] == 'in_progress': # One study is marked complete without HSR Number
+                # One study is marked complete without HSR Number
+                if study['status'] == 'in_progress':
                     num_in_progress += 1
-                if study['status'] == 'open_for_enrollment':  # Currently, we don't automatically set studies to open for enrollment
+                # Currently, we don't automatically set studies to open for enrollment
+                if study['status'] == 'open_for_enrollment':
                     num_open += 1
                 if study['id'] == 65432:
-                    # This study has `null` for DATELASTMODIFIED, so we should use the value in DATECREATED
+                    # This study has `null` for DATELASTMODIFIED, so
+                    # we should use the value in DATECREATED
                     assert '2020-02-19T14:24:55' in study['last_updated']
                 if study['id'] == 11111:
-                    self.assertTrue(False,"Study 11111 is too old to be processed and imported, it should be ignored.")
+                    self.assertTrue(False,
+                                    "Study 11111 is too old to be processed and imported, "
+                                    "it should be ignored.")
             db_studies_after = session.query(StudyModel).all()
             num_db_studies_after = len(db_studies_after)
             self.assertGreater(num_db_studies_after, num_db_studies_before)
             self.assertEqual(num_abandoned, 1)
-            self.assertEqual(num_open, 0)  # Currently, we don't automatically set studies to open for enrollment
+            # Currently, we don't automatically set studies to open for enrollment
+            self.assertEqual(num_open, 0)
             self.assertEqual(num_in_progress, 2)
             self.assertEqual(len(json_data), num_db_studies_after)
             # The sum below is off, since we don't automatically set studies to Open for Enrollment
@@ -249,9 +259,15 @@ class TestStudyApi(BaseTest):
             # self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
 
             # We don't manage Exempt studies, so these should get deleted
-            mock_info.return_value = json.loads(self.protocol_builder_response('irb_info_exempt.json'))
+            mock_info.return_value = \
+                json.loads(self.protocol_builder_response('irb_info_exempt.json'))
+            mock_studies.return_value = \
+                ProtocolBuilderCreatorStudySchema(many=True).\
+                    loads(self.protocol_builder_response('user_studies_exempt.json'))
             # Make the api call to get all studies
-            api_response = self.app.get('/v1.0/study', headers=self.logged_in_headers(), content_type="application/json")
+            api_response = self.app.get('/v1.0/study',
+                                        headers=self.logged_in_headers(),
+                                        content_type="application/json")
             self.assert_success(api_response)
             json_data = json.loads(api_response.get_data(as_text=True))
 
