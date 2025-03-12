@@ -530,25 +530,25 @@ class StudyService(object):
 
             self.__process_pb_study(pb_study, db_studies, user, specs)
 
-    def __cleanup_missing_and_exempt_studies(self, study, pb_studies):
+    def __cleanup_missing_and_exempt_studies(self, db_study, pb_studies):
         """We don't manage exempt studies"""
-        pb_study_info = ProtocolBuilderService.get_irb_info(study.id)
+        pb_study_info = ProtocolBuilderService.get_irb_info(db_study.id)
         # we receive a list, if the study is downloaded to IRB Online
         # otherwise, we receive this object
         # {'DETAIL': 'Study not downloaded to IRB Online.', 'STATUS': 'Error'}
-        if isinstance(pb_study_info, list) and len(pb_study_info) > 0:
-            if ('IRB_REVIEW_TYPE' in pb_study_info[0] and
-                    pb_study_info[0]['IRB_REVIEW_TYPE'] ==
-                    'Exempt'):
-                self.__delete_exempt_study(study.id)
-
-            else:
-                pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == study.id), None)
-                if not pb_study and study.status != StudyStatus.abandoned:
-                    study.status = StudyStatus.abandoned
-                    StudyService.add_study_update_event(study,
-                                                        status=StudyStatus.abandoned,
-                                                        event_type=StudyEventType.automatic)
+        if isinstance(pb_study_info, list):
+            if len(pb_study_info) > 0:
+                if ('IRB_REVIEW_TYPE' in pb_study_info[0] and
+                        pb_study_info[0]['IRB_REVIEW_TYPE'] ==
+                        'Exempt'):
+                    self.__delete_exempt_study(db_study.id)
+                else:
+                    pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == db_study.id), None)
+                    if not pb_study and db_study.status != StudyStatus.abandoned:
+                        db_study.status = StudyStatus.abandoned
+                        StudyService.add_study_update_event(db_study,
+                                                            status=StudyStatus.abandoned,
+                                                            event_type=StudyEventType.automatic)
 
     def sync_with_protocol_builder_if_enabled(self, user, specs):
         """Assures that the studies we have locally for the given user are
@@ -560,8 +560,11 @@ class StudyService(object):
                             str(app.config['PB_ENABLED']))
 
             # Get studies matching this user from Protocol Builder
-            pb_studies: List[ProtocolBuilderCreatorStudy] = (
-                ProtocolBuilderService.get_studies(user.uid))
+            if user:
+                pb_studies: List[ProtocolBuilderCreatorStudy] = (
+                    ProtocolBuilderService.get_studies(user.uid))
+            else:
+                pb_studies = []
 
             # Get studies from the database
             db_studies = session.query(StudyModel).filter_by(user_uid=user.uid).all()
@@ -572,9 +575,9 @@ class StudyService(object):
             self.__process_pb_studies(pb_studies, db_studies, user, specs)
 
             # Process studies in the DB that are no longer in Protocol Builder
-            for study in db_studies:
+            for db_study in db_studies:
                 # we don't manage Exempt studies
-                self.__cleanup_missing_and_exempt_studies(study, pb_studies)
+                self.__cleanup_missing_and_exempt_studies(db_study, pb_studies)
 
             db.session.commit()
 

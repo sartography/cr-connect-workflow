@@ -39,7 +39,7 @@ class LoadIRBPersonnel(Script):
         subpb = {}
         subx = {}
         for k in investigators.keys():
-            if k[:2] == 'SI':  # k.startswith() can fail here, so we use ==
+            if k[:2] == 'SI':  # k.startswith() can fail here, so we use ==  # NOSONAR
                 investigator = investigators.get(k)
                 if investigator.get('uid', None) is not None:
                     subs[k] = investigator
@@ -87,11 +87,14 @@ class LoadIRBPersonnel(Script):
         return self.do_task(task, study_id, workflow_id, *args, **kwargs)
 
     def do_task(self, task, study_id, workflow_id, *args, **kwargs):
-        """This code used to be in the Personnel workflow, in the 'Load IRB Personnel' Script Task.
-        It was moved here while troubleshooting an issue adding associated users who also created the study.
+        """This code used to be in the Personnel workflow,
+        in the 'Load IRB Personnel' Script Task.
+        It was moved here while troubleshooting an issue
+        adding associated users who also created the study.
 
         Ultimately, I might move this to a call activity or sub process.
         We should at least break it into multiple tasks."""
+
         # TODO: move this all back into the Personnel workflow, into a call activity, sub process, etc
 
         current_user = task.data.get('current_user')
