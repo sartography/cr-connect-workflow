@@ -167,7 +167,7 @@ class TestStudyApi(BaseTest):
         self.assertEqual(study_event.comment, update_comment)
         self.assertEqual(study_event.user_uid, self.test_uid)
 
-    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_irb_info')  # mock_info
+    @patch('crc.services.protocol_builder.ProtocolBuilderService.get_irb_info', spec=list)  # mock_info
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_investigators
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_required_docs')  # mock_docs
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_study_details')  # mock_details
@@ -191,16 +191,21 @@ class TestStudyApi(BaseTest):
             num_db_studies_before = session.query(StudyModel).count()
 
             # Mock Protocol Builder responses
-            studies_response = self.protocol_builder_response('user_studies.json')
+            # studies_response =
             mock_studies.return_value = \
-                ProtocolBuilderCreatorStudySchema(many=True).loads(studies_response)
-            details_response = self.protocol_builder_response('study_details.json')
-            mock_details.return_value = json.loads(details_response)
-            docs_response = self.protocol_builder_response('required_docs.json')
-            mock_docs.return_value = json.loads(docs_response)
-            investigators_response = self.protocol_builder_response('investigators.json')
-            mock_investigators.return_value = json.loads(investigators_response)
-            mock_info.return_value = json.loads(self.protocol_builder_response('irb_info.json'))
+                ProtocolBuilderCreatorStudySchema(many=True).loads(
+                    self.protocol_builder_response('user_studies.json'))
+            # details_response =
+            mock_details.return_value = json.loads(
+                self.protocol_builder_response('study_details.json'))
+            # docs_response =
+            mock_docs.return_value = json.loads(
+                self.protocol_builder_response('required_docs.json'))
+            # investigators_response =
+            mock_investigators.return_value = json.loads(
+                self.protocol_builder_response('investigators.json'))
+            mock_info.return_value = json.loads(
+                self.protocol_builder_response('irb_info.json'))
 
             # Make the api call to get all studies
             api_response = self.app.get('/v1.0/study',
@@ -258,12 +263,14 @@ class TestStudyApi(BaseTest):
             # open_for_enrollment_events = session.query(StudyEvent).filter_by(status=StudyStatus.open_for_enrollment)
             # self.assertEqual(open_for_enrollment_events.count(), 1)  # 1 study was moved to open for enrollment
 
-            # We don't manage Exempt studies, so these should get deleted
+            # We don't manage exempt studies. They are not even sent to use by Protocol Builder.
+            # Sometimes, a study we already manage is changed to exempt. We have to delete these.
             mock_info.return_value = \
                 json.loads(self.protocol_builder_response('irb_info_exempt.json'))
             mock_studies.return_value = \
                 ProtocolBuilderCreatorStudySchema(many=True).\
                     loads(self.protocol_builder_response('user_studies_exempt.json'))
+
             # Make the api call to get all studies
             api_response = self.app.get('/v1.0/study',
                                         headers=self.logged_in_headers(),
@@ -271,7 +278,8 @@ class TestStudyApi(BaseTest):
             self.assert_success(api_response)
             json_data = json.loads(api_response.get_data(as_text=True))
 
-            assert json_data == []
+            # We don't manage exempt studies, so 2 should get deleted
+            assert len(json_data) == 2
 
 
     @patch('crc.services.protocol_builder.ProtocolBuilderService.get_investigators')  # mock_studies
