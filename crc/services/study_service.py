@@ -60,7 +60,7 @@ class StudyService(object):
     def get_pb_min_date():
         try:
             pb_min_date = parser.parse(app.config['PB_MIN_DATE'])
-        except Exception as e:
+        except Exception:
             pb_min_date = datetime(2019, 1, 1)
         return pb_min_date
 
@@ -98,6 +98,8 @@ class StudyService(object):
 
     @staticmethod
     def get_study_warnings(workflow_metas, status):
+        """Returns a list of warnings for the study.
+        These are generated from the master workflow."""
 
         # Grab warnings generated from the master workflow for debugging
         warnings = []
@@ -106,31 +108,36 @@ class StudyService(object):
             unused_statuses.pop(wfm.workflow_spec_id, None)
             # do we have a status for you
             if wfm.workflow_spec_id not in status.keys():
-                warnings.append(ApiError("missing_status",
-                                         "No status information provided about workflow %s" % wfm.workflow_spec_id))
+                warnings.append(ApiError(
+                    "missing_status",
+                          f"No status information provided about workflow {wfm.workflow_spec_id}"))
                 continue
             if not isinstance(status[wfm.workflow_spec_id], dict):
-                warnings.append(ApiError(code='invalid_status',
-                                         message=f'Status must be a dictionary with "status" and "message" keys. '
-                                                 f'Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
+                warnings.append(ApiError(
+                    code='invalid_status',
+                    message=f'Status must be a dictionary with "status" and "message" keys. '
+                    f'Name is {wfm.workflow_spec_id}. Status is {status[wfm.workflow_spec_id]}'))
                 continue
             if 'status' not in status[wfm.workflow_spec_id].keys():
-                warnings.append(ApiError("missing_status_key",
-                                         "Workflow '%s' is present in master workflow, but doesn't have a status" % wfm.workflow_spec_id))
+                warnings.append(ApiError(
+                    "missing_status_key",
+                    f"Workflow '{wfm.workflow_spec_id}' "
+                    f"is present in master workflow, but doesn't have a status"))
                 continue
             if not WorkflowState.has_value(status[wfm.workflow_spec_id]['status']):
-                warnings.append(ApiError("invalid_state",
-                                         "Workflow '%s' can not be set to '%s', should be one of %s" % (
-                                             wfm.workflow_spec_id, status[wfm.workflow_spec_id]['status'],
-                                             ",".join(WorkflowState.list())
-                                         )))
-                continue
+                warnings.append(ApiError(
+                    "invalid_state",
+                    f"Workflow '{wfm.workflow_spec_id}' "
+                    f"can not be set to '{status[wfm.workflow_spec_id]['status']}', "
+                    f"should be one of {','.join(WorkflowState.list())}"))
 
-        for status in unused_statuses:
-            if isinstance(unused_statuses[status], dict) and 'status' in unused_statuses[status]:
-                warnings.append(ApiError("unmatched_status", "The master workflow provided a status for '%s' a "
-                                                             "workflow that doesn't seem to exist." %
-                                         status))
+        for unused_status in unused_statuses:
+            if (isinstance(unused_statuses[unused_status], dict)
+                    and 'status' in unused_statuses[unused_status]):
+                warnings.append(ApiError(
+                    "unmatched_status",
+                    f"The master workflow provided a status for '{unused_status}' "
+                    "a workflow that doesn't seem to exist."))
 
         return warnings
 
@@ -275,17 +282,17 @@ class StudyService(object):
 
         study = db.session.query(StudyModel).filter(StudyModel.id == study_id).first()
         if study is None:
-            raise ApiError('study_id not found', "A study with id# %d was not found" % study_id)
+            raise ApiError('study_id not found', f"A study with id# {study_id} was not found")
 
         db.session.query(StudyAssociated).filter(StudyAssociated.study_id == study_id).delete()
         for person in associates:
-            newAssociate = StudyAssociated()
-            newAssociate.study_id = study_id
-            newAssociate.uid = person['uid']
-            newAssociate.role = person.get('role', None)
-            newAssociate.send_email = person.get('send_email', False)
-            newAssociate.access = person.get('access', False)
-            session.add(newAssociate)
+            new_associate = StudyAssociated()
+            new_associate.study_id = study_id
+            new_associate.uid = person['uid']
+            new_associate.role = person.get('role', None)
+            new_associate.send_email = person.get('send_email', False)
+            new_associate.access = person.get('access', False)
+            session.add(new_associate)
         session.commit()
 
     @staticmethod
@@ -530,25 +537,48 @@ class StudyService(object):
 
             self.__process_pb_study(pb_study, db_studies, user, specs)
 
-    def __cleanup_missing_and_exempt_studies(self, db_study, pb_studies):
-        """We don't manage exempt studies"""
-        pb_study_info = ProtocolBuilderService.get_irb_info(db_study.id)
+    @staticmethod
+    def __is_exempt(db_study_id):
         # we receive a list, if the study is downloaded to IRB Online
         # otherwise, we receive this object
         # {'DETAIL': 'Study not downloaded to IRB Online.', 'STATUS': 'Error'}
-        if isinstance(pb_study_info, list):
-            if len(pb_study_info) > 0:
-                if ('IRB_REVIEW_TYPE' in pb_study_info[0] and
-                        pb_study_info[0]['IRB_REVIEW_TYPE'] ==
-                        'Exempt'):
-                    self.__delete_exempt_study(db_study.id)
-                else:
-                    pb_study = next((pbs for pbs in pb_studies if pbs.STUDYID == db_study.id), None)
-                    if not pb_study and db_study.status != StudyStatus.abandoned:
-                        db_study.status = StudyStatus.abandoned
-                        StudyService.add_study_update_event(db_study,
-                                                            status=StudyStatus.abandoned,
-                                                            event_type=StudyEventType.automatic)
+        pb_study_info = ProtocolBuilderService.get_irb_info(db_study_id)
+        if isinstance(pb_study_info, list) and len(pb_study_info) > 0:
+            if ('IRB_REVIEW_TYPE' in pb_study_info[0] and
+                    pb_study_info[0]['IRB_REVIEW_TYPE'] ==
+                    'Exempt'):
+                return True
+        return False
+
+    def __get_missing_and_exempt_studies(self, db_studies, pb_studies):
+        """We don't manage exempt studies"""
+        db_study_ids = {db_study.id for db_study in db_studies}
+        pb_study_ids = {pb_study.STUDYID for pb_study in pb_studies}
+        db_studies_not_in_pb = db_study_ids - pb_study_ids
+        exempt_studies = set()
+
+        for db_study_id in db_studies_not_in_pb:
+            if self.__is_exempt(db_study_id):
+                exempt_studies.add(db_study_id)
+
+        missing_studies = db_studies_not_in_pb - exempt_studies
+
+        return missing_studies, exempt_studies
+
+    def __delete_exempt_studies(self, exempt_studies):
+        if exempt_studies:
+            for exempt_study_id in exempt_studies:
+                self.__delete_exempt_study(exempt_study_id)
+
+    @staticmethod
+    def __abandon_missing_studies(missing_studies, db_studies):
+        for missing_study_id in missing_studies:
+            study = next((s for s in db_studies if s.id == missing_study_id), None)
+            if study and study.status != StudyStatus.abandoned:
+                study.status = StudyStatus.abandoned
+                StudyService.add_study_update_event(study,
+                                                    status=StudyStatus.abandoned,
+                                                    event_type=StudyEventType.automatic)
 
     def sync_with_protocol_builder_if_enabled(self, user, specs):
         """Assures that the studies we have locally for the given user are
@@ -575,11 +605,10 @@ class StudyService(object):
             self.__process_pb_studies(pb_studies, db_studies, user, specs)
 
             # Process studies in the DB that are no longer in Protocol Builder
-            for db_study in db_studies:
-                # we don't manage Exempt studies
-                self.__cleanup_missing_and_exempt_studies(db_study, pb_studies)
-
-            db.session.commit()
+            missing_studies, exempt_studies = \
+                self.__get_missing_and_exempt_studies(db_studies, pb_studies)
+            self.__delete_exempt_studies(exempt_studies)
+            self.__abandon_missing_studies(missing_studies, db_studies)
 
     @staticmethod
     def add_study_update_event(study, status, event_type, user_uid=None, comment=''):

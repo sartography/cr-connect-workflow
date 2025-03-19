@@ -138,6 +138,12 @@ class WorkflowService():
                 filter(WorkflowModel.status == WorkflowStatus.erroring).
                 all())
 
+    def get_workflow_url(self, workflow_id):
+        """Returns the URL for a given workflow."""
+        workflow = session.query(WorkflowModel).filter_by(id=workflow_id).first()
+        if workflow:
+            return self.__get_workflow_url(workflow)
+
     @staticmethod
     def __get_workflow_url(workflow):
         base_url = app.config['FRONTEND']
