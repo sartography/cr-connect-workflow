@@ -116,3 +116,5 @@ SYNC_FILE_ROOT = environ.get('SYNC_FILE_ROOT', default='tests/data/IMPORT_TEST')
 
 # Turn on/off processing waiting tasks
 PROCESS_WAITING_TASKS = environ.get('PROCESS_WAITING_TASKS', default='true')
+
+CAN_TIME_IT = environ.get('CAN_TIME_IT', default='false') == 'true'
