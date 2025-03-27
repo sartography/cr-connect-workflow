@@ -167,14 +167,11 @@ def user_studies():
     specs = spec_service.get_specs()
     last_time = time_it('user_studies', last_time)
     cats = spec_service.get_categories()
-    app.logger.info("Before sync with protocol builder")
     last_time = time_it('user_studies', last_time)
     StudyService().sync_with_protocol_builder_if_enabled(user, specs)
-    app.logger.info("After sync with protocol builder")
     last_time = time_it('user_studies', last_time)
     studies = StudyService().get_studies_for_user(user, categories=cats)
 
-    app.logger.info("Have user studies")
     last_time = time_it('user_studies', last_time)
 
     # Disable this check - we don't want to raise this error.

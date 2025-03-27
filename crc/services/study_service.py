@@ -36,12 +36,13 @@ import time
 
 
 def time_it(method, last_time=None):
-    now = time.time()
-    if last_time:
-        app.logger.info(f"{method}: Time since last time: {now - last_time}")
-    else:
-        app.logger.info(f"{method}: First time: {now}")
-    return now
+    if app.config['CAN_TIME_IT']:
+        now = time.time()
+        if last_time:
+            app.logger.info(f"{method}: Time since last time: {now - last_time}")
+        else:
+            app.logger.info(f"{method}: First time: {now}")
+        return now
 
 
 class StudyService(object):
@@ -584,17 +585,14 @@ class StudyService(object):
     @staticmethod
     def __abandon_missing_studies(missing_studies, db_studies):
         last_time = time_it('__abandon_missing_studies')
-        app.logger.info("loop through missing studies")
         for missing_study_id in missing_studies:
             last_time = time_it('__abandon_missing_studies', last_time)
             study = next((s for s in db_studies if s.id == missing_study_id), None)
             if study and study.status != StudyStatus.abandoned:
-                app.logger.info("add updtae event")
                 study.status = StudyStatus.abandoned
                 StudyService.add_study_update_event(study,
                                                     status=StudyStatus.abandoned,
                                                     event_type=StudyEventType.automatic)
-        app.logger.info("end loop through missing studies")
 
     def sync_with_protocol_builder_if_enabled(self, user, specs):
         """Assures that the studies we have locally for the given user are
@@ -629,10 +627,8 @@ class StudyService(object):
                 self.__get_missing_and_exempt_studies(db_studies, pb_studies)
             last_time = time_it('sync_with_protocol_builder_if_enabled', last_time)
             self.__delete_exempt_studies(exempt_studies)
-            app.logger.info("Before abandon missing studies")
             last_time = time_it('sync_with_protocol_builder_if_enabled', last_time)
             self.__abandon_missing_studies(missing_studies, db_studies)
-            app.logger.info("After abandon missing studies")
             time_it('sync_with_protocol_builder_if_enabled', last_time)
 
     @staticmethod
