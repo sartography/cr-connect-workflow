@@ -174,8 +174,8 @@ class WorkflowService():
         admin_email = app.config['CRC_SYSTEM_ADMIN_EMAIL']
         self.__send_message(admin_email, message, "Failing CRC Workflows")
 
-    def __send_message_to_helpdesk(self, message):
-        self.__send_message(app.config['CRC_SUPPORT_EMAIL'], message, "Failing CRC Status Checks")
+    # def __send_message_to_helpdesk(self, message):
+    #     self.__send_message(app.config['CRC_SUPPORT_EMAIL'], message, "Failing CRC Status Checks")
 
     def __get_messages(self, workflows):
 
@@ -224,8 +224,8 @@ class WorkflowService():
                     # this sends a message through sentry
                     capture_message(failing_message)
 
-                if send_status_message:
-                    self.__send_message_to_helpdesk(status_message)
+                # if send_status_message:
+                #     self.__send_message_to_helpdesk(status_message)
                 self.__send_message_to_admin_user(failing_message)
 
     @staticmethod
