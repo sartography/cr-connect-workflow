@@ -69,6 +69,9 @@ class GitService(object):
             app.logger.error(e)
             raise ApiError(code='unknown_exception',
                            message=f'There was an unknown exception. Original message is: {e}')
+        if app.config['DEVELOPMENT']:
+            current_branch = repo.active_branch.name
+            git_branch = current_branch
         try:
             repo.git.checkout(git_branch)
         except GitCommandError:
@@ -77,9 +80,14 @@ class GitService(object):
             repo.git.checkout(git_branch)
             repo.remotes.origin.push(refspec='{}:{}'.format(git_branch, f'{git_branch}'))
             repo.remotes.origin.fetch()
+        except Exception as e:
+            app.logger.error(e)
+            raise ApiError(code='unknown_exception',
+                           message=f'There was an unknown exception. Original message is: {e}')
 
-        remote_ref = repo.remotes.origin.refs[f'{git_branch}']
-        repo.active_branch.set_tracking_branch(remote_ref)
+        if not app.config['DEVELOPMENT']:
+            remote_ref = repo.remotes.origin.refs[f'{git_branch}']
+            repo.active_branch.set_tracking_branch(remote_ref)
         repo.display_push = display_push
         repo.display_merge = display_merge
         return repo
