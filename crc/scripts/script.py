@@ -5,7 +5,6 @@ from types import ModuleType
 
 from crc.api.common import ApiError
 
-
 # Generally speaking, having some global in a flask app is TERRIBLE.
 # This is here, because after loading the application this will never change under
 # any known condition, and it is expensive to calculate it everytime.
@@ -128,6 +127,21 @@ class Script(object):
             task.data[key].update(data)
         else:
             task.data[key] = data
+
+    @staticmethod
+    def get_reference_file_as_dictionary():
+        """Returns a dictionary of document details keyed on the doc_code."""
+        from crc.services.lookup_service import LookupService
+        lookup_model = LookupService.get_lookup_model_for_reference('dsp_form_variables.xlsx',
+                                                                    'template_variable',
+                                                                    'stored_variable')
+        doc_dict = {}
+        for lookup_data in lookup_model.dependencies:
+            doc_dict[lookup_data.value] = lookup_data.data
+        return doc_dict
+
+
+
 
 class ScriptValidationError:
 
