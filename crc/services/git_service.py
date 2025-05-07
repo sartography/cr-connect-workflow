@@ -69,7 +69,7 @@ class GitService(object):
             app.logger.error(e)
             raise ApiError(code='unknown_exception',
                            message=f'There was an unknown exception. Original message is: {e}')
-        if app.config['DEVELOPMENT']:
+        if 'DEVELOPMENT' in app.config and app.config['DEVELOPMENT']:
             current_branch = repo.active_branch.name
             git_branch = current_branch
         try:
@@ -85,7 +85,7 @@ class GitService(object):
             raise ApiError(code='unknown_exception',
                            message=f'There was an unknown exception. Original message is: {e}')
 
-        if not app.config['DEVELOPMENT']:
+        if 'DEVELOPMENT' not in app.config or not app.config['DEVELOPMENT']:
             remote_ref = repo.remotes.origin.refs[f'{git_branch}']
             repo.active_branch.set_tracking_branch(remote_ref)
         repo.display_push = display_push
