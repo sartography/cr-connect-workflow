@@ -1,7 +1,9 @@
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from tempfile import NamedTemporaryFile
 
 from typing import List
+
+from crc.services.reference_file_service import ReferenceFileService
 
 
 class SpreadsheetService(object):
@@ -26,3 +28,16 @@ class SpreadsheetService(object):
             tmp.seek(0)
             stream = tmp.read()
             return stream
+
+
+    def create_enum_dict_from_spreadsheet(self, name):
+        """Creates a dictionary from a spreadsheet.
+           Meant for form enums.
+           We assume 2 columns, the first column is the key and the second column is the value."""
+        path_name = ReferenceFileService.file_path(name)
+        wb = load_workbook(filename=path_name)
+        ws = wb.active
+        data_dict = {}
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            data_dict[row[0]] = row[1]
+        return data_dict

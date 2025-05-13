@@ -16,6 +16,7 @@ class SaveDSPData(Script):
         for template_variable in doc_dict:
             if template_variable and template_variable in task.data:
                 key = doc_dict[template_variable]['stored_variable']
+                value = str(task.data[template_variable])
                 task.data['data_store_set'](type='study',
                                             key=key,
-                                            value=task.data[template_variable])
+                                            value=value)
