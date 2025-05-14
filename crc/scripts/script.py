@@ -129,7 +129,7 @@ class Script(object):
             task.data[key] = data
 
     @staticmethod
-    def get_reference_file_as_dictionary():
+    def get_dsp_form_variables_as_dictionary():
         """Returns a dictionary of document details keyed on the doc_code."""
         from crc.services.lookup_service import LookupService
         lookup_model = LookupService.get_lookup_model_for_reference('dsp_form_variables.xlsx',
