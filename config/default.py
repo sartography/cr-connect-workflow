@@ -24,7 +24,8 @@ BPMN = environ.get('BPMN', default="localhost:5002")
 CORS_DEFAULT = f'{FRONTEND}, {BPMN}'
 CORS_ALLOW_ORIGINS = re.split(r',\s*', environ.get('CORS_ALLOW_ORIGINS', default=CORS_DEFAULT))
 TESTING = environ.get('TESTING', default="false") == "true"
-PRODUCTION = (environ.get('PRODUCTION', default="false") == "true")
+PRODUCTION = environ.get('PRODUCTION', default="false") == "true"
+DEVELOPMENT = environ.get('DEVELOPMENT', default="false") == "true"
 TEST_UID = environ.get('TEST_UID', default="dhf8r")
 ADMIN_UIDS = re.split(r',\s*', environ.get('ADMIN_UIDS', default="dhf8r,kcm4zc,cah3us"))
 SUPERUSER_UIDS = re.split(r',\s*', environ.get('SUPERUSER_UIDS', default="dhf8r,kcm4zc,cah3us"))
