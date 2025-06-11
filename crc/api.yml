@@ -1106,6 +1106,7 @@ paths:
           type: string
     get:
       operationId: crc.api.reference_file.get_reference_file_data
+      security: []
       summary: Returns only the reference file content
       tags:
         - Reference Files
