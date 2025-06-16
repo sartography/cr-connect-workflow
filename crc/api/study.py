@@ -9,7 +9,7 @@ from crc.models.study import Study, StudyEventType, StudyModel, StudySchema, Stu
     StudyStatus, StudyAssociatedSchema, ProgressStatus, Category
 from crc.models.task_log import TaskLogQuery, TaskLogQuerySchema
 from crc.services.spreadsheet_service import SpreadsheetService
-from crc.services.study_service import StudyService, time_it
+from crc.services.study_service import StudyService
 from crc.services.task_logging_service import TaskLoggingService
 from crc.services.user_service import UserService
 from crc.services.workflow_processor import WorkflowProcessor
@@ -159,20 +159,13 @@ def delete_study(study_id):
 def user_studies():
     """Returns all the studies associated with the current user. """
     app.logger.info("Getting user studies")
-    last_time = time_it('user_studies')
     user = UserService.current_user(allow_admin_impersonate=True)
-    last_time = time_it('user_studies', last_time)
     spec_service = WorkflowSpecService()
-    last_time = time_it('user_studies', last_time)
     specs = spec_service.get_specs()
-    last_time = time_it('user_studies', last_time)
     cats = spec_service.get_categories()
-    last_time = time_it('user_studies', last_time)
     StudyService().sync_with_protocol_builder_if_enabled(user, specs)
-    last_time = time_it('user_studies', last_time)
     studies = StudyService().get_studies_for_user(user, categories=cats)
 
-    last_time = time_it('user_studies', last_time)
 
     # Disable this check - we don't want to raise this error.
     # if len(studies) == 0:
